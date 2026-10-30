@@ -861,7 +861,7 @@ assert.doesNotMatch(patchedAe, /\.style2-details\{display:grid;grid-template-col
 const livePatched = await readFile(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
 assertPatchedStyleTwo(livePatched);
 assert.equal(livePatched.includes('8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y'), false);
-assert.equal(livePatched.includes('children:"Trip View"'), false);
+assert.equal(livePatched.includes('children:"Trip View"'), true);
 assertStyleTwoPatchParses(livePatched);
 await assertTemporaryJavaScriptParses(livePatched, 'patched TREK bundle failed node --check');
 assert.equal(

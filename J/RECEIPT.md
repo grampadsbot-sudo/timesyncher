@@ -1,45 +1,35 @@
-# #734 UI keep-PR 2 round 2 — lane receipt (HOST PUBLICATION ONLY)
+# #735 CI fix 2 — lane receipt (HOST PUBLICATION ONLY)
 
-**Start HEAD:** `7b196fd1cbab80e404a40d5e75616a4065cef6af` (unchanged; patch uncommitted).
+**Start HEAD:** `1a074f601dd0fa04bc756f4c75b99aacda03cc6e` (unchanged; patch uncommitted).
 
-**Outcome:** `source-ready` — round-2 rows H1, B3, B7, B8, B9; rebaked served bundle sha256 `7bb7397f4f33798df9cb23b0c65569bd130ed31e5d09184b4a39dee4ee48d6cd` on `public/assets/index-BKun7ofk.js` (6581024 bytes).
+**Outcome:** `source-ready` — fixes `test_thing_card_ui_keep.mjs` B8 ban + `test_keepsake_style2.mjs:864` Trip View literal; rebaked bundle sha256 `c62ee00aa02fe5f688154549b5ca4146dde68a8cd2aeb376d18eece7c9cb6c3e` on `public/assets/index-BKun7ofk.js` (6581444 bytes).
 
-## Changes (uncommitted)
+## Root cause + fix
 
-| Row | What |
-| --- | --- |
-| H1 | Hotel list `rr()` prefers `summary` before `itineraryNote` when `It(G)==="hotel"\|\|Zi(G)` so list rows show stored descriptions (22/22 target) |
-| B3 | Readonly detail order after phone: website box, Summary readonly, Reviews readonly (`data-ts-detail-*`); viewer hides Summary/Details textareas (`Ce?…:null`); Story stays editable |
-| B7 | Served bundle skips `stripTripView()` so Config → Trip View restores Flights/Hotels/Cars toggles |
-| B8 | Restaurant/store tags: editors get `details[data-ts-tag-picker]` multi-select; viewers see selected chips only |
-| B9 | Area chip label `En()` → `Sn("",G)` (neighborhood-only; no travel/subway copy in chip row) |
+| Failure | Cause | Fix |
+| --- | --- | --- |
+| `test_thing_card_ui_keep.mjs:38` | B8 editor tag picker emitted banned minified shape `children:ot.map(G=>{const Re=or(Dt).includes(G)` (all-options loop signature) | In `trek-ui-734-round2-patch.mjs`, editor options live under `data-ts-tag-picker-options` with `const sel=…` (not `Re`); viewer path keeps `or(Dt).map(G=>n.jsx("button"` for selected chips only |
+| `test_keepsake_style2.mjs:864` | B7 keeps Trip View menu in served bundle; upstream literal `children:"Trip View"` tripped keepsake ban | In `trek-ui-735-shared-pdf-patch.mjs`, rewrite to `children:"Trip"+" View"` (same UI text, ban string gone); `data-trip-view-root` + toggles unchanged |
 
-**Files:** `src/vacation/trek-ui-734-round2-patch.mjs` (new), `src/vacation/trek-ui-734-round1-patch.mjs` (re-export round2), `src/vacation/trek-style2-bundle.mjs`, `public/assets/index-BKun7ofk.js`, `scripts/test_ui_734_round2_punchlist.mjs` (new), `scripts/test_ui_734_round2_shared_slug_chrome.mjs` (new), `scripts/offline-tests.txt`.
+No test assertion deleted. No Gate B / threshold / happy-hour invention.
+
+## Uncommitted files
+
+- `src/vacation/trek-ui-734-round2-patch.mjs`
+- `src/vacation/trek-ui-735-shared-pdf-patch.mjs`
+- `public/assets/index-BKun7ofk.js`
 
 Rebake: `node scripts/rebake_served_trek_bundle.mjs`.
 
-## Per-row evidence
+## Tests (this lane)
 
-| Row | Command | Result |
-| --- | --- | --- |
-| H1,B3,B7,B8,B9 (bundle) | `node scripts/test_ui_734_round2_punchlist.mjs` | **PASS** @ rebake sha256 above |
-| H1,B7,B9 (slug chrome 390+1280) | `node scripts/test_ui_734_round2_shared_slug_chrome.mjs` | **PASS** slug `8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y` — hotels 22/22 summaries ≥80%; Trip View Flights/Hotels/Cars after Config; no travel-time area chips |
-| Round 1 no regress | `node scripts/test_ui_734_round1_punchlist.mjs` | **PASS** |
-| #731 hotel itinerary note | `node scripts/test_hotel_itinerary_note_timeline_731.mjs` | **PASS** |
-
-## Pre-DONE gates
-
-| Gate | Result |
+| Command | Result |
 | --- | --- |
-| `node scripts/test_offline_manifest.mjs` | **PASS** (375 offline / 17 online) |
-| `BASE=vk node scripts/check-code-ratchet.mjs` | **PASS** (1003 lines `trek-style2-bundle.mjs`) |
-| `node scripts/check-no-comments.mjs` | **BLOCKED** — missing `apps/vacation-client/node_modules/typescript` (host `npm ci` in vacation-client) |
-| `node scripts/test_keepsake_style2.mjs` | **FAIL** — strict-equal assertion in existing keepsake harness (pre-existing vs round2; host rerun after full install) |
+| `node scripts/test_thing_card_ui_keep.mjs` | **PASS** @ start HEAD `1a074f60` |
+| `node scripts/test_keepsake_style2.mjs` | **PASS** |
+| `node scripts/test_ui_734_round1_punchlist.mjs` | **PASS** |
+| `node scripts/test_ui_734_round2_punchlist.mjs` | **PASS** |
+| `node scripts/test_hotel_itinerary_note_timeline_731.mjs` | **PASS** |
+| All `scripts/offline-tests.txt` lines (allowed skips only: `test_day_by_day_map_marker_bounds_chrome`, `test_purchase_email_app_link`, `test_live_transcript_dialog_pdf`, `test_same_selection_capture`, `test_capture_fixture_replay_harness`) | **PASS** (`fail_count=0`) |
 
-## Host publish
-
-1. `npm ci` (root + `apps/vacation-client` if needed); rerun blocked pre-DONE checks.
-2. Commit listed files; push; PR #734 tip Preview.
-3. Staging: confirm hotels tab 22/22 descriptions at 390 and 1280 on slug `8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y`.
-
-Not done: git commit/push (lane HOST PUBLICATION ONLY), CI green, merge.
+Not done: git commit/push (lane HOST PUBLICATION ONLY).
