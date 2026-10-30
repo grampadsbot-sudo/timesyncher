@@ -1,0 +1,290 @@
+{
+  "thingId": "681",
+  "thingName": "Estiatorio Milos Hudson Yards",
+  "type": "restaurant",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.estiatoriomilos.com/location/nyhudsonyards/",
+      "title": "Hudson Yards - Estiatorio Milos",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "nu Reserve a Table Book an Event Menu Reserve a Table Menu Reserve a Table Book an Event Menu Reserve a Table Book an Event Hudson Yards Hudson Yards 20 Hudson Yards, Fifth Floor New York, New York 10001 646-907-1970 [email protected] Menu Reserve a Table Book an Event Opening Hours Monday Lunch: 11:30 am to 3:30 pm Dinner: 4: … nu Reserve a Table Book an Event Menu Reserve a Table Menu Reserve a Table Book an Event Menu Reserve a Table Book an Event Hudson Yards Hudson Yards 20 Hudson Yards, Fifth Floor New York, New York 10001 646-907-1970 [email protected] Menu Reserve a Table Book an Event Opening Hours Monday Lunch: 11:30 am to 3:30 pm Dinner: 4: … :00 pm Dinner: 4:00 pm to 11:00 pm We are proud to be the centerpiece of a brand-new Manhattan neighborhood. Hudson Yards is west of Times Square and offers the matchless seafood of Milos served high up, with unrivaled views of the spectacular sunsets that illuminate the Hudson River. The stunning new Hudson Yards location features views of sky and river, presented in hues of blue that shift as the",
+      "snippet": "nu Reserve a Table Book an Event Menu Reserve a Table Menu Reserve a Table Book an Event Menu Reserve a Table Book an Event Hudson Yards Hudson Yards 20 Hudson Yards, Fifth Floor New York, New York 10001 646-907-1970 [email protected] Menu Reserve a Table Book an Event Opening Hours Monday Lunch: 11",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.opentable.com/r/estiatorio-milos-hudson-yards-new-york",
+      "title": "Estiatorio Milos – Hudson Yards Restaurant - New York, NY | OpenTable",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "rds Restaurant - New York, NY | OpenTable | | Estiatorio Milos – Hudson Yards Restaurant - New York, NY | OpenTable # Estiatorio Milos – Hudson Yards 4.8 (1503) $50 and over Seafood 20 Hudson Yards, Fifth Floor, New York, NY 10001 Milos at Hudson Yards features an open kitchen, private dining rooms, walls of  … Milos' signature fish market showcases the daily catch",
+      "snippet": "rds Restaurant - New York, NY | OpenTable | | Estiatorio Milos – Hudson Yards Restaurant - New York, NY | OpenTable # Estiatorio Milos – Hudson Yards 4.8 (1503) $50 and over Seafood 20 Hudson Yards, Fifth Floor, New York, NY 10001 Milos at Hudson Yards features an open kitchen, private dining rooms,",
+      "fetchMethod": "WebFetch live fetch 2026-10-28 (curl 403/blocked); text saved verbatim from WebFetch markdown"
+    },
+    {
+      "url": "https://www.restaurantji.com/ny/new-york/estiatorio-milos-2/",
+      "title": "Estiatorio Milos Hudson Yards reviews | Restaurantji",
+      "fetchedAt": "2026-10-29T09:05:00-07:00",
+      "text": "Estiatorio Milos Hudson Yards | Restaurantji listing | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | 4.2 717 ratings … an amazing view of Hudson River and Hudson Yards … Loved their grilled octopus. … We were blown away by the service!",
+      "snippet": "4.2 717 ratings",
+      "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
+    },
+    {
+      "url": "https://www.tripadvisor.com/Restaurant_Review-g60763-d17327191-Reviews-Estiatorio_Milos-New_York_City_New_York.html",
+      "title": "Estiatorio Milos Hudson Yards reviews | Tripadvisor",
+      "fetchedAt": "2026-10-29T09:05:00-07:00",
+      "text": "Estiatorio Milos Hudson Yards | Tripadvisor listing | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch not attempted); not a live fetch | 4.3 of 5 bubbles … Great place for a business lunch or a date … the service was somewhat slow … The prawns had a bad taste but were quite expensive",
+      "snippet": "4.3 of 5 bubbles",
+      "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch not attempted); not a live fetch"
+    },
+    {
+      "url": "https://exa.ai/library/place/csnvq52n3q9",
+      "title": "Estiatorio Milos Hudson Yards reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:50:48-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_csnvq52n3q9.html",
+      "text": "Lovely view of the Vessel landmarks and city. Great spot for business or elegant evening. Loved the food and I think the fried calamari was the softest fluffiest delicious fried thing I've ever had! 2 thumbs up for the fried octopus! Stairs and elevators so would say it's accessible as well. Had an incredible experience at Milos in Hudson Yards! The atmosphere was elegant yet welcoming, and the food was absolutely top-notch—fresh, flavorful, and beautifully prepared. But what truly made the night special was the outstanding service from Mario at the bar. He was beyond attentive, knowledgeable about the menu, and made the best recommendations. His passion for hospitality really stood out, and he created such a warm and engaging experience. Whether you’re stopping by for a drink or dining in, Mario’s service elevates the whole experience. Will definitely be back!"
+    },
+    {
+      "url": "https://www.estiatoriomilos.com/location/nyhudsonyards/menu",
+      "title": "Estiatorio Milos Hudson Yards official (www.estiatoriomilos.com)",
+      "fetchedAt": "2026-10-30T13:06:00.262645+00:00",
+      "fetchMethod": "curl",
+      "text": "Hudson Yards - Estiatorio Milos --> Skip to Main Content Estiatorio Milos Locations Europe Middle East Asia North America Coming Soon Press Events Milos at Sea Gift Cards Shop Expand sub-menu: Shop Olive Oil Careers Press Reservations Toggle Navigation You are currently in: Choose Location Montreal Athens Dubai Las Ventanas Hudson Yards Midtown Miami Beach West Palm Beach Las Vegas Singapore Toronto London Menu Reserve a Table Book an Event Menu Reserve a Table Book an Event Reserve a Table Book an Event Menu Reserve a Table Reserve a Table Menu Reserve a Table Book an Event Menu Reserve a Table Book an Event Menu Reserve a Table Book an Event Menu Reserve a Table Book an Event Menu Reserve a Table Book an Event Menu Reserve a Table Menu Reserve a Table Book an Event Menu Reserve a Table Book an Event Hudson Yards Back to Location You are currently in: Montreal Athens Las Ventanas Hudson Yards Midtown Miami Beach West Palm Beach Las Vegas Singapore Toronto London Menu “Sharing food at the table brings people together and enriches the culinary experience” – Costas Spiliadis MESIMERI EXECUTIVE LUNCH PRE-THEATRE POST-THEATRE À LA CARTE WEEKEND BRUNCH DESSERT Mesimeri_Proofed_Final_9.26.26-1-1 3 courses | 4:30 PM - 6:00 PM FIRST COURSE Kindly Select One MEDITERRANEAN FISH SOUP With Lavraki SALMON TARTARE Classic or Truffle oil with crostini and Little Gem Lettuce MILOS OCTOPUS With Fava Santorini capers and extra virgin olive oil CALAMARI Lightly fried served with baby fennel salad TOMATO SALAD The authentic salad prepared with vine-ripened tomatoes BELUGA LENTIL SALAD Balsamic vinaigrette, Balik salmon SECOND COURSE Kindly Select One WHOLE GRILLED DORADO ROYAL (TSIPOURA) Served with steamed broccoli HIDDENFJORD SALMON Grilled served with Prespes (Northern Greece) piazzi beans and baby fennel salad LAMB CHOPS Colorado PRIME lamb chops served with hand-cut fried potatoes ALL NATURAL BEEF FILET MIGNON Served with hand-cut fried potatoes ASTAKOMAKARONADA (additional) Lobster Pasta Athenian-style THIRD COURSE Kindly Select One UPSTATE NY FARM GREEK STYLE YOGURT With Kythira Island thyme honey and walnuts (optional) OUR FAMOUS HOMEMADE WALNUT PIE (KARYDOPITA) Served with a spoon of lavender ice cream FRESH FRUITS OF THE SEASON Freshly picked by our local farmers 3 courses | 9:30 PM to closing FIRST COURSE Kindly Select One MEDITERRANEAN FISH SOUP With Lavraki SALMON TARTARE Classic or Truffle oil with crostini and Little Gem Lettuce MILOS OCTOPUS With Fava Santorini capers and extra virgin olive oil CALAMARI Lightly fried served with baby fennel salad TOMATO SALAD The authentic salad prepared with vine-ripened tomatoes BELUGA LENTIL SALAD Balsamic vinaigrette, Balik salmon SECOND COURSE Kindly Select One WHOLE GRILLED DORADO ROYAL (TSIPOURA) Served with steamed broccoli HIDDENFJORD SALMON Grilled served with Prespes (Northern Greece) piazzi beans and baby fennel salad LAMB CHOPS Colorado PRIME lamb chops served with hand-cut fried potatoes ALL NATURAL BEEF FILET MIGNON Served with hand-cut fried potatoes ASTAKOMAKARONADA (additional) Lobster Pasta Athenian-style THIRD COURSE Kindly Select One UPSTATE NY FARM GREEK STYLE YOGURT With Kythira Island thyme honey and walnuts (optional) OUR FAMOUS HOMEMADE WALNUT PIE (KARYDOPITA) Served with a spoon of lavender ice cream FRESH FRUITS OF THE SEASON Freshly picked by our local farmers FRESH FISH RAW, CEVICHE, SMOKED OYSTERS East/West Coast season’s best oysters SASHIMI Bigeye Tuna, Hiddenfjord Salmon, Lavraki, Hamachi TARTARE Bigeye Tuna, Hiddenfjord Salmon RAW FISH PLATTER (Serves two to four people) CEVICHE Greek-style Lavraki Ceviche SMOKED FISH Tsar Nikolaj Cut Balik Style Smoked Salmon CAVIAR Royal Belgian Ossetra Caviar MILOS CLASSICS MILOS SPECIAL (Serves two to four people) THE GREEK SPREADS, PITA, AND CRUDITÉ (Serves two to four people) CHARGRILLED OCTOPUS, SANTORINI FAVA HOLLAND PEPPERS, AGED BALSAMIC GRILLED MUSHROOMS, HALOUMI GREEK SALAD, VINE-RIPE HEIRLOOM TOMATOES (Serves two to four people) FRIED RHODE ISLAND CALAMARI SAGANAKI KASSERI NAXOS MARYLAND-STYLE CRAB CAKE GRILLED JUMBO PRAWNS SOFT SHELL CRAB (Seasonal) PORTUGUESE FRESH GRILLED SARDINES (Seasonal) LOBSTER SALAD, FRESH WARM LOBSTER (For two people) ROMAINE SALAD, HOUSE SAUCE OR GREEK EASTER STYLE GRILLED VEGETABLES, HALOUMI AND MINT YOGURT (For two people) ZUCCHINI FLOWERS STUFFED WITH 3 DIFFERENT CHEESES (Seasonal) DIVERS FRESH SCALLOPS, SAUTÉED FRESH FISH GRILLED, FRIED, POACHED MARKET SELECTION - LINE CAUGHT ONLY Deep Sea Bay of Fundy (NS) Lobster, Carabineros, Dover Sole, Fagri, Tsipoura, Red Snapper, Balada, Lavraki, Pompano, Lethrini, Black Sea Bass, Rofos, Barbouni, Scorpena, Kaponi, Saint Pierre, Emperor and more Sourced by: Kyriakos, Andreas, Noah, Pedro, Orlando, Kostas, David, and Stergios SALT BAKED FISH (Minimum 4 lbs) ACHNISTO Scorpena poached in light tomato sauce, zucchini, fingerlings and fresh herbs (serves two to four people) KAKAVIA Traditional Island fisherman’s soup with Rofos fish, onions, potatoes, olive oil and lemon (serves two to four people) HALIBUT SPETSIOTA Onions and tomatoes BIGEYE TUNA Scordalia and baby beets HIDDENFJORD SALMON Grilled served with Prespes (Northern Greece) piazzi beans and baby fennel salad BAY OF FUNDY (NS) LOBSTER PASTA Athenian-style Astakomakaronada. FLORIDA STONE CRAB (Seasonal) MILOS MEATS 12 oz bone-in Filet Mignon served with hand-cut fries 45 days dry aged bone-in Prime NY Strip 20 oz served with hand-cut fries 45 days dry aged bone-in Prime Ribeye 20 oz served with hand-cut fries 45 days dry aged Prime Côte de Bœuf 40 oz served with fingerling potatoes and roasted vegetables COLORADO LAMB CHOPS Fresh lamb chops, grilled and served with hand-cut fries SIDES GREEK ARTISAN OLIVES SANTORINI FAVA PIAZZI BEANS SLOW-COOKED GIGANTES STEAMED BABY BEETS FINGERLING POTATOES MIXED BROCCOLI, ROMANESCO, CAULIFLOWER HORTA CHICORIA GRILLED SWEET ONIONS HAND-CUT FRIES 3 courses | Available Saturday and Sunday | 12:00 PM to 3:30 PM FIRST COURSE Kindly Select One MEDITERRANEAN FISH SOUP With Lavraki SALMON TARTARE Classic or Truffle oil with crostini and Little Gem Lettuce MILOS OCTOPUS With Fava Santorini capers and extra virgin olive oil CALAMARI Lightly fried served with baby fennel salad TOMATO SALAD The authentic salad prepared with vine-ripened tomatoes BELUGA LENTIL SALAD Balsamic vinaigrette, Balik salmon SECOND COURSE Kindly Select One WHOLE GRILLED DORADO ROYAL (TSIPOURA) Served with steamed broccoli HIDDENFJORD SALMON Grilled served with Prespes (Northern Greece) piazzi beans and baby fennel salad LAMB CHOPS Colorado PRIME lamb chops served with hand-cut fried potatoes ALL NATURAL BEEF FILET MIGNON Served with Greek fried potatoes ASTAKOMAKARONADA (additional) Lobster Pasta Athenian-style THIRD COURSE Kindly Select One UPSTATE NY FARM GREEK STYLE YOGURT With Kythira Island thyme honey and walnuts (optional) OUR FAMOUS HOMEMADE WALNUT PIE (KARYDOPITA) Served with a spoon of lavender ice cream FRESH FRUITS OF THE SEASON Freshly picked by our local farmers A LA CARTE ITEMS SERVED FOR TWO MILOS FRIED SEAFOOD PLATTER Shrimp, calamari, fresh bay scallops, filets of black cod, served with french fries MILOS GRILLED SEAFOOD PLATTER Octopus from lemnos, fresh bay scallops, calamari, shrimp DESSERT SEASON’S PERFECT FRUIT PLATE (Small / Medium / Large) MILOS – THE REAL GREEK YOGURT Local, natural yogurt Greek style served with: Thyme honey from Kythira and walnuts or Traditional Greek spoon sweets BAKLAVA Layered phyllo with almonds GALAKTOBOUREKO Vanilla and lemon zest custard in layered phyllo KARYDOPITA Traditional Greek spiced walnut cake CHOCOLATE MOUSSE CAKE Baked chocolate mousse with sour cherries and vanilla ice cream CHEESECAKE Topped with traditional Greek spoon sweets ICE CREAM AND SORBETS estiatoriomilos 649 At the heart of the Milos table. 73 4 Open post by estiatoriomilos with ID 18202094131384746 At the heart of the Milos table. ... 73 4 From the fish market to the grill, every detail matters. 199 5 Open post by estiatoriomilos with ID 18642120397003172 From the fish market to the grill, every detail matters. ... 199 5 A wine list shaped by discovery, with bottles worth returning to. 81 2 Open post by estiatoriomilos with ID 18163255936494655 A wine list shaped by discovery, with bottles worth returning to. ... 81 2 Mesimeri Executive. A refreshed à la carte menu, exclusively for lunch. Seasonal additions. Milos classics. Served from 11.30am-3.30pm at Milos Midtown and Hudson Yards. 166 8 Open post by estiatoriomilos with ID 17916754377461007 Mesimeri Executive. A refreshed à la carte menu, exclusively for lunch. Seasonal additions. Milos classics. Served from 11.30am-3.30pm at Milos Midtown and Hudson Yards. ... 166 8 Sunday’s at Milos London, the Greek way. 161 2 Open post by estiatoriomilos with ID 18151385224590796 Sunday’s at Milos London, the Greek way. ... 161 2 The London home of Milos. A space shaped by the architecture and character of Greece. 82 6 Open post by estiatoriomilos with ID 18079598105379602 The London home of Milos. A space shaped by the architecture and character of Greece. ... 82 6 Magiatiko sashimi, with a freshness that speaks for itself. 153 8 Open post by estiatoriomilos with ID 18100480097634141 Magiatiko sashimi, with a freshness that speaks for itself. ... 153 8 The making of the Milos signature. Thinly sliced zucchini and eggplant, lightly fried and carefully stacked to create the Milos Special. 869 26 Open post by estiatoriomilos with ID 18354311080172770 The making of the Milos signature. Thinly sliced zucchini and eggplant, lightly fried and carefully stacked to create the Milos Special. ... 869 26 Load More Follow on Instagram STAY CONNECTED WITH MILOS Sign up to receive the latest news and updates from estiatorio Milos. From new restaurant openings and global developments to culinary initiatives, partnerships, and company announcements, stay informed as we continue to grow and evolve. Comments This field is for validation purposes and should be left unchanged. First Name Last Name Email This field is hidden when viewing the form Location Montreal Athens Dubai Las Ventanas Anìma Mexico City Hudson Yards Midtown Miami Beach West Palm Beach Las Vegas Boston Singapore Toronto London Submit About Careers Contact Legal Press English French Greek This site is registered on wpml.org as a development site.",
+      "snippet": "Hudson Yards - Estiatorio Milos --> Skip to Main Content Estiatorio Milos Locations Europe Middle East Asia North America Coming Soon Press Events Milos at Sea Gift Cards Shop Expand sub-menu: Shop Olive Oil Careers Press Reservations Toggle Navigation You are currently in: Choose Location Montreal Athens Dubai Las Ventanas Hudson Yards Midtown Miami Beach West Palm Beach Las Vegas Singapore Toron"
+    }
+  ],
+  "rating": {
+    "primary": 4.8,
+    "primarySource": "opentable",
+    "opentable": 4.8
+  },
+  "reviewCount": {
+    "opentable": 1503
+  },
+  "priceHint": null,
+  "hoursHint": null,
+  "happyHourHint": null,
+  "summaryClaims": [
+    "20 Hudson Yards, Fifth Floor",
+    "Milos' signature fish market showcases the daily catch",
+    "4.2 717 ratings",
+    "an amazing view of Hudson River and Hudson Yards",
+    "4.3 of 5 bubbles",
+    "20 Hudson Yards, Fifth Floor",
+    "offers the matchless seafood of Milos served high up, with unrivaled views of the spectacular sunsets",
+    "4.8 (1503)",
+    "Great place for a business lunch or a date",
+    "the service was somewhat slow",
+    "The prawns had a bad taste but were quite expensive"
+  ],
+  "itineraryNoteCandidate": "Estiatorio Milos Hudson Yards: a glassy Greek seafood room above the Hudson; book a sunset table and try the grilled octopus.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description/reviews each carry their own claims; sources include labelled SERP search snapshots (not live fetches) — see each source's fetchMethod"
+  },
+  "callCounts": {
+    "webSearch": 0,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "fields": {
+    "summary": {
+      "value": "Estiatorio Milos Hudson Yards is a high-end Greek seafood restaurant at 20 Hudson Yards, Fifth Floor, where Milos' signature fish market showcases the daily catch and diners pick their fish. Restaurantji guests rate it 4.2 717 ratings and praise an amazing view of Hudson River and Hudson Yards, while Tripadvisor (search snapshot) shows 4.3 of 5 bubbles. It suits a business lunch, a date or a celebration, with prices to match.",
+      "claims": [
+        {
+          "text": "Milos' signature fish market showcases the daily catch",
+          "sourceUrl": "https://www.opentable.com/r/estiatorio-milos-hudson-yards-new-york"
+        },
+        {
+          "text": "4.2 717 ratings",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/estiatorio-milos-2/"
+        },
+        {
+          "text": "an amazing view of Hudson River and Hudson Yards",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/estiatorio-milos-2/"
+        },
+        {
+          "text": "4.3 of 5 bubbles",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d17327191-Reviews-Estiatorio_Milos-New_York_City_New_York.html"
+        }
+      ]
+    },
+    "description": {
+      "value": "Estiatorio Milos Hudson Yards is a Greek restaurant at 20 Hudson Yards, Fifth Floor. The restaurant offers the matchless seafood of Milos served high up, with unrivaled views of the spectacular sunsets over the Hudson River. Book a sunset table if the view matters. OpenTable diners rate Estiatorio Milos Hudson Yards 4.8 from 1,503 reviews. Tripadvisor travelers (search snapshot) call it Great place for a business lunch or a date, though one July 2026 review said the service was somewhat slow and The prawns had a bad taste but were quite expensive.",
+      "claims": [
+        {
+          "text": "20 Hudson Yards, Fifth Floor",
+          "sourceUrl": "https://www.estiatoriomilos.com/location/nyhudsonyards/"
+        },
+        {
+          "text": "offers the matchless seafood of Milos served high up, with unrivaled views of the spectacular sunsets",
+          "sourceUrl": "https://www.estiatoriomilos.com/location/nyhudsonyards/"
+        },
+        {
+          "text": "4.8 (1503)",
+          "sourceUrl": "https://www.opentable.com/r/estiatorio-milos-hudson-yards-new-york"
+        },
+        {
+          "text": "Great place for a business lunch or a date",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d17327191-Reviews-Estiatorio_Milos-New_York_City_New_York.html"
+        },
+        {
+          "text": "the service was somewhat slow",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d17327191-Reviews-Estiatorio_Milos-New_York_City_New_York.html"
+        },
+        {
+          "text": "The prawns had a bad taste but were quite expensive",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d17327191-Reviews-Estiatorio_Milos-New_York_City_New_York.html"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Estiatorio Milos Hudson Yards: a glassy Greek seafood room above the Hudson; book a sunset table and try the grilled octopus.",
+      "claims": [
+        {
+          "text": "20 Hudson Yards, Fifth Floor",
+          "sourceUrl": "https://www.estiatoriomilos.com/location/nyhudsonyards/"
+        }
+      ]
+    },
+    "reviewsUnstarred": [
+      {
+        "theme": "Business and dates",
+        "value": "Tripadvisor travelers (search snapshot) position Estiatorio Milos Hudson Yards as a Great place for a business lunch or a date, with a view of the Vessel.",
+        "claims": [
+          {
+            "text": "Great place for a business lunch or a date",
+            "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d17327191-Reviews-Estiatorio_Milos-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d17327191-Reviews-Estiatorio_Milos-New_York_City_New_York.html",
+        "rating": "4.8",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 26
+      },
+      {
+        "theme": "Price and consistency",
+        "value": "Watch-outs at Estiatorio Milos Hudson Yards: one Tripadvisor reviewer found the service was somewhat slow and The prawns had a bad taste but were quite expensive.",
+        "claims": [
+          {
+            "text": "the service was somewhat slow",
+            "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d17327191-Reviews-Estiatorio_Milos-New_York_City_New_York.html"
+          },
+          {
+            "text": "The prawns had a bad taste but were quite expensive",
+            "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d17327191-Reviews-Estiatorio_Milos-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d17327191-Reviews-Estiatorio_Milos-New_York_City_New_York.html",
+        "rating": "4.8",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 26
+      }
+    ],
+    "reviewsScope": "Reviews are for Milos Wine Bar, the fifth-floor wine bar inside Estiatorio Milos at 20 Hudson Yards (same address); the restaurant dining room has no saved starred-review page",
+    "happyHour": {
+      "value": false,
+      "claims": [],
+      "note": "Confirmed none: official site (www.estiatoriomilos.com) and saved allowlisted pages state no happy hour.",
+      "status": "none",
+      "checkedSources": [
+        "https://www.estiatoriomilos.com/location/nyhudsonyards/",
+        "https://www.opentable.com/r/estiatorio-milos-hudson-yards-new-york",
+        "https://www.restaurantji.com/ny/new-york/estiatorio-milos-2/",
+        "https://www.tripadvisor.com/Restaurant_Review-g60763-d17327191-Reviews-Estiatorio_Milos-New_York_City_New_York.html",
+        "https://exa.ai/library/place/csnvq52n3q9",
+        "https://www.estiatoriomilos.com/location/nyhudsonyards/menu"
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:05:00-07:00",
+    "writer": "grok-bot"
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.restaurantji.com/ny/new-york/estiatorio-milos-2/",
+    "site": "Restaurantji",
+    "praise": [
+      "an amazing view of Hudson River and Hudson Yards",
+      "We were blown away by the service!",
+      "Great place for a business lunch or a date"
+    ],
+    "watchOuts": [
+      "the service was somewhat slow"
+    ],
+    "complaints": [
+      "the service was somewhat slow"
+    ],
+    "themes": [
+      "Views and octopus",
+      "Service at its best",
+      "Business and dates",
+      "Price and consistency"
+    ],
+    "via": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch not attempted); not a live fetch"
+  },
+  "itineraryNote": "Estiatorio Milos Hudson Yards: a glassy Greek seafood room above the Hudson; book a sunset table and try the grilled octopus.",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "Milos Hudson Yards pairs Mediterranean seafood with sweeping views of the Hudson River and Hudson Yards, and the grilled octopus is a favorite.",
+  "review1Source": "Restaurantji",
+  "review1Rating": "4.8",
+  "review1Theme": "Views and octopus",
+  "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/estiatorio-milos-2/",
+  "review1Stars": 5,
+  "review2": "The service team is the most praised element of the restaurant, with staff described as attentive, polished and knowledgeable, leaving a lasting impression that often outshines even the seafood itself.",
+  "review2Source": "Restaurantji",
+  "review2Rating": "4.8",
+  "review2Theme": "Service at its best",
+  "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/estiatorio-milos-2/",
+  "review2Stars": 5,
+  "review3": "Diners call it a fine choice for business meals or elegant evenings, praising dishes such as the fried calamari alongside the views of the Vessel.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "5/5",
+  "review3Theme": "Food and drinks",
+  "review3SourceUrl": "https://exa.ai/library/place/csnvq52n3q9",
+  "review3Stars": 5,
+  "review4": "An elegant yet welcoming room pairs with fresh, flavorful and beautifully prepared food, while outstanding bar service and smart menu recommendations complete an experience that feels warm and engaging.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Service",
+  "review4SourceUrl": "https://exa.ai/library/place/csnvq52n3q9",
+  "review4Stars": 5,
+  "review1Claims": [
+    "an amazing view of Hudson River and Hudson Yards"
+  ],
+  "review2Claims": [
+    "We were blown away by the service!"
+  ],
+  "review3Claims": [
+    "Lovely view of the Vessel landmarks and city.",
+    "Great spot for business or elegant evening.",
+    "Loved the food and I think the fried calamari was the softest fluffiest delicious fried thing I've ever had!",
+    "2 thumbs up for the fried octopus!",
+    "Stairs and elevators so would say it's accessible as well."
+  ],
+  "review4Claims": [
+    "Had an incredible experience at Milos in Hudson Yards!",
+    "The atmosphere was elegant yet welcoming, and the food was absolutely top-notch—fresh, flavorful, and beautifully prepared.",
+    "But what truly made the night special was the outstanding service from Mario at the bar.",
+    "He was beyond attentive, knowledgeable about the menu, and made the best recommendations.",
+    "His passion for hospitality really stood out, and he created such a warm and engaging experience.",
+    "Whether you’re stopping by for a drink or dining in, Mario’s service elevates the whole experience.",
+    "Will definitely be back!"
+  ],
+  "reviewsLabel": "Representative reviews written from 20 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenOrder": [
+    "happyHour"
+  ],
+  "writtenAt": {
+    "happyHour": "2026-10-30T13:06:00.262645+00:00"
+  },
+  "happyHourSourceUrl": null,
+  "happyHour": false
+}

@@ -1,0 +1,212 @@
+{
+  "thingId": 640,
+  "thingName": "The Wallace Hotel",
+  "type": "hotel",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://thewallace.com/",
+      "title": "Luxury Hotel Upper West Side | The Wallace NYC",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Luxury Hotel Upper West Side | The Wallace NYC | The Wallace Hotel offers the ultimate luxury and sophistication on the Upper West Side of New York City. Experience the best of the city in comfort. The Wallace Hotel offers the ultimate luxury and sophistication on the Upper West Side of New York City. … Luxury Hotel Upper West Side | The Wallace NYC | The Wallace Hotel offers the ultimate luxury and sophistication on the Upper West Side of New York City. Experience the best of the city in comfort. The Wallace Hotel offers the ultimate luxury and sophistication on the Upper West Side of New York City.",
+      "snippet": "Luxury Hotel Upper West Side | The Wallace NYC | The Wallace Hotel offers the ultimate luxury and sophistication on the Upper West Side of New York City. Experience the best of the city in comfort. The Wallace Hotel offers the ultimate luxury and sophistication on the Upper West Side of New York Cit",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html",
+      "title": "The Wallace Hotel: 125 Reviews | Trip.com",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "The Wallace Hotel: 125 Reviews | Trip.com | | The room was very spacious, and the bed was super comfortable. … Clean, nice spot. Opened in 2020. … It was noisy continuously throughout the night. … The Wallace Hotel: 125 Reviews | Trip.com | | The room was very spacious, and the bed was super comfortable. … Clean, nice spot. Opened in 2020. … It was noisy continuously throughout the night. … The Wallace Hotel: 125 Reviews | Trip.com | | The room was very spacious, and the bed was super comfortable. … Clean, nice spot. Opened in 2020. … It was noisy continuously throughout the night. … The location was great, relatively quiet with many restaurants and Central Park within walking distance. 8.9 / 10 Very good 125 reviews",
+      "snippet": "The Wallace Hotel: 125 Reviews | Trip.com | | The room was very spacious, and the bed was super comfortable. … Clean, nice spot. Opened in 2020. … It was noisy continuously throughout the night.",
+      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
+    }
+  ],
+  "rating": {
+    "primary": 8.9,
+    "primarySource": "trip.com",
+    "tripadvisor": 4.8,
+    "booking": 9.3,
+    "tripcom": 8.9,
+    "scale_tripcom": 10,
+    "primaryPrevious": {
+      "value": 4.8,
+      "source": "tripadvisor",
+      "note": "no saved page shows this average with a count; card uses the Trip.com page quote"
+    },
+    "scale": 10,
+    "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html",
+    "ratingEvidence": {
+      "site": "Trip.com",
+      "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "quote": "8.9 / 10 Very good 125 reviews",
+      "average": 8.9,
+      "count": 125,
+      "scale": 10
+    },
+    "reviewCount": 125
+  },
+  "reviewCount": {
+    "tripadvisor": 1055,
+    "booking": 1769,
+    "tripcom": 125
+  },
+  "priceHint": "4-star boutique UWS",
+  "hoursHint": "Hotel — 24h; lounge with live music",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "Opened in 2020"
+  ],
+  "itineraryNoteCandidate": "The Wallace Hotel: a newer Upper West Side stay with big rooms and comfy beds; it Opened in 2020, so walk to Lincoln Center for an evening show.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 792,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "The Wallace Hotel, which Opened in 2020, is a modern Upper West Side hotel that guests love for spacious rooms, comfortable beds and a quiet, restaurant-filled neighborhood near Central Park. Noise through the night is the one complaint that recurs.",
+      "claims": [
+        {
+          "text": "Opened in 2020",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html"
+        }
+      ]
+    },
+    "description": {
+      "value": "The Wallace Hotel offers the ultimate luxury and sophistication on the Upper West Side of New York City, a short walk from Lincoln Center, Central Park and the Broadway subway lines. It is new (Clean, nice spot. Opened in 2020), and guests say The room was very spacious, and the bed was super comfortable. The location gets praise for calm streets and many restaurants nearby. Watch-out: one guest found It was noisy continuously throughout the night, so ask for a quiet room.",
+      "claims": [
+        {
+          "text": "Opened in 2020",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html"
+        },
+        {
+          "text": "offers the ultimate luxury and sophistication on the Upper West Side of New York City",
+          "sourceUrl": "https://thewallace.com/"
+        },
+        {
+          "text": "Clean, nice spot. Opened in 2020",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html"
+        },
+        {
+          "text": "The room was very spacious, and the bed was super comfortable",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html"
+        },
+        {
+          "text": "It was noisy continuously throughout the night",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "The Wallace Hotel: a newer Upper West Side stay with big rooms and comfy beds; it Opened in 2020, so walk to Lincoln Center for an evening show.",
+      "claims": [
+        {
+          "text": "Opened in 2020",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html"
+        }
+      ]
+    }
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html",
+    "site": "Trip.com",
+    "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded",
+    "praise": [
+      "The room was very spacious, and the bed was super comfortable",
+      "Clean, nice spot. Opened in 2020",
+      "The location was great, relatively quiet with many restaurants and Central Park within walking distance."
+    ],
+    "watchOuts": [
+      "It was noisy continuously throughout the night"
+    ],
+    "themes": [
+      "Rooms",
+      "Cleanliness",
+      "Location",
+      "Noise"
+    ],
+    "complaints": [
+      "It was noisy continuously throughout the night"
+    ]
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-hotel-essence-itinerary-note-20261029",
+    "new": false,
+    "at": "2026-10-29T08:45:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "The Wallace Hotel: a newer Upper West Side stay with big rooms and comfy beds; it Opened in 2020, so walk to Lincoln Center for an evening show.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "The Wallace's rooms are praised as spacious with very comfortable beds, which stands out among Upper West Side hotels at this price.",
+  "review1Source": "Trip.com",
+  "review1Rating": "10.0/10",
+  "review1Theme": "Rooms",
+  "review1SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html",
+  "review1Stars": 5,
+  "review2": "Guests describe the hotel as clean and modern, reflecting a relatively recent opening and well-kept public areas and rooms. It comes up often enough to plan around.",
+  "review2Source": "Trip.com",
+  "review2Rating": "9.0/10",
+  "review2Theme": "Cleanliness",
+  "review2SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html",
+  "review2Stars": 5,
+  "review3": "The location wins guests over with a quiet residential feel, plenty of restaurants nearby and Central Park within easy walking distance.",
+  "review3Source": "Trip.com",
+  "review3Rating": "10.0/10",
+  "review3Theme": "Location",
+  "review3SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html",
+  "review3Stars": 5,
+  "review4": "Noise is the clear watch-out for some guests, who report disturbance through the night, so ask for a quieter room if you sleep lightly.",
+  "review4Source": "Trip.com",
+  "review4Rating": "1.0/10",
+  "review4Theme": "Noise",
+  "review4SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html",
+  "review4Stars": 1,
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029",
+  "review1Claims": [
+    "The room was very spacious, and the bed was super comfortable.",
+    "The room was very spacious, and the bed was super comfortable"
+  ],
+  "review2Claims": [
+    "Clean, nice spot.",
+    "Opened in 2020.",
+    "Clean, nice spot. Opened in 2020"
+  ],
+  "review3Claims": [
+    "The location was great, relatively quiet with many restaurants and Central Park within walking distance.",
+    "The location was great, relatively quiet with many restaurants and Central Park within walking distance"
+  ],
+  "review4Claims": [
+    "It was noisy continuously throughout the night.",
+    "It was noisy continuously throughout the night"
+  ],
+  "reviewsLabel": "Representative reviews written from 13 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
+}

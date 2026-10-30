@@ -1,0 +1,215 @@
+{
+  "thingId": "694",
+  "thingName": "The Jazz Club at Aman New York",
+  "type": "attraction",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.aman.com/hotels/aman-new-york/dining",
+      "title": "Private dining & rooftop bar in Manhattan - Aman New York",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "ri. Celebrating the traditions of rustic Italian and Japanese “washoku” preparation with seasonal flare, Arva and Akari sit alongside the Lounge Bar, subterranean Jazz Club and a collection of alfresco dining terraces. ​​ Aman New York’s culinary destinations, in the heart of NYC's Midtown, are currently open to hotel gu …  with signature Aman restaurants Arva and Akari. Celebrating the traditions of rustic Italian and Japanese “washoku” preparation with seasonal flare, Arva and Akari sit alongside the Lounge Bar, subterranean Jazz Club and a collection of alfresco dining terraces. ​​ Aman New York’s culinary destinations, in the heart of NYC's Midtown, are currently open to hotel gu",
+      "snippet": "ri. Celebrating the traditions of rustic Italian and Japanese “washoku” preparation with seasonal flare, Arva and Akari sit alongside the Lounge Bar, subterranean Jazz Club and a collection of alfresco dining terraces. ​​ Aman New York’s culinary destinations, in the heart of NYC's Midtown, are curr",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.aman.com/hotels/aman-new-york",
+      "title": "Luxury Hotel & Spa, Fifth Avenue, Manhattan - Aman New York",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "ating design, exclusivity and collection of private spaces. Discover more Since 1921, the Crown Building has presided over the midpoint of Manhattan; the corner of Fifth Avenue and 57th Street. Formerly the first home of the Museum of Modern Art, the over 100-year-old building has undergone a monumental transformation, which has seen it ful",
+      "snippet": "ating design, exclusivity and collection of private spaces. Discover more Since 1921, the Crown Building has presided over the midpoint of Manhattan; the corner of Fifth Avenue and 57th Street. Formerly the first home of the Museum of Modern Art, the over 100-year-old building has undergone a monume",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://exa.ai/library/place/8t7j7x9qnkg",
+      "text": "The Jazz Club at Aman New York | Exa | Jazz and Blues Venue 4.4 (190 reviews) … The drinks were the best I've had in NYC and for over $30 a drink, they better be. … Price Point $$$$$ Staff was very good, service was exceptional. … The private \"members only\" club is beautiful and sophisticated. … We had issues with our table, and they were accommodating and let us table hop to find the perfect spot. This exclusive jazz club with a speakeasy vibe in the heart of Manhattan offers live music and attracts a more mature crowd, yet the vibe stays lively and fun with plenty of people dancing. The drinks are unique, complex, and beautifully crafted, but perhaps a little too complex for me personally. They also check names and reservations before you can even enter the building.",
+      "title": "Exa place listing reviews",
+      "via": "live curl fetch 2026-10-29 of Exa place listing (4.4, 190 reviews; 8 dated guest excerpts); verbatim review sentences only",
+      "fetchedAt": "2026-10-29T09:07:05-07:00",
+      "fetchMethod": "live curl 2026-10-29; saved r7/raw/694.html"
+    }
+  ],
+  "rating": {
+    "primary": 4.4,
+    "primarySource": "exa-place-aggregate",
+    "aggregate": 4.4
+  },
+  "reviewCount": {
+    "aggregate": 190
+  },
+  "priceHint": null,
+  "hoursHint": null,
+  "happyHourHint": null,
+  "summaryClaims": [
+    "subterranean Jazz Club"
+  ],
+  "itineraryNoteCandidate": "The Jazz Club at Aman New York: a hushed luxury hideaway at the corner of Fifth Avenue and 57th Street; book a late cocktail in the subterranean Jazz Club.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 0,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "fields": {
+    "summary": {
+      "value": "The Jazz Club at Aman New York is a hushed, speakeasy-style hideaway under the Crown Building where excellent cocktails, gracious service and live music come at a luxury price. Staff move guests to better tables when asked, and the subterranean Jazz Club suits a special late evening rather than a casual drop-in.",
+      "claims": [
+        {
+          "text": "subterranean Jazz Club",
+          "sourceUrl": "https://www.aman.com/hotels/aman-new-york/dining"
+        }
+      ]
+    },
+    "description": {
+      "value": "The Jazz Club at Aman New York is a subterranean jazz venue inside the hotel. Aman says Arva and Akari sit alongside the Lounge Bar, subterranean Jazz Club and a collection of alfresco dining terraces. The hotel occupies the Crown Building on the corner of Fifth Avenue and 57th Street; since 1921 it has stood there, and it was formerly the first home of the Museum of Modern Art. Reviews describe a speakeasy-style room with live music and dancing, cocktails ranked among the best in the city at top-tier prices, and exceptional service that helps guests find a better table.",
+      "claims": [
+        {
+          "text": "Arva and Akari sit alongside the Lounge Bar, subterranean Jazz Club",
+          "sourceUrl": "https://www.aman.com/hotels/aman-new-york/dining"
+        },
+        {
+          "text": "the corner of Fifth Avenue and 57th Street",
+          "sourceUrl": "https://www.aman.com/hotels/aman-new-york"
+        },
+        {
+          "text": "Since 1921, the Crown Building has presided over the midpoint of Manhattan",
+          "sourceUrl": "https://www.aman.com/hotels/aman-new-york"
+        },
+        {
+          "text": "Formerly the first home of the Museum of Modern Art",
+          "sourceUrl": "https://www.aman.com/hotels/aman-new-york"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "The Jazz Club at Aman New York: a hushed luxury hideaway at the corner of Fifth Avenue and 57th Street; book a late cocktail in the subterranean Jazz Club.",
+      "claims": [
+        {
+          "text": "the corner of Fifth Avenue and 57th Street",
+          "sourceUrl": "https://www.aman.com/hotels/aman-new-york"
+        },
+        {
+          "text": "subterranean Jazz Club",
+          "sourceUrl": "https://www.aman.com/hotels/aman-new-york/dining"
+        }
+      ]
+    },
+    "reviewsUnstarred": [
+      {
+        "theme": "Overall experience",
+        "value": "Exa place listing reviewer on The Jazz Club at Aman New York: The private \"members only\" club is beautiful and sophisticated. Keep that in mind when choosing timing, a room, or an arrival plan.",
+        "claims": [
+          {
+            "text": "The private \"members only\" club is beautiful and sophisticated.",
+            "sourceUrl": "https://exa.ai/library/place/8t7j7x9qnkg"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/8t7j7x9qnkg",
+        "rating": "4.4/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 34
+      }
+    ],
+    "happyHour": {
+      "value": null,
+      "claims": [],
+      "note": "Jazz club inside Aman: HH not required per Craig rule; Aman dining pages state no happy hour.",
+      "status": "na",
+      "checkedSources": [
+        "https://www.aman.com/hotels/aman-new-york/dining",
+        "https://www.aman.com/hotels/aman-new-york",
+        "https://exa.ai/library/place/8t7j7x9qnkg"
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "The Jazz Club at Aman New York: a hushed luxury hideaway at the corner of Fifth Avenue and 57th Street; book a late cocktail in the subterranean Jazz Club.",
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://exa.ai/library/place/8t7j7x9qnkg",
+    "site": "Exa place listing",
+    "via": "live curl fetch 2026-10-29 of Exa place listing (4.4, 190 reviews; 8 dated guest excerpts); verbatim review sentences only",
+    "praise": [
+      "The drinks were the best I've had in NYC and for over $30 a drink, they better be.",
+      "Price Point $$$$$ Staff was very good, service was exceptional.",
+      "The private \"members only\" club is beautiful and sophisticated."
+    ],
+    "watchOuts": [
+      "We had issues with our table, and they were accommodating and let us table hop to find the perfect spot."
+    ],
+    "themes": [
+      "Breakfast and dining",
+      "Service",
+      "Overall experience",
+      "Overall experience"
+    ],
+    "complaints": [
+      "We had issues with our table, and they were accommodating and let us table hop to find the perfect spot."
+    ]
+  },
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "The Jazz Club at Aman serves some of the best cocktails in the city, unique and beautifully crafted, though at very high prices that start well above thirty dollars a drink.",
+  "review1Source": "Exa place listing",
+  "review1Rating": "4.4/5",
+  "review1Theme": "Breakfast and dining",
+  "review1SourceUrl": "https://exa.ai/library/place/8t7j7x9qnkg",
+  "review1Stars": 4,
+  "review2": "Service is consistently described as exceptional, with very good staff whose polish matches the club's top-tier price point and luxury positioning inside the Aman hotel on Fifth Avenue.",
+  "review2Source": "Exa place listing",
+  "review2Rating": "4.4/5",
+  "review2Theme": "Service",
+  "review2SourceUrl": "https://exa.ai/library/place/8t7j7x9qnkg",
+  "review2Stars": 5,
+  "review3": "Staff respond well when a table is not ideal, accommodating requests and letting guests move around until they find a better spot, which keeps the evening relaxed even on busy nights.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "4.4/5",
+  "review3Theme": "Overall experience",
+  "review3SourceUrl": "https://exa.ai/library/place/8t7j7x9qnkg",
+  "review3Stars": 4,
+  "review4": "The speakeasy-style club offers lively live music and dancing for a more mature crowd in a sophisticated setting, with names and reservations checked before entry to the building.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "4/5",
+  "review4Theme": "Music",
+  "review4SourceUrl": "https://exa.ai/library/place/8t7j7x9qnkg",
+  "review4Stars": 4,
+  "review1Claims": [
+    "The drinks were the best I've had in NYC and for over $30 a drink, they better be.",
+    "The drinks were the best I've had in NYC and for over $30 a drink, they better be"
+  ],
+  "review2Claims": [
+    "Price Point $$$$$ Staff was very good, service was exceptional.",
+    "Price Point $$$$$ Staff was very good, service was exceptional"
+  ],
+  "review3Claims": [
+    "We had issues with our table, and they were accommodating and let us table hop to find the perfect spot.",
+    "We had issues with our table, and they were accommodating and let us table hop to find the perfect spot"
+  ],
+  "review4Claims": [
+    "This exclusive jazz club with a speakeasy vibe in the heart of Manhattan offers live music and attracts a more mature crowd, yet the vibe stays lively and fun with plenty of people dancing.",
+    "The drinks are unique, complex, and beautifully crafted, but perhaps a little too complex for me personally.",
+    "They also check names and reservations before you can even enter the building."
+  ],
+  "reviewsLabel": "Representative reviews written from 14 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenAt": {
+    "happyHour": "2026-10-30T13:06:00.262645+00:00"
+  },
+  "writtenOrder": [
+    "happyHour"
+  ],
+  "happyHourSourceUrl": null,
+  "happyHour": null
+}

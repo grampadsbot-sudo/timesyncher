@@ -1,0 +1,110 @@
+{
+  "thingId": 657,
+  "thingName": "Flight option: Southwest LAS-LGA 2026-06-23 11:30-22:25",
+  "type": "flight",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york",
+      "title": "Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "es by day and time to fly Las Vegas to New York (LaGuardia) with Southwest, check out our Low Fare Calendar . Can I rent a car at La Guardia Airport? You can rent a car at La Guardia Airport book yours with your flight . Can I change my flight reservation for my flight from Las Vegas to New York (LaGuardia)? Yes! Flights from Las Vegas to … Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines | Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel or rental ca … ind the most updated fare, please visit Southwest.com . Fares listed are Basic, which are subject to additional terms and conditions . Flight Details Departing from: McCarran International Airport Arriving at: La Guardia Airport Distance: 2242 miles Questions we hear the most How many Southwest flights occur weekly from Las Vegas to New York (LaGuardia)? There are 152 weekly flights from Las Vega … ere— can be changed with no change fees . Fare difference may apply. Where can I find the status of my flight from Las Vegas to New York (LaGuardia)? Check the status of your upcoming Southwest flight. Where can I find answers to other questions about flying with Southwest? Check out the Southwest Airlines ® Help Center for answers about everything … oducts and services may apply. Modifying this information may result in a different fare. To find the most updated fare, please visit Southwest.com . Fares listed are Basic, which are subject to additional terms and conditions . Flight Details Departing from: McCarran International Airport Arriving at: La Guardia Airport Distance: 2242 miles Questions we hear the most How m … to New York (LaGuardia)? Check the status of your upcoming Southwest flight. Where can I find answers to other questions about flying with Southwest? Check out the Southwest Airlines ® Help Center for answers about everything Southwest. Explore Flights from Other Popular Origins Flights from Chicago-Midway Flights from Atlanta Flights from Dallas-Love Field Flights from Houston Hobb",
+      "snippet": "es by day and time to fly Las Vegas to New York (LaGuardia) with Southwest, check out our Low Fare Calendar . Can I rent a car at La Guardia Airport? You can rent a car at La Guardia Airport book yours with your flight . Can I change my flight reservation for my flight from Las Vegas to New York (La",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    }
+  ],
+  "rating": null,
+  "reviewCount": null,
+  "priceHint": "Inventory/list price $194",
+  "hoursHint": null,
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "Check the status of your upcoming Southwest flight",
+    "You can rent a car at La Guardia Airport",
+    "2242 miles",
+    "You can rent a car at La Guardia Airport",
+    "Fares listed are Basic, which are subject to additional terms and conditions",
+    "Check the status of your upcoming Southwest flight"
+  ],
+  "itineraryNoteCandidate": "Flight option: Southwest LAS-LGA 2026-06-23 11:30-22:25: a late arrival; check flight status on the day (Check the status of your upcoming Southwest flight).",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 194,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 4,
+  "baseFieldScore": 2,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Southwest's 11:30 departure on June 23, Flight option: Southwest LAS-LGA 2026-06-23 11:30-22:25, lands at 22:25, and you can rent a car at La Guardia Airport. The route is 2242 miles, and the fares shown are Basic, so check the extra conditions.",
+      "claims": [
+        {
+          "text": "You can rent a car at La Guardia Airport",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "2242 miles",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        }
+      ]
+    },
+    "description": {
+      "value": "Southwest's late-morning departure, Flight option: Southwest LAS-LGA 2026-06-23 11:30-22:25, flies Las Vegas to New York LaGuardia, a route of 2242 miles. Leaving at 11:30 allows a relaxed final morning in Las Vegas, and the 22:25 Eastern arrival makes it a late night, so a car helps, and You can rent a car at La Guardia Airport. Southwest notes that Fares listed are Basic, which are subject to additional terms and conditions. On travel day you can Check the status of your upcoming Southwest flight.",
+      "claims": [
+        {
+          "text": "2242 miles",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "You can rent a car at La Guardia Airport",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "Fares listed are Basic, which are subject to additional terms and conditions",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "Check the status of your upcoming Southwest flight",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Flight option: Southwest LAS-LGA 2026-06-23 11:30-22:25: a late arrival; check flight status on the day (Check the status of your upcoming Southwest flight).",
+      "claims": [
+        {
+          "text": "Check the status of your upcoming Southwest flight",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Flight option: Southwest LAS-LGA 2026-06-23 11:30-22:25: a late arrival; check flight status on the day (Check the status of your upcoming Southwest flight)."
+}

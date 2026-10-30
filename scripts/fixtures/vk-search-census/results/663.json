@@ -1,0 +1,285 @@
+{
+  "thingId": 663,
+  "thingName": "Dizzy’s Club / Jazz at Lincoln Center",
+  "type": "attraction",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://jazz.org/dizzys/dizzys-faq/",
+      "title": "Dizzy’s FAQ | Jazz at Lincoln Center",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "at Lincoln Center Dizzy’s Club is located within Jazz at Lincoln Center, inside the Deutsche Bank Center. We encourage purchasing tickets in advance. Broadway at 60th Street, 5th Floor New York, NY 10019 VIEW SETS VIEW MENU Will food and beverage be available for my performance? A curated food and beverage menu will be available for … at Lincoln Center Dizzy’s Club is located within Jazz at Lincoln Center, inside the Deutsche Bank Center. We encourage purchasing tickets in advance. Broadway at 60th Street, 5th Floor New York, NY 10019 VIEW SETS VIEW MENU Will food and beverage be available for my performance? A curated food and beverage menu will be available for … or sold out sets, we have a standby list for walk-ups, so you may still be able to get in to see the show. Is there a food and beverage minimum? Yes, there is a food and beverage minimum of $25 per person, per set. What time does the club open? The Club opens at 6pm for dinner service for the 7:00pm set. It opens at 8:30pm for the 9:00pm set. On Sundays, the Cl",
+      "snippet": "at Lincoln Center Dizzy’s Club is located within Jazz at Lincoln Center, inside the Deutsche Bank Center. We encourage purchasing tickets in advance. Broadway at 60th Street, 5th Floor New York, NY 10019 VIEW SETS VIEW MENU Will food and beverage be available for my performance? A curated food and b",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com/Attraction_Review-g60763-d616668-Reviews-Dizzy_s_Club-New_York_City_New_York.html",
+      "title": "Dizzy's Club - All You SHOULD Know Before Going (2026 Reviews)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Dizzy's Club - All You SHOULD Know Before Going (2026 Reviews) | | Dizzys Jazz Club is a fantastic beautiful venue, overlooking Central Park … The Dizzy Gillespie tribute was wonderful … great music, evening spoiled by management … Good music, garbage food. … 4.5 Very Good … Dizzy's Club - All You SHOULD Know Before Going (2026 Reviews) | | Dizzys Jazz Club is a fantastic beautiful venue, overlooking Central Park … The Dizzy Gillespie tribute was wonderful … great music, evening spoiled by management … Good music, garbage food. … 4.5 Very Good … fore Going (2026 Reviews) | | Dizzys Jazz Club is a fantastic beautiful venue, overlooking Central Park … The Dizzy Gillespie tribute was wonderful … great music, evening spoiled by management … Good music, garbage food. … 4.5 Very Good … b is a fantastic beautiful venue, overlooking Central Park … The Dizzy Gillespie tribute was wonderful … great music, evening spoiled by management … Good music, garbage food. … 4.5 Very Good … enue, overlooking Central Park … The Dizzy Gillespie tribute was wonderful … great music, evening spoiled by management … Good music, garbage food. … 4.5 Very Good",
+      "snippet": "Dizzy's Club - All You SHOULD Know Before Going (2026 Reviews) | | Dizzys Jazz Club is a fantastic beautiful venue, overlooking Central Park … The Dizzy Gillespie tribute was wonderful … great music, evening spoiled by management … Good music, garbage food. … 4.5 Very Good",
+      "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch"
+    },
+    {
+      "url": "https://exa.ai/library/place/2c9y5y3vgly",
+      "title": "Dizzy’s Club / Jazz at Lincoln Center reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:19:12-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_2c9y5y3vgly.html",
+      "text": "The best time! We love jazz so we enjoyed the show very much with a bottle of wine! We were pleasantly surprised by the food. It was delicious. I recommend the branzino! Have been here a couple times as a tourist in my own city to see world-class jazz musicians take the stage and remind us that everything is better with 9 artists vibing and improv’ing the standards together. This time it was the incredible bassist Carlos Enriquez and his nonet plaiting Nuyorican jazz and it was the perfect way to close out the year. Definitely recommend it for a legendary vibe. Owens' performance, I would say she is now a full-blown jazz enthusiast. It was worth it to come here just to see her eyes glued on the band for the entire hour+ performance. She could not get enough of the incredible live music, solos, improvising, etc. What an experience for us both. I loved the music just as much, but had never been to Dizzy's. The backdrop view of Central Park, Columbus Circle, and the NYC skyline Pasta tasted as if it was blanched in tomato water and crab cakes were too salty. Great jazz band though, Recommend you only come for drinks and music"
+    }
+  ],
+  "rating": {
+    "primary": 4.5,
+    "primarySource": "tripadvisor",
+    "tripadvisor": 4.5
+  },
+  "reviewCount": {
+    "tripadvisor": 880
+  },
+  "priceHint": "~$60 + $25 F&B minimum; student $15–$25",
+  "hoursHint": "Mon–Sat sets 7 & 9pm; Sun 5 & 7:30pm; late night Thu–Sat 10:45pm (Dizzy's FAQ)",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "Broadway at 60th Street, 5th Floor",
+    "there is a food and beverage minimum of $25 per person, per set"
+  ],
+  "itineraryNoteCandidate": "Dizzy’s Club / Jazz at Lincoln Center: world-class sets with Central Park behind the band at Broadway at 60th Street, 5th Floor; come for music and drinks, go light on food.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 1
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 1 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 50,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Dizzy’s Club / Jazz at Lincoln Center is the jazz club on Broadway at 60th Street, 5th Floor, where reviews keep returning to world-class musicians in an intimate room with Central Park behind the band. Food draws mixed verdicts, so many treat it as a drinks-and-music night, and there is a food and beverage minimum of $25 per person, per set.",
+      "claims": [
+        {
+          "text": "Broadway at 60th Street, 5th Floor",
+          "sourceUrl": "https://jazz.org/dizzys/dizzys-faq/"
+        },
+        {
+          "text": "there is a food and beverage minimum of $25 per person, per set",
+          "sourceUrl": "https://jazz.org/dizzys/dizzys-faq/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Dizzy’s Club / Jazz at Lincoln Center is a jazz club inside the Deutsche Bank Center at Broadway at 60th Street, 5th Floor. The FAQ says there is a food and beverage minimum of $25 per person, per set. Large windows look out over Central Park behind the band. Tripadvisor shows 4.5 Very Good. Representative Tripadvisor praise (search snapshot): “Dizzys Jazz Club is a fantastic beautiful venue, overlooking Central Park”; “The Dizzy Gillespie tribute was wonderful”. Representative watch-outs: “great music, evening spoiled by management”; “Good music, garbage food”.",
+      "claims": [
+        {
+          "text": "Broadway at 60th Street, 5th Floor",
+          "sourceUrl": "https://jazz.org/dizzys/dizzys-faq/"
+        },
+        {
+          "text": "there is a food and beverage minimum of $25 per person, per set",
+          "sourceUrl": "https://jazz.org/dizzys/dizzys-faq/"
+        },
+        {
+          "text": "Dizzys Jazz Club is a fantastic beautiful venue, overlooking Central Park",
+          "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d616668-Reviews-Dizzy_s_Club-New_York_City_New_York.html"
+        },
+        {
+          "text": "The Dizzy Gillespie tribute was wonderful",
+          "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d616668-Reviews-Dizzy_s_Club-New_York_City_New_York.html"
+        },
+        {
+          "text": "great music, evening spoiled by management",
+          "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d616668-Reviews-Dizzy_s_Club-New_York_City_New_York.html"
+        },
+        {
+          "text": "Good music, garbage food",
+          "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d616668-Reviews-Dizzy_s_Club-New_York_City_New_York.html"
+        },
+        {
+          "text": "4.5 Very Good",
+          "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d616668-Reviews-Dizzy_s_Club-New_York_City_New_York.html"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Dizzy’s Club / Jazz at Lincoln Center: world-class sets with Central Park behind the band at Broadway at 60th Street, 5th Floor; come for music and drinks, go light on food.",
+      "claims": [
+        {
+          "text": "Broadway at 60th Street, 5th Floor",
+          "sourceUrl": "https://jazz.org/dizzys/dizzys-faq/"
+        }
+      ]
+    },
+    "reviewsUnstarred": [
+      {
+        "theme": "Location",
+        "value": "Tripadvisor reviewer on Dizzy’s Club / Jazz at Lincoln Center: Dizzys Jazz Club is a fantastic beautiful venue, overlooking Central Park. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "Dizzys Jazz Club is a fantastic beautiful venue, overlooking Central Park",
+            "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d616668-Reviews-Dizzy_s_Club-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d616668-Reviews-Dizzy_s_Club-New_York_City_New_York.html",
+        "rating": "4.5/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 36
+      },
+      {
+        "theme": "Overall experience",
+        "value": "Tripadvisor reviewer on Dizzy’s Club / Jazz at Lincoln Center: The Dizzy Gillespie tribute was wonderful. Worth weighing alongside the overall 4.5/5 score before locking in the plan.",
+        "claims": [
+          {
+            "text": "The Dizzy Gillespie tribute was wonderful",
+            "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d616668-Reviews-Dizzy_s_Club-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d616668-Reviews-Dizzy_s_Club-New_York_City_New_York.html",
+        "rating": "4.5/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 28
+      },
+      {
+        "theme": "Breakfast and dining",
+        "value": "Tripadvisor reviewer on Dizzy’s Club / Jazz at Lincoln Center: Good music, garbage food. Keep that in mind when choosing timing, a room, or an arrival plan.",
+        "claims": [
+          {
+            "text": "Good music, garbage food",
+            "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d616668-Reviews-Dizzy_s_Club-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d616668-Reviews-Dizzy_s_Club-New_York_City_New_York.html",
+        "rating": "4.5/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 27
+      },
+      {
+        "theme": "Overall experience",
+        "value": "Tripadvisor reviewer on Dizzy’s Club / Jazz at Lincoln Center: great music, evening spoiled by management. A practical point to factor into the decision before the trip.",
+        "claims": [
+          {
+            "text": "great music, evening spoiled by management",
+            "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d616668-Reviews-Dizzy_s_Club-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d616668-Reviews-Dizzy_s_Club-New_York_City_New_York.html",
+        "rating": "4.5/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 27
+      }
+    ]
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.tripadvisor.com/Attraction_Review-g60763-d616668-Reviews-Dizzy_s_Club-New_York_City_New_York.html",
+    "site": "Tripadvisor",
+    "via": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch",
+    "praise": [
+      "Dizzys Jazz Club is a fantastic beautiful venue, overlooking Central Park",
+      "The Dizzy Gillespie tribute was wonderful",
+      "Good music, garbage food",
+      "great music, evening spoiled by management"
+    ],
+    "watchOuts": [],
+    "themes": [
+      "Location",
+      "Overall experience",
+      "Breakfast and dining",
+      "Overall experience"
+    ],
+    "complaints": []
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Dizzy’s Club / Jazz at Lincoln Center: world-class sets with Central Park behind the band at Broadway at 60th Street, 5th Floor; come for music and drinks, go light on food.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "Dizzy's Club pairs excellent jazz with a beautiful setting overlooking Central Park, and the food can be a pleasant surprise, with dishes like the branzino singled out as worth ordering.",
+  "review1Source": "Exa place listing",
+  "review1Rating": "5/5",
+  "review1Theme": "Food and drinks",
+  "review1SourceUrl": "https://exa.ai/library/place/2c9y5y3vgly",
+  "review1Stars": 5,
+  "review2": "The club regularly books world-class musicians, including large ensembles improvising on the standards, creating memorable performances in an intimate room that works especially well for a special night out.",
+  "review2Source": "Exa place listing",
+  "review2Rating": "5/5",
+  "review2Theme": "Music",
+  "review2SourceUrl": "https://exa.ai/library/place/2c9y5y3vgly",
+  "review2Stars": 5,
+  "review3": "First-time jazz fans are often captivated by the live music, making it a strong pick for introducing guests to jazz.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "5/5",
+  "review3Theme": "Music",
+  "review3SourceUrl": "https://exa.ai/library/place/2c9y5y3vgly",
+  "review3Stars": 5,
+  "review4": "Food is inconsistent, with some pasta and crab cake dishes criticized for blandness or saltiness, so going mainly for drinks and the excellent jazz band is the safer approach.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "3/5",
+  "review4Theme": "Music",
+  "review4SourceUrl": "https://exa.ai/library/place/2c9y5y3vgly",
+  "review4Stars": 3,
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029",
+  "review1Claims": [
+    "We love jazz so we enjoyed the show very much with a bottle of wine!",
+    "We were pleasantly surprised by the food.",
+    "It was delicious.",
+    "I recommend the branzino!"
+  ],
+  "review2Claims": [
+    "Have been here a couple times as a tourist in my own city to see world-class jazz musicians take the stage and remind us that everything is better with 9 artists vibing and improv’ing the standards together.",
+    "This time it was the incredible bassist Carlos Enriquez and his nonet plaiting Nuyorican jazz and it was the perfect way to close out the year.",
+    "Definitely recommend it for a legendary vibe."
+  ],
+  "review3Claims": [
+    "Owens' performance, I would say she is now a full-blown jazz enthusiast.",
+    "It was worth it to come here just to see her eyes glued on the band for the entire hour+ performance.",
+    "She could not get enough of the incredible live music, solos, improvising, etc.",
+    "What an experience for us both.",
+    "I loved the music just as much, but had never been to Dizzy's.",
+    "The backdrop view of Central Park, Columbus Circle, and the NYC skyline"
+  ],
+  "review4Claims": [
+    "Pasta tasted as if it was blanched in tomato water and crab cakes were too salty.",
+    "Great jazz band though, Recommend you only come for drinks and music"
+  ],
+  "reviewsLabel": "Representative reviews written from 23 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenAt": {
+    "reviews": "2026-10-29T20:22:18.188033+00:00"
+  },
+  "writtenOrder": [
+    "reviews"
+  ]
+}

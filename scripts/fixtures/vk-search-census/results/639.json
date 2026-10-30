@@ -1,0 +1,203 @@
+{
+  "thingId": 639,
+  "thingName": "Library Hotel by Library Hotel Collection",
+  "type": "hotel",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.libraryhotel.com/",
+      "title": "Library Hotel New York City | OFFICIAL SITE | Boutique Hotel Manhattan",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "otel Meetings & Events Meeting Rooms Weddings & Elopements Request a Proposal Gallery Location Map Parking & Transportation Contact Us (212) 983-4500 299 Madison Ave, at E.41st Street New York City 10017 Menu BOOK YOUR STAY Overview Petite Room with One Full Bed Deluxe Room with One Queen Bed Deluxe Queen Accessible with Roll In Shower Deluxe Room wit … otel Meetings & Events Meeting Rooms Weddings & Elopements Request a Proposal Gallery Location Map Parking & Transportation Contact Us (212) 983-4500 299 Madison Ave, at E.41st Street New York City 10017 Menu BOOK YOUR STAY Overview Petite Room with One Full Bed Deluxe Room with One Queen Bed Deluxe Queen Accessible with Roll In Shower Deluxe Room wit … m Access to PureGym In-room bottled water High-Speed Wireless Internet Access Digital access to The New York Times Daily Housekeeping Luggage Storage Access to our collection of over 6,000 books View All Services I have always imagined that paradise will be a kind of Library - JORGE LUIS BORGES - Festive Reads HarperCollins is partnering with … tries, yogurt, fresh fruit, coffee, and juice served daily 7:00 - 10:30 Refreshments such as coffee, tea, soft drinks, carbonated water, and more are available 24 hours a day in our Reading Room Fresh fruit, health bars, snacks, and more are available 24 hours in the Reading Room Access to PureGym In-room bottled water High-Speed Wireless Int",
+      "snippet": "otel Meetings & Events Meeting Rooms Weddings & Elopements Request a Proposal Gallery Location Map Parking & Transportation Contact Us (212) 983-4500 299 Madison Ave, at E.41st Street New York City 10017 Menu BOOK YOUR STAY Overview Petite Room with One Full Bed Deluxe Room with One Queen Bed Deluxe",
+      "fetchMethod": "curl --compressed live fetch 2026-10-28"
+    },
+    {
+      "url": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html",
+      "title": "Library Hotel by Library Hotel Collection: 103 Reviews | Trip.com",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Hotel by Library Hotel Collection: 103 Reviews | Trip.com | | Guest Reviews of Library Hotel by Library Hotel Collection 9.3 / 10 Great 103 reviews … The hotel has a great location and good service. … the facilities are old … ip.com | | Guest Reviews of Library Hotel by Library Hotel Collection 9.3 / 10 Great 103 reviews … The hotel has a great location and good service. … the facilities are old … Library Hotel by Library Hotel Collection: 103 Reviews | Trip.com | | Guest Reviews of Library Hotel by Library Hotel Collection 9.3 / 10 Great 103 reviews … The hotel has a great location and good service. … the facilities are old",
+      "snippet": "Hotel by Library Hotel Collection: 103 Reviews | Trip.com | | Guest Reviews of Library Hotel by Library Hotel Collection 9.3 / 10 Great 103 reviews … The hotel has a great location and good service. … the facilities are old",
+      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
+    },
+    {
+      "url": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html#reviews-20261029",
+      "title": "Library Hotel - Trip.com guest reviews (refetch)",
+      "fetchMethod": "live curl fetch 2026-10-29 12:56 PT; saved r10/t639.html; English review excerpts",
+      "text": "Because of renovations nearby, one of the doors was not open, making it difficult to find. The hygiene is quite good, but the pillows smell. The bathroom is quite clean. The front desk staff are very warm and thoughtful, chatting and laughing. The hotel is quite literary and artistic, but the books in the room are too political. I thought that if you like Jane Austen, the boss would have more books about her, but he didn't. … Very good, beyond expectations, except for the loud air conditioner, everything else is very good, the location is super convenient, and the service attitude is also very good, recommended",
+      "fetchedAt": "2026-10-29T12:55:00-07:00"
+    }
+  ],
+  "rating": {
+    "primary": 9.3,
+    "primarySource": "trip.com",
+    "tripcom": 9.3,
+    "scale": 10,
+    "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html",
+    "ratingEvidence": {
+      "site": "Trip.com",
+      "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "quote": "9.3 / 10 Great 103 reviews",
+      "average": 9.3,
+      "count": 103,
+      "scale": 10
+    },
+    "reviewCount": 103
+  },
+  "reviewCount": {
+    "tripcom": 103
+  },
+  "priceHint": null,
+  "hoursHint": "Hotel — 24h; Reading Room refreshments",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "299 Madison Ave, at E.41st Street New York City 10017"
+  ],
+  "itineraryNoteCandidate": "Library Hotel by Library Hotel Collection: a bookish Madison Avenue boutique with great service; refreshments are available 24 hours a day in our Reading Room.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 412,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Library Hotel by Library Hotel Collection, at 299 Madison Ave, at E.41st Street New York City 10017, is a book-themed Midtown boutique that guests rate very highly for location and service, near the New York Public Library and Grand Central. The only recurring caveat is that some facilities feel old.",
+      "claims": [
+        {
+          "text": "299 Madison Ave, at E.41st Street New York City 10017",
+          "sourceUrl": "https://www.libraryhotel.com/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Library Hotel by Library Hotel Collection stands at 299 Madison Ave, at E.41st Street New York City 10017, and its story is literary: guests get Access to our collection of over 6,000 books, with refreshments available 24 hours a day in our Reading Room. Trip.com shows 9.3 / 10 Great 103 reviews, and guests say The hotel has a great location and good service. The honest note is that the facilities are old, which most guests accept for the charm.",
+      "claims": [
+        {
+          "text": "available 24 hours a day in our Reading Room",
+          "sourceUrl": "https://www.libraryhotel.com/"
+        },
+        {
+          "text": "299 Madison Ave, at E.41st Street New York City 10017",
+          "sourceUrl": "https://www.libraryhotel.com/"
+        },
+        {
+          "text": "Access to our collection of over 6,000 books",
+          "sourceUrl": "https://www.libraryhotel.com/"
+        },
+        {
+          "text": "9.3 / 10 Great 103 reviews",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html"
+        },
+        {
+          "text": "The hotel has a great location and good service",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html"
+        },
+        {
+          "text": "the facilities are old",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Library Hotel by Library Hotel Collection: a bookish Madison Avenue boutique with great service; refreshments are available 24 hours a day in our Reading Room.",
+      "claims": [
+        {
+          "text": "available 24 hours a day in our Reading Room",
+          "sourceUrl": "https://www.libraryhotel.com/"
+        }
+      ]
+    }
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html",
+    "site": "Trip.com",
+    "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded",
+    "praise": [
+      "The hotel has a great location and good service"
+    ],
+    "watchOuts": [
+      "the facilities are old"
+    ],
+    "themes": [
+      "Location",
+      "Facilities"
+    ],
+    "complaints": [
+      "the facilities are old"
+    ]
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-hotel-essence-itinerary-note-20261029",
+    "new": false,
+    "at": "2026-10-29T08:45:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Library Hotel by Library Hotel Collection: a bookish Madison Avenue boutique with great service; refreshments are available 24 hours a day in our Reading Room.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029",
+  "reviewStarsDropped": "mean 4.00 vs venue 4.65 >0.5",
+  "reviewsLabel": "Representative reviews written from 7 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "missingFields": [],
+  "review1": "Guests consistently praise the Library Hotel's location together with attentive, good-quality service. This is worth keeping in mind when planning the visit.",
+  "review1Claims": [
+    "The hotel has a great location and good service.",
+    "The hotel has a great location and good service"
+  ],
+  "review1Theme": "Location",
+  "review1SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html",
+  "review1Source": "Library Hotel by Library Hotel Collection: 103 Reviews | Trip.com",
+  "review2": "The main caveat in the saved reviews is that some facilities feel old, though it does not seem to dent the hotel's very high overall score.",
+  "review2Claims": [
+    "the facilities are old"
+  ],
+  "review2Theme": "Facilities",
+  "review2SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html",
+  "review2Source": "Library Hotel by Library Hotel Collection: 103 Reviews | Trip.com",
+  "review3": "The front desk team stands out for warmth and thoughtfulness, and the literary, artistic character of the hotel suits readers looking for a calmer Midtown stay.",
+  "review3Claims": [
+    "The front desk staff are very warm and thoughtful"
+  ],
+  "review3Theme": "Front desk",
+  "review3SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html#reviews-20261029",
+  "review3Source": "Library Hotel - Trip.com guest reviews (refetch)",
+  "review4": "Small comfort complaints include a loud air conditioner and tired pillows, set against a clean bathroom and a location that is consistently called super convenient.",
+  "review4Claims": [
+    "except for the loud air conditioner",
+    "the location is super convenient"
+  ],
+  "review4Theme": "Comfort",
+  "review4SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html#reviews-20261029",
+  "review4Source": "Library Hotel - Trip.com guest reviews (refetch)",
+  "representative": true,
+  "writtenAt": {
+    "reviews": "2026-10-29T12:52:46-07:00"
+  }
+}

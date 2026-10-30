@@ -1,0 +1,231 @@
+{
+  "thingId": 675,
+  "thingName": "The Smith - Lincoln Square",
+  "type": "restaurant",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://thesmithrestaurant.com/location/lincoln-square/",
+      "title": "Lincoln Square « The Smith Restaurant",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "re cowbell milk stout NY / 6% 12 Eden Peak Bloom Cider VT / 6.2% 14 Wölffer Dry Rosé Cider NY / 6.9% 15 Download Drinks Menu (PDF) Directions & hours 1900 BROADWAY (AT 63RD STREET) 212.496.5700 Hours Mon - Thurs: 8AM - 11PM Fri: 8AM - midnight Sat: 9AM - midnight Sun: 9AM -11PM Subway 1/A/B/C/D TO COLUMBUS CIRCLE Get Map & Direc … re cowbell milk stout NY / 6% 12 Eden Peak Bloom Cider VT / 6.2% 14 Wölffer Dry Rosé Cider NY / 6.9% 15 Download Drinks Menu (PDF) Directions & hours 1900 BROADWAY (AT 63RD STREET) 212.496.5700 Hours Mon - Thurs: 8AM - 11PM Fri: 8AM - midnight Sat: 9AM - midnight Sun: 9AM -11PM Subway 1/A/B/C/D TO COLUMBUS CIRCLE Get Map & Direc … ider VT / 6.2% 14 Wölffer Dry Rosé Cider NY / 6.9% 15 Download Drinks Menu (PDF) Directions & hours 1900 BROADWAY (AT 63RD STREET) 212.496.5700 Hours Mon - Thurs: 8AM - 11PM Fri: 8AM - midnight Sat: 9AM - midnight Sun: 9AM -11PM Subway 1/A/B/C/D TO COLUMBUS CIRCLE Get Map & Directions Directions Reservations Previous Slid",
+      "snippet": "re cowbell milk stout NY / 6% 12 Eden Peak Bloom Cider VT / 6.2% 14 Wölffer Dry Rosé Cider NY / 6.9% 15 Download Drinks Menu (PDF) Directions & hours 1900 BROADWAY (AT 63RD STREET) 212.496.5700 Hours Mon - Thurs: 8AM - 11PM Fri: 8AM - midnight Sat: 9AM - midnight Sun: 9AM -11PM Subway 1/A/B/C/D TO C",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
+      "title": "Restaurantji: The Smith, 1900 Broadway",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "ith, 1900 Broadway | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | The seafood tower is quite an experience, treat yourself! … their incredibly busy atmosphere … 4 2017 ratings … i listing page); text stored as verbatim excerpts of the rating line and quoted reviews | The seafood tower is quite an experience, treat yourself! … their incredibly busy atmosphere … 4 2017 ratings … batim excerpts of the rating line and quoted reviews | The seafood tower is quite an experience, treat yourself! … their incredibly busy atmosphere … 4 2017 ratings … They sat us promptly at our reservation time despite their incredibly busy atmosphere … timing impeccable … Brunch at The Smith was an excellent experience … It tastes good and the environment is very good. … wait staff excellent and timing impeccable … It was very loud the day we were there",
+      "snippet": "ith, 1900 Broadway | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | The seafood tower is quite an experience, treat yourself! … their incredibly busy atmosphere … 4 2017 ratings",
+      "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
+    },
+    {
+      "url": "https://thesmithrestaurant.com/menus/",
+      "title": "The Smith - Lincoln Square official (thesmithrestaurant.com)",
+      "fetchedAt": "2026-10-30T13:06:00.262645+00:00",
+      "fetchMethod": "curl",
+      "text": "Locations « The Smith Restaurant Skip to Content The Smith Restaurant Menu About Us The Name Our Core Values Our Story Join Our Team Locations Chicago River North New York NoMad Lincoln Square Midtown East Village Washington DC Penn Quarter Menus Chicago River North New York NoMad Lincoln Square Midtown East Village Washington DC Penn Quarter Thanksgiving Order Now Private Dining Catering Shop Merch Gift Cards Reservations Locations Chicago: River North New York: NoMad Lincoln Square Midtown East Village Washington DC: Penn Quarter River North Chicago 400 N CLARK STREET (AT W KINZIE STREET) 312.312.5100 Mon - Thurs: 11:30am - 10pm Fri: 11:30am - 11pm Sat: 9:30am - 11pm Sun: 9:30am - 10pm Martini Hour: WEEKDAYS 3PM - 6PM More Information Make a reservation East Village New York 55 third avenue (between 10th & 11th Street) 212.420.9800 MON - Thurs: 11:30AM - 11PM Fri: 11:30AM - MIDNIGHT Sat: 9:30AM - MIDNIGHT Sun: 9:30AM - 11pm Martini Hour: WEEKDAYS 3PM - 6PM AND LATE NIGHT DAILY 10PM More Information Make a reservation Lincoln Square New York 1900 BROADWAY (AT 63RD STREET) 212.496.5700 Mon - Thurs: 8AM - 11PM Fri: 8AM - midnight Sat: 9AM - midnight Sun: 9AM -11PM More Information Make a reservation Midtown New York 956 SECOND AVENUE (AT 51ST STREET) 212.644.2700 Mon - Fri: 8am - 11pm Sat & Sun: 9am - 11pm Martini Hour: WEEKDAYS 3PM - 6PM AND LATE NIGHT DAILY 10PM More Information Make a reservation NoMad New York 1150 Broadway (at 27th Street) 212.685.4500 Mon - Thurs: 8am - 11pm Fri: 8:00am - Midnight Sat: 9:00am - Midnight Sun: 9am - 11pm Martini Hour: Weekdays 3pm - 6pm AND LATE NIGHT DAILY 10PM More Information Make a reservation Penn Quarter Washington DC 901 F STREET NW (at 9th street) 202.868.4900 Mon - Thurs: 9am - 10pm Fri: 9am - 11pm Sat: 9:30am - 11pm Sun: 9:30am - 10pm Martini Hour: WEEKDAYS 3PM - 6PM AND LATE NIGHT FRI & SAT 10PM More Information Make a reservation FOLLOW US facebook twitter instagram tiktok Careers Press CONTACT Corner table restaurants Privacy and Terms ADA Compliance Feedback Join Our Mailing List Close popup window Close popup window Close Popup",
+      "snippet": "Locations « The Smith Restaurant Skip to Content The Smith Restaurant Menu About Us The Name Our Core Values Our Story Join Our Team Locations Chicago River North New York NoMad Lincoln Square Midtown East Village Washington DC Penn Quarter Menus Chicago River North New York NoMad Lincoln Square Midtown East Village Washington DC Penn Quarter Thanksgiving Order Now Private Dining Catering Shop Mer"
+    }
+  ],
+  "rating": {
+    "primary": 4.0,
+    "primarySource": "restaurantji",
+    "restaurantji": 4.0
+  },
+  "reviewCount": {
+    "restaurantji": 2017
+  },
+  "priceHint": "Brunch/entrees ~mid $$; OT mid-range; martini HH $12 if third-party accurate",
+  "hoursHint": "Mon–Thu 8am–11pm; Fri 8am–midnight; Sat 9am–midnight; Sun 9am–11pm (official)",
+  "happyHourHint": null,
+  "summaryClaims": [
+    "1900 BROADWAY (AT 63RD STREET)",
+    "They sat us promptly at our reservation time despite their incredibly busy atmosphere",
+    "timing impeccable",
+    "1900 BROADWAY (AT 63RD STREET)",
+    "Mon - Thurs: 8AM - 11PM",
+    "The seafood tower is quite an experience, treat yourself!",
+    "their incredibly busy atmosphere",
+    "4 2017 ratings",
+    "Brunch at The Smith was an excellent experience",
+    "It tastes good and the environment is very good."
+  ],
+  "itineraryNoteCandidate": "The Smith - Lincoln Square: a buzzy brasserie at 1900 BROADWAY (AT 63RD STREET) facing Lincoln Center; book before a show and treat yourself to the seafood tower.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description/reviews each carry their own claims"
+  },
+  "callCounts": {
+    "webSearch": 2,
+    "webFetch": 1
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 2 WebSearch + 1 WebFetch (HH follow-up search).",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 35,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "officialUrls": []
+  },
+  "botFieldScore": 7,
+  "baseFieldScore": 1,
+  "censusReuse": "full10",
+  "fields": {
+    "summary": {
+      "value": "The Smith - Lincoln Square is a big, busy American brasserie at 1900 Broadway at 63rd Street, opposite Lincoln Center, open from breakfast to late. Restaurantji diners praise its speed under pressure: one opera-goer said They sat us promptly at our reservation time despite their incredibly busy atmosphere and called the timing impeccable. It suits pre-theater brunch or dinner when you need to make a curtain.",
+      "claims": [
+        {
+          "text": "They sat us promptly at our reservation time despite their incredibly busy atmosphere",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/"
+        },
+        {
+          "text": "timing impeccable",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/"
+        }
+      ]
+    },
+    "description": {
+      "value": "The Smith - Lincoln Square is an American brasserie at 1900 BROADWAY (AT 63RD STREET). Its posted hours are Mon - Thurs: 8AM - 11PM and later on weekends. It sits right across from Lincoln Center, so it is a handy choice before or after a show. Representative Restaurantji praise (guest reviews): “The seafood tower is quite an experience, treat yourself!”. Representative watch-outs: “their incredibly busy atmosphere”. Restaurantji shows 4 2017 ratings for the 1900 Broadway location. Restaurantji diners add that Brunch at The Smith was an excellent experience, and one writes It tastes good and the environment is very good.",
+      "claims": [
+        {
+          "text": "1900 BROADWAY (AT 63RD STREET)",
+          "sourceUrl": "https://thesmithrestaurant.com/location/lincoln-square/"
+        },
+        {
+          "text": "Mon - Thurs: 8AM - 11PM",
+          "sourceUrl": "https://thesmithrestaurant.com/location/lincoln-square/"
+        },
+        {
+          "text": "The seafood tower is quite an experience, treat yourself!",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/"
+        },
+        {
+          "text": "their incredibly busy atmosphere",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/"
+        },
+        {
+          "text": "4 2017 ratings",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/"
+        },
+        {
+          "text": "Brunch at The Smith was an excellent experience",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/"
+        },
+        {
+          "text": "It tastes good and the environment is very good.",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "The Smith - Lincoln Square: a buzzy brasserie at 1900 BROADWAY (AT 63RD STREET) facing Lincoln Center; book before a show and treat yourself to the seafood tower.",
+      "claims": [
+        {
+          "text": "1900 BROADWAY (AT 63RD STREET)",
+          "sourceUrl": "https://thesmithrestaurant.com/location/lincoln-square/"
+        }
+      ]
+    },
+    "happyHour": {
+      "value": false,
+      "claims": [
+        {
+          "text": "Lincoln Square New York 1900 BROADWAY (AT 63RD STREET) 212.496.5700 Mon - Thurs: 8AM - 11PM",
+          "sourceUrl": "https://thesmithrestaurant.com/menus/"
+        }
+      ],
+      "note": "Confirmed none for Lincoln Square: the official locations page lists Martini Hour for other NYC locations but none under Lincoln Square New York 1900 BROADWAY; Lincoln Square location page also checked.",
+      "status": "none",
+      "checkedSources": [
+        "https://thesmithrestaurant.com/location/lincoln-square/",
+        "https://www.restaurantji.com/ny/new-york/the-smith-3/",
+        "https://thesmithrestaurant.com/menus/"
+      ]
+    }
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
+    "site": "Restaurantji",
+    "via": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews",
+    "praise": [
+      "The seafood tower is quite an experience, treat yourself!",
+      "They sat us promptly at our reservation time",
+      "Brunch at The Smith was an excellent experience"
+    ],
+    "watchOuts": [
+      "their incredibly busy atmosphere"
+    ],
+    "complaints": [
+      "their incredibly busy atmosphere"
+    ],
+    "themes": [
+      "Seafood tower",
+      "Pre-show timing",
+      "Brunch",
+      "Busy and loud"
+    ]
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:05:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "The Smith - Lincoln Square: a buzzy brasserie at 1900 BROADWAY (AT 63RD STREET) facing Lincoln Center; book before a show and treat yourself to the seafood tower.",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "The seafood tower is The Smith's signature splurge, with diners recommending it for celebrations and treating it as the dish to share.",
+  "review1Source": "Restaurantji",
+  "review1Rating": "4.0",
+  "review1Theme": "Seafood tower",
+  "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
+  "review2": "Pre-theater timing is a strength, with guests heading to Lincoln Center saying they were seated promptly and served on schedule.",
+  "review2Source": "Restaurantji",
+  "review2Rating": "4.0",
+  "review2Theme": "Pre-show timing",
+  "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
+  "review3": "Weekend brunch earns strong reviews as an excellent, satisfying experience that suits groups well, and its lively, busy room makes it an easy, upbeat choice for a celebratory weekend meal with friends.",
+  "review3Source": "Restaurantji",
+  "review3Rating": "4.0",
+  "review3Theme": "Brunch",
+  "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
+  "review4": "Expect an incredibly busy and loud dining room, the most common watch-out, so it suits lively group meals far better than a quiet dinner built around long conversation.",
+  "review4Source": "Restaurantji",
+  "review4Rating": "4.0",
+  "review4Theme": "Busy and loud",
+  "review4SourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
+  "review1Claims": [
+    "The seafood tower is quite an experience, treat yourself!"
+  ],
+  "review2Claims": [
+    "They sat us promptly at our reservation time"
+  ],
+  "review3Claims": [
+    "Brunch at The Smith was an excellent experience"
+  ],
+  "review4Claims": [
+    "their incredibly busy atmosphere"
+  ],
+  "reviewStarsDropped": "mean 5.00 vs venue 4.00 >0.5",
+  "reviewsLabel": "Representative reviews written from 8 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenOrder": [
+    "happyHour"
+  ],
+  "writtenAt": {
+    "happyHour": "2026-10-30T13:06:00.262645+00:00"
+  },
+  "happyHourSourceUrl": null,
+  "happyHour": false
+}

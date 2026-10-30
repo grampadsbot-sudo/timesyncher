@@ -1,0 +1,127 @@
+{
+  "thingId": "715",
+  "thingName": "Dollar Full-size sedan at JFK",
+  "type": "car",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp",
+      "title": "New York John F. Kennedy International Airport Car Rentals from $73/day",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": " Jetta or similar 4 people 2 Unlimited mileage Rental dates Nov 27 – Dec 4 · 7 days Prices checked Oct 28 $ 135 /day $942 total, incl. taxes and fees Full-Size Car Toyota Camry or similar 5 people 3 Unlimited mileage Rental dates Nov 27 – Dec 4 · 7 days Prices checked Oct 28 $ 135 /day $942 total, incl. taxes and fees Mid-Size SUV Ford Escape or  …  Jetta or similar 4 people 2 Unlimited mileage Rental dates Nov 27 – Dec 4 · 7 days Prices checked Oct 28 $ 135 /day $942 total, incl. taxes and fees Full-Size Car Toyota Camry or similar 5 people 3 Unlimited mileage Rental dates Nov 27 – Dec 4 · 7 days Prices checked Oct 28 $ 135 /day $942 total, incl. taxes and fees Mid-Size SUV Ford Escape or  … 22/day Special Offer $58/day Show 5 more Show less Car Company ACE $62/day Alamo Rent a Car $75/day Avis Rent a Car $71/day Budget Rent a Car $66/day Dollar Rent A Car $97/day Enterprise Rent-A-Car $82/day Hertz Corporation $104/day National Car Rental $85/day Payless Car Rental $68/day Sixt Rent a Car $67/day Thrifty Car R … erall Satisfaction 8.1 Availability at Pick-up 8.1 Condition & Cleanliness 7.7 Drop-off Procedure 9 Jamaica, 305 Federal Circle $75 /day Find similar Dollar Rent A Car 8 135 reviews Typical Wait Time 0-15 Minutes Location 7.6 Overall Satisfaction 7.8 Availability at Pick-up 7.8 Condition & Cleanliness 8 Drop-off Procedure 8.7 New York, Building 318 Federal Cir",
+      "snippet": " Jetta or similar 4 people 2 Unlimited mileage Rental dates Nov 27 – Dec 4 · 7 days Prices checked Oct 28 $ 135 /day $942 total, incl. taxes and fees Full-Size Car Toyota Camry or similar 5 people 3 Unlimited mileage Rental dates Nov 27 – Dec 4 · 7 days Prices checked Oct 28 $ 135 /day $942 total, i",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.jfkairport.com/transportation/car-rentals",
+      "title": "Car Rentals - JFK Airport",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "al car companies at JFK Alamo +1 (844) 648-1611 Reserve now Avis +1 (718) 244-5400 Reserve now Budget +1 (718)-656-1890 +1 (800)-527-0700 Reserve now Dollar +1 (866) 434-2226 Reserve now Enterprise +1 (844) 648–1609 Reserve now Hertz +1 (718) 656-7600 +1 (800) 654-3131 Reserve now National +1 (844) 648-1610 Reserve now Pay … s originating or terminating at Jamaica and Howard Beach AirTrain stations is $8.75 per person. Children under five can ride AirTrain free of charge. You can also reach Federal Circle by hotel shuttle. Rental car companies at JFK Alamo +1 (844) 648-1611 Reserve now Avis +1 (718) 244-5400 Reserve now Budget +1 (718)-656-1890 +1 (800)-527-0700 Reserv … r own E-ZPass® transponder If you decide to use your own transponder, do not add the rental car license plate to your account. Accessible rental cars Some on-airport car rental companies offer vehicles with hand controls. For details or to arrange shuttle service to or from your terminal, please contact the rental company directly. Navigate JFK with the AirTrain The A …  the AirTrain from any terminal or from the Jamaica and Howard Beach AirTrain Stations. AirTrain rides between terminals and Federal Circle are free. The fare for trips originating or terminating at Jamaica and Howard Beach AirTrain stations is $8.75 per person. Children under five can ride AirTrain free of charge. You can also reach Federal Circle by hotel shuttle. Rental car companies at JFK Alamo +1 (844) … al car companies at JFK Alamo +1 (844) 648-1611 Reserve now Avis +1 (718) 244-5400 Reserve now Budget +1 (718)-656-1890 +1 (800)-527-0700 Reserve now Dollar +1 (866) 434-2226 Reserve now Enterprise +1 (844) 648–1609 Reserve now Hertz +1 (718) 656-7600 +1 (800) 654-3131 Reserve now National +1 (844) 648-1610 Reserve now Pay",
+      "snippet": "al car companies at JFK Alamo +1 (844) 648-1611 Reserve now Avis +1 (718) 244-5400 Reserve now Budget +1 (718)-656-1890 +1 (800)-527-0700 Reserve now Dollar +1 (866) 434-2226 Reserve now Enterprise +1 (844) 648–1609 Reserve now Hertz +1 (718) 656-7600 +1 (800) 654-3131 Reserve now National +1 (844) ",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    }
+  ],
+  "rating": {
+    "primary": 8.0,
+    "primarySource": "priceline",
+    "priceline": 8.0,
+    "scale": "10 (brand-level at JFK)"
+  },
+  "reviewCount": {
+    "priceline": 135
+  },
+  "priceHint": "Dollar from $97/day on Priceline JFK (checked Oct 28)",
+  "hoursHint": null,
+  "happyHourHint": null,
+  "summaryClaims": [
+    "Full-Size Car Toyota Camry or similar 5 people 3",
+    "Full-Size Car Toyota Camry or similar 5 people 3",
+    "Dollar +1 (866) 434-2226",
+    "Full-Size Car Toyota Camry or similar 5 people 3",
+    "You can also reach Federal Circle by hotel shuttle",
+    "Some on-airport car rental companies offer vehicles with hand controls",
+    "The fare for trips originating or terminating at Jamaica and Howard Beach AirTrain stations is $8.75 per person",
+    "Dollar Rent A Car $97/day",
+    "Dollar Rent A Car 8 135 reviews Typical Wait Time 0-15 Minutes",
+    "Dollar +1 (866) 434-2226"
+  ],
+  "itineraryNoteCandidate": "Dollar Full-size sedan at JFK: a Camry-class car with room for three bags (Full-Size Car Toyota Camry or similar 5 people 3); ideal for a family drive.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 0,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "tripRowTitle": "Dollar JFK — Full-size sedan",
+  "fields": {
+    "summary": {
+      "value": "Dollar JFK — Full-size sedan (Dollar Full-size sedan at JFK) is the roomiest sedan here, a Toyota Camry or similar full-size car for 5 people from Dollar's JFK counter. Children under five can ride AirTrain free of charge.",
+      "claims": [
+        {
+          "text": "Full-Size Car Toyota Camry or similar 5 people 3",
+          "sourceUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp"
+        },
+        {
+          "text": "Dollar +1 (866) 434-2226",
+          "sourceUrl": "https://www.jfkairport.com/transportation/car-rentals"
+        },
+        {
+          "text": "Children under five can ride AirTrain free of charge.",
+          "sourceUrl": "https://www.jfkairport.com/transportation/car-rentals"
+        }
+      ]
+    },
+    "description": {
+      "value": "For a group with more luggage, Dollar JFK — Full-size sedan (Dollar Full-size sedan at JFK) books a Full-Size Car Toyota Camry or similar for 5 people from Dollar Rent A Car. You can also reach Federal Circle by hotel shuttle. Some on-airport car rental companies offer vehicles with hand controls. The fare for trips originating or terminating at Jamaica and Howard Beach AirTrain stations is $8.75 per person. Dollar Rent A Car lists at $97/day on Priceline and scores 8 from 135 reviews; call +1 (866) 434-2226 for the JFK desk.",
+      "claims": [
+        {
+          "text": "Full-Size Car Toyota Camry or similar 5 people 3",
+          "sourceUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp"
+        },
+        {
+          "text": "You can also reach Federal Circle by hotel shuttle",
+          "sourceUrl": "https://www.jfkairport.com/transportation/car-rentals"
+        },
+        {
+          "text": "Some on-airport car rental companies offer vehicles with hand controls",
+          "sourceUrl": "https://www.jfkairport.com/transportation/car-rentals"
+        },
+        {
+          "text": "The fare for trips originating or terminating at Jamaica and Howard Beach AirTrain stations is $8.75 per person",
+          "sourceUrl": "https://www.jfkairport.com/transportation/car-rentals"
+        },
+        {
+          "text": "Dollar Rent A Car $97/day",
+          "sourceUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp"
+        },
+        {
+          "text": "Dollar Rent A Car 8 135 reviews Typical Wait Time 0-15 Minutes",
+          "sourceUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp"
+        },
+        {
+          "text": "Dollar +1 (866) 434-2226",
+          "sourceUrl": "https://www.jfkairport.com/transportation/car-rentals"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Dollar Full-size sedan at JFK: a Camry-class car with room for three bags (Full-Size Car Toyota Camry or similar 5 people 3); ideal for a family drive.",
+      "claims": [
+        {
+          "text": "Full-Size Car Toyota Camry or similar 5 people 3",
+          "sourceUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Dollar Full-size sedan at JFK: a Camry-class car with room for three bags (Full-Size Car Toyota Camry or similar 5 people 3); ideal for a family drive."
+}

@@ -1,0 +1,274 @@
+{
+  "thingId": 660,
+  "thingName": "Blue Note Jazz Club",
+  "type": "attraction",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.bluenotejazz.com/nyc/faqs/",
+      "title": "FAQs Blue Note New York",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "ive? How does the seating arrangement work? Doors open at 6pm for 8pm shows and 10pm for 10:30pm shows (12:00pm for 1:30pm shown on Sunday Brunches). Seating is always first come, first come serve. No exceptions. We suggest you arrive early and with your full party, as we cannot guarantee that parties arriving separately or late will be seated  … sit Blue Note New York on Instagram FAQs Explore Frequently Asked Questions about Blue Note New York Where is the Blue Note located? The Blue Note is located at 131 West 3rd Street, between MacDougal Street and 6th Avenue, right in the heart of Manhattan’s Greenwich Village in New York City. Where can I purchase tickets? You can purchase tickets online at www.bluenotejazz.com. You can also call in or buy tickets in person at the box offi … ere can I purchase tickets? You can purchase tickets online at www.bluenotejazz.com. You can also call in or buy tickets in person at the box office. Everyone needs a ticket to enter the club. When should I expect my tickets to be delivered? Tickets will be e-mailed to customers 48 hours prior to the event. This is a security method instal …  also call in or buy tickets in person at the box office. Everyone needs a ticket to enter the club. When should I expect my tickets to be delivered? Tickets will be e-mailed to customers 48 hours prior to the event. This is a security method installed to avoid scalping. What time should I arrive? How does the seating arrangement work? Doors open at 6pm for 8pm s … 48 hours prior to the event. This is a security method installed to avoid scalping. What time should I arrive? How does the seating arrangement work? Doors open at 6pm for 8pm shows and 10pm for 10:30pm shows (12:00pm for 1:30pm shown on Sunday Brunches). Seating is always first come, first come serve. No exceptions. We suggest you arrive early and with your full party, as we cannot guarantee that par",
+      "snippet": "ive? How does the seating arrangement work? Doors open at 6pm for 8pm shows and 10pm for 10:30pm shows (12:00pm for 1:30pm shown on Sunday Brunches). Seating is always first come, first come serve. No exceptions. We suggest you arrive early and with your full party, as we cannot guarantee that parti",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.bluenotejazz.com/nyc/",
+      "title": "Blue Note New York",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "unch Shows SEE ALL previous next Nov 7 Strictly Sinatra A Tribute To Frank Sinatra Starring Michael Dutra & His 9-Pc. Big Band Ensemble Tickets Nov 8 The World Famous Harlem Gospel Choir Tickets Nov 14 The Music Of The Buena Vista Social Club A Tribute To The Golden Age Of Cuba Tickets Nov 21 King Of The World: A Steely Dan Revue Tick … unch Shows SEE ALL previous next Nov 7 Strictly Sinatra A Tribute To Frank Sinatra Starring Michael Dutra & His 9-Pc. Big Band Ensemble Tickets Nov 8 The World Famous Harlem Gospel Choir Tickets Nov 14 The Music Of The Buena Vista Social Club A Tribute To The Golden Age Of Cuba Tickets Nov 21 King Of The World: A Steely Dan Revue Tick",
+      "snippet": "unch Shows SEE ALL previous next Nov 7 Strictly Sinatra A Tribute To Frank Sinatra Starring Michael Dutra & His 9-Pc. Big Band Ensemble Tickets Nov 8 The World Famous Harlem Gospel Choir Tickets Nov 14 The Music Of The Buena Vista Social Club A Tribute To The Golden Age Of Cuba Tickets Nov 21 King O",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html",
+      "title": "BLUE NOTE, New York City - Greenwich Village - Menu, Prices & Restaurant Reviews - Tripadvisor",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "nu, Prices & Restaurant Reviews - Tripadvisor | | The location is iconic, intimate and full of atmosphere … the real star was the Gospel Choir show … Door staff were very friendly and welcoming … They really do try to cram everyone into a space that only comfortably accommodates two thirds of the people in the room … Staff is quite pushy dur … ram everyone into a space that only comfortably accommodates two thirds of the people in the room … Staff is quite pushy during the seating process … on top of the expensive ticket price, there is a mandatory minimum spend at the table",
+      "snippet": "nu, Prices & Restaurant Reviews - Tripadvisor | | The location is iconic, intimate and full of atmosphere … the real star was the Gospel Choir show … Door staff were very friendly and welcoming … They really do try to cram everyone into a space that only comfortably accommodates two thirds of the pe",
+      "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch"
+    },
+    {
+      "url": "https://www.restaurantji.com/ny/new-york/blue-note-/",
+      "title": "Blue Note Jazz Club reviews | Restaurantji",
+      "fetchedAt": "2026-10-29T09:16:08-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r7/raw/st_124430a340.html",
+      "text": "The performance was wonderful, but I did not appreciate how long it took for the club to let us in. It said doors open at 9:30 but people were not let in until almost 10. I also do not appreciate that we were forced to order a $20 minimum per person after paying over 150 for a ticket."
+    },
+    {
+      "url": "https://exa.ai/library/place/3yp348r72jp",
+      "title": "Blue Note Jazz Club reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:49:34-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_3yp348r72jp.html",
+      "text": "The renowned Blue Note has intimate seating for those who reserve tables. The atmosphere was charged. The sound was great. The service was amazing and efficient. My food was delicious. My only gripe is that they squeeze people in. Really, there should have been only six people to a table, not 8. Other than that, I truly enjoyed Louie Vega, the Elements of Life and Lisa Fischer. 🙌🏽🙌🏿🙌🏾 Blue Note has long ago secured it's place in Jazz history internationally, and continues to showcase the best of the best. There is a $20 minimum at the bar, which is limited and also all the way to the side, so don't expect to get good views. The sound system is excellent, though, and the food good. If you love the artist you're going to see, spring for a table, get your tickets early, and get there early, as all seating is first-come first-served! If you want to enjoy a good jazz show definitely purchase the tickets for the tables but try to get there early like 1 hour before the show so you can eat and get the best seats for the show. It gets crowded but all the servers move fast. The tables are shared, so keep it in mind. The drinks were really good! The food was just ok. The live music was awesome. And by the end of the show everyone was dancing and enjoying themselves."
+    }
+  ],
+  "rating": {
+    "primary": 4.2,
+    "primarySource": "aggregator",
+    "aggregator": 4.2
+  },
+  "reviewCount": {
+    "aggregator": 5492
+  },
+  "priceHint": "$20 consumption minimum + ticket (varies by show)",
+  "hoursHint": "Music ~8:00pm & 10:30pm; doors 6pm/10pm (official contact/FAQ)",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "Seating is always first come, first come serve",
+    "The World Famous Harlem Gospel Choir"
+  ],
+  "itineraryNoteCandidate": "Blue Note Jazz Club: a West 3rd Street jazz room; arrive early because Seating is always first come, first come serve.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 1
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 1 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 55,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Blue Note Jazz Club rewards early arrivals, since Seating is always first come, first come serve and the room is tight. The sound and door staff win praise, the minimum spend on top of tickets draws grumbles, and The World Famous Harlem Gospel Choir brunch is a lighter daytime alternative to a late set.",
+      "claims": [
+        {
+          "text": "Seating is always first come, first come serve",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
+        },
+        {
+          "text": "The World Famous Harlem Gospel Choir",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Blue Note Jazz Club is located at 131 West 3rd Street, between MacDougal Street and 6th Avenue, right in the heart of Manhattan’s Greenwich Village in New York City. Everyone needs a ticket to enter the club. Tickets will be e-mailed to customers 48 hours prior to the event. Doors open at 6pm for 8pm shows and 10pm for 10:30pm shows (12:00pm for 1:30pm shown on Sunday Brunches). Upcoming brunch shows include The World Famous Harlem Gospel Choir. Representative Tripadvisor praise (search snapshot): “Door staff were very friendly and welcoming”. Representative watch-outs: “on top of the expensive ticket price, there is a mandatory minimum spend at the table”.",
+      "claims": [
+        {
+          "text": "located at 131 West 3rd Street, between MacDougal Street and 6th Avenue, right in the heart of Manhattan’s Greenwich Village in New York City",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
+        },
+        {
+          "text": "Everyone needs a ticket to enter the club",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
+        },
+        {
+          "text": "Tickets will be e-mailed to customers 48 hours prior to the event",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
+        },
+        {
+          "text": "Doors open at 6pm for 8pm shows and 10pm for 10:30pm shows (12:00pm for 1:30pm shown on Sunday Brunches)",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
+        },
+        {
+          "text": "The World Famous Harlem Gospel Choir",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/"
+        },
+        {
+          "text": "Door staff were very friendly and welcoming",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html"
+        },
+        {
+          "text": "on top of the expensive ticket price, there is a mandatory minimum spend at the table",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Blue Note Jazz Club: a West 3rd Street jazz room; arrive early because Seating is always first come, first come serve.",
+      "claims": [
+        {
+          "text": "Seating is always first come, first come serve",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
+        }
+      ]
+    },
+    "reviewsUnstarred": [
+      {
+        "theme": "Service",
+        "value": "Tripadvisor reviewer on Blue Note Jazz Club: Door staff were very friendly and welcoming. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "Door staff were very friendly and welcoming",
+            "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html",
+        "rating": "4.2/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 29
+      },
+      {
+        "theme": "Value",
+        "value": "Watch-out from a Tripadvisor reviewer at Blue Note Jazz Club: on top of the expensive ticket price, there is a mandatory minimum spend at the table.",
+        "claims": [
+          {
+            "text": "on top of the expensive ticket price, there is a mandatory minimum spend at the table",
+            "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html",
+        "rating": "4.2/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "watchOut",
+        "words": 26
+      }
+    ]
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html",
+    "site": "Tripadvisor",
+    "via": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch",
+    "praise": [
+      "Door staff were very friendly and welcoming"
+    ],
+    "watchOuts": [
+      "on top of the expensive ticket price, there is a mandatory minimum spend at the table"
+    ],
+    "themes": [
+      "Service",
+      "Value"
+    ],
+    "complaints": [
+      "on top of the expensive ticket price, there is a mandatory minimum spend at the table"
+    ]
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Blue Note Jazz Club: a West 3rd Street jazz room; arrive early because Seating is always first come, first come serve.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029",
+  "review1": "Blue Note's music earns strong praise, but visitors note late door openings and extra minimum spending on top of ticket prices.",
+  "review1Source": "Restaurantji",
+  "review1Rating": "3/5",
+  "review1Theme": "Music",
+  "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/blue-note-/",
+  "review1Stars": 3,
+  "review2": "The atmosphere is charged and the sound is excellent, with servers moving quickly and efficiently through the room, though seating is tight and tables can feel crowded during popular sets.",
+  "review2Source": "Exa place listing",
+  "review2Rating": "4/5",
+  "review2Theme": "Seating",
+  "review2SourceUrl": "https://exa.ai/library/place/3yp348r72jp",
+  "review2Stars": 4,
+  "review3": "The club's long-secured place in jazz history and a strong lineup remain the draw, while the bar seating carries a minimum and sits off to the side with limited sightlines.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "4/5",
+  "review3Theme": "Seating",
+  "review3SourceUrl": "https://exa.ai/library/place/3yp348r72jp",
+  "review3Stars": 4,
+  "review4": "Arriving well before showtime is the most common advice, leaving time to eat and secure good seats in a crowded room where tables are shared and seating is first-come first-served.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Seating",
+  "review4SourceUrl": "https://exa.ai/library/place/3yp348r72jp",
+  "review4Stars": 5,
+  "review1Claims": [
+    "The performance was wonderful, but I did not appreciate how long it took for the club to let us in.",
+    "It said doors open at 9:30 but people were not let in until almost 10.",
+    "I also do not appreciate that we were forced to order a $20 minimum per person after paying over 150 for a ticket."
+  ],
+  "review2Claims": [
+    "The renowned Blue Note has intimate seating for those who reserve tables.",
+    "The atmosphere was charged.",
+    "The sound was great.",
+    "The service was amazing and efficient.",
+    "My food was delicious.",
+    "My only gripe is that they squeeze people in.",
+    "Really, there should have been only six people to a table, not 8.",
+    "Other than that, I truly enjoyed Louie Vega, the Elements of Life and Lisa Fischer."
+  ],
+  "review3Claims": [
+    "Blue Note has long ago secured it's place in Jazz history internationally, and continues to showcase the best of the best.",
+    "There is a $20 minimum at the bar, which is limited and also all the way to the side, so don't expect to get good views.",
+    "The sound system is excellent, though, and the food good.",
+    "If you love the artist you're going to see, spring for a table, get your tickets early, and get there early, as all seating is first-come first-served!"
+  ],
+  "review4Claims": [
+    "If you want to enjoy a good jazz show definitely purchase the tickets for the tables but try to get there early like 1 hour before the show so you can eat and get the best seats for the show.",
+    "It gets crowded but all the servers move fast.",
+    "The tables are shared, so keep it in mind.",
+    "The drinks were really good!",
+    "The food was just ok.",
+    "The live music was awesome.",
+    "And by the end of the show everyone was dancing and enjoying themselves."
+  ],
+  "reviewsLabel": "Representative reviews written from 28 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenAt": {
+    "reviews": "2026-10-29T20:22:18.187221+00:00"
+  },
+  "writtenOrder": [
+    "reviews"
+  ]
+}

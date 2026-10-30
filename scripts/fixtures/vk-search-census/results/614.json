@@ -1,0 +1,298 @@
+{
+  "thingId": 614,
+  "thingName": "MoMA Design Store - 53rd Street",
+  "type": "store",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://store.moma.org/pages/design-store-53rd-nyc",
+      "title": "Design Store 53rd NYC – MoMA Design Store",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": ".m. About This Store This destination store offers the best selection of new and classic design objects and gifts for everyone. The light, airy space showcases an array of lighting, tech innovations, tabletop, home decor, jewelry, accessories and more. … Design Store 53rd NYC – MoMA Design Store | | MoMA Design Store 44 West 53rd Street, New York 10019 Across from the Museum, between 5th and 6th Avenues (212) 767-1050 Open daily Monday 9:30 a.m. - 6:30 p.m. Tuesday 9:30 a.m. - 6:30 p.m. Wednesday 9:30 a.m. - 6:30 p.m. Thursday 9:30 a.m. - 6:30 p.m. F … .m. - 9:00 p.m. Saturday 9:30 a.m. - 6:30 p.m. Sunday 9:30 a.m. - 6:30 p.m. Every Friday, the store will remain open until 9:00 p.m. About This Store This destination store offers the best selection of new and classic design objects and gifts for everyone. The light, airy space showcases an array of lighting, tech innovations, tabletop, home decor, jewelry, accessories and more. … main open until 9:00 p.m. About This Store This destination store offers the best selection of new and classic design objects and gifts for everyone. The light, airy space showcases an array of lighting, tech innovations, tabletop, home decor, jewelry, accessories and more. … dnesday 9:30 a.m. - 6:30 p.m. Thursday 9:30 a.m. - 6:30 p.m. Friday 9:30 a.m. - 9:00 p.m. Saturday 9:30 a.m. - 6:30 p.m. Sunday 9:30 a.m. - 6:30 p.m. Every Friday, the store will remain open until 9:00 p.m. About This Store This destination store offers the best selection of new and classic design objects and gifts for everyone. The light, airy space sho",
+      "snippet": ".m. About This Store This destination store offers the best selection of new and classic design objects and gifts for everyone. The light, airy space showcases an array of lighting, tech innovations, tabletop, home decor, jewelry, accessories and more.",
+      "fetchMethod": "WebFetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com/Attraction_Review-g60763-d565447-Reviews-MoMA_Design_Store-New_York_City_New_York.html",
+      "title": "Tripadvisor: MoMA Design Store, 44 W 53rd St (search snapshot)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "r fetch 403); not a live fetch | The MoMA Design Store is packed with beautifully designed products … The store can get quite crowded around midday … Spread across two floors, there's plenty to explore … Prices are better on the internet than in the store. … pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | The MoMA Design Store is packed with beautifully designed products … The store can get quite crowded around midday … Spread across two floors, there's plenty to explore … Prices are better on the internet than in the … ighlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | The MoMA Design Store is packed with beautifully designed products … The store can get quite crowded around midday … Spread across two floors, there's plenty to explore … Prices are better on the internet than in the store. …  is packed with beautifully designed products … The store can get quite crowded around midday … Spread across two floors, there's plenty to explore … Prices are better on the internet than in the store.",
+      "snippet": "r fetch 403); not a live fetch | The MoMA Design Store is packed with beautifully designed products … The store can get quite crowded around midday … Spread across two floors, there's plenty to explore … Prices are better on the internet than in the store.",
+      "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch"
+    },
+    {
+      "url": "https://www.tripadvisor.ie/Attraction_Review-g60763-d565447-Reviews-MoMA_Design_Store-New_York_City_New_York.html",
+      "title": "Tripadvisor (IE): MoMA Design Store (search snapshot)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": " MoMA Design Store (search snapshot) | SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch) | 4.4 of 5 bubbles (636 reviews)",
+      "snippet": " MoMA Design Store (search snapshot) | SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch) | 4.4 of 5 bubbles (636 reviews)",
+      "fetchMethod": "SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch)"
+    },
+    {
+      "url": "https://exa.ai/library/place/jwz8k9zhbtm",
+      "title": "MoMA Design Store - 53rd Street reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:19:08-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_jwz8k9zhbtm.html",
+      "text": "The MoMA design store is a wonderful place to gift shop. They have a lot of very unique decorations and practical house items. This is a great stop before or after visiting the museum. It is also nice to go to as an independent endeavor. Every piece there looks perfectly curated. It's good for tourists and New Yorkers alike. They displayed many different items and you really can spend some time browsing through these items sections by sections. This is also a place to get some unique souvenir if you're tired of the regular I love New York t shirts! An well curated collection of classic and contemporary design elements covering home, technology, textiles and even entertainment. Many of the selections are mini replicas of larger exhibit items from the museum, some are inspired by their exhibits. Great shop, unique products. MoMA Design Store is a design boutique located next to the Museum of Modern Art (MoMA), a leading modern art museum in New York. The store offers a variety of products that incorporate contemporary art into lifestyle design. Products range from fashion accessories, household items, interior decoration, and design stationery. The unique and practical items make them popular gifts and souvenirs, making it a popular destination for travelers."
+    }
+  ],
+  "rating": {
+    "primary": 4.4,
+    "primarySource": "tripadvisor",
+    "tripadvisor": 4.4
+  },
+  "reviewCount": {
+    "tripadvisor": 636
+  },
+  "priceHint": "$$$ design gifts",
+  "hoursHint": "Daily 9:30am–6:30pm; Fri until 9pm (official store page)",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "Across from the Museum",
+    "showcases an array of lighting, tech innovations, tabletop, home decor, jewelry, accessories and more",
+    "44 West 53rd Street, New York 10019 Across from the Museum, between 5th and 6th Avenues",
+    "This destination store offers the best selection of new and classic design objects and gifts for everyone",
+    "The light, airy space",
+    "Spread across two floors, there's plenty to explore",
+    "Every Friday, the store will remain open until 9:00 p.m.",
+    "4.4 of 5 bubbles (636 reviews)",
+    "The MoMA Design Store is packed with beautifully designed products",
+    "The store can get quite crowded around midday",
+    "Prices are better on the internet than in the store."
+  ],
+  "itineraryNoteCandidate": "MoMA Design Store - 53rd Street: a design-lover's gift stop Across from the Museum; browse both floors after a MoMA visit.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text; sources include labelled SERP search snapshots (not live fetches) — see each source's fetchMethod"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 1
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 1 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 35,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot",
+  "evidenceReuse": {
+    "source": "READY preview saved evidenceDossier.pages",
+    "sha": "6d32a103602be23e3f0c38d0cf9fc506f2220e2d",
+    "reviewedAt": "2026-10-28",
+    "notes": "Selected narrative statements from saved page bytes; no new provider or model call."
+  },
+  "fields": {
+    "summary": {
+      "value": "MoMA Design Store - 53rd Street, across from the museum, showcases an array of lighting, tech innovations, tabletop, home decor, jewelry, accessories and more. Spread across two floors, it is an easy gift stop before or after the museum, and it stays open until 9:00 p.m. every Friday.",
+      "claims": [
+        {
+          "text": "showcases an array of lighting, tech innovations, tabletop, home decor, jewelry, accessories and more",
+          "sourceUrl": "https://store.moma.org/pages/design-store-53rd-nyc"
+        },
+        {
+          "text": "Every Friday, the store will remain open until 9:00 p.m.",
+          "sourceUrl": "https://store.moma.org/pages/design-store-53rd-nyc"
+        }
+      ]
+    },
+    "description": {
+      "value": "MoMA Design Store - 53rd Street is at 44 West 53rd Street, New York 10019 Across from the Museum, between 5th and 6th Avenues. The store says This destination store offers the best selection of new and classic design objects and gifts for everyone, and its light, airy space covers lighting, tech, tabletop, home decor and jewelry. A Tripadvisor reviewer (search snapshot) notes that, Spread across two floors, there's plenty to explore. Every Friday, the store will remain open until 9:00 p.m., which makes it an easy add-on after a museum evening. Tripadvisor shows 4.4 of 5 bubbles (636 reviews) in a search snapshot. Representative Tripadvisor praise (search snapshot): “The MoMA Design Store is packed with beautifully designed products”. Representative watch-outs: “The store can get quite crowded around midday” and “Prices are better on the internet than in the store.”",
+      "claims": [
+        {
+          "text": "44 West 53rd Street, New York 10019 Across from the Museum, between 5th and 6th Avenues",
+          "sourceUrl": "https://store.moma.org/pages/design-store-53rd-nyc"
+        },
+        {
+          "text": "This destination store offers the best selection of new and classic design objects and gifts for everyone",
+          "sourceUrl": "https://store.moma.org/pages/design-store-53rd-nyc"
+        },
+        {
+          "text": "The light, airy space",
+          "sourceUrl": "https://store.moma.org/pages/design-store-53rd-nyc"
+        },
+        {
+          "text": "Spread across two floors, there's plenty to explore",
+          "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d565447-Reviews-MoMA_Design_Store-New_York_City_New_York.html"
+        },
+        {
+          "text": "Every Friday, the store will remain open until 9:00 p.m.",
+          "sourceUrl": "https://store.moma.org/pages/design-store-53rd-nyc"
+        },
+        {
+          "text": "4.4 of 5 bubbles (636 reviews)",
+          "sourceUrl": "https://www.tripadvisor.ie/Attraction_Review-g60763-d565447-Reviews-MoMA_Design_Store-New_York_City_New_York.html"
+        },
+        {
+          "text": "The MoMA Design Store is packed with beautifully designed products",
+          "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d565447-Reviews-MoMA_Design_Store-New_York_City_New_York.html"
+        },
+        {
+          "text": "The store can get quite crowded around midday",
+          "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d565447-Reviews-MoMA_Design_Store-New_York_City_New_York.html"
+        },
+        {
+          "text": "Prices are better on the internet than in the store.",
+          "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d565447-Reviews-MoMA_Design_Store-New_York_City_New_York.html"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "MoMA Design Store - 53rd Street: a design-lover's gift stop Across from the Museum; browse both floors after a MoMA visit.",
+      "claims": [
+        {
+          "text": "Across from the Museum",
+          "sourceUrl": "https://store.moma.org/pages/design-store-53rd-nyc"
+        }
+      ]
+    },
+    "reviewsUnstarred": [
+      {
+        "theme": "Overall experience",
+        "value": "Tripadvisor reviewer on MoMA Design Store - 53rd Street: The MoMA Design Store is packed with beautifully designed products. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "The MoMA Design Store is packed with beautifully designed products",
+            "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d565447-Reviews-MoMA_Design_Store-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d565447-Reviews-MoMA_Design_Store-New_York_City_New_York.html",
+        "rating": "4.4/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 34
+      },
+      {
+        "theme": "Value",
+        "value": "Tripadvisor reviewer on MoMA Design Store - 53rd Street: Prices are better on the internet than in the store. Worth weighing alongside the overall 4.4/5 score before locking in the plan.",
+        "claims": [
+          {
+            "text": "Prices are better on the internet than in the store.",
+            "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d565447-Reviews-MoMA_Design_Store-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d565447-Reviews-MoMA_Design_Store-New_York_City_New_York.html",
+        "rating": "4.4/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 31
+      },
+      {
+        "theme": "Overall experience",
+        "value": "Watch-out from a Tripadvisor reviewer at MoMA Design Store - 53rd Street: The store can get quite crowded around midday. Keep that in mind when choosing timing, a room, or an arrival plan.",
+        "claims": [
+          {
+            "text": "The store can get quite crowded around midday",
+            "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d565447-Reviews-MoMA_Design_Store-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d565447-Reviews-MoMA_Design_Store-New_York_City_New_York.html",
+        "rating": "4.4/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "watchOut",
+        "words": 33
+      }
+    ]
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.tripadvisor.com/Attraction_Review-g60763-d565447-Reviews-MoMA_Design_Store-New_York_City_New_York.html",
+    "site": "Tripadvisor",
+    "via": "SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch)",
+    "praise": [
+      "The MoMA Design Store is packed with beautifully designed products",
+      "Prices are better on the internet than in the store."
+    ],
+    "watchOuts": [
+      "The store can get quite crowded around midday"
+    ],
+    "themes": [
+      "Overall experience",
+      "Value",
+      "Overall experience"
+    ],
+    "complaints": [
+      "The store can get quite crowded around midday"
+    ]
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "MoMA Design Store - 53rd Street: a design-lover's gift stop Across from the Museum; browse both floors after a MoMA visit.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "The MoMA Design Store is a favorite gift stop near the museum, packed with distinctive home decor and practical design pieces.",
+  "review1Source": "Exa place listing",
+  "review1Rating": "5/5",
+  "review1Theme": "Building and design",
+  "review1SourceUrl": "https://exa.ai/library/place/jwz8k9zhbtm",
+  "review2": "Shoppers enjoy taking time to browse section by section and find it a good place for souvenirs that go beyond standard tourist T-shirts.",
+  "review2Source": "Exa place listing",
+  "review2Rating": "5/5",
+  "review2Theme": "Atmosphere",
+  "review2SourceUrl": "https://exa.ai/library/place/jwz8k9zhbtm",
+  "review3": "The shop's collection is carefully curated, mixing classic and contemporary design across home goods, technology and textiles, with many pieces offered as small replicas of museum exhibit items.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "5/5",
+  "review3Theme": "Selection",
+  "review3SourceUrl": "https://exa.ai/library/place/jwz8k9zhbtm",
+  "review4": "It can get crowded around midday, and some shoppers note better prices online, so browsing in store and buying later is an option.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Building and design",
+  "review4SourceUrl": "https://exa.ai/library/place/jwz8k9zhbtm",
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029",
+  "review1Claims": [
+    "The MoMA design store is a wonderful place to gift shop.",
+    "They have a lot of very unique decorations and practical house items.",
+    "This is a great stop before or after visiting the museum.",
+    "It is also nice to go to as an independent endeavor.",
+    "Every piece there looks perfectly curated.",
+    "It's good for tourists and New Yorkers alike."
+  ],
+  "review2Claims": [
+    "They displayed many different items and you really can spend some time browsing through these items sections by sections.",
+    "This is also a place to get some unique souvenir if you're tired of the regular I love New York t shirts!"
+  ],
+  "review3Claims": [
+    "An well curated collection of classic and contemporary design elements covering home, technology, textiles and even entertainment.",
+    "Many of the selections are mini replicas of larger exhibit items from the museum, some are inspired by their exhibits.",
+    "Great shop, unique products."
+  ],
+  "review4Claims": [
+    "MoMA Design Store is a design boutique located next to the Museum of Modern Art (MoMA), a leading modern art museum in New York.",
+    "The store offers a variety of products that incorporate contemporary art into lifestyle design.",
+    "Products range from fashion accessories, household items, interior decoration, and design stationery.",
+    "The unique and practical items make them popular gifts and souvenirs, making it a popular destination for travelers."
+  ],
+  "reviewStarsDropped": "mean 5.00 vs venue 4.40 >0.5",
+  "reviewsLabel": "Representative reviews written from 22 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:22:18.183130+00:00"
+  }
+}

@@ -1,0 +1,190 @@
+{
+  "thingId": 602,
+  "thingName": "Zabar's",
+  "type": "store",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.zabars.com/directions.html",
+      "title": "https://www.zabars.com/directions.html",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": " public transportation or by car. Please check current bus, train, subway and road conditions for up to date transportation information. OUR LOCATION 2245 Broadway at 80th Street New York, NY 10024 212-787-2000 We're open 365 days a year. STORE HOURS Monday - Saturday: 8 am - 7:30 pm Sunday: 9 am - 6 pm HOUSEWARES MEZZANINE HO …  public transportation or by car. Please check current bus, train, subway and road conditions for up to date transportation information. OUR LOCATION 2245 Broadway at 80th Street New York, NY 10024 212-787-2000 We're open 365 days a year. STORE HOURS Monday - Saturday: 8 am - 7:30 pm Sunday: 9 am - 6 pm HOUSEWARES MEZZANINE HO … rain, subway and road conditions for up to date transportation information. OUR LOCATION 2245 Broadway at 80th Street New York, NY 10024 212-787-2000 We're open 365 days a year. STORE HOURS Monday - Saturday: 8 am - 7:30 pm Sunday: 9 am - 6 pm HOUSEWARES MEZZANINE HOURS Monday - Sunday: 9 am - 6 pm CAFE HOURS Monday - Saturd",
+      "snippet": " public transportation or by car. Please check current bus, train, subway and road conditions for up to date transportation information. OUR LOCATION 2245 Broadway at 80th Street New York, NY 10024 212-787-2000 We're open 365 days a year. STORE HOURS Monday - Saturday: 8 am - 7:30 pm Sunday: 9 am - ",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.yelp.com/biz/zabars-new-york",
+      "title": "ZABAR’S - Updated October 2026 - 1448 Reviews - 1254 Photos - 2245 Broadway, New York, New York - Bakeries - Phone Number - Menu - Yelp",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "| | ZABAR’S - Updated October 2026 - 1448 Reviews - 1254 Photos - 2245 Broadway, New York, New York - Bakeries - Phone Number - Menu - Yelp # Zabar's 3.9 (1.4k reviews) Unclaimed $$ Bakeries, Coffee & Tea, Bagels Dogs allowed ## Location & Hours 2245 Broadway New York, NY 10024 Upper West Side | Mon | 8:00 AM - 7:30 ",
+      "snippet": "| | ZABAR’S - Updated October 2026 - 1448 Reviews - 1254 Photos - 2245 Broadway, New York, New York - Bakeries - Phone Number - Menu - Yelp # Zabar's 3.9 (1.4k reviews) Unclaimed $$ Bakeries, Coffee & Tea, Bagels Dogs allowed ## Location & Hours 2245 Broadway New York, NY 10024 Upper West Side | Mon",
+      "fetchMethod": "Yelp page text as captured by the WebSearch index on 2026-10-28 (direct curl 403, WebFetch timed out); saved verbatim from the indexed page snapshot"
+    },
+    {
+      "url": "https://exa.ai/library/place/1rgnf7mjmnf",
+      "title": "Zabar's reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:19:07-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_1rgnf7mjmnf.html",
+      "text": "If you’ve never been to Zabars, WHAT ARE YOU DOING???? The hand sliced nova is NOT the only thing they have. I highly recommend the new addition Cinnamon Babka bread pudding, absolutely TO DIE FOR. The cafe is also a great quick eats spot with good coffee and amazing bagels. Highly recommend This is a great neighborhood store. Usually very busy in the morning. They have all the Jewish food and breakfast options that you can think of and the service is usually good. This is a staple on the upper west side and has been around for years. Run don’t walk to zabars!! Not exactly a hidden gem but an underrated one maybe? I don’t think many visitors know about it. A much better version of whole foods. Prices were very fair or even cheap for most things in NYC. The selection is amazing. Fresh prepared food and sandwiches. Great bagels. I can’t say enough good things about it. An institution for a reason! Support local and come check this place out. You will not be disappointed. I finally made it to Zabars, a NYC institution! I got some chocolate babka, which was one of the best babkas I've had. I also got some cinnamon rugelach, which was really tasty. Their house blend coffee was glorious and perfect on a cold winter's day. Zabars has so many high quality products and I can't wait to go back."
+    }
+  ],
+  "rating": {
+    "primary": 3.9,
+    "primarySource": "yelp",
+    "yelp": 3.9
+  },
+  "reviewCount": {
+    "yelp": 1448
+  },
+  "priceHint": "$$ gourmet market / cafe",
+  "hoursHint": "Mon–Sat 8am–7:30pm; Sun 9am–6pm (official directions)",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "2245 Broadway at 80th Street",
+    "2245 Broadway at 80th Street",
+    "2245 Broadway at 80th Street",
+    "We're open 365 days a year",
+    "3.9 (1.4k reviews)"
+  ],
+  "itineraryNoteCandidate": "Zabar's: the Upper West Side food hall at 2245 Broadway at 80th Street; browse the smoked fish counter and grab picnic supplies for Riverside Park.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 1
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 1 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": true,
+    "pageCount": 90,
+    "googleRating": "4.5",
+    "yelpRating": "3.9",
+    "price": 18,
+    "hours": false,
+    "happyHour": false,
+    "itineraryNote": true,
+    "xaiUsd": 0.071644,
+    "attemptKinds": {
+      "brave": 27
+    },
+    "braveAttempts": 27
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 5,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Zabar's is the Upper West Side food store at 2245 Broadway at 80th Street, open every day. Zabar's is open 365 days a year, so it works on any day of the trip for smoked fish, bagels, coffee and a Central Park picnic.",
+      "claims": [
+        {
+          "text": "2245 Broadway at 80th Street",
+          "sourceUrl": "https://www.zabars.com/directions.html"
+        },
+        {
+          "text": "open 365 days a year",
+          "sourceUrl": "https://www.zabars.com/directions.html"
+        }
+      ]
+    },
+    "description": {
+      "value": "Zabar's is a landmark Upper West Side food store at 2245 Broadway at 80th Street. Its directions page says the store is open 365 days a year. It is a good stop for smoked fish, bagels, coffee and picnic supplies before a walk in Central Park. On Yelp, Zabar's holds a 3.9 rating from about 1,400 reviews.",
+      "claims": [
+        {
+          "text": "2245 Broadway at 80th Street",
+          "sourceUrl": "https://www.zabars.com/directions.html"
+        },
+        {
+          "text": "We're open 365 days a year",
+          "sourceUrl": "https://www.zabars.com/directions.html"
+        },
+        {
+          "text": "3.9 (1.4k reviews)",
+          "sourceUrl": "https://www.yelp.com/biz/zabars-new-york"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Zabar's: the Upper West Side food hall at 2245 Broadway at 80th Street; browse the smoked fish counter and grab picnic supplies for Riverside Park.",
+      "claims": [
+        {
+          "text": "2245 Broadway at 80th Street",
+          "sourceUrl": "https://www.zabars.com/directions.html"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Zabar's: the Upper West Side food hall at 2245 Broadway at 80th Street; browse the smoked fish counter and grab picnic supplies for Riverside Park.",
+  "review1": "Zabar's is treated as an essential Upper West Side food stop, with shoppers praising the smoked fish counter and extras like bread pudding and the cafe.",
+  "review1Source": "Exa place listing",
+  "review1Rating": "5/5",
+  "review1Theme": "Food and drinks",
+  "review1SourceUrl": "https://exa.ai/library/place/1rgnf7mjmnf",
+  "review2": "Shoppers describe it as a busy neighborhood institution, especially on mornings, with a deep range of Jewish deli and breakfast foods and generally good service.",
+  "review2Source": "Exa place listing",
+  "review2Rating": "5/5",
+  "review2Theme": "Service",
+  "review2SourceUrl": "https://exa.ai/library/place/1rgnf7mjmnf",
+  "review3": "Visitors often call it an underrated find, comparing it favorably with big chain grocers for selection and finding prices fair for Manhattan.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "5/5",
+  "review3Theme": "Food and drinks",
+  "review3SourceUrl": "https://exa.ai/library/place/1rgnf7mjmnf",
+  "review4": "The baked goods and coffee are a verdict highlight, with chocolate babka, rugelach and the house blend coffee among the most recommended buys.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Food and drinks",
+  "review4SourceUrl": "https://exa.ai/library/place/1rgnf7mjmnf",
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029",
+  "review1Claims": [
+    "If you’ve never been to Zabars, WHAT ARE YOU DOING????",
+    "The hand sliced nova is NOT the only thing they have.",
+    "I highly recommend the new addition Cinnamon Babka bread pudding, absolutely TO DIE FOR.",
+    "The cafe is also a great quick eats spot with good coffee and amazing bagels.",
+    "Highly recommend"
+  ],
+  "review2Claims": [
+    "This is a great neighborhood store.",
+    "Usually very busy in the morning.",
+    "They have all the Jewish food and breakfast options that you can think of and the service is usually good.",
+    "This is a staple on the upper west side and has been around for years."
+  ],
+  "review3Claims": [
+    "Run don’t walk to zabars!!",
+    "Not exactly a hidden gem but an underrated one maybe?",
+    "I don’t think many visitors know about it.",
+    "A much better version of whole foods.",
+    "Prices were very fair or even cheap for most things in NYC.",
+    "The selection is amazing.",
+    "Fresh prepared food and sandwiches.",
+    "I can’t say enough good things about it.",
+    "An institution for a reason!",
+    "Support local and come check this place out.",
+    "You will not be disappointed."
+  ],
+  "review4Claims": [
+    "I finally made it to Zabars, a NYC institution!",
+    "I got some chocolate babka, which was one of the best babkas I've had.",
+    "I also got some cinnamon rugelach, which was really tasty.",
+    "Their house blend coffee was glorious and perfect on a cold winter's day.",
+    "Zabars has so many high quality products and I can't wait to go back."
+  ],
+  "reviewStarsDropped": "mean 5.00 vs venue 3.90 >0.5",
+  "reviewsLabel": "Representative reviews written from 29 reviews",
+  "reviewsRepresentative": true,
+  "reviewThemes": {
+    "representative": true
+  },
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
+}

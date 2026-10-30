@@ -1,0 +1,108 @@
+{
+  "thingId": 630,
+  "thingName": "Southwest LAS → LGA 07:25–16:35",
+  "type": "flight",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york",
+      "title": "Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines | Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel or rental ca … ind the most updated fare, please visit Southwest.com . Fares listed are Basic, which are subject to additional terms and conditions . Flight Details Departing from: McCarran International Airport Arriving at: La Guardia Airport Distance: 2242 miles Questions we hear the most How many Southwest flights occur weekly from Las Vegas to New York (LaGuardia)? There are 152 weekly flights from Las Vega … oducts and services may apply. Modifying this information may result in a different fare. To find the most updated fare, please visit Southwest.com . Fares listed are Basic, which are subject to additional terms and conditions . Flight Details Departing from: McCarran International Airport Arriving at: La Guardia Airport Distance: 2242 miles Questions we hear the most How m",
+      "snippet": "Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines | Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel or rental ca",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    }
+  ],
+  "rating": {
+    "primary": null,
+    "primarySource": null
+  },
+  "reviewCount": {},
+  "priceHint": "Inventory/list price $164",
+  "hoursHint": "Southwest LAS→LGA 07:25–16:35 — schedule per airline booking tool",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "Las Vegas (LAS) to New York LaGuardia (LGA)",
+    "Las Vegas (LAS) to New York LaGuardia (LGA)",
+    "La Guardia Airport",
+    "2242 miles",
+    "Fares listed are Basic, which are subject to additional terms and conditions"
+  ],
+  "itineraryNoteCandidate": "Southwest LAS → LGA 07:25–16:35: a mid-morning departure into LaGuardia; land in time for dinner in the city.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 164,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 4,
+  "baseFieldScore": 2,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Southwest LAS → LGA 07:25–16:35 covers Las Vegas (LAS) to New York LaGuardia (LGA), leaving mid-morning and arriving at 16:35 Eastern. The flight covers 2242 miles, a long morning in the air that still leaves the evening free in Manhattan.",
+      "claims": [
+        {
+          "text": "Las Vegas (LAS) to New York LaGuardia (LGA)",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "2242 miles",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        }
+      ]
+    },
+    "description": {
+      "value": "Southwest LAS → LGA 07:25–16:35 is a mid-morning Southwest flight from Las Vegas to La Guardia Airport, leaving at 07:25 and landing at 16:35 Eastern, a trip of 2242 miles. With Southwest LAS → LGA 07:25–16:35 you skip the predawn alarm, and you still arrive in time for an evening in Manhattan. The fares Southwest shows on the route page carry a caveat: Fares listed are Basic, which are subject to additional terms and conditions.",
+      "claims": [
+        {
+          "text": "La Guardia Airport",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "2242 miles",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "Fares listed are Basic, which are subject to additional terms and conditions",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Southwest LAS → LGA 07:25–16:35: a mid-morning departure into LaGuardia; land in time for dinner in the city.",
+      "claims": [
+        {
+          "text": "Las Vegas (LAS) to New York LaGuardia (LGA)",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Southwest LAS → LGA 07:25–16:35: a mid-morning departure into LaGuardia; land in time for dinner in the city."
+}

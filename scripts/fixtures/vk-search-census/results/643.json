@@ -1,0 +1,229 @@
+{
+  "thingId": 643,
+  "thingName": "Juice Generation Columbus Circle",
+  "type": "store",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.juicegeneration.com/locations",
+      "title": "Locations   | Juice Generation",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Location W 72nd Street 117 W 72nd Street btw Columbus & Broadway TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2002 View This Location Columbus Circle 979 Eighth Avenue btw 57th & 58th TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2012 View This Location Lexington Avenue 599 Lexington Avenue btw 52nd & 53rd TODAY’S HOURS: 7:00 AM 9:0 …  2012 View This Location W 72nd Street 117 W 72nd Street btw Columbus & Broadway TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2002 View This Location Columbus Circle 979 Eighth Avenue btw 57th & 58th TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2012 View This Location Lexington Avenue 599 Lexington Avenue btw 52nd & 53rd TODAY’S HOURS: 7:00 AM 9:0 … dway btw 85th & 86th TODAY’S HOURS: 7:00 AM 8:00 PM JUICING SINCE 2013 View This Location 3rd Avenue 1486 Third Avenue btw 83rd & 84th TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2012 View This Location W 72nd Street 117 W 72nd Street btw Columbus & Broadway TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2002 View  … kip to Content Menu Shop COOLER CLEANSE JUICE FOR A DAY® WELLNESS SHOTS ACTIVATED NUTRITION FRESH GOODS Stores Locations About Us Sustainability Menu Smoothies Fresh Juices Hotties Bowls Blender Boosts Bottled + SuperFoods Catering Rewards Order Ahead Search Sign In Shopping cart F Free Shipping on orders of $150+ 0 --> 0 --> Please w",
+      "snippet": "Location W 72nd Street 117 W 72nd Street btw Columbus & Broadway TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2002 View This Location Columbus Circle 979 Eighth Avenue btw 57th & 58th TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2012 View This Location Lexington Avenue 599 Lexington Avenue btw 52nd ",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.restaurantji.com/ny/new-york/juice-generation-6/",
+      "title": "Restaurantji: Juice Generation, 979 8th Avenue",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "ge); text stored as verbatim excerpts of the rating line and quoted reviews | Great selection of flavors … there is a bit of a wait … 4 231 ratings … Great selection of flavors, nice you can make your own mix and also creatine and protein options to add in, wheatgrass cocktails, immunity shots, salads and fruit bowls … This store is always busy, so there is a bit of a wait despite being larger than most … the juices are labeled and put in the refrigerator for pick … heatgrass cocktails, immunity shots, salads and fruit bowls … This store is always busy, so there is a bit of a wait despite being larger than most … the juices are labeled and put in the refrigerator for pick up as soon as they are made … antji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | Great selection of flavors … there is a bit of a wait … 4 231 ratings … Great selection of flavors, nice you can make your own mix and also creatine and protein options to add in, wheatgrass cocktails, immunity shots, s … avors, nice you can make your own mix and also creatine and protein options to add in, wheatgrass cocktails, immunity shots, salads and fruit bowls … This store is always busy, so there is a bit of a wait despite being larger than most … the juices are labeled and put in the refrigerator for pick up as soon as they are made",
+      "snippet": "ge); text stored as verbatim excerpts of the rating line and quoted reviews | Great selection of flavors … there is a bit of a wait … 4 231 ratings … Great selection of flavors, nice you can make your own mix and also creatine and protein options to add in, wheatgrass cocktails, immunity shots, sala",
+      "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
+    },
+    {
+      "url": "https://exa.ai/library/place/4dx7w0476ks",
+      "title": "Juice Generation Columbus Circle reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:49:35-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_4dx7w0476ks.html",
+      "text": "The service at this location is bad. I usually order ahead on the app with no issue to save time but the last 2 times I’ve been including today, I had to wait an extra 10 minutes to be handed my order. Today the short guy with square glasses at the register was laughing and talking with a friend (which is fine) and I was the only other customer inside so I figured it wouldn’t take too long because I could see my order sitting there ready. When their conversation ended the guy at the register proceeded to ignore me, move a couple things around and then disappeared into the back. Slow service for online orders. I ordered on the app which predicted the smoothie would be ready in 15 minutes. I arrive a couple minutes early and stood there and watched as people who walked in ordered and got their drink within minutes, yet I had yet to get mine. When I asked about my drink after the time I was supposed pick it up at 12:06, i see the staff grabbing the receipt to go make it. There must have been 6 walk-ins that got their drinks before I did."
+    }
+  ],
+  "rating": {
+    "primary": 4.0,
+    "primarySource": "restaurantji",
+    "restaurantji": 4.0
+  },
+  "reviewCount": {
+    "restaurantji": 231
+  },
+  "priceHint": "$$ juice / bowls",
+  "hoursHint": "Mon–Fri 7am–9pm; Sat–Sun 8am–9pm (location listing)",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    {
+      "text": "979 Eighth Avenue btw 57th & 58th",
+      "sourceUrl": "https://www.juicegeneration.com/locations"
+    },
+    {
+      "text": "Great selection of flavors",
+      "sourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-6/"
+    },
+    {
+      "text": "Slow service for online orders.",
+      "sourceUrl": "https://exa.ai/library/place/4dx7w0476ks"
+    }
+  ],
+  "itineraryNoteCandidate": "Juice Generation Columbus Circle: a quick smoothie stop at 979 Eighth Avenue btw 57th & 58th; grab one before a Central Park walk.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from live fetches (see each source's fetchMethod)"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 12,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Juice Generation Columbus Circle is a busy juice and smoothie bar at 979 Eighth Avenue btw 57th & 58th, liked for its wide range of flavors and make-your-own mixes. Lines are common even in this larger branch, and app or online pickups can run late, so ordering at the counter is often the quicker route.",
+      "claims": [
+        {
+          "text": "979 Eighth Avenue btw 57th & 58th",
+          "sourceUrl": "https://www.juicegeneration.com/locations"
+        },
+        {
+          "text": "Great selection of flavors",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-6/"
+        },
+        {
+          "text": "Slow service for online orders.",
+          "sourceUrl": "https://exa.ai/library/place/4dx7w0476ks"
+        }
+      ]
+    },
+    "description": {
+      "value": "Juice Generation Columbus Circle sits at Columbus Circle 979 Eighth Avenue btw 57th & 58th, open 7:00 AM 9:00 PM. The chain's menu runs from Smoothies Fresh Juices Hotties Bowls to bottled juices. A Restaurantji reviewer praises the Great selection of flavors, nice you can make your own mix and also creatine and protein options to add in, wheatgrass cocktails, immunity shots, salads and fruit bowls. Another notes that the juices are labeled and put in the refrigerator for pick up as soon as they are made, which helps on a grab-and-go morning before Central Park. Restaurantji shows 4 from 231 ratings (4 231 ratings). Representative Restaurantji praise (guest reviews): “Great selection of flavors”. Representative watch-outs: “This store is always busy, so there is a bit of a wait despite being larger than most”.",
+      "claims": [
+        {
+          "text": "Columbus Circle 979 Eighth Avenue btw 57th & 58th",
+          "sourceUrl": "https://www.juicegeneration.com/locations"
+        },
+        {
+          "text": "7:00 AM 9:00 PM",
+          "sourceUrl": "https://www.juicegeneration.com/locations"
+        },
+        {
+          "text": "Smoothies Fresh Juices Hotties Bowls",
+          "sourceUrl": "https://www.juicegeneration.com/locations"
+        },
+        {
+          "text": "Great selection of flavors, nice you can make your own mix and also creatine and protein options to add in, wheatgrass cocktails, immunity shots, salads and fruit bowls",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-6/"
+        },
+        {
+          "text": "the juices are labeled and put in the refrigerator for pick up as soon as they are made",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-6/"
+        },
+        {
+          "text": "4 231 ratings",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-6/"
+        },
+        {
+          "text": "This store is always busy, so there is a bit of a wait despite being larger than most",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-6/"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Juice Generation Columbus Circle: build a custom smoothie from the long flavor list before a Central Park walk, and order in person when the shop is packed.",
+      "claims": [
+        {
+          "text": "nice you can make your own mix",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-6/"
+        }
+      ]
+    }
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.restaurantji.com/ny/new-york/juice-generation-6/",
+    "site": "Restaurantji",
+    "via": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews",
+    "praise": [
+      "Great selection of flavors"
+    ],
+    "watchOuts": [
+      "This store is always busy, so there is a bit of a wait despite being larger than most"
+    ],
+    "themes": [
+      "Overall experience",
+      "Overall experience"
+    ],
+    "complaints": [
+      "This store is always busy, so there is a bit of a wait despite being larger than most"
+    ]
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Juice Generation Columbus Circle: build a custom smoothie from the long flavor list before a Central Park walk, and order in person when the shop is packed.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "Juice Generation Columbus Circle is liked for its wide range of smoothie and juice flavors, making it easy to find a favorite drink.",
+  "review1Source": "Restaurantji",
+  "review1Rating": "4.0/5",
+  "review1Theme": "Overall experience",
+  "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-6/",
+  "review1Stars": 5,
+  "review2": "The store is almost always busy, so a wait at checkout or the counters is common even though this branch is larger than most, and building extra time into the stop helps.",
+  "review2Source": "Restaurantji",
+  "review2Rating": "4.0/5",
+  "review2Theme": "Overall experience",
+  "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-6/",
+  "review2Stars": 5,
+  "review3": "App order pickups can run late, with customers reporting extra waits beyond the promised time, so ordering ahead may not save much time.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "1/5",
+  "review3Theme": "Service",
+  "review3SourceUrl": "https://exa.ai/library/place/4dx7w0476ks",
+  "review3Stars": 1,
+  "review4": "Online orders are a sore point, with walk-in customers sometimes served first, so ordering at the counter may be faster.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "4/5",
+  "review4Theme": "Service",
+  "review4SourceUrl": "https://exa.ai/library/place/4dx7w0476ks",
+  "review4Stars": 4,
+  "review1Claims": [
+    "Great selection of flavors"
+  ],
+  "review2Claims": [
+    "This store is always busy, so there is a bit of a wait despite being larger than most"
+  ],
+  "review3Claims": [
+    "The service at this location is bad.",
+    "I usually order ahead on the app with no issue to save time but the last 2 times I’ve been including today, I had to wait an extra 10 minutes to be handed my order.",
+    "Today the short guy with square glasses at the register was laughing and talking with a friend (which is fine) and I was the only other customer inside so I figured it wouldn’t take too long because I could see my order sitting there ready.",
+    "When their conversation ended the guy at the register proceeded to ignore me, move a couple things around and then disappeared into the back."
+  ],
+  "review4Claims": [
+    "Slow service for online orders.",
+    "I ordered on the app which predicted the smoothie would be ready in 15 minutes.",
+    "I arrive a couple minutes early and stood there and watched as people who walked in ordered and got their drink within minutes, yet I had yet to get mine.",
+    "When I asked about my drink after the time I was supposed pick it up at 12:06, i see the staff grabbing the receipt to go make it.",
+    "There must have been 6 walk-ins that got their drinks before I did."
+  ],
+  "reviewsLabel": "Representative reviews written from 15 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenOrder": [
+    "summary",
+    "itineraryNote"
+  ],
+  "writtenAt": {
+    "summary": "2026-10-29T20:33:25.626109+00:00",
+    "itineraryNote": "2026-10-29T20:33:25.626144+00:00"
+  }
+}

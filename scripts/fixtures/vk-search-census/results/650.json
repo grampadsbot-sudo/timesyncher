@@ -1,0 +1,113 @@
+{
+  "thingId": 650,
+  "thingName": "Flight option: American LAS-JFK 2026-06-23 12:37-20:59",
+  "type": "flight",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york",
+      "title": "Flights from Las Vegas to New York | American Airlines",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": " travel dates and demand. ### Book early Booking 1 to 3 months ahead can help you find lower fares on flights to New York. ### Be flexible with dates Midweek flights, such as Tuesdays or Wednesdays, can sometimes offer lower fares. ### Arrive early Arrive at least 2 hours before domestic flights. For international travel, plan for 3 hours before departure. ### Get your boarding … n Airlines | | Flights from Las Vegas to New York | American Airlines # American Airlines flights from Las Vegas to New York ## Your trip to New York American Airlines offers flights from Las Vegas to New York. Browse available flight options and fares between McCarran International Airport (LAS) and New York All Airports (NYC) for business trips, family vi … fore you arrive. ## Which New York airports does American Airlines fly to? Fly American Airlines into three major airports in the New York City area: John F. Kennedy International Airport (JFK), LaGuardia Airport (LGA) and Newark Liberty International Airport (EWR). All three airports are just a short distance from Manhattan and have Admiral …  travel dates and demand. ### Book early Booking 1 to 3 months ahead can help you find lower fares on flights to New York. ### Be flexible with dates Midweek flights, such as Tuesdays or Wednesdays, can sometimes offer lower fares. ### Arrive early Arrive at least 2 hours before domestic flights. For international travel, plan for 3 hours before departure. ### Get your boarding … ules and choose the option that fits your trip to New York (NYC). Prices and availability may change based on travel dates and demand. ### Book early Booking 1 to 3 months ahead can help you find lower fares on flights to New York. ### Be flexible with dates Midweek flights, such as Tuesdays or Wednesdays, can sometimes offer lower fares. ### Arrive early Arrive at least 2 hour …  options and fares between McCarran International Airport (LAS) and New York All Airports (NYC) for business trips, family visits and short getaways. Compare fares and schedules and choose the option that fits your trip to New York (NYC). Prices and availability may change based on travel dates and demand. ### Book early Booking 1 to 3 months ahead can help you find lower fares on fli",
+      "snippet": " travel dates and demand. ### Book early Booking 1 to 3 months ahead can help you find lower fares on flights to New York. ### Be flexible with dates Midweek flights, such as Tuesdays or Wednesdays, can sometimes offer lower fares. ### Arrive early Arrive at least 2 hours before domestic flights. Fo",
+      "fetchMethod": "WebFetch live fetch 2026-10-28 (curl 403/blocked); text saved verbatim from WebFetch markdown"
+    }
+  ],
+  "rating": null,
+  "reviewCount": null,
+  "priceHint": "Inventory/list price $257",
+  "hoursHint": null,
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "Midweek flights, such as Tuesdays or Wednesdays, can sometimes offer lower fares",
+    "Midweek flights, such as Tuesdays or Wednesdays, can sometimes offer lower fares",
+    "American Airlines offers flights from Las Vegas to New York",
+    "John F. Kennedy International Airport (JFK)",
+    "Midweek flights, such as Tuesdays or Wednesdays, can sometimes offer lower fares",
+    "Booking 1 to 3 months ahead can help you find lower fares on flights to New York",
+    "Compare fares and schedules and choose the option that fits your trip to New York (NYC)"
+  ],
+  "itineraryNoteCandidate": "Flight option: American LAS-JFK 2026-06-23 12:37-20:59: a midday Tuesday departure. Midweek flights, such as Tuesdays or Wednesdays, can sometimes offer lower fares.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": true,
+    "pageCount": 76,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 257,
+    "hours": true,
+    "happyHour": false,
+    "itineraryNote": false,
+    "xaiUsd": 0.051493,
+    "attemptKinds": {
+      "brave": 30
+    },
+    "braveAttempts": 30
+  },
+  "censusReuse": null,
+  "botFieldScore": 4,
+  "baseFieldScore": 3,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "American's Tuesday, June 23 departure listed as Flight option: American LAS-JFK 2026-06-23 12:37-20:59 falls on a midweek day, and midweek flights, such as Tuesdays or Wednesdays, can sometimes offer lower fares.",
+      "claims": [
+        {
+          "text": "Midweek flights, such as Tuesdays or Wednesdays, can sometimes offer lower fares",
+          "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
+        }
+      ]
+    },
+    "description": {
+      "value": "American Airlines offers flights from Las Vegas to New York, including the Tuesday departure Flight option: American LAS-JFK 2026-06-23 12:37-20:59 into John F. Kennedy International Airport (JFK). Midweek flights, such as Tuesdays or Wednesdays, can sometimes offer lower fares. Booking 1 to 3 months ahead can help you find lower fares on flights to New York. Compare fares and schedules and choose the option that fits your trip to New York (NYC).",
+      "claims": [
+        {
+          "text": "American Airlines offers flights from Las Vegas to New York",
+          "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "John F. Kennedy International Airport (JFK)",
+          "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "Midweek flights, such as Tuesdays or Wednesdays, can sometimes offer lower fares",
+          "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "Booking 1 to 3 months ahead can help you find lower fares on flights to New York",
+          "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "Compare fares and schedules and choose the option that fits your trip to New York (NYC)",
+          "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Flight option: American LAS-JFK 2026-06-23 12:37-20:59: a midday Tuesday departure. Midweek flights, such as Tuesdays or Wednesdays, can sometimes offer lower fares.",
+      "claims": [
+        {
+          "text": "Midweek flights, such as Tuesdays or Wednesdays, can sometimes offer lower fares",
+          "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Flight option: American LAS-JFK 2026-06-23 12:37-20:59: a midday Tuesday departure. Midweek flights, such as Tuesdays or Wednesdays, can sometimes offer lower fares."
+}

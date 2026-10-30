@@ -1,0 +1,108 @@
+{
+  "thingId": 651,
+  "thingName": "Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13",
+  "type": "flight",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://info.flightmapper.net/route/Delta_Air_Lines_DL_LAS_JFK",
+      "title": "Delta Air Lines flights from Las Vegas Harry Reid to New York John F. Kennedy.",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Reid (LAS) 1 14:59 New York John F. Kennedy (JFK) 4 Delta Air Lines DL 510 Non-stop Airbus A321neo (32Q) 4:56 Effective 2026-02-12 through 2026-03-07 Daily 07:05 Las Vegas Harry Reid (LAS) 1 15:17 New York John F. Kennedy (JFK) 4 Delta Air Lines DL 510 Non-stop Airbus A321neo (32Q) 5:12 Effective 2026-04-13 through 2026-10-05 Daily 07:05 Las Vegas Harry Reid (LAS) 1 15:10 New York John F. Kennedy (JFK) 4 Del …  (Spanish) Française (French) Português (Portuguese) Suomi (Finnish) 日本語 (Japanese) 한국말 (Korean) 简体中文 (Chinese,Simplified) 繁體中文 (Chinese,Traditional) Delta Air Lines flights from Las Vegas Harry Reid (LAS) to New York John F. Kennedy (JFK). Select flight date: FLIGHT SCHEDULE Direct Flights: Sat 22:10 Las Vegas Harry Reid (LAS) 1 05:59 New York John F. Kennedy (JFK) 4 Delta Air Lines DL … Reid (LAS) 1 14:59 New York John F. Kennedy (JFK) 4 Delta Air Lines DL 510 Non-stop Airbus A321neo (32Q) 4:56 Effective 2026-02-12 through 2026-03-07 Daily 07:05 Las Vegas Harry Reid (LAS) 1 15:17 New York John F. Kennedy (JFK) 4 Delta Air Lines DL 510 Non-stop Airbus A321neo (32Q) 5:12 Effective 2026-04-13 through 2026-10-05 Daily 07:05 Las Vegas Harry Reid (LAS) 1 15:10 New York John F. Kennedy (JFK) 4 Delta Air Lines DL 510 Non-stop Airbus A321neo (32Q) 5:05 Effective f … S) 1 21:08 New York John F. Kennedy (JFK) 4 Delta Air Lines DL 978 Non-stop Airbus A321neo (32Q) 5:08 Effective 2026-02-17 through 2026-03-04 --> 1 2 A domestic route departing from the Las Vegas Harry Reid airport (LAS) and arriving at New York John F. Kennedy airport (JFK). The flight distance is 2241 miles, or 3607 km. The timezone of the departure airport is UTC-8 , and the timezone of the arrival airport is UTC-5 . C … ugh 2026-03-04 --> 1 2 A domestic route departing from the Las Vegas Harry Reid airport (LAS) and arriving at New York John F. Kennedy airport (JFK). The flight distance is 2241 miles, or 3607 km. The timezone of the departure airport is UTC-8 , and the timezone of the arrival airport is UTC-5 . Current time at the point of departure is (loadi",
+      "snippet": "Reid (LAS) 1 14:59 New York John F. Kennedy (JFK) 4 Delta Air Lines DL 510 Non-stop Airbus A321neo (32Q) 4:56 Effective 2026-02-12 through 2026-03-07 Daily 07:05 Las Vegas Harry Reid (LAS) 1 15:17 New York John F. Kennedy (JFK) 4 Delta Air Lines DL 510 Non-stop Airbus A321neo (32Q) 5:12 Effective 20",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    }
+  ],
+  "rating": {
+    "primary": null,
+    "primarySource": null
+  },
+  "reviewCount": {},
+  "priceHint": "Inventory/list price $257",
+  "hoursHint": "Delta LAS-JFK 07:05-15:13 — schedule per airline booking tool",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "Delta Air Lines DL 510 Non-stop",
+    "Daily 07:05 Las Vegas Harry Reid (LAS) 1 15:17 New York John F. Kennedy (JFK) 4 Delta Air Lines DL 510 Non-stop",
+    "Delta Air Lines DL 510 Non-stop",
+    "Airbus A321neo (32Q)",
+    "A domestic route departing from the Las Vegas Harry Reid airport (LAS) and arriving at New York John F. Kennedy airport (JFK)."
+  ],
+  "itineraryNoteCandidate": "Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13: an early nonstop on Delta Air Lines DL 510 Non-stop; land by mid-afternoon.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 257,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 4,
+  "baseFieldScore": 2,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "FlightMapper lists Delta Air Lines DL 510 Non-stop at 07:05 from Las Vegas, the departure behind Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13 into New York JFK. The route is a nonstop on an Airbus A321neo, and the 15:13 Eastern arrival leaves time to check in before dinner.",
+      "claims": [
+        {
+          "text": "Daily 07:05 Las Vegas Harry Reid (LAS) 1 15:17 New York John F. Kennedy (JFK) 4 Delta Air Lines DL 510 Non-stop",
+          "sourceUrl": "https://info.flightmapper.net/route/Delta_Air_Lines_DL_LAS_JFK"
+        },
+        {
+          "text": "Airbus A321neo (32Q)",
+          "sourceUrl": "https://info.flightmapper.net/route/Delta_Air_Lines_DL_LAS_JFK"
+        }
+      ]
+    },
+    "description": {
+      "value": "Delta's early-morning nonstop, Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13, runs from Las Vegas Harry Reid to New York JFK. FlightMapper lists it as Delta Air Lines DL 510 Non-stop, flown on an Airbus A321neo (32Q), with about five hours and twelve minutes in the air. It is A domestic route departing from the Las Vegas Harry Reid airport (LAS) and arriving at New York John F. Kennedy airport (JFK). Taking Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13 puts you in New York by mid-afternoon, with time to reach the hotel before dinner.",
+      "claims": [
+        {
+          "text": "Delta Air Lines DL 510 Non-stop",
+          "sourceUrl": "https://info.flightmapper.net/route/Delta_Air_Lines_DL_LAS_JFK"
+        },
+        {
+          "text": "Airbus A321neo (32Q)",
+          "sourceUrl": "https://info.flightmapper.net/route/Delta_Air_Lines_DL_LAS_JFK"
+        },
+        {
+          "text": "A domestic route departing from the Las Vegas Harry Reid airport (LAS) and arriving at New York John F. Kennedy airport (JFK).",
+          "sourceUrl": "https://info.flightmapper.net/route/Delta_Air_Lines_DL_LAS_JFK"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13: an early nonstop on Delta Air Lines DL 510 Non-stop; land by mid-afternoon.",
+      "claims": [
+        {
+          "text": "Delta Air Lines DL 510 Non-stop",
+          "sourceUrl": "https://info.flightmapper.net/route/Delta_Air_Lines_DL_LAS_JFK"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13: an early nonstop on Delta Air Lines DL 510 Non-stop; land by mid-afternoon."
+}

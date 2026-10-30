@@ -1,6 +1,7 @@
 import { BudgetLogoChip } from '../components/BudgetLogoChip';
 import {
   buildBudgetModel,
+  formatBudgetTarget,
   formatUsd,
   bucketIcon,
 } from '../lib/budgetModel.mjs';
@@ -21,13 +22,20 @@ function TargetReadout({
   currency: string;
   ariaLabel: string;
 }) {
+  const targetText = formatBudgetTarget(target, currency);
   return (
     <span className="tsv-budget-target-line">
       <span className="tsv-budget-planned">{formatUsd(planned, currency)}</span>
-      <span className="tsv-budget-target-sep"> / </span>
-      <span className="tsv-budget-target-input" aria-label={ariaLabel}>
-        {formatUsd(target ?? 0, currency)}
-      </span>
+      {targetText ? (
+        <>
+          <span className="tsv-budget-target-sep"> / </span>
+          <span className="tsv-budget-target-input" aria-label={ariaLabel}>
+            {targetText}
+          </span>
+        </>
+      ) : (
+        <span className="tsv-budget-target-input" aria-label={ariaLabel} />
+      )}
     </span>
   );
 }

@@ -72,9 +72,6 @@ export function applyStoredDossiersToSharedTripSync(shared = {}, dossiersByPlace
     if (ccabLogo) patch.logoUrl = ccabLogo;
     const resolvedLogo = resolveThingLogoUrl({ ...place, ...placeCtx, sourceRecord: record }, patch);
     if (resolvedLogo) patch.logoUrl = resolvedLogo;
-    if (/bluenotejazz\.com/i.test(patch.website || record.website || placeCtx.url || '')) {
-      patch.logoUrl = 'https://www.bluenotejazz.com/favicon.ico';
-    }
     if (record.missingFields?.includes('address') && !addressIsSpecific(record.address || '')) patch.address = null;
     if (record.missingFields?.includes('phone')) patch.phone = null;
     if (!normalized.reviewThemes) patch.reviewThemes = null;

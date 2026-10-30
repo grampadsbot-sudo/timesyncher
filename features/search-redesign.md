@@ -33,3 +33,18 @@ Trip intake uses OpenRouter Jev decisions (`typesafe/jev-1.13` by default) for t
 ## Live tabs
 
 Live restaurant, store, and rest rows are real results for the trip. They are not padded with Las Vegas names or coordinates.
+
+## Thing dossier discovery
+
+Decision #66: `bot-admin/messages/time-syncher/eggbot-bot-primary-search-ruling-20261027`.
+`gatherThingEvidence` uses VK Search bot `aa90bc69-c4eb-4237-a2f9-bcd76cd14dce` first.
+An optional host HTTP bridge (`VK_SEARCH_WAKE_URL`) receives one POST with `{ botId, place }`;
+otherwise the adapter reads `scripts/fixtures/vk-search-census/results/{id}.json`.
+`VK_SEARCH_CENSUS_DIR` overrides the results directory; `VK_SEARCH_BOT_PRIMARY=0` restores the existing discovery path.
+Empty/thin discovery falls back to the existing Brave/Tavily path. Discovery pages with failed
+claim support are retained with `claim_support_failed`; their itinerary note is omitted.
+Only claims citing URLs in the bot's sources become dossier fields. The existing stored-dossier
+overlay supplies ratings, review counts, hours, happy-hour details and supported notes to Things.
+Text price hints stay in the dossier and do not become numeric prices. No render path changes.
+Local contract/overlay check: `node scripts/test_dossier_vk_search_adapter.mjs`.
+Preview screen and PDF verification remains with the host publication pipeline; this entry does not certify it.

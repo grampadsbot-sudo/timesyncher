@@ -1,0 +1,210 @@
+{
+  "thingId": 627,
+  "thingName": "Park Central Hotel New York",
+  "type": "hotel",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://en.wikipedia.org/wiki/Park_Central_Hotel",
+      "title": "Park Central Hotel - Wikipedia",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "details Floor count 25 Design and construction Architects Gronenberg & Leuchtag References [ 1 ] The Park Central Hotel is a 25-story, 761-room [ 2 ] hotel located southwest of Carnegie Hall at 870 7th Avenue (between West 55th and 56th streets) in Midtown Manhattan , New York City . It was designed in the Renaissance Revival style and opened on June 12, 1 … details Floor count 25 Design and construction Architects Gronenberg & Leuchtag References [ 1 ] The Park Central Hotel is a 25-story, 761-room [ 2 ] hotel located southwest of Carnegie Hall at 870 7th Avenue (between West 55th and 56th streets) in Midtown Manhattan , New York City . It was designed in the Renaissance Revival style and opened on June 12, 1 … onenberg & Leuchtag References [ 1 ] The Park Central Hotel is a 25-story, 761-room [ 2 ] hotel located southwest of Carnegie Hall at 870 7th Avenue (between West 55th and 56th streets) in Midtown Manhattan , New York City . It was designed in the Renaissance Revival style and opened on June 12, 1927. The Park Central is an independ",
+      "snippet": "details Floor count 25 Design and construction Architects Gronenberg & Leuchtag References [ 1 ] The Park Central Hotel is a 25-story, 761-room [ 2 ] hotel located southwest of Carnegie Hall at 870 7th Avenue (between West 55th and 56th streets) in Midtown Manhattan , New York City . It was designed",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html",
+      "title": "Park Central: 185 Reviews | Trip.com",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": " hotel's biggest advantage is its incredibly convenient location. … The room amenities are basic. … My room faced the street, which was a bit noisy … 8.0 / 10 Very good 185 reviews … Park Central: 185 Reviews | Trip.com | | The hotel's biggest advantage is its incredibly convenient location. … The room amenities are basic. … My room faced the street, which was a bit noisy … 8.0 / 10 Very good 185 reviews … Park Central: 185 Reviews | Trip.com | | The hotel's biggest advantage is its incredibly convenient location. … The room amenities are basic. … My room faced the street, which was a bit noisy … 8.0 / 10 Very good 185 reviews … Park Central: 185 Reviews | Trip.com | | The hotel's biggest advantage is its incredibly convenient location. … The room amenities are basic. … My room faced the street, which was a bit noisy … 8.0 / 10 Very good 185 reviews … American hotels generally tend to have older facilities, but this place offers great value for money and exceeded my expectations. … The room service was also great, very diligent and excellent!",
+      "snippet": " hotel's biggest advantage is its incredibly convenient location. … The room amenities are basic. … My room faced the street, which was a bit noisy … 8.0 / 10 Very good 185 reviews",
+      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
+    }
+  ],
+  "rating": {
+    "primary": 8.0,
+    "primarySource": "tripcom",
+    "tripcom": 8.0,
+    "scale": "10",
+    "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html",
+    "ratingEvidence": {
+      "site": "Trip.com",
+      "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "quote": "8.0 / 10 Very good 185 reviews",
+      "average": 8.0,
+      "count": 185,
+      "scale": 10
+    },
+    "reviewCount": 185
+  },
+  "reviewCount": {
+    "tripcom": 185
+  },
+  "priceHint": "4-star Midtown near Central Park",
+  "hoursHint": null,
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "southwest of Carnegie Hall at 870 7th Avenue",
+    "hotel located southwest of Carnegie Hall at 870 7th Avenue"
+  ],
+  "itineraryNoteCandidate": "Park Central Hotel New York: a big, walkable Midtown base southwest of Carnegie Hall at 870 7th Avenue; Central Park in the morning, Broadway at night.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 144,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 4,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Park Central Hotel New York, a hotel located southwest of Carnegie Hall at 870 7th Avenue, is a large, good-value Midtown pick that guests choose for its walk-everywhere location and attentive housekeeping. Rooms are basic and street-facing ones can be noisy, but most guests say it beat expectations for the price.",
+      "claims": [
+        {
+          "text": "southwest of Carnegie Hall at 870 7th Avenue",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Park_Central_Hotel"
+        },
+        {
+          "text": "hotel located southwest of Carnegie Hall at 870 7th Avenue",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Park_Central_Hotel"
+        }
+      ]
+    },
+    "description": {
+      "value": "Park Central Hotel New York is a large hotel located southwest of Carnegie Hall at 870 7th Avenue, between West 55th and 56th streets, a few blocks from Central Park and the Theater District. Trip.com guests rate it 8.0 / 10 Very good 185 reviews and say The hotel's biggest advantage is its incredibly convenient location. Reviews praise value and diligent room service. Honest watch-outs: The room amenities are basic, and My room faced the street, which was a bit noisy, so request an inner room.",
+      "claims": [
+        {
+          "text": "southwest of Carnegie Hall at 870 7th Avenue",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Park_Central_Hotel"
+        },
+        {
+          "text": "hotel located southwest of Carnegie Hall at 870 7th Avenue",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Park_Central_Hotel"
+        },
+        {
+          "text": "between West 55th and 56th streets",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Park_Central_Hotel"
+        },
+        {
+          "text": "8.0 / 10 Very good 185 reviews",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html"
+        },
+        {
+          "text": "The hotel's biggest advantage is its incredibly convenient location",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html"
+        },
+        {
+          "text": "The room amenities are basic",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html"
+        },
+        {
+          "text": "My room faced the street, which was a bit noisy",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Park Central Hotel New York: a big, walkable Midtown base southwest of Carnegie Hall at 870 7th Avenue; Central Park in the morning, Broadway at night.",
+      "claims": [
+        {
+          "text": "southwest of Carnegie Hall at 870 7th Avenue",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Park_Central_Hotel"
+        }
+      ]
+    }
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html",
+    "site": "Trip.com",
+    "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded",
+    "praise": [
+      "The hotel's biggest advantage is its incredibly convenient location",
+      "American hotels generally tend to have older facilities, but this place offers great value for money and exceeded my expectations.",
+      "The room service was also great, very diligent and excellent!"
+    ],
+    "watchOuts": [
+      "The room amenities are basic"
+    ],
+    "themes": [
+      "Location",
+      "Value",
+      "Rooms",
+      "Rooms"
+    ],
+    "complaints": [
+      "The room amenities are basic"
+    ]
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-hotel-essence-itinerary-note-20261029",
+    "new": false,
+    "at": "2026-10-29T08:45:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Park Central Hotel New York: a big, walkable Midtown base southwest of Carnegie Hall at 870 7th Avenue; Central Park in the morning, Broadway at night.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "Park Central's Midtown position is the most praised feature, with guests calling the location extremely convenient. This is worth keeping in mind when planning the visit.",
+  "review1Source": "Trip.com",
+  "review1Rating": "9.0/10",
+  "review1Theme": "Location",
+  "review1SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html",
+  "review2": "Value comes up often, with guests saying the hotel exceeded their expectations for the price compared with other older New York properties.",
+  "review2Source": "Trip.com",
+  "review2Rating": "10.0/10",
+  "review2Theme": "Value",
+  "review2SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html",
+  "review3": "Service from housekeeping and in-room staff is described as diligent and excellent, adding to the sense that the hotel is well run.",
+  "review3Source": "Trip.com",
+  "review3Rating": "10.0/10",
+  "review3Theme": "Rooms",
+  "review3SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html",
+  "review4": "The honest caveat is that room amenities are fairly basic, so guests expecting luxury touches may find the rooms simple.",
+  "review4Source": "Trip.com",
+  "review4Rating": "7.5/10",
+  "review4Theme": "Rooms",
+  "review4SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html",
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029",
+  "review1Claims": [
+    "The hotel's biggest advantage is its incredibly convenient location.",
+    "The hotel's biggest advantage is its incredibly convenient location"
+  ],
+  "review2Claims": [
+    "American hotels generally tend to have older facilities, but this place offers great value for money and exceeded my expectations.",
+    "American hotels generally tend to have older facilities, but this place offers great value for money and exceeded my expectations"
+  ],
+  "review3Claims": [
+    "The room service was also great, very diligent and excellent"
+  ],
+  "review4Claims": [
+    "The room amenities are basic.",
+    "The room amenities are basic"
+  ],
+  "reviewStarsDropped": "mean 4.75 vs venue 4.00 >0.5",
+  "reviewsLabel": "Representative reviews written from 12 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
+}

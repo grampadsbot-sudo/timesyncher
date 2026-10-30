@@ -1,0 +1,264 @@
+{
+  "thingId": 613,
+  "thingName": "Macy's Herald Square",
+  "type": "store",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://en.wikipedia.org/wiki/Macy%27s_Herald_Square",
+      "title": "Macy's Herald Square - Wikipedia",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "esignated NHL June 2, 1978 [ 3 ] Designated NYSRHP June 23, 1980 [ 4 ] Macy's Herald Square (originally named the R. H. Macy and Company Store ) is a department store building on West 34th Street at Herald Square in New York City , New York, United States. It was designed by A. W. Cordes and Theodore de Lemos for Isidor and Nathan Straus , and opened in 1902;  … esignated NHL June 2, 1978 [ 3 ] Designated NYSRHP June 23, 1980 [ 4 ] Macy's Herald Square (originally named the R. H. Macy and Company Store ) is a department store building on West 34th Street at Herald Square in New York City , New York, United States. It was designed by A. W. Cordes and Theodore de Lemos for Isidor and Nathan Straus , and opened in 1902;  … store chain, and the headquarters of its holding company Macy's, Inc. The building has a floor area of about 2.2 million square feet (200,000 m 2 ) , making it the largest department store in the United States and one of the largest in the world. It was added to the National Register of Historic Places and was made a National Historic Landmark in 1978. [ 2 ] [ 3 ] [ 5 ] History [ edit ] Previ … eventh Avenue building in 1931, all designed by architect Robert D. Kohn , the newer buildings becoming increasingly Art Deco in style. [ 13 ] [ 16 ] The store boasts several wooden escalators still in operation. Renovations [ edit ] The building in 2018 By the 21st century, the building spanned 2.2 million square feet (200,000 m 2 ) . [ 17 ] [ 18 ] The New Y",
+      "snippet": "esignated NHL June 2, 1978 [ 3 ] Designated NYSRHP June 23, 1980 [ 4 ] Macy's Herald Square (originally named the R. H. Macy and Company Store ) is a department store building on West 34th Street at Herald Square in New York City , New York, United States. It was designed by A. W. Cordes and Theodor",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com.au/ShowUserReviews-g60763-d208847-r949129567-Macy_s_Herald_Square-New_York_City_New_York.html",
+      "title": "Tripadvisor review page: Macy's Herald Square (search snapshot)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | The store is huge and has the most beautiful Christmas displays in the windows … I tend to get lost in and have difficulties finding the things I am looking for … erbatim page text; direct Tripadvisor fetch 403); not a live fetch | The store is huge and has the most beautiful Christmas displays in the windows … I tend to get lost in and have difficulties finding the things I am looking for",
+      "snippet": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | The store is huge and has the most beautiful Christmas displays in the windows … I tend to get lost in and have difficulties finding the things I am l",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com/Attraction_Review-g60763-d208847-Reviews-Macy_s_Herald_Square-New_York_City_New_York.html",
+      "title": "Tripadvisor: Macy's Herald Square (search snapshot)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | 4 of 5 bubbles (4,988 reviews)",
+      "snippet": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | 4 of 5 bubbles (4,988 reviews)",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://exa.ai/library/place/04qc8w8hrwx",
+      "title": "Macy's Herald Square reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:19:08-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_04qc8w8hrwx.html",
+      "text": "This review is from the view of a tourist. If you are visiting NYC and have never been to the 34 st store you should definitely go. The store is very large and contains a mix of history like wooden escalators and the piano from the movie big, to great shopping with an almost endless variety. The staff is friendly, and will help you navigate the store. There are 8 resturants in the store for you to take a rest and recharge. We stopped in to check out the historic Macy’s as well as buy some sheets. The person in the bedding department was super helpful, but ended up recommending that we order online when they went on sale the next day. I loved seeing the historic wooden escalators. And would’ve loved to have more time to shop. I did buy some shoes in the UGG shop within the store, and that was fun. If you go to Macy’s you have to go to the back of the store and check out the Wooden Escalator ! Only one in operation in the country. Also this store is soo amazing. The energy is real. And they had a DJ for the weekend around Christmas. The NBA section of the store was neat to see. What a place!!! I had a great shopping experience at Macy’s Herald Square. The store is huge, well-organized, and has an incredible selection of clothing, accessories, and brands all in one place. The staff was friendly, helpful, and professional, making the whole experience smooth and enjoyable. The location is iconic, clean, and easy to navigate despite how large it is. Whether you’re shopping for everyday items, gifts, or something special, this Macy’s truly has it all. I always enjoy coming here and will definitely be back again. Highly recommend!"
+    }
+  ],
+  "rating": {
+    "primary": 4.0,
+    "primarySource": "tripadvisor",
+    "tripadvisor": 4.0
+  },
+  "reviewCount": {
+    "tripadvisor": 4988
+  },
+  "priceHint": "$$$ department store",
+  "hoursHint": "Mon–Thu 10am–9pm; Fri–Sat 10am–10pm; Sun 11am–9pm (store page)",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "several wooden escalators still in operation",
+    "department store building on West 34th Street at Herald Square",
+    "The store boasts several wooden escalators still in operation"
+  ],
+  "itineraryNoteCandidate": "Macy's Herald Square: a giant on 34th Street; ride several wooden escalators still in operation and see the window displays.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 40,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Macy's Herald Square is less a store than a 34th Street landmark, with holiday windows, giant floors and The store boasts several wooden escalators still in operation. Shoppers find helpful staff and enormous choice, but the scale makes it easy to get lost, so pick two or three departments first; it is the department store building on West 34th Street at Herald Square.",
+      "claims": [
+        {
+          "text": "several wooden escalators still in operation",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Macy%27s_Herald_Square"
+        },
+        {
+          "text": "department store building on West 34th Street at Herald Square",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Macy%27s_Herald_Square"
+        },
+        {
+          "text": "The store boasts several wooden escalators still in operation",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Macy%27s_Herald_Square"
+        }
+      ]
+    },
+    "description": {
+      "value": "Macy's Herald Square is the flagship department store building on West 34th Street at Herald Square. Wikipedia says the building has a floor area of about 2.2 million square feet, making it the largest department store in the United States and one of the largest in the world. It also notes that the store boasts several wooden escalators still in operation, a detail worth seeking out between floors. Allow at least an hour to cover fashion, home and beauty. Representative Tripadvisor praise (search snapshot): “The store is huge and has the most beautiful Christmas displays in the windows”. Representative watch-outs: “I tend to get lost in and have difficulties finding the things I am looking for”. Tripadvisor shows 4 of 5 bubbles (4,988 reviews) for the 151 West 34th Street store.",
+      "claims": [
+        {
+          "text": "department store building on West 34th Street at Herald Square",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Macy%27s_Herald_Square"
+        },
+        {
+          "text": "making it the largest department store in the United States and one of the largest in the world",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Macy%27s_Herald_Square"
+        },
+        {
+          "text": "The store boasts several wooden escalators still in operation",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Macy%27s_Herald_Square"
+        },
+        {
+          "text": "The store is huge and has the most beautiful Christmas displays in the windows",
+          "sourceUrl": "https://www.tripadvisor.com.au/ShowUserReviews-g60763-d208847-r949129567-Macy_s_Herald_Square-New_York_City_New_York.html"
+        },
+        {
+          "text": "I tend to get lost in and have difficulties finding the things I am looking for",
+          "sourceUrl": "https://www.tripadvisor.com.au/ShowUserReviews-g60763-d208847-r949129567-Macy_s_Herald_Square-New_York_City_New_York.html"
+        },
+        {
+          "text": "4 of 5 bubbles (4,988 reviews)",
+          "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d208847-Reviews-Macy_s_Herald_Square-New_York_City_New_York.html"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Macy's Herald Square: a giant on 34th Street; ride several wooden escalators still in operation and see the window displays.",
+      "claims": [
+        {
+          "text": "several wooden escalators still in operation",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Macy%27s_Herald_Square"
+        }
+      ]
+    },
+    "reviewsUnstarred": [
+      {
+        "theme": "Overall experience",
+        "value": "Tripadvisor reviewer on Macy's Herald Square: The store is huge and has the most beautiful Christmas displays in the windows. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "The store is huge and has the most beautiful Christmas displays in the windows",
+            "sourceUrl": "https://www.tripadvisor.com.au/ShowUserReviews-g60763-d208847-r949129567-Macy_s_Herald_Square-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com.au/ShowUserReviews-g60763-d208847-r949129567-Macy_s_Herald_Square-New_York_City_New_York.html",
+        "rating": "4.0/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 35
+      },
+      {
+        "theme": "Overall experience",
+        "value": "Tripadvisor reviewer on Macy's Herald Square: I tend to get lost in and have difficulties finding the things I am looking for. Worth weighing alongside the overall 4.0/5 score before locking in the plan.",
+        "claims": [
+          {
+            "text": "I tend to get lost in and have difficulties finding the things I am looking for",
+            "sourceUrl": "https://www.tripadvisor.com.au/ShowUserReviews-g60763-d208847-r949129567-Macy_s_Herald_Square-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com.au/ShowUserReviews-g60763-d208847-r949129567-Macy_s_Herald_Square-New_York_City_New_York.html",
+        "rating": "4.0/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 34
+      }
+    ]
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.tripadvisor.com.au/ShowUserReviews-g60763-d208847-r949129567-Macy_s_Herald_Square-New_York_City_New_York.html",
+    "site": "Tripadvisor",
+    "via": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch",
+    "praise": [
+      "The store is huge and has the most beautiful Christmas displays in the windows",
+      "I tend to get lost in and have difficulties finding the things I am looking for"
+    ],
+    "watchOuts": [],
+    "themes": [
+      "Overall experience",
+      "Overall experience"
+    ],
+    "complaints": []
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Macy's Herald Square: a giant on 34th Street; ride several wooden escalators still in operation and see the window displays.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "Macy's Herald Square is a must-see for many visitors thanks to its huge size and historic touches such as the original wooden escalators.",
+  "review1Source": "Exa place listing",
+  "review1Rating": "5/5",
+  "review1Theme": "Selection",
+  "review1SourceUrl": "https://exa.ai/library/place/04qc8w8hrwx",
+  "review2": "Staff in departments such as bedding come across as genuinely helpful, even pointing out when an upcoming online sale would save money, and the historic wooden escalators add charm.",
+  "review2Source": "Exa place listing",
+  "review2Rating": "5/5",
+  "review2Theme": "Service",
+  "review2SourceUrl": "https://exa.ai/library/place/04qc8w8hrwx",
+  "review3": "The store's energy and special events around the holidays make it feel like an attraction, not just a place to shop.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "5/5",
+  "review3Theme": "Atmosphere",
+  "review3SourceUrl": "https://exa.ai/library/place/04qc8w8hrwx",
+  "review4": "Shoppers praise a vast, well-organized selection of clothing, accessories and brands, although the size means it is easy to get lost.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Selection",
+  "review4SourceUrl": "https://exa.ai/library/place/04qc8w8hrwx",
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029",
+  "review1Claims": [
+    "This review is from the view of a tourist.",
+    "If you are visiting NYC and have never been to the 34 st store you should definitely go.",
+    "The store is very large and contains a mix of history like wooden escalators and the piano from the movie big, to great shopping with an almost endless variety.",
+    "The staff is friendly, and will help you navigate the store.",
+    "There are 8 resturants in the store for you to take a rest and recharge."
+  ],
+  "review2Claims": [
+    "We stopped in to check out the historic Macy’s as well as buy some sheets.",
+    "The person in the bedding department was super helpful, but ended up recommending that we order online when they went on sale the next day.",
+    "I loved seeing the historic wooden escalators.",
+    "And would’ve loved to have more time to shop.",
+    "I did buy some shoes in the UGG shop within the store, and that was fun."
+  ],
+  "review3Claims": [
+    "If you go to Macy’s you have to go to the back of the store and check out the Wooden Escalator !",
+    "Only one in operation in the country.",
+    "Also this store is soo amazing.",
+    "The energy is real.",
+    "And they had a DJ for the weekend around Christmas.",
+    "The NBA section of the store was neat to see.",
+    "What a place!!!"
+  ],
+  "review4Claims": [
+    "I had a great shopping experience at Macy’s Herald Square.",
+    "The store is huge, well-organized, and has an incredible selection of clothing, accessories, and brands all in one place.",
+    "The staff was friendly, helpful, and professional, making the whole experience smooth and enjoyable.",
+    "The location is iconic, clean, and easy to navigate despite how large it is.",
+    "Whether you’re shopping for everyday items, gifts, or something special, this Macy’s truly has it all.",
+    "I always enjoy coming here and will definitely be back again.",
+    "Highly recommend!"
+  ],
+  "reviewStarsDropped": "mean 5.00 vs venue 4.00 >0.5",
+  "reviewsLabel": "Representative reviews written from 30 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenAt": {
+    "reviews": "2026-10-29T20:22:18.182654+00:00"
+  },
+  "writtenOrder": [
+    "reviews"
+  ]
+}

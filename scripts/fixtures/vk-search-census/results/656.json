@@ -1,0 +1,110 @@
+{
+  "thingId": 656,
+  "thingName": "Flight option: Southwest LAS-LGA 2026-06-23 07:25-16:35",
+  "type": "flight",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york",
+      "title": "Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": " Resource Page New Destinations Explore Destinations Popular Routes Tarmac Delay Plan Contract of Carriage Southwest Products Fare Types and Benefits EarlyBird Check-in® Upgrade to Business Select® Upgrade Boarding Southwest® gift card Hotels open_in_new Southwest Vacations WiFi & Inflight Entertainment Southwest Busi … Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines | Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel or rental ca … es by day and time to fly Las Vegas to New York (LaGuardia) with Southwest, check out our Low Fare Calendar . Can I rent a car at La Guardia Airport? You can rent a car at La Guardia Airport book yours with your flight . Can I change my flight reservation for my flight from Las Vegas to New York (LaGuardia)? Yes! Flights from Las Vegas to … 52 weekly flights from Las Vegas to New York (LaGuardia) on Southwest Airlines. What day has the lowest fares from Las Vegas to New York (LaGuardia)? To find the lowest fares by day and time to fly Las Vegas to New York (LaGuardia) with Southwest, check out our Low Fare Calendar . Can I rent a car at La Guardia Airport? You can rent a car at La Guardia Airport book yours with your flight . Can I change my flight reservation f … to New York (LaGuardia)? Check the status of your upcoming Southwest flight. Where can I find answers to other questions about flying with Southwest? Check out the Southwest Airlines ® Help Center for answers about everything Southwest. Explore Flights from Other Popular Origins Flights from Chicago-Midway Flights from Atlanta Flights from Dallas-Love Field Flights from Houston Hobb",
+      "snippet": " Resource Page New Destinations Explore Destinations Popular Routes Tarmac Delay Plan Contract of Carriage Southwest Products Fare Types and Benefits EarlyBird Check-in® Upgrade to Business Select® Upgrade Boarding Southwest® gift card Hotels open_in_new Southwest Vacations WiFi & Inflight Entertain",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    }
+  ],
+  "rating": null,
+  "reviewCount": null,
+  "priceHint": "Inventory/list price $164",
+  "hoursHint": null,
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "You can rent a car at La Guardia Airport",
+    "EarlyBird Check-in®",
+    "Las Vegas (LAS) to New York LaGuardia (LGA)",
+    "You can rent a car at La Guardia Airport",
+    "To find the lowest fares by day and time to fly Las Vegas to New York (LaGuardia) with Southwest, check out our Low Fare Calendar",
+    "Check out the Southwest Airlines ® Help Center for answers about everything Southwest"
+  ],
+  "itineraryNoteCandidate": "Flight option: Southwest LAS-LGA 2026-06-23 07:25-16:35: a civilized morning departure; grab a car on landing since You can rent a car at La Guardia Airport.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 164,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 4,
+  "baseFieldScore": 2,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Southwest's 07:25 departure on June 23, Flight option: Southwest LAS-LGA 2026-06-23 07:25-16:35, lands at 16:35, with EarlyBird Check-in® offered on the route. It runs Las Vegas (LAS) to New York LaGuardia (LGA), with rental cars available at La Guardia Airport after landing.",
+      "claims": [
+        {
+          "text": "EarlyBird Check-in®",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "Las Vegas (LAS) to New York LaGuardia (LGA)",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        }
+      ]
+    },
+    "description": {
+      "value": "Southwest's 07:25 departure Flight option: Southwest LAS-LGA 2026-06-23 07:25-16:35 runs Las Vegas (LAS) to New York LaGuardia (LGA). You can rent a car at La Guardia Airport. To find the lowest fares by day and time to fly Las Vegas to New York (LaGuardia) with Southwest, check out our Low Fare Calendar. Check out the Southwest Airlines ® Help Center for answers about everything Southwest.",
+      "claims": [
+        {
+          "text": "Las Vegas (LAS) to New York LaGuardia (LGA)",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "You can rent a car at La Guardia Airport",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "To find the lowest fares by day and time to fly Las Vegas to New York (LaGuardia) with Southwest, check out our Low Fare Calendar",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "Check out the Southwest Airlines ® Help Center for answers about everything Southwest",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Flight option: Southwest LAS-LGA 2026-06-23 07:25-16:35: a civilized morning departure; grab a car on landing since You can rent a car at La Guardia Airport.",
+      "claims": [
+        {
+          "text": "You can rent a car at La Guardia Airport",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Flight option: Southwest LAS-LGA 2026-06-23 07:25-16:35: a civilized morning departure; grab a car on landing since You can rent a car at La Guardia Airport."
+}

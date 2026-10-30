@@ -1,0 +1,193 @@
+{
+  "thingId": 636,
+  "thingName": "Sheraton New York Times Square Hotel",
+  "type": "hotel",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://en.wikipedia.org/wiki/Sheraton_New_York_Times_Square_Hotel",
+      "title": "Sheraton New York Times Square Hotel - Wikipedia",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": " Liebman Other information Number of rooms 1,780 [ 1 ] Website [ 3 ] [ 4 ] [ 5 ] [ 6 ] The Sheraton New York Times Square Hotel is a 501 ft (153 m) , 51-story hotel located near Times Square in Midtown Manhattan , New York City. It faces 7th Avenue , 52nd Street , and 53rd Street . It is one of the world's 100 tallest hotels, and one of t …  Liebman Other information Number of rooms 1,780 [ 1 ] Website [ 3 ] [ 4 ] [ 5 ] [ 6 ] The Sheraton New York Times Square Hotel is a 501 ft (153 m) , 51-story hotel located near Times Square in Midtown Manhattan , New York City. It faces 7th Avenue , 52nd Street , and 53rd Street . It is one of the world's 100 tallest hotels, and one of t",
+      "snippet": " Liebman Other information Number of rooms 1,780 [ 1 ] Website [ 3 ] [ 4 ] [ 5 ] [ 6 ] The Sheraton New York Times Square Hotel is a 501 ft (153 m) , 51-story hotel located near Times Square in Midtown Manhattan , New York City. It faces 7th Avenue , 52nd Street , and 53rd Street . It is one of the ",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://ca.trip.com/hotels/new-york-hotel-detail-2140147/sheraton-new-york-times-square-hotel/review.html",
+      "title": "Sheraton New York Times Square Hotel: 158 Reviews | Trip.com",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Sheraton New York Times Square Hotel: 158 Reviews | Trip.com | | Guest Reviews of Sheraton New York Times Square Hotel 7.8 / 10 Good 158 reviews … Room is great and clean. … I expected a sauna/Spa as it is listed under amenities … Square Hotel: 158 Reviews | Trip.com | | Guest Reviews of Sheraton New York Times Square Hotel 7.8 / 10 Good 158 reviews … Room is great and clean. … I expected a sauna/Spa as it is listed under amenities … Sheraton New York Times Square Hotel: 158 Reviews | Trip.com | | Guest Reviews of Sheraton New York Times Square Hotel 7.8 / 10 Good 158 reviews … Room is great and clean. … I expected a sauna/Spa as it is listed under amenities … The front desk staff were super friendly and even gave us free tickets! … It is a good location where you can just walk to the known tourist attractions like time square and central park. … The rooms are just so-so, and parking is extremely expensive.",
+      "snippet": "Sheraton New York Times Square Hotel: 158 Reviews | Trip.com | | Guest Reviews of Sheraton New York Times Square Hotel 7.8 / 10 Good 158 reviews … Room is great and clean. … I expected a sauna/Spa as it is listed under amenities",
+      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
+    }
+  ],
+  "rating": {
+    "primary": 7.8,
+    "primarySource": "trip.com",
+    "tripcom": 7.8,
+    "scale": 10,
+    "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2140147/sheraton-new-york-times-square-hotel/review.html",
+    "ratingEvidence": {
+      "site": "Trip.com",
+      "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2140147/sheraton-new-york-times-square-hotel/review.html",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "quote": "7.8 / 10 Good 158 reviews",
+      "average": 7.8,
+      "count": 158,
+      "scale": 10
+    },
+    "reviewCount": 158
+  },
+  "reviewCount": {
+    "tripcom": 158
+  },
+  "priceHint": "4-star Times Square Sheraton",
+  "hoursHint": null,
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "51-story hotel located near Times Square"
+  ],
+  "itineraryNoteCandidate": "Sheraton New York Times Square Hotel: a 51-story hotel located near Times Square with friendly staff; walk to Broadway, Rockefeller Center and Central Park.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 349,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Sheraton New York Times Square Hotel is a big, practical 51-story hotel located near Times Square that guests rate for clean rooms, warm front-desk staff and a walkable location. Some find rooms only average, and parking is very expensive.",
+      "claims": [
+        {
+          "text": "51-story hotel located near Times Square",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Sheraton_New_York_Times_Square_Hotel"
+        }
+      ]
+    },
+    "description": {
+      "value": "Sheraton New York Times Square Hotel is a 51-story hotel located near Times Square on Seventh Avenue, a convention-scale property with many room types for groups. Trip.com guests rate it 7.8 / 10 Good 158 reviews and report Room is great and clean, plus front-desk staff who go out of their way. Honest watch-outs: room quality is described as so-so by some, parking costs a lot, and one guest adds I expected a sauna/Spa as it is listed under amenities.",
+      "claims": [
+        {
+          "text": "51-story hotel located near Times Square",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Sheraton_New_York_Times_Square_Hotel"
+        },
+        {
+          "text": "7.8 / 10 Good 158 reviews",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2140147/sheraton-new-york-times-square-hotel/review.html"
+        },
+        {
+          "text": "Room is great and clean",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2140147/sheraton-new-york-times-square-hotel/review.html"
+        },
+        {
+          "text": "I expected a sauna/Spa as it is listed under amenities",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2140147/sheraton-new-york-times-square-hotel/review.html"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Sheraton New York Times Square Hotel: a 51-story hotel located near Times Square with friendly staff; walk to Broadway, Rockefeller Center and Central Park.",
+      "claims": [
+        {
+          "text": "51-story hotel located near Times Square",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Sheraton_New_York_Times_Square_Hotel"
+        }
+      ]
+    }
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://ca.trip.com/hotels/new-york-hotel-detail-2140147/sheraton-new-york-times-square-hotel/review.html",
+    "site": "Trip.com",
+    "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded",
+    "praise": [
+      "Room is great and clean",
+      "The front desk staff were super friendly and even gave us free tickets!",
+      "It is a good location where you can just walk to the known tourist attractions like time square and central park."
+    ],
+    "watchOuts": [
+      "The rooms are just so-so, and parking is extremely expensive."
+    ],
+    "themes": [
+      "Rooms",
+      "Service",
+      "Location",
+      "Rooms"
+    ],
+    "complaints": [
+      "The rooms are just so-so, and parking is extremely expensive."
+    ]
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-hotel-essence-itinerary-note-20261029",
+    "new": false,
+    "at": "2026-10-29T08:45:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Sheraton New York Times Square Hotel: a 51-story hotel located near Times Square with friendly staff; walk to Broadway, Rockefeller Center and Central Park.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "Guests find Sheraton Times Square's rooms clean and generally pleasant, which makes it a dependable base for a busy Midtown itinerary.",
+  "review1Source": "Trip.com",
+  "review1Rating": "7.5/10",
+  "review1Theme": "Rooms",
+  "review1SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2140147/sheraton-new-york-times-square-hotel/review.html",
+  "review2": "Front desk staff draw warm praise for friendliness and occasional extras, which leaves guests with a good impression from arrival onward.",
+  "review2Source": "Trip.com",
+  "review2Rating": "10.0/10",
+  "review2Theme": "Service",
+  "review2SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2140147/sheraton-new-york-times-square-hotel/review.html",
+  "review3": "The walkable location is a recurring plus, with Times Square, the theater district and Central Park all reachable on foot.",
+  "review3Source": "Trip.com",
+  "review3Rating": "8.0/10",
+  "review3Theme": "Location",
+  "review3SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2140147/sheraton-new-york-times-square-hotel/review.html",
+  "review4": "Watch-outs center on rooms that some guests describe as only average and on very expensive parking, so plan transit rather than a car.",
+  "review4Source": "Trip.com",
+  "review4Rating": "9.2/10",
+  "review4Theme": "Rooms",
+  "review4SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2140147/sheraton-new-york-times-square-hotel/review.html",
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029",
+  "review1Claims": [
+    "Room is great and clean.",
+    "Room is great and clean"
+  ],
+  "review2Claims": [
+    "The front desk staff were super friendly and even gave us free tickets"
+  ],
+  "review3Claims": [
+    "It is a good location where you can just walk to the known tourist attractions like time square and central park.",
+    "It is a good location where you can just walk to the known tourist attractions like time square and central park"
+  ],
+  "review4Claims": [
+    "The rooms are just so-so, and parking is extremely expensive.",
+    "The rooms are just so-so, and parking is extremely expensive"
+  ],
+  "reviewStarsDropped": "mean 4.50 vs venue 3.90 >0.5",
+  "reviewsLabel": "Representative reviews written from 12 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
+}

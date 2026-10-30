@@ -20,7 +20,7 @@ const INK_MAX = Number(process.env.VACATION_CLIENT_DETAIL_INK_MAX || '0.5');
 
 const NYC_SCENARIOS = [
   { tab: 'Restaurants', namePattern: /sample nyc restaurant/i, slug: 'restaurant' },
-  { tab: 'Hotels', namePattern: /midtown sample hotel/i, slug: 'hotel' },
+  { tab: 'Hotels', namePattern: /the manhattan club/i, slug: 'hotel' },
   { tab: 'Flights', namePattern: /jetblue/i, slug: 'flight' },
 ];
 
