@@ -58,4 +58,8 @@ mkdir -p "$OUT" "$C/fontcache"
 export FONTCONFIG_FILE=$C/fonts.conf
 export TSV_CAPTURE_BASE=$BASE
 export TSV_CAPTURE_RENDER_HEAD_SHA=$RENDER_HEAD
-exec node "$C/capture.mjs" "$OUT" "$PRODUCER_SHA"
+node "$C/capture.mjs" "$OUT" "$PRODUCER_SHA"
+EVIDENCE=$(dirname "$0")/budget_capture_evidence.py
+if [ -f "$EVIDENCE" ] && [ -f "$OUT/capture-regions.json" ]; then
+  python3 "$EVIDENCE" --regions "$OUT/capture-regions.json" --fixture "$TSV_CAPTURE_FIXTURE" --out "$OUT/budget-evidence.json" --comment "$OUT/budget-membership-comment.txt"
+fi

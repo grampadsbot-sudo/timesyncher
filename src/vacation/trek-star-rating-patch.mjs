@@ -7,7 +7,7 @@ const LR_NEEDLE =
   'Lr=G=>[1,2,3].map(Re=>Ps(G,Re)).filter(Boolean).map(Re=>{const ua=String(Re||"").trim().replace(/^[⭐★☆️\\s]+/,"").replace(/^\\(?\\s*5\\s*stars?\\s*\\)?[:\\-–—]?\\s*/i,"").replace(/^[⭐★☆️\\s]+/,"").trim();return`<div class="review"><span class="review-stars-inline">★★★★★</span> ${an(ua)}</div>`}).join("")';
 
 const LR_PATCH =
-  'Lr=G=>[1,2,3,4].map(Re=>{const body=String(Ps(G,Re)||"").trim();if(!body)return "";let rv=No(G,`review${Re}Rating`);if(!tsParseStarRating(rv)){const m=body.match(/^\\(?\\s*(\\d+(?:\\.\\d+)?)\\s*stars?\\s*\\)?[:\\-–—]?\\s*/i);if(m)rv=m[1];}const stars=tsRenderStarRatingHtml(rv);if(!stars)return "";const ua=body.replace(/^[⭐★☆️\\s]+/,"").replace(/^\\(?\\s*\\d+(?:\\.\\d+)?\\s*stars?\\s*\\)?[:\\-–—]?\\s*/i,"").replace(/^[⭐★☆️\\s]+/,"").trim();return`<div class="review">${stars} ${an(ua)}</div>`}).filter(Boolean).join("")';
+  'Lr=G=>[1,2,3,4].map(Re=>{const body=String(Ps(G,Re)||"").trim();if(!body)return "";let rv=No(G,`review${Re}Rating`);if(!tsParseStarRating(rv)){const m=body.match(/^\\(?\\s*(\\d+(?:\\.\\d+)?)\\s*stars?\\s*\\)?[:\\-–—]?\\s*/i);if(m)rv=m[1];}const stars=tsRenderStarRatingHtml(rv);const ua=body.replace(/^[⭐★☆️\\s]+/,"").replace(/^\\(?\\s*\\d+(?:\\.\\d+)?\\s*stars?\\s*\\)?[:\\-–—]?\\s*/i,"").replace(/^[⭐★☆️\\s]+/,"").trim();if(!stars&&!ua)return "";return`<div class="review" data-ts-thing-review="1">${stars?stars+" ":""}${an(ua)}</div>`}).filter(Boolean).join("")';
 
 const LR_V2_NEEDLE =
   'Lr=G=>[1,2,3,4].map(Re=>{const body=String(Ps(G,Re)||"").trim();if(!body)return "";const stars=tsRenderStarRatingHtml(No(G,`review${Re}Rating`));if(!stars)return "";const ua=body.replace(/^[⭐★☆️\\s]+/,"").replace(/^\\(?\\s*\\d+(?:\\.\\d+)?\\s*stars?\\s*\\)?[:\\-–—]?\\s*/i,"").replace(/^[⭐★☆️\\s]+/,"").trim();return`<div class="review">${stars} ${an(ua)}</div>`}).filter(Boolean).join("")';
@@ -25,7 +25,7 @@ const OE_ROW_TITLE_NEEDLE =
   'sr=n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"28px minmax(0, 1fr)",gap:9,alignItems:"center",width:"100%",minWidth:0},children:[n.jsx(dc,{item:G}),n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,maxWidth:"100%",width:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})]})';
 
 const OE_ROW_TITLE_PATCH =
-  'sr=n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"28px minmax(0, 1fr)",gap:9,alignItems:"center",width:"100%",minWidth:0},children:[n.jsx(dc,{item:G}),n.jsxs("span",{style:{minWidth:0,maxWidth:"100%",width:"100%",display:"flex",flexDirection:"column",gap:2},children:[n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,maxWidth:"100%",width:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn}),tsRowStars?n.jsx("span",{"data-ts-list-row-rating":"1",dangerouslySetInnerHTML:{__html:tsRowStars},role:"img","aria-label":tsStarRatingAria(tsRowRating)}):null]})]})';
+  'sr=n.jsxs("span",{"data-ts-thing-header":"1",style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto minmax(0,1fr)",alignItems:"center",columnGap:8,width:"100%",minWidth:0},children:[n.jsx("span",{"aria-hidden":"true"}),n.jsxs("span",{"data-ts-logo-name-pair":"1",style:{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:9,minWidth:0,maxWidth:"100%"},children:[n.jsx(dc,{item:G}),n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,maxWidth:"100%",width:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})]}),tsRowStars?n.jsx("span",{"data-ts-list-row-rating":"1",style:{display:"flex",flexDirection:"row",flexWrap:"nowrap",alignItems:"center",justifyContent:"flex-end"},dangerouslySetInnerHTML:{__html:tsRowStars},role:"img","aria-label":tsStarRatingAria(tsRowRating)}):n.jsx("span",{"aria-hidden":"true"})]})';
 
 const DETAIL_RATING_GRID_NEEDLE =
   '[["googleRating","Google rating"],["yelpRating","Yelp rating"],["thirdPartyRating","Other rating"]].map(([k,label])=>n.jsxs("label",{style:Hn,children:[label,n.jsx("input",{value:No(Dt,k),onChange:G=>Xa(Dt,k,G.target.value),placeholder:"",style:De})]},k))';
@@ -38,6 +38,12 @@ const REVIEW_INPUT_NEEDLE =
 
 const REVIEW_INPUT_PATCH =
   'children:[n.jsx("div",{"data-ts-review-stars":"1",style:{display:"flex",alignItems:"center",minHeight:36},dangerouslySetInnerHTML:{__html:tsRenderStarRatingHtml(No(Dt,`review${G}Rating`))},role:"img","aria-label":tsStarRatingAria(No(Dt,`review${G}Rating`))}),n.jsx("input",{value:No(Dt,`review${G}Rating`),onChange:Re=>Xa(Dt,`review${G}Rating`,Re.target.value),placeholder:"Star rating",style:{...De,position:"absolute",opacity:0,width:1,height:1,padding:0,border:0,pointerEvents:Ce?"auto":"none"},tabIndex:Ce?0:-1,"aria-hidden":Ce?void 0:"true"}),n.jsx("textarea"';
+
+const DETAIL_HEADER_NEEDLE =
+  'n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"34px minmax(0, 1fr)",gap:10,alignItems:"center",marginTop:6},children:[n.jsx(dc,{item:Dt,size:34}),n.jsx("input",{"aria-label":"Detail name",disabled:!Ce,value:mr(Dt),onChange:G=>kd(Dt,G.target.value),style:{...De,fontSize:18,width:"100%",background:Ce?"white":"#f9fafb",color:"#111827"}})]})';
+
+const DETAIL_HEADER_PATCH =
+  'n.jsxs("div",{"data-ts-thing-header":"1",style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto minmax(0,1fr)",alignItems:"center",columnGap:8,width:"100%",minWidth:0,marginTop:6},children:[n.jsx("span",{"aria-hidden":"true"}),n.jsxs("span",{"data-ts-logo-name-pair":"1",style:{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:10,minWidth:0,maxWidth:"100%"},children:[n.jsx(dc,{item:Dt,size:34}),n.jsx("input",{"aria-label":"Detail name",disabled:!Ce,value:mr(Dt),onChange:G=>kd(Dt,G.target.value),style:{...De,fontSize:18,width:220,maxWidth:"100%",background:Ce?"white":"#f9fafb",color:"#111827"}})]}),(()=>{const tsHeadStars=tsRenderStarRatingHtml(tsPrimaryPlaceStarRating(ha(Dt)));return tsHeadStars?n.jsx("span",{"data-ts-detail-header-stars":"1",style:{display:"flex",flexDirection:"row",flexWrap:"nowrap",alignItems:"center",justifyContent:"flex-end"},dangerouslySetInnerHTML:{__html:tsHeadStars}}):n.jsx("span",{"aria-hidden":"true"})})()]})';
 
 const REVIEW_CSS_NEEDLE = '.review-stars-inline{font-size:10px;letter-spacing:.2px;color:#f59e0b;font-weight:900;white-space:nowrap}';
 
@@ -75,6 +81,11 @@ export function patchStarRatings(source = '') {
   }
   if (js.includes(REVIEW_INPUT_NEEDLE)) {
     js = js.replaceAll(REVIEW_INPUT_NEEDLE, REVIEW_INPUT_PATCH);
+  }
+  if (js.includes(DETAIL_HEADER_NEEDLE)) {
+    js = js.replace(DETAIL_HEADER_NEEDLE, DETAIL_HEADER_PATCH);
+  } else if (!js.includes('data-ts-detail-header-stars":"1"')) {
+    throw new Error('thing detail header star row patch did not apply');
   }
   if (js.includes(REVIEW_CSS_NEEDLE)) {
     js = js.replace(REVIEW_CSS_NEEDLE, `${TREK_STAR_RATING_CSS}.review-stars-inline{display:none!important}`);

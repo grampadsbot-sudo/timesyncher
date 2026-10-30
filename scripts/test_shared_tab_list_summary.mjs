@@ -70,7 +70,7 @@ const jsx = (type, props) => typeof type === 'function' ? type(props) : { type, 
 function renderedRow(place, expanded) {
   const env = { n: { jsx, jsxs: jsx }, J: (p) => p.name, ie: (p) => p.price, uc: () => 'Car', Bs: String,
     mr: (p) => p.name, rr: (p) => p.summary, Mi: (p) => p.category === 'car', Zi: (p) => p.category === 'hotel', bn: () => false,
-    tsPrimaryPlaceStarRating: () => '', tsRenderStarRatingHtml: () => '', ha: (p) => p, fo: () => [], _l: (p) => p.logoUrl,
+    tsPrimaryPlaceStarRating: () => '', tsRenderStarRatingHtml: () => '', tsThingReviewLines: () => '', ha: (p) => p, fo: () => [], _l: (p) => p.logoUrl,
     Qt: (p) => p.id, It: (p) => p.category, Sa: expanded, xt: null, kl: () => null, Ce: false, Ds: () => false, Nr: () => null, dc: () => null };
   return new Function(...Object.keys(env), `const ${bundle.slice(headerStart, rowEnd)};return Oe`)(...Object.values(env))(place);
 }

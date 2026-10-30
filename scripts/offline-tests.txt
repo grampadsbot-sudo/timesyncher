@@ -11,6 +11,7 @@ scripts/test_nyc_gateb_snapshot_staging_list_prices.mjs
 scripts/test_nyc_offline_shared_trip_608.mjs
 scripts/test_budget_required_price_completeness.mjs
 scripts/test_budget_timeline_only_rows.mjs
+scripts/test_budget_row_capture.mjs
 scripts/test_build_used_vs_tip.mjs
 scripts/test_chat_place_search.mjs
 scripts/test_chat_place_search_when.mjs
@@ -52,6 +53,7 @@ scripts/test_check_no_comments.mjs
 scripts/test_trek_bundle_strip.mjs
 scripts/test_served_trek_bundle.mjs
 scripts/test_served_star_rating_bundle.mjs
+scripts/test_thing_card_ui_keep.mjs
 scripts/test_star_rating_model.mjs
 scripts/test_trip_map_initial_view.mjs
 scripts/test_trip_map_initial_view_bundle.mjs
@@ -247,6 +249,7 @@ scripts/test_welcome_scope_trip_id_lodging_turn.mjs
 scripts/test_intake_lodging_resolve_providers.mjs
 scripts/test_intake_lodging_pick_rank.mjs
 scripts/test_itinerary_fresh_daybyday_bundle.mjs
+scripts/test_hotel_itinerary_note_timeline_731.mjs
 scripts/test_first_intake_no_consent_policy.mjs
 scripts/test_reply_live_path_qa.mjs
 scripts/test_first_intake_reply.mjs

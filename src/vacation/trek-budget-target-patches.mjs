@@ -10,6 +10,10 @@ const BUDGET_IS_NEEDLE = 'children:Xi?`${fr?"Under":"Over"} by ${Re(Math.abs(go)
 const BUDGET_IS_PATCH = 'children:Xi==null?`${Re(di)} timeline`:Xi?`${fr?"Under":"Over"} by ${Re(Math.abs(go))}`:`${Re(di)} timeline`})}';
 const BUDGET_TARGET_PLACEHOLDER_NEEDLE = 'onChange:fr=>zr(Xi,go,fr.target.value),placeholder:"0",inputMode:"decimal"';
 const BUDGET_TARGET_PLACEHOLDER_PATCH = 'onChange:fr=>zr(Xi,go,fr.target.value),placeholder:"",inputMode:"decimal"';
+const BUDGET_ROW_NEEDLE = 'zl=({r:di})=>n.jsxs("div",{style:{display:"flex",justifyContent:"space-between",gap:10,padding:"4px 0 4px 12px",fontSize:11,color:"#6b7280"},children:[n.jsx("button",{onClick:()=>Ne(Qt(di.item)),style:{border:0,padding:0,background:"transparent",color:"#6b7280",fontSize:11,cursor:"pointer",textDecoration:"underline",textDecorationColor:"#cbd5e1",textUnderlineOffset:3,textAlign:"left",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:mr(di.item)})';
+const BUDGET_ROW_PATCH = 'zl=({r:di})=>n.jsxs("div",{"data-ts-budget-row":"1","data-place-id":String((di.item&&di.item.id)||Qt(di.item)||""),style:{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,padding:"4px 0 4px 12px",fontSize:11,color:"#6b7280"},children:[n.jsx("button",{onClick:()=>Ne(Qt(di.item)),style:{border:0,padding:0,background:"transparent",color:"#6b7280",fontSize:11,cursor:"pointer",textDecoration:"underline",textDecorationColor:"#cbd5e1",textUnderlineOffset:3,textAlign:"left",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere"},children:mr(di.item)})';
+const BUDGET_PANEL_NEEDLE = 'n.jsxs("div",{style:{background:"white",border:"1px solid #e5e7eb",borderRadius:14,padding:14},children:[n.jsx("div",{style:{fontSize:13,fontWeight:900,color:"#111827",marginBottom:8},children:"Overall trip budget"})';
+const BUDGET_PANEL_PATCH = 'n.jsxs("div",{"data-ts-budget-panel":"1",style:{background:"white",border:"1px solid #e5e7eb",borderRadius:14,padding:14},children:[n.jsx("div",{style:{fontSize:13,fontWeight:900,color:"#111827",marginBottom:8},children:"Overall trip budget"})';
 
 export function patchBudgetSavedTargetsOnly(source = '', options = {}) {
   const served = options.served === true;
@@ -28,5 +32,7 @@ export function patchBudgetSavedTargetsOnly(source = '', options = {}) {
   if (js.includes(BUDGET_TARGET_PLACEHOLDER_NEEDLE)) {
     js = js.replace(BUDGET_TARGET_PLACEHOLDER_NEEDLE, BUDGET_TARGET_PLACEHOLDER_PATCH);
   }
+  if (js.includes(BUDGET_ROW_NEEDLE)) js = js.replace(BUDGET_ROW_NEEDLE, BUDGET_ROW_PATCH);
+  if (js.includes(BUDGET_PANEL_NEEDLE)) js = js.replace(BUDGET_PANEL_NEEDLE, BUDGET_PANEL_PATCH);
   return js;
 }

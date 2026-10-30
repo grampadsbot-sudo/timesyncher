@@ -19,6 +19,7 @@ import {
   summarizeImageHosts,
   tileRequestRecord,
 } from './passive-acquisition.mjs';
+import { attachFixtureBudgetCounts, collectBudgetEvidence, mergeBudgetEvidence } from './budget-rows.mjs';
 const [,, outdir] = process.argv;
 const BASE = process.env.TSV_CAPTURE_BASE || 'https://vacation-staging.timesyncher.com';
 const TOKEN = 'gateb-fixture-replay';
@@ -27,6 +28,7 @@ const FIXTURE = process.env.TSV_CAPTURE_FIXTURE || '/home/ubishere9995/tsv-dispa
 if (!outdir) { console.error('usage: capture.mjs <outdir>'); process.exit(2); }
 fs.mkdirSync(outdir, { recursive: true });
 const fixtureBytes = fs.readFileSync(FIXTURE);
+const fixtureShared = JSON.parse(fixtureBytes.toString('utf8'));
 const { payload, timelineReplay } = prepareTimelineReplay(fixtureBytes);
 try {
   await assertGateBCapturePreDataCheckPayload(payload);
@@ -249,6 +251,10 @@ async function recordRegions(page, shot, full) {
       result.passive_logo_events = window.__tsLogoPassiveEvents ? window.__tsLogoPassiveEvents.splice(0) : [];
       return result;
     }, [ROW_SEL, ICON_SEL, full]);
+    if (regions[shot] && regions[shot].ok && String(shot).startsWith('budget')) {
+      mergeBudgetEvidence(regions[shot], await page.evaluate(collectBudgetEvidence), ROW_SEL);
+      attachFixtureBudgetCounts(regions[shot], fixtureShared);
+    }
   } catch (e) { regions[shot] = { ok: false, error: String(e.message || e).split('\n')[0] }; }
 }
 
@@ -387,7 +393,10 @@ function recordLogoShot(w, shot) {
   if (regions[shot]) delete regions[shot].passive_logo_events;
 }
 
-const browser = await chromium.launch();
+const browser = await chromium.launch({
+  executablePath: process.env.CHROME_PATH || undefined,
+  args: ['--no-sandbox', '--disable-dev-shm-usage'],
+});
 let failed = 0;
 try {
   for (const [w, h] of VIEWPORTS) {

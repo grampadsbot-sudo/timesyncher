@@ -33,7 +33,7 @@ function patchCarBeGrid(js = '') {
 }
 
 const OE_HOTEL_JE_TITLE_NEEDLE = 'je=({item:G,title:Re})=>n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0, 1fr) 44px",gap:8,width:"100%",alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:Re}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:ie(G)})]})';
-const OE_HOTEL_JE_TITLE_PATCH = 'je=({item:G,title:Re})=>n.jsxs("span",{"data-ts-hotel-row-head":"1",style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto",gap:8,width:"100%",minWidth:0,maxWidth:"100%",alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,maxWidth:"100%"},children:n.jsx("strong",{style:{display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,maxWidth:"100%"},children:Re})}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)})]})';
+const OE_HOTEL_JE_TITLE_PATCH = 'je=({item:G,title:Re})=>n.jsxs("span",{"data-ts-hotel-row-head":"1",style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto",gap:8,width:"100%",minWidth:0,maxWidth:"100%",alignItems:"center"},children:[n.jsx("span",{style:{minWidth:0,maxWidth:"100%",whiteSpace:"normal",overflowWrap:"anywhere"},children:n.jsx("strong",{style:{display:"block",minWidth:0,maxWidth:"100%",whiteSpace:"normal",overflowWrap:"anywhere",fontWeight:800},children:Re})}),n.jsx("span",{style:{whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)})]})';
 
 const WR_SORT_ROW_NEEDLE = 'Wr=({listKey:G})=>{const Re=K[G]||{key:"name",dir:"asc"},zt=ua=>Re.key===ua?Re.dir==="asc"?" ↑":" ↓":"";return n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2},children:';
 const WR_SORT_ROW_PATCH = 'Wr=({listKey:G})=>{const Re=K[G]||{key:"name",dir:"asc"},zt=ua=>Re.key===ua?Re.dir==="asc"?" ↑":" ↓":"";return n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2,minWidth:0,maxWidth:"100%"},children:';
@@ -124,5 +124,10 @@ export function patchSharedTripListWrapping(source = '') {
     if (oeIdx < 0) throw new Error('shared trip list wrapping lost Oe() anchor');
     rows = rows.slice(0, oeIdx) + jeBlock + rows.slice(oeIdx);
   }
-  return js.slice(0, start) + rows + js.slice(end);
+  let next = js.slice(0, start) + rows + js.slice(end);
+  const summaryClose = '"data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4},children:Pn}):null';
+  const reviewLine = '"data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4},children:Pn}):null,(()=>{const tsRev=tsThingReviewLines(G);return tsRev?n.jsx("div",{"data-ts-thing-review-line":"1",style:{marginTop:4,fontSize:12,lineHeight:1.45,color:"#334155",whiteSpace:"normal",overflowWrap:"anywhere"},dangerouslySetInnerHTML:{__html:tsRev}}):null})()';
+  if (!next.includes(summaryClose)) throw new Error('thing card review line anchor missing');
+  next = next.replaceAll(summaryClose, reviewLine);
+  return next;
 }
