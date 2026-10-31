@@ -9,8 +9,9 @@ import { patchBudgetUpstreamMiscBucket } from './trek-budget-upstream-misc-patch
 import { patchThingLogoInkCenterInBundle } from './thing-logo-ink-center.mjs';
 import { patchTabIconVerticalCenter } from './trek-tab-icon-center-patches.mjs';
 import { forceSharedDayByDayUi } from './shared-day-by-day-ui.mjs';
+import { buildListLogoPatch } from './thing-logo-fallback-url.mjs';
 
-export const LIST_LOGO_PATCH = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"").trim();if(raw&&!/^data:image\\/svg\\+xml/i.test(raw)&&!(/\\/ts-thing-media\\//i.test(raw)&&!/\\/ts-thing-logos\\//i.test(raw)))return raw;const pg=String(Re.url||Re.website||Re.sourceUrl||G.url||G.website||"").trim();if(pg){try{const u=new URL(pg);if(u.protocol==="http:"||u.protocol==="https:")return u.origin+"/favicon.ico"}catch(e){}}return ""}';
+export const LIST_LOGO_PATCH = buildListLogoPatch();
 
 const LIST_LOGO_NEEDLE = '_l=G=>{if(qr(G))return pDe;const Re=ha(G);return Re.logoUrl||Re.iconUrl||G.logoUrl||oi(cc(G))}';
 const LIST_LOGO_PATCH_NEEDLE = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"");if(raw&&!/^data:image\\/svg\\+xml/i.test(raw))return raw;return ""}';

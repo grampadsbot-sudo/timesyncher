@@ -222,6 +222,12 @@ export function resolveThingLogoUrl(thing = {}, override = {}) {
   return sourceLogoUrl(thing, override);
 }
 
+export function resolveThingLogoDisplayUrl(thing = {}, override = {}) {
+  const logo = resolveThingLogoUrl(thing, override);
+  if (!logo) return '';
+  return repairExplicitLogoUrl(logo, pageUrlForLogo(thing, override));
+}
+
 export function applyCapturedLogos(shared = {}) {
   const next = {
     ...shared,

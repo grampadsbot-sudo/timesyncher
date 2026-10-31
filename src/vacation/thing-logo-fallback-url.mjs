@@ -38,7 +38,13 @@ const EXPLICIT_LOGO_REPAIRS = new Map([
   ['https://www.latraviatapizzeria.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/latraviatapizzany.com.ico'],
   ['https://www.cilantrorestaurant.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/cilantrorestaurant.com.ico'],
   ['https://www.hertz.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/hertz.com.ico'],
+  ['https://www.carminesnyc.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/carminesnyc.com.ico'],
 ]);
+
+export function buildListLogoPatch() {
+  const mapJson = JSON.stringify(Object.fromEntries(EXPLICIT_LOGO_REPAIRS));
+  return `_l=G=>{const tsLR=${mapJson};const tsPick=s=>{const v=String(s||"").trim();return v&&tsLR[v]?tsLR[v]:v;};const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"").trim();if(raw&&!/^data:image\\/svg\\+xml/i.test(raw)&&!(/\\/ts-thing-media\\//i.test(raw)&&!/\\/ts-thing-logos\\//i.test(raw)))return tsPick(raw);const pg=String(Re.url||Re.website||Re.sourceUrl||G.url||G.website||"").trim();if(pg){try{const u=new URL(pg);if(u.protocol==="http:"||u.protocol==="https:")return tsPick(u.origin+"/favicon.ico")}catch(e){}}return ""}`;
+}
 
 export function repairExplicitLogoUrl(logoUrl, pageUrl = '') {
   const src = text(logoUrl);

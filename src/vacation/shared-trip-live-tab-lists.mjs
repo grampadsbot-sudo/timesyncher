@@ -3,7 +3,7 @@ import { applyThingPresentation } from './intake-shared-trip.mjs';
 import { applyLiveAppListRowFields } from './shared-trip-live-app-fields.mjs';
 import { syncSharedTripApiBudget } from './shared-trip-api-budget.mjs';
 import { timelineCategoryIcon } from './timeline-icons.mjs';
-import { resolveThingLogoUrl } from './thing-logo-capture.mjs';
+import { resolveThingLogoDisplayUrl, resolveThingLogoUrl } from './thing-logo-capture.mjs';
 import { logoImgOnErrorInline, logoImgOnLoadInline } from './thing-logo-fallback-url.mjs';
 import { applyThingDetailOverrides } from './thing-detail-fields.mjs';
 
@@ -101,6 +101,7 @@ function emojiOnlyChipHtml({ category }) {
 
 function listRowHtml({ place, override, tab, category, onLogoMissing }) {
   const logoUrl = resolveThingLogoUrl(place, override) || text(override.logoUrl || place.logoUrl);
+  const displayLogoUrl = resolveThingLogoDisplayUrl(place, override) || logoUrl;
   const name = escapeHtml(place.name || place.title || 'Place');
   const tabAttr = escapeHtml(tab);
   const categoryAttr = escapeHtml(category);
@@ -109,9 +110,10 @@ function listRowHtml({ place, override, tab, category, onLogoMissing }) {
     const chip = emojiOnlyChipHtml({ category });
     return `<li data-list-row="1" data-has-logo="0" data-shared-tab="${tabAttr}" data-thing-category="${categoryAttr}" style="display:flex;align-items:center;gap:8px">${chip}<span><strong>${name}</strong></span></li>`;
   }
-  const src = escapeHtml(logoUrl);
+  const src = escapeHtml(displayLogoUrl);
+  const logoAttr = escapeHtml(logoUrl);
   const chip = logoChipHtml({ src, category });
-  return `<li data-list-row="1" data-has-logo="1" data-logo-src="${src}" data-shared-tab="${tabAttr}" data-thing-category="${escapeHtml(category)}" style="display:flex;align-items:center;gap:8px">${chip}<span><strong>${name}</strong></span></li>`;
+  return `<li data-list-row="1" data-has-logo="1" data-logo-src="${logoAttr}" data-shared-tab="${tabAttr}" data-thing-category="${escapeHtml(category)}" style="display:flex;align-items:center;gap:8px">${chip}<span><strong>${name}</strong></span></li>`;
 }
 
 function sharedLiveTabRowHtmlFragments(shared = {}, tabKeyword = '', options = {}) {

@@ -313,7 +313,7 @@ export function carSubtitle(place, trip) {
 }
 
 import { pickFlightListRowSummaryText } from '../../../../src/vacation/flight-list-row-summary.mjs';
-import { resolveThingLogoUrl } from '../../../../src/vacation/thing-logo-capture.mjs';
+import { resolveThingLogoDisplayUrl } from '../../../../src/vacation/thing-logo-capture.mjs';
 
 export { pickFlightListRowSummaryText };
 
@@ -339,7 +339,7 @@ export function rowSummary(place, trip) {
 
 export function logoUrlForPlace(place, trip) {
   const override = overrideFor(trip, place);
-  return text(resolveThingLogoUrl(place, override));
+  return text(resolveThingLogoDisplayUrl(place, override));
 }
 
 export function hotelFirstRowNote(place, trip, isFirstHotel) {
