@@ -136,7 +136,6 @@ async function postWorkerFill(body, { env, storeImpl, mocks }) {
     extractReviewsImpl: mocks.extractReviewsImpl,
     judgeImpl: mocks.judgeImpl,
   });
-  // #747: the HTTP route is VK-Search-only now; exercise the (unrouted) rebuild module directly.
   const json = await runThingEvidenceDossierStagingTargets(body.targets, { skipExisting: body.skipExisting, timeBudgetMs: body.timeBudgetMs, env: { ...process.env, TIMESYNCHER_DOSSIER_TEST_IMPLS: body.enableTestImpls ? '1' : '' } });
   const status = 200;
   return { status, json };

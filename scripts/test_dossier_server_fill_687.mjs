@@ -82,7 +82,6 @@ assert.doesNotThrow(
 );
 
 const routeSource = readFileSync(new URL('../routes/thing-evidence-dossiers.mjs', import.meta.url), 'utf8');
-// #747: route must not reach the xAI fill path in any auth mode.
 assert.doesNotMatch(routeSource, /runThingEvidenceDossierStagingTargets|XAI_API_KEY|xai-dossier-fill/);
 assert.match(routeSource, /runBotPrimarySeedTargets\(targets/);
 
@@ -182,7 +181,6 @@ await assert.rejects(
 
 process.env.XAI_API_KEY = '';
 const noXai = await post({ offset: 0, limit: 1 });
-// #747: no xAI key is needed; the route never asks for one.
 assert.notEqual(noXai.json.code, 'missing_xai_api_key');
 assert.equal(noXai.json.xaiCalled, 0);
 process.env.XAI_API_KEY = 'test';

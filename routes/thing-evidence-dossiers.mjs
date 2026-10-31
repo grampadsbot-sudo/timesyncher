@@ -70,7 +70,6 @@ export default async function handler(req, res) {
         targets = body?.allMissing === true ? [] : PR336_GATE_B_XAI_PLACE_TARGETS;
       }
     }
-    // #747 (Craig t2850u): no xAI in the dossier refill path. Every auth mode runs the VK Search bot seed.
     const result = await runBotPrimarySeedTargets(targets, { env: process.env });
     const seeded = { ...result, xaiCalled: 0, fillPath: 'bot-primary' };
     const payload = batch ? { ...seeded, batch, inventorySource } : seeded;
