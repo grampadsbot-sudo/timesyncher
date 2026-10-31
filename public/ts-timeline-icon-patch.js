@@ -110,12 +110,22 @@
     document.head.appendChild(style);
   }
 
+  function injectNarrowHeaderCss() {
+    if (isPrintReport() || document.querySelector('style[data-ts-narrow-header="1"]')) return;
+    const style = document.createElement('style');
+    style.dataset.tsNarrowHeader = '1';
+    style.textContent = '@media (max-width:560px){[data-ts-thing-header="1"]{grid-template-columns:0 minmax(0,1fr) max-content!important}[data-ts-thing-header="1"]>[data-ts-logo-name-pair="1"]{justify-content:flex-start!important}}';
+    document.head.appendChild(style);
+  }
+
   function isTinyIconSlot(el) {
     if (!el || !el.getBoundingClientRect) return false;
     const rect = el.getBoundingClientRect();
     if (rect.width > 48 || rect.height > 48) return false;
     const label = text(el.textContent);
     if (label.length > 8 && !AIRPLANE.test(label)) return false;
+    if (/\p{L}{2}/u.test(label) && !AIRPLANE.test(label)) return false;
+    if (el.closest('[data-ts-timeline-title]')) return false;
     return true;
   }
 
@@ -269,6 +279,7 @@
       }).observe(document.documentElement, { childList: true, subtree: true, characterData: true });
       return;
     }
+    injectNarrowHeaderCss();
     apply(lookup);
     repairStoryCards();
     new MutationObserver(() => {
