@@ -329,7 +329,7 @@ const CONFLICT_LABEL_NEEDLE = 'ua.isConflict&&n.jsxs("div",{style:{display:"flex
 const CONFLICT_LABEL_PATCH = 'ua.isConflict&&n.jsxs("div",{"data-ts-conflict-label":"1",style:{display:"flex",alignItems:"center",gap:8,flexWrap:"nowrap",width:"100%",minWidth:0,color:"#b91c1c",fontSize:11,fontWeight:900,marginBottom:6,lineHeight:1.35,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"},children:[n.jsx("span",{style:{width:34,height:2,background:"#ef4444",display:"inline-block",flexShrink:0}}),"Conflict with ",Bs(ua.conflictWith||"another timeline item")]}),n.jsx("button",{"data-ts-timeline-title":"1"';
 const ROW_TYPE_SKIP = '/^(travel|travel-to-thing|transport|hotel-wake|hotel-sleep|hotel-chec[k]out)$/i';
 const DAY_TITLE_NR_NEEDLE = 'children:Pn}),n.jsx(Nr,{items:zr,scopeKey:Qt(ua.item),compact:!0})';
-const DAY_TITLE_NR_PATCH = `children:Pn}),!${ROW_TYPE_SKIP}.test(String(ua.type||""))&&!/^Travel (to|from)\\b/i.test(String(ua.title||""))&&tsItinLine(ua.item)?n.jsx("div",{"data-row-summary":"1","data-itinerary-note":"1","data-summary-thing-only":"1","data-summary-src":"thing","data-summary-stored":"1",style:{display:"block",width:"100%",fontSize:12,fontWeight:400,marginTop:0,lineHeight:1.4,color:"#334155"},children:Bs(tsItinLine(ua.item))}):null,zr.length?n.jsx(Nr,{items:zr,scopeKey:Qt(ua.item),compact:!0}):null`;
+const DAY_TITLE_NR_PATCH = `children:Pn}),!${ROW_TYPE_SKIP}.test(String(ua.type||""))&&!/^Travel (to|from)\\b/i.test(String(ua.title||""))&&(!Zi(ua.item)||String(ua.type||"")==="hotel-event")&&tsItinLine(ua.item)?n.jsx("div",{"data-row-summary":"1","data-itinerary-note":"1","data-summary-thing-only":"1","data-summary-src":"thing","data-summary-stored":"1",style:{display:"block",width:"100%",fontSize:12,fontWeight:400,marginTop:0,lineHeight:1.4,color:"#334155"},children:Bs(tsItinLine(ua.item))}):null,zr.length?n.jsx(Nr,{items:zr,scopeKey:Qt(ua.item),compact:!0}):null`;
 
 const OE_ROW_SUMMARY_NEEDLE = 'Rn=Bs(rr(G)||Co(G)||Fl(G))';
 const OE_ROW_SUMMARY_PATCH = 'Rn=Bs(rr(G))';
@@ -408,7 +408,7 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
     throw new Error('conflict timeline label patch did not apply');
   }
   if (js.includes(DAY_TITLE_NR_NEEDLE)) js = js.replace(DAY_TITLE_NR_NEEDLE, DAY_TITLE_NR_PATCH);
-  else if (served && !js.includes('data-summary-thing-only":"1","data-summary-src":"thing"')) {
+  else if (served && !js.includes('(!Zi(ua.item)||String(ua.type||"")==="hotel-event")&&tsItinLine(ua.item)')) {
     throw new Error('day-by-day timeline row summary patch did not apply');
   }
   if (js.includes(NR_VIDEO_THUMB_NEEDLE)) js = js.replace(NR_VIDEO_THUMB_NEEDLE, NR_VIDEO_THUMB_PATCH);
