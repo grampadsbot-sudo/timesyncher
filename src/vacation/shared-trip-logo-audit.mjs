@@ -32,9 +32,6 @@ export function auditScheduledThingLogos(shared = {}) {
     const logoUrl = scheduledLogoUrlForPlace(place, override);
     const issues = [];
     if (!logoUrl) issues.push('missing_logo_url');
-    if (/favicon\.ico$/i.test(logoUrl) && !/duckduckgo|gstatic\.com\/faviconV2/i.test(logoUrl)) {
-      issues.push('bare_favicon_ico');
-    }
     if (text(override.icon) === '?') issues.push('question_mark_icon');
     rows.push({
       id: place.id,

@@ -27,15 +27,15 @@ export function duckDuckGoIp3LogoUrl(pageUrl) {
 }
 
 const EXPLICIT_LOGO_REPAIRS = new Map([
-  ['https://statuecitycruises.com/favicon.ico', 'https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.statuecitycruises.com&size=64'],
+  ['https://statuecitycruises.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/statuecitycruises.com.ico'],
   ['https://www.macys.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/macys.com.ico'],
   ['https://www.wholefoodsmarket.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/wholefoodsmarket.com.ico'],
   ['https://www.hyatt.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/hyatt.com.ico'],
   ['https://www.tiffany.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/tiffany.com.ico'],
   ['https://www.delta.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/delta.com.ico'],
   ['https://www.united.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/united.com.ico'],
-  ['https://www.ameliebistro.com/favicon.ico', 'https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.yelp.com&size=64'],
-  ['https://www.latraviatapizzeria.com/favicon.ico', 'https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Flatraviatapizza.com&size=64'],
+  ['https://www.ameliebistro.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/ameliewinebar.com.ico'],
+  ['https://www.latraviatapizzeria.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/latraviatapizzany.com.ico'],
   ['https://www.cilantrorestaurant.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/cilantrorestaurant.com.ico'],
   ['https://www.hertz.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/hertz.com.ico'],
 ]);
@@ -45,10 +45,6 @@ export function repairExplicitLogoUrl(logoUrl, pageUrl = '') {
   if (!src) return '';
   const direct = EXPLICIT_LOGO_REPAIRS.get(src);
   if (direct) return direct;
-  if (/\/favicon\.ico$/i.test(src)) {
-    const duck = duckDuckGoIp3LogoUrl(pageUrl || src);
-    if (duck) return duck;
-  }
   return src;
 }
 
