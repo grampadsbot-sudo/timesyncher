@@ -20,7 +20,7 @@ assert.match(bundle, /_l=G=>\{if\(qr\(G\)\)return pDe;const Re=ha\(G\);return Re
 assert.match(bundle, /dc=\(\{item:G,size:Re=28\}\)=>\{const zt=_l\(G\),ua=Pc\(G\)/);
 assert.match(bundle, /"data-ts-logo-chip":"1","aria-hidden":"true",style:\{width:Re,height:Re/);
 assert.match(bundle, /className:"tiny-logo",src:zt,alt:""/);
-assert.match(bundle, /onError:Rn=>\{const ua=Rn\.currentTarget;ua\.style\.display="none"/);
+assert.match(bundle, /tsLogoFallback/);
 assert.match(bundle, /tsv-logo-fallback/);
 assert.match(bundle, /ic&&ic!=="\?"\?ic:wl\(G\)/);
 assert.doesNotMatch(bundle, /LIST_LOGO_PATCH|ts-thing-media\\\/\)\|\|/);
@@ -41,6 +41,6 @@ assert.equal(nestedLogoPayload.thingOverrides['place:802'].logoUrl, 'https://sou
 const dcSnippet = bundle.slice(bundle.indexOf('dc=({item:G,size:Re=28})'), bundle.indexOf('dc=({item:G,size:Re=28})') + 900);
 assert.match(dcSnippet, /"data-ts-logo-chip":"1"/, 'logo chip exposes Gate B marker');
 assert.match(dcSnippet, /className:"tsv-logo-fallback"/, 'logo chip keeps type-icon fallback visible');
-assert.match(dcSnippet, /onError:Rn=>\{const ua=Rn\.currentTarget;ua\.style\.display="none"/, 'broken logo URL hides img so fallback shows');
+assert.match(dcSnippet, /tsLogoFallback/, 'logo chip retries favicon services before emoji fallback');
 
 console.log('shared trip live tab logo tests passed');

@@ -16,6 +16,7 @@ import {
 import { overrideFor } from '../lib/placeHelpers';
 import { primaryPlaceStarRating } from '../lib/starRatingModel.mjs';
 import { StarRating } from './StarRating';
+import { logoChipFallbackEmoji, onLogoImgError, onLogoImgLoad } from '../lib/logoChipHandlers.mjs';
 
 type TabKind = 'flights' | 'hotels' | 'cars' | 'restaurants' | 'stores' | 'events';
 
@@ -34,11 +35,17 @@ type Props = {
 function LogoChip({ place, trip }: { place: SharedPlace; trip: SharedTripPayload }) {
   const logo = logoUrlForPlace(place, trip);
   const override = overrideFor(trip, place);
-  const fallback = String(override.icon || place.category?.icon || place.category_icon || '📍');
+  const fallback = logoChipFallbackEmoji(String(override.icon || place.category?.icon || place.category_icon || '📍'));
   return (
-    <span className="tsv-logo-chip" data-ts-logo-chip="1" aria-hidden="true">
+    <span className="tsv-logo-chip" data-ts-logo-chip="1" aria-hidden="true" data-ts-fallback-emoji={fallback}>
       {logo ? (
-        <img className="tsv-logo" src={logo} alt="" />
+        <img
+          className="tsv-logo"
+          src={logo}
+          alt=""
+          onError={(event) => onLogoImgError(event, fallback)}
+          onLoad={(event) => onLogoImgLoad(event, fallback)}
+        />
       ) : (
         <span className="tsv-logo-fallback">{fallback}</span>
       )}
