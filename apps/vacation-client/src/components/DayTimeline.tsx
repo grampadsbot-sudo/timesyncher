@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 import { logoUrlForPlace, tabCategoryKey } from '../lib/listTabModel.mjs';
 import { overrideFor, placeName } from '../lib/placeHelpers';
+import { logoChipFallbackEmoji, onLogoImgError, onLogoImgLoad } from '../lib/logoChipHandlers.mjs';
 
 type TimelineMedia = {
   publicUrl?: string;
@@ -74,14 +75,22 @@ function TimelineIcon({
   const logo = logoUrlForPlace(place, trip);
   const override = overrideFor(trip, place);
   const category = tabCategoryKey(place, trip);
-  const fallback =
+  const fallback = logoChipFallbackEmoji(
     entry.kind === 'hotel-event' || entry.kind === 'hotel-checkout' || category === 'hotel'
       ? '🧳'
-      : String(override.icon || place.category?.icon || place.category_icon || '📍');
+      : String(override.icon || place.category?.icon || place.category_icon || '📍'),
+  );
   return (
     <span className="tsv-timeline-icon" data-ts-timeline-icon="1" aria-hidden="true">
       {logo ? (
-        <img className="tsv-timeline-logo" src={logo} alt="" loading="lazy" />
+        <img
+          className="tsv-timeline-logo"
+          src={logo}
+          alt=""
+          loading="lazy"
+          onError={(event) => onLogoImgError(event, fallback)}
+          onLoad={(event) => onLogoImgLoad(event, fallback)}
+        />
       ) : (
         <span className="tsv-timeline-emoji">{fallback}</span>
       )}

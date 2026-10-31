@@ -912,7 +912,7 @@
     "summary": "West Village French bistro; Price: $65 prix fixe floor.",
     "price": 65,
     "website": "https://www.ameliebistro.com/",
-    "logoUrl": "https://www.ameliebistro.com/favicon.ico",
+    "logoUrl": "https://icons.duckduckgo.com/ip3/ameliewinebar.com.ico",
     "lat": 40.731,
     "lng": -73.998,
     "address": "566 Hudson St, New York, NY 10014"
@@ -978,7 +978,7 @@
     "summary": "Village pizza option from Craig/Kim trek notes.",
     "price": 28,
     "website": "https://www.latraviatapizzeria.com/",
-    "logoUrl": "https://www.latraviatapizzeria.com/favicon.ico",
+    "logoUrl": "https://icons.duckduckgo.com/ip3/latraviatapizzany.com.ico",
     "lat": 40.731,
     "lng": -74.002,
     "address": "Greenwich Village, New York, NY"
@@ -1045,7 +1045,7 @@
     "price": 22,
     "website": "https://www.joespizzanyc.com/",
     "logoUrl": "https://www.joespizzanyc.com/favicon.ico",
-    "lat": 40.730,
+    "lat": 40.73,
     "lng": -74.003,
     "address": "7 Carmine St, New York, NY 10014"
   },
@@ -1088,7 +1088,7 @@
     "summary": "Cilantro UWS tacos; Craig email trek source.",
     "price": 32,
     "website": "https://www.cilantrorestaurant.com/",
-    "logoUrl": "https://www.cilantrorestaurant.com/favicon.ico",
+    "logoUrl": "https://icons.duckduckgo.com/ip3/cilantrorestaurant.com.ico",
     "lat": 40.786,
     "lng": -73.973,
     "address": "485 Columbus Ave, New York, NY 10024"
@@ -1111,7 +1111,7 @@
     "price": 24,
     "website": "https://www.zincbar.com/",
     "logoUrl": "https://www.zincbar.com/wp-content/uploads/2025/04/cropped-Zinc-web-icon-32x32.png",
-    "lat": 40.730,
+    "lat": 40.73,
     "lng": -74.001,
     "address": "Greenwich Village, New York, NY"
   },

@@ -13,7 +13,7 @@ const raw = execFileSync('git', ['show', `${UPSTREAM_COMMIT}:${UPSTREAM_PATH}`],
 });
 
 const rendered = renderServedTrekBundle(raw.toString('utf8'));
-assert.match(rendered, /onError:Rn=>\{const ua=Rn\.currentTarget;ua\.style\.display="none"/);
+assert.match(rendered, /onError:Rn=>\{.*dataset\.tsLogoFallback/);
 assert.match(rendered, /tsCenterThingLogoFallbackEl/);
 assert.match(rendered, /className:"tsv-logo-fallback",ref:Rn=>\{Rn&&tsCenterThingLogoFallbackEl\(Rn\)/);
 assert.match(rendered, /className:"tiny-logo",src:zt,alt:""/);

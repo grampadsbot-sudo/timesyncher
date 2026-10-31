@@ -70,7 +70,7 @@ assert.equal(rendered, committed);
 assert.match(rendered, /_l=G=>\{if\(qr\(G\)\)return pDe;const Re=ha\(G\);return Re\.logoUrl\|\|Re\.iconUrl\|\|G\.logoUrl\|\|oi\(cc\(G\)\)\}/);
 assert.match(rendered, /"data-ts-logo-chip":"1","aria-hidden":"true",style:\{width:Re,height:Re/);
 assert.match(rendered, /className:"tiny-logo",src:zt,alt:""/);
-assert.match(rendered, /onError:Rn=>\{const ua=Rn\.currentTarget;ua\.style\.display="none"/);
+assert.match(rendered, /tsLogoFallback/);
 assert.match(rendered, /tsv-logo-fallback/);
 assert.match(rendered, /ic&&ic!=="\?"\?ic:wl\(G\)/);
 assert.match(rendered, /i==="car"\?"🚗"/);
