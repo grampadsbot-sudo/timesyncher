@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { completeDossierFill } from './xai-dossier-fill-state.mjs';
 import { normalizeDossierEvidence } from './dossier-evidence-hydrate.mjs';
-import { mergeDossierPages, mergeDossierForPersistence } from './thing-evidence-dossier.mjs';
+import { mergeDossierPages, mergeDossierForPersistence, remapReviewClaimPages } from './thing-evidence-dossier.mjs';
 import {
   bindSharedThingEvidenceDossier,
   getThingEvidenceDossierStore,
@@ -155,6 +155,9 @@ export function mergeBotPrimaryPresentedFields(persisted = {}, bot = {}, place =
     fields: { ...(persisted.fields || {}), ...(bot.fields || {}) },
   };
   merged.thing = thing || merged.thing;
+  if (Array.isArray(bot.reviews) && bot.reviews.length) {
+    merged.reviews = remapReviewClaimPages(bot.reviews, bot.pages, merged.pages);
+  }
   merged.fields = {
     ...(merged.fields || {}),
     summary: pickRecitNarrativeField(merged, 'summary', bot.fields?.summary, persisted.fields?.summary),

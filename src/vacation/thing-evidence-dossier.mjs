@@ -164,6 +164,26 @@ export function mergeDossierPages(persisted = {}, gathered = {}) {
   };
 }
 
+function remapClaimPages(claims = [], fromPages = [], toPages = []) {
+  return claims.map((claim) => ({
+    ...claim,
+    pages: (claim.pages || []).map((id) => {
+      const match = /^p(\d+)$/.exec(String(id));
+      if (!match) return id;
+      const source = fromPages?.[Number(match[1]) - 1];
+      const index = toPages.findIndex((page) => source && page.url === source.url
+        && (page.sha256 || page.text) === (source.sha256 || source.text));
+      return index >= 0 ? `p${index + 1}` : '';
+    }),
+  }));
+}
+
+export function remapReviewClaimPages(reviews = [], fromPages = [], toPages = []) {
+  return reviews.map((review) => (Array.isArray(review?.claims)
+    ? { ...review, claims: remapClaimPages(review.claims, fromPages, toPages) }
+    : review));
+}
+
 function dossierIsSharedPointer(dossier = {}) {
   if (!dossier?.sharedDossierKey?.startsWith('shared:')) return false;
   const keys = Object.keys(dossier);
@@ -196,22 +216,12 @@ export function mergeDossierForPersistence(persisted = {}, incoming = {}) {
     if (value === undefined) continue;
     fields[key] = value;
     if (!Array.isArray(value?.claims)) continue;
-    fields[key] = {
-      ...value,
-      claims: value.claims.map((claim) => ({
-        ...claim,
-        pages: (claim.pages || []).map((id) => {
-          const match = /^p(\d+)$/.exec(String(id));
-          if (!match) return id;
-          const source = incoming.pages?.[Number(match[1]) - 1];
-          const index = merged.pages.findIndex((page) => source && page.url === source.url
-            && (page.sha256 || page.text) === (source.sha256 || source.text));
-          return index >= 0 ? `p${index + 1}` : '';
-        }),
-      })),
-    };
+    fields[key] = { ...value, claims: remapClaimPages(value.claims, incoming.pages, merged.pages) };
   }
   merged.fields = fields;
+  if (Array.isArray(incoming.reviews) && incoming.reviews.length) {
+    merged.reviews = remapReviewClaimPages(incoming.reviews, incoming.pages, merged.pages);
+  }
   for (const key of ['reviews', 'reviewSet', 'reviewExcerpts', 'knownFor', 'xaiUsageRuns', 'xaiUsage']) {
     const inc = incoming[key];
     const empty = inc == null || (Array.isArray(inc) && inc.length === 0);
