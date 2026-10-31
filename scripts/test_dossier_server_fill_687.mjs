@@ -82,7 +82,8 @@ assert.doesNotThrow(
 );
 
 const routeSource = readFileSync(new URL('../routes/thing-evidence-dossiers.mjs', import.meta.url), 'utf8');
-assert.match(routeSource, /authMode === 'operator'[\s\S]*delete runEnv\.TIMESYNCHER_DOSSIER_TEST_IMPLS/);
+assert.doesNotMatch(routeSource, /runThingEvidenceDossierStagingTargets|XAI_API_KEY|xai-dossier-fill/);
+assert.match(routeSource, /runBotPrimarySeedTargets\(targets/);
 
 assert.equal(parsePassBOperatorOffset(undefined), 0);
 assert.throws(() => parsePassBOperatorOffset(-1), (e) => e.statusCode === 400);
@@ -180,7 +181,8 @@ await assert.rejects(
 
 process.env.XAI_API_KEY = '';
 const noXai = await post({ offset: 0, limit: 1 });
-assert.equal(noXai.json.code, 'missing_xai_api_key');
+assert.notEqual(noXai.json.code, 'missing_xai_api_key');
+assert.equal(noXai.json.xaiCalled, 0);
 process.env.XAI_API_KEY = 'test';
 
 const workerBatchOne = await post({

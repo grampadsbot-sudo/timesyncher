@@ -176,8 +176,9 @@ await handler({
     json = JSON.parse(String(payload));
   },
 });
-assert.equal(json.ok, true);
-assert.equal(json.results[0].skipped, 'existing_dossier');
+assert.equal(json.xaiCalled, 0);
+assert.equal(json.fillPath, 'bot-primary');
+await store.putDossier(dossierKey, { ...stable, fieldHashes: hashes, fieldSources: sources });
 
 const libraryTarget = { ...target, sharedLibrary: true, address: '181 Thompson St, New York, NY', url: 'https://carbone.example/' };
 const libraryRun = await runThingEvidenceDossierStagingTargets([libraryTarget], {
