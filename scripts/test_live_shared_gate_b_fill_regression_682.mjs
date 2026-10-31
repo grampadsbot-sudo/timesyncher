@@ -11,6 +11,7 @@ import { logXaiUsage } from '../src/vacation/dossier-cost.mjs';
 import { applyStoredDossiersToSharedTripSync } from '../src/vacation/shared-trip-dossier-overlay.mjs';
 import {
   __setDossierFillTestImpls,
+  runThingEvidenceDossierStagingTargets,
   placeFromTarget,
 } from '../src/vacation/thing-evidence-dossier-execution.mjs';
 import {
@@ -122,6 +123,7 @@ function seedStore(dossiers = {}) {
 async function postWorkerFill(body, { env, storeImpl, mocks }) {
   process.env.TIMESYNCHER_WORKER_TOKEN = env.TIMESYNCHER_WORKER_TOKEN || 'test';
   process.env.XAI_API_KEY = env.XAI_API_KEY;
+  process.env.XAI_PLACE_SEARCH_MODEL = env.XAI_PLACE_SEARCH_MODEL;
   useThingEvidenceDossierStore(storeImpl);
   __setDossierFillTestImpls({
     storeImpl,
@@ -134,24 +136,9 @@ async function postWorkerFill(body, { env, storeImpl, mocks }) {
     extractReviewsImpl: mocks.extractReviewsImpl,
     judgeImpl: mocks.judgeImpl,
   });
-  let status = 0;
-  let json = null;
-  await handler({
-    method: 'POST',
-    headers: { authorization: `Bearer ${process.env.TIMESYNCHER_WORKER_TOKEN}`, 'content-type': 'application/json' },
-    async *[Symbol.asyncIterator]() {
-      yield Buffer.from(JSON.stringify(body));
-    },
-  }, {
-    statusCode: 0,
-    setHeader() {},
-    end(payload) {
-      json = JSON.parse(String(payload));
-      status = this.statusCode;
-    },
-    get statusCode() { return status; },
-    set statusCode(code) { status = code; },
-  });
+  // #747: the HTTP route is VK-Search-only now; exercise the (unrouted) rebuild module directly.
+  const json = await runThingEvidenceDossierStagingTargets(body.targets, { skipExisting: body.skipExisting, timeBudgetMs: body.timeBudgetMs, env: { ...process.env, TIMESYNCHER_DOSSIER_TEST_IMPLS: body.enableTestImpls ? '1' : '' } });
+  const status = 200;
   return { status, json };
 }
 
