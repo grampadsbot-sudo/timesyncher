@@ -87,7 +87,8 @@ function logoFromWebsite(website = '') {
 }
 
 export function eventLogoMatchesWebsite({ logoUrl = '', website = '' } = {}) {
-  const logoHost = hostname(logoUrl);
+  const ddg = text(logoUrl, 500).match(/^https:\/\/icons\.duckduckgo\.com\/ip3\/([^/]+)\.ico$/i);
+  const logoHost = ddg ? ddg[1].replace(/^www\./i, '').toLowerCase() : hostname(logoUrl);
   const siteHost = hostname(website);
   if (!logoHost || !siteHost) return false;
   if (logoHost === siteHost) return true;
