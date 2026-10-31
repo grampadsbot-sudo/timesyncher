@@ -217,7 +217,7 @@ export function resolveThingLogoUrl(thing = {}, override = {}) {
   const direct = thingLogoUrl(thing, override);
   if (direct) {
     const logo = usableLogo(direct);
-    if (logo) return logo;
+    if (logo) return repairExplicitLogoUrl(logo, pageUrlForLogo(thing, override));
   }
   return sourceLogoUrl(thing, override);
 }
