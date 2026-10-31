@@ -14,7 +14,7 @@ const bundlePath = new URL('../public/assets/index-BKun7ofk.js', import.meta.url
 const committed = await readFile(bundlePath, 'utf8');
 assert.equal(rebaked, committed);
 
-assert.match(committed, /return js\.filter\(wn=>\{const tp=String\(wn\.type\|\|""\);if\(!xn\("flights"\)/);
+assert.match(committed, /return js\.filter\(wn=>\{const tp=String\(wn\.type\|\|""\);if\(!xn\("flights"\)&&\(tp==="flight"\|\|bn\(wn\.item\)/);
 assert.match(committed, /!xn\("cars"\)&&\(Mi\(wn\.item\)\|\|\/\^\(Pickup\|Drop-off\):\/i\.test\(String\(wn\.title\|\|""\)\)\)/);
 assert.match(committed, /\(!Zi\(ua\.item\)\|\|String\(ua\.type\|\|""\)==="hotel-event"\)&&tsItinLine\(ua\.item\)/);
 assert.match(committed, /!ua\.endTime&&!ua\.isConflict\?n\.jsx\("div",\{"data-ts-timeline-time":"1"/);
