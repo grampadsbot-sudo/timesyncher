@@ -1,3 +1,4 @@
+import { MAP_MARKER_LOGO_PATCH, MAP_MARKER_LOGO_PATCH_V2_NOFB } from './trek-map-marker-logo-patch.mjs';
 import { XA_STATIC_MAP_TILE_NEEDLE, XA_STATIC_MAP_TILE_PATCH } from './trek-day-by-day-map-patches.mjs';
 import { patchSharedTripOeListRows } from './shared-trip-oe-list-row-patch.mjs';
 import { patchBudgetSavedTargetsOnly } from './trek-budget-target-patches.mjs';
@@ -80,9 +81,6 @@ const MAP_MARKER_LOGO_NEEDLE = 'p=c?`<img src="${c}" alt="" style="width:30px;he
 const MAP_MARKER_LOGO_WRAP_V1 =
   'p=c?`<div data-ts-logo-chip="1" style="width:30px;height:30px;display:grid;place-items:center;box-sizing:border-box;padding:2px"><img src="${c}" alt="" style="max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;border:0;background:transparent;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.30));" /></div>`';
 
-const MAP_MARKER_LOGO_PATCH =
-  'p=c?`<div data-ts-map-marker-logo="1" style="width:30px;height:30px;max-width:30px;max-height:30px;overflow:hidden;display:grid;place-items:center;box-sizing:border-box"><img src="${c}" alt="" style="width:26px;height:26px;max-width:26px;max-height:26px;object-fit:contain;border:0;background:transparent;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.30));" /></div>`';
-
 const MAP_MARKER_LOGO_PATCH_V1_CHIP =
   'p=c?`<div data-ts-map-marker-logo="1" data-ts-logo-chip="1" style="width:30px;height:30px;max-width:30px;max-height:30px;overflow:hidden;display:grid;place-items:center;box-sizing:border-box"><img src="${c}" alt="" style="width:26px;height:26px;max-width:26px;max-height:26px;object-fit:contain;border:0;background:transparent;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.30));" /></div>`';
 
@@ -125,6 +123,7 @@ export function patchThingLogoChipAlignment(source = '') {
   if (js.includes(MAP_MARKER_LOGO_NEEDLE)) js = js.replace(MAP_MARKER_LOGO_NEEDLE, MAP_MARKER_LOGO_PATCH);
   else if (js.includes(MAP_MARKER_LOGO_WRAP_V1)) js = js.replaceAll(MAP_MARKER_LOGO_WRAP_V1, MAP_MARKER_LOGO_PATCH);
   else if (js.includes(MAP_MARKER_LOGO_PATCH_V1_CHIP)) js = js.replaceAll(MAP_MARKER_LOGO_PATCH_V1_CHIP, MAP_MARKER_LOGO_PATCH);
+  else if (js.includes(MAP_MARKER_LOGO_PATCH_V2_NOFB)) js = js.replaceAll(MAP_MARKER_LOGO_PATCH_V2_NOFB, MAP_MARKER_LOGO_PATCH);
   else if (!js.includes('data-ts-map-marker-logo="1"')) {
     throw new Error('trek bundle missing map marker logo needle for centering patch');
   }
