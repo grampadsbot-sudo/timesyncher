@@ -1,6 +1,6 @@
 const CI_RETURN_NEEDLE = '}return js},cr=""';
 const CI_RETURN_PATCH =
-  '}return js.filter(wn=>{const tp=String(wn.type||"");if(!xn("flights")&&(tp==="flight"||(tp==="travel"&&/airport/i.test(String(wn.title||"")))))return!1;if(!xn("hotels")&&/^hotel-/.test(tp))return!1;if(!xn("cars")&&(Mi(wn.item)||/^(Pickup|Drop-off):/i.test(String(wn.title||""))))return!1;return!0})},cr=""';
+  '}return js.filter(wn=>{const tp=String(wn.type||"");if(!xn("flights")&&(tp==="flight"||bn(wn.item)||(tp==="travel"&&/airport/i.test(String(wn.title||"")))))return!1;if(!xn("hotels")&&/^hotel-/.test(tp))return!1;if(!xn("cars")&&(Mi(wn.item)||/^(Pickup|Drop-off):/i.test(String(wn.title||""))))return!1;return!0})},cr=""';
 
 const NT_NEEDLE =
   'Nt=(G,Re)=>{Ce&&(ge(!0),pe(zt=>({...zt,[Pi]:{...zt[Pi]||{},[G]:Re}})),!Re&&q===G&&W("plan"))}';
@@ -16,7 +16,7 @@ export function patchUi754(source = '') {
   let js = String(source || '');
   if (js.includes(CI_RETURN_NEEDLE)) {
     js = js.replace(CI_RETURN_NEEDLE, CI_RETURN_PATCH);
-  } else if (!js.includes('return js.filter(wn=>{const tp=String(wn.type||"");if(!xn("flights")')) {
+  } else if (!js.includes('return js.filter(wn=>{const tp=String(wn.type||"");if(!xn("flights")&&(tp==="flight"||bn(wn.item)')) {
     throw new Error('ui #754 day-by-day Ci() section visibility filter did not apply');
   }
   if (!js.includes('!xn("cars")&&(Mi(wn.item)||/^(Pickup|Drop-off):/i.test(String(wn.title||"")))')) {

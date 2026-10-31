@@ -188,14 +188,21 @@ try {
     );
     assert.equal(hiddenHotels, 0, `B7 hotels toggle hides day rows at ${width}`);
 
+    const day1FlightRow = await page.evaluate(() =>
+      [...document.querySelectorAll('[data-ts-day-timeline] [data-ts-timeline-title]')]
+        .map((el) => String(el.textContent || '').replace(/\s+/g, ' ').trim())
+        .some((t) => /American Airlines/i.test(t)),
+    );
+    assert.ok(day1FlightRow, `Day 1 American Airlines flight row before Flights toggle at ${width}`);
+
     await toggleTripView('Flights');
     assert.equal(await tripViewChecked('Flights'), false, `B7 flights checkbox off at ${width}`);
     const hiddenFlights = await page.evaluate(() =>
       [...document.querySelectorAll('[data-ts-day-timeline] [data-ts-timeline-title]')]
         .map((el) => String(el.textContent || '').replace(/\s+/g, ' ').trim())
-        .filter((t) => /flight|airport/i.test(t)).length,
+        .filter((t) => /American Airlines/i.test(t)).length,
     );
-    assert.equal(hiddenFlights, 0, `B7 flights toggle hides day rows at ${width}`);
+    assert.equal(hiddenFlights, 0, `B7 flights toggle hides American Airlines day rows at ${width}`);
 
     await toggleTripView('Cars');
     assert.equal(await tripViewChecked('Cars'), false, `B7 cars checkbox off at ${width}`);
