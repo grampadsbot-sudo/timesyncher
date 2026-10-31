@@ -1,3 +1,4 @@
+import { MAP_MARKER_LOGO_PATCH, MAP_MARKER_LOGO_PATCH_V2_NOFB } from './trek-map-marker-logo-patch.mjs';
 import { XA_STATIC_MAP_TILE_NEEDLE, XA_STATIC_MAP_TILE_PATCH } from './trek-day-by-day-map-patches.mjs';
 import { patchSharedTripOeListRows } from './shared-trip-oe-list-row-patch.mjs';
 import { patchBudgetSavedTargetsOnly } from './trek-budget-target-patches.mjs';
@@ -78,12 +79,6 @@ const MAP_MARKER_LOGO_NEEDLE = 'p=c?`<img src="${c}" alt="" style="width:30px;he
 
 const MAP_MARKER_LOGO_WRAP_V1 =
   'p=c?`<div data-ts-logo-chip="1" style="width:30px;height:30px;display:grid;place-items:center;box-sizing:border-box;padding:2px"><img src="${c}" alt="" style="max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;border:0;background:transparent;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.30));" /></div>`';
-
-const MAP_MARKER_LOGO_PATCH_V2_NOFB =
-  'p=c?`<div data-ts-map-marker-logo="1" style="width:30px;height:30px;max-width:30px;max-height:30px;overflow:hidden;display:grid;place-items:center;box-sizing:border-box"><img src="${c}" alt="" style="width:26px;height:26px;max-width:26px;max-height:26px;object-fit:contain;border:0;background:transparent;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.30));" /></div>`';
-
-const MAP_MARKER_LOGO_PATCH =
-  'p=c?`<div data-ts-map-marker-logo="1" style="width:30px;height:30px;max-width:30px;max-height:30px;overflow:hidden;display:grid;place-items:center;box-sizing:border-box"><img data-ts-map-logo-fb="1" data-logo-src="${c}" onerror="var s=this.dataset.fb||\'0\',h=\'\';try{h=new URL(this.dataset.logoSrc||this.src).hostname.replace(/^www[.]/i,\'\')}catch(e){}if(s===\'0\'&&h){this.dataset.fb=\'1\';this.src=\'https://icons.duckduckgo.com/ip3/\'+h+\'.ico\'}else if(s===\'1\'&&h){this.dataset.fb=\'2\';this.src=\'https://www.google.com/s2/favicons?sz=64&domain=\'+encodeURIComponent(h)}else if(s!==\'3\'){this.dataset.fb=\'3\';this.dataset.tsLogoFallbackEmoji=\'1\';this.src=\'data:image/svg+xml,\'+encodeURIComponent(\'<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 32 32&quot;><text x=&quot;16&quot; y=&quot;25&quot; font-size=&quot;24&quot; text-anchor=&quot;middle&quot;>&#128205;</text></svg>\')}" onload="if(this.naturalWidth<16||this.naturalHeight<16){var s=this.dataset.fb||\'0\',h=\'\';try{h=new URL(this.dataset.logoSrc||this.src).hostname.replace(/^www[.]/i,\'\')}catch(e){}if(s===\'0\'&&h){this.dataset.fb=\'1\';this.src=\'https://icons.duckduckgo.com/ip3/\'+h+\'.ico\'}else if(s===\'1\'&&h){this.dataset.fb=\'2\';this.src=\'https://www.google.com/s2/favicons?sz=64&domain=\'+encodeURIComponent(h)}else if(s!==\'3\'){this.dataset.fb=\'3\';this.dataset.tsLogoFallbackEmoji=\'1\';this.src=\'data:image/svg+xml,\'+encodeURIComponent(\'<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 32 32&quot;><text x=&quot;16&quot; y=&quot;25&quot; font-size=&quot;24&quot; text-anchor=&quot;middle&quot;>&#128205;</text></svg>\')}}" src="${c}" alt="" style="width:26px;height:26px;max-width:26px;max-height:26px;object-fit:contain;border:0;background:transparent;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.30));" /></div>`';
 
 const MAP_MARKER_LOGO_PATCH_V1_CHIP =
   'p=c?`<div data-ts-map-marker-logo="1" data-ts-logo-chip="1" style="width:30px;height:30px;max-width:30px;max-height:30px;overflow:hidden;display:grid;place-items:center;box-sizing:border-box"><img src="${c}" alt="" style="width:26px;height:26px;max-width:26px;max-height:26px;object-fit:contain;border:0;background:transparent;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.30));" /></div>`';
