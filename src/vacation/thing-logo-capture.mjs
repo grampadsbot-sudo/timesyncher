@@ -217,9 +217,15 @@ export function resolveThingLogoUrl(thing = {}, override = {}) {
   const direct = thingLogoUrl(thing, override);
   if (direct) {
     const logo = usableLogo(direct);
-    if (logo) return repairExplicitLogoUrl(logo, pageUrlForLogo(thing, override));
+    if (logo) return logo;
   }
   return sourceLogoUrl(thing, override);
+}
+
+export function resolveThingLogoDisplayUrl(thing = {}, override = {}) {
+  const logo = resolveThingLogoUrl(thing, override);
+  if (!logo) return '';
+  return repairExplicitLogoUrl(logo, pageUrlForLogo(thing, override));
 }
 
 export function applyCapturedLogos(shared = {}) {

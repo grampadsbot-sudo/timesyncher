@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
 import { auditScheduledThingLogos, visibleLogoDomCheckSource } from '../src/vacation/shared-trip-logo-audit.mjs';
-import { resolveThingLogoUrl } from '../src/vacation/thing-logo-capture.mjs';
+import { resolveThingLogoDisplayUrl } from '../src/vacation/thing-logo-capture.mjs';
 import { logoFallbackChain, repairExplicitLogoUrl } from '../src/vacation/thing-logo-fallback-url.mjs';
 import { liveAcceptScheduledLogoAudit } from '../apps/vacation-client/src/lib/liveAcceptLogoAudit.mjs';
 import { runVisibleSharedLogoCheck } from './lib/shared-trip-visible-logo-check.mjs';
@@ -18,7 +18,7 @@ assert.match(
 );
 assert.ok(logoFallbackChain('https://www.macys.com/favicon.ico', 'https://www.macys.com/').length >= 2);
 assert.match(
-  resolveThingLogoUrl(
+  resolveThingLogoDisplayUrl(
     { id: 685, logoUrl: 'https://www.carminesnyc.com/favicon.ico', website: 'https://www.carminesnyc.com/' },
     { logoUrl: 'https://www.carminesnyc.com/favicon.ico' },
   ),
