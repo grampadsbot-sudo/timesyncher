@@ -8,6 +8,7 @@ import { applyDossierRatingsAndReviews } from './thing-dossier-ratings-copy.mjs'
 import { dossierThingTitle, placeSupportsDossierReviews } from './dossier-brave-queries.mjs';
 import { dossierScalarClaimRejected } from './dossier-evidence-hydrate.mjs';
 import { dossierPagesVerified, reviewSourceHost } from './thing-evidence-dossier.mjs';
+import { applySourcedHotelDescriptionToRecord } from './xai-sourced-hotel-description.mjs';
 
 export { applyDossierRatingsAndReviews } from './thing-dossier-ratings-copy.mjs';
 export { dossierPageIdForUrl, ensureBraveSnippetCitationPages } from './dossier-brave-snippet-pages.mjs';
@@ -432,7 +433,12 @@ export function applyDossierFields(record = {}, dossier = {}) {
     next.dataShortcomings = next.dataShortcomings.filter((row) => missing.has(row.field));
   }
   next.xaiRatingsFetched = dossierReviewsValid(dossier);
-  return writeDossierReviews(next, dossier, { useShortcomingMissing });
+  const reviewed = writeDossierReviews(next, dossier, { useShortcomingMissing });
+  return applySourcedHotelDescriptionToRecord(reviewed, {
+    title: reviewed.title || dossier.thing,
+    category: reviewed.category,
+    address: reviewed.address,
+  });
 }
 
 export {
