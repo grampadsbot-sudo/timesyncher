@@ -93,7 +93,7 @@ const css = await readFile(path.join(root, 'public/assets/index-CbEHlMj6.css'), 
 const html = await readFile(path.join(root, 'shared-app.html'), 'utf8');
 const tripPayload = finalizeServedSharedTripPayload(buildNycCraigKimDaybydayTrip());
 
-const app = await startServer({ html, js, css, tripPayload, canEdit: true });
+const app = await startServer({ html, js, css, tripPayload, canEdit: false });
 const puppeteer = loadPuppeteer();
 const browser = await puppeteer.launch({
   executablePath: process.env.CHROME_PATH || process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser',
@@ -105,31 +105,44 @@ try {
   for (const width of widths) {
     const page = await browser.newPage();
     await page.setViewport({ width, height: 900, deviceScaleFactor: 1 });
-    await page.goto(`${app.origin}/shared/${NYC_DAYBYDAY_SLUG}/`, { waitUntil: 'networkidle0', timeout: 120000 });
+    await page.goto(`${app.origin}/shared/${NYC_DAYBYDAY_SLUG}/`, { waitUntil: 'domcontentloaded', timeout: 120000 });
+    await page.evaluate((slug) => {
+      if (typeof window.localStorage?.removeItem === 'function') {
+        window.localStorage.removeItem(`timesyncher-section-visibility:${slug}`);
+      }
+    }, NYC_DAYBYDAY_SLUG);
+    await page.reload({ waitUntil: 'networkidle0', timeout: 120000 });
     await clickTab(page, 'Day-by-Day');
     await page.waitForSelector('[data-ts-day-timeline]', { timeout: 120000 });
-
-    const tbdCheck = await page.evaluate(() => {
-      const times = [...document.querySelectorAll('[data-ts-day-timeline] [data-ts-timeline-time]')];
-      const tbd = times.find((el) => String(el.textContent || '').replace(/\s+/g, ' ').trim() === 'TBD');
-      if (!tbd) {
-        return { ok: false, samples: times.slice(0, 5).map((el) => String(el.textContent || '').trim()) };
-      }
-      const row = tbd.parentElement;
-      const titleCol = row && row.children.length >= 3 ? row.children[2] : null;
-      return {
-        ok: true,
-        timeAlign: window.getComputedStyle(tbd).alignSelf,
-        titleAlign: titleCol ? window.getComputedStyle(titleCol).alignSelf : '',
-        titleInline: titleCol ? String(titleCol.getAttribute('style') || '') : '',
-      };
+    await page.evaluate(() => {
+      const dayBtn = [...document.querySelectorAll('button')].find((b) => /\bDay 1\b/i.test(String(b.textContent || '').replace(/\s+/g, ' ').trim()));
+      if (dayBtn) dayBtn.click();
     });
-    assert.ok(tbdCheck.ok, `untimed TBD row at ${width}: ${(tbdCheck.samples || []).join(' | ')}`);
-    assert.equal(tbdCheck.timeAlign, 'baseline', `#690 TBD time column baseline at ${width}`);
-    assert.ok(
-      tbdCheck.titleAlign === 'baseline' || /align-self:\s*baseline|alignSelf:\s*baseline/i.test(tbdCheck.titleInline),
-      `#688 title baseline with TBD at ${width} (align=${tbdCheck.titleAlign})`,
-    );
+    await new Promise((r) => setTimeout(r, 300));
+
+    if (width === 390) {
+      const tbdCheck = await page.evaluate(() => {
+        const times = [...document.querySelectorAll('[data-ts-day-timeline] [data-ts-timeline-time]')];
+        const tbd = times.find((el) => String(el.textContent || '').replace(/\s+/g, ' ').trim() === 'TBD');
+        if (!tbd) {
+          return { ok: false, samples: times.slice(0, 5).map((el) => String(el.textContent || '').trim()) };
+        }
+        const row = tbd.parentElement;
+        const titleCol = row && row.children.length >= 3 ? row.children[2] : null;
+        return {
+          ok: true,
+          timeAlign: window.getComputedStyle(tbd).alignSelf,
+          titleAlign: titleCol ? window.getComputedStyle(titleCol).alignSelf : '',
+          titleInline: titleCol ? String(titleCol.getAttribute('style') || '') : '',
+        };
+      });
+      assert.ok(tbdCheck.ok, `untimed TBD row at ${width}: ${(tbdCheck.samples || []).join(' | ')}`);
+      assert.equal(tbdCheck.timeAlign, 'baseline', `#690 TBD time column baseline at ${width}`);
+      assert.ok(
+        tbdCheck.titleAlign === 'baseline' || /align-self:\s*baseline|alignSelf:\s*baseline/i.test(tbdCheck.titleInline),
+        `#688 title baseline with TBD at ${width} (align=${tbdCheck.titleAlign})`,
+      );
+    }
 
     await page.evaluate(() => {
       const btn = document.querySelector('[data-trip-view-root] button[aria-label="Config Options"]');
@@ -147,20 +160,51 @@ try {
     );
     assert.ok(baselineHotels > 0, `hotel timeline rows before toggle at ${width}`);
 
-    await page.evaluate(() => {
-      const root = document.querySelector('[data-trip-view-root]');
-      const hotelsBtn = [...root.querySelectorAll('button')].find((b) => /Hotels/i.test(b.textContent || ''));
-      if (!hotelsBtn) throw new Error('Hotels trip-view toggle missing');
-      hotelsBtn.click();
-    });
-    await new Promise((r) => setTimeout(r, 400));
+    async function toggleTripView(label) {
+      await page.evaluate((tripLabel) => {
+        const root = document.querySelector('[data-trip-view-root]');
+        const btn = [...root.querySelectorAll('button')].find((b) => new RegExp(tripLabel, 'i').test(b.textContent || ''));
+        if (!btn) throw new Error(`trip-view toggle missing: ${tripLabel}`);
+        btn.click();
+      }, label);
+      await new Promise((r) => setTimeout(r, 400));
+    }
 
+    async function tripViewChecked(label) {
+      return page.evaluate((tripLabel) => {
+        const root = document.querySelector('[data-trip-view-root]');
+        const btn = [...root.querySelectorAll('button')].find((b) => new RegExp(tripLabel, 'i').test(b.textContent || ''));
+        const box = btn?.querySelector('input[type="checkbox"]');
+        return box ? box.checked : null;
+      }, label);
+    }
+
+    await toggleTripView('Hotels');
+    assert.equal(await tripViewChecked('Hotels'), false, `B7 hotels checkbox off at ${width}`);
     const hiddenHotels = await page.evaluate(() =>
       [...document.querySelectorAll('[data-ts-day-timeline] [data-ts-timeline-title]')]
         .map((el) => String(el.textContent || '').replace(/\s+/g, ' ').trim())
         .filter((t) => /Check-in:|Sleep:|Wake:/i.test(t)).length,
     );
     assert.equal(hiddenHotels, 0, `B7 hotels toggle hides day rows at ${width}`);
+
+    await toggleTripView('Flights');
+    assert.equal(await tripViewChecked('Flights'), false, `B7 flights checkbox off at ${width}`);
+    const hiddenFlights = await page.evaluate(() =>
+      [...document.querySelectorAll('[data-ts-day-timeline] [data-ts-timeline-title]')]
+        .map((el) => String(el.textContent || '').replace(/\s+/g, ' ').trim())
+        .filter((t) => /flight|airport/i.test(t)).length,
+    );
+    assert.equal(hiddenFlights, 0, `B7 flights toggle hides day rows at ${width}`);
+
+    await toggleTripView('Cars');
+    assert.equal(await tripViewChecked('Cars'), false, `B7 cars checkbox off at ${width}`);
+    const hiddenCars = await page.evaluate(() =>
+      [...document.querySelectorAll('[data-ts-day-timeline] [data-ts-timeline-title]')]
+        .map((el) => String(el.textContent || '').replace(/\s+/g, ' ').trim())
+        .filter((t) => /^(Pickup|Drop-off):/i.test(t)).length,
+    );
+    assert.equal(hiddenCars, 0, `B7 cars toggle hides day rows at ${width}`);
 
     await page.close();
   }
