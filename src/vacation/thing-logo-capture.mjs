@@ -1,17 +1,18 @@
+import { repairExplicitLogoUrl } from './thing-logo-fallback-url.mjs';
 import { timelineIcon, timelineCategoryIcon, thingLogoUrl } from './timeline-icons.mjs';
 
 export const NAMED_THING_LOGOS = {
-  hertz: 'https://www.hertz.com/favicon.ico',
+  hertz: 'https://icons.duckduckgo.com/ip3/hertz.com.ico',
   alamo: 'https://www.alamo.com/favicon.ico',
   avis: 'https://www.avis.com/favicon.ico',
   enterprise: 'https://www.enterprise.com/favicon.ico',
   budget: 'https://www.budget.com/favicon.ico',
   national: 'https://www.nationalcar.com/favicon.ico',
-  hyatt: 'https://www.hyatt.com/hyatt/hds/images/4.0.0/favicon.ico',
+  hyatt: 'https://icons.duckduckgo.com/ip3/hyatt.com.ico',
   jetblue: 'https://www.jetblue.com/favicon.ico',
   southwest: 'https://www.southwest.com/favicon.ico',
-  united: 'https://www.united.com/favicon.ico',
-  delta: 'https://www.delta.com/favicon.ico',
+  united: 'https://icons.duckduckgo.com/ip3/united.com.ico',
+  delta: 'https://icons.duckduckgo.com/ip3/delta.com.ico',
   american: 'https://www.aa.com/favicon.ico',
 };
 
@@ -188,7 +189,7 @@ export function sourceLogoUrl(thing = {}, override = {}) {
         const hyattIcon = usableLogo(NAMED_THING_LOGOS.hyatt);
         if (hyattIcon) return hyattIcon;
       }
-      return logo;
+      return repairExplicitLogoUrl(logo, pageUrlForLogo(thing, override));
     }
   }
   const thumb = thumbnailFromSource(source);
@@ -201,7 +202,7 @@ export function sourceLogoUrl(thing = {}, override = {}) {
     const hyattIcon = usableLogo(NAMED_THING_LOGOS.hyatt);
     if (hyattIcon) return hyattIcon;
   }
-  return `${page.origin}/favicon.ico`;
+  return repairExplicitLogoUrl(`${page.origin}/favicon.ico`, page.href);
 }
 
 export function logoLookupRuntimeSource() {

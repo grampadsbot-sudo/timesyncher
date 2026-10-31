@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef } from 'react';
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 import { buildDetailViewModel } from '../lib/detailModel.mjs';
+import { onLogoImgError, onLogoImgLoad } from '../lib/logoChipHandlers.mjs';
 import { StarRating } from './StarRating';
 import type { DetailAddressHoursLine } from '../lib/detailModel.mjs';
 
@@ -12,8 +13,14 @@ type Props = {
 
 function DetailLogo({ logoUrl }: { logoUrl: string }) {
   return (
-    <span className="tsv-detail-logo-chip" data-ts-detail-logo-chip="1" aria-hidden="true">
-      <img className="tsv-detail-logo" src={logoUrl} alt="" />
+    <span className="tsv-detail-logo-chip" data-ts-detail-logo-chip="1" data-ts-logo-chip="1" aria-hidden="true" data-ts-fallback-emoji="📍">
+      <img
+        className="tsv-detail-logo"
+        src={logoUrl}
+        alt=""
+        onError={(event) => onLogoImgError(event, '📍')}
+        onLoad={(event) => onLogoImgLoad(event, '📍')}
+      />
     </span>
   );
 }

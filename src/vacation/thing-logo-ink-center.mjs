@@ -1,4 +1,5 @@
 import thingLogoInkOffsets from './thing-logo-ink-offsets.json' with { type: 'json' };
+import { logoImgOnErrorInline, logoImgOnLoadInline } from './thing-logo-fallback-url.mjs';
 
 export function normalizeThingLogoUrl(src) {
   const s = String(src || '').trim();
@@ -244,7 +245,10 @@ export function thingLogoInkCenterBundleSnippet(offsetTable = thingLogoInkOffset
   return `const TS_LOGO_INK_CY=${tableJson};${body}`;
 }
 
-const THING_LOGO_CHIP_DC_INK_PATCH = 'dc=({item:G,size:Re=28})=>{const zt=_l(G),ua=Pc(G);return n.jsxs("span",{"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:Re,height:Re,minWidth:Re,borderRadius:9,background:"#f8fafc",border:"1px solid #e5e7eb",display:"inline-grid",placeItems:"center",position:"relative",overflow:"hidden",fontSize:Math.max(14,Math.round(Re*.62)),lineHeight:1,boxShadow:"0 1px 2px rgba(15,23,42,0.05)",boxSizing:"border-box"},children:[n.jsx("span",{className:"tsv-logo-fallback",ref:Rn=>{Rn&&tsCenterThingLogoFallbackEl(Rn)},style:{display:"grid",placeItems:"center",width:"100%",height:"100%",lineHeight:1,gridArea:"1/1"},children:ua}),zt?n.jsx("img",{className:"tiny-logo",src:zt,alt:"",loading:"lazy",onError:Rn=>{const ua=Rn.currentTarget;ua.style.display="none";const Xi=ua.closest("[data-ts-logo-chip]"),ts=Xi&&Xi.querySelector(".tsv-logo-fallback");ts&&tsCenterThingLogoFallbackEl(ts)},ref:Rn=>{if(!Rn||!Rn.complete)return;if(Rn.naturalWidth>1)tsCenterThingLogoInk(Rn);else{const ua=Rn.closest("[data-ts-logo-chip]"),ts=ua&&ua.querySelector(".tsv-logo-fallback");ts&&tsCenterThingLogoFallbackEl(ts)}},onLoad:Rn=>{tsCenterThingLogoInk(Rn.currentTarget)},style:{maxWidth:"100%",maxHeight:"100%",width:"auto",height:"auto",objectFit:"contain",objectPosition:"center center",display:"block",gridArea:"1/1",background:"#f8fafc"}}):null]})}';
+const TREK_LOGO_ON_ERROR = logoImgOnErrorInline().replace(/\bthis\b/g, 'Rn.currentTarget');
+const TREK_LOGO_ON_LOAD = logoImgOnLoadInline().replace(/\bthis\b/g, 'Rn.currentTarget');
+
+const THING_LOGO_CHIP_DC_INK_PATCH = 'dc=({item:G,size:Re=28})=>{const zt=_l(G),ua=Pc(G);return n.jsxs("span",{"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:Re,height:Re,minWidth:Re,borderRadius:9,background:"#f8fafc",border:"1px solid #e5e7eb",display:"inline-grid",placeItems:"center",position:"relative",overflow:"hidden",fontSize:Math.max(14,Math.round(Re*.62)),lineHeight:1,boxShadow:"0 1px 2px rgba(15,23,42,0.05)",boxSizing:"border-box"},children:[n.jsx("span",{className:"tsv-logo-fallback",ref:Rn=>{Rn&&tsCenterThingLogoFallbackEl(Rn)},style:{display:"grid",placeItems:"center",width:"100%",height:"100%",lineHeight:1,gridArea:"1/1"},children:ua}),zt?n.jsx("img",{className:"tiny-logo",src:zt,alt:"",loading:"lazy",onError:Rn=>{' + TREK_LOGO_ON_ERROR + '},ref:Rn=>{if(!Rn||!Rn.complete)return;if(Rn.naturalWidth>1)tsCenterThingLogoInk(Rn);else{const ua=Rn.closest("[data-ts-logo-chip]"),ts=ua&&ua.querySelector(".tsv-logo-fallback");ts&&tsCenterThingLogoFallbackEl(ts)}},onLoad:Rn=>{' + TREK_LOGO_ON_LOAD + 'tsCenterThingLogoInk(Rn.currentTarget)},style:{maxWidth:"100%",maxHeight:"100%",width:"auto",height:"auto",objectFit:"contain",objectPosition:"center center",display:"block",gridArea:"1/1",background:"#f8fafc"}}):null]})}';
 
 const THING_LOGO_INK_ANCHOR = 'function pze({places:e=[],dayPlaces:t=[]';
 
