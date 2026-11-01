@@ -69,7 +69,10 @@ assert.equal(rendered, committed);
 
 assert.match(rendered, /_l=G=>\{if\(qr\(G\)\)return pDe;const Re=ha\(G\);return Re\.logoUrl\|\|Re\.iconUrl\|\|G\.logoUrl\|\|oi\(cc\(G\)\)\}/);
 assert.match(rendered, /"data-ts-logo-chip":"1","aria-hidden":"true",style:\{width:Re,height:Re/);
-assert.match(rendered, /className:"tiny-logo",src:zt,alt:""/);
+assert.match(rendered, /className:"tiny-logo","data-logo-src":zt\|\|"",src:tsRepairExplicitLogoUrl\(zt\)\|\|zt,alt:""/);
+assert.match(rendered, /function tsRepairExplicitLogoUrl\(/);
+assert.match(rendered, /src:tsRepairExplicitLogoUrl\(zt\)\|\|zt/);
+assert.match(rendered, /src:tsRepairExplicitLogoUrl\(Xr\)\|\|Xr/);
 assert.match(rendered, /tsLogoFallback/);
 assert.match(rendered, /tsv-logo-fallback/);
 assert.match(rendered, /ic&&ic!=="\?"\?ic:wl\(G\)/);

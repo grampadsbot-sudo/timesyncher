@@ -46,6 +46,11 @@ export function buildListLogoPatch() {
   return `_l=G=>{const tsLR=${mapJson};const tsPick=s=>{const v=String(s||"").trim();return v&&tsLR[v]?tsLR[v]:v;};const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"").trim();if(raw&&!/^data:image\\/svg\\+xml/i.test(raw)&&!(/\\/ts-thing-media\\//i.test(raw)&&!/\\/ts-thing-logos\\//i.test(raw)))return tsPick(raw);const pg=String(Re.url||Re.website||Re.sourceUrl||G.url||G.website||"").trim();if(pg){try{const u=new URL(pg);if(u.protocol==="http:"||u.protocol==="https:")return tsPick(u.origin+"/favicon.ico")}catch(e){}}return ""}`;
 }
 
+export function buildExplicitLogoRepairBundleSnippet() {
+  const mapJson = JSON.stringify(Object.fromEntries(EXPLICIT_LOGO_REPAIRS));
+  return `function tsRepairExplicitLogoUrl(s){const tsLR=${mapJson};const v=String(s||"").trim();if(!v)return "";return tsLR[v]||v}`;
+}
+
 export function repairExplicitLogoUrl(logoUrl, pageUrl = '') {
   const src = text(logoUrl);
   if (!src) return '';
