@@ -655,11 +655,6 @@ body {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  [data-shared-live-tab='events'] .tsv-row-desc {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
   [data-shared-live-tab='events'] .tsv-row-price {
     overflow: hidden;
     text-overflow: ellipsis;
