@@ -1,7 +1,8 @@
-import { captureThingLogo } from './thing-logo-capture.mjs';
+import { captureThingLogo, logoUrlFromSearchPlace } from './thing-logo-capture.mjs';
 import { estimateSearchPlacePrice } from './search-place-price-estimate.mjs';
 import { descriptionPassesDetailJudge } from './thing-detail-fields.mjs';
 
+export { logoUrlFromSearchPlace } from './thing-logo-capture.mjs';
 export { estimateSearchPlacePrice } from './search-place-price-estimate.mjs';
 const GENERIC_DESCRIPTION_RES = [
   /^Documented NYC option\b/i,
@@ -226,53 +227,6 @@ export function buildCategoryDescription({
     return eventDescription(title, sourceRecord, raw);
   }
   return text(raw || `${title}; source-backed option to compare against your shortlist`, 4000);
-}
-
-function airlineLogoFromTitle(title = '') {
-  const row = text(title, 240);
-  for (const [pattern, url] of AIRLINE_LOGOS) {
-    if (pattern.test(row)) return url;
-  }
-  return '';
-}
-
-export function logoUrlFromSearchPlace(place = {}, sourceRecord = {}) {
-  const explicit = text(
-    sourceRecord.logoUrl
-    || sourceRecord.logo
-    || sourceRecord.favicon
-    || sourceRecord.faviconUrl
-    || place.logoUrl
-    || place.iconUrl,
-  );
-  if (explicit) return explicit;
-  const thumb = sourceRecord?.thumbnail;
-  if (thumb && typeof thumb === 'object') {
-    const src = text(thumb.original || thumb.src);
-    if (src) return src;
-  }
-  const category = text(place.category, 80).toLowerCase();
-  if (category === 'flight') {
-    const airlineLogo = airlineLogoFromTitle(place.title);
-    if (airlineLogo) return airlineLogo;
-  }
-  const named = captureThingLogo(
-    { ...place, sourceRecord, title: place.title, website: place.url || sourceRecord.url },
-    { category, sourceRecord },
-  );
-  if (named) return named;
-  const page = text(place.url || sourceRecord.url || sourceRecord.website);
-  if (page) {
-    try {
-      const parsed = new URL(page);
-      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
-        return `${parsed.origin}/favicon.ico`;
-      }
-    } catch {
-      return '';
-    }
-  }
-  return '';
 }
 
 function sourcedLongDescription(place = {}, sourceRecord = {}) {
