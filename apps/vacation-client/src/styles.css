@@ -651,18 +651,19 @@ body {
     overflow-wrap: anywhere;
   }
   [data-shared-live-tab='events'] .tsv-row-main .tsv-row-name {
-    white-space: normal;
-    overflow: visible;
-    text-overflow: unset;
-    overflow-wrap: anywhere;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  [data-shared-live-tab='events'] .tsv-row-desc {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   [data-shared-live-tab='events'] .tsv-row-price {
-    grid-column: 1 / -1;
-    justify-self: end;
-    white-space: normal;
-    overflow-wrap: anywhere;
+    overflow: hidden;
+    text-overflow: ellipsis;
     max-width: 100%;
-    text-align: right;
   }
 }
 

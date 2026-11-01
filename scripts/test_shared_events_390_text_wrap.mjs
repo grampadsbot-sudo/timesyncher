@@ -15,14 +15,23 @@ assert.match(
 );
 assert.match(
   css,
-  /\[data-shared-live-tab="events"\] \[data-ts-list-row-name="1"\] strong[\s\S]*white-space:\s*normal!important/,
-  'event names wrap at 390px',
+  /\[data-shared-live-tab="events"\] \[data-ts-list-row-name="1"\] strong[\s\S]*white-space:\s*nowrap!important/,
+  'event names stay single-line with ellipsis at 390px',
 );
-assert.doesNotMatch(
+assert.match(
   css,
   /\[data-shared-live-tab="events"\] \[data-ts-list-row-name="1"\] strong[\s\S]*text-overflow:\s*ellipsis!important/,
-  'event names must not ellipsis-clip at 390px',
+  'event names ellipsis at 390px',
+);
+const mediaLine = css.split('\n').find((line) => line.includes('[data-shared-live-tab="events"]') && line.includes('@media')) || '';
+const eventsStart = mediaLine.indexOf('[data-shared-live-tab="events"]');
+assert.ok(eventsStart >= 0, 'events mobile CSS block missing');
+const eventsCss = mediaLine.slice(eventsStart);
+assert.doesNotMatch(
+  eventsCss,
+  /white-space:\s*normal!important/,
+  'events tab must not force wrap at 390px (Gate B baseline uses ellipsis)',
 );
 assert.match(bundle, /data-shared-live-tab":"events"/, 'served bundle must mark events tab panel for mobile CSS');
 
-console.log('shared events 390px name wrap contract OK');
+console.log('shared events 390px name ellipsis contract OK');
