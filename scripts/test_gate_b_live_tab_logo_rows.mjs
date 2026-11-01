@@ -8,6 +8,7 @@ import { applyProductKeepsakeOverrides } from '../src/vacation/keepsake-product-
 import { resolveThingLogoUrl, NAMED_THING_LOGOS } from '../src/vacation/thing-logo-capture.mjs';
 import { patchSharedTripOeListRows } from '../src/vacation/shared-trip-oe-list-row-patch.mjs';
 import { LIST_LOGO_PATCH } from '../src/vacation/trek-live-product-patches.mjs';
+import { LIST_LOGO_QR_GUARD_PATCH } from '../src/vacation/trek-list-logo-qr-patch.mjs';
 
 assert.match(LIST_LOGO_PATCH, /new URL\(pg\)/);
 assert.match(LIST_LOGO_PATCH, /favicon\.ico/);
@@ -49,10 +50,9 @@ assert.match(lists.cars[0], /tiny-logo/);
 
 const bundle = readFileSync(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
 assert.match(bundle, /"data-ts-tab":G\.id,"data-tab":G\.id/);
-assert.match(
-  bundle,
-  /_l=G=>\{if\(qr\(G\)\)return pDe;const Re=ha\(G\);return Re\.logoUrl\|\|Re\.iconUrl\|\|G\.logoUrl\|\|oi\(cc\(G\)\)\}/,
-  'served bundle keeps TREK _l logo chain; favicon backfill is via resolveThingLogoUrl',
+assert.ok(
+  bundle.includes(LIST_LOGO_QR_GUARD_PATCH),
+  'served bundle _l logo chain prefers real logo URLs before the qr/pDe fallback (#441)',
 );
 assert.match(bundle, /"data-list-row":"1","data-has-logo":tsRowHasLogo/);
 assert.match(bundle, /"data-list-summary":"1","data-summary-src":"thing"/);

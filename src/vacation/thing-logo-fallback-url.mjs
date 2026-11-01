@@ -26,7 +26,7 @@ export function duckDuckGoIp3LogoUrl(pageUrl) {
   }
 }
 
-const EXPLICIT_LOGO_REPAIRS = new Map([
+const BUNDLE_LIST_LOGO_REPAIRS = new Map([
   ['https://statuecitycruises.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/statuecitycruises.com.ico'],
   ['https://www.macys.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/macys.com.ico'],
   ['https://www.wholefoodsmarket.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/wholefoodsmarket.com.ico'],
@@ -41,8 +41,35 @@ const EXPLICIT_LOGO_REPAIRS = new Map([
   ['https://www.carminesnyc.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/carminesnyc.com.ico'],
 ]);
 
-export function buildListLogoPatch() {
+const EXPLICIT_LOGO_REPAIRS = new Map([
+  ...BUNDLE_LIST_LOGO_REPAIRS,
+  ['https://www.aa.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/aa.com.ico'],
+  ['https://www.southwest.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/southwest.com.ico'],
+  ['https://www.jetblue.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/jetblue.com.ico'],
+  ['https://jazz.org/favicon.ico', 'https://icons.duckduckgo.com/ip3/jazz.org.ico'],
+  ['https://bryantpark.org/favicon.ico', 'https://icons.duckduckgo.com/ip3/bryantpark.org.ico'],
+  ['https://www.hotelbelleclaire.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/hotelbelleclaire.com.ico'],
+  ['https://www.manhattanclub.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/manhattanclub.com.ico'],
+  ['https://villagevanguard.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/villagevanguard.com.ico'],
+  ['https://smokejazz.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/smokejazz.com.ico'],
+  ['https://www.circleline.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/circleline.com.ico'],
+]);
+
+export function declaredIconFetchLooksBroken(status, contentType = '', byteLength = 0) {
+  if (status === 403 || status === 429) return true;
+  if (!status || status < 200 || status >= 400) return true;
+  if (!byteLength) return true;
+  if (contentType && !/^image\//i.test(String(contentType))) return true;
+  return false;
+}
+
+export function buildDeclaredLogoRepairFn() {
   const mapJson = JSON.stringify(Object.fromEntries(EXPLICIT_LOGO_REPAIRS));
+  return `function tsRepairDeclaredLogo(u){var s=String(u||"").trim();if(!s)return s;var m=${mapJson};return m[s]||s}`;
+}
+
+export function buildListLogoPatch() {
+  const mapJson = JSON.stringify(Object.fromEntries(BUNDLE_LIST_LOGO_REPAIRS));
   return `_l=G=>{const tsLR=${mapJson};const tsPick=s=>{const v=String(s||"").trim();return v&&tsLR[v]?tsLR[v]:v;};const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"").trim();if(raw&&!/^data:image\\/svg\\+xml/i.test(raw)&&!(/\\/ts-thing-media\\//i.test(raw)&&!/\\/ts-thing-logos\\//i.test(raw)))return tsPick(raw);const pg=String(Re.url||Re.website||Re.sourceUrl||G.url||G.website||"").trim();if(pg){try{const u=new URL(pg);if(u.protocol==="http:"||u.protocol==="https:")return tsPick(u.origin+"/favicon.ico")}catch(e){}}return ""}`;
 }
 

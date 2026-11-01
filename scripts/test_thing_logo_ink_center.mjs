@@ -86,15 +86,19 @@ assert.match(snippet, /createTreeWalker/);
 assert.match(snippet, /function tsCenterThingLogoInk\(/);
 assert.doesNotMatch(snippet, /function tsCenterThingLogoFallback\(/);
 assert.match(snippet, /function tsCenterThingLogoFallbackEl\(/);
-assert.doesNotMatch(
-  snippet.match(/function tsCenterThingLogoInk\([^)]*\)\{[\s\S]*?\} function tsCenterThingLogoFallback/)?.[0] || '',
-  /getImageData/,
-);
+assert.match(snippet, /tsInkBboxCenterYFromRgba\(ctx\.getImageData/);
 
 assert.equal(listRowFirstNameLineCenterY(null), null);
 
 assert.throws(
   () => patchThingLogoChipAlignment('dc=({item:G})=>{}'),
+  /qr\/pDe guard patch/,
+);
+
+const listLogoNeedle =
+  '_l=G=>{if(qr(G))return pDe;const Re=ha(G);return Re.logoUrl||Re.iconUrl||G.logoUrl||oi(cc(G))}';
+assert.throws(
+  () => patchThingLogoChipAlignment(`x${listLogoNeedle}y`),
   /missing upstream dc\(\) logo chain/,
 );
 
