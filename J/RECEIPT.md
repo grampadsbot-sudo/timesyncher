@@ -1,39 +1,39 @@
-# Lane receipt — issue #441 (row logo centring + Blue Note generic logo)
+# PR #773 / issue #471 — lane vkfill-773 receipt
 
-**Start HEAD:** `6c35291ca69bbb2730a39cc5bccbc5a0b7640479` (vk, HOST PUBLICATION ONLY — uncommitted PATCH for outer host)
+**Start HEAD:** `4ec3250b7f07d494568ce8c255715eb530cd875c` (unchanged; host publishes)
 
-## Root causes
+## Root cause (Gate B on 4ec3250b)
 
-1. **Generic logo on Blue Note rows:** Served TREK `_l()` returned `pDe` when `qr(G)` (family_event) ran **before** reading stored `logoUrl`, so real URLs were replaced by the generic SVG placeholder.
-2. **~1px low vs name line:** `tsCenterThingLogoInk` only nudged when `TS_LOGO_INK_CY` had a table entry; unknown logos skipped ink bbox measurement.
+`patchSharedTripListWrapping` set `whiteSpace:"normal"` on every `data-ts-list-row-name` span, including rows inside `data-ts-logo-name-pair`. Multi-line names vertically center the 28px chip against the full text block, so logo ink (nudged to the first name line) fails Gate B **logo not centred with name** on flights/hotels/restaurants/events/stores/cars captures. Price lines in the brief are data-only (ignored per Craig 10/20).
 
-## Changes
+## Fix
 
-| Area | File | What |
-| --- | --- | --- |
-| List resolver | `src/vacation/trek-list-logo-qr-patch.mjs` | New: `LIST_LOGO_QR_GUARD_PATCH` + `patchListLogoQrGuard()` — prefer non-placeholder stored URL before `if(qr(G))return pDe`. |
-| Patches | `src/vacation/trek-live-product-patches.mjs` | `patchThingLogoChipAlignment` calls qr guard first; re-exports from qr patch module. |
-| Ink center | `src/vacation/thing-logo-ink-center.mjs` | Canvas `getImageData` + `tsInkBboxCenterYFromRgba` when table lookup misses. |
-| Bundle | `src/vacation/trek-style2-bundle.mjs` | Assert served bundle embeds qr guard; import needles from qr patch. |
-| Rebaked | `public/assets/index-BKun7ofk.js` | `node scripts/rebake_served_trek_bundle.mjs` (sha256 `14bd4bbb7a161d10e1ce14252d35256e7d5a2956d15a534653478e6d2c159380`). |
-| Data | `scripts/fixtures/vk-search-census/results/{659,660,661}.json` | `logoUrl` for Blue Note entities (gate-b fixture already had URLs). |
-| Test | `scripts/test_issue_441_row_logo_fix.mjs` | Fixture logos, patch + served bundle guard. |
-| Test | `scripts/test_thing_logo_ink_center.mjs`, `scripts/test_shared_logo_chip_center_bundle.mjs` | Updated for qr guard + canvas ink path. |
-| Manifest | `scripts/offline-tests.txt` | Registered `scripts/test_issue_441_row_logo_fix.mjs`. |
+Keep #471 Apple leaf alignment (`lineHeight:1`, `strong` block, ink → `tsListRowNameLeafCenterY`) but restore **single-line** list titles inside logo+name pairs (`nowrap` + ellipsis) so chip center and first name line stay aligned.
 
-## Checks (local, start HEAD `6c35291`)
+## Files touched
+
+- `src/vacation/shared-trip-oe-list-row-patch.mjs` — `OE_LOGO_PAIR_LIST_ROW_NAME_*` rewind after wrap patch
+- `public/assets/index-BKun7ofk.js` — rebaked (`node scripts/rebake_served_trek_bundle.mjs`, sha256 `dd89d02ba17d8ecf57060706c3925d1a600e07a24b5dd273800dd1912f3ee469`)
+- `scripts/test_ui_471_apple_row_name_frame.mjs` — assert logo-pair bundle anchor
+- `scripts/test_shared_tab_list_summary.mjs` — list row name `nowrap` under logo pair
+
+## Checks (local, uncommitted tree)
 
 | Command | Result |
 | --- | --- |
-| `node scripts/test_issue_441_row_logo_fix.mjs` | PASS |
+| `node scripts/rebake_served_trek_bundle.mjs` | PASS |
+| `node scripts/test_ui_471_apple_row_name_frame.mjs` | PASS |
+| `node scripts/test_shared_tab_list_summary.mjs` | PASS |
+| `node scripts/test_gate_b_row_name_frame.mjs` | PASS |
 | `node scripts/test_thing_logo_ink_center.mjs` | PASS |
-| `node scripts/test_shared_logo_chip_center_bundle.mjs` | PASS |
+| `node scripts/test_gate_b_live_tab_logo_rows.mjs` | PASS |
+| `node scripts/test_served_trek_bundle.mjs` | PASS |
 | `node scripts/check-no-comments.mjs` | PASS |
 | `node scripts/test_offline_manifest.mjs` | PASS |
-| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS (0 fail) |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS |
 
-Gate B pixel PASS on PR head is **not** claimed here (lean lane; host CI + Ubuntu Gate B after push).
+Gate B pixel re-run on Ubuntu staging not executed in lane (host CI + `restore_check.py` on push).
 
-## Host next
+## Scope left alone
 
-Commit all paths above on branch `vkfill/441-20261031180405`, push once, open PR to `vk` titled `fix(#441): …` with `Closes #441`.
+Budget/flight/hotel/car **price** gaps on NYC fixture — data harness, not UI (brief + decisions-log #65/#773 handoff).
