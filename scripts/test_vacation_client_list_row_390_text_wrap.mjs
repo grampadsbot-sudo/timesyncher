@@ -25,7 +25,7 @@ assert.match(
 );
 assert.match(
   listMobile,
-  /\[data-shared-live-tab='events'\]\s+\.tsv-row-flight-main\s+\.tsv-row-name[\s\S]*white-space:\s*normal/,
+  /\[data-shared-live-tab='events'\]\s+\.tsv-row-main\s+\.tsv-row-name[\s\S]*white-space:\s*normal/,
 );
 
 assert.match(css, /\.tsv-row-desc[\s\S]*white-space:\s*nowrap/);

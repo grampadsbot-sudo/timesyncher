@@ -489,8 +489,8 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   }
   js = patchSharedTripOeListRows(js);
   if (served) {
-    if (!js.includes('data-shared-live-tab":"hotels"') || !js.includes('data-shared-live-tab":"cars"')) {
-      throw new Error('served shared Hotels/Cars tab panels missing data-shared-live-tab anchor');
+    if (!['hotels', 'cars', 'events'].every((tab) => js.includes(`data-shared-live-tab":"${tab}"`))) {
+      throw new Error('served shared live tab panels missing data-shared-live-tab anchor');
     }
     if (!js.includes('"data-list-row":"1","data-has-logo":tsRowHasLogo')) {
       throw new Error('served shared Oe() rows missing Gate B list row markers');
