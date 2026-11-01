@@ -100,4 +100,30 @@ assert.match(hotelPriceDisplay(estimatedTravelTrip.places[1], estimatedTravelTri
 assert.match(carPriceDisplay(estimatedTravelTrip.places[2], estimatedTravelTrip), /^\$/);
 assert.equal(gateBBudgetPriceCompleteness(estimatedTravelTrip).pass, true);
 
+const rawTravelTrip = {
+  trip: { currency: 'USD' },
+  days: [{ id: dayId, day_number: 1 }],
+  places: [
+    { id: 1, name: 'American Airlines JFK to LAS', category_name: 'Flight' },
+    { id: 2, name: 'Arthouse Hotel', category_name: 'Hotel' },
+    { id: 3, name: 'Dollar JFK', category_name: 'Car' },
+  ],
+  assignments: {
+    [dayId]: [
+      { place_id: 1, place: { id: 1, name: 'American Airlines JFK to LAS' } },
+      { place_id: 2, place: { id: 2, name: 'Arthouse Hotel' } },
+      { place_id: 3, place: { id: 3, name: 'Dollar JFK' } },
+    ],
+  },
+  thingOverrides: {
+    'place:1': { category: 'flight', dayIds: [dayId] },
+    'place:2': { category: 'hotel', dayIds: [dayId] },
+    'place:3': { category: 'car', dayIds: [dayId] },
+  },
+};
+assert.match(flightPriceDisplay(rawTravelTrip.places[0], rawTravelTrip), /^\$/);
+assert.match(hotelPriceDisplay(rawTravelTrip.places[1], rawTravelTrip), /^\$/);
+assert.match(carPriceDisplay(rawTravelTrip.places[2], rawTravelTrip), /^\$/);
+assert.equal(gateBBudgetPriceCompleteness(rawTravelTrip).pass, true);
+
 console.log('budget required price completeness tests passed');

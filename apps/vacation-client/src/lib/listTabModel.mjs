@@ -1,4 +1,4 @@
-
+import { estimateThingTravelPrice } from '../../../../src/vacation/thing-price.mjs';
 
 export const LIST_TAB_IDS = ['flights', 'hotels', 'cars', 'restaurants', 'stores', 'events'];
 
@@ -218,12 +218,17 @@ export function filterPlaces(places, trip, tab, filters = {}) {
 export function numericPrice(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
-  return (
+  const explicit =
     parsePrice(override.price) ??
     parsePrice(place.price) ??
     parsePrice(source.price) ??
-    parsePrice(source.totalPrice)
-  );
+    parsePrice(source.totalPrice);
+  if (explicit != null) return explicit;
+  const category = tabCategoryKey(place, trip);
+  if (category !== 'flight' && category !== 'hotel' && category !== 'car') return null;
+  const estimated = estimateThingTravelPrice(place, override, category);
+  if (estimated == null || estimated === '') return null;
+  return parsePrice(String(estimated));
 }
 
 export function sortPlaces(places, trip, sort = DEFAULT_SORT) {
