@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { repairExplicitLogoUrl } from '../src/vacation/thing-logo-fallback-url.mjs';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -335,7 +336,7 @@ for (const rowId of VK_SEARCH_SNAPSHOT_COPY_ROW_IDS) {
     assert.equal(override.price, snapshot.price, `${rowId} price must match pr336 snapshot`);
   }
   if (snapshot.logoUrl) {
-    assert.equal(override.logoUrl, snapshot.logoUrl, `${rowId} logoUrl must match pr336 snapshot`);
+    assert.equal(override.logoUrl, repairExplicitLogoUrl(snapshot.logoUrl), `${rowId} logoUrl must match pr336 snapshot (served repair)`);
   }
 }
 assert.equal(vkSnapshotBindingTrip.places.find((p) => p.id === 601)?.lat, 36.084, '601 keeps fixture coordinates');
