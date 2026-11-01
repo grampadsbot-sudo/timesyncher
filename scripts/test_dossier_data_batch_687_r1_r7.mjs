@@ -43,6 +43,21 @@ assert.equal(
   ratingQuoteSupportsAggregate('Call 212-475-8592 for reservations; menu from 4.2 to 5747 dollars.', 4.2, 5747),
   false,
 );
+assert.equal(
+  ratingQuoteSupportsAggregate('4.2 ounces. Telephone 157479999. No customer rating published.', 4.2, 5747),
+  false,
+);
+assert.equal(
+  ratingQuoteSupportsAggregate('4.2 ounces. Telephone157479999. No customer ratings published.', 4.2, 5747),
+  false,
+);
+assert.equal(ratingQuoteSupportsAggregate('No scores are available.', 4.2, 5747), false);
+assert.equal(
+  ratingQuoteSupportsAggregate('Rated 4.2 out of 5 from 5,747 reviews', 4.2, 5747),
+  true,
+);
+assert.equal(ratingQuoteSupportsAggregate('4.2 stars (5747 ratings)', 4.2, 5747), true);
+assert.equal(ratingQuoteSupportsAggregate('Rated 4.2 from 5,747.', 4.2, 5747), true);
 
 const hoursDossier = {
   thing: 'Blue Note Jazz Club',
