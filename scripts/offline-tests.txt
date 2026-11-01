@@ -61,6 +61,7 @@ scripts/test_trip_map_harness_hook_bundle.mjs
 scripts/test_shared_hotels_390_text_wrap.mjs
 scripts/test_shared_logo_chip_center_bundle.mjs
 scripts/test_map_marker_logo_fallback_758.mjs
+scripts/test_served_logo_url_repair_758.mjs
 scripts/test_thing_logo_ink_center.mjs
 scripts/test_shared_category_tab_icon_center_bundle.mjs
 scripts/test_served_customer_copy_no_internal_terms.mjs

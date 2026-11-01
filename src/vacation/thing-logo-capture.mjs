@@ -240,10 +240,12 @@ export function applyCapturedLogos(shared = {}) {
     const key = `place:${place.id}`;
     const override = { ...(next.thingOverrides[key] || {}) };
     const resolved = timelineIcon(place, override);
-    const logoUrl = captureThingLogo(place, override);
+    const logoUrl = repairExplicitLogoUrl(captureThingLogo(place, override), pageUrlForLogo(place, override));
     if (logoUrl) {
       override.logoUrl = logoUrl;
-    } else if (!text(override.logoUrl)) {
+    } else if (text(override.logoUrl)) {
+      override.logoUrl = repairExplicitLogoUrl(override.logoUrl, pageUrlForLogo(place, override));
+    } else {
       override.logoUrl = '';
       const reason = logoCaptureMissReason(place, override);
       if (reason) override.logoCaptureReason = reason;
