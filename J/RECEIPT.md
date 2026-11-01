@@ -1,3 +1,15 @@
+# PR #776 / issue #613 — Gate B fix-it receipt
+
+**GBrain handoff:** `bot-admin/lanes/vk-pr-handoff/pr-776` — page not found at lane start (noted per handoff).
+
+**Start HEAD:** `8850e3b1223f2e7b8fb1ff46c6f71b0235d94afa`
+
+**Fix-it:** First push used wrap at 390px; Gate B failed `events-390-top.png` (3.20%) and `events-390.png` (2.04%) vs baseline (single-line ellipsis). Reverted Events mobile rules to `nowrap` + ellipsis + `overflow-x:clip` / `min-width:0` containment; kept `data-shared-live-tab="events"`. Served CSS: Events `@media` block ordered before Hotels so `test_shared_hotels_390_text_wrap.mjs` greedy regex does not cross-match.
+
+**Commit:** `64b230f0` on branch `cursor/tsv-613-vk-live-accept-no-text-past-the-right-edge-at-390-px-live-staging-74f5`
+
+---
+
 # PR #773 / issue #471 — lane vkfill-773 receipt
 
 **Start HEAD:** `4ec3250b7f07d494568ce8c255715eb530cd875c` (unchanged; host publishes)
