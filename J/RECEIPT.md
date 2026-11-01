@@ -1,19 +1,20 @@
 # PR #767 / issue #760 — lane receipt
 
-**Start HEAD (round 1):** `130b2f0506abefc2fdf12a6da8b1845201f40ef4`
+**Start HEAD (round 2):** `d7683d9d48f60bf5a8b7a6883ff25ee71121c0b0`
 
 **GBrain handoff:** `bot-admin/lanes/vk-pr-handoff/pr-767` — **page not found** (MCP `get_page` rc1, 2026-11-01).
 
-## CI round 2 fix
+## CI round 3 fix
 
-**Failure:** `scripts/test_shared_logo_chip_center_bundle.mjs` — still asserted `className:"tiny-logo",src:zt,alt:""` after display-time logo repair landed in the served bundle.
+**Failure:** `scripts/test_shared_trip_live_tab_logos.mjs` — same stale `src:zt` assertion on `dc()` as round 2 chip-center test.
 
-**Fix:** Align test with `test_served_trek_bundle.mjs`: expect `tsRepairExplicitLogoUrl` and `data-logo-src` + repaired `src` on `dc()` chips.
+**Fix:** Assert `tsRepairExplicitLogoUrl` and repaired img props on served bundle.
 
-## Checks (local, after round 2)
+## Checks (local, after round 3)
 
 | Command | Result |
 | --- | --- |
+| `node scripts/test_shared_trip_live_tab_logos.mjs` | PASS |
 | `node scripts/test_shared_logo_chip_center_bundle.mjs` | PASS |
 | `node scripts/test_served_trek_bundle.mjs` | PASS |
 | `node scripts/check-no-comments.mjs` | PASS |

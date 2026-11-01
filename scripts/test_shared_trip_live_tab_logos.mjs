@@ -19,7 +19,8 @@ assert.equal(bundle, committed, 'committed served bundle must match renderServed
 assert.match(bundle, /_l=G=>\{if\(qr\(G\)\)return pDe;const Re=ha\(G\);return Re\.logoUrl\|\|Re\.iconUrl\|\|G\.logoUrl\|\|oi\(cc\(G\)\)\}/);
 assert.match(bundle, /dc=\(\{item:G,size:Re=28\}\)=>\{const zt=_l\(G\),ua=Pc\(G\)/);
 assert.match(bundle, /"data-ts-logo-chip":"1","aria-hidden":"true",style:\{width:Re,height:Re/);
-assert.match(bundle, /className:"tiny-logo",src:zt,alt:""/);
+assert.match(bundle, /function tsRepairExplicitLogoUrl\(/);
+assert.match(bundle, /className:"tiny-logo","data-logo-src":zt\|\|"",src:tsRepairExplicitLogoUrl\(zt\)\|\|zt,alt:""/);
 assert.match(bundle, /tsLogoFallback/);
 assert.match(bundle, /tsv-logo-fallback/);
 assert.match(bundle, /ic&&ic!=="\?"\?ic:wl\(G\)/);
@@ -38,7 +39,7 @@ const nestedLogoPayload = finalizeServedSharedTripPayload({
 assert.equal(nestedLogoPayload.thingOverrides['place:801'].logoUrl, 'https://north.example/icon.png');
 assert.equal(nestedLogoPayload.thingOverrides['place:802'].logoUrl, 'https://south.example/logo.svg');
 
-const dcSnippet = bundle.slice(bundle.indexOf('dc=({item:G,size:Re=28})'), bundle.indexOf('dc=({item:G,size:Re=28})') + 900);
+const dcSnippet = bundle.slice(bundle.indexOf('dc=({item:G,size:Re=28})'), bundle.indexOf('dc=({item:G,size:Re=28})') + 1200);
 assert.match(dcSnippet, /"data-ts-logo-chip":"1"/, 'logo chip exposes Gate B marker');
 assert.match(dcSnippet, /className:"tsv-logo-fallback"/, 'logo chip keeps type-icon fallback visible');
 assert.match(dcSnippet, /tsLogoFallback/, 'logo chip retries favicon services before emoji fallback');
