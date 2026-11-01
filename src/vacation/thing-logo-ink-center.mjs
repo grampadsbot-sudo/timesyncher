@@ -152,6 +152,20 @@ function centerThingLogoInk(img) {
         inkCy = Math.abs(nh - row.nh) > 2 ? (row.inkCy / row.nh) * nh : row.inkCy;
       }
       if (inkCy == null) {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = nw;
+          canvas.height = nh;
+          const ctx = canvas.getContext('2d', { willReadFrequently: true });
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, nw, nh);
+            inkCy = tsInkBboxCenterYFromRgba(ctx.getImageData(0, 0, nw, nh).data, nw, nh);
+          }
+        } catch (_canvasErr) {
+          inkCy = null;
+        }
+      }
+      if (inkCy == null) {
         const fb = chip.querySelector('.tsv-logo-fallback');
         if (fb) centerThingLogoFallbackEl(fb);
         img.dataset.tsLogoInkDone = '1';
