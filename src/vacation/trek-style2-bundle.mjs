@@ -263,7 +263,8 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
   if (!js.includes(ZU_STYLE2) && !js.includes(AE_STYLE2)) {
     throw new Error('Refusing to serve TREK bundle: Style two still not the zu() site we patch to Ae().');
   }
-  let patched = patchListLogoQrGuard(js.includes(ZU_STYLE2) ? js.replace(ZU_STYLE2, AE_STYLE2) : js);
+  let patched = js.includes(ZU_STYLE2) ? js.replace(ZU_STYLE2, AE_STYLE2) : js;
+  if (patched.includes(LIST_LOGO_NEEDLE)) patched = patchListLogoQrGuard(patched);
   if (patched.includes(AE_LAYOUT_NEEDLE)) {
     patched = patched.replace(AE_LAYOUT_NEEDLE, AE_LAYOUT_PATCH);
   }
