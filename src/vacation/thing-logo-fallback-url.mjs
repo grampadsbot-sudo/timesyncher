@@ -26,7 +26,7 @@ export function duckDuckGoIp3LogoUrl(pageUrl) {
   }
 }
 
-const EXPLICIT_LOGO_REPAIRS = new Map([
+const BUNDLE_LIST_LOGO_REPAIRS = new Map([
   ['https://statuecitycruises.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/statuecitycruises.com.ico'],
   ['https://www.macys.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/macys.com.ico'],
   ['https://www.wholefoodsmarket.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/wholefoodsmarket.com.ico'],
@@ -39,6 +39,10 @@ const EXPLICIT_LOGO_REPAIRS = new Map([
   ['https://www.cilantrorestaurant.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/cilantrorestaurant.com.ico'],
   ['https://www.hertz.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/hertz.com.ico'],
   ['https://www.carminesnyc.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/carminesnyc.com.ico'],
+]);
+
+const EXPLICIT_LOGO_REPAIRS = new Map([
+  ...BUNDLE_LIST_LOGO_REPAIRS,
   ['https://www.aa.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/aa.com.ico'],
   ['https://www.southwest.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/southwest.com.ico'],
   ['https://www.jetblue.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/jetblue.com.ico'],
@@ -64,15 +68,8 @@ export function buildDeclaredLogoRepairFn() {
   return `function tsRepairDeclaredLogo(u){var s=String(u||"").trim();if(!s)return s;var m=${mapJson};return m[s]||s}`;
 }
 
-export function patchBundleDeclaredLogoRepair(js = '', anchor = '') {
-  const src = String(js);
-  const needle = String(anchor);
-  if (!needle || src.includes('function tsRepairDeclaredLogo(') || !src.includes(needle)) return src;
-  return src.replace(needle, `${buildDeclaredLogoRepairFn()}${needle}`);
-}
-
 export function buildListLogoPatch() {
-  const mapJson = JSON.stringify(Object.fromEntries(EXPLICIT_LOGO_REPAIRS));
+  const mapJson = JSON.stringify(Object.fromEntries(BUNDLE_LIST_LOGO_REPAIRS));
   return `_l=G=>{const tsLR=${mapJson};const tsPick=s=>{const v=String(s||"").trim();return v&&tsLR[v]?tsLR[v]:v;};const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"").trim();if(raw&&!/^data:image\\/svg\\+xml/i.test(raw)&&!(/\\/ts-thing-media\\//i.test(raw)&&!/\\/ts-thing-logos\\//i.test(raw)))return tsPick(raw);const pg=String(Re.url||Re.website||Re.sourceUrl||G.url||G.website||"").trim();if(pg){try{const u=new URL(pg);if(u.protocol==="http:"||u.protocol==="https:")return tsPick(u.origin+"/favicon.ico")}catch(e){}}return ""}`;
 }
 
