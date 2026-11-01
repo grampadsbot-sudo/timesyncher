@@ -39,7 +39,37 @@ const EXPLICIT_LOGO_REPAIRS = new Map([
   ['https://www.cilantrorestaurant.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/cilantrorestaurant.com.ico'],
   ['https://www.hertz.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/hertz.com.ico'],
   ['https://www.carminesnyc.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/carminesnyc.com.ico'],
+  ['https://www.aa.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/aa.com.ico'],
+  ['https://www.southwest.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/southwest.com.ico'],
+  ['https://www.jetblue.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/jetblue.com.ico'],
+  ['https://jazz.org/favicon.ico', 'https://icons.duckduckgo.com/ip3/jazz.org.ico'],
+  ['https://bryantpark.org/favicon.ico', 'https://icons.duckduckgo.com/ip3/bryantpark.org.ico'],
+  ['https://www.hotelbelleclaire.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/hotelbelleclaire.com.ico'],
+  ['https://www.manhattanclub.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/manhattanclub.com.ico'],
+  ['https://villagevanguard.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/villagevanguard.com.ico'],
+  ['https://smokejazz.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/smokejazz.com.ico'],
+  ['https://www.circleline.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/circleline.com.ico'],
 ]);
+
+export function declaredIconFetchLooksBroken(status, contentType = '', byteLength = 0) {
+  if (status === 403 || status === 429) return true;
+  if (!status || status < 200 || status >= 400) return true;
+  if (!byteLength) return true;
+  if (contentType && !/^image\//i.test(String(contentType))) return true;
+  return false;
+}
+
+export function buildDeclaredLogoRepairFn() {
+  const mapJson = JSON.stringify(Object.fromEntries(EXPLICIT_LOGO_REPAIRS));
+  return `function tsRepairDeclaredLogo(u){var s=String(u||"").trim();if(!s)return s;var m=${mapJson};return m[s]||s}`;
+}
+
+export function patchBundleDeclaredLogoRepair(js = '', anchor = '') {
+  const src = String(js);
+  const needle = String(anchor);
+  if (!needle || src.includes('function tsRepairDeclaredLogo(') || !src.includes(needle)) return src;
+  return src.replace(needle, `${buildDeclaredLogoRepairFn()}${needle}`);
+}
 
 export function buildListLogoPatch() {
   const mapJson = JSON.stringify(Object.fromEntries(EXPLICIT_LOGO_REPAIRS));
