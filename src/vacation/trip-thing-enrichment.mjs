@@ -10,11 +10,11 @@ const GENERIC_DESCRIPTION_RES = [
 ];
 
 const AIRLINE_LOGOS = [
-  [/\bjetblue\b/i, 'https://www.jetblue.com/favicon.ico'],
-  [/\bsouthwest\b/i, 'https://www.southwest.com/favicon.ico'],
-  [/\bunited\b/i, 'https://www.united.com/favicon.ico'],
-  [/\bdelta\b/i, 'https://www.delta.com/favicon.ico'],
-  [/\bamerican\b/i, 'https://www.aa.com/favicon.ico'],
+  [/\bjetblue\b/i, 'https://icons.duckduckgo.com/ip3/jetblue.com.ico'],
+  [/\bsouthwest\b/i, 'https://icons.duckduckgo.com/ip3/southwest.com.ico'],
+  [/\bunited\b/i, 'https://icons.duckduckgo.com/ip3/united.com.ico'],
+  [/\bdelta\b/i, 'https://icons.duckduckgo.com/ip3/delta.com.ico'],
+  [/\bamerican\b/i, 'https://icons.duckduckgo.com/ip3/aa.com.ico'],
 ];
 
 function text(value, max = 4000) {
