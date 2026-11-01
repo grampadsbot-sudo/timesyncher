@@ -3,6 +3,12 @@ import assert from 'node:assert/strict';
 
 import { budgetCompletenessChecks } from '../apps/vacation-client/src/lib/budgetModel.mjs';
 import { gateBBudgetPriceCompleteness } from '../src/vacation/gate-b-budget-price-completeness.mjs';
+import { applyLiveAppListRowFields } from '../src/vacation/shared-trip-live-app-fields.mjs';
+import {
+  carPriceDisplay,
+  flightPriceDisplay,
+  hotelPriceDisplay,
+} from '../apps/vacation-client/src/lib/listTabModel.mjs';
 
 function miniTrip(places, overrides = {}) {
   const dayId = 50;
@@ -34,11 +40,15 @@ const missingFlightTrip = miniTrip(
 );
 
 const missingFlightGate = gateBBudgetPriceCompleteness(missingFlightTrip);
-assert.equal(missingFlightGate.pass, false, 'missing flight price must fail Gate B budget price completeness');
+assert.equal(
+  missingFlightGate.pass,
+  true,
+  'flight without explicit price must use VK category estimate for Gate B budget completeness',
+);
 const missingFlightChecks = budgetCompletenessChecks(missingFlightTrip);
 assert.equal(
   missingFlightChecks.find((check) => check.name === 'required_travel_budget_prices')?.pass,
-  false,
+  true,
 );
 
 const optionalOnlyTrip = miniTrip(
@@ -62,5 +72,32 @@ const optionalReport = budgetCompletenessChecks(optionalOnlyTrip).find(
 );
 assert.equal(optionalReport?.name, 'report_optional_budget_missing_prices_2');
 assert.equal(optionalReport?.pass, true);
+
+const dayId = 50;
+const estimatedTravelTrip = applyLiveAppListRowFields({
+  trip: { currency: 'USD' },
+  days: [{ id: dayId, day_number: 1 }],
+  places: [
+    { id: 1, name: 'American Airlines JFK to LAS', category_name: 'Flight' },
+    { id: 2, name: 'Arthouse Hotel', category_name: 'Hotel' },
+    { id: 3, name: 'Dollar JFK', category_name: 'Car' },
+  ],
+  assignments: {
+    [dayId]: [
+      { place_id: 1, place: { id: 1, name: 'American Airlines JFK to LAS' } },
+      { place_id: 2, place: { id: 2, name: 'Arthouse Hotel' } },
+      { place_id: 3, place: { id: 3, name: 'Dollar JFK' } },
+    ],
+  },
+  thingOverrides: {
+    'place:1': { category: 'flight' },
+    'place:2': { category: 'hotel' },
+    'place:3': { category: 'car' },
+  },
+});
+assert.match(flightPriceDisplay(estimatedTravelTrip.places[0], estimatedTravelTrip), /^\$/);
+assert.match(hotelPriceDisplay(estimatedTravelTrip.places[1], estimatedTravelTrip), /^\$/);
+assert.match(carPriceDisplay(estimatedTravelTrip.places[2], estimatedTravelTrip), /^\$/);
+assert.equal(gateBBudgetPriceCompleteness(estimatedTravelTrip).pass, true);
 
 console.log('budget required price completeness tests passed');

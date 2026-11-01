@@ -1,3 +1,5 @@
+import { estimateSearchPlacePrice } from './search-place-price-estimate.mjs';
+
 const PER_PERSON_CATEGORIES = new Set([
   'restaurant', 'store', 'event', 'family_event', 'tour', 'transport', 'music',
   'workout', 'artist', 'theatre', 'sightseeing', 'other', 'flight',
@@ -31,13 +33,48 @@ function stayDays(row) {
   return end > start ? Math.max(1, Math.round((end - start) / 86400000)) : 7;
 }
 
+function sourceRecord(place = {}, override = {}) {
+  return (
+    override.sourceRecord
+    || place.sourceRecord
+    || (place.source && typeof place.source === 'object' ? place.source : null)
+    || {}
+  );
+}
+
+export function estimateThingTravelPrice(place = {}, override = {}, category = '') {
+  const cat = String(category).toLowerCase();
+  if (cat !== 'flight' && cat !== 'hotel' && cat !== 'car') return null;
+  const source = sourceRecord(place, override);
+  return estimateSearchPlacePrice({
+    category: cat,
+    title: place.name || place.title,
+    description: override.longDetails || place.description || source.description || source.longDetails || '',
+    summary: override.summary || place.summary || source.summary || '',
+    sourceRecord: source,
+  });
+}
+
+function priceNumbersFromString(priceText = '') {
+  const price = String(priceText ?? '');
+  return [...price.matchAll(/\$?([0-9][0-9,]*(?:\.\d+)?)/g)]
+    .map((match) => Number(match[1].replace(/,/g, '')))
+    .filter(Number.isFinite);
+}
+
 export function thingBudgetAmount(place = {}, override = {}, category = '', shared = {}) {
   const row = { ...place, ...override };
   const perPerson = perPersonThing(place, override, category);
   const explicit = row.pricePerPerson != null && row.pricePerPerson !== '' ? Number(row.pricePerPerson) : null;
-  const price = String(row.price ?? '');
-  const numbers = [...price.matchAll(/\$?([0-9][0-9,]*(?:\.\d+)?)/g)]
-    .map((match) => Number(match[1].replace(/,/g, ''))).filter(Number.isFinite);
+  let price = String(row.price ?? '');
+  let numbers = priceNumbersFromString(price);
+  if (!numbers.length) {
+    const estimated = estimateThingTravelPrice(place, override, category);
+    if (estimated != null && estimated !== '') {
+      price = String(estimated);
+      numbers = priceNumbersFromString(price);
+    }
+  }
   const unit = perPerson && Number.isFinite(explicit) && explicit >= 0 ? explicit
     : numbers.length > 1 ? (numbers[0] + numbers[1]) / 2 : numbers[0];
   if (unit == null) return { amount: 0, hasPrice: false, nightly: null };
