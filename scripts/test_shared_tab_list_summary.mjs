@@ -59,7 +59,7 @@ assert.match(bundle, /data-summary-stored":"1"/);
 assert.match(bundle, /flexWrap:"wrap",justifyContent:"center"/);
 assert.doesNotMatch(bundle, /marginLeft:-8,marginRight:-8,width:"calc\(100% \+ 16px\)"/);
 assert.doesNotMatch(bundle, /data-day-itinerary-mount|data-trek-list/);
-assert.match(bundle, /"data-ts-list-row-name":"1",style:\{minWidth:0,maxWidth:"100%",width:"100%",display:"inline-flex",alignItems:"center",lineHeight:1,whiteSpace:"normal",overflowWrap:"anywhere"\}/);
+assert.match(bundle, /"data-ts-list-row-name":"1",style:\{minWidth:0,maxWidth:"100%",width:"100%",display:"inline-flex",alignItems:"center",lineHeight:1,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"\}/);
 assert.match(bundle, /"data-list-summary":"1","data-summary-src":"thing",style:\{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere"/);
 assert.match(bundle, /color:"#0f766e",fontWeight:900,flexShrink:0\},children:ie\(G\)/);
 
@@ -85,7 +85,7 @@ for (const expanded of [false, true]) {
   const nodes = descendants(row);
   const nameNode = nodes.find((v) => v.props['data-ts-list-row-name']);
   const summaryNode = nodes.find((v) => v.props['data-list-summary']);
-  assert.equal(nameNode.props.style.whiteSpace, 'normal');
+  assert.equal(nameNode.props.style.whiteSpace, 'nowrap');
   assert.equal(summaryNode.props.children, summary);
   assert.equal(summaryNode.props.style.whiteSpace, 'normal');
   assert.equal(nodes.find((v) => v.type === 'strong').props.children, name);

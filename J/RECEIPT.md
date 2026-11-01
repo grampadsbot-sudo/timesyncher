@@ -1,28 +1,39 @@
-# PR #762 / issue #760 — lane receipt
+# PR #773 / issue #471 — lane vkfill-773 receipt
 
-**Start HEAD:** `ffdb715ab597e3bd318a7be92b3973d71e631b41`
+**Start HEAD:** `4ec3250b7f07d494568ce8c255715eb530cd875c` (unchanged; host publishes)
 
-**GBrain handoff:** `bot-admin/lanes/vk-pr-handoff/pr-762` — **page not found** (MCP `get_page` rc1, 2026-10-31).
+## Root cause (Gate B on 4ec3250b)
 
-## CI round 2 fix
+`patchSharedTripListWrapping` set `whiteSpace:"normal"` on every `data-ts-list-row-name` span, including rows inside `data-ts-logo-name-pair`. Multi-line names vertically center the 28px chip against the full text block, so logo ink (nudged to the first name line) fails Gate B **logo not centred with name** on flights/hotels/restaurants/events/stores/cars captures. Price lines in the brief are data-only (ignored per Craig 10/20).
 
-**Failure:** `scripts/test_gate_b_product_row_fields.mjs` — place 604 `logoUrl` must stay `https://statuecitycruises.com/favicon.ico` (pr336 snapshot), not DuckDuckGo ip3.
+## Fix
 
-**Cause:** Round 1 repaired logos inside `resolveThingLogoUrl`, which `applyLiveAppListRowFields` writes into `thingOverrides.logoUrl`.
+Keep #471 Apple leaf alignment (`lineHeight:1`, `strong` block, ink → `tsListRowNameLeafCenterY`) but restore **single-line** list titles inside logo+name pairs (`nowrap` + ellipsis) so chip center and first name line stay aligned.
 
-**Fix:** Split canonical vs display:
+## Files touched
 
-- `resolveThingLogoUrl` — unchanged stored URL (official favicon in overrides).
-- `resolveThingLogoDisplayUrl` — `repairExplicitLogoUrl` for img/`_l()` only.
-- `buildListLogoPatch()` — embeds `EXPLICIT_LOGO_REPAIRS` in served bundle `_l()`.
-- Live tab HTML: `data-logo-src` = canonical, `<img src>` = display.
+- `src/vacation/shared-trip-oe-list-row-patch.mjs` — `OE_LOGO_PAIR_LIST_ROW_NAME_*` rewind after wrap patch
+- `public/assets/index-BKun7ofk.js` — rebaked (`node scripts/rebake_served_trek_bundle.mjs`, sha256 `dd89d02ba17d8ecf57060706c3925d1a600e07a24b5dd273800dd1912f3ee469`)
+- `scripts/test_ui_471_apple_row_name_frame.mjs` — assert logo-pair bundle anchor
+- `scripts/test_shared_tab_list_summary.mjs` — list row name `nowrap` under logo pair
 
-## Checks (local)
+## Checks (local, uncommitted tree)
 
 | Command | Result |
 | --- | --- |
-| `node scripts/test_gate_b_product_row_fields.mjs` | PASS |
-| `node scripts/test_thing_logo_fallback_758.mjs` | PASS |
+| `node scripts/rebake_served_trek_bundle.mjs` | PASS |
+| `node scripts/test_ui_471_apple_row_name_frame.mjs` | PASS |
+| `node scripts/test_shared_tab_list_summary.mjs` | PASS |
+| `node scripts/test_gate_b_row_name_frame.mjs` | PASS |
+| `node scripts/test_thing_logo_ink_center.mjs` | PASS |
+| `node scripts/test_gate_b_live_tab_logo_rows.mjs` | PASS |
+| `node scripts/test_served_trek_bundle.mjs` | PASS |
 | `node scripts/check-no-comments.mjs` | PASS |
 | `node scripts/test_offline_manifest.mjs` | PASS |
 | `BASE=vk node scripts/check-code-ratchet.mjs` | PASS |
+
+Gate B pixel re-run on Ubuntu staging not executed in lane (host CI + `restore_check.py` on push).
+
+## Scope left alone
+
+Budget/flight/hotel/car **price** gaps on NYC fixture — data harness, not UI (brief + decisions-log #65/#773 handoff).
