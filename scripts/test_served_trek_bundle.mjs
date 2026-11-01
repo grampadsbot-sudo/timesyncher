@@ -4,6 +4,7 @@ import { execFileSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 
 import { OTHER_THINGS_BUCKET } from '../src/vacation/budget-bucket-keys.mjs';
+import { LIST_LOGO_QR_GUARD_PATCH } from '../src/vacation/trek-list-logo-qr-patch.mjs';
 import { renderServedTrekBundle } from '../src/vacation/trek-style2-bundle.mjs';
 import {
   BUDGET_BUCKET_CLASSIFIER_PATCH,
@@ -67,7 +68,7 @@ assert.equal(areaSelect.includes('selected'), false);
 const committed = await readFile(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
 assert.equal(rendered, committed);
 
-assert.match(rendered, /_l=G=>\{if\(qr\(G\)\)return pDe;const Re=ha\(G\);return Re\.logoUrl\|\|Re\.iconUrl\|\|G\.logoUrl\|\|oi\(cc\(G\)\)\}/);
+assert.ok(rendered.includes(LIST_LOGO_QR_GUARD_PATCH));
 assert.match(rendered, /"data-ts-logo-chip":"1","aria-hidden":"true",style:\{width:Re,height:Re/);
 assert.match(rendered, /className:"tiny-logo",src:zt,alt:""/);
 assert.match(rendered, /tsLogoFallback/);
