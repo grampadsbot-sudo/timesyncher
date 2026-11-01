@@ -15,7 +15,7 @@ import {
   REST_TYPE_CHIPS_PATCH,
   stripHotelBrandNameGuessing,
 } from './trek-live-product-patches.mjs';
-import { LIST_LOGO_NEEDLE, LIST_LOGO_QR_GUARD_PATCH } from './trek-list-logo-qr-patch.mjs';
+import { LIST_LOGO_NEEDLE, LIST_LOGO_QR_GUARD_PATCH, patchListLogoQrGuard } from './trek-list-logo-qr-patch.mjs';
 import { patchThingDetailCapture, patchThingDetailPanel } from './trek-thing-detail-patches.mjs';
 import { patchStarRatings } from './trek-star-rating-patch.mjs';
 import { patchSharedTripListWrapping } from './shared-trip-oe-list-row-patch.mjs';
@@ -263,7 +263,7 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
   if (!js.includes(ZU_STYLE2) && !js.includes(AE_STYLE2)) {
     throw new Error('Refusing to serve TREK bundle: Style two still not the zu() site we patch to Ae().');
   }
-  let patched = js.includes(ZU_STYLE2) ? js.replace(ZU_STYLE2, AE_STYLE2) : js;
+  let patched = patchListLogoQrGuard(js.includes(ZU_STYLE2) ? js.replace(ZU_STYLE2, AE_STYLE2) : js);
   if (patched.includes(AE_LAYOUT_NEEDLE)) {
     patched = patched.replace(AE_LAYOUT_NEEDLE, AE_LAYOUT_PATCH);
   }
