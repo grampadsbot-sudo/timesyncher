@@ -38,7 +38,7 @@ assert.doesNotMatch(rendered, /\]\.concat\(rs,Po,bc,Oc,Fs,Cc\)/);
 assert.doesNotMatch(rendered, /children:ot\.map\(G=>\{const Re=or\(Dt\)\.includes\(G\)/);
 assert.doesNotMatch(rendered, /children:gt\.map\(G=>\{const Re=vn\(Dt\)\.includes\(G\)/);
 assert.match(rendered, /data-ts-cuisine-chips":"1"/);
-assert.match(rendered, /or\(Dt\)\.map\(G=>n\.jsx\("button"/);
+assert.match(rendered, /or\(Dt\)\.map\(G=>n\.jsx\("span"/);
 assert.match(rendered, /!\/\^no happy hour\\b\/i\.test\(raw\)/);
 assert.doesNotMatch(
   rendered,
