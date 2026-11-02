@@ -1,6 +1,9 @@
 import { useEffect, useId, useRef } from 'react';
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 import { buildDetailViewModel } from '../lib/detailModel.mjs';
+import { onLogoImgError, onLogoImgLoad } from '../lib/logoChipHandlers.mjs';
+import { StarRating } from './StarRating';
+import type { DetailAddressHoursLine } from '../lib/detailModel.mjs';
 
 type Props = {
   place: SharedPlace;
@@ -10,8 +13,14 @@ type Props = {
 
 function DetailLogo({ logoUrl }: { logoUrl: string }) {
   return (
-    <span className="tsv-detail-logo-chip" data-ts-detail-logo-chip="1" aria-hidden="true">
-      <img className="tsv-detail-logo" src={logoUrl} alt="" />
+    <span className="tsv-detail-logo-chip" data-ts-detail-logo-chip="1" data-ts-logo-chip="1" aria-hidden="true" data-ts-fallback-emoji="📍">
+      <img
+        className="tsv-detail-logo"
+        src={logoUrl}
+        alt=""
+        onError={(event) => onLogoImgError(event, '📍')}
+        onLoad={(event) => onLogoImgLoad(event, '📍')}
+      />
     </span>
   );
 }
@@ -86,13 +95,32 @@ export function ThingDetailPanel({ place, trip, onClose }: Props) {
           ) : null}
           {model.ratingLines.map((line) => (
             <p key={line.id} className="tsv-detail-rating" data-ts-detail-field="rating">
-              {line.text}
+              <StarRating value={line.value} />
+              {line.caption ? <span className="tsv-detail-rating-caption"> {line.caption}</span> : null}
             </p>
           ))}
           {model.summary ? (
             <p className="tsv-detail-summary" data-ts-detail-field="summary">
               {model.summary}
             </p>
+          ) : null}
+          {model.addressHoursBox ? (
+            <div className="tsv-detail-info-box" data-ts-detail-info-box="address-hours">
+              {model.addressHoursBox.lines.map((line: DetailAddressHoursLine) => (
+                <p key={line.key} className="tsv-detail-field" data-ts-detail-field={line.key}>
+                  <strong>{line.label}:</strong> {line.value}
+                </p>
+              ))}
+            </div>
+          ) : null}
+          {model.phoneCallBox ? (
+            <a
+              className="tsv-detail-info-box tsv-detail-phone-box"
+              data-ts-detail-info-box="phone"
+              href={model.phoneCallBox.href}
+            >
+              <strong>Phone:</strong> {model.phoneCallBox.phone}
+            </a>
           ) : null}
           {model.fieldRows.map((row) => (
             <p key={row.key} className="tsv-detail-field" data-ts-detail-field={row.key}>
@@ -127,8 +155,10 @@ export function ThingDetailPanel({ place, trip, onClose }: Props) {
                         {review.compositeLabel}
                       </p>
                     ) : null}
-                    {review.rating ? (
-                      <div className="tsv-review-stars">{review.rating} ★</div>
+                    {review.ratingValue != null ? (
+                      <div className="tsv-review-stars">
+                        <StarRating value={review.ratingValue} />
+                      </div>
                     ) : null}
                     <p>{review.text}</p>
                   </li>

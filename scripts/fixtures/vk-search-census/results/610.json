@@ -1,0 +1,249 @@
+{
+  "thingId": 610,
+  "thingName": "Carbone",
+  "type": "restaurant",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://carbonenewyork.com/",
+      "title": "Carbone New York",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "NEW YORK CITY THE ORIGINAL Carbone is one of the most celebrated Italian restaurants in America and a quintessential New York City dining experience. Located on historic Thompson Street, the original location features charismatic service, captains sporting tuxedos by Zac Posen, artworks by the likes of Julian Schnabel, and a menu fil … NEW YORK CITY THE ORIGINAL Carbone is one of the most celebrated Italian restaurants in America and a quintessential New York City dining experience. Located on historic Thompson Street, the original location features charismatic service, captains sporting tuxedos by Zac Posen, artworks by the likes of Julian Schnabel, and a menu fil … ecame Your Favorite Celebs' Favorite Restaurant The Wall Street Journal Mario Carbone Doesn't Care for Your Fancy Kitchen Gadgets HOURS & INFORMATION 181 Thompson Street (between Bleecker & Houston) New York, NY 10012 Lunch Tuesday - Sunday 11:30am - 2:00pm Dinner Monday - Sunday 5:00pm - 11:30pm We welcome guests to  … merica and a quintessential New York City dining experience. Located on historic Thompson Street, the original location features charismatic service, captains sporting tuxedos by Zac Posen, artworks by the likes of Julian Schnabel, and a menu filled with signatures inspired by the culinary history of Little Italy. CHEF MARIO CARBONE Gro",
+      "snippet": "NEW YORK CITY THE ORIGINAL Carbone is one of the most celebrated Italian restaurants in America and a quintessential New York City dining experience. Located on historic Thompson Street, the original location features charismatic service, captains sporting tuxedos by Zac Posen, artworks by the likes",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.restaurantji.com/ny/new-york/carbone-/",
+      "title": "Carbone New York, New York - Menu, Reviews (822), Photos (77) - Restaurantji",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Carbone New York, New York - Menu, Reviews (822), Photos (77) - Restaurantji | | 4.2 822 ratings … The food was exceptional, the decor is so chic … Roberto was a sensational waiter … Carbone New York, New York - Menu, Reviews (822), Photos (77) - Restaurantji | | 4.2 822 ratings … The food was exceptional, the decor is so chic … Roberto was a sensational waiter … Carbone New York, New York - Menu, Reviews (822), Photos (77) - Restaurantji | | 4.2 822 ratings … The food was exceptional, the decor is so chic … Roberto was a sensational waiter … A must see and experience when in NY … go above and beyond for that true over the top experience … a birthday and a new job … It’s worth securing a reservation when they go live … your hosts go above and beyond for that true over the top experience … the whole experience was just wonderful",
+      "snippet": "Carbone New York, New York - Menu, Reviews (822), Photos (77) - Restaurantji | | 4.2 822 ratings … The food was exceptional, the decor is so chic … Roberto was a sensational waiter",
+      "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
+    },
+    {
+      "url": "https://www.yelp.com/biz/carbone-new-york",
+      "title": "CARBONE - Yelp",
+      "fetchedAt": "2026-10-30T03:02:58.709607+00:00",
+      "fetchMethod": "search-snapshot (direct fetch 403)",
+      "text": "CARBONE - 181 Thompson St, New York. Open 11:30 AM - 2:00 PM, 5:00 PM - 11:30 PM. Location & Hours: Mon 5:00 PM - 11:30 PM; Tue-Sun 11:30 AM - 2:00 PM 5:00 PM - 11:30 PM. Takes reservations. Carbone is an Italian-American restaurant created by Mario Carbone, Rich Torrisi and Jeff Zalaznick located in Greenwich Village.",
+      "snippet": "CARBONE - 181 Thompson St, New York. Open 11:30 AM - 2:00 PM, 5:00 PM - 11:30 PM. Location & Hours: Mon 5:00 PM - 11:30 PM; Tue-Sun 11:30 AM - 2:00 PM 5:00 PM - 11:30 PM. Takes reservations. Carbone is an Italian-American restaurant created by Mario Carbone, Rich Torrisi and Jeff Zalaznick located in Greenwich Village."
+    }
+  ],
+  "rating": {
+    "primary": 4.2,
+    "primarySource": "restaurantji",
+    "restaurantji": 4.2
+  },
+  "reviewCount": {
+    "restaurantji": 822
+  },
+  "priceHint": "$$$$ / OT $50+; Spicy Rigatoni Vodka $49 (Yelp menu)",
+  "hoursHint": "Lunch Tue–Sun 11:30am–2pm; Dinner Mon–Sun 5–11:30pm (official)",
+  "happyHourHint": null,
+  "happyHourRejectReason": "Third-party HH page maps to 168 Sullivan St, not 181 Thompson St",
+  "summaryClaims": [
+    "charismatic service, captains sporting tuxedos by Zac Posen",
+    "charismatic service, captains sporting tuxedos by Zac Posen, artworks by the likes of Julian Schnabel",
+    "A must see and experience when in NY",
+    "go above and beyond for that true over the top experience",
+    "Located on historic Thompson Street",
+    "181 Thompson Street",
+    "captains sporting tuxedos by Zac Posen",
+    "The food was exceptional, the decor is so chic",
+    "Roberto was a sensational waiter",
+    "4.2 822 ratings",
+    "4.2 822 ratings",
+    "a birthday and a new job",
+    "It’s worth securing a reservation when they go live"
+  ],
+  "itineraryNoteCandidate": "Carbone: dress-up red-sauce theater on Thompson Street; book the moment tables open and go for the charismatic service, captains sporting tuxedos by Zac Posen and a big Italian-American feast.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description/reviews each carry their own claims"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 1
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 1 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": true,
+    "pageCount": 71,
+    "googleRating": "4.3",
+    "yelpRating": "4",
+    "price": 48,
+    "hours": true,
+    "happyHour": false,
+    "itineraryNote": true,
+    "xaiUsd": 0.084376,
+    "attemptKinds": {
+      "brave": 17
+    },
+    "officialUrls": [
+      "https://carbonenewyork.com/",
+      "https://en.wikipedia.org/wiki/Carbone_(restaurant)",
+      "https://www.tripadvisor.com/Restaurant_Review-g60763-d3958626-Reviews-Carbone-New_York_City_New_York.html",
+      "https://www.majorfood.com/brands/carbone",
+      "https://www.nyctourism.com/restaurants/carbone-greenwich-village/"
+    ]
+  },
+  "botFieldScore": 6,
+  "baseFieldScore": 6,
+  "censusReuse": "full10",
+  "fields": {
+    "summary": {
+      "value": "Carbone is Mario Carbone's Italian-American restaurant on Thompson Street in Greenwich Village, and the room itself is the show: charismatic service, captains sporting tuxedos by Zac Posen, artworks by the likes of Julian Schnabel. It is a special-occasion booking, and Restaurantji diners back that up, calling it A must see and experience when in NY and saying the hosts go above and beyond for that true over the top experience.",
+      "claims": [
+        {
+          "text": "charismatic service, captains sporting tuxedos by Zac Posen, artworks by the likes of Julian Schnabel",
+          "sourceUrl": "https://carbonenewyork.com/"
+        },
+        {
+          "text": "A must see and experience when in NY",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/"
+        },
+        {
+          "text": "go above and beyond for that true over the top experience",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Carbone is an Italian-American restaurant located on historic Thompson Street in Greenwich Village. Wikipedia places the original at 181 Thompson Street. Its official site describes captains sporting tuxedos by Zac Posen, and reservations are famously hard to get, so book well ahead. Restaurantji shows 4.2 822 ratings. Representative Restaurantji praise (diner reviews): “The food was exceptional, the decor is so chic”; “Roberto was a sensational waiter”. Restaurantji diners rate it 4.2 822 ratings; one party celebrating a birthday and a new job wrote that the team made it extra special, and another advises that It’s worth securing a reservation when they go live.",
+      "claims": [
+        {
+          "text": "Located on historic Thompson Street",
+          "sourceUrl": "https://carbonenewyork.com/"
+        },
+        {
+          "text": "181 Thompson Street",
+          "sourceUrl": "https://carbonenewyork.com/"
+        },
+        {
+          "text": "captains sporting tuxedos by Zac Posen",
+          "sourceUrl": "https://carbonenewyork.com/"
+        },
+        {
+          "text": "The food was exceptional, the decor is so chic",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/"
+        },
+        {
+          "text": "Roberto was a sensational waiter",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/"
+        },
+        {
+          "text": "4.2 822 ratings",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/"
+        },
+        {
+          "text": "a birthday and a new job",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/"
+        },
+        {
+          "text": "It’s worth securing a reservation when they go live",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Carbone: dress-up red-sauce theater on Thompson Street; book the moment tables open and go for the charismatic service, captains sporting tuxedos by Zac Posen and a big Italian-American feast.",
+      "claims": [
+        {
+          "text": "charismatic service, captains sporting tuxedos by Zac Posen",
+          "sourceUrl": "https://carbonenewyork.com/"
+        }
+      ]
+    },
+    "happyHour": {
+      "value": false,
+      "claims": [
+        {
+          "text": "Lunch Tuesday - Sunday 11:30am - 2:00pm Dinner Monday - Sunday 5:00pm - 11:30pm",
+          "sourceUrl": "https://carbonenewyork.com/"
+        },
+        {
+          "text": "Open 11:30 AM - 2:00 PM, 5:00 PM - 11:30 PM",
+          "sourceUrl": "https://www.yelp.com/biz/carbone-new-york"
+        }
+      ],
+      "note": "Confirmed none: official hours list only lunch and dinner service; no happy hour on carbonenewyork.com, Yelp hours, or Restaurantji.",
+      "checkedSources": [
+        "https://carbonenewyork.com/",
+        "https://www.yelp.com/biz/carbone-new-york",
+        "https://www.restaurantji.com/ny/new-york/carbone-/"
+      ]
+    }
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.restaurantji.com/ny/new-york/carbone-/",
+    "site": "Restaurantji",
+    "via": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews",
+    "praise": [
+      "your hosts go above and beyond for that true over the top experience",
+      "a birthday and a new job",
+      "The food was exceptional, the decor is so chic",
+      "It’s worth securing a reservation when they go live"
+    ],
+    "watchOuts": [],
+    "complaints": [],
+    "themes": [
+      "Over-the-top hospitality",
+      "Celebration dinners",
+      "Food and decor",
+      "Booking strategy"
+    ]
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:05:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Carbone: dress-up red-sauce theater on Thompson Street; book the moment tables open and go for the charismatic service, captains sporting tuxedos by Zac Posen and a big Italian-American feast.",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "Hospitality is the defining theme at Carbone, with diners describing hosts and servers who go out of their way to make the evening feel theatrical and special.",
+  "review1Source": "Restaurantji",
+  "review1Rating": "4.2",
+  "review1Theme": "Over-the-top hospitality",
+  "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/",
+  "review2": "Celebrations come up often, and guests marking birthdays and milestones say the team helped turn the dinner into a memorable occasion worth the effort of booking.",
+  "review2Source": "Restaurantji",
+  "review2Rating": "4.2",
+  "review2Theme": "Celebration dinners",
+  "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/",
+  "review3": "Food and room earn equal praise, with diners calling the cooking exceptional and the decor stylish, so the whole experience feels like the point of going.",
+  "review3Source": "Restaurantji",
+  "review3Rating": "4.2",
+  "review3Theme": "Food and decor",
+  "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/",
+  "review4": "Access is the real watch-out: tables are hard to get, and diners advise grabbing a reservation the moment the booking window opens.",
+  "review4Source": "Restaurantji",
+  "review4Rating": "4.2",
+  "review4Theme": "Booking strategy",
+  "review4SourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/",
+  "review1Claims": [
+    "your hosts go above and beyond for that true over the top experience"
+  ],
+  "review2Claims": [
+    "a birthday and a new job"
+  ],
+  "review3Claims": [
+    "The food was exceptional, the decor is so chic"
+  ],
+  "review4Claims": [
+    "It’s worth securing a reservation when they go live"
+  ],
+  "reviewStarsDropped": "mean 5.00 vs venue 4.20 >0.5",
+  "reviewsLabel": "Representative reviews written from 8 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenOrder": [
+    "happyHour"
+  ],
+  "writtenAt": {
+    "happyHour": "2026-10-30T03:02:58.709607+00:00"
+  }
+}

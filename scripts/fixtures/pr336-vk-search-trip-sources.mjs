@@ -1,16 +1,10 @@
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 import { enrichSearchPlace } from '../../src/vacation/trip-thing-enrichment.mjs';
-import {
-  createStoredCcabNarrativeMerge,
-  rawSearchPlaceFromCcab,
-} from '../../src/vacation/stored-ccab-narrative-merge.mjs';
-import {
-  NYC_STAGING_CAPTURE_LIST_ROWS,
-  resolveNycCcabKey,
-} from './nyc-vk-list-tab-rows.mjs';
-
-export { rawSearchPlaceFromCcab };
+import { createStoredCcabNarrativeMerge } from '../../src/vacation/stored-ccab-narrative-merge.mjs';
+import { buildNycCraigKimDaybydayFixtureRows } from './nyc-craig-kim-daybyday-rows.mjs';
+import { resolveNycCcabKey } from './nyc-vk-list-tab-rows.mjs';
 
 const BASE_ENRICHMENT = JSON.parse(
   readFileSync(new URL('./nyc_ccab_place_enrichment.json', import.meta.url), 'utf8'),
@@ -21,7 +15,10 @@ const OVERLAY_ENRICHMENT = JSON.parse(
 const REVIEW_ENRICHMENT = JSON.parse(
   readFileSync(new URL('./pr336-gate-b-vk-reviews.json', import.meta.url), 'utf8'),
 );
-export const ENRICHMENT = { ...BASE_ENRICHMENT };
+const ROW_TEXT_OVERRIDES = JSON.parse(
+  readFileSync(new URL('./pr336-gate-b-row-descriptions.json', import.meta.url), 'utf8'),
+);
+const ENRICHMENT = { ...BASE_ENRICHMENT };
 for (const [key, patch] of Object.entries(OVERLAY_ENRICHMENT)) {
   ENRICHMENT[key] = { ...(BASE_ENRICHMENT[key] || {}), ...patch };
 }
@@ -39,17 +36,22 @@ export const GATE_B_DISPLAY_TITLE_ALIASES = {
 };
 
 export const NYC_GATE_B_ROW_CCAB_KEYS = {
-  601: 'Flight option: JetBlue LAS-JFK 2026-06-23 07:22-15:31',
+  601: 'Flight option: American LAS-JFK 2026-06-23 12:37-20:59',
   602: "Zabar's",
-  603: 'Motto by Hilton New York City Times Square',
+  603: 'Hotel Belleclaire Central Park',
   604: 'Statue of Liberty walking tour',
   605: 'Strand Book Store',
   606: 'Afternoon matinee show',
   607: 'Friend meetup at Bryant Park',
-  608: 'Midtown sample hotel',
+  608: 'The Manhattan Club',
   609: 'Priceline opaque JFK — Standard sedan',
   610: 'Carbone',
-  611: 'Jazz at Lincoln Center',
+  611: 'Blue Note Jazz Club',
+  612: 'Chelsea Market',
+  613: "Macy's Herald Square",
+  614: 'MoMA Design Store - 53rd Street',
+  615: 'Bergdorf Goodman',
+  616: 'Whole Foods Market Columbus Circle',
 };
 
 export const GATE_B_INCOMPLETE_CONTRACT_ROW_IDS = new Set([608]);
@@ -69,46 +71,42 @@ export const {
   storedCcabRecordForTitle,
 } = pr336StoredCcabNarrative;
 
-export const PR336_GATE_B_TIMELINE_ROWS = [
-  { day: 1, time: '10:30', name: 'JetBlue LAS → JFK', cat: 'flight', id: 601 },
-  { day: 1, time: '14:00', name: "Zabar's", cat: 'store', id: 602 },
-  { day: 1, time: '16:00', name: 'Motto by Hilton New York City Times Square', cat: 'hotel', id: 603 },
-  { day: 1, time: '19:00', name: 'Carbone', cat: 'restaurant', id: 610 },
-  { day: 1, time: '20:30', name: 'Jazz at Lincoln Center', cat: 'activity', id: 611 },
-  { day: 2, time: '11:00', name: 'Statue of Liberty walking tour', cat: 'activity', id: 604 },
-  { day: 2, time: '15:30', name: 'Strand Book Store', cat: 'store', id: 605 },
-  { day: 3, time: '14:00', name: 'Afternoon matinee show', cat: 'activity', id: 606 },
-  { day: 3, time: '14:30', name: 'Friend meetup at Bryant Park', cat: 'activity', id: 607 },
-  { day: 1, time: '11:00', name: 'Midtown sample hotel', cat: 'hotel', id: 608, listOnly: true },
-  { day: 1, time: '11:00', name: 'Priceline opaque Standard sedan', cat: 'car', id: 609, listOnly: true },
-];
-
 export function buildPr336GateBRegenerateRows() {
-  const rows = [...PR336_GATE_B_TIMELINE_ROWS];
-  const rowIdentity = (row) => `${row.ccabKey || resolveNycCcabKey(row.name)}\0${row.name}`;
-  const seenRowIdentities = new Set(rows.map(rowIdentity));
-  const seenIds = new Set(rows.map((row) => row.id));
-  for (const listRow of NYC_STAGING_CAPTURE_LIST_ROWS) {
-    if (!['hotel', 'flight', 'car'].includes(listRow.cat)) continue;
-    const identity = `${listRow.ccabKey}\0${listRow.name}`;
-    if (seenRowIdentities.has(identity) || seenIds.has(listRow.id)) continue;
-    seenRowIdentities.add(identity);
-    seenIds.add(listRow.id);
-    rows.push({
-      day: 1,
-      time: '11:00',
-      name: listRow.name,
-      cat: listRow.cat,
-      id: listRow.id,
-      ccabKey: listRow.ccabKey,
-      listOnly: true,
-    });
-  }
-  return rows;
+  return buildNycCraigKimDaybydayFixtureRows();
 }
 
 function text(value, max = 4000) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
+}
+
+export function rawSearchPlaceFromCcab({
+  title,
+  category,
+  ccabKey,
+  ccabRecord = {},
+} = {}) {
+  const recordCategory = text(ccabRecord.category, 40).toLowerCase();
+  const resolvedCategory = category
+    || (recordCategory === 'flight' && /\bcar\b|rental|sedan|suv|corolla/i.test(`${title} ${ccabKey}`)
+      ? 'car'
+      : recordCategory)
+    || 'event';
+  return {
+    source: 'fixture',
+    title: text(title, 240),
+    category: resolvedCategory,
+    lat: ccabRecord.lat ?? null,
+    lng: ccabRecord.lng ?? null,
+    address: text(ccabRecord.address, 240),
+    url: text(ccabRecord.website, 500),
+    externalId: text(ccabKey, 240),
+    sourceRecord: {
+      ...ccabRecord,
+      source: 'fixture',
+      ccabInputKind: 'stored_fixture_literal',
+      url: text(ccabRecord.website, 500),
+    },
+  };
 }
 
 export function assertPr336GateBSnapshotWriteAllowed(placesById = {}, rows = []) {
@@ -176,9 +174,19 @@ export function materializePr336GateBSnapshotPlaces(placesById = {}) {
   );
 }
 
+function lookupCcabRecord(ccabKey) {
+  if (!ccabKey) return null;
+  if (ENRICHMENT[ccabKey]) return ENRICHMENT[ccabKey];
+  const curly = ccabKey.replace(/'/g, '\u2019');
+  if (curly !== ccabKey && ENRICHMENT[curly]) return ENRICHMENT[curly];
+  const straight = ccabKey.replace(/\u2019/g, "'");
+  if (straight !== ccabKey && ENRICHMENT[straight]) return ENRICHMENT[straight];
+  return null;
+}
+
 export function buildGateBSearchPlaceForRow({ id, name, cat, ccabKey: rowCcabKey }) {
-  const ccabKey = resolveNycCcabKey(rowCcabKey || NYC_GATE_B_ROW_CCAB_KEYS[id] || name);
-  let ccabRecord = ccabKey ? ENRICHMENT[ccabKey] : null;
+  const ccabKey = resolveNycCcabKey(NYC_GATE_B_ROW_CCAB_KEYS[id] || rowCcabKey || name);
+  let ccabRecord = lookupCcabRecord(ccabKey);
   if (!ccabRecord) {
     throw new Error(`missing ccab search source for gate-b row ${id} (${name})`);
   }
@@ -193,6 +201,10 @@ export function buildGateBSearchPlaceForRow({ id, name, cat, ccabKey: rowCcabKey
       },
     };
   }
+  const rowText = ROW_TEXT_OVERRIDES[id];
+  if (rowText) {
+    ccabRecord = { ...ccabRecord, ...rowText, longDetails: rowText.description };
+  }
   const alias = GATE_B_DISPLAY_TITLE_ALIASES[id];
   const displayTitle = alias?.title || name;
   return enrichSearchPlace(rawSearchPlaceFromCcab({
@@ -203,10 +215,18 @@ export function buildGateBSearchPlaceForRow({ id, name, cat, ccabKey: rowCcabKey
   }));
 }
 
+export function pr336SnapshotRowIdKey(id) {
+  const key = String(id);
+  if (!/^[1-9]\d*$/.test(key)) {
+    throw new Error(`gate-b row id must be a positive integer; got ${JSON.stringify(id)}`);
+  }
+  return key;
+}
+
 export function buildPr336VkSearchPlacesByRowId(rows = []) {
   const out = {};
   for (const row of rows) {
-    out[row.id] = buildGateBSearchPlaceForRow(row);
+    out[pr336SnapshotRowIdKey(row.id)] = buildGateBSearchPlaceForRow(row);
   }
   return out;
 }
@@ -243,7 +263,7 @@ export function assertGateBRowProvenance(rows = [], placesById = {}) {
   const failures = [];
   for (const row of rows) {
     const place = placesById[row.id];
-    const ccabKey = resolveNycCcabKey(row.ccabKey || NYC_GATE_B_ROW_CCAB_KEYS[row.id] || row.name);
+    const ccabKey = resolveNycCcabKey(NYC_GATE_B_ROW_CCAB_KEYS[row.id] || row.ccabKey || row.name);
     const alias = GATE_B_DISPLAY_TITLE_ALIASES[row.id];
     if (!place || !ccabKey) {
       failures.push(`row ${row.id}: missing place or ccab key`);

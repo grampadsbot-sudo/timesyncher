@@ -1,0 +1,125 @@
+{
+  "thingId": 609,
+  "thingName": "Priceline opaque Standard sedan",
+  "type": "car",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://blog.autoslash.com/are-priceline-express-deals-worth-it/",
+      "title": "Are Priceline Express Deals Worth It? - AutoSlash",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "ou must pay for your Express Deal car rental in full at the time of booking. You do not find out the rental car company until you pay for the rental. Express Deal rental reservations are non-refundable, non-transferable, and non-changeable even if the reservation is not use. If you think those sound like some pretty onerous restrictions, you’re absolutely right. So why would someone wan … ou must pay for your Express Deal car rental in full at the time of booking. You do not find out the rental car company until you pay for the rental. Express Deal rental reservations are non-refundable, non-transferable, and non-changeable even if the reservation is not use. If you think those sound like some pretty onerous restrictions, you’re absolutely right. So why would someone wan",
+      "snippet": "ou must pay for your Express Deal car rental in full at the time of booking. You do not find out the rental car company until you pay for the rental. Express Deal rental reservations are non-refundable, non-transferable, and non-changeable even if the reservation is not use. If you think those sound",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp",
+      "title": "New York John F. Kennedy International Airport Car Rentals from $73/day",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "ls we’ve found. Make sure to check back soon if you’re not finding what you’re looking for, as deals are updated frequently. Economy Car from $73/day Standard Car from $73/day Premium Car from $77/day Compact Car Kia Soul or similar 4 people 2 Unlimited mileage Rental dates Nov 27 – Dec 4 · 7 days Prices checked Oct 28 $ 12",
+      "snippet": "ls we’ve found. Make sure to check back soon if you’re not finding what you’re looking for, as deals are updated frequently. Economy Car from $73/day Standard Car from $73/day Premium Car from $77/day Compact Car Kia Soul or similar 4 people 2 Unlimited mileage Rental dates Nov 27 – Dec 4 · 7 days P",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    }
+  ],
+  "rating": {
+    "primary": null,
+    "primarySource": null
+  },
+  "reviewCount": {},
+  "priceHint": "Opaque Express Deal — prepaid/nonrefundable; compare all-in vs named brands",
+  "hoursHint": "Airport pickup per supplier after reveal",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "Express Deal rental reservations are non-refundable, non-transferable, and non-changeable",
+    "Express Deal rental reservations are non-refundable, non-transferable, and non-changeable",
+    "Express Deal rental reservations are non-refundable, non-transferable, and non-changeable",
+    "Standard Car from $73/day"
+  ],
+  "itineraryNoteCandidate": "Priceline opaque Standard sedan: a budget rental bet; lock it only if plans are firm, since Express Deal rental reservations are non-refundable, non-transferable, and non-changeable.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": true,
+    "pageCount": 93,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 306,
+    "hours": true,
+    "happyHour": null,
+    "itineraryNote": true,
+    "xaiUsd": 0.07053,
+    "attemptKinds": {
+      "brave": 24
+    },
+    "braveAttempts": 24
+  },
+  "censusReuse": null,
+  "botFieldScore": 4,
+  "baseFieldScore": 4,
+  "winner": "tie-brave-deeper-pages",
+  "fields": {
+    "summary": {
+      "value": "Priceline opaque Standard sedan rental at New York JFK booked as an Express Deal with the brand hidden. You do not find out the rental car company until you pay for the rental. Express Deal rental reservations are non-refundable, non-transferable, and non-changeable even if the reservation is not use.",
+      "claims": [
+        {
+          "text": "Express Deal rental reservations are non-refundable, non-transferable, and non-changeable",
+          "sourceUrl": "https://blog.autoslash.com/are-priceline-express-deals-worth-it/"
+        },
+        {
+          "text": "You do not find out the rental car company until you pay for the rental.",
+          "sourceUrl": "https://blog.autoslash.com/are-priceline-express-deals-worth-it/"
+        },
+        {
+          "text": "Express Deal rental reservations are non-refundable, non-transferable, and non-changeable even if the reservation is not use.",
+          "sourceUrl": "https://blog.autoslash.com/are-priceline-express-deals-worth-it/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Priceline opaque Standard sedan is a hidden-brand Express Deal rental at JFK. AutoSlash notes that Express Deal rental reservations are non-refundable, non-transferable, and non-changeable, and that you must pay for your Express Deal car rental in full at the time of booking. Priceline lists a Standard Car from $73/day at JFK and says deals are updated frequently, so compare it with a named-brand booking first.",
+      "claims": [
+        {
+          "text": "Express Deal rental reservations are non-refundable, non-transferable, and non-changeable",
+          "sourceUrl": "https://blog.autoslash.com/are-priceline-express-deals-worth-it/"
+        },
+        {
+          "text": "Standard Car from $73/day",
+          "sourceUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp"
+        },
+        {
+          "text": "pay for your Express Deal car rental in full at the time of booking",
+          "sourceUrl": "https://blog.autoslash.com/are-priceline-express-deals-worth-it/"
+        },
+        {
+          "text": "deals are updated frequently",
+          "sourceUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Priceline opaque Standard sedan: a budget rental bet; lock it only if plans are firm, since Express Deal rental reservations are non-refundable, non-transferable, and non-changeable.",
+      "claims": [
+        {
+          "text": "Express Deal rental reservations are non-refundable, non-transferable, and non-changeable",
+          "sourceUrl": "https://blog.autoslash.com/are-priceline-express-deals-worth-it/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Priceline opaque Standard sedan: a budget rental bet; lock it only if plans are firm, since Express Deal rental reservations are non-refundable, non-transferable, and non-changeable."
+}

@@ -2,27 +2,28 @@ Closes #546
 
 ## Summary
 
-Host base-merge of `migrate/trek-source` at `e3364ac5` (#598/#599/#600 on base) onto #549 list-row description substance (`stored-ccab-narrative-merge`, `composeListRowDescription` / `tsListRowDescription`). Rebaked `public/assets/index-BKun7ofk.js` from base upstream + product patches.
+Gate B / Craig Hotels tab requirement: **every hotel list row** shows sourced, non-generic description text inline with the name (≥30 words, substance cues), not only Motto.
 
-## Changes (merge `244cb282`)
+## Changes (this round on `origin/vk`)
 
-- **`pr336-vk-search-trip-sources.mjs`**: kept PR stored-ccab exports + base `buildPr336GateBRegenerateRows` / `resolveNycCcabKey` / snapshot materialize.
-- **`trip-thing-enrichment.mjs` / `stored-ccab-narrative-merge.mjs`**: hotel ccab list summary from enrichment when substantive; row **608** incomplete-contract list rows omit planning-note/scrape text from live list UI (bundle + server).
-- **`shared-trip-live-app-fields.mjs`**: apply stored-ccab merge without leaving stale `longDetails` keys after delete.
-- **Tests**: merge conflict fixes (`64` ccab keys; pr225/snapshot binding); `scripts/test_shared_tab_list_summary.mjs` hotel summary pattern.
+- **`trip-thing-enrichment.mjs`**: after vk detail-judge search fill, hotels get `hotelStoredCcabListNarrative` so trip-fill persists substantive `description`/`longDetails` from ccab enrichment (not raw planning-note templates).
+- **`stored-ccab-narrative-merge.mjs`**: ccab key lookup uses `resolveNycCcabKey` (straight vs curly apostrophe aliases, e.g. Romer Hell's Kitchen).
+- **`pr336-vk-search-trip-sources.mjs`**: re-export stored-ccab merge helpers + `bindPr336GateBCanonicalIdentity` on vk's `buildNycCraigKimDaybydayFixtureRows` / row-description overrides.
+- **`listTabModel.mjs`**: incomplete hotel row **608** uses `hotelListRowUnboundNarrative` when composed copy is under 30 words.
+- **Tests**: `test_stored_ccab_canonical_identity.mjs` covers every staging-capture hotel row + Romer alias.
 
-## Verification (local `244cb282`)
+Prior #549 work retained: `composeListRowDescription`, `listRowSubstanceDescription`, trek bundle `tsListRowDescription`, car/hotel list substance, incomplete row **608** contract.
+
+## Verification
 
 ```bash
-cd apps/vacation-client && npm test
-PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser # all lines in scripts/offline-tests.txt
+node scripts/test_stored_ccab_canonical_identity.mjs
+node scripts/test_list_row_description_substance.mjs
+node scripts/test_gate_b_product_row_fields.mjs
 node scripts/check-no-comments.mjs && node scripts/test_offline_manifest.mjs
-BASE=migrate/trek-source node scripts/check-code-ratchet.mjs
-BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs
+BASE=vk node scripts/check-code-ratchet.mjs
 ```
-
-All exit 0 locally. CI + Gate B on host-pushed head are authority for close.
 
 ## Left alone
 
-Baselines, Gate B checker config, workflows, itinerary look (approved). No layout churn beyond merged base + #549 description paths.
+No baseline/threshold/workflow edits. No deploy.

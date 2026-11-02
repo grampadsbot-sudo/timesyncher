@@ -1,8 +1,14 @@
 import { captureThingLogo } from './thing-logo-capture.mjs';
 import { estimateSearchPlacePrice } from './search-place-price-estimate.mjs';
+import { descriptionPassesDetailJudge } from './thing-detail-fields.mjs';
+import { hotelStoredCcabListNarrative } from './hotel-list-row-narrative.mjs';
 
 export { estimateSearchPlacePrice } from './search-place-price-estimate.mjs';
-
+export {
+  hotelListRowUnboundNarrative,
+  hotelStoredCcabListNarrative,
+  isHotelPlanningNote,
+} from './hotel-list-row-narrative.mjs';
 const GENERIC_DESCRIPTION_RES = [
   /^Documented NYC option\b/i,
   /^Documented .+ option\b/i,
@@ -10,11 +16,11 @@ const GENERIC_DESCRIPTION_RES = [
 ];
 
 const AIRLINE_LOGOS = [
-  [/\bjetblue\b/i, 'https://www.jetblue.com/favicon.ico'],
-  [/\bsouthwest\b/i, 'https://www.southwest.com/favicon.ico'],
-  [/\bunited\b/i, 'https://www.united.com/favicon.ico'],
-  [/\bdelta\b/i, 'https://www.delta.com/favicon.ico'],
-  [/\bamerican\b/i, 'https://www.aa.com/favicon.ico'],
+  [/\bjetblue\b/i, 'https://icons.duckduckgo.com/ip3/jetblue.com.ico'],
+  [/\bsouthwest\b/i, 'https://icons.duckduckgo.com/ip3/southwest.com.ico'],
+  [/\bunited\b/i, 'https://icons.duckduckgo.com/ip3/united.com.ico'],
+  [/\bdelta\b/i, 'https://icons.duckduckgo.com/ip3/delta.com.ico'],
+  [/\bamerican\b/i, 'https://icons.duckduckgo.com/ip3/aa.com.ico'],
 ];
 
 function text(value, max = 4000) {
@@ -43,16 +49,6 @@ export function isListRowPipelineDiagnostic(value = '') {
   if (/\blist-only\b/i.test(row) && /\b(?:hotel|row|property)\b/i.test(row)) return true;
   if (/^List-only row until/i.test(row)) return true;
   return false;
-}
-
-export function hotelListRowUnboundNarrative(title = '', address = '') {
-  const name = text(title, 120) || 'This hotel';
-  const area = text(address, 160) || 'the planned area';
-  return text(
-    `${name} is a planning row on the Hotels tab without a bound property identity for this trip. `
-    + `Use it to compare stay options near ${area}, but verify the real hotel name, nightly rate, check-in rules, and guest reviews on an official listing before you book.`,
-    4000,
-  );
 }
 
 function parsePriceValue(value) {
@@ -325,64 +321,37 @@ function shortLineFromSourceText(value = '', max = 120) {
   return text(row.split(/\s+/).slice(0, 10).join(' '), max);
 }
 
-export function isHotelPlanningNote(value = '') {
-  const row = text(value, 4000);
-  if (!row) return false;
-  if (!/^Neighborhood:/i.test(row)) return false;
-  return /Rating:/i.test(row) || /Status:\s*candidate/i.test(row) || /Price:\s*\$/i.test(row);
+function ccabFactText(sourceRecord = {}, place = {}) {
+  return text(sourceRecord.summary || sourceRecord.description || place.description || place.summary, 500);
 }
 
-export function hotelStoredCcabListNarrative(title = '', ccabRecord = {}) {
-  if (!ccabRecord || typeof ccabRecord !== 'object') return null;
-  const displayTitle = text(title, 240);
-  const neighborhoodMatch = text(ccabRecord.description).match(/Neighborhood:\s*([^;]+)/i);
-  const neighborhood = neighborhoodMatch
-    ? text(neighborhoodMatch[1], 160)
-    : text(ccabRecord.neighborhood || ccabRecord.address, 160);
-  const sourceRecord = { ...ccabRecord, neighborhood };
-  const built = buildCategoryDescription({
-    category: 'hotel',
-    title: displayTitle,
-    sourceRecord,
-    address: ccabRecord.address,
-    rawDescription: text(ccabRecord.websiteFlavour),
-  });
-  const longRaw = text(ccabRecord.longDetails || ccabRecord.description);
-  const ratingSource = text(ccabRecord.thirdPartySource, 40)
-    || (ccabRecord.googleRating ? 'Google' : '');
-  const ratingLine = text(ccabRecord.thirdPartyRating || ccabRecord.googleRating)
-    ? `${ratingSource || 'Guest'} rating ${text(ccabRecord.thirdPartyRating || ccabRecord.googleRating)}${text(ccabRecord.thirdPartyReviewCount || ccabRecord.googleReviewCount) ? ` (${text(ccabRecord.thirdPartyReviewCount || ccabRecord.googleReviewCount)} reviews)` : ''}`
-    : '';
-  const longDetails = isHotelPlanningNote(longRaw)
-    ? text(
-      `${built}${ratingLine ? `. ${ratingLine}` : ''}. Compare room types, fees, and cancellation rules on the official listing before you book this candidate.`,
-    )
-    : longRaw;
-  let summary = text(ccabRecord.websiteFlavour)
-    ? shortLineFromSourceText(ccabRecord.websiteFlavour, 160)
-    : shortLineFromSourceText(built, 160);
-  const recordSummary = text(ccabRecord.summary, 500);
-  if (
-    recordSummary
-    && !isHotelPlanningNote(recordSummary)
-    && recordSummary.split(/\s+/).filter(Boolean).length >= 8
-    && !isGenericDescription(recordSummary)
-  ) {
-    summary = recordSummary;
-  } else if (isHotelPlanningNote(recordSummary)) {
-    summary = shortLineFromSourceText(built, 160) || summary;
-  }
-  return {
-    summary,
-    longDetails,
-    neighborhood,
-    websiteFlavour: text(ccabRecord.websiteFlavour),
-  };
+function ccabNeighborhoodTagline(sourceRecord = {}, title = '') {
+  const neighborhood = ccabFactText(sourceRecord, {}).match(/Neighborhood:\s*([^;]+)/i);
+  const name = text(title, 160);
+  if (neighborhood && name) return text(`${name} in ${neighborhood[1]}`, 120);
+  return '';
 }
 
-function sourcedShortSummary(place = {}, sourceRecord = {}, longDescription = '') {
+function descriptionWhenJudgeFails({
+  category = '',
+  title = '',
+  sourceRecord = {},
+  address = '',
+  place = {},
+  rawDescription = '',
+} = {}) {
+  const cat = text(category, 80).toLowerCase();
+  if ((cat === 'hotel' || cat === 'lodging') && /Neighborhood:\s*[^;]+/i.test(ccabFactText(sourceRecord, place))) return '';
+  return buildCategoryDescription({ category: cat, title, sourceRecord, address, rawDescription });
+}
+
+function sourcedShortSummary(place = {}, sourceRecord = {}, longDescription = '', title = '') {
   let summary = text(sourceRecord.summary || place.summary, 500);
   const itinerary = text(sourceRecord.itineraryNote || sourceRecord.itinerary_note, 280);
+  if (longDescription && descriptionPassesDetailJudge(longDescription, title)) {
+    const tagline = ccabNeighborhoodTagline(sourceRecord, title) || shortLineFromSourceText(longDescription);
+    if (tagline) return tagline;
+  }
   if (itinerary && itinerary !== longDescription) return itinerary;
   if (summary && summary === longDescription) return shortLineFromSourceText(summary);
   if (summary.length > 140) summary = shortLineFromSourceText(summary);
@@ -393,14 +362,29 @@ function sourcedShortSummary(place = {}, sourceRecord = {}, longDescription = ''
 }
 
 export function enrichSearchPlace(place = {}) {
+  if (place.sourceRecord?.evidenceDossier) return { ...place };
   const next = { ...place };
   const sourceRecord = sourceRecordFrom(next);
   const category = text(next.category, 80).toLowerCase();
-  let description = sourcedLongDescription(next, sourceRecord);
-  let summary = sourcedShortSummary(next, sourceRecord, description);
+  const title = text(next.title || next.name, 240);
+  let description = text(
+    next.longDetails || sourceRecord.longDetails || sourcedLongDescription(next, sourceRecord),
+    4000,
+  );
+  if (!descriptionPassesDetailJudge(description, title)) {
+    description = descriptionWhenJudgeFails({
+      category,
+      title: next.title,
+      sourceRecord,
+      address: next.address || '',
+      place: next,
+      rawDescription: sourcedLongDescription(next, sourceRecord),
+    });
+  }
+  let summary = sourcedShortSummary(next, sourceRecord, description, title);
   let hotelNarrative = null;
   if (category === 'hotel' || category === 'lodging') {
-    hotelNarrative = hotelStoredCcabListNarrative(next.title, {
+    hotelNarrative = hotelStoredCcabListNarrative(title, {
       ...sourceRecord,
       description,
       summary,
@@ -463,4 +447,3 @@ export function enrichSearchPlace(place = {}) {
   if (category) next.category = category;
   return next;
 }
-

@@ -137,7 +137,17 @@ for (const js of [bundle, readFileSync(new URL('../public/assets/index-BKun7ofk.
     assert.ok(car.includes(fact), `car description missing ${fact}`);
   }
   const hotel = renderedDescription(js, payload, 603);
-  for (const fact of [hotelOverride.address, '$188/night', 'Google 3.9', 'fitness center', 'free Wi-Fi', 'friendly and helpful staff', 'small/compact rooms']) {
+  const hotelRecord = hotelOverride.sourceRecord && typeof hotelOverride.sourceRecord === 'object'
+    ? hotelOverride.sourceRecord
+    : {};
+  const hotelFacts = [
+    hotelOverride.address || hotelRecord.address,
+    `$${hotelOverride.price ?? hotelRecord.price}/night`,
+    hotelRecord.googleRating ? `Google ${hotelRecord.googleRating}` : '',
+    hotelRecord.reviewThemes?.praise?.[0],
+    'Lincoln Center',
+  ].filter(Boolean);
+  for (const fact of hotelFacts) {
     assert.ok(hotel.includes(fact), `hotel description missing ${fact}`);
   }
   const tour = renderedDescription(js, payload, 604);
@@ -166,7 +176,14 @@ for (const js of [bundle, readFileSync(new URL('../public/assets/index-BKun7ofk.
   assert.deepEqual(carFacts.filter((fact) => !car.includes(fact)), []);
   const hotel = renderedDescription(js, snapshotTrip, 603);
   const hotelRecord = snapshot['603'].sourceRecord;
-  const hotelFacts = [hotelRecord.address, hotelRecord.websiteFlavour, '$188/night', `Google ${hotelRecord.googleRating}`, hotelRecord.reviewThemes.praise[0], hotelRecord.reviewThemes.complaints[0]];
+  const hotelFacts = [
+    hotelRecord.address,
+    hotelRecord.websiteFlavour,
+    `$${snapshot['603'].price}/night`,
+    hotelRecord.googleRating ? `Google ${hotelRecord.googleRating}` : '',
+    hotelRecord.reviewThemes?.praise?.[0],
+    hotelRecord.reviewThemes?.complaints?.[0],
+  ].filter(Boolean);
   assert.deepEqual(hotelFacts.filter((fact) => !hotel.includes(fact)), []);
   for (const text of [car, hotel]) {
     assert.doesNotMatch(text, TEMPLATE_TEXT);

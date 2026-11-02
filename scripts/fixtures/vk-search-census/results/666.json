@@ -1,0 +1,337 @@
+{
+  "thingId": 666,
+  "thingName": "Smoke Jazz & Supper Club",
+  "type": "attraction",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://smokejazz.com/faq/",
+      "title": "FAQ - Smoke Jazz Club",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "'d like to walk up and take your chances. I'd like more information about the dinner show. All 6:30 p.m. & 8:30 p.m. shows at Smoke are dinner shows. Dinner shows require a minimum purchase of at least one entrée per person, to be billed at the end of the performance. Dinner is not required with a standing room ticket purchase, but there is a $20 consumption minimum. If  … chase of at least one entrée per person, to be billed at the end of the performance. Dinner is not required with a standing room ticket purchase, but there is a $20 consumption minimum. If desired, guests with standing room tickets may enjoy dinner in the bar/lounge before the set begins. Is there an entrance fee? A ticket must be p",
+      "snippet": "'d like to walk up and take your chances. I'd like more information about the dinner show. All 6:30 p.m. & 8:30 p.m. shows at Smoke are dinner shows. Dinner shows require a minimum purchase of at least one entrée per person, to be billed at the end of the performance. Dinner is not required with a s",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Smoke_(jazz_club)",
+      "title": "Smoke (jazz club) - Wikipedia",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": " Owners Paul Stache Molly Sparrow Johnson Location 2751 Broadway, Manhattan , New York City Website www .smokejazz .com Smoke Jazz & Supper Club is a jazz club located at 2751 Broadway on the Upper West Side of Manhattan in New York City . The club was opened on April 9, 1999 by co-founders Paul Stache and Frank Christopher and is currently owned by Stach …  Owners Paul Stache Molly Sparrow Johnson Location 2751 Broadway, Manhattan , New York City Website www .smokejazz .com Smoke Jazz & Supper Club is a jazz club located at 2751 Broadway on the Upper West Side of Manhattan in New York City . The club was opened on April 9, 1999 by co-founders Paul Stache and Frank Christopher and is currently owned by Stach",
+      "snippet": " Owners Paul Stache Molly Sparrow Johnson Location 2751 Broadway, Manhattan , New York City Website www .smokejazz .com Smoke Jazz & Supper Club is a jazz club located at 2751 Broadway on the Upper West Side of Manhattan in New York City . The club was opened on April 9, 1999 by co-founders Paul Sta",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com/Restaurant_Review-g60763-d1052364-Reviews-Smoke_Jazz_Club-New_York_City_New_York.html",
+      "title": "SMOKE JAZZ CLUB, New York City - Upper Manhattan (Uptown) - Menu, Prices & Restaurant Reviews - Tripadvisor",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "SMOKE JAZZ CLUB, New York City - Upper Manhattan (Uptown) - Menu, Prices & Restaurant Reviews - Tripadvisor | | The show itself was exceptional … Gabriela (sp?) was our friendly and helpful server … Excellent Show, Poor Service … Tight seating because so many people want to come here … 4.2 of … SMOKE JAZZ CLUB, New York City - Upper Manhattan (Uptown) - Menu, Prices & Restaurant Reviews - Tripadvisor | | The show itself was exceptional … Gabriela (sp?) was our friendly and helpful server … Excellent Show, Poor Service … Tight seating because so many people want to come here … 4.2 of 5 bubbles (574 reviews) … (Uptown) - Menu, Prices & Restaurant Reviews - Tripadvisor | | The show itself was exceptional … Gabriela (sp?) was our friendly and helpful server … Excellent Show, Poor Service … Tight seating because so many people want to come here … 4.2 of 5 bubbles (574 reviews) … urant Reviews - Tripadvisor | | The show itself was exceptional … Gabriela (sp?) was our friendly and helpful server … Excellent Show, Poor Service … Tight seating because so many people want to come here … 4.2 of 5 bubbles (574 reviews) … tional … Gabriela (sp?) was our friendly and helpful server … Excellent Show, Poor Service … Tight seating because so many people want to come here … 4.2 of 5 bubbles (574 reviews)",
+      "snippet": "SMOKE JAZZ CLUB, New York City - Upper Manhattan (Uptown) - Menu, Prices & Restaurant Reviews - Tripadvisor | | The show itself was exceptional … Gabriela (sp?) was our friendly and helpful server … Excellent Show, Poor Service … Tight seating because so many people want to come here … 4.2 of",
+      "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch"
+    },
+    {
+      "url": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/",
+      "title": "Smoke Jazz & Supper Club reviews | Restaurantji",
+      "fetchedAt": "2026-10-29T09:16:09-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r7/raw/st_e191b0b5ec.html",
+      "text": "Lovely food. A beautiful Steinway B piano (and stunning pianist Lex Korten on Oct.8, 2023) Make sure if you are a party of 4 or 6 that you can get 2 or 3 tables together in the 3 main long lines of tables, No good option for party of 5. No refunds for persons who cannot make the show, for any reason only a future credit. Even with ear plugs I found the amplification disheartening for such an intimate space, and we were as far from the stage as we could get. Got to see the Al Foster Quintet earlier this evening - absolutely phenomenal. SMOKE is an incredible venue! The service was unparalleled, the food phenomenal, and the staff wonderful! I wholeheartedly recommend checking them out!"
+    },
+    {
+      "url": "https://exa.ai/library/place/9pfhjt1b9gq",
+      "title": "Smoke Jazz & Supper Club reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:49:35-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_9pfhjt1b9gq.html",
+      "text": "Let’s start with the good part: the atmosphere is incredible. Red velvet, candlelight, and live jazz so close you can feel the bass through your glass. The cocktails are top-tier, and the food easily outperforms what most music venues even attempt. My crab cakes were crisp perfection, the salad was fresh, and the service stayed calm even with a packed house. Now for the part that ruined the vibe. The mandatory entrée rule. I came for drinks and small plates, happily spent several times the cost of an entrée, and was still told I had to order one or leave it uneaten. The new Smoke is a massive upgrade. The venue is much larger now, which means the bar has leveled up—the cocktails are easily some of the best in the city. The kitchen is still undefeated; the food is as awesome as ever. ​We saw Theo Croker, and while it was a modern, stripped-back set, the band was incredibly sharp. ​The Music: A very cool, modern jazz feel. ​The Twist: Even without a DJ or heavy electronics, Theo and the band held it down. ​The Talent: Theo’s trumpet work was top-tier, and the ensemble playing was seamless."
+    }
+  ],
+  "rating": {
+    "primary": 4.2,
+    "primarySource": "tripadvisor",
+    "tripadvisor": 4.2
+  },
+  "reviewCount": {
+    "tripadvisor": 574
+  },
+  "priceHint": "Tickets ~$25–$65; dinner entrée min on early sets; $20 min on 10pm",
+  "hoursHint": "Lounge & listening room Wed–Sun 4pm–close (official FAQ)",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    {
+      "text": "jazz club located at 2751 Broadway on the Upper West Side",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Smoke_(jazz_club)"
+    },
+    {
+      "text": "A beautiful Steinway B piano",
+      "sourceUrl": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/"
+    },
+    {
+      "text": "Red velvet, candlelight, and live jazz",
+      "sourceUrl": "https://exa.ai/library/place/9pfhjt1b9gq"
+    },
+    {
+      "text": "Dinner shows require a minimum purchase of at least one entrée per person",
+      "sourceUrl": "https://smokejazz.com/faq/"
+    }
+  ],
+  "itineraryNoteCandidate": "Smoke Jazz & Supper Club: an intimate Upper West Side jazz supper room at 2751 Broadway; book a dinner show.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 1
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 1 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 45,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 7,
+  "baseFieldScore": 2,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Smoke Jazz & Supper Club is a jazz club at 2751 Broadway on the Upper West Side, known for top pianists on its Steinway, a red-velvet, candlelit room and cocktails ranked among the best in the city. Food and staff earn strong marks too, and dinner shows require a minimum purchase of at least one entrée per person.",
+      "claims": [
+        {
+          "text": "jazz club located at 2751 Broadway on the Upper West Side",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Smoke_(jazz_club)"
+        },
+        {
+          "text": "A beautiful Steinway B piano",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/"
+        },
+        {
+          "text": "Red velvet, candlelight, and live jazz",
+          "sourceUrl": "https://exa.ai/library/place/9pfhjt1b9gq"
+        },
+        {
+          "text": "Dinner shows require a minimum purchase of at least one entrée per person",
+          "sourceUrl": "https://smokejazz.com/faq/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Smoke Jazz & Supper Club is a jazz club located at 2751 Broadway on the Upper West Side, and its draw starts at the piano: the stage is built around a Steinway, and strong pianists and full ensembles keep the music sharp from set to set. The room itself is a big part of the appeal, with red velvet and candlelight putting tables close enough to the band to feel every bass line. The kitchen and floor staff hold up their end, with the food regarded as well above typical music-venue fare and the service praised as warm and attentive, while the larger bar now mixes cocktails counted among the strongest in the city. Watch-outs are practical: seating is tight on busy nights, sound can run loud for such an intimate space, parties of five are hard to seat together, and each seated dinner guest must order an entrée, so plan a full meal. Standing room skips dinner but carries a drink minimum, and Tripadvisor lists 4.2 of 5 bubbles (574 reviews).",
+      "claims": [
+        {
+          "text": "jazz club located at 2751 Broadway on the Upper West Side",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Smoke_(jazz_club)"
+        },
+        {
+          "text": "A beautiful Steinway B piano",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/"
+        },
+        {
+          "text": "The service was unparalleled, the food phenomenal, and the staff wonderful!",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/"
+        },
+        {
+          "text": "Red velvet, candlelight, and live jazz so close you can feel the bass through your glass.",
+          "sourceUrl": "https://exa.ai/library/place/9pfhjt1b9gq"
+        },
+        {
+          "text": "the cocktails are easily some of the best in the city",
+          "sourceUrl": "https://exa.ai/library/place/9pfhjt1b9gq"
+        },
+        {
+          "text": "Tight seating because so many people want to come here",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d1052364-Reviews-Smoke_Jazz_Club-New_York_City_New_York.html"
+        },
+        {
+          "text": "No good option for party of 5",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/"
+        },
+        {
+          "text": "there is a $20 consumption minimum",
+          "sourceUrl": "https://smokejazz.com/faq/"
+        },
+        {
+          "text": "4.2 of 5 bubbles (574 reviews)",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d1052364-Reviews-Smoke_Jazz_Club-New_York_City_New_York.html"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Smoke Jazz & Supper Club: book a dinner show for close-up jazz by candlelight, then pair a top-tier cocktail with the crab cakes.",
+      "claims": [
+        {
+          "text": "The cocktails are top-tier",
+          "sourceUrl": "https://exa.ai/library/place/9pfhjt1b9gq"
+        }
+      ]
+    },
+    "reviewsUnstarred": [
+      {
+        "theme": "Overall experience",
+        "value": "Tripadvisor reviewer on Smoke Jazz & Supper Club: The show itself was exceptional. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "The show itself was exceptional",
+            "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d1052364-Reviews-Smoke_Jazz_Club-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d1052364-Reviews-Smoke_Jazz_Club-New_York_City_New_York.html",
+        "rating": "4.2/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 28
+      },
+      {
+        "theme": "Service",
+        "value": "Tripadvisor reviewer on Smoke Jazz & Supper Club: Gabriela (sp?) was our friendly and helpful server. Worth weighing alongside the overall 4.2/5 score before locking in the plan.",
+        "claims": [
+          {
+            "text": "Gabriela (sp?) was our friendly and helpful server",
+            "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d1052364-Reviews-Smoke_Jazz_Club-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d1052364-Reviews-Smoke_Jazz_Club-New_York_City_New_York.html",
+        "rating": "4.2/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 28
+      },
+      {
+        "theme": "Service",
+        "value": "Tripadvisor reviewer on Smoke Jazz & Supper Club: Excellent Show, Poor Service. Keep that in mind when choosing timing, a room, or an arrival plan.",
+        "claims": [
+          {
+            "text": "Excellent Show, Poor Service",
+            "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d1052364-Reviews-Smoke_Jazz_Club-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d1052364-Reviews-Smoke_Jazz_Club-New_York_City_New_York.html",
+        "rating": "4.2/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 25
+      },
+      {
+        "theme": "Overall experience",
+        "value": "Tripadvisor reviewer on Smoke Jazz & Supper Club: Tight seating because so many people want to come here. A practical point to factor into the decision before the trip.",
+        "claims": [
+          {
+            "text": "Tight seating because so many people want to come here",
+            "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d1052364-Reviews-Smoke_Jazz_Club-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d1052364-Reviews-Smoke_Jazz_Club-New_York_City_New_York.html",
+        "rating": "4.2/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 29
+      }
+    ]
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.tripadvisor.com/Restaurant_Review-g60763-d1052364-Reviews-Smoke_Jazz_Club-New_York_City_New_York.html",
+    "site": "Tripadvisor",
+    "via": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch",
+    "praise": [
+      "The show itself was exceptional",
+      "Gabriela (sp?) was our friendly and helpful server",
+      "Excellent Show, Poor Service",
+      "Tight seating because so many people want to come here"
+    ],
+    "watchOuts": [],
+    "themes": [
+      "Overall experience",
+      "Service",
+      "Service",
+      "Overall experience"
+    ],
+    "complaints": []
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Smoke Jazz & Supper Club: book a dinner show for close-up jazz by candlelight, then pair a top-tier cocktail with the crab cakes.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029",
+  "review1": "Smoke Jazz & Supper Club is praised for excellent pianists on a beautiful Steinway, though groups of five struggle with table layouts, refunds become credits only, and amplification can feel loud.",
+  "review1Source": "Restaurantji",
+  "review1Rating": "5/5",
+  "review1Theme": "Music",
+  "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/",
+  "review1Stars": 5,
+  "review2": "Outstanding performances from top ensembles, phenomenal food and wonderful, attentive staff come up repeatedly, making the venue an easy recommendation for a complete dinner-and-jazz evening in the neighborhood.",
+  "review2Source": "Restaurantji",
+  "review2Rating": "5/5",
+  "review2Theme": "Food and drinks",
+  "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/",
+  "review2Stars": 5,
+  "review3": "Red velvet, candlelight and close-up live jazz create a standout atmosphere with top-tier cocktails and strong food, though a mandatory entree rule frustrates anyone wanting only drinks and small plates.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "3/5",
+  "review3Theme": "Music",
+  "review3SourceUrl": "https://exa.ai/library/place/9pfhjt1b9gq",
+  "review3Stars": 3,
+  "review4": "The larger new venue is seen as a major upgrade, with a stronger bar pouring some of the best cocktails in the city, consistently great food and sharp, modern jazz sets.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Music",
+  "review4SourceUrl": "https://exa.ai/library/place/9pfhjt1b9gq",
+  "review4Stars": 5,
+  "review1Claims": [
+    "A beautiful Steinway B piano (and stunning pianist Lex Korten on Oct.8, 2023) Make sure if you are a party of 4 or 6 that you can get 2 or 3 tables together in the 3 main long lines of tables, No good option for party of 5.",
+    "No refunds for persons who cannot make the show, for any reason only a future credit.",
+    "Even with ear plugs I found the amplification disheartening for such an intimate space, and we were as far from the stage as we could get."
+  ],
+  "review2Claims": [
+    "Got to see the Al Foster Quintet earlier this evening - absolutely phenomenal.",
+    "SMOKE is an incredible venue!",
+    "The service was unparalleled, the food phenomenal, and the staff wonderful!",
+    "I wholeheartedly recommend checking them out!"
+  ],
+  "review3Claims": [
+    "Let’s start with the good part",
+    "the atmosphere is incredible.",
+    "Red velvet, candlelight, and live jazz so close you can feel the bass through your glass.",
+    "The cocktails are top-tier, and the food easily outperforms what most music venues even attempt.",
+    "My crab cakes were crisp perfection, the salad was fresh, and the service stayed calm even with a packed house.",
+    "Now for the part that ruined the vibe.",
+    "The mandatory entrée rule.",
+    "I came for drinks and small plates, happily spent several times the cost of an entrée, and was still told I had to order one or leave it uneaten."
+  ],
+  "review4Claims": [
+    "The new Smoke is a massive upgrade.",
+    "The venue is much larger now, which means the bar has leveled up—the cocktails are easily some of the best in the city.",
+    "The kitchen is still undefeated; the food is as awesome as ever.",
+    "​We saw Theo Croker, and while it was a modern, stripped-back set, the band was incredibly sharp.",
+    "A very cool, modern jazz feel.",
+    "Even without a DJ or heavy electronics, Theo and the band held it down.",
+    "Theo’s trumpet work was top-tier, and the ensemble playing was seamless."
+  ],
+  "reviewsLabel": "Representative reviews written from 30 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenOrder": [
+    "description"
+  ],
+  "writtenAt": {
+    "description": "2026-10-29T20:43:58.588296+00:00"
+  }
+}

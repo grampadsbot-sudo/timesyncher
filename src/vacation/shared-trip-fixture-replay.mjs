@@ -8,7 +8,8 @@ import {
 } from '../../scripts/fixtures/pr336-vk-search-trip-sources.mjs';
 import { applyLiveAppListRowFields } from './shared-trip-live-app-fields.mjs';
 
-export const GATEB_FIXTURE_REPLAY_SLUG = 'gateb-fixture-replay';
+const GATEB_FIXTURE_REPLAY_SLUG = 'gateb-fixture-replay';
+void GATEB_FIXTURE_REPLAY_SLUG;
 
 function normalizeTimelineSelections(trip = {}) {
   if (!Array.isArray(trip.places)) throw new TypeError('places must be an array');
@@ -64,7 +65,7 @@ export function prepareFixtureReplaySharedTrip(bytes) {
   };
 }
 
-export function loadFixtureReplaySharedTripFromPath(fixturePath = '') {
+function loadFixtureReplaySharedTripFromPath(fixturePath = '') {
   const path = String(fixturePath || '').trim();
   if (!path) return null;
   return prepareFixtureReplaySharedTrip(readFileSync(path));

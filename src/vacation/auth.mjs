@@ -1,9 +1,33 @@
+import { timingSafeEqual } from 'node:crypto';
 import { headerValue } from './http.mjs';
 
 function bearerToken(req) {
   const auth = headerValue(req, 'authorization') || '';
   const match = /^Bearer\s+(.+)$/i.exec(auth);
   return match ? match[1].trim() : '';
+}
+
+function equalSecret(candidate, expected) {
+  if (!candidate || !expected) return false;
+  const left = Buffer.from(String(candidate));
+  const right = Buffer.from(String(expected));
+  return left.length === right.length && timingSafeEqual(left, right);
+}
+
+export function dossierOperatorTokenFrom(req) {
+  return bearerToken(req)
+    || headerValue(req, 'x-timesyncher-dossier-operator-token')
+    || '';
+}
+
+export function authorizeThingEvidenceDossierRequest(req, env = process.env) {
+  const operatorExpected = String(env.TIMESYNCHER_DOSSIER_OPERATOR_TOKEN || '').trim();
+  const actual = dossierOperatorTokenFrom(req);
+  if (operatorExpected && actual && equalSecret(actual, operatorExpected)) {
+    return 'operator';
+  }
+  requireWorkerAuth(req, env);
+  return 'worker';
 }
 
 export function requireWorkerAuth(req, env = process.env) {

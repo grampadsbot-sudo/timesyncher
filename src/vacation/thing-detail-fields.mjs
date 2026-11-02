@@ -279,11 +279,16 @@ export function thingDetailOverrideFields(thing = {}) {
   const record = sourceRecordFrom(thing) || {};
   const fromRecord = detailFieldsFromPlace({}, thing);
   const merged = { ...fromRecord, ...bag };
+  const dossierNote = text(
+    record.evidenceDossier?.fields?.itineraryNote?.value
+    || bag.evidenceDossier?.fields?.itineraryNote?.value,
+  );
   const explicitItinerary = text(
     bag.itineraryNote
     || bag.itinerary_note
     || record.itineraryNote
-    || record.itinerary_note,
+    || record.itinerary_note
+    || dossierNote,
   );
   if (explicitItinerary) merged.itineraryNote = explicitItinerary;
   else {

@@ -20,6 +20,7 @@ import {
   sharedLogoTabCheck,
   stitchLogoChipCropsPng,
 } from './shepherd-staging-smoke-logo-metrics.mjs';
+import { runVisibleSharedLogoCheck } from './lib/shared-trip-visible-logo-check.mjs';
 
 let BASE = 'https://vacation-staging.timesyncher.com';
 
@@ -292,6 +293,11 @@ export async function runSharedSiteLogoCheck({ page, prep, artifactPath, onPersi
   else if (!logoHotels.pass) failReason = 'logo_hotels_grade_fail';
   else if (!logoCars.pass) failReason = 'logo_cars_grade_fail';
 
+  const visible758 = await runVisibleSharedLogoCheck(page, { sharedJson: sharedJson });
+  if (visible758.pass === false) {
+    failReason = failReason || visible758.failReason || 'visible_logo_758_fail';
+  }
+
   const checkLOGO = {
     hotels: logoHotels,
     cars: logoCars,
@@ -305,10 +311,11 @@ export async function runSharedSiteLogoCheck({ page, prep, artifactPath, onPersi
     stageTimestamps,
     slowStage,
     partial: false,
+    visible758: visible758.checkLOGO758,
   };
   persist(checkLOGO);
   return {
-    pass,
+    pass: pass && visible758.pass,
     appFail: null,
     checkLOGO,
   };

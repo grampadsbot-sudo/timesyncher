@@ -3,11 +3,12 @@ import { applyThingPresentation } from './intake-shared-trip.mjs';
 import { applyLiveAppListRowFields } from './shared-trip-live-app-fields.mjs';
 import { syncSharedTripApiBudget } from './shared-trip-api-budget.mjs';
 import { timelineCategoryIcon } from './timeline-icons.mjs';
-import { resolveThingLogoUrl } from './thing-logo-capture.mjs';
+import { resolveThingLogoDisplayUrl, resolveThingLogoUrl } from './thing-logo-capture.mjs';
+import { logoImgOnErrorInline, logoImgOnLoadInline } from './thing-logo-fallback-url.mjs';
 import { applyThingDetailOverrides } from './thing-detail-fields.mjs';
 
 const LOGO_IMG_STYLE = 'width:18px;height:18px;max-width:18px;max-height:18px;object-fit:contain;object-position:center center;display:block';
-const LOGO_FALLBACK_SPAN_STYLE = 'width:18px;height:18px;font-size:13px;display:inline-grid;place-items:center';
+const LOGO_FALLBACK_SPAN_STYLE = 'width:18px;height:18px;font-size:13px;display:inline-grid;place-items:center;transform:translateY(-2.5px)';
 
 function text(value) {
   return String(value || '').trim();
@@ -71,24 +72,23 @@ function logoChipFallbackInline() {
     'if(!chip||chip.dataset.tsLogoFailed===\'1\')return;',
     'chip.dataset.tsLogoFailed=\'1\';',
     'var emoji=chip.getAttribute(\'data-ts-fallback-emoji\')||\'\\uD83D\\uDCCD\';',
+    'if(emoji===\'?\')emoji=\'\\uD83D\\uDCCD\';',
     'chip.innerHTML=\'<span class="thing-emoji" style="' + LOGO_FALLBACK_SPAN_STYLE + '">\'+emoji+\'</span>\';',
   ].join('');
 }
 
 function logoChipLoadInline() {
-  const fail = logoChipFallbackInline();
-  return [
-    'var img=this,chip=img.closest(\'[data-ts-logo-chip]\');',
-    'if(!chip||chip.dataset.tsLogoFailed===\'1\')return;',
-    'var box=img.getBoundingClientRect();',
-    'if(box.width<4||box.height<4||img.naturalWidth<1||img.naturalHeight<1){' + fail + 'return;}',
-  ].join('');
+  return logoImgOnLoadInline();
+}
+
+function logoChipErrorInline() {
+  return logoImgOnErrorInline();
 }
 
 function logoChipHtml({ src, category }) {
   const emoji = timelineCategoryIcon(category);
   const emojiAttr = escapeHtml(emoji);
-  const onerror = escapeHtml(`this.onerror=null;${logoChipFallbackInline()}`);
+  const onerror = escapeHtml(`this.onerror=null;${logoChipErrorInline()}`);
   const onload = escapeHtml(logoChipLoadInline());
   return `<span data-ts-logo-chip="1" data-ts-fallback-emoji="${emojiAttr}" aria-hidden="true" style="width:22px;height:22px;min-width:22px;display:inline-grid;place-items:center;box-sizing:border-box;border-radius:6px;background:#f8fafc;border:1px solid #e5e7eb"><img class="tiny-logo" src="${src}" alt="" style="${LOGO_IMG_STYLE}" onerror="${onerror}" onload="${onload}" /></span>`;
 }
@@ -101,6 +101,7 @@ function emojiOnlyChipHtml({ category }) {
 
 function listRowHtml({ place, override, tab, category, onLogoMissing }) {
   const logoUrl = resolveThingLogoUrl(place, override) || text(override.logoUrl || place.logoUrl);
+  const displayLogoUrl = resolveThingLogoDisplayUrl(place, override) || logoUrl;
   const name = escapeHtml(place.name || place.title || 'Place');
   const tabAttr = escapeHtml(tab);
   const categoryAttr = escapeHtml(category);
@@ -109,9 +110,10 @@ function listRowHtml({ place, override, tab, category, onLogoMissing }) {
     const chip = emojiOnlyChipHtml({ category });
     return `<li data-list-row="1" data-has-logo="0" data-shared-tab="${tabAttr}" data-thing-category="${categoryAttr}" style="display:flex;align-items:center;gap:8px">${chip}<span><strong>${name}</strong></span></li>`;
   }
-  const src = escapeHtml(logoUrl);
+  const src = escapeHtml(displayLogoUrl);
+  const logoAttr = escapeHtml(logoUrl);
   const chip = logoChipHtml({ src, category });
-  return `<li data-list-row="1" data-has-logo="1" data-logo-src="${src}" data-shared-tab="${tabAttr}" data-thing-category="${escapeHtml(category)}" style="display:flex;align-items:center;gap:8px">${chip}<span><strong>${name}</strong></span></li>`;
+  return `<li data-list-row="1" data-has-logo="1" data-logo-src="${logoAttr}" data-shared-tab="${tabAttr}" data-thing-category="${escapeHtml(category)}" style="display:flex;align-items:center;gap:8px">${chip}<span><strong>${name}</strong></span></li>`;
 }
 
 function sharedLiveTabRowHtmlFragments(shared = {}, tabKeyword = '', options = {}) {

@@ -1,3 +1,4 @@
+import { itineraryLineText } from '../../../../src/vacation/itinerary-line.mjs';
 import {
   flightPriceDisplay,
   flightSchedule,
@@ -210,12 +211,7 @@ export function estimateTravelMinutes(fromPlace, toPlace) {
 
 export function itineraryNoteFor(place, trip, assignmentNotes) {
   const override = overrideFor(trip, place);
-  return text(
-    override.itineraryNote ||
-      override.itinerary_note ||
-      assignmentNotes ||
-      override.notes,
-  );
+  return itineraryLineText(override) || text(assignmentNotes || override.notes);
 }
 
 function endMinutes(entry) {
@@ -302,7 +298,7 @@ function pushHotelRows(entries, trip, day) {
             trip,
             String(place.id) === String(firstTimelineHotelId),
           ) || itineraryNoteFor(place, trip, '')
-        : '';
+        : itineraryNoteFor(place, trip, '');
 
     if (dayNumber > span.start && dayNumber <= span.end + 1) {
       entries.push({
@@ -334,6 +330,7 @@ function pushHotelRows(entries, trip, day) {
         place,
         title: `Bed: ${name}`,
         category: 'hotel',
+        itineraryNote: note,
       });
     }
     if (dayNumber === span.end + 1) {
@@ -375,6 +372,7 @@ function pushFlightRows(entries, trip, day, dayId) {
       category: 'flight',
       fare: flightPriceDisplay(place, trip),
       summary: rowSummary(place, trip),
+      itineraryNote: itineraryNoteFor(place, trip, ''),
     });
   };
   for (const row of trip.assignments?.[dayId] || []) {

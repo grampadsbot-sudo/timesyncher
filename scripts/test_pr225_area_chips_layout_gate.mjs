@@ -335,7 +335,7 @@ try {
     }
   });
   await new Promise((r) => setTimeout(r, 300));
-  const hotelVisible = await page.evaluate(() => /Midtown sample hotel/i.test(document.body?.innerText || ''));
+  const hotelVisible = await page.evaluate(() => /The Manhattan Club/i.test(document.body?.innerText || ''));
   assert.equal(hotelVisible, true, 'area chip filters hotels');
   await page.evaluate(() => {
     for (const btn of document.querySelectorAll('button,[role="tab"]')) {

@@ -19,8 +19,17 @@ for (const forbidden of FORBIDDEN_SERVED_STRINGS) {
 }
 assert.equal(served.includes(SO_ORIGIN_NEEDLE), false);
 assert.equal(served.includes('https://travel.timesyncher.com'), false);
-assert.equal(served.split('/timesyncher/i.test(').length - 1, 1);
-assert.equal(served.includes('dn=!0'), false);
+assert.equal(served.includes('/timesyncher/i.test('), false);
+assert.equal(served.includes('timesyncher\\.com$/i.test(window.location.hostname)'), false);
+assert.equal(served.includes('dn=!0'), true);
+assert.match(served, /label:"Day-by-Day"/);
+assert.match(served, /label:"Flights"/);
+assert.match(served, /label:"The Rest"/);
+assert.equal(served.includes('label:x("shared.tabPlan")'), false);
+assert.equal(served.includes('id:"bookings"'), false);
+assert.equal(served.includes('q==="bookings"'), false);
+assert.equal(served.includes('q==="packing"'), false);
+assert.equal(served.includes('q==="collab"'), false);
 assertPatchedStyleTwo(served);
 for (const inserted of [
   '/ts-thing-logos/bellagio.svg',

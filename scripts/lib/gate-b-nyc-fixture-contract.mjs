@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 
 import { listRowSubstanceDescription } from '../../apps/vacation-client/src/lib/listTabModel.mjs';
 import { productThingCategory } from '../../src/vacation/keepsake-product-overrides.mjs';
+import { GATE_B_NYC_REQUIRED_PLACE_COUNT } from '../fixtures/gate-b-nyc-place-count.mjs';
 
 const MIN_SUMMARY_WORDS = 30;
 
@@ -81,8 +82,8 @@ export function assessGateBNycFixtureContract(shared = {}, options = {}) {
   const { profile = 'positive' } = options;
   const violations = [];
   const places = Array.isArray(shared.places) ? shared.places : [];
-  if (places.length !== 22) {
-    violations.push(`expected 22 places, got ${places.length}`);
+  if (places.length !== GATE_B_NYC_REQUIRED_PLACE_COUNT) {
+    violations.push(`expected ${GATE_B_NYC_REQUIRED_PLACE_COUNT} places, got ${places.length}`);
   }
 
   for (const place of places) {

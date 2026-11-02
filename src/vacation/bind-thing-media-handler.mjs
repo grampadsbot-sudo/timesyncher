@@ -12,6 +12,7 @@ import {
   newBindingId,
   resolveThingFromShared,
   sniffMediaType,
+  boundMediaPlayUrl,
 } from './thing-media-bind.mjs';
 import { sendCachedBindingMedia } from './bind-thing-media-cache.mjs';
 import { getBindingMedia, listBindings, putMediaBlob, saveBinding } from './thing-media-store.mjs';
@@ -253,6 +254,10 @@ async function handleBind(req, res) {
   const saved = await saveBinding(binding, process.env, {
     bytes: storage.storeBytes ? bytes : null,
   });
+  const playUrl = boundMediaPlayUrl(saved.binding);
+  if (playUrl && playUrl !== saved.binding.publicUrl) {
+    saved.binding = { ...saved.binding, publicUrl: playUrl };
+  }
   const origin = originFromReq(req);
   return sendJson(res, 200, {
     ok: true,

@@ -1,3 +1,5 @@
+import { NYC_PASS_B_RESTAURANT_LIST_ROWS } from './nyc-pass-b-restaurant-rows.mjs';
+
 export const NYC_CCAB_DISPLAY_ALIASES = {
   "Motto by Hilton Chelsea": "Motto by Hilton New York City Times Square",
   "Romer Hell's Kitchen": "Romer Hell’s Kitchen",
@@ -52,6 +54,12 @@ export const NYC_STAGING_CAPTURE_LIST_ROWS = [
     "name": "Hyatt House New York/Chelsea",
     "cat": "hotel",
     "ccabKey": "Hyatt House New York/Chelsea"
+  },
+  {
+    "id": 676,
+    "name": "Motto by Hilton New York City Times Square",
+    "cat": "hotel",
+    "ccabKey": "Motto by Hilton New York City Times Square"
   },
   {
     "id": 620,
@@ -109,9 +117,9 @@ export const NYC_STAGING_CAPTURE_LIST_ROWS = [
   },
   {
     "id": 629,
-    "name": "The Manhattan Club",
+    "name": "Library Hotel by Library Hotel Collection",
     "cat": "hotel",
-    "ccabKey": "The Manhattan Club"
+    "ccabKey": "Library Hotel by Library Hotel Collection"
   },
   {
     "id": 630,
@@ -358,8 +366,52 @@ export const NYC_STAGING_CAPTURE_LIST_ROWS = [
     "name": "The Smith - Lincoln Square",
     "cat": "restaurant",
     "ccabKey": "The Smith - Lincoln Square"
-  }
+  },
+  {"id": 710, "name": "Hertz JFK — Compact SUV", "cat": "car", "ccabKey": "Hertz JFK — Compact SUV"},
+  {"id": 711, "name": "Thrifty JFK — Midsize sedan", "cat": "car", "ccabKey": "Thrifty JFK — Midsize sedan"},
+  {"id": 712, "name": "Thrifty JFK — Compact SUV", "cat": "car", "ccabKey": "Thrifty JFK — Compact SUV"},
+  {"id": 713, "name": "Dollar JFK — Midsize sedan", "cat": "car", "ccabKey": "Dollar JFK — Midsize sedan"},
+  {"id": 714, "name": "Dollar JFK — Compact SUV", "cat": "car", "ccabKey": "Dollar JFK — Compact SUV"},
+  {"id": 715, "name": "Dollar JFK — Full-size sedan", "cat": "car", "ccabKey": "Dollar JFK — Full-size sedan"}
 ];
+
+export function appendNycStagingListTabRows(rows, options = {}) {
+  const includeCategories = options.categories ?? ['hotel', 'flight', 'car', 'store', 'activity', 'restaurant'];
+  const rowIdentity = (row) => `${row.ccabKey || resolveNycCcabKey(row.name)}\0${row.name}`;
+  const seenRowIdentities = new Set(rows.map(rowIdentity));
+  const seenIds = new Set(rows.map((row) => row.id));
+  let nextFreeId = 617;
+  while (seenIds.has(nextFreeId)) nextFreeId += 1;
+  const appendList = [...NYC_STAGING_CAPTURE_LIST_ROWS, ...NYC_PASS_B_RESTAURANT_LIST_ROWS];
+  for (const listRow of appendList) {
+    if (!includeCategories.includes(listRow.cat)) continue;
+    const identity = `${listRow.ccabKey}\0${listRow.name}`;
+    if (seenRowIdentities.has(identity)) continue;
+    seenRowIdentities.add(identity);
+    const duplicateFlight = listRow.cat === 'flight'
+      && rows.some((row) => row.cat === 'flight' && row.ccabKey === listRow.ccabKey);
+    let id = listRow.id;
+    if (listRow.id == null || seenIds.has(id)) {
+      id = nextFreeId;
+      seenIds.add(id);
+      nextFreeId += 1;
+      while (seenIds.has(nextFreeId)) nextFreeId += 1;
+    } else {
+      seenIds.add(id);
+    }
+    if (duplicateFlight) continue;
+    rows.push({
+      day: 1,
+      time: '11:00',
+      name: listRow.name,
+      cat: listRow.cat,
+      id,
+      ccabKey: listRow.ccabKey,
+      listOnly: true,
+    });
+  }
+  return rows;
+}
 
 export function resolveNycCcabKey(displayName = '') {
   const name = String(displayName || '').trim();

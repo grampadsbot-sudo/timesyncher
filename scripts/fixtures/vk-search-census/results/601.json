@@ -1,0 +1,123 @@
+{
+  "thingId": 601,
+  "thingName": "American Airlines LAS → JFK",
+  "type": "flight",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york",
+      "title": "Flights from Las Vegas to New York | American Airlines",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "n Airlines | | Flights from Las Vegas to New York | American Airlines # American Airlines flights from Las Vegas to New York ## Your trip to New York American Airlines offers flights from Las Vegas to New York. Browse available flight options and fares between McCarran International Airport (LAS) and New York All Airports (NYC) for business trips, family vi … fore you arrive. ## Which New York airports does American Airlines fly to? Fly American Airlines into three major airports in the New York City area: John F. Kennedy International Airport (JFK), LaGuardia Airport (LGA) and Newark Liberty International Airport (EWR). All three airports are just a short distance from Manhattan and have Admiral … s to New York ## Your trip to New York American Airlines offers flights from Las Vegas to New York. Browse available flight options and fares between McCarran International Airport (LAS) and New York All Airports (NYC) for business trips, family visits and short getaways. Compare fares and schedules and choose the option that fits you … fore you arrive. ## Which New York airports does American Airlines fly to? Fly American Airlines into three major airports in the New York City area: John F. Kennedy International Airport (JFK), LaGuardia Airport (LGA) and Newark Liberty International Airport (EWR). All three airports are just a short distance from Manhattan and have Admiral … ports in the New York City area: John F. Kennedy International Airport (JFK), LaGuardia Airport (LGA) and Newark Liberty International Airport (EWR). All three airports are just a short distance from Manhattan and have Admiral's Club® lounges in the American Airlines terminals. ### Extra legroom More space with seats at the front of the Main Cabin or in exit rows. Enjoy beer, wine and spirits on flights with full beverage s … on flights to New York. ### Be flexible with dates Midweek flights, such as Tuesdays or Wednesdays, can sometimes offer lower fares. ### Arrive early Arrive at least 2 hours before domestic flights. For international travel, plan for 3 hours before departure. ### Get your boarding pass Check in online or on the American app to download your boar … Arrive early Arrive at least 2 hours before domestic flights. For international travel, plan for 3 hours before departure. ### Get your boarding pass Check in online or on the American app to download your boarding pass or print it before you arrive. ## Which New York airports does American Airlines fly to? Fly American Airlines into three major airports in the New York City area: John F. Kennedy",
+      "snippet": "n Airlines | | Flights from Las Vegas to New York | American Airlines # American Airlines flights from Las Vegas to New York ## Your trip to New York American Airlines offers flights from Las Vegas to New York. Browse available flight options and fares between McCarran International Airport (LAS) an",
+      "fetchMethod": "WebFetch live fetch 2026-10-28 (curl 403/blocked); text saved verbatim from WebFetch markdown"
+    }
+  ],
+  "rating": {
+    "primary": null,
+    "primarySource": null
+  },
+  "reviewCount": {},
+  "priceHint": "Inventory/list price $257",
+  "hoursHint": "American Airlines LAS→JFK — schedule per airline booking tool",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "Admiral's Club® lounges",
+    "American Airlines offers flights from Las Vegas to New York",
+    "John F. Kennedy International Airport (JFK)",
+    "McCarran International Airport (LAS)",
+    "John F. Kennedy International Airport (JFK)",
+    "All three airports are just a short distance from Manhattan and have Admiral's Club® lounges in the American Airlines terminals",
+    "Arrive at least 2 hours before domestic flights",
+    "Check in online or on the American app to download your boarding pass or print it before you arrive"
+  ],
+  "itineraryNoteCandidate": "American Airlines LAS → JFK: the outbound into Kennedy; arrive early and, with status, relax in the Admiral's Club® lounges.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 257,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 4,
+  "baseFieldScore": 2,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "American Airlines offers flights from Las Vegas to New York, and American Airlines LAS → JFK is the outbound row into John F. Kennedy International Airport (JFK). Plan to arrive at least 2 hours before domestic flights, and check in online or in the American app first. Plan to arrive at least 2 hours before domestic flights, and check in online or in the American app first.",
+      "claims": [
+        {
+          "text": "American Airlines offers flights from Las Vegas to New York",
+          "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "John F. Kennedy International Airport (JFK)",
+          "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "Arrive at least 2 hours before domestic flights",
+          "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
+        }
+      ]
+    },
+    "description": {
+      "value": "For the outbound row American Airlines LAS → JFK, American lists McCarran International Airport (LAS) as the Las Vegas airport and John F. Kennedy International Airport (JFK) as the New York arrival. All three airports are just a short distance from Manhattan and have Admiral's Club® lounges in the American Airlines terminals. Arrive at least 2 hours before domestic flights. Check in online or on the American app to download your boarding pass or print it before you arrive.",
+      "claims": [
+        {
+          "text": "McCarran International Airport (LAS)",
+          "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "John F. Kennedy International Airport (JFK)",
+          "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "All three airports are just a short distance from Manhattan and have Admiral's Club® lounges in the American Airlines terminals",
+          "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "Arrive at least 2 hours before domestic flights",
+          "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "Check in online or on the American app to download your boarding pass or print it before you arrive",
+          "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "American Airlines LAS → JFK: the outbound into Kennedy; arrive early and, with status, relax in the Admiral's Club® lounges.",
+      "claims": [
+        {
+          "text": "Admiral's Club® lounges",
+          "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "American Airlines LAS → JFK: the outbound into Kennedy; arrive early and, with status, relax in the Admiral's Club® lounges."
+}

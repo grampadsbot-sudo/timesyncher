@@ -6,7 +6,10 @@ import {
   GATE_B_INCOMPLETE_LIST_ROW_IDS,
   mergeStoredCcabNarrativeIntoOverride,
 } from '../../../../src/vacation/stored-ccab-narrative-merge.mjs';
-import { resolveThingLogoUrl } from '../../../../src/vacation/thing-logo-capture.mjs';
+import {
+  resolveThingLogoDisplayUrl,
+  resolveThingLogoUrl,
+} from '../../../../src/vacation/thing-logo-capture.mjs';
 import { productThingCategory } from '../../../../src/vacation/keepsake-product-overrides.mjs';
 import {
   hotelListRowUnboundNarrative,
@@ -410,11 +413,23 @@ export function listRowSubstanceDescription(
   if (
     !spare
     && category === 'hotel'
-    && text(mergedOverride.provenanceBlocker || source.provenanceBlocker)
+    && (
+      GATE_B_INCOMPLETE_LIST_ROW_IDS.has(place.id)
+      || text(mergedOverride.provenanceBlocker || source.provenanceBlocker)
+    )
   ) {
     spare = hotelListRowUnboundNarrative(place.name || place.title, fields.address);
   }
-  return finalizeListRowDisplayDescription(composed, { spare });
+  const display = finalizeListRowDisplayDescription(composed, { spare });
+  if (
+    category === 'hotel'
+    && GATE_B_INCOMPLETE_LIST_ROW_IDS.has(place.id)
+    && wordCount(display) < 30
+  ) {
+    const fallback = spare || hotelListRowUnboundNarrative(place.name || place.title, fields.address);
+    if (wordCount(fallback) >= 30) return fallback;
+  }
+  return display;
 }
 
 export function rowSummary(place, trip) {
@@ -427,7 +442,8 @@ export function logoUrlForPlace(place, trip) {
   });
   const source = sourceRecord(place, mergedOverride);
   return text(
-    resolveThingLogoUrl(place, mergedOverride)
+    resolveThingLogoDisplayUrl(place, mergedOverride)
+      || resolveThingLogoUrl(place, mergedOverride)
       || mergedOverride.logoUrl
       || mergedOverride.iconUrl
       || place.logoUrl

@@ -11,6 +11,7 @@ import {
   placeName,
   tabCategoryKey,
 } from './listTabModel.mjs';
+import { parseStarRating } from './starRatingModel.mjs';
 
 const REVIEW_SOURCES = new Set(['Google', 'Yelp', 'TripAdvisor']);
 export const REPRESENTATIVE_REVIEWS_FOOTNOTE =
@@ -156,6 +157,8 @@ function reviewIsComplete(override, index) {
 }
 
 function reviewCompositeLabel(override, index) {
+  const dossierLabel = text(override[`review${index}Label`] || override.reviewsLabel, 200);
+  if (dossierLabel) return dossierLabel;
   const explicit = text(override[`review${index}CompositeLabel`], 200);
   if (explicit) return explicit;
   const flagged = override[`review${index}Composite`];
@@ -203,9 +206,10 @@ export function detailSummary(place, trip) {
   const source = sourceRecord(place, override);
   const name = placeName(place);
   const candidate = text(
-    override.summary ||
-      override.longDetails ||
+    override.longDetails ||
       override.details ||
+      override.summary ||
+      source.longDetails ||
       source.summary ||
       place.description,
   );
@@ -221,7 +225,11 @@ export function detailItineraryNote(place, trip) {
 }
 
 export function detailHappyHour(override) {
-  return text(override.happyHourDetails);
+  const raw = text(override.happyHourDetails);
+  if (!raw || /^no happy hour found$/i.test(raw)) return '';
+  if (/^false$/i.test(raw)) return '';
+  if (String(override.happyHour ?? '').toLowerCase() === 'false' && !raw) return '';
+  return raw;
 }
 
 export function detailPriceLabel(place, trip, category) {
@@ -238,31 +246,34 @@ export function detailPriceLabel(place, trip, category) {
 
 export function detailRatingLines(override) {
   const lines = [];
-  const googleRating = text(override.googleRating);
   const googleCount = text(override.googleReviewCount);
-  if (googleRating) {
+  const googleValue = parseStarRating(override.googleRating);
+  if (googleValue != null) {
     lines.push({
       id: 'google',
-      text: googleCount ? `${googleRating} on Google (${googleCount} reviews)` : `${googleRating} on Google`,
+      value: googleValue,
+      caption: googleCount ? `on Google (${googleCount} reviews)` : 'on Google',
     });
   }
-  const yelpRating = text(override.yelpRating);
   const yelpCount = text(override.yelpReviewCount);
-  if (yelpRating) {
+  const yelpValue = parseStarRating(override.yelpRating);
+  if (yelpValue != null) {
     lines.push({
       id: 'yelp',
-      text: yelpCount ? `${yelpRating} on Yelp (${yelpCount} reviews)` : `${yelpRating} on Yelp`,
+      value: yelpValue,
+      caption: yelpCount ? `on Yelp (${yelpCount} reviews)` : 'on Yelp',
     });
   }
   const explicitThird = text(override.thirdPartyRating);
   const fallbackRating = text(override.rating);
-  const thirdRating = explicitThird || (!googleRating && !yelpRating ? fallbackRating : '');
+  const thirdRaw = explicitThird || (!googleValue && !yelpValue ? fallbackRating : '');
+  const thirdValue = parseStarRating(thirdRaw);
   const thirdCount = text(override.thirdPartyReviewCount || override.count);
-  if (thirdRating) {
-    const value = thirdCount ? `${thirdRating} (${thirdCount} reviews)` : thirdRating;
+  if (thirdValue != null) {
     lines.push({
       id: 'third',
-      text: `Other ratings: ${value}`,
+      value: thirdValue,
+      caption: thirdCount ? `Other ratings (${thirdCount} reviews)` : 'Other ratings',
     });
   }
   return lines;
@@ -278,7 +289,7 @@ export function detailReviews(override, category) {
     reviews.push({
       index,
       text: text(override[`review${index}`]),
-      rating: text(override[`review${index}Rating`]),
+      ratingValue: parseStarRating(override[`review${index}Rating`]),
       source: text(override[`review${index}Source`]),
       compositeLabel,
     });
@@ -342,15 +353,29 @@ function hotelExtraRows(override) {
   return rows;
 }
 
+function detailAddressHoursBox(place, trip) {
+  const override = overrideFor(trip, place);
+  const source = sourceRecord(place, override);
+  const address = text(override.address || place.address || source.address);
+  const hours = text(override.hours || source.hours || source.openingHours);
+  if (!address && !hours) return null;
+  const lines = [];
+  if (address) lines.push({ key: 'address', label: 'Address', value: address });
+  if (hours) lines.push({ key: 'hours', label: 'Hours', value: hours });
+  return { lines };
+}
+
+function detailPhoneCallBox(place, trip) {
+  const override = overrideFor(trip, place);
+  const source = sourceRecord(place, override);
+  const phone = text(override.phone || place.phone || source.phone || source.telephone);
+  if (!phone) return null;
+  return { phone, href: `tel:${phone.replace(/\s+/g, '')}` };
+}
+
 function standardContactRows(place, override) {
   const source = sourceRecord(place, override);
   const rows = [];
-  const address = text(override.address || place.address || source.address);
-  if (address) rows.push({ key: 'address', label: 'Address', value: address });
-  const hours = text(override.hours || source.hours || source.openingHours);
-  if (hours) rows.push({ key: 'hours', label: 'Hours', value: hours });
-  const phone = text(override.phone || place.phone || source.phone || source.telephone);
-  if (phone) rows.push({ key: 'phone', label: 'Phone', value: phone, href: `tel:${phone.replace(/\s+/g, '')}` });
   const website = text(override.website || override.url || place.url || source.website || source.url);
   const websiteHref = safeHttpUrl(website);
   if (website) {
@@ -424,6 +449,8 @@ export function buildDetailViewModel(place, trip) {
         : '',
     reviewTotalsLine: detailReviewTotalsLine(override),
     summarySourceUrls: detailSummarySourceUrls(override),
+    addressHoursBox: detailAddressHoursBox(place, trip),
+    phoneCallBox: detailPhoneCallBox(place, trip),
     fieldRows: detailFieldRows(place, trip),
   };
 }

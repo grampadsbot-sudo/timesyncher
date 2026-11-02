@@ -1,0 +1,178 @@
+{
+  "thingId": 606,
+  "thingName": "Afternoon matinee show",
+  "type": "attraction",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/",
+      "title": "TKTS by TDF | TDF",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "TKTS by TDF | TDF | Visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off. Visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off. | TKTS by TDF | TDF Skip to content About Us TDF Login Se … TKTS by TDF | TDF | Visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off. Visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off. | TKTS by TDF | TDF Skip to content About Us TDF Login Se … et the TKTS App Download the only app with a real-time display of what’s currently on sale at all TKTS Discount Booths. Available on TKTS eGift Cards Share the gift of live theatre with TKTS eGift Cards, which work like cash at our TKTS Discount Booths! Buy TKTS eGift Cards TKTS Accessibility Policy Our TKTS Patron Services Representatives and ticket … iladelphia, PA Closed View Details London, England Closed View Details Tokyo, Japan Closed View Details Get the TKTS App Download the only app with a real-time display of what’s currently on sale at all TKTS Discount Booths. Available on TKTS eGift Cards Share the gift of live theatre with TKTS eGift Cards, which work like cash at our TKTS Discount Booths! Buy TKTS eGift",
+      "snippet": "TKTS by TDF | TDF | Visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off. Visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off. | TKTS by TDF | TDF Skip to content About Us TDF Login Se",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://exa.ai/library/place/rs4jvjhrng1",
+      "title": "Afternoon matinee show reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:20:52-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_rs4jvjhrng1.html",
+      "text": "I pity the people that don't know about this place. This is THE spot to get discounted tickets to current Broadway and off Broadway shows, both evenings and matinees. Sure, you wait in line outside, but to save 50% off box office prices, you can suffer a little. Forget the people that are offering you discounts on the street. Go here!! Really smooth experience buying tickets. The website was easy to use, prices were clear, and checkout was quick with no issues. Tickets arrived promptly and everything worked perfectly on the day. Great ticket price and great follow up show (the Great Gatsby). Apox 1 hour in line, but great options were still available and we got amazing seats for 4 next to each other. TKTS is a great place to buy tickets to Broadway shows. It's been in this location in Times Square for as long as I can remember. On this visit, the line was long, but I was still able to get a ticket to the show that I wanted to see, and it was in a small theatre."
+    }
+  ],
+  "rating": {
+    "primary": 4.0,
+    "primarySource": "yelp",
+    "yelp": 4.0,
+    "tripadvisor": 4.6
+  },
+  "reviewCount": {
+    "yelp": 344,
+    "tripadvisor": 17
+  },
+  "priceHint": "Same-day Broadway/Off-Broadway up to 50% off + $8 TKTS service fee",
+  "hoursHint": "Times Square booth: Mon/Tue/Fri 3–8; Wed/Thu/Sat 11–8; Sun 11–7 (search listing; confirm TKTS Live)",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "same-day performances and next-day matinees up to 50% off",
+    "same-day performances and next-day matinees up to 50% off",
+    "Visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off",
+    "Share the gift of live theatre with TKTS eGift Cards",
+    "real-time display of what’s currently on sale at all TKTS Discount Booths"
+  ],
+  "itineraryNoteCandidate": "Afternoon matinee show: a Broadway afternoon on a budget; try a TKTS booth for same-day performances and next-day matinees up to 50% off.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 1
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 1 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": true,
+    "pageCount": 80,
+    "googleRating": "4.5",
+    "yelpRating": "4",
+    "price": 78,
+    "hours": false,
+    "happyHour": false,
+    "itineraryNote": true,
+    "xaiUsd": 0.061796,
+    "attemptKinds": {
+      "brave": 34
+    },
+    "braveAttempts": 34
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 5,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Afternoon matinee show using the TKTS booth for discounted same-day and next-day matinee Broadway tickets. The plan is to queue at a booth on the day: TKTS sells same-day and next-day matinee seats at up to 50% off, so the show is picked from what is on sale.",
+      "claims": [
+        {
+          "text": "same-day performances and next-day matinees up to 50% off",
+          "sourceUrl": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/"
+        },
+        {
+          "text": "next-day matinees up to 50% off",
+          "sourceUrl": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Afternoon matinee show plan: pick up discounted seats at a TKTS booth. TDF says to visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off. For gifts, TDF suggests you Share the gift of live theatre with TKTS eGift Cards. TDF also points buyers to its TKTS app, which has a real-time display of what’s currently on sale at all TKTS Discount Booths.",
+      "claims": [
+        {
+          "text": "Visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off",
+          "sourceUrl": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/"
+        },
+        {
+          "text": "Share the gift of live theatre with TKTS eGift Cards",
+          "sourceUrl": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/"
+        },
+        {
+          "text": "real-time display of what’s currently on sale at all TKTS Discount Booths",
+          "sourceUrl": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Afternoon matinee show: a Broadway afternoon on a budget; try a TKTS booth for same-day performances and next-day matinees up to 50% off.",
+      "claims": [
+        {
+          "text": "same-day performances and next-day matinees up to 50% off",
+          "sourceUrl": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/"
+        }
+      ]
+    },
+    "reviewsScope": "Reviews are for TKTS Times Square booth (anchor named in summary), not every candidate in this row"
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Afternoon matinee show: a Broadway afternoon on a budget; try a TKTS booth for same-day performances and next-day matinees up to 50% off.",
+  "review1": "TKTS in Times Square is the go-to place for discounted same-day Broadway tickets, though visitors should expect to queue outside.",
+  "review1Source": "Exa place listing",
+  "review1Rating": "5/5",
+  "review1Theme": "Crowds",
+  "review1SourceUrl": "https://exa.ai/library/place/rs4jvjhrng1",
+  "review2": "Buying tickets is described as smooth and easy, with a clear website, transparent prices and a quick checkout, and tickets arriving promptly and working without trouble on the day.",
+  "review2Source": "Exa place listing",
+  "review2Rating": "5/5",
+  "review2Theme": "Value",
+  "review2SourceUrl": "https://exa.ai/library/place/rs4jvjhrng1",
+  "review3": "Even after roughly an hour in line, good shows and strong seats are often still available, including blocks of seats together for small groups wanting to sit side by side.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "5/5",
+  "review3Theme": "Selection",
+  "review3SourceUrl": "https://exa.ai/library/place/rs4jvjhrng1",
+  "review4": "Lines at the Times Square booth can run long, yet most people still land a ticket for the show they wanted, sometimes in a smaller theatre, which makes the wait feel worthwhile.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "4/5",
+  "review4Theme": "Crowds",
+  "review4SourceUrl": "https://exa.ai/library/place/rs4jvjhrng1",
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029",
+  "review1Claims": [
+    "I pity the people that don't know about this place.",
+    "This is THE spot to get discounted tickets to current Broadway and off Broadway shows, both evenings and matinees.",
+    "Sure, you wait in line outside, but to save 50% off box office prices, you can suffer a little.",
+    "Forget the people that are offering you discounts on the street."
+  ],
+  "review2Claims": [
+    "Really smooth experience buying tickets.",
+    "The website was easy to use, prices were clear, and checkout was quick with no issues.",
+    "Tickets arrived promptly and everything worked perfectly on the day."
+  ],
+  "review3Claims": [
+    "Great ticket price and great follow up show (the Great Gatsby).",
+    "Apox 1 hour in line, but great options were still available and we got amazing seats for 4 next to each other."
+  ],
+  "review4Claims": [
+    "TKTS is a great place to buy tickets to Broadway shows.",
+    "It's been in this location in Times Square for as long as I can remember.",
+    "On this visit, the line was long, but I was still able to get a ticket to the show that I wanted to see, and it was in a small theatre."
+  ],
+  "reviewStarsDropped": "mean 4.75 vs venue 4.00 >0.5",
+  "reviewsLabel": "Representative reviews written from 16 reviews",
+  "reviewsRepresentative": true,
+  "reviewThemes": {
+    "representative": true
+  },
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:22:18.181148+00:00"
+  }
+}

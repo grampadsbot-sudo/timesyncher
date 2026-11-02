@@ -1,0 +1,284 @@
+{
+  "thingId": 616,
+  "thingName": "Whole Foods Market Columbus Circle",
+  "type": "store",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.wholefoodsmarket.com/stores/columbuscircle/",
+      "title": "Columbus Circle | Grocery Store in New York 10019-1232",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "e=\"subheader\" aria-disabled=\"false\" aria-label=\"Recipes\" href=\"/recipes?ref_=US_TRF_ALL_UFG_WFM_OTHER_1002393\"> Recipes Columbus Circle Store Address 10 Columbus Circle Ste SC101, New York, NY 10019-1232 Get directions Phone (212) 823-9600 Store Hours Monday - Friday: 7 am - 10 pm Saturday: 7 am - 10 pm Sunday: 7 am - 10 pm Shop this store Shop Cateri … ur Amazon packages. Open during store hours. Pay With Your App Conveniently pay with the In-Store Code found in the Whole Foods Market or Amazon app. Hot & Salad Bar Customizable seasonal entrées, salads and sides with keto- and paleo-friendly options. Cakes and Custom Cakes Our bakery offers a variety of ready-made cakes and desserts, plus custom cake services … the cleanup), to eat in-store or take away. WFM Coffee Bar A full service coffee shop, brewing a variety of roasts and creating drinks made to order. Genji Sushi Authentic sushi freshly rolled using sustainably sourced seafood and high-quality ingredients. Get to know your store. Store Team Leader — Shondell Gordon Stop by to find expert te … custom orders to daily specials. Vegan and vegetarian options. Market Plate Homemade-style meals (without the cleanup), to eat in-store or take away. WFM Coffee Bar A full service coffee shop, brewing a variety of roasts and creating drinks made to order. Genji Sushi Authentic sushi freshly rolled using sustainab … night. Grind Your Own Nut Butters Make your own butters and spreads with freshly ground nuts. Mochi Bar Little balls of ice cream heaven. Self serve. Café Seating Lunch meetings, people watching, you time. Eateries and Bars Columbus Circle Pizza Pizza how you want it, from custom orders to daily specials. Vegan … 1002393\"> Recipes Columbus Circle Store Address 10 Columbus Circle Ste SC101, New York, NY 10019-1232 Get directions Phone (212) 823-9600 Store Hours Monday - Friday: 7 am - 10 pm Saturday: 7 am - 10 pm Sunday: 7 am - 10 pm Shop this store Shop Catering Store Amenities Grocery Delivery & Pickup Order what you need on Amazon.com",
+      "snippet": "e=\"subheader\" aria-disabled=\"false\" aria-label=\"Recipes\" href=\"/recipes?ref_=US_TRF_ALL_UFG_WFM_OTHER_1002393\"> Recipes Columbus Circle Store Address 10 Columbus Circle Ste SC101, New York, NY 10019-1232 Get directions Phone (212) 823-9600 Store Hours Monday - Friday: 7 am - 10 pm Saturday: 7 am - 1",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com/Restaurant_Review-g60763-d952670-Reviews-Whole_Foods_Market-New_York_City_New_York.html",
+      "title": "Tripadvisor: Whole Foods Market, 10 Columbus Cir (search snapshot)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "; direct Tripadvisor fetch 403); not a live fetch | Very spacious, a wide variety of products, all fresh and delicious. … be careful with the price … 4.4 Very Good … pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Very spacious, a wide variety of products, all fresh and delicious. … be careful with the price … 4.4 Very Good … ghlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Very spacious, a wide variety of products, all fresh and delicious. … be careful with the price … 4.4 Very Good",
+      "snippet": "; direct Tripadvisor fetch 403); not a live fetch | Very spacious, a wide variety of products, all fresh and delicious. … be careful with the price … 4.4 Very Good",
+      "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch"
+    },
+    {
+      "url": "https://www.yelp.com/biz/whole-foods-market-new-york-3",
+      "title": "Yelp: Whole Foods Market, 10 Columbus Cir (search snapshot)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "h) | 3.3 (913 reviews) … If you are planning on having a little picnic in Central Park, this is the place to go to get the best equipment for that. … conveniently located in the lower level of 10 Columbus Circle … search snapshot) | SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch) | 3.3 (913 reviews) … If you are planning on having a little picnic in Central Park, this is the place to go to get the best equipment for that. … conveniently located in the lower level of 10 Columbus Circle … t, 10 Columbus Cir (search snapshot) | SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch) | 3.3 (913 reviews) … If you are planning on having a little picnic in Central Park, this is the place to go to get the best equipment for that. … conveniently located i",
+      "snippet": "h) | 3.3 (913 reviews) … If you are planning on having a little picnic in Central Park, this is the place to go to get the best equipment for that. … conveniently located in the lower level of 10 Columbus Circle",
+      "fetchMethod": "SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch)"
+    },
+    {
+      "url": "https://exa.ai/library/place/vnffv79vcj0",
+      "title": "Whole Foods Market Columbus Circle reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:19:09-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_vnffv79vcj0.html",
+      "text": "• This Whole Foods store is spacious and carries a wide variety of essentials. • Aisles are well-organized, and the staff are kind and helpful. • I like the brands they carry, though a few protein bars I was looking for (Built and Barebells) weren’t available. • Picked up all my fresh produce for my stay and made toast with it—great seasoning, fresh fruits, and a perfectly cooked egg. • The sourdough bread was also really good. • Will definitely be back to try their pastries and prepared meals! We've been visiting this place at Columbus circle for more than 10 years now and is a life saver for fresh food people like us. It was a great experience, there was tons of photo ups and activities to keep the kiddos entertained. They raved about what they enjoyed most (the toy soldier and testing their strength) all the way home. This Whole Foods Market is always one of the busiest spots—especially the elevator, which is constantly packed with people coming and going. The in-store restaurant is equipped with restrooms, and the entire market is always buzzing with activity, so expect to wait in line no matter when you go. That said, one of the best things to do in the summer is grab some fresh sushi and a cold soda here, then head to Central Park for the perfect picnic."
+    }
+  ],
+  "rating": {
+    "primary": 4.4,
+    "primarySource": "tripadvisor",
+    "tripadvisor": 4.4,
+    "yelp": 3.3
+  },
+  "reviewCount": {
+    "yelp": 913
+  },
+  "priceHint": "$$$ grocery / prepared foods",
+  "hoursHint": "Daily 7:00am–10:00pm (official store page)",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "10 Columbus Circle",
+    "Hot & Salad Bar",
+    "conveniently located in the lower level of 10 Columbus Circle",
+    "10 Columbus Circle Ste SC101, New York, NY 10019-1232",
+    "Hot & Salad Bar Customizable seasonal entrées, salads and sides",
+    "Genji Sushi Authentic sushi freshly rolled",
+    "WFM Coffee Bar",
+    "Café Seating",
+    "If you are planning on having a little picnic in Central Park, this is the place to go to get the best equipment for that.",
+    "Monday - Friday: 7 am - 10 pm",
+    "4.4 Very Good",
+    "3.3 (913 reviews)",
+    "Very spacious, a wide variety of products, all fresh and delicious.",
+    "be careful with the price"
+  ],
+  "itineraryNoteCandidate": "Whole Foods Market Columbus Circle: an underground grocery at 10 Columbus Circle; build a picnic at the Hot & Salad Bar for Central Park.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text; sources include labelled SERP search snapshots (not live fetches) — see each source's fetchMethod"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 25,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Whole Foods Market Columbus Circle is the big grocery conveniently located in the lower level of 10 Columbus Circle, with a hot bar, sushi and café seating. It is a practical stop for a Central Park picnic, with a hot and salad bar, Genji sushi and a coffee bar under one roof.",
+      "claims": [
+        {
+          "text": "conveniently located in the lower level of 10 Columbus Circle",
+          "sourceUrl": "https://www.yelp.com/biz/whole-foods-market-new-york-3"
+        },
+        {
+          "text": "Genji Sushi Authentic sushi freshly rolled",
+          "sourceUrl": "https://www.wholefoodsmarket.com/stores/columbuscircle/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Whole Foods Market Columbus Circle is a full organic grocery at 10 Columbus Circle Ste SC101, New York, NY 10019-1232, a block from Central Park. Beyond groceries, the store page lists a Hot & Salad Bar Customizable seasonal entrées, salads and sides, Genji Sushi Authentic sushi freshly rolled, a WFM Coffee Bar and Café Seating, so it doubles as a quick lunch stop. A Yelp highlight (search snapshot) sums up the local use case: If you are planning on having a little picnic in Central Park, this is the place to go to get the best equipment for that. Hours are Monday - Friday: 7 am - 10 pm, with the same hours on weekends. Search snapshots show Tripadvisor at 4.4 Very Good and Yelp at 3.3 (913 reviews). Representative Tripadvisor praise (traveler reviews, search snapshot): “Very spacious, a wide variety of products, all fresh and delicious.”. Representative watch-outs: “be careful with the price”.",
+      "claims": [
+        {
+          "text": "10 Columbus Circle Ste SC101, New York, NY 10019-1232",
+          "sourceUrl": "https://www.wholefoodsmarket.com/stores/columbuscircle/"
+        },
+        {
+          "text": "Hot & Salad Bar Customizable seasonal entrées, salads and sides",
+          "sourceUrl": "https://www.wholefoodsmarket.com/stores/columbuscircle/"
+        },
+        {
+          "text": "Genji Sushi Authentic sushi freshly rolled",
+          "sourceUrl": "https://www.wholefoodsmarket.com/stores/columbuscircle/"
+        },
+        {
+          "text": "WFM Coffee Bar",
+          "sourceUrl": "https://www.wholefoodsmarket.com/stores/columbuscircle/"
+        },
+        {
+          "text": "Café Seating",
+          "sourceUrl": "https://www.wholefoodsmarket.com/stores/columbuscircle/"
+        },
+        {
+          "text": "If you are planning on having a little picnic in Central Park, this is the place to go to get the best equipment for that.",
+          "sourceUrl": "https://www.yelp.com/biz/whole-foods-market-new-york-3"
+        },
+        {
+          "text": "Monday - Friday: 7 am - 10 pm",
+          "sourceUrl": "https://www.wholefoodsmarket.com/stores/columbuscircle/"
+        },
+        {
+          "text": "4.4 Very Good",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d952670-Reviews-Whole_Foods_Market-New_York_City_New_York.html"
+        },
+        {
+          "text": "3.3 (913 reviews)",
+          "sourceUrl": "https://www.yelp.com/biz/whole-foods-market-new-york-3"
+        },
+        {
+          "text": "Very spacious, a wide variety of products, all fresh and delicious.",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d952670-Reviews-Whole_Foods_Market-New_York_City_New_York.html"
+        },
+        {
+          "text": "be careful with the price",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d952670-Reviews-Whole_Foods_Market-New_York_City_New_York.html"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Whole Foods Market Columbus Circle: an underground grocery at 10 Columbus Circle; build a picnic at the Hot & Salad Bar for Central Park.",
+      "claims": [
+        {
+          "text": "10 Columbus Circle",
+          "sourceUrl": "https://www.wholefoodsmarket.com/stores/columbuscircle/"
+        },
+        {
+          "text": "Hot & Salad Bar",
+          "sourceUrl": "https://www.wholefoodsmarket.com/stores/columbuscircle/"
+        }
+      ]
+    },
+    "reviewsUnstarred": [
+      {
+        "theme": "Rooms",
+        "value": "Tripadvisor reviewer on Whole Foods Market Columbus Circle: Very spacious, a wide variety of products, all fresh and delicious. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "Very spacious, a wide variety of products, all fresh and delicious.",
+            "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d952670-Reviews-Whole_Foods_Market-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d952670-Reviews-Whole_Foods_Market-New_York_City_New_York.html",
+        "rating": "4.4/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 34
+      },
+      {
+        "theme": "Value",
+        "value": "Tripadvisor reviewer on Whole Foods Market Columbus Circle: be careful with the price. Worth weighing alongside the overall 4.4/5 score before locking in the plan.",
+        "claims": [
+          {
+            "text": "be careful with the price",
+            "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d952670-Reviews-Whole_Foods_Market-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d952670-Reviews-Whole_Foods_Market-New_York_City_New_York.html",
+        "rating": "4.4/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 25
+      }
+    ]
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.tripadvisor.com/Restaurant_Review-g60763-d952670-Reviews-Whole_Foods_Market-New_York_City_New_York.html",
+    "site": "Tripadvisor",
+    "via": "SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch)",
+    "praise": [
+      "Very spacious, a wide variety of products, all fresh and delicious.",
+      "be careful with the price"
+    ],
+    "watchOuts": [],
+    "themes": [
+      "Rooms",
+      "Value"
+    ],
+    "complaints": []
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Whole Foods Market Columbus Circle: an underground grocery at 10 Columbus Circle; build a picnic at the Hot & Salad Bar for Central Park.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "Whole Foods Columbus Circle is spacious, with a wide range of essentials, well-organized aisles and helpful staff, though some brands can be missing.",
+  "review1Source": "Exa place listing",
+  "review1Rating": "5/5",
+  "review1Theme": "Service",
+  "review1SourceUrl": "https://exa.ai/library/place/vnffv79vcj0",
+  "review2": "Longtime shoppers rely on it for fresh food, calling it a lifesaver for prepared meals and groceries near Central Park.",
+  "review2Source": "Exa place listing",
+  "review2Rating": "5/5",
+  "review2Theme": "Food and drinks",
+  "review2SourceUrl": "https://exa.ai/library/place/vnffv79vcj0",
+  "review3": "Seasonal displays and photo spots, including activities like a toy soldier and strength tests, keep children entertained and make a family visit fun beyond the grocery shopping itself.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "5/5",
+  "review3Theme": "Atmosphere",
+  "review3SourceUrl": "https://exa.ai/library/place/vnffv79vcj0",
+  "review4": "It is one of the busiest stores in the area, with packed elevators and crowds, and prices can add up, so timing visits matters.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Crowds",
+  "review4SourceUrl": "https://exa.ai/library/place/vnffv79vcj0",
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029",
+  "review1Claims": [
+    "• This Whole Foods store is spacious and carries a wide variety of essentials.",
+    "• Aisles are well-organized, and the staff are kind and helpful.",
+    "• I like the brands they carry, though a few protein bars I was looking for (Built and Barebells) weren’t available.",
+    "• Picked up all my fresh produce for my stay and made toast with it—great seasoning, fresh fruits, and a perfectly cooked egg.",
+    "• The sourdough bread was also really good.",
+    "• Will definitely be back to try their pastries and prepared meals!"
+  ],
+  "review2Claims": [
+    "We've been visiting this place at Columbus circle for more than 10 years now and is a life saver for fresh food people like us."
+  ],
+  "review3Claims": [
+    "It was a great experience, there was tons of photo ups and activities to keep the kiddos entertained.",
+    "They raved about what they enjoyed most (the toy soldier and testing their strength) all the way home."
+  ],
+  "review4Claims": [
+    "This Whole Foods Market is always one of the busiest spots—especially the elevator, which is constantly packed with people coming and going.",
+    "The in-store restaurant is equipped with restrooms, and the entire market is always buzzing with activity, so expect to wait in line no matter when you go.",
+    "That said, one of the best things to do in the summer is grab some fresh sushi and a cold soda here, then head to Central Park for the perfect picnic."
+  ],
+  "reviewStarsDropped": "mean 5.00 vs venue 4.40 >0.5",
+  "reviewsLabel": "Representative reviews written from 17 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:22:18.183541+00:00"
+  }
+}

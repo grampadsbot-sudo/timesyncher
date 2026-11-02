@@ -1,0 +1,105 @@
+{
+  "thingId": 655,
+  "thingName": "Flight option: Southwest LAS-LGA 2026-06-23 06:50-18:55",
+  "type": "flight",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york",
+      "title": "Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "t: La Guardia Airport Distance: 2242 miles Questions we hear the most How many Southwest flights occur weekly from Las Vegas to New York (LaGuardia)? There are 152 weekly flights from Las Vegas to New York (LaGuardia) on Southwest Airlines. What day has the lowest fares from Las Vegas to New York (LaGuardia)? To find the lowest fares by day and time to fly Las Vegas to New York (LaGuard … t: La Guardia Airport Distance: 2242 miles Questions we hear the most How many Southwest flights occur weekly from Las Vegas to New York (LaGuardia)? There are 152 weekly flights from Las Vegas to New York (LaGuardia) on Southwest Airlines. What day has the lowest fares from Las Vegas to New York (LaGuardia)? To find the lowest fares by day and time to fly Las Vegas to New York (LaGuard … oducts and services may apply. Modifying this information may result in a different fare. To find the most updated fare, please visit Southwest.com . Fares listed are Basic, which are subject to additional terms and conditions . Flight Details Departing from: McCarran International Airport Arriving at: La Guardia Airport Distance: 2242 miles Questions we hear the most How m … 88 * Seen: 6 hrs ago Book now Book now Two happy travelers riding a scooter at sunset, promoting low-fare flights. Looking for more low-fare flights? Check out the Low Fare Calendar to find a fare that works for you. Just choose the month you want to depart and return, and we’ll show you the best fares available. Find low fares E",
+      "snippet": "t: La Guardia Airport Distance: 2242 miles Questions we hear the most How many Southwest flights occur weekly from Las Vegas to New York (LaGuardia)? There are 152 weekly flights from Las Vegas to New York (LaGuardia) on Southwest Airlines. What day has the lowest fares from Las Vegas to New York (L",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    }
+  ],
+  "rating": null,
+  "reviewCount": null,
+  "priceHint": "Inventory/list price $249",
+  "hoursHint": null,
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "Fares listed are Basic",
+    "There are 152 weekly flights from Las Vegas to New York (LaGuardia) on Southwest Airlines",
+    "There are 152 weekly flights from Las Vegas to New York (LaGuardia) on Southwest Airlines",
+    "Fares listed are Basic, which are subject to additional terms and conditions",
+    "Check out the Low Fare Calendar"
+  ],
+  "itineraryNoteCandidate": "Flight option: Southwest LAS-LGA 2026-06-23 06:50-18:55: a long travel day; read the fare rules, since Fares listed are Basic.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 249,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 4,
+  "baseFieldScore": 2,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Among 152 weekly Southwest flights on the route, Flight option: Southwest LAS-LGA 2026-06-23 06:50-18:55 has the longest day, landing at 18:55. It departs at 06:50 and only reaches LaGuardia at 18:55 Eastern, and the listed fares are Basic with extra conditions.",
+      "claims": [
+        {
+          "text": "There are 152 weekly flights from Las Vegas to New York (LaGuardia) on Southwest Airlines",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "Fares listed are Basic, which are subject to additional terms and conditions",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        }
+      ]
+    },
+    "description": {
+      "value": "With 152 weekly departures, Southwest has plenty of choice on this route: There are 152 weekly flights from Las Vegas to New York (LaGuardia) on Southwest Airlines. The June 23 pick, Flight option: Southwest LAS-LGA 2026-06-23 06:50-18:55, departs at 06:50 and only reaches LaGuardia at 18:55 Eastern, roughly nine hours later. Read the fare type carefully, since Fares listed are Basic, which are subject to additional terms and conditions. Cheaper days are easy to spot if you Check out the Low Fare Calendar.",
+      "claims": [
+        {
+          "text": "There are 152 weekly flights from Las Vegas to New York (LaGuardia) on Southwest Airlines",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "Fares listed are Basic, which are subject to additional terms and conditions",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "Check out the Low Fare Calendar",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Flight option: Southwest LAS-LGA 2026-06-23 06:50-18:55: a long travel day; read the fare rules, since Fares listed are Basic.",
+      "claims": [
+        {
+          "text": "Fares listed are Basic",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Flight option: Southwest LAS-LGA 2026-06-23 06:50-18:55: a long travel day; read the fare rules, since Fares listed are Basic."
+}

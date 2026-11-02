@@ -439,31 +439,7 @@ body {
 }
 
 .tsv-row-flight-main {
-  grid-template-columns: auto minmax(0, max-content) auto auto auto minmax(0, 1fr);
-}
-
-.tsv-row-flight-main .tsv-logo-chip {
-  grid-column: 1;
-}
-
-.tsv-row-flight-main .tsv-row-name {
-  grid-column: 2;
-}
-
-.tsv-row-flight-main .tsv-row-price {
-  grid-column: 3;
-}
-
-.tsv-row-flight-main .tsv-row-flight-time:nth-of-type(1) {
-  grid-column: 4;
-}
-
-.tsv-row-flight-main .tsv-row-flight-time:nth-of-type(2) {
-  grid-column: 5;
-}
-
-.tsv-row-flight-main .tsv-row-desc {
-  grid-column: 6;
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
 }
 
 .tsv-row-flight-time {
@@ -518,7 +494,7 @@ body {
   align-self: center;
 }
 
-.tsv-row-car-head .tsv-row-name {
+.tsv-row-car-head .tsv-row-title-stack {
   grid-row: 1;
   grid-column: 2;
   align-self: center;
@@ -537,29 +513,8 @@ body {
   white-space: nowrap;
 }
 
-.tsv-row-car-main > .tsv-row-price {
-  grid-column: 3;
-  grid-row: 1;
-}
-
 .tsv-row-car-desc {
-  grid-column: 4;
-  grid-row: 1;
-}
-
-@media (min-width: 481px) {
-  .tsv-row-car-main {
-    grid-template-columns: auto minmax(0, max-content) auto minmax(0, 1fr);
-    grid-template-rows: auto;
-  }
-
-  .tsv-row-car-head {
-    display: contents;
-  }
-
-  .tsv-row-car-head .tsv-row-car-sub {
-    display: none;
-  }
+  grid-column: 1 / -1;
 }
 
 .tsv-timeline-toggle {
@@ -572,13 +527,60 @@ body {
   flex-shrink: 0;
 }
 
+.tsv-row-title-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+  grid-column: 2;
+}
+
 .tsv-row-name {
   font-weight: 800;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  grid-column: 2;
+  width: 100%;
+}
+
+.tsv-row-rating {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.tsv-star-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  line-height: 1;
+}
+
+.tsv-star {
+  display: block;
+  flex-shrink: 0;
+}
+
+.tsv-star-full,
+.tsv-star-half-full {
+  color: #f2b01e;
+}
+
+.tsv-star-empty,
+.tsv-star-half-empty {
+  color: #475569;
+}
+
+.tsv-detail-rating {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.tsv-detail-rating-caption {
+  color: #cbd5e1;
 }
 
 .tsv-row-price {
@@ -608,44 +610,55 @@ body {
 
 @media (max-width: 480px) {
   .tsv-row-main {
-    grid-template-columns: auto minmax(0, max-content) auto minmax(0, 1fr);
-    grid-template-rows: auto;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
   }
   .tsv-row-price {
-    grid-column: 3;
-    justify-self: start;
+    grid-column: 2;
+    justify-self: end;
   }
-  .tsv-row-desc {
-    grid-column: 4;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  .tsv-row-main:not(.tsv-row-flight-main) .tsv-row-name {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    overflow-wrap: anywhere;
   }
-  .tsv-row-hotel-note {
-    grid-column: 2 / -1;
-    grid-row: 2;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  .tsv-row-desc,
+  .tsv-row-hotel-note,
+  .tsv-row-car-desc,
+  .tsv-row-car-sub {
+    grid-column: 1 / -1;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    overflow-wrap: anywhere;
   }
   .tsv-row-flight-main {
-    grid-template-columns: auto minmax(0, max-content) auto auto auto minmax(0, 1fr);
-    grid-template-rows: auto;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: auto auto auto auto;
   }
   .tsv-row-flight-time {
-    justify-self: start;
+    grid-column: 2;
+    justify-self: end;
   }
   .tsv-row-car-main {
-    grid-template-columns: auto minmax(0, max-content) auto minmax(0, 1fr);
-    grid-template-rows: auto;
+    grid-template-columns: minmax(0, 1fr) auto;
   }
-
-  .tsv-row-car-head {
-    display: contents;
+  .tsv-budget-line .tsv-budget-line-name {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    overflow-wrap: anywhere;
   }
-
-  .tsv-row-car-head .tsv-row-car-sub {
-    display: none;
+  [data-shared-live-tab='events'] .tsv-row-main .tsv-row-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  [data-shared-live-tab='events'] .tsv-row-price {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
   }
 }
 
@@ -663,6 +676,16 @@ body {
   max-width: 18px;
   max-height: 18px;
   object-fit: contain;
+}
+
+.tsv-logo-fallback {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  font-size: inherit;
+  line-height: 1;
+  transform: translateY(-2.5px);
 }
 
 .tsv-day-screen {
@@ -1115,11 +1138,37 @@ button.tsv-timeline-link {
 .tsv-detail-summary,
 .tsv-detail-field,
 .tsv-detail-happy-hour,
-.tsv-detail-note {
+.tsv-detail-note,
+.tsv-detail-info-box {
   margin: 0 0 10px;
   font-size: 14px;
   line-height: 1.45;
   overflow-wrap: anywhere;
+}
+
+.tsv-detail-info-box {
+  display: block;
+  padding: 10px 12px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 10px;
+}
+
+.tsv-detail-info-box .tsv-detail-field {
+  margin-bottom: 6px;
+}
+
+.tsv-detail-info-box .tsv-detail-field:last-child {
+  margin-bottom: 0;
+}
+
+.tsv-detail-phone-box {
+  color: inherit;
+  text-decoration: none;
+}
+
+.tsv-detail-phone-box:hover {
+  border-color: #64748b;
 }
 
 .tsv-detail-summary {
@@ -1149,7 +1198,6 @@ button.tsv-timeline-link {
 }
 
 .tsv-review-stars {
-  font-weight: 800;
   margin-bottom: 6px;
 }
 

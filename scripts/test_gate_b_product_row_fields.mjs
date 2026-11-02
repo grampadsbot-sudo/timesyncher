@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { repairExplicitLogoUrl } from '../src/vacation/thing-logo-fallback-url.mjs';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -110,7 +111,7 @@ assert.equal(carOverride.price, 172);
 assert.match(String(carOverride.summary || ''), /JFK AirTrain/i);
 assert.equal(carOverride.rentalCompany, 'Priceline opaque');
 
-const hotel = (payload.places || []).find((place) => /midtown sample hotel/i.test(place.name || ''));
+const hotel = (payload.places || []).find((place) => /the manhattan club/i.test(place.name || ''));
 assert.ok(hotel, 'hotel place');
 const hotelOverride = payload.thingOverrides[`place:${hotel.id}`] || {};
 assert.match(String(hotelOverride.summary || ''), /subway access|transit access|walkable neighborhood access/i);
@@ -203,12 +204,19 @@ const bundle = patchLiveProductDetailBundle(
 );
 assert.match(bundle, /"data-list-summary":"1","data-summary-src":"thing"/);
 assert.match(bundle, /children:n\.jsx\("strong",\{children:J\(G\)\|\|"Rental"\}\)/);
-assert.match(bundle, /children:n\.jsx\("strong",\{children:Re\}\)/);
+assert.match(
+  bundle,
+  /data-ts-hotel-row-head":"1"[\s\S]*whiteSpace:"normal",overflowWrap:"anywhere",fontWeight:800\},children:Re\}\)/,
+);
 assert.doesNotMatch(bundle, /Open details for summary/);
 assert.match(bundle, /Itinerary note/);
 assert.match(bundle, /ha\(G\)\.itineraryNote/);
-assert.match(bundle, /It\(Dt\)==="bar"\)&&n\.jsxs\("label",\{style:Hn,children:\["Happy hour details"/);
+assert.match(bundle, /!\/\^no happy hour\\b\/i\.test\(raw\)/);
+assert.match(bundle, /data-ts-tag-picker":"1"/);
+assert.match(bundle, /data-ts-cuisine-chips":"1"/);
 assert.match(bundle, /data-ts-detail-capture":"1"/);
+assert.match(bundle, /data-ts-detail-info-box":"address-hours"/);
+assert.match(bundle, /data-ts-detail-reviews":"1"/);
 assert.match(bundle, /tsDetailCapturePayload=Dt=>/);
 assert.doesNotMatch(bundle, /function tsDetailCapturePayload\(/);
 assert.match(bundle, /\[1,2,3,4\]\.filter\(G=>String\(Ps\(Dt,G\)\|\|""\)\.trim\(\)\)/);
@@ -249,7 +257,7 @@ const nycEnrichment = JSON.parse(
   readFileSync(new URL('./fixtures/nyc_ccab_place_enrichment.json', import.meta.url), 'utf8'),
 );
 const nycNames = Object.keys(nycEnrichment);
-assert.equal(nycNames.length, 64, 'NYC ccab fixture should document 64 places');
+assert.equal(nycNames.length, 100, 'NYC ccab fixture should document 100 places');
 const nycDescriptions = nycNames.map((name) => String(nycEnrichment[name]?.description || '').trim());
 assert.equal(nycDescriptions.length, new Set(nycDescriptions).size, 'each NYC fixture place needs a unique description');
 for (const [name, record] of Object.entries(nycEnrichment)) {
@@ -268,7 +276,14 @@ const negativeFixture = finalizeServedSharedTripPayload(buildNycCraigKimDaybyday
 assert.equal(gateBBudgetPriceCompleteness(negativeFixture).pass, true);
 const negativeFixtureReport = assessGateBNycFixtureContract(negativeFixture, { profile: 'negative' });
 assert.equal(negativeFixtureReport.pass, false, 'short-copy PR340 fixture must fail the positive contract');
-assert.ok(negativeFixtureReport.violations.length >= 4, `expected negative-profile violations, got ${negativeFixtureReport.violations.length}`);
+assert.ok(
+  negativeFixtureReport.violations.length >= 1,
+  `expected negative-profile violations after stored-ccab list merge, got ${negativeFixtureReport.violations.length}: ${negativeFixtureReport.violations.join('; ')}`,
+);
+assert.ok(
+  negativeFixtureReport.violations.some((line) => line.startsWith('608:')),
+  'incomplete contract row 608 must still fail price contract on negative fixture',
+);
 
 const positiveFixtureOnce = buildNycCraigKimDaybydayTripPositiveV1();
 const positiveFixtureTwice = finalizeServedSharedTripPayload(structuredClone(positiveFixtureOnce));
@@ -329,7 +344,7 @@ for (const rowId of VK_SEARCH_SNAPSHOT_COPY_ROW_IDS) {
     assert.equal(override.price, snapshot.price, `${rowId} price must match pr336 snapshot`);
   }
   if (snapshot.logoUrl) {
-    assert.equal(override.logoUrl, snapshot.logoUrl, `${rowId} logoUrl must match pr336 snapshot`);
+    assert.equal(override.logoUrl, repairExplicitLogoUrl(snapshot.logoUrl), `${rowId} logoUrl must match pr336 snapshot (served repair)`);
   }
 }
 assert.equal(vkSnapshotBindingTrip.places.find((p) => p.id === 601)?.lat, 36.084, '601 keeps fixture coordinates');

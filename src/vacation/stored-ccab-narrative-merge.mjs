@@ -5,11 +5,19 @@ import { resolveNycCcabKey } from '../../scripts/fixtures/nyc-vk-list-tab-rows.m
 
 import {
   enrichSearchPlace,
-  hotelStoredCcabListNarrative,
   isGenericDescription,
-  isHotelPlanningNote,
   isListRowPipelineDiagnostic,
 } from './trip-thing-enrichment.mjs';
+import {
+  hotelStoredCcabListNarrative,
+  isHotelPlanningNote,
+} from './hotel-list-row-narrative.mjs';
+
+export {
+  hotelListRowUnboundNarrative,
+  hotelStoredCcabListNarrative,
+  isHotelPlanningNote,
+} from './hotel-list-row-narrative.mjs';
 
 function mergeCcabEnrichmentLayers(base = {}, ...patches) {
   const merged = { ...base };
@@ -25,7 +33,7 @@ function text(value, max = 4000) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
 
-export function rawSearchPlaceFromCcab({
+function rawSearchPlaceFromCcab({
   title,
   category,
   ccabKey,
