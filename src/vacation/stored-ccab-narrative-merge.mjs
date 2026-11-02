@@ -160,9 +160,19 @@ export function createStoredCcabNarrativeMerge(
     return null;
   }
 
+  const GENERIC_ONE_WORD_PREFIX = new Set([
+    'cafe', 'café', 'bar', 'hotel', 'inn', 'shop', 'store', 'restaurant',
+    'diner', 'pub', 'grill', 'kitchen', 'bistro', 'market', 'museum',
+    'park', 'theater', 'theatre', 'club', 'lounge', 'spa', 'tour',
+  ]);
+
   function enrichmentHitByUniqueNamePrefix(name = '') {
     const base = text(resolveNycCcabKey(name) || name, 240);
     if (!base) return null;
+    // A generic one-word label is not an identity. "Cafe" must not attach
+    // the only stored key that starts with that word (Cafe Luxembourg) or its price.
+    // A proper nickname such as "Smoke" still matches "Smoke Jazz & Supper Club".
+    if (!base.includes(' ') && GENERIC_ONE_WORD_PREFIX.has(base.toLowerCase())) return null;
     const matches = Object.keys(enrichment).filter(
       (key) => key === base || key.startsWith(`${base} `),
     );
