@@ -56,3 +56,28 @@ assert.ok(
   && finalized.sourceRecord.summarySourceUrls.length >= 2,
   'summarySourceUrls must persist',
 );
+
+const placeholderHotel = enrichSearchPlace({
+  title: 'Hotel Edison',
+  category: 'hotel',
+  description: 'Documented NYC option (hotel)',
+  address: 'Times Square / Theater District, New York, NY',
+  lat: 40.759647,
+  lng: -73.9862944,
+  source: 'brave',
+  sourceRecord: {
+    description: 'Documented NYC option (hotel)',
+    price: 225,
+    googleRating: '4.1',
+    googleReviewCount: '12000',
+    websiteFlavour: 'Hotel Edison has anchored 47th Street since the 1930s, offering art-deco details and a classic Times Square address steps from Broadway theaters.',
+    reviewThemes: { praise: ['compact but clean rooms', 'lively lobby bar near Broadway'] },
+  },
+});
+assert.equal(
+  descriptionPassesDetailJudge(placeholderHotel.description, placeholderHotel.title),
+  true,
+  'search fill must compose a sourced hotel description when only placeholder copy is stored',
+);
+assert.ok(placeholderHotel.description.length >= 40);
+assert.ok(placeholderHotel.price != null && placeholderHotel.price > 0);
