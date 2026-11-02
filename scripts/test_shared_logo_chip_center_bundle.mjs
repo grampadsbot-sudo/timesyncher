@@ -3,7 +3,10 @@ import { execFileSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 
 import { renderServedTrekBundle } from '../src/vacation/trek-style2-bundle.mjs';
-import { patchThingLogoChipAlignment } from '../src/vacation/trek-live-product-patches.mjs';
+import {
+  LIST_LOGO_QR_GUARD_PATCH,
+  patchThingLogoChipAlignment,
+} from '../src/vacation/trek-live-product-patches.mjs';
 
 const UPSTREAM_COMMIT = '06e47169699ffdee8accf48e74b0a247a8793ebc^';
 const UPSTREAM_PATH = 'public/assets/upstream/index-BKun7ofk.js';
@@ -22,7 +25,7 @@ assert.match(rendered, /tsCenterThingLogoInk\(Rn\.currentTarget\)/);
 assert.doesNotMatch(rendered, /function tsCenterThingLogoFallback\(/);
 assert.match(rendered, /function tsCenterThingLogoFallbackEl\(/);
 assert.match(rendered, /tsv-logo-fallback/);
-assert.match(rendered, /_l=G=>\{if\(qr\(G\)\)return pDe;const Re=ha\(G\);return Re\.logoUrl\|\|Re\.iconUrl\|\|G\.logoUrl\|\|oi\(cc\(G\)\)\}/);
+assert.ok(rendered.includes(LIST_LOGO_QR_GUARD_PATCH));
 assert.match(rendered, /data-ts-category-tab-icon":"1"/);
 assert.match(rendered, /data-ts-map-marker-logo="1" style="width:30px;height:30px;max-width:30px;max-height:30px;overflow:hidden/);
 assert.doesNotMatch(rendered, /data-ts-map-marker-logo="1"[^`]{0,80}data-ts-logo-chip/);
@@ -31,7 +34,7 @@ assert.doesNotMatch(rendered, /translateY\(-0\.5px\)/);
 
 assert.throws(
   () => patchThingLogoChipAlignment('dc=({item:G,size:Re=28})=>{noop}'),
-  /missing upstream dc\(\) logo chain/,
+  /qr\/pDe guard patch/,
 );
 
 const committed = await readFile(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');

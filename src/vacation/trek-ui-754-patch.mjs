@@ -12,6 +12,8 @@ const VIEWER_SECTION_LOAD_NEEDLE =
 const VIEWER_SECTION_LOAD_PATCH =
   'I.useEffect(()=>{if(!(!r||Ce||He))try{window.localStorage.removeItem(`timesyncher-travel-overrides:${r}`)}catch{}},[r,Ce,He]),I.useEffect(()=>{if(!r||!te||Ce||He)return;try{const raw=window.localStorage.getItem(`timesyncher-section-visibility:${r}`);if(!raw)return;const sv=JSON.parse(raw);if(!sv||typeof sv!=="object")return;pe(G=>({...G,__sectionVisibility:{...G.__sectionVisibility||{},...sv}}))}catch{}},[r,te,Ce,He]),I.useEffect(()=>{if(!r||!te||!xe||!Ce)return;';
 
+import { patchUi691RestaurantTags } from './trek-ui-691-restaurant-tags-patch.mjs';
+
 export function patchUi754(source = '') {
   let js = String(source || '');
   if (js.includes(CI_RETURN_NEEDLE)) {
@@ -32,5 +34,5 @@ export function patchUi754(source = '') {
   } else if (!js.includes('getItem(`timesyncher-section-visibility:${r}`)')) {
     throw new Error('ui #754 shared trip-view localStorage hydrate patch did not apply');
   }
-  return js;
+  return patchUi691RestaurantTags(js);
 }

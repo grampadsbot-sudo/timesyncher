@@ -1,3 +1,4 @@
+import { MAP_MARKER_LOGO_PATCH, MAP_MARKER_LOGO_PATCH_V2_NOFB } from './trek-map-marker-logo-patch.mjs';
 import { XA_STATIC_MAP_TILE_NEEDLE, XA_STATIC_MAP_TILE_PATCH } from './trek-day-by-day-map-patches.mjs';
 import { patchSharedTripOeListRows } from './shared-trip-oe-list-row-patch.mjs';
 import { patchBudgetSavedTargetsOnly, patchTravelPriceEstimateBi } from './trek-budget-target-patches.mjs';
@@ -9,10 +10,12 @@ import { patchBudgetUpstreamMiscBucket } from './trek-budget-upstream-misc-patch
 import { patchThingLogoInkCenterInBundle } from './thing-logo-ink-center.mjs';
 import { patchTabIconVerticalCenter } from './trek-tab-icon-center-patches.mjs';
 import { forceSharedDayByDayUi } from './shared-day-by-day-ui.mjs';
+import { buildListLogoPatch } from './thing-logo-fallback-url.mjs';
+import { LIST_LOGO_NEEDLE, patchListLogoQrGuard } from './trek-list-logo-qr-patch.mjs';
 
-export const LIST_LOGO_PATCH = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"").trim();if(raw&&!/^data:image\\/svg\\+xml/i.test(raw)&&!(/\\/ts-thing-media\\//i.test(raw)&&!/\\/ts-thing-logos\\//i.test(raw)))return raw;const pg=String(Re.url||Re.website||Re.sourceUrl||G.url||G.website||"").trim();if(pg){try{const u=new URL(pg);if(u.protocol==="http:"||u.protocol==="https:")return u.origin+"/favicon.ico"}catch(e){}}return ""}';
+export { LIST_LOGO_QR_GUARD_PATCH, patchListLogoQrGuard } from './trek-list-logo-qr-patch.mjs';
 
-const LIST_LOGO_NEEDLE = '_l=G=>{if(qr(G))return pDe;const Re=ha(G);return Re.logoUrl||Re.iconUrl||G.logoUrl||oi(cc(G))}';
+export const LIST_LOGO_PATCH = buildListLogoPatch();
 const LIST_LOGO_PATCH_NEEDLE = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"");if(raw&&!/^data:image\\/svg\\+xml/i.test(raw))return raw;return ""}';
 const REST_ALL_TAGS_NEEDLE = 'q==="restaurants"&&n.jsxs("div",{style:{display:"flex",flexDirection:"column",gap:10},children:[ci.length>0&&n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2},children:[n.jsx("button",{onClick:()=>qt([])';
 const REST_ALL_TAGS_PATCH = 'q==="restaurants"&&n.jsxs("div",{style:{display:"flex",flexDirection:"column",gap:10},children:[n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2},children:[n.jsx("button",{onClick:()=>qt([])';
@@ -79,9 +82,6 @@ const MAP_MARKER_LOGO_NEEDLE = 'p=c?`<img src="${c}" alt="" style="width:30px;he
 const MAP_MARKER_LOGO_WRAP_V1 =
   'p=c?`<div data-ts-logo-chip="1" style="width:30px;height:30px;display:grid;place-items:center;box-sizing:border-box;padding:2px"><img src="${c}" alt="" style="max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;border:0;background:transparent;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.30));" /></div>`';
 
-const MAP_MARKER_LOGO_PATCH =
-  'p=c?`<div data-ts-map-marker-logo="1" style="width:30px;height:30px;max-width:30px;max-height:30px;overflow:hidden;display:grid;place-items:center;box-sizing:border-box"><img src="${c}" alt="" style="width:26px;height:26px;max-width:26px;max-height:26px;object-fit:contain;border:0;background:transparent;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.30));" /></div>`';
-
 const MAP_MARKER_LOGO_PATCH_V1_CHIP =
   'p=c?`<div data-ts-map-marker-logo="1" data-ts-logo-chip="1" style="width:30px;height:30px;max-width:30px;max-height:30px;overflow:hidden;display:grid;place-items:center;box-sizing:border-box"><img src="${c}" alt="" style="width:26px;height:26px;max-width:26px;max-height:26px;object-fit:contain;border:0;background:transparent;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.30));" /></div>`';
 
@@ -112,18 +112,19 @@ const TAB_EMOJI_INK_ANCHOR = 'function pze({places:e=[],dayPlaces:t=[]';
 const TAB_EMOJI_LABEL_STYLE_NEEDLE = 'if(label){label.style.lineHeight="1";label.style.display="inline-flex";label.style.alignItems="center";label.style.verticalAlign="middle"}';
 const TAB_EMOJI_LABEL_STYLE_PATCH = 'if(label){label.style.lineHeight="1";if(label.style.display!=="none"){label.style.display="inline-flex";label.style.alignItems="center";label.style.verticalAlign="middle"}}';
 const TIMELINE_LOGO_FALLBACK_FN = `function tsTimelineLogoFallback(img,emoji){if(!img)return;var st=img.getAttribute("data-ts-fb")||"0",h="";try{h=new URL(img.src).hostname.replace(/^www\\./i,"")}catch(x){}if(st==="0"&&h&&!/duckduckgo|gstatic|google/.test(h)){img.setAttribute("data-ts-fb","1");img.src="https://icons.duckduckgo.com/ip3/"+h+".ico";return}if(st!=="2"&&st!=="3"){var o=img.getAttribute("data-logo-src")||"";var oh="";try{oh=new URL(o).hostname.replace(/^www\\./i,"")}catch(x){}if(oh){img.setAttribute("data-ts-fb","2");img.src="https://www.google.com/s2/favicons?sz=64&domain="+encodeURIComponent(oh);return}}if(st==="3")return;img.setAttribute("data-ts-fb","3");img.setAttribute("data-ts-logo-fallback-emoji","1");img.src="data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><text x="16" y="25" font-size="24" text-anchor="middle">'+(emoji||"\uD83D\uDCCD")+"</text></svg>")}`;
-const TAB_EMOJI_INK_FN = `function tsPaintTabEmoji(node,emoji){if(!node||!emoji)return;var chip=node.closest("[data-ts-category-tab-icon]")||node.parentElement;if(chip){chip.style.setProperty("display","inline-flex","important");chip.style.setProperty("align-items","center","important");chip.style.setProperty("justify-content","center","important");chip.style.setProperty("line-height","1","important");chip.style.setProperty("position","relative","important");chip.style.setProperty("top","0px","important");chip.style.setProperty("align-self","center","important")}var btn=chip&&chip.closest("button");if(btn){btn.style.alignItems="center";btn.style.lineHeight="1";var label=[].slice.call(btn.children).filter(function(n){return n!==chip})[0];if(label){label.style.lineHeight="1";if(label.style.display!=="none"){label.style.display="inline-flex";label.style.alignItems="center";label.style.verticalAlign="middle"}}}var cssSize=16,dpr=2;node.width=cssSize*dpr;node.height=cssSize*dpr;var ctx=node.getContext("2d",{willReadFrequently:true});if(!ctx)return;var cs=getComputedStyle(chip||node);var font=cs.fontWeight+" "+cs.fontSize+" "+cs.fontFamily;function paint(shift){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,cssSize,cssSize);ctx.font=font;ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(emoji,cssSize/2,cssSize/2+shift)}paint(0);var img=ctx.getImageData(0,0,node.width,node.height);var sum=0,mass=0,y,x,a;for(y=0;y<node.height;y++){for(x=0;x<node.width;x++){a=img.data[(y*node.width+x)*4+3];if(a<20)continue;sum+=y*a;mass+=a}}if(mass)paint((node.height/2-sum/mass)/dpr)}`;
+const TAB_EMOJI_INK_FN = `function tsPaintTabEmoji(node,emoji){if(!node||!emoji)return;var chip=node.closest("[data-ts-category-tab-icon]")||node.parentElement;if(chip){chip.style.setProperty("display","inline-flex","important");chip.style.setProperty("align-items","center","important");chip.style.setProperty("justify-content","center","important");chip.style.setProperty("line-height","1","important");chip.style.setProperty("position","relative","important");chip.style.setProperty("top","0px","important");chip.style.setProperty("align-self","center","important")}var btn=chip&&chip.closest("button");if(btn){btn.style.alignItems="center";btn.style.lineHeight="1";var label=[].slice.call(btn.children).filter(function(n){return n!==chip})[0];if(label){label.style.lineHeight="1";if(label.style.display!=="none"){label.style.display="inline-flex";label.style.alignItems="center";label.style.verticalAlign="middle"}}}var cssSize=16,dpr=2;node.width=cssSize*dpr;node.height=cssSize*dpr;var ctx=node.getContext("2d",{willReadFrequently:true});if(!ctx)return;var cs=getComputedStyle(chip||node);var font=cs.fontWeight+" "+cs.fontSize+" "+cs.fontFamily;function paint(shift){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,cssSize,cssSize);ctx.font=font;ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(emoji,cssSize/2,cssSize/2+shift)}var bg=[255,255,255];for(var bn=chip||node;bn&&bn.nodeType===1;bn=bn.parentElement){var bv=bn.style.background||bn.style.backgroundColor,bc;if(bv){var pr=document.createElement("span");pr.style.cssText="position:absolute;width:0;height:0;transition:none";pr.style.background=bv;bn.appendChild(pr);bc=getComputedStyle(pr).backgroundColor;bn.removeChild(pr)}else bc=getComputedStyle(bn).backgroundColor;var bm=String(bc||"").match(/[\\d.]+/g);if(bm&&bm.length>=3&&(bm.length<4||+bm[3]>0)){bg=[+bm[0],+bm[1],+bm[2]];break}}paint(0);var img=ctx.getImageData(0,0,node.width,node.height),d=img.data;var sum=0,mass=0,y,x,k,w;for(y=0;y<node.height;y++){for(x=0;x<node.width;x++){k=(y*node.width+x)*4;w=(Math.abs(d[k]-bg[0])+Math.abs(d[k+1]-bg[1])+Math.abs(d[k+2]-bg[2]))*d[k+3]/255;if(w<18)continue;sum+=Math.floor(y/dpr)*w;mass+=w}}if(mass)paint(cssSize/2-sum/mass)}`;
 
 const SERVED_FOOTER_AI_ASSISTED_NEEDLE = ',n.jsx("span",{style:{fontSize:11,color:"#c4c9d1"},children:"· AI-assisted vacation itinerary planning"})';
 
 export function patchThingLogoChipAlignment(source = '') {
-  let js = String(source || '');
+  let js = patchListLogoQrGuard(String(source || ''));
   if (!js.includes(THING_LOGO_CHIP_DC_UPSTREAM_NEEDLE) && !js.includes('onError:Rn=>{Rn.currentTarget.style.display="none"}')) {
     throw new Error('trek bundle missing upstream dc() logo chain (emoji under img on error)');
   }
   if (js.includes(MAP_MARKER_LOGO_NEEDLE)) js = js.replace(MAP_MARKER_LOGO_NEEDLE, MAP_MARKER_LOGO_PATCH);
   else if (js.includes(MAP_MARKER_LOGO_WRAP_V1)) js = js.replaceAll(MAP_MARKER_LOGO_WRAP_V1, MAP_MARKER_LOGO_PATCH);
   else if (js.includes(MAP_MARKER_LOGO_PATCH_V1_CHIP)) js = js.replaceAll(MAP_MARKER_LOGO_PATCH_V1_CHIP, MAP_MARKER_LOGO_PATCH);
+  else if (js.includes(MAP_MARKER_LOGO_PATCH_V2_NOFB)) js = js.replaceAll(MAP_MARKER_LOGO_PATCH_V2_NOFB, MAP_MARKER_LOGO_PATCH);
   else if (!js.includes('data-ts-map-marker-logo="1"')) {
     throw new Error('trek bundle missing map marker logo needle for centering patch');
   }
@@ -367,8 +368,7 @@ const FLIGHT_EU_AIRLINE_PATCH = 'ua=((Zn=Re.match(/^(JetBlue|United|Delta|Americ
 
 export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   const served = options.served === true;
-  let js = String(patched || '');
-  js = patchTravelPriceEstimateBi(js, { served });
+  let js = patchTravelPriceEstimateBi(String(patched || ''), { served });
   if (js.includes(LIVE_TAB_NEEDLE)) js = js.replace(LIVE_TAB_NEEDLE, LIVE_TAB_PATCH);
   if (js.includes(QN_RENDER_NEEDLE)) js = js.replace(QN_RENDER_NEEDLE, QN_RENDER_PATCH);
   if (js.includes(GN_RENDER_NEEDLE)) js = js.replace(GN_RENDER_NEEDLE, GN_RENDER_PATCH);
@@ -489,8 +489,8 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   }
   js = patchSharedTripOeListRows(js);
   if (served) {
-    if (!js.includes('data-shared-live-tab":"hotels"') || !js.includes('data-shared-live-tab":"cars"')) {
-      throw new Error('served shared Hotels/Cars tab panels missing data-shared-live-tab anchor');
+    if (!['hotels', 'cars', 'events'].every((tab) => js.includes(`data-shared-live-tab":"${tab}"`))) {
+      throw new Error('served shared live tab panels missing data-shared-live-tab anchor');
     }
     if (!js.includes('"data-list-row":"1","data-has-logo":tsRowHasLogo')) {
       throw new Error('served shared Oe() rows missing Gate B list row markers');

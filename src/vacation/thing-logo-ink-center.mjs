@@ -95,11 +95,15 @@ export function verticalNudgePxForInkToScreenTarget({ inkCenterY, naturalWidth, 
   return targetScreenY - inkY;
 }
 
-export function listRowFirstNameLineCenterY(chip) {
-  if (!chip) return null;
-  const listRow = chip.closest('li[data-list-row], li[data-ts-list-row]');
-  const nameEl = listRow ? listRow.querySelector('[data-ts-list-row-name]') : null;
+export function listRowNameLeafCenterY(nameEl) {
   if (!nameEl) return null;
+  const leaf = [...nameEl.querySelectorAll('span,strong')].find(
+    (el) => !el.children.length && String(el.textContent || '').trim(),
+  );
+  if (leaf) {
+    const lr = leaf.getBoundingClientRect();
+    if (lr.height > 0) return lr.top + lr.height / 2;
+  }
   const doc = nameEl.ownerDocument;
   const tw = doc.createTreeWalker(nameEl, NodeFilter.SHOW_TEXT);
   let nd;
@@ -116,6 +120,13 @@ export function listRowFirstNameLineCenterY(chip) {
   const nr = nameEl.getBoundingClientRect();
   if (nr.height > 0) return nr.top + nr.height / 2;
   return null;
+}
+
+export function listRowFirstNameLineCenterY(chip) {
+  if (!chip) return null;
+  const listRow = chip.closest('li[data-list-row], li[data-ts-list-row]');
+  const nameEl = listRow ? listRow.querySelector('[data-ts-list-row-name]') : null;
+  return listRowNameLeafCenterY(nameEl);
 }
 
 function centerThingLogoInk(img) {
@@ -150,6 +161,20 @@ function centerThingLogoInk(img) {
       let inkCy = null;
       if (row && row.nh > 1 && row.inkCy != null) {
         inkCy = Math.abs(nh - row.nh) > 2 ? (row.inkCy / row.nh) * nh : row.inkCy;
+      }
+      if (inkCy == null) {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = nw;
+          canvas.height = nh;
+          const ctx = canvas.getContext('2d', { willReadFrequently: true });
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, nw, nh);
+            inkCy = tsInkBboxCenterYFromRgba(ctx.getImageData(0, 0, nw, nh).data, nw, nh);
+          }
+        } catch (_canvasErr) {
+          inkCy = null;
+        }
       }
       if (inkCy == null) {
         const fb = chip.querySelector('.tsv-logo-fallback');
@@ -223,6 +248,7 @@ function minifyFn(fn) {
 
 const BUNDLE_INK_RUNTIME_FNS = [
   inkBboxCenterYFromRgba,
+  listRowNameLeafCenterY,
   listRowFirstNameLineCenterY,
   centerThingLogoInk,
   centerThingLogoFallbackEl,
@@ -230,10 +256,12 @@ const BUNDLE_INK_RUNTIME_FNS = [
 
 const BUNDLE_INK_RENAMES = [
   ['function inkBboxCenterYFromRgba', 'function tsInkBboxCenterYFromRgba'],
+  ['function listRowNameLeafCenterY', 'function tsListRowNameLeafCenterY'],
   ['function listRowFirstNameLineCenterY', 'function tsListRowFirstNameLineCenterY'],
   ['function centerThingLogoInk', 'function tsCenterThingLogoInk'],
   ['function centerThingLogoFallbackEl', 'function tsCenterThingLogoFallbackEl'],
   ['inkBboxCenterYFromRgba(', 'tsInkBboxCenterYFromRgba('],
+  ['listRowNameLeafCenterY(', 'tsListRowNameLeafCenterY('],
   ['listRowFirstNameLineCenterY(', 'tsListRowFirstNameLineCenterY('],
   ['centerThingLogoFallbackEl(', 'tsCenterThingLogoFallbackEl('],
 ];

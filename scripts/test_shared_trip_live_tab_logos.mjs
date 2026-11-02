@@ -4,6 +4,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 
 import { renderServedTrekBundle } from '../src/vacation/trek-style2-bundle.mjs';
+import { LIST_LOGO_QR_GUARD_PATCH } from '../src/vacation/trek-list-logo-qr-patch.mjs';
 import { finalizeServedSharedTripPayload } from '../src/vacation/shared-trip-served-page.mjs';
 import { buildNycPr225SharedTrip } from './fixtures/nyc-pr225-shared-trip.mjs';
 
@@ -16,7 +17,7 @@ const bundle = renderServedTrekBundle(raw.toString('utf8'));
 const committed = readFileSync(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
 assert.equal(bundle, committed, 'committed served bundle must match renderServedTrekBundle');
 
-assert.match(bundle, /_l=G=>\{if\(qr\(G\)\)return pDe;const Re=ha\(G\);return Re\.logoUrl\|\|Re\.iconUrl\|\|G\.logoUrl\|\|oi\(cc\(G\)\)\}/);
+assert.ok(bundle.includes(LIST_LOGO_QR_GUARD_PATCH), 'served _l() must carry the #441 list-logo QR guard');
 assert.match(bundle, /dc=\(\{item:G,size:Re=28\}\)=>\{const zt=_l\(G\),ua=Pc\(G\)/);
 assert.match(bundle, /"data-ts-logo-chip":"1","aria-hidden":"true",style:\{width:Re,height:Re/);
 assert.match(bundle, /className:"tiny-logo",src:zt,alt:""/);

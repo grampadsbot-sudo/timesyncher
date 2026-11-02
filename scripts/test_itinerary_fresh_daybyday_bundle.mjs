@@ -40,7 +40,7 @@ assert.match(committed, /data-ts-list-row-rating":"1",style:\{display:"flex",fle
 assert.doesNotMatch(committed, /minHeight:28},children:Zn}\)\]\}\),Xr=fo/);
 assert.match(
   committed,
-  /Zi\(G\)\?n\.jsx\(je,\{item:G,title:ua\}\):n\.jsx\("strong",\{children:ua\}\)/,
+  /Zi\(G\)\?n\.jsx\(je,\{item:G,title:ua\}\):n\.jsx\("strong",\{style:\{lineHeight:1,display:"block"\},children:ua\}\)/,
 );
 assert.match(committed, /Rn=Bs\(rr\(G\)\)/);
 assert.match(committed, /data-row-video-qr":"1"/);

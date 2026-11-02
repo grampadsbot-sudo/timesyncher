@@ -9,11 +9,11 @@ export const NAMED_THING_LOGOS = {
   budget: 'https://www.budget.com/favicon.ico',
   national: 'https://www.nationalcar.com/favicon.ico',
   hyatt: 'https://icons.duckduckgo.com/ip3/hyatt.com.ico',
-  jetblue: 'https://www.jetblue.com/favicon.ico',
-  southwest: 'https://www.southwest.com/favicon.ico',
+  jetblue: 'https://icons.duckduckgo.com/ip3/jetblue.com.ico',
+  southwest: 'https://icons.duckduckgo.com/ip3/southwest.com.ico',
   united: 'https://icons.duckduckgo.com/ip3/united.com.ico',
   delta: 'https://icons.duckduckgo.com/ip3/delta.com.ico',
-  american: 'https://www.aa.com/favicon.ico',
+  american: 'https://icons.duckduckgo.com/ip3/aa.com.ico',
 };
 
 const BRAND_LOGO_RULES = [
@@ -189,7 +189,7 @@ export function sourceLogoUrl(thing = {}, override = {}) {
         const hyattIcon = usableLogo(NAMED_THING_LOGOS.hyatt);
         if (hyattIcon) return hyattIcon;
       }
-      return repairExplicitLogoUrl(logo, pageUrlForLogo(thing, override));
+      return logo;
     }
   }
   const thumb = thumbnailFromSource(source);
@@ -202,7 +202,7 @@ export function sourceLogoUrl(thing = {}, override = {}) {
     const hyattIcon = usableLogo(NAMED_THING_LOGOS.hyatt);
     if (hyattIcon) return hyattIcon;
   }
-  return repairExplicitLogoUrl(`${page.origin}/favicon.ico`, page.href);
+  return `${page.origin}/favicon.ico`;
 }
 
 export function logoLookupRuntimeSource() {
@@ -222,6 +222,12 @@ export function resolveThingLogoUrl(thing = {}, override = {}) {
   return sourceLogoUrl(thing, override);
 }
 
+export function resolveThingLogoDisplayUrl(thing = {}, override = {}) {
+  const logo = resolveThingLogoUrl(thing, override);
+  if (!logo) return '';
+  return repairExplicitLogoUrl(logo, pageUrlForLogo(thing, override));
+}
+
 export function applyCapturedLogos(shared = {}) {
   const next = {
     ...shared,
@@ -234,10 +240,13 @@ export function applyCapturedLogos(shared = {}) {
     const key = `place:${place.id}`;
     const override = { ...(next.thingOverrides[key] || {}) };
     const resolved = timelineIcon(place, override);
-    const logoUrl = captureThingLogo(place, override);
+    const pageUrl = pageUrlForLogo(place, override);
+    const logoUrl = repairExplicitLogoUrl(captureThingLogo(place, override), pageUrl);
     if (logoUrl) {
       override.logoUrl = logoUrl;
-    } else if (!text(override.logoUrl)) {
+    } else if (text(override.logoUrl)) {
+      override.logoUrl = repairExplicitLogoUrl(override.logoUrl, pageUrl);
+    } else {
       override.logoUrl = '';
       const reason = logoCaptureMissReason(place, override);
       if (reason) override.logoCaptureReason = reason;

@@ -10,7 +10,9 @@ import { dossierBuilderEvidenceHints, dossierForModel } from '../src/vacation/do
 import { hydrateScalarFieldsFromEvidence, normalizeDossierEvidence } from '../src/vacation/dossier-evidence-hydrate.mjs';
 import { dossierBuilderPrompt } from '../src/vacation/xai-grok-place-ratings.mjs';
 import {
+  applyDossierFields,
   prepareDossierFindings,
+  pageTextSupportsRating,
   ratingQuoteSupportsAggregate,
 } from '../src/vacation/thing-dossier-fields.mjs';
 import { computeDossierFieldCounts } from '../src/vacation/thing-evidence-dossier-field-counts.mjs';
@@ -43,6 +45,25 @@ assert.equal(
   ratingQuoteSupportsAggregate('Call 212-475-8592 for reservations; menu from 4.2 to 5747 dollars.', 4.2, 5747),
   false,
 );
+assert.equal(
+  ratingQuoteSupportsAggregate('4.2 ounces. Telephone 157479999. No customer rating published.', 4.2, 5747),
+  false,
+);
+assert.equal(
+  ratingQuoteSupportsAggregate('4.2 ounces. Telephone157479999. No customer ratings published.', 4.2, 5747),
+  false,
+);
+assert.equal(ratingQuoteSupportsAggregate('No scores are available.', 4.2, 5747), false);
+assert.equal(
+  ratingQuoteSupportsAggregate('Rated 4.2 out of 5 from 5,747 reviews', 4.2, 5747),
+  true,
+);
+assert.equal(ratingQuoteSupportsAggregate('4.2 stars (5747 ratings)', 4.2, 5747), true);
+assert.equal(ratingQuoteSupportsAggregate('Rated 4.2 from 5,747.', 4.2, 5747), true);
+
+assert.equal(pageTextSupportsRating('rating 4.0 from 120 reviews', 4, 120), true);
+assert.equal(pageTextSupportsRating('rating 4.2 from 120 reviews', 4, 120), false);
+assert.equal(pageTextSupportsRating('rating 4.0 from 120 reviews', 4.2, 120), false);
 
 const hoursDossier = {
   thing: 'Blue Note Jazz Club',
@@ -104,6 +125,40 @@ const built = prepareDossierFindings(
 );
 assert.equal(built.rating, 4.2);
 assert.equal(built.reviewsAvailable, 5747);
+
+const blueNoteExcerpt = 'Blue Note Reviews Good rating 4.2|5747 reviews Image 3: Trustindex Verified Company Blue Note rating: 4.2 out of 5 from 5,747 reviews Image 5: Trustindex4.2| 5747 total Rating breakdown';
+const blueNoteQuotes = [
+  'Blue Note is rated 4.2 out of 5 based on 5,747 reviews.',
+  'Trustindex4.2| 5747 total',
+  'Blue Note rating: 4.2| 5747 total',
+];
+for (const quote of blueNoteQuotes) {
+  const saved = page('https://www.trustindex.io/reviews/www.bluenotejazz.com-nyc', blueNoteExcerpt);
+  const round = prepareDossierFindings(
+    { thing: 'Blue Note', pages: [saved] },
+    { rating: { average: 4.2, count: 5747, scaleMax: 5, quote, url: saved.url } },
+  );
+  assert.equal(round.rating, 4.2, quote);
+  assert.equal(round.reviewsAvailable, 5747, quote);
+  assert.equal(JSON.stringify(round).includes('4. 2'), false, quote);
+  const published = applyDossierFields({ category: 'attraction', title: 'Blue Note' }, round);
+  assert.equal(published.thirdPartyRating, '4.2', quote);
+  assert.equal(published.thirdPartyReviewCount, '5747', quote);
+  assert.equal(JSON.stringify(published).includes('4. 2'), false, quote);
+}
+
+function ratingFrom(textBody, rating) {
+  const saved = page('https://www.trustindex.io/reviews/www.bluenotejazz.com-nyc', textBody);
+  return prepareDossierFindings(
+    { thing: 'Blue Note', pages: [saved] },
+    { rating: { average: 4.2, count: 5747, scaleMax: 5, quote: 'Blue Note rating: 4.2| 5747 total', url: saved.url, ...rating } },
+  ).rating;
+}
+assert.equal(ratingFrom(blueNoteExcerpt.replaceAll('4.2', 'good')), undefined);
+assert.equal(ratingFrom(blueNoteExcerpt.replaceAll('5747', 'many').replaceAll('5,747', 'many')), undefined);
+assert.equal(ratingFrom('Served 4.2 ounces. Call 212-555-0199.'), undefined);
+assert.equal(ratingFrom(blueNoteExcerpt, { url: 'https://example.invalid/not-saved' }), undefined);
+assert.equal(ratingFrom(blueNoteExcerpt, { average: 4.3 }), undefined);
 
 const normalized = normalizeDossierEvidence(hydrated, place);
 assert.equal(normalized.fieldCounts.coordinates.status, 'ok');

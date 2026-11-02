@@ -15,6 +15,7 @@ import {
   REST_TYPE_CHIPS_PATCH,
   stripHotelBrandNameGuessing,
 } from './trek-live-product-patches.mjs';
+import { LIST_LOGO_NEEDLE, LIST_LOGO_QR_GUARD_PATCH, patchListLogoQrGuard } from './trek-list-logo-qr-patch.mjs';
 import { patchThingDetailCapture, patchThingDetailPanel } from './trek-thing-detail-patches.mjs';
 import { patchStarRatings } from './trek-star-rating-patch.mjs';
 import { patchSharedTripListWrapping } from './shared-trip-oe-list-row-patch.mjs';
@@ -242,8 +243,6 @@ const CO_PATCH = 'Co=G=>ha(G).longDetails||(tsPf.find(row=>row.match.test(String
 const MN_CATEGORY_NEEDLE = 'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("car")||Re.includes("rental")?"car":Re.includes("hotel")?"hotel":';
 const MN_CATEGORY_PATCH = 'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("restaurant")?"restaurant":Re.includes("hotel")||Re.includes("lodging")||Re.includes("accommodation")||Re.includes("resort")?"hotel":Re.includes("car")||Re.includes("rental")?"car":';
 
-const LIST_LOGO_NEEDLE = '_l=G=>{if(qr(G))return pDe;const Re=ha(G);return Re.logoUrl||Re.iconUrl||G.logoUrl||oi(cc(G))}';
-
 const IT_CATEGORY_NEEDLE = 'It=G=>Mn(ha(G).category??Fn(G))';
 const IT_CATEGORY_PATCH = 'It=G=>Mn(ha(G).category??(typeof G.category==="string"?G.category:G.category&&G.category.name)??G.category_name??Fn(G))';
 
@@ -265,6 +264,7 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
     throw new Error('Refusing to serve TREK bundle: Style two still not the zu() site we patch to Ae().');
   }
   let patched = js.includes(ZU_STYLE2) ? js.replace(ZU_STYLE2, AE_STYLE2) : js;
+  if (patched.includes(LIST_LOGO_NEEDLE)) patched = patchListLogoQrGuard(patched);
   if (patched.includes(AE_LAYOUT_NEEDLE)) {
     patched = patched.replace(AE_LAYOUT_NEEDLE, AE_LAYOUT_PATCH);
   }
@@ -712,8 +712,8 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes(REST_TYPE_CHIPS_NEEDLE) || js.includes(REST_TYPE_CHIPS_PATCH)) {
     throw new Error('Rest type chips must use TREK Os.map list, not fixture-derived types.');
   }
-  if (!js.includes(LIST_LOGO_NEEDLE) || js.includes(LIST_LOGO_PATCH)) {
-    throw new Error('List logos must use TREK _l() chain (logoUrl, favicon oi(cc)), not LIST_LOGO_PATCH.');
+  if (!js.includes(LIST_LOGO_QR_GUARD_PATCH) || js.includes(LIST_LOGO_PATCH) || js.includes(LIST_LOGO_NEEDLE)) {
+    throw new Error('List logos must prefer stored logoUrl before family_event pDe placeholder.');
   }
   if (!js.includes('data-logo-src=') || !js.includes('data:image\\/svg\\+xml')) {
     throw new Error('Print end-list rows must mark data-logo-src and skip data-URI letter tiles.');
