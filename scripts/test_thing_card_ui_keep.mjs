@@ -31,7 +31,7 @@ assert.match(rendered, /data-ts-thing-review="1"/);
 
 assert.match(
   rendered,
-  /Mo=Array\.from\(new Map\(Qa\.flatMap\(di=>Ci\(di\)\)\.filter\(di=>\(di==null\?void 0:di\.item\)&&!\[/,
+  /Mo=Array\.from\(new Map\(\(Gt\|\|\[\]\)\.filter\(Xi=>Xi&&Ds\(Xi\)\)/,
 );
 assert.doesNotMatch(rendered, /\]\.concat\(rs,Po,bc,Oc,Fs,Cc\)/);
 
