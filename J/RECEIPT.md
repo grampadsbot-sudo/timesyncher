@@ -1,23 +1,23 @@
-# vkfill-550 receipt — flight logo/name row fix (HOST LIVE ROW CHECK reject 2026-11-02 ~21:47 UTC)
+# vkfill-550 receipt — flight QoRest flex / row fill (HOST PUBLICATION ONLY)
 
 ## Outcome
 
-**source-ready** on start HEAD **aaffa24023bb4625e77d731f5f81923fec04f401** (verified before edit).
+**source-ready** on start HEAD **bc776027f59da07f24f6cf8beb530941bd7033ea** (verified before edit).
 
-## Root cause (Gate B structure, flights-* screens)
+## Root cause (Gate B structure round 18, `bc776027`)
 
-Host live row check failed **logo not centred with name** on Southwest flight rows: **missing visible name line (fail closed)** on `flights-390`, `flights-390-top`, `flights-1280`, `flights-1280-top` (capture `first_text` / `row-name-frame.mjs`).
+`restore_check.row_layout` on `flights-1280*.png`: Southwest rows **description does not fill the row** (e.g. 199 of 483 px). Gate B verdict `gateb-verdicts.jsonl` 2026-11-02T14:25:56-08:00, sha `bc77602`, gap_close FAIL on #547/#796.
 
-Full flight row `Qo` (airline + price + times + route) lived inside `data-ts-list-row-name` within the 55% logo–name pair. Flex `width:0` on the airline cell collapsed the `<strong>` leaf to zero visible width, so capture recorded no measurable name line for logo vertical alignment.
+After the QoRest split (airline-only `strong` in the logo–name pair), `QoRest` used `flex:"1 1 0"` beside the inline `data-ts-list-desc` span. QoRest grew and the description box stayed at intrinsic width (~199 px) instead of filling ≥60% of available row space (aaffa24 PASS used ~312/573 px on the same fixture row).
 
 ## Change (host publish)
 
 | Path | Why |
 | --- | --- |
-| `src/vacation/shared-trip-oe-list-row-patch.mjs` | Flights: `Zn` is airline-only `<strong>` in the name span; `QoRest` renders price/times/route beside the logo pair; thing-header inline wrap inserts `bn(G)?n.jsx(QoRest,{item:G})`; restore default `ua` strong wrap for #471. |
-| `public/assets/index-BKun7ofk.js` | Rebaked via `node scripts/rebake_served_trek_bundle.mjs` (sha256 **89ba830a851920e09d9e0fa5c630174b7c1ff6038a6174264a6a6c6d4019cc70**). |
+| `src/vacation/shared-trip-oe-list-row-patch.mjs` | `QoRest` outer wrapper: `flex:"0 1 auto"` + `maxWidth:"55%"` (upgrade needle from old `1 1 0` / `100%`) so price/times/route shrink-wrap; inline description keeps `flex:"1 1 0"` + `minWidth:"35%"` and absorbs remaining row width. |
+| `public/assets/index-BKun7ofk.js` | Rebaked via `node scripts/rebake_served_trek_bundle.mjs` (sha256 **257a0bcc2c5a28c2fc4218d1078ced3ff08d85ae45832754d97f41441e83645c**). |
 
-Untouched: row layout widths, `#471` logo–name pair markers, `data-ts-list-desc`, car remove controls, tests/baselines/Gate B config.
+Untouched: row layout width constants on non-flight categories, `#471` logo–name pair, `data-ts-list-desc`, car Remove controls, tests/baselines/Gate B config.
 
 ## Checks (local, exit 0)
 
@@ -26,15 +26,16 @@ Untouched: row layout widths, `#471` logo–name pair markers, `data-ts-list-des
 | `node scripts/check-no-comments.mjs` | |
 | `node scripts/test_offline_manifest.mjs` | |
 | `BASE=vk node scripts/check-code-ratchet.mjs` | 0 fail |
-| `cd apps/vacation-client && npm test` | |
+| `node scripts/test_shared_tab_list_summary.mjs` | |
 | `node scripts/test_gate_b_row_name_frame.mjs` | |
 | `node scripts/test_ui_471_apple_row_name_frame.mjs` | |
+| `cd apps/vacation-client && npm test` | |
 | `node scripts/rebake_served_trek_bundle.mjs` | |
-
-Note: `npm test` refreshed many `evidence/vacation-client-p2-*/*.png` locally; **not** part of the intended host publish set (only patch + rebaked bundle).
 
 ## Uncommitted (host only)
 
 - `src/vacation/shared-trip-oe-list-row-patch.mjs`
 - `public/assets/index-BKun7ofk.js`
 - `J/RECEIPT.md` (this file)
+
+Host: commit, push once, re-run Gate B structure on new head.

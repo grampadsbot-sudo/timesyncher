@@ -76,8 +76,12 @@ const FLIGHT_QO_ROUTE_CELL_WIDTH_NEEDLE =
   'flex:"1 1 0",minWidth:0,width:"100%",maxWidth:"100%",display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:parts[3]||""})]})}';
 const FLIGHT_QO_ROUTE_CELL_WIDTH_PATCH =
   'flex:"1 1 0",minWidth:0,width:0,maxWidth:"100%",display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:parts[3]||""})]})}';
+const FLIGHT_QO_REST_FLEX_OLD =
+  'QoRest=({item:G})=>{const parts=eu(G);return n.jsxs("span",{style:{display:"flex",alignItems:"center",gap:6,minWidth:0,flex:"1 1 0",maxWidth:"100%",overflow:"hidden"}';
+const FLIGHT_QO_REST_FLEX_NEW =
+  'QoRest=({item:G})=>{const parts=eu(G);return n.jsxs("span",{style:{display:"flex",alignItems:"center",gap:6,minWidth:0,flex:"0 1 auto",maxWidth:"55%",overflow:"hidden"}';
 const FLIGHT_QO_REST_INLINE =
-  'QoRest=({item:G})=>{const parts=eu(G);return n.jsxs("span",{style:{display:"flex",alignItems:"center",gap:6,minWidth:0,flex:"1 1 0",maxWidth:"100%",overflow:"hidden"},children:[n.jsx("span",{style:{whiteSpace:"nowrap",flexShrink:0,color:"#0f766e",fontWeight:900},children:parts[1]||""}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,flex:"0 1 auto"},children:parts[2]||""}),n.jsx("span",{style:{flex:"1 1 0",minWidth:0,width:0,maxWidth:"100%",display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:parts[3]||""})]})},';
+  `${FLIGHT_QO_REST_FLEX_NEW},children:[n.jsx("span",{style:{whiteSpace:"nowrap",flexShrink:0,color:"#0f766e",fontWeight:900},children:parts[1]||""}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,flex:"0 1 auto"},children:parts[2]||""}),n.jsx("span",{style:{flex:"1 1 0",minWidth:0,width:0,maxWidth:"100%",display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:parts[3]||""})]})},`;
 const OE_ROW_ZN_FLIGHT_AIRLINE_NEEDLE = 'Zn=bn(G)?n.jsx(Qo,{item:G}):';
 const OE_ROW_ZN_FLIGHT_AIRLINE_PATCH =
   'Zn=bn(G)?n.jsx("strong",{style:{lineHeight:1,display:"block",fontWeight:800,minWidth:0,maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:(eu(G)[0]||"")}):';
@@ -164,6 +168,9 @@ function injectFlightQoRest(js = '') {
 
 function patchFlightQoAirlineNameFrame(js = '') {
   js = injectFlightQoRest(js);
+  if (js.includes(FLIGHT_QO_REST_FLEX_OLD)) {
+    js = js.replace(FLIGHT_QO_REST_FLEX_OLD, FLIGHT_QO_REST_FLEX_NEW);
+  }
   if (js.includes(FLIGHT_QO_AIRLINE_ELLIPSIS_UPGRADE_NEEDLE)) {
     js = js.replace(FLIGHT_QO_AIRLINE_ELLIPSIS_UPGRADE_NEEDLE, FLIGHT_QO_AIRLINE_ELLIPSIS_UPGRADE_PATCH);
   }
