@@ -16,3 +16,4 @@ scripts/test_pr225_area_chips_layout_gate.mjs browser: PR225 Hotels/Restaurants 
 scripts/test_shared_trip_no_horizontal_overflow.mjs browser: shared trip scrollWidth at 390 and 1280 needs puppeteer-core and Chrome, which the offline job does not install
 scripts/test_pr225_cars_tab_overflow.mjs browser: PR225 NYC Cars tab overflow harness needs puppeteer-core and Chrome, which the offline job does not install
 scripts/test_pr225_served_tabs_overflow.mjs browser: PR225 NYC all-tab scrollWidth harness needs puppeteer-core and Chrome, which the offline job does not install
+scripts/test_vkprloop_lane_chrome_path.mjs dispatcher: reads Ubuntu ~/tsv-dispatch lanes/vk-lane-run.sh and formal/VKPrLoop.tla, which the product offline job does not have
