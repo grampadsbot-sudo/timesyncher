@@ -6,7 +6,7 @@ Gate B / Craig Hotels tab requirement: **every hotel list row** shows sourced, n
 
 ## Changes (this round on `origin/vk`)
 
-- **`trip-thing-enrichment.mjs`**: after vk detail-judge search fill, hotels get `hotelStoredCcabListNarrative` so trip-fill persists substantive `description`/`longDetails` from ccab enrichment (not raw planning-note templates).
+- **`trip-thing-enrichment.mjs`** + **`hotel-list-row-narrative.mjs`**: after vk detail-judge search fill, hotels get stored-ccab list narratives so trip-fill persists substantive `description`/`longDetails` (not raw planning-note templates).
 - **`stored-ccab-narrative-merge.mjs`**: ccab key lookup uses `resolveNycCcabKey` (straight vs curly apostrophe aliases, e.g. Romer Hell's Kitchen).
 - **`pr336-vk-search-trip-sources.mjs`**: re-export stored-ccab merge helpers + `bindPr336GateBCanonicalIdentity` on vk's `buildNycCraigKimDaybydayFixtureRows` / row-description overrides.
 - **`listTabModel.mjs`**: incomplete hotel row **608** uses `hotelListRowUnboundNarrative` when composed copy is under 30 words.
