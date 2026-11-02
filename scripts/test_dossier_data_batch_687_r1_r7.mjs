@@ -12,6 +12,7 @@ import { dossierBuilderPrompt } from '../src/vacation/xai-grok-place-ratings.mjs
 import {
   applyDossierFields,
   prepareDossierFindings,
+  pageTextSupportsRating,
   ratingQuoteSupportsAggregate,
 } from '../src/vacation/thing-dossier-fields.mjs';
 import { computeDossierFieldCounts } from '../src/vacation/thing-evidence-dossier-field-counts.mjs';
@@ -59,6 +60,10 @@ assert.equal(
 );
 assert.equal(ratingQuoteSupportsAggregate('4.2 stars (5747 ratings)', 4.2, 5747), true);
 assert.equal(ratingQuoteSupportsAggregate('Rated 4.2 from 5,747.', 4.2, 5747), true);
+
+assert.equal(pageTextSupportsRating('rating 4.0 from 120 reviews', 4, 120), true);
+assert.equal(pageTextSupportsRating('rating 4.2 from 120 reviews', 4, 120), false);
+assert.equal(pageTextSupportsRating('rating 4.0 from 120 reviews', 4.2, 120), false);
 
 const hoursDossier = {
   thing: 'Blue Note Jazz Club',

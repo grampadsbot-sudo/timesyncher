@@ -156,8 +156,9 @@ export function pageTextSupportsRating(pageText = '', average, count) {
   const cnt = Number(count);
   if (!(avg > 0) || !(Number.isInteger(cnt) && cnt > 0)) return false;
   const avgEsc = String(avg).replace('.', '\\.');
+  const avgPart = Number.isInteger(avg) ? `${avgEsc}(?:\\.0+)?` : avgEsc;
   const digits = String(cnt);
-  const avgRe = new RegExp(`(?:^|[^\\d.])(${avgEsc})(?![\\d.])`, 'g');
+  const avgRe = new RegExp(`(?:^|[^\\d.])(${avgPart})(?![\\d.])`, 'g');
   let match;
   while ((match = avgRe.exec(raw))) {
     const at = match.index + match[0].length - match[1].length;
