@@ -213,6 +213,47 @@ export function captureThingLogo(thing = {}, override = {}) {
   return sourceLogoUrl(thing, override);
 }
 
+export function logoUrlFromSearchPlace(place = {}, sourceRecord = {}) {
+  const page = text(
+    place.url || sourceRecord.url || sourceRecord.website,
+  );
+  const explicit = text(
+    sourceRecord.logoUrl
+    || sourceRecord.logo
+    || sourceRecord.favicon
+    || sourceRecord.faviconUrl
+    || place.logoUrl
+    || place.iconUrl,
+  );
+  if (explicit) return repairExplicitLogoUrl(explicit, page);
+  const thumb = sourceRecord?.thumbnail;
+  if (thumb && typeof thumb === 'object') {
+    const src = text(thumb.original || thumb.src);
+    if (src) return src;
+  }
+  const category = text(place.category || place.category_name, 80).toLowerCase();
+  if (category === 'flight') {
+    const airlineLogo = brandLogoFromName(place.title || place.name);
+    if (airlineLogo) return airlineLogo;
+  }
+  const named = captureThingLogo(
+    { ...place, sourceRecord, title: place.title, website: place.url || sourceRecord.url },
+    { category, sourceRecord },
+  );
+  if (named) return named;
+  if (page) {
+    try {
+      const parsed = new URL(page);
+      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+        return repairExplicitLogoUrl(`${parsed.origin}/favicon.ico`, page);
+      }
+    } catch {
+      return '';
+    }
+  }
+  return '';
+}
+
 export function resolveThingLogoUrl(thing = {}, override = {}) {
   const direct = thingLogoUrl(thing, override);
   if (direct) {

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { resolveThingLogoDisplayUrl, resolveThingLogoUrl } from '../src/vacation/thing-logo-capture.mjs';
+import { logoUrlFromSearchPlace } from '../src/vacation/trip-thing-enrichment.mjs';
 import {
   buildDeclaredLogoRepairFn,
   declaredIconFetchLooksBroken,
@@ -37,5 +38,20 @@ assert.match(
 const repairFn = buildDeclaredLogoRepairFn();
 assert.match(repairFn, /function tsRepairDeclaredLogo/);
 assert.match(repairFn, /aa\.com\.ico/);
+
+assert.match(
+  logoUrlFromSearchPlace(
+    { title: 'Jazz at Lincoln Center', url: 'https://jazz.org/' },
+    { logoUrl: 'https://jazz.org/favicon.ico' },
+  ),
+  /duckduckgo\.com\/ip3\/jazz\.org\.ico/,
+);
+assert.match(
+  logoUrlFromSearchPlace(
+    { title: 'Hotel Belleclaire', url: 'https://www.hotelbelleclaire.com/' },
+    { logoUrl: 'https://www.hotelbelleclaire.com/favicon.ico' },
+  ),
+  /duckduckgo\.com\/ip3\/hotelbelleclaire\.com\.ico/,
+);
 
 console.log('tsv470 declared-icon logo repair tests passed');

@@ -1,39 +1,40 @@
-# PR #773 / issue #471 — lane vkfill-773 receipt
+# Lane receipt — issue #470 (declared-icon logo 403/429 → served repair)
 
-**Start HEAD:** `4ec3250b7f07d494568ce8c255715eb530cd875c` (unchanged; host publishes)
+**Start HEAD:** `ccaa511f70381a8be34946651b04bb45c96ae239` (HOST PUBLICATION ONLY — uncommitted PATCH for outer host)
 
-## Root cause (Gate B on 4ec3250b)
+## Root cause
 
-`patchSharedTripListWrapping` set `whiteSpace:"normal"` on every `data-ts-list-row-name` span, including rows inside `data-ts-logo-name-pair`. Multi-line names vertically center the 28px chip against the full text block, so logo ink (nudged to the first name line) fails Gate B **logo not centred with name** on flights/hotels/restaurants/events/stores/cars captures. Price lines in the brief are data-only (ignored per Craig 10/20).
+Declared `favicon.ico` / site icon URLs on flight, hotel, and event rows often return **403**, **429**, or empty bodies in the browser. TREK list chips then showed blank or generic logos on Gate B live tabs even when `thingOverrides.logoUrl` was populated.
 
-## Fix
+## Changes (this lane round, on top of ccaa511 logo repair maps)
 
-Keep #471 Apple leaf alignment (`lineHeight:1`, `strong` block, ink → `tsListRowNameLeafCenterY`) but restore **single-line** list titles inside logo+name pairs (`nowrap` + ellipsis) so chip center and first name line stay aligned.
+| Area | File | What |
+| --- | --- | --- |
+| Fill / search logo URL | `src/vacation/thing-logo-capture.mjs` | `logoUrlFromSearchPlace()` applies `repairExplicitLogoUrl()` to declared icons and origin favicon guesses before persist; flight titles still resolve via brand rules. |
+| Re-export | `src/vacation/trip-thing-enrichment.mjs` | Re-export `logoUrlFromSearchPlace` from capture module (keeps search-event + enrichment imports stable); drops duplicate implementation to stay under FILE-SIZE-500 ratchet. |
+| Test | `scripts/test_tsv470_declared_icon_logo_repairs.mjs` | Asserts hotel/event declared favicons map to DuckDuckGo ip3 repairs via `logoUrlFromSearchPlace`. |
 
-## Files touched
+**Already on start HEAD (ccaa511, host may have landed earlier):** `EXPLICIT_LOGO_REPAIRS` for AA/Southwest/JetBlue + hotel/event favicons; `declaredIconFetchLooksBroken`; `applyCapturedLogos` / `finalizeServedSharedTripPayload` repair; airline `NAMED_THING_LOGOS` DuckDuckGo URLs; offline test registered in `scripts/offline-tests.txt`.
 
-- `src/vacation/shared-trip-oe-list-row-patch.mjs` — `OE_LOGO_PAIR_LIST_ROW_NAME_*` rewind after wrap patch
-- `public/assets/index-BKun7ofk.js` — rebaked (`node scripts/rebake_served_trek_bundle.mjs`, sha256 `dd89d02ba17d8ecf57060706c3925d1a600e07a24b5dd273800dd1912f3ee469`)
-- `scripts/test_ui_471_apple_row_name_frame.mjs` — assert logo-pair bundle anchor
-- `scripts/test_shared_tab_list_summary.mjs` — list row name `nowrap` under logo pair
+**Left alone (scope / ruling 109):** no `public/assets` bundle rebake (`LIST_LOGO_PATCH` / `tsRepairDeclaredLogo` remain build helpers only until host rebakes); no fixture/baseline/check-config edits.
 
-## Checks (local, uncommitted tree)
+## Checks (local, start HEAD `ccaa511f`)
 
 | Command | Result |
 | --- | --- |
-| `node scripts/rebake_served_trek_bundle.mjs` | PASS |
-| `node scripts/test_ui_471_apple_row_name_frame.mjs` | PASS |
-| `node scripts/test_shared_tab_list_summary.mjs` | PASS |
-| `node scripts/test_gate_b_row_name_frame.mjs` | PASS |
-| `node scripts/test_thing_logo_ink_center.mjs` | PASS |
+| `node scripts/test_tsv470_declared_icon_logo_repairs.mjs` | PASS |
+| `node scripts/test_thing_logo_fallback_758.mjs` | PASS |
+| `node scripts/test_served_payload_logo_repair_758.mjs` | PASS |
+| `node scripts/test_served_logo_url_repair_758.mjs` | PASS |
 | `node scripts/test_gate_b_live_tab_logo_rows.mjs` | PASS |
-| `node scripts/test_served_trek_bundle.mjs` | PASS |
+| `node scripts/test_gate_b_product_row_fields.mjs` | PASS |
+| `node scripts/test_trip_thing_logo_metadata.mjs` | PASS |
 | `node scripts/check-no-comments.mjs` | PASS |
 | `node scripts/test_offline_manifest.mjs` | PASS |
-| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS (0 fail) |
 
-Gate B pixel re-run on Ubuntu staging not executed in lane (host CI + `restore_check.py` on push).
+Gate B pixel PASS on PR head is **not** claimed here (host CI + Ubuntu Gate B after push).
 
-## Scope left alone
+## Host next
 
-Budget/flight/hotel/car **price** gaps on NYC fixture — data harness, not UI (brief + decisions-log #65/#773 handoff).
+Commit modified paths on branch `vkfill/470-20261031200815`, push once, open PR to `vk` with `Closes #470` describing declared-icon repair at fill + serve time and #758 regression coverage.
