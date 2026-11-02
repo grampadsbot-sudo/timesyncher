@@ -396,8 +396,23 @@ export function enrichSearchPlace(place = {}) {
   const next = { ...place };
   const sourceRecord = sourceRecordFrom(next);
   const category = text(next.category, 80).toLowerCase();
-  const description = sourcedLongDescription(next, sourceRecord);
-  const summary = sourcedShortSummary(next, sourceRecord, description);
+  let description = sourcedLongDescription(next, sourceRecord);
+  let summary = sourcedShortSummary(next, sourceRecord, description);
+  let hotelNarrative = null;
+  if (category === 'hotel' || category === 'lodging') {
+    hotelNarrative = hotelStoredCcabListNarrative(next.title, {
+      ...sourceRecord,
+      description,
+      summary,
+    });
+    if (
+      hotelNarrative?.longDetails
+      && !isListRowPipelineDiagnostic(hotelNarrative.longDetails)
+    ) {
+      description = hotelNarrative.longDetails;
+      if (hotelNarrative.summary) summary = hotelNarrative.summary;
+    }
+  }
   const explicitBannedZero = next.price === 0 || sourceRecord.price === 0;
   let price = firstPrice(
     next.price,
@@ -434,6 +449,8 @@ export function enrichSearchPlace(place = {}) {
     ...sourceRecord,
     ...(description ? { description, longDetails: description } : {}),
     ...(summary ? { summary } : {}),
+    ...(hotelNarrative?.neighborhood ? { neighborhood: hotelNarrative.neighborhood } : {}),
+    ...(hotelNarrative?.websiteFlavour ? { websiteFlavour: hotelNarrative.websiteFlavour } : {}),
     ...(price != null ? { price } : {}),
     ...(logoUrl ? { logoUrl } : {}),
     ...(next.url ? { url: next.url, website: next.url } : {}),

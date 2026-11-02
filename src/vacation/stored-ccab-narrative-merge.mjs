@@ -1,6 +1,7 @@
 import BASE_ENRICHMENT from '../../scripts/fixtures/nyc_ccab_place_enrichment.json' with { type: 'json' };
 import OVERLAY_ENRICHMENT from '../../scripts/fixtures/pr336-gate-b-ccab-overlay.json' with { type: 'json' };
 import REVIEW_ENRICHMENT from '../../scripts/fixtures/pr336-gate-b-vk-reviews.json' with { type: 'json' };
+import { resolveNycCcabKey } from '../../scripts/fixtures/nyc-vk-list-tab-rows.mjs';
 
 import {
   enrichSearchPlace,
@@ -98,7 +99,7 @@ export function createStoredCcabNarrativeMerge(
   }
 
   function enrichmentHit(ccabKey = '') {
-    const key = text(ccabKey, 240);
+    const key = text(resolveNycCcabKey(ccabKey) || ccabKey, 240);
     if (!key) return null;
     const ccabRecord = enrichment[key];
     if (!ccabRecord || typeof ccabRecord !== 'object') return null;
@@ -152,7 +153,7 @@ export function createStoredCcabNarrativeMerge(
   }
 
   function enrichmentHitByUniqueNamePrefix(name = '') {
-    const base = text(name, 240);
+    const base = text(resolveNycCcabKey(name) || name, 240);
     if (!base) return null;
     const matches = Object.keys(enrichment).filter(
       (key) => key === base || key.startsWith(`${base} `),

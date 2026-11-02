@@ -12,6 +12,7 @@ import {
   resolveStoredCcabKey,
   shouldMergeStoredCcabOnFixtureReplay,
 } from './fixtures/pr336-vk-search-trip-sources.mjs';
+import { NYC_STAGING_CAPTURE_LIST_ROWS } from './fixtures/nyc-vk-list-tab-rows.mjs';
 import { isHotelPlanningNote } from '../src/vacation/trip-thing-enrichment.mjs';
 
 function narrativeWordCount(value) {
@@ -223,14 +224,7 @@ assert.ok(
 );
 assert.match(aliasOverride.longDetails || '', /Greenwich Village jazz/i);
 
-const gateBHotelNames = [
-  'Park Central Hotel New York',
-  'New York Marriott Downtown',
-  'The Manhattan at Times Square Hotel',
-  'Hotel Edison',
-  'Hyatt Grand Central New York',
-];
-for (const name of gateBHotelNames) {
+for (const { name } of NYC_STAGING_CAPTURE_LIST_ROWS.filter((row) => row.cat === 'hotel')) {
   const served = finalizeServedSharedTripPayload({
     places: [{ id: 701, name, category_name: 'hotel' }],
     thingOverrides: { 'place:701': {} },
@@ -263,6 +257,21 @@ assert.match(
   rowSummary(mottoServed.places[0], mottoServed),
   /fitness center|Times Square|eco-certified/i,
   'Motto keeps sourced review overlay narrative',
+);
+
+const romerServed = finalizeServedSharedTripPayload({
+  places: [{
+    id: 625,
+    name: "Romer Hell's Kitchen",
+    category_name: 'hotel',
+  }],
+  thingOverrides: { 'place:625': {} },
+  days: [],
+  assignments: {},
+});
+assert.ok(
+  narrativeWordCount(rowSummary(romerServed.places[0], romerServed)) >= 30,
+  "Romer Hell's Kitchen with straight apostrophe must bind stored ccab narrative",
 );
 
 const placeholderTrip = finalizeServedSharedTripPayload({
