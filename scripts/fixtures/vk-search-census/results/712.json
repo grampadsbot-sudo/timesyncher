@@ -1,0 +1,122 @@
+{
+  "thingId": "712",
+  "thingName": "Thrifty Compact SUV at JFK",
+  "type": "car",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp",
+      "title": "New York John F. Kennedy International Airport Car Rentals from $73/day",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "ick-up or similar 4 people 2 Unlimited mileage Rental dates Nov 27 – Dec 4 · 7 days Prices checked Oct 28 $ 102 /day $717 total, incl. taxes and fees Compact SUV Nissan Kicks or similar 5 people 2 Unlimited mileage Rental dates Nov 27 – Dec 4 · 7 days Prices checked Oct 28 $ 132 /day $925 total, incl. taxes and fees Economy Car Mitsubishi Mirag … ick-up or similar 4 people 2 Unlimited mileage Rental dates Nov 27 – Dec 4 · 7 days Prices checked Oct 28 $ 102 /day $717 total, incl. taxes and fees Compact SUV Nissan Kicks or similar 5 people 2 Unlimited mileage Rental dates Nov 27 – Dec 4 · 7 days Prices checked Oct 28 $ 132 /day $925 total, incl. taxes and fees Economy Car Mitsubishi Mirag … verall Satisfaction 7.7 Availability at Pick-up 7.8 Condition & Cleanliness 8.1 Drop-off Procedure 8.8 Jamaica, 305 Federal Cir $88 /day Find similar Thrifty Car Rental 7.9 93 reviews Typical Wait Time 0-15 Minutes Location 7.8 Overall Satisfaction 7.5 Availability at Pick-up 7.8 Condition & Cleanliness 8 Drop-off Procedure 8.7 New York, Building 318 Federal Cir",
+      "snippet": "ick-up or similar 4 people 2 Unlimited mileage Rental dates Nov 27 – Dec 4 · 7 days Prices checked Oct 28 $ 102 /day $717 total, incl. taxes and fees Compact SUV Nissan Kicks or similar 5 people 2 Unlimited mileage Rental dates Nov 27 – Dec 4 · 7 days Prices checked Oct 28 $ 132 /day $925 total, inc",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.jfkairport.com/transportation/car-rentals",
+      "title": "Car Rentals - JFK Airport",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": " plan Content Car Rentals One easy stop Car rentals are located at Federal Circle Our car rental partners are conveniently located at Federal Circle. Federal Circle is accessible by the AirTrain from any terminal or from the Jamaica and Howard Beach AirTrain Stations. AirTrain rides between terminals and Federal Circle are free. The fare for trips originating  … 56-7600 +1 (800) 654-3131 Reserve now National +1 (844) 648-1610 Reserve now Payless +1 (718) 244-8277 Reserve now Sixt +1 (888) 749-8227 Reserve now Thrifty +1 (877) 283-0898 Reserve now Your rental experience from start to finish Picking up your rental car You can reserve a rental car from one of the available rental car  … shless tolling, which means you will be billed electronically. Be sure to check with your rental car agency to learn about their toll payment policy. Some companies provide E-ZPass® transponder tags. If they provide you with a transponder, make sure you understand how it works, including any fees and charges. The rental company may also charge an … ctronically. Be sure to check with your rental car agency to learn about their toll payment policy. Some companies provide E-ZPass® transponder tags. If they provide you with a transponder, make sure you understand how it works, including any fees and charges. The rental company may also charge an administrative fee for using a toll road. If your rental car company does not provide a transponder, or if you … ies provide E-ZPass® transponder tags. If they provide you with a transponder, make sure you understand how it works, including any fees and charges. The rental company may also charge an administrative fee for using a toll road. If your rental car company does not provide a transponder, or if you do not want to use a rental car company tag, you have two options: “Pay by plat",
+      "snippet": " plan Content Car Rentals One easy stop Car rentals are located at Federal Circle Our car rental partners are conveniently located at Federal Circle. Federal Circle is accessible by the AirTrain from any terminal or from the Jamaica and Howard Beach AirTrain Stations. AirTrain rides between terminal",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    }
+  ],
+  "rating": {
+    "primary": 7.9,
+    "primarySource": "priceline",
+    "priceline": 7.9,
+    "scale": "10 (brand-level at JFK)"
+  },
+  "reviewCount": {
+    "priceline": 93
+  },
+  "priceHint": "Thrifty from $97/day on Priceline JFK (checked Oct 28)",
+  "hoursHint": null,
+  "happyHourHint": null,
+  "summaryClaims": [
+    "Federal Circle is accessible by the AirTrain from any terminal",
+    "Compact SUV Nissan Kicks or similar 5 people 2",
+    "Federal Circle is accessible by the AirTrain from any terminal",
+    "Thrifty +1 (877) 283-0898",
+    "Compact SUV Nissan Kicks or similar 5 people 2",
+    "Thrifty Car Rental 7.9 93 reviews Typical Wait Time 0-15 Minutes",
+    "Some companies provide E-ZPass® transponder tags",
+    "If they provide you with a transponder, make sure you understand how it works, including any fees and charges",
+    "The rental company may also charge an administrative fee for using a toll road"
+  ],
+  "itineraryNoteCandidate": "Thrifty Compact SUV at JFK: a small SUV for the drive in; reach the counter because Federal Circle is accessible by the AirTrain from any terminal.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 0,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "tripRowTitle": "Thrifty JFK — Compact SUV",
+  "fields": {
+    "summary": {
+      "value": "Thrifty JFK — Compact SUV (Thrifty Compact SUV at JFK) swaps the sedan for Thrifty's Nissan Kicks or similar compact SUV, picked up at JFK's Federal Circle rental car center. Federal Circle is accessible by the AirTrain from any terminal or from the Jamaica and Howard Beach AirTrain Stations.",
+      "claims": [
+        {
+          "text": "Compact SUV Nissan Kicks or similar 5 people 2",
+          "sourceUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp"
+        },
+        {
+          "text": "Federal Circle is accessible by the AirTrain from any terminal",
+          "sourceUrl": "https://www.jfkairport.com/transportation/car-rentals"
+        },
+        {
+          "text": "Federal Circle is accessible by the AirTrain from any terminal or from the Jamaica and Howard Beach AirTrain Stations.",
+          "sourceUrl": "https://www.jfkairport.com/transportation/car-rentals"
+        }
+      ]
+    },
+    "description": {
+      "value": "Call Thrifty at +1 (877) 283-0898 to confirm Thrifty JFK — Compact SUV (Thrifty Compact SUV at JFK), a Compact SUV Nissan Kicks or similar for 5 people. Thrifty Car Rental scores 7.9 from 93 reviews on Priceline, with a typical wait time of 0-15 minutes. Some companies provide E-ZPass® transponder tags. If they provide you with a transponder, make sure you understand how it works, including any fees and charges. The rental company may also charge an administrative fee for using a toll road.",
+      "claims": [
+        {
+          "text": "Thrifty +1 (877) 283-0898",
+          "sourceUrl": "https://www.jfkairport.com/transportation/car-rentals"
+        },
+        {
+          "text": "Compact SUV Nissan Kicks or similar 5 people 2",
+          "sourceUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp"
+        },
+        {
+          "text": "Thrifty Car Rental 7.9 93 reviews Typical Wait Time 0-15 Minutes",
+          "sourceUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp"
+        },
+        {
+          "text": "Some companies provide E-ZPass® transponder tags",
+          "sourceUrl": "https://www.jfkairport.com/transportation/car-rentals"
+        },
+        {
+          "text": "If they provide you with a transponder, make sure you understand how it works, including any fees and charges",
+          "sourceUrl": "https://www.jfkairport.com/transportation/car-rentals"
+        },
+        {
+          "text": "The rental company may also charge an administrative fee for using a toll road",
+          "sourceUrl": "https://www.jfkairport.com/transportation/car-rentals"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Thrifty Compact SUV at JFK: a small SUV for the drive in; reach the counter because Federal Circle is accessible by the AirTrain from any terminal.",
+      "claims": [
+        {
+          "text": "Federal Circle is accessible by the AirTrain from any terminal",
+          "sourceUrl": "https://www.jfkairport.com/transportation/car-rentals"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Thrifty Compact SUV at JFK: a small SUV for the drive in; reach the counter because Federal Circle is accessible by the AirTrain from any terminal."
+}

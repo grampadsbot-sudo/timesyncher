@@ -1,0 +1,201 @@
+{
+  "thingId": 619,
+  "thingName": "Hotel Beacon",
+  "type": "hotel",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://en.wikipedia.org/wiki/Hotel_Beacon",
+      "title": "Hotel Beacon - Wikipedia",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "w York Evening Post April 14, 1928]</ref>\"}},\"i\":0}}]}'> The Hotel Beacon The Hotel Beacon (2026) General information Status Open Type Hotel Location 2130 Broadway New York, NY 10023 United States Coordinates 40°46′50″N 73°58′52″W ﻿ / ﻿ 40.7806402°N 73.9810592°W ﻿ / 40.7806402; -73.9810592 [[Geographic coordinat … 2 ] Design and construction Architect Walter W. Ahlschlager [ 3 ] Main contractor Havemeyer Construction Co. [ 4 ] The Hotel Beacon is a Beaux-Arts , 24-story building on the Upper West Side of Manhattan in New York City , designed by Walter W. Ahlschlager . [ 3 ] It was built in 1928 at 2130 Broadway , at the corner with 75th Street , on the site of  … The Hotel Beacon is a Beaux-Arts , 24-story building on the Upper West Side of Manhattan in New York City , designed by Walter W. Ahlschlager . [ 3 ] It was built in 1928 at 2130 Broadway , at the corner with 75th Street , on the site of the Tilden Club House [ 5 ] and the Dakota Stables. [ 6 ] At the time of its opening, apartments co",
+      "snippet": "w York Evening Post April 14, 1928]</ref>\"}},\"i\":0}}]}'> The Hotel Beacon The Hotel Beacon (2026) General information Status Open Type Hotel Location 2130 Broadway New York, NY 10023 United States Coordinates 40°46′50″N 73°58′52″W ﻿ / ﻿ 40.7806402°N 73.9810592°W ﻿ / 40.7806402; -73.9810592 [[Geograp",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com/Hotel_Review-g60763-d93338-Reviews-Hotel_Beacon-New_York_City_New_York.html",
+      "title": "HOTEL BEACON - Updated 2026 Prices & Reviews (New York City)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Reviews (New York City) | | HOTEL BEACON - Updated 2026 Prices & Reviews (New York City) Hotel Beacon Someone from this business manages the listing. 4.5 of 5 bubbles (5,535 reviews) 1 (212) 787-1100 Location 2130 Broadway, New York City, NY 10023-1724 Reviews 4.5 Very Good (5,535) Excellent 3,574",
+      "snippet": "Reviews (New York City) | | HOTEL BEACON - Updated 2026 Prices & Reviews (New York City) Hotel Beacon Someone from this business manages the listing. 4.5 of 5 bubbles (5,535 reviews) 1 (212) 787-1100 Location 2130 Broadway, New York City, NY 10023-1724 Reviews 4.5 Very Good (5,535) Excellent 3,574",
+      "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result text (direct curl 403 / WebFetch timeout); not a live fetch"
+    },
+    {
+      "url": "https://www.trip.com/hotels/new-york-hotel-detail-2193522/hotel-beacon-new-york/",
+      "text": " | Guest Reviews 8.8/10 85 verified reviews … This hotel is fantastic – the location, surroundings, and the staff's service attitude and professionalism are all top-notch! … The public transport access is great, and the quality of the accommodation is also excellent. … And the view from the room is absolutely fantastic! … Although the hotel is a bit old, the hygiene and service are excellent.",
+      "title": "Trip.com reviews",
+      "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded",
+      "fetchedAt": "2026-10-29T09:06:16-07:00",
+      "fetchMethod": "live curl 2026-10-29 (drev/tripfetch.py); saved drev/raw/619.json"
+    }
+  ],
+  "rating": {
+    "primary": 4.5,
+    "primarySource": "tripadvisor",
+    "tripadvisor": 4.5,
+    "tripcom": 8.8,
+    "scale_tripcom": 10,
+    "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d93338-Reviews-Hotel_Beacon-New_York_City_New_York.html",
+    "ratingEvidence": {
+      "site": "Tripadvisor",
+      "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d93338-Reviews-Hotel_Beacon-New_York_City_New_York.html",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "quote": "4.5 of 5 bubbles (5,535 reviews)",
+      "average": 4.5,
+      "count": 5535,
+      "scale": 5
+    },
+    "reviewCount": 5535
+  },
+  "reviewCount": {
+    "tripadvisor": 5535,
+    "tripcom": 85
+  },
+  "priceHint": "4-star UWS; kitchenette studios",
+  "hoursHint": null,
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "24-story building on the Upper West Side of Manhattan"
+  ],
+  "itineraryNoteCandidate": "Hotel Beacon: It was built in 1928 at 2130 Broadway beside the Beacon Theatre; enjoy the views and friendly staff, then breakfast at Zabar's around the corner.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims; sources include labelled SERP search snapshots (not live fetches) — see each source's fetchMethod"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 1
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 1 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 736,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Hotel Beacon is a classic 24-story building on the Upper West Side of Manhattan that guests love for its professional staff, easy transit and room views, with a residential feel instead of Midtown buzz. The building is older, but reviews say spotless rooms and service more than compensate.",
+      "claims": [
+        {
+          "text": "24-story building on the Upper West Side of Manhattan",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Hotel_Beacon"
+        }
+      ]
+    },
+    "description": {
+      "value": "Hotel Beacon is a 24-story building on the Upper West Side of Manhattan. It was built in 1928 at 2130 Broadway, at 75th Street, beside the Beacon Theatre and a short walk from Central Park, Riverside Park and Zabar's. Tripadvisor travelers rate it 4.5 of 5 bubbles (5,535 reviews). Guests single out the staff's professionalism, generous rooms for a longer stay and striking views; the honest caveat is age, as parts of the hotel look their years even though hygiene and service stay excellent.",
+      "claims": [
+        {
+          "text": "It was built in 1928 at 2130 Broadway",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Hotel_Beacon"
+        },
+        {
+          "text": "24-story building on the Upper West Side of Manhattan",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Hotel_Beacon"
+        },
+        {
+          "text": "4.5 of 5 bubbles (5,535 reviews)",
+          "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d93338-Reviews-Hotel_Beacon-New_York_City_New_York.html"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Hotel Beacon: It was built in 1928 at 2130 Broadway beside the Beacon Theatre; enjoy the views and friendly staff, then breakfast at Zabar's around the corner.",
+      "claims": [
+        {
+          "text": "It was built in 1928 at 2130 Broadway",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Hotel_Beacon"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-hotel-essence-itinerary-note-20261029",
+    "new": false,
+    "at": "2026-10-29T08:45:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Hotel Beacon: It was built in 1928 at 2130 Broadway beside the Beacon Theatre; enjoy the views and friendly staff, then breakfast at Zabar's around the corner.",
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.trip.com/hotels/new-york-hotel-detail-2193522/hotel-beacon-new-york/",
+    "site": "Trip.com",
+    "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded",
+    "praise": [
+      "This hotel is fantastic – the location, surroundings, and the staff's service attitude and professionalism are all top-notch!",
+      "The public transport access is great, and the quality of the accommodation is also excellent.",
+      "And the view from the room is absolutely fantastic!"
+    ],
+    "watchOuts": [
+      "Although the hotel is a bit old, the hygiene and service are excellent."
+    ],
+    "themes": [
+      "Location",
+      "Overall experience",
+      "Rooms",
+      "Service"
+    ],
+    "complaints": [
+      "Although the hotel is a bit old, the hygiene and service are excellent."
+    ]
+  },
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "The Beacon's Upper West Side setting and professional, attentive staff are the strongest recurring praise, with guests calling the overall stay excellent for the price.",
+  "review1Source": "Trip.com",
+  "review1Rating": "10.0/10",
+  "review1Theme": "Location",
+  "review1SourceUrl": "https://www.trip.com/hotels/new-york-hotel-detail-2193522/hotel-beacon-new-york/",
+  "review1Stars": 5,
+  "review2": "Transit access is a frequent plus, and guests pair it with comments that the accommodation itself is high quality for a long stay in the city.",
+  "review2Source": "Trip.com",
+  "review2Rating": "10.0/10",
+  "review2Theme": "Overall experience",
+  "review2SourceUrl": "https://www.trip.com/hotels/new-york-hotel-detail-2193522/hotel-beacon-new-york/",
+  "review2Stars": 5,
+  "review3": "Room views draw repeated enthusiasm, with guests describing the outlook from their rooms as one of the highlights of the trip.",
+  "review3Source": "Trip.com",
+  "review3Rating": "10.0/10",
+  "review3Theme": "Rooms",
+  "review3SourceUrl": "https://www.trip.com/hotels/new-york-hotel-detail-2193522/hotel-beacon-new-york/",
+  "review3Stars": 5,
+  "review4": "The building shows its age in places, but guests consistently say cleanliness and service more than make up for it, so the older decor rarely spoils a visit.",
+  "review4Source": "Trip.com",
+  "review4Rating": "10.0/10",
+  "review4Theme": "Service",
+  "review4SourceUrl": "https://www.trip.com/hotels/new-york-hotel-detail-2193522/hotel-beacon-new-york/",
+  "review4Stars": 5,
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029",
+  "review1Claims": [
+    "This hotel is fantastic – the location, surroundings, and the staff's service attitude and professionalism are all top-notch"
+  ],
+  "review2Claims": [
+    "The public transport access is great, and the quality of the accommodation is also excellent.",
+    "The public transport access is great, and the quality of the accommodation is also excellent"
+  ],
+  "review3Claims": [
+    "And the view from the room is absolutely fantastic"
+  ],
+  "review4Claims": [
+    "Although the hotel is a bit old, the hygiene and service are excellent.",
+    "Although the hotel is a bit old, the hygiene and service are excellent"
+  ],
+  "reviewsLabel": "Representative reviews written from 12 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
+}

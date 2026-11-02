@@ -1,0 +1,137 @@
+{
+  "thingId": "714",
+  "thingName": "Dollar Compact SUV at JFK",
+  "type": "car",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp",
+      "title": "New York John F. Kennedy International Airport Car Rentals from $73/day",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "ick-up or similar 4 people 2 Unlimited mileage Rental dates Nov 27 – Dec 4 · 7 days Prices checked Oct 28 $ 102 /day $717 total, incl. taxes and fees Compact SUV Nissan Kicks or similar 5 people 2 Unlimited mileage Rental dates Nov 27 – Dec 4 · 7 days Prices checked Oct 28 $ 132 /day $925 total, incl. taxes and fees Economy Car Mitsubishi Mirag … 22/day Special Offer $58/day Show 5 more Show less Car Company ACE $62/day Alamo Rent a Car $75/day Avis Rent a Car $71/day Budget Rent a Car $66/day Dollar Rent A Car $97/day Enterprise Rent-A-Car $82/day Hertz Corporation $104/day National Car Rental $85/day Payless Car Rental $68/day Sixt Rent a Car $67/day Thrifty Car R … ompany ACE $62/day Alamo Rent a Car $75/day Avis Rent a Car $71/day Budget Rent a Car $66/day Dollar Rent A Car $97/day Enterprise Rent-A-Car $82/day Hertz Corporation $104/day National Car Rental $85/day Payless Car Rental $68/day Sixt Rent a Car $67/day Thrifty Car Rental $97/day Show 6 more Show less Category Intermediate … ick-up or similar 4 people 2 Unlimited mileage Rental dates Nov 27 – Dec 4 · 7 days Prices checked Oct 28 $ 102 /day $717 total, incl. taxes and fees Compact SUV Nissan Kicks or similar 5 people 2 Unlimited mileage Rental dates Nov 27 – Dec 4 · 7 days Prices checked Oct 28 $ 132 /day $925 total, incl. taxes and fees Economy Car Mitsubishi Mirag … 22/day Special Offer $58/day Show 5 more Show less Car Company ACE $62/day Alamo Rent a Car $75/day Avis Rent a Car $71/day Budget Rent a Car $66/day Dollar Rent A Car $97/day Enterprise Rent-A-Car $82/day Hertz Corporation $104/day National Car Rental $85/day Payless Car Rental $68/day Sixt Rent a Car $67/day Thrifty Car R … ompany ACE $62/day Alamo Rent a Car $75/day Avis Rent a Car $71/day Budget Rent a Car $66/day Dollar Rent A Car $97/day Enterprise Rent-A-Car $82/day Hertz Corporation $104/day National Car Rental $85/day Payless Car Rental $68/day Sixt Rent a Car $67/day Thrifty Car Rental $97/day Show 6 more Show less Category Intermediate … erall Satisfaction 8.1 Availability at Pick-up 8.1 Condition & Cleanliness 7.7 Drop-off Procedure 9 Jamaica, 305 Federal Circle $75 /day Find similar Dollar Rent A Car 8 135 reviews Typical Wait Time 0-15 Minutes Location 7.6 Overall Satisfaction 7.8 Availability at Pick-up 7.8 Condition & Cleanliness 8 Drop-off Procedure 8.7 New York, Building 318 Federal Cir",
+      "snippet": "ick-up or similar 4 people 2 Unlimited mileage Rental dates Nov 27 – Dec 4 · 7 days Prices checked Oct 28 $ 102 /day $717 total, incl. taxes and fees Compact SUV Nissan Kicks or similar 5 people 2 Unlimited mileage Rental dates Nov 27 – Dec 4 · 7 days Prices checked Oct 28 $ 132 /day $925 total, inc",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.jfkairport.com/transportation/car-rentals",
+      "title": "Car Rentals - JFK Airport",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "u arrive. To pick up your rental, take AirTrain to the car rental center at the Federal Circle Station opens in a new tab . Returning your rental car When you're ready to return your rental car, enter “ Federal Circle Station opens in a new tab ” in your GPS for directions to the car rental center. Remember to refuel your car before returning it. T … ation opens in a new tab . Returning your rental car When you're ready to return your rental car, enter “ Federal Circle Station opens in a new tab ” in your GPS for directions to the car rental center. Remember to refuel your car before returning it. There are gas stations conveniently located within two miles of the airport and at the \" JFK Airpor … as stations conveniently located within two miles of the airport and at the \" JFK Airport Travel Plaza opens in a new tab \" for your refueling needs. After you drop off your rental, take the AirTrain to reach your designated terminal to catch your flight. Paying for tolls when using a rental car New York State tolls have switched to cashless tolling, which means you will be billed electronically. Be s … al car companies at JFK Alamo +1 (844) 648-1611 Reserve now Avis +1 (718) 244-5400 Reserve now Budget +1 (718)-656-1890 +1 (800)-527-0700 Reserve now Dollar +1 (866) 434-2226 Reserve now Enterprise +1 (844) 648–1609 Reserve now Hertz +1 (718) 656-7600 +1 (800) 654-3131 Reserve now National +1 (844) 648-1610 Reserve now Pay",
+      "snippet": "u arrive. To pick up your rental, take AirTrain to the car rental center at the Federal Circle Station opens in a new tab . Returning your rental car When you're ready to return your rental car, enter “ Federal Circle Station opens in a new tab ” in your GPS for directions to the car rental center. ",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    }
+  ],
+  "rating": {
+    "primary": 8.0,
+    "primarySource": "priceline",
+    "priceline": 8.0,
+    "scale": "10 (brand-level at JFK)"
+  },
+  "reviewCount": {
+    "priceline": 135
+  },
+  "priceHint": "Dollar from $97/day on Priceline JFK (checked Oct 28)",
+  "hoursHint": null,
+  "happyHourHint": null,
+  "summaryClaims": [
+    "Dollar Rent A Car $97/day",
+    "Compact SUV Nissan Kicks or similar 5 people 2",
+    "Dollar Rent A Car $97/day",
+    "Hertz Corporation $104/day",
+    "Compact SUV Nissan Kicks or similar 5 people 2",
+    "Dollar Rent A Car $97/day",
+    "Hertz Corporation $104/day",
+    "When you're ready to return your rental car, enter",
+    "in your GPS for directions to the car rental center",
+    "After you drop off your rental, take the AirTrain to reach your designated terminal to catch your flight",
+    "Dollar Rent A Car 8 135 reviews Typical Wait Time 0-15 Minutes",
+    "Dollar +1 (866) 434-2226"
+  ],
+  "itineraryNoteCandidate": "Dollar Compact SUV at JFK: a budget small SUV at Dollar Rent A Car $97/day; room for bags after the flight.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 0,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "tripRowTitle": "Dollar JFK — Compact SUV",
+  "fields": {
+    "summary": {
+      "value": "Dollar JFK — Compact SUV (Dollar Compact SUV at JFK) is Dollar's Nissan Kicks or similar compact SUV at $97/day on Priceline, below the $104/day Hertz rate. To return it, enter Federal Circle Station in your GPS, then take the AirTrain to your terminal.",
+      "claims": [
+        {
+          "text": "Compact SUV Nissan Kicks or similar 5 people 2",
+          "sourceUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp"
+        },
+        {
+          "text": "Dollar Rent A Car $97/day",
+          "sourceUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp"
+        },
+        {
+          "text": "Hertz Corporation $104/day",
+          "sourceUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp"
+        },
+        {
+          "text": "After you drop off your rental, take the AirTrain to reach your designated terminal to catch your flight",
+          "sourceUrl": "https://www.jfkairport.com/transportation/car-rentals"
+        }
+      ]
+    },
+    "description": {
+      "value": "A Compact SUV Nissan Kicks or similar for 5 people is what Dollar JFK — Compact SUV (Dollar Compact SUV at JFK) reserves, at Dollar Rent A Car's $97/day Priceline rate against $104/day for Hertz. Returning it is simple: When you're ready to return your rental car, enter Federal Circle Station in your GPS for directions to the car rental center. After you drop off your rental, take the AirTrain to reach your designated terminal to catch your flight. Dollar scores 8 from 135 Priceline reviews, and its JFK line is +1 (866) 434-2226.",
+      "claims": [
+        {
+          "text": "Compact SUV Nissan Kicks or similar 5 people 2",
+          "sourceUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp"
+        },
+        {
+          "text": "Dollar Rent A Car $97/day",
+          "sourceUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp"
+        },
+        {
+          "text": "Hertz Corporation $104/day",
+          "sourceUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp"
+        },
+        {
+          "text": "When you're ready to return your rental car, enter",
+          "sourceUrl": "https://www.jfkairport.com/transportation/car-rentals"
+        },
+        {
+          "text": "in your GPS for directions to the car rental center",
+          "sourceUrl": "https://www.jfkairport.com/transportation/car-rentals"
+        },
+        {
+          "text": "After you drop off your rental, take the AirTrain to reach your designated terminal to catch your flight",
+          "sourceUrl": "https://www.jfkairport.com/transportation/car-rentals"
+        },
+        {
+          "text": "Dollar Rent A Car 8 135 reviews Typical Wait Time 0-15 Minutes",
+          "sourceUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp"
+        },
+        {
+          "text": "Dollar +1 (866) 434-2226",
+          "sourceUrl": "https://www.jfkairport.com/transportation/car-rentals"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Dollar Compact SUV at JFK: a budget small SUV at Dollar Rent A Car $97/day; room for bags after the flight.",
+      "claims": [
+        {
+          "text": "Dollar Rent A Car $97/day",
+          "sourceUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Dollar Compact SUV at JFK: a budget small SUV at Dollar Rent A Car $97/day; room for bags after the flight."
+}

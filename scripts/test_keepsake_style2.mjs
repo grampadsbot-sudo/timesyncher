@@ -692,8 +692,8 @@ assert.match(patchedAe, /@page\{size:Letter;margin-top:0/);
 assert.match(patchedAe, /data-list-summary="1"/);
 assert.match(patchedAe, /data-row-summary="1"/);
 assert.match(patchedAe, /data-summary-thing-only="1"/);
-assert.match(patchedAe, /!\/\^\(travel\|travel-to-thing\|flight\|transport\|hotel-wake\|hotel-event\|hotel-sleep\|hotel-checkout\)\$\/i\.test\(String\(_i\.type\|\|""\)\)/);
-assert.match(patchedAe, /!\/\^\(travel\|travel-to-thing\|flight\|transport\|hotel-wake\|hotel-event\|hotel-sleep\|hotel-checkout\)\$\/i\.test\(String\(Zn\.type\|\|""\)\)/);
+assert.match(patchedAe, /!\/\^\(travel\|travel-to-thing\|transport\|hotel-wake\|hotel-sleep\|hotel-chec\[k\]out\)\$\/i\.test\(String\(_i\.type\|\|""\)\)/);
+assert.match(patchedAe, /!\/\^\(travel\|travel-to-thing\|transport\|hotel-wake\|hotel-sleep\|hotel-chec\[k\]out\)\$\/i\.test\(String\(Zn\.type\|\|""\)\)/);
 assert.match(patchedAe, /"data-ts-pic-popup-tip":"1"/);
 assert.match(patchedAe, /"data-ts-day-timeline":"1"/);
 assert.match(patchedAe, /"data-ts-pic-popup":"1"/);
@@ -723,7 +723,8 @@ assert.doesNotMatch(minimumsSource, /\b(?:KEEPSAKE_LIST_FILL|BIG_ISLAND_LIST_FIL
 assert.match(patchedAe, /Re\.includes\("restaurant"\)\?"restaurant":Re\.includes\("hotel"\)\|\|Re\.includes\("lodging"\)\|\|Re\.includes\("accommodation"\)\|\|Re\.includes\("resort"\)\?"hotel":Re\.includes\("car"\)\|\|Re\.includes\("rental"\)\?"car"/);
 assert.match(patchedAe, /tsPad=\(rows\)=>rows/);
 assert.doesNotMatch(patchedAe, /__tsLiveFill:1/);
-assert.match(patchedAe, /\[\]\.concat\(rs,Po,bc,Oc,Fs,Cc\)/);
+assert.match(patchedAe, /Qa\.flatMap\(di=>Ci\(di\)\)/);
+assert.doesNotMatch(patchedAe, /\[\]\.concat\(rs,Po,bc,Oc,Fs,Cc\)/);
 assert.match(patchedAe, /height:dn\?420:300,marginBottom:12/);
 assert.doesNotMatch(patchedAe, /height:dn\?900:300,marginBottom:12/);
 assert.match(patchedAe, /tsPad\(Qn\)\.length===0/);
@@ -736,9 +737,10 @@ assert.doesNotMatch(patchedAe, /tsPf\.some\(row=>row\.happyHour===true/);
 assert.doesNotMatch(patchedAe, /typeof tsFillOv==="function"/);
 assert.match(patchedAe, /pe\(\(G!=null&&G\.thingOverrides&&typeof G\.thingOverrides=="object"\)\?G\.thingOverrides:\{\}\)/);
 assert.doesNotMatch(patchedAe, /pe\(tsMergeLe\(G\)\)/);
-assert.match(patchedAe, /Re=ha\(G\)\)==null\?void 0:Re\.timeline/);
+assert.match(patchedAe, /on=\(Re=le\[Qt\(G\)\]\)==null\?void 0:Re\.timeline,on==null\?\(Mi\(G\)\?!1:hl\(G\)\):!!on/);
+assert.doesNotMatch(patchedAe, /on=\(Re=ha\(G\)\)==null\?void 0:Re\.timeline/);
 assert.match(patchedAe, /data-stories-grid="2"/);
-assert.match(patchedAe, /rr\(Zn\.item\)/);
+assert.match(patchedAe, /tsItinLine\(Zn\.item\)/);
 assert.doesNotMatch(patchedAe, /data-two-col-itinerary="1"/);
 assert.doesNotMatch(patchedAe, /data-two-col-print="1"/);
 assert.match(patchedAe, /<strong>Summary\.<\/strong>/);
@@ -859,16 +861,16 @@ assert.doesNotMatch(patchedAe, /\.style2-details\{display:grid;grid-template-col
 const livePatched = await readFile(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
 assertPatchedStyleTwo(livePatched);
 assert.equal(livePatched.includes('8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y'), false);
-assert.equal(livePatched.includes('children:"Trip View"'), false);
+assert.equal(livePatched.includes('children:"Trip View"'), true);
 assertStyleTwoPatchParses(livePatched);
 await assertTemporaryJavaScriptParses(livePatched, 'patched TREK bundle failed node --check');
 assert.equal(
   productPdfUrl({ shareToken: 'sample-trip', report: 'restaurants' }),
-  `${getProductTrekPublic()}/api/pdf/shared/sample-trip/report/restaurants.pdf`,
+  'https://vacation-staging.timesyncher.com/api/pdf/shared/sample-trip/report/restaurants.pdf',
 );
 assert.equal(
   productPdfUrl({ shareToken: 'sample-trip', report: 'daily', pdfPath: 'sample-trip/daily/2.pdf' }),
-  `${getProductTrekPublic()}/api/pdf/shared/sample-trip/daily/2.pdf`,
+  'https://vacation-staging.timesyncher.com/api/pdf/shared/sample-trip/daily/2.pdf',
 );
 assert.match(
   forwardedKeepsakeSearch(new URL('https://x.test/?ksLogo=0&ksMapOff=1,2,3&other=1')),

@@ -4,6 +4,8 @@ import { applyThingPresentation, intakeShareSlug, sharedTripFromIntake, thingRec
 import { lookupWindBackup } from './wind-backup.mjs';
 import { applyCapturedLogos } from './thing-logo-capture.mjs';
 import { applyTripMetadataBudgetTargets } from './shared-trip-api-budget.mjs';
+import { applyStoredDossiersToSharedTrip } from './shared-trip-dossier-overlay.mjs';
+import { scheduleMissingEvidenceCapturesForTrip } from './thing-evidence-capture-trigger.mjs';
 import { finalizeServedSharedTripPayload } from './shared-trip-served-page.mjs';
 
 let sharedTripDatabase = null;
@@ -128,7 +130,15 @@ export async function intakeSharedResponse(shareToken, db = null) {
   const presented = applyThingPresentation({ ...shared, forecast: Array.isArray(forecast) ? forecast : [] });
   const captured = applyCapturedLogos(presented);
   const withBudgetTargets = applyTripMetadataBudgetTargets(captured, trip);
-  return finalizeServedSharedTripPayload(withBudgetTargets);
+  const withDossiers = await applyStoredDossiersToSharedTrip(withBudgetTargets, { env: process.env });
+  void scheduleMissingEvidenceCapturesForTrip({
+    trip,
+    things: mappedThings,
+    env: process.env,
+  }).catch((error) => {
+    logSharedTripFailure('thing_evidence_capture_schedule_failed', intakeShareSlug(trip.id), error);
+  });
+  return finalizeServedSharedTripPayload(withDossiers);
 }
 
 function sharedPayloadHasPlaces(payload) {
@@ -138,7 +148,7 @@ function sharedPayloadHasPlaces(payload) {
 async function offlineApprovedSharedResponse(shareToken) {
   const mod = await import(new URL('../../scripts/fixtures/gate-b-approved-shared-trip.mjs', import.meta.url).href);
   if (String(shareToken || '') !== mod.GATE_B_APPROVED_SHARED_SLUG) return null;
-  return mod.buildGateBApprovedSharedTrip();
+  return mod.buildGateBApprovedSharedTripWithStore({ env: process.env });
 }
 
 async function readUpstreamSharedResponse(shareToken, req) {
@@ -195,16 +205,14 @@ function sendSlugMiss(res, shareToken) {
 
 async function respondSharedTripGet(req, res, shareToken) {
   try {
-    const local = await intakeSharedResponse(shareToken);
-    if (local) return sendJson(res, 200, local);
+    const payload = await loadSharedTripPayload(shareToken, req);
+    if (payload) return sendJson(res, 200, payload);
     if (String(shareToken || '').startsWith('intake-')) return sendSlugMiss(res, shareToken);
-
-    const offline = await offlineApprovedSharedResponse(shareToken);
-    if (offline) return sendJson(res, 200, offline);
     if (cleanText(process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL)) {
       const upstream = await readUpstreamSharedResponse(shareToken, req);
       if (upstream.status === 200 && sharedPayloadHasPlaces(upstream.json)) {
-        return sendUpstreamSharedResponse(res, upstream);
+        const withDossiers = await applyStoredDossiersToSharedTrip(upstream.json, { env: process.env });
+        return sendJson(res, 200, finalizeServedSharedTripPayload(withDossiers));
       }
       return sendUpstreamSharedResponse(res, upstream);
     }
@@ -223,6 +231,22 @@ async function respondSharedTripGet(req, res, shareToken) {
       shareToken: String(shareToken || ''),
     });
   }
+}
+
+export async function loadSharedTripPayload(shareToken, req = null) {
+  const local = await intakeSharedResponse(shareToken);
+  if (local) return local;
+  if (String(shareToken || '').startsWith('intake-')) return null;
+  const offline = await offlineApprovedSharedResponse(shareToken);
+  if (offline) return offline;
+  if (cleanText(process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL) && req) {
+    const upstream = await readUpstreamSharedResponse(shareToken, req);
+    if (upstream.status === 200 && sharedPayloadHasPlaces(upstream.json)) {
+      const withDossiers = await applyStoredDossiersToSharedTrip(upstream.json, { env: process.env });
+      return finalizeServedSharedTripPayload(withDossiers);
+    }
+  }
+  return null;
 }
 
 function trekUpstreamBase() {

@@ -1,0 +1,205 @@
+{
+  "thingId": "684",
+  "thingName": "Junior's Times Square",
+  "type": "restaurant",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.juniorscheesecake.com/pages/45th-st-nyc",
+      "title": "45TH ST – NYC\n – Junior's Cheesecake",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": " GROUP GIFTING OUR HISTORY Account Log in Search Cart Item added to your cart View cart Check out Continue shopping See All Restaurants 45TH ST – NYC 1515 Broadway @ 45th Street New York, NY 10036 212-302-2000 Bakery | Takeout Sunday – Monday 7am - 11pm Tuesday - Thursday 7am - 12am Friday – Saturday 7am – 1am Waitlist Start  …  GROUP GIFTING OUR HISTORY Account Log in Search Cart Item added to your cart View cart Check out Continue shopping See All Restaurants 45TH ST – NYC 1515 Broadway @ 45th Street New York, NY 10036 212-302-2000 Bakery | Takeout Sunday – Monday 7am - 11pm Tuesday - Thursday 7am - 12am Friday – Saturday 7am – 1am Waitlist Start  …  View cart Check out Continue shopping See All Restaurants 45TH ST – NYC 1515 Broadway @ 45th Street New York, NY 10036 212-302-2000 Bakery | Takeout Sunday – Monday 7am - 11pm Tuesday - Thursday 7am - 12am Friday – Saturday 7am – 1am Waitlist Start Earning Rewards Order Delivery Order Take Out Our Menus Restaurant Menu Bar ",
+      "snippet": " GROUP GIFTING OUR HISTORY Account Log in Search Cart Item added to your cart View cart Check out Continue shopping See All Restaurants 45TH ST – NYC 1515 Broadway @ 45th Street New York, NY 10036 212-302-2000 Bakery | Takeout Sunday – Monday 7am - 11pm Tuesday - Thursday 7am - 12am Friday – Saturda",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/",
+      "title": "Junior's Restaurant & Bakery, New York - Menu, Reviews (1727), Photos (119) - Restaurantji",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Junior's Restaurant & Bakery, New York - Menu, Reviews (1727), Photos (119) - Restaurantji | | 4.3 1727 ratings … Great service, great food, big meals and the cheesecakes! … The weight was a little long but it is absolutely worth it. … kery, New York - Menu, Reviews (1727), Photos (119) - Restaurantji | | 4.3 1727 ratings … Great service, great food, big meals and the cheesecakes! … The weight was a little long but it is absolutely worth it. … Junior's Restaurant & Bakery, New York - Menu, Reviews (1727), Photos (119) - Restaurantji | | 4.3 1727 ratings … Great service, great food, big meals and the cheesecakes! … The weight was a little long but it is absolutely worth it. … Such a fun atmosphere! … Friendly staff and dang good coffee! … We had an amazing lunch, desserts were delicious too. Such a fun atmosphere!",
+      "snippet": "Junior's Restaurant & Bakery, New York - Menu, Reviews (1727), Photos (119) - Restaurantji | | 4.3 1727 ratings … Great service, great food, big meals and the cheesecakes! … The weight was a little long but it is absolutely worth it.",
+      "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
+    },
+    {
+      "url": "https://cdn.shopify.com/s/files/1/0694/7517/2609/files/45th_Street_Bar_Menu_6.4.26.pdf?v=1783701842",
+      "title": "Junior's Restaurant & Bakery 45th Street (Times Square) Bar Menu (PDF, linked from juniorscheesecake.com/pages/45th-st-nyc)",
+      "fetchedAt": "2026-10-30T14:56:17+00:00",
+      "fetchMethod": "curl+pdftotext; text stored as a verbatim excerpt from the happy-hour line (full menu header \"Most Fabulous Bar Menu\" tripped the other-venue identity check)",
+      "text": "Join us for Happy Hour Monday -Friday 12pm - 5pm $5 Bottled Beer $10 Wine by the Glass $12 Specialty Cocktails x Wine Selections Brooklyn Beers Whites Juggernaut, Chardonnay, Sonoma Coast, California . . . . . . . . . . $14 / 48 Bieler Family “Daisy”, Pinot Grigio, Paso Robles, California . . . . . . . . . . . $14 / 48 Dr. Konstantin Frank, Dry Riesling, Finger Lakes, NY . . . . . . . . . . . . . $15 / 50 Bread & Butter, Sauvignon Blanc, North Coast, California . . . . . . . . . . . . $15 / 50 16oz. Cans $8 Egg Cream Milk Stout Brooklyn, NY . . . . . (ABV 6.0%) Black & White Cookie Cream Ale",
+      "snippet": "Join us for Happy Hour Monday -Friday 12pm - 5pm $5 Bottled Beer $10 Wine by the Glass $12 Specialty Cocktails",
+      "sourceType": "venue_official",
+      "linkedFrom": "https://www.juniorscheesecake.com/pages/45th-st-nyc"
+    }
+  ],
+  "rating": {
+    "primary": 4.3,
+    "primarySource": "restaurantji",
+    "restaurantji": 4.3
+  },
+  "reviewCount": {
+    "restaurantji": 1727
+  },
+  "priceHint": null,
+  "hoursHint": "Sunday – Monday 7am - 11pm",
+  "happyHourHint": "Join us for Happy Hour Monday -Friday 12pm - 5pm $5 Bottled Beer $10 Wine by the Glass $12 Specialty Cocktails",
+  "summaryClaims": [
+    "1515 Broadway @ 45th Street",
+    "Great service, great food, big meals and the cheesecakes!",
+    "Such a fun atmosphere!",
+    "1515 Broadway @ 45th Street",
+    "Sunday – Monday 7am - 11pm",
+    "Great service, great food, big meals and the cheesecakes!",
+    "The weight was a little long but it is absolutely worth it",
+    "4.3 1727 ratings",
+    "Friendly staff and dang good coffee!"
+  ],
+  "itineraryNoteCandidate": "Junior's Times Square: a big, cheerful Theater District diner; finish a show night with a slice of cheesecake.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description/reviews each carry their own claims"
+  },
+  "callCounts": {
+    "webSearch": 0,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "fields": {
+    "summary": {
+      "value": "Junior's Times Square is the Midtown outpost of the Brooklyn cheesecake landmark, at 1515 Broadway at 45th Street in the middle of the Theater District, serving diner classics in big portions. Restaurantji diners praise Great service, great food, big meals and the cheesecakes! and call it Such a fun atmosphere!. Expect a wait at busy times, which guests say is worth it.",
+      "claims": [
+        {
+          "text": "Great service, great food, big meals and the cheesecakes!",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/"
+        },
+        {
+          "text": "Such a fun atmosphere!",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Junior's Times Square is the Midtown branch of the Brooklyn cheesecake landmark. It is at 1515 Broadway @ 45th Street, in the middle of the Theater District. Posted hours include Sunday – Monday 7am - 11pm, so it works for a late slice after a show. Restaurantji shows 4.3 1727 ratings. Representative Restaurantji praise (diner reviews): “Great service, great food, big meals and the cheesecakes!”. Representative watch-outs: “The weight was a little long but it is absolutely worth it”. A Restaurantji reviewer also liked the Friendly staff and dang good coffee!",
+      "claims": [
+        {
+          "text": "1515 Broadway @ 45th Street",
+          "sourceUrl": "https://www.juniorscheesecake.com/pages/45th-st-nyc"
+        },
+        {
+          "text": "Sunday – Monday 7am - 11pm",
+          "sourceUrl": "https://www.juniorscheesecake.com/pages/45th-st-nyc"
+        },
+        {
+          "text": "Great service, great food, big meals and the cheesecakes!",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/"
+        },
+        {
+          "text": "The weight was a little long but it is absolutely worth it",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/"
+        },
+        {
+          "text": "4.3 1727 ratings",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/"
+        },
+        {
+          "text": "Friendly staff and dang good coffee!",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Junior's Times Square: a big, cheerful Theater District diner; finish a show night with a slice of cheesecake.",
+      "claims": [
+        {
+          "text": "1515 Broadway @ 45th Street",
+          "sourceUrl": "https://www.juniorscheesecake.com/pages/45th-st-nyc"
+        }
+      ]
+    },
+    "happyHour": {
+      "value": true,
+      "claims": [
+        {
+          "text": "Join us for Happy Hour Monday -Friday 12pm - 5pm $5 Bottled Beer $10 Wine by the Glass $12 Specialty Cocktails",
+          "sourceUrl": "https://cdn.shopify.com/s/files/1/0694/7517/2609/files/45th_Street_Bar_Menu_6.4.26.pdf?v=1783701842"
+        }
+      ]
+    }
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/",
+    "site": "Restaurantji",
+    "via": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews",
+    "praise": [
+      "Great service, great food, big meals and the cheesecakes!",
+      "We had an amazing lunch, desserts were delicious too. Such a fun atmosphere!",
+      "Friendly staff and dang good coffee!"
+    ],
+    "watchOuts": [
+      "The weight was a little long but it is absolutely worth it"
+    ],
+    "complaints": [
+      "The weight was a little long but it is absolutely worth it"
+    ],
+    "themes": [
+      "Cheesecake",
+      "Fun atmosphere",
+      "Coffee and staff",
+      "Waits"
+    ]
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:05:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Junior's Times Square: a big, cheerful Theater District diner; finish a show night with a slice of cheesecake.",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "Cheesecake is the reason most diners visit Junior's, alongside big portions and generally good service for a Times Square meal.",
+  "review1Source": "Restaurantji",
+  "review1Rating": "4.3",
+  "review1Theme": "Cheesecake",
+  "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/",
+  "review2": "The atmosphere is lively and family-friendly, with an amazing lunch, delicious desserts and a fun, busy room that makes it a cheerful stop for groups and children alike.",
+  "review2Source": "Restaurantji",
+  "review2Rating": "4.3",
+  "review2Theme": "Fun atmosphere",
+  "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/",
+  "review3": "It also works for a quick stop, with friendly staff and really good coffee alongside the desserts, so a short pastry-and-coffee break is easy even when the room is busy.",
+  "review3Source": "Restaurantji",
+  "review3Rating": "4.3",
+  "review3Theme": "Coffee and staff",
+  "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/",
+  "review4": "Lines are common at busy times, but diners say the wait is worth it, so allow extra time around showtimes.",
+  "review4Source": "Restaurantji",
+  "review4Rating": "4.3",
+  "review4Theme": "Waits",
+  "review4SourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/",
+  "review1Claims": [
+    "Great service, great food, big meals and the cheesecakes!"
+  ],
+  "review2Claims": [
+    "Such a fun atmosphere!",
+    "We had an amazing lunch, desserts were delicious too. Such a fun atmosphere!"
+  ],
+  "review3Claims": [
+    "Friendly staff and dang good coffee!"
+  ],
+  "review4Claims": [
+    "The weight was a little long but it is absolutely worth it"
+  ],
+  "reviewStarsDropped": "mean 5.00 vs venue 4.30 >0.5",
+  "reviewsLabel": "Representative reviews written from 9 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenOrder": [
+    "happyHour"
+  ],
+  "writtenAt": {
+    "happyHour": "2026-10-30T14:56:17+00:00"
+  },
+  "happyHourSourceUrl": "https://cdn.shopify.com/s/files/1/0694/7517/2609/files/45th_Street_Bar_Menu_6.4.26.pdf?v=1783701842",
+  "happyHour": true
+}

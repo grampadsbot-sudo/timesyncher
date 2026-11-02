@@ -1,8 +1,9 @@
 import { captureThingLogo } from './thing-logo-capture.mjs';
 import { estimateSearchPlacePrice } from './search-place-price-estimate.mjs';
+import { ccabNeighborhoodTaglineFromRecord, descriptionPassesDetailJudge } from './thing-detail-fields.mjs';
+import { enrichSearchPlaceHotelSourceRecord } from './xai-sourced-hotel-description.mjs';
 
 export { estimateSearchPlacePrice } from './search-place-price-estimate.mjs';
-
 const GENERIC_DESCRIPTION_RES = [
   /^Documented NYC option\b/i,
   /^Documented .+ option\b/i,
@@ -10,11 +11,11 @@ const GENERIC_DESCRIPTION_RES = [
 ];
 
 const AIRLINE_LOGOS = [
-  [/\bjetblue\b/i, 'https://www.jetblue.com/favicon.ico'],
-  [/\bsouthwest\b/i, 'https://www.southwest.com/favicon.ico'],
-  [/\bunited\b/i, 'https://www.united.com/favicon.ico'],
-  [/\bdelta\b/i, 'https://www.delta.com/favicon.ico'],
-  [/\bamerican\b/i, 'https://www.aa.com/favicon.ico'],
+  [/\bjetblue\b/i, 'https://icons.duckduckgo.com/ip3/jetblue.com.ico'],
+  [/\bsouthwest\b/i, 'https://icons.duckduckgo.com/ip3/southwest.com.ico'],
+  [/\bunited\b/i, 'https://icons.duckduckgo.com/ip3/united.com.ico'],
+  [/\bdelta\b/i, 'https://icons.duckduckgo.com/ip3/delta.com.ico'],
+  [/\bamerican\b/i, 'https://icons.duckduckgo.com/ip3/aa.com.ico'],
 ];
 
 function text(value, max = 4000) {
@@ -304,9 +305,30 @@ function shortLineFromSourceText(value = '', max = 120) {
   return text(row.split(/\s+/).slice(0, 10).join(' '), max);
 }
 
-function sourcedShortSummary(place = {}, sourceRecord = {}, longDescription = '') {
+function ccabFactText(sourceRecord = {}, place = {}) {
+  return text(sourceRecord.summary || sourceRecord.description || place.description || place.summary, 500);
+}
+
+function descriptionWhenJudgeFails({
+  category = '',
+  title = '',
+  sourceRecord = {},
+  address = '',
+  place = {},
+  rawDescription = '',
+} = {}) {
+  const cat = text(category, 80).toLowerCase();
+  if ((cat === 'hotel' || cat === 'lodging') && /Neighborhood:\s*[^;]+/i.test(ccabFactText(sourceRecord, place))) return '';
+  return buildCategoryDescription({ category: cat, title, sourceRecord, address, rawDescription });
+}
+
+function sourcedShortSummary(place = {}, sourceRecord = {}, longDescription = '', title = '') {
   let summary = text(sourceRecord.summary || place.summary, 500);
   const itinerary = text(sourceRecord.itineraryNote || sourceRecord.itinerary_note, 280);
+  if (longDescription && descriptionPassesDetailJudge(longDescription, title)) {
+    const tagline = ccabNeighborhoodTaglineFromRecord(sourceRecord, title) || shortLineFromSourceText(longDescription);
+    if (tagline) return tagline;
+  }
   if (itinerary && itinerary !== longDescription) return itinerary;
   if (summary && summary === longDescription) return shortLineFromSourceText(summary);
   if (summary.length > 140) summary = shortLineFromSourceText(summary);
@@ -317,11 +339,32 @@ function sourcedShortSummary(place = {}, sourceRecord = {}, longDescription = ''
 }
 
 export function enrichSearchPlace(place = {}) {
+  if (place.sourceRecord?.evidenceDossier) return { ...place };
   const next = { ...place };
-  const sourceRecord = sourceRecordFrom(next);
+  let sourceRecord = sourceRecordFrom(next);
   const category = text(next.category, 80).toLowerCase();
-  const description = sourcedLongDescription(next, sourceRecord);
-  const summary = sourcedShortSummary(next, sourceRecord, description);
+  sourceRecord = enrichSearchPlaceHotelSourceRecord(sourceRecord, {
+    title: next.title,
+    category,
+    address: next.address || sourceRecord.address,
+  });
+  next.sourceRecord = sourceRecord;
+  const title = text(next.title || next.name, 240);
+  let description = text(
+    next.longDetails || sourceRecord.longDetails || sourcedLongDescription(next, sourceRecord),
+    4000,
+  );
+  if (!descriptionPassesDetailJudge(description, title)) {
+    description = descriptionWhenJudgeFails({
+      category,
+      title: next.title,
+      sourceRecord,
+      address: next.address || '',
+      place: next,
+      rawDescription: sourcedLongDescription(next, sourceRecord),
+    });
+  }
+  const summary = sourcedShortSummary(next, sourceRecord, description, title);
   const explicitBannedZero = next.price === 0 || sourceRecord.price === 0;
   let price = firstPrice(
     next.price,
@@ -378,13 +421,26 @@ export function enrichTripThing(thing = {}) {
     : {};
   const category = text(thing.category, 80).toLowerCase();
   const location = thing.location && typeof thing.location === 'object' ? thing.location : {};
-  const description = buildCategoryDescription({
-    category,
-    title: thing.title,
-    sourceRecord,
-    address: location.address || '',
-    rawDescription: thing.description,
-  });
+  const title = text(thing.title, 240);
+  const sourcedLong = text(
+    meta.thingDetail?.longDetails
+    || sourceRecord.longDetails
+    || thing.description,
+    4000,
+  );
+  let description = '';
+  if (descriptionPassesDetailJudge(sourcedLong, title)) {
+    description = sourcedLong;
+  } else {
+    description = descriptionWhenJudgeFails({
+      category,
+      title: thing.title,
+      sourceRecord,
+      address: location.address || '',
+      place: { description: thing.description, summary: thing.summary },
+      rawDescription: thing.description,
+    });
+  }
   let price = firstPrice(
     thing.price,
     meta.price,

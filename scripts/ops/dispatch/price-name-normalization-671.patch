@@ -1,0 +1,27 @@
+--- a/gateb_coverage.py
++++ b/gateb_coverage.py
+@@ -22,13 +22,19 @@
+         if c in TAB and p.get("name") and not str(p["name"]).lower().startswith("none"): out.setdefault(c, set()).add(p["name"].strip())
+     return out
+ def _segments(text, names):
+-    lines = [l.strip() for l in text.split("\n")]; idx = [(i, l) for i, l in enumerate(lines) if l in names]
++    def normalized(value):
++        return value.translate(str.maketrans({"\u2018": "'", "\u2019": "'", "\u02bc": "'"}))
++    aliases = {}
++    for name in names:
++        aliases.setdefault(normalized(name), []).append(name)
++    lines = [line.strip() for line in text.split("\n")]
++    idx = [(i, aliases[normalized(line)]) for i, line in enumerate(lines) if normalized(line) in aliases]
+     seg = {}
+-    for k, (i, l) in enumerate(idx):
++    for k, (i, originals) in enumerate(idx):
+         j = idx[k + 1][0] if k + 1 < len(idx) else len(lines)
+-        seg.setdefault(l, lines[i + 1:j])
+-    return seg
+-# ---- 390 px overflow ratchet (Craig decision relayed by dr eggbot 3:33 PM PT 10/21, job bell-gate-1792620901447998740-rules)
++        for name in originals:
++            seg.setdefault(name, lines[i + 1:j])
++    return seg# ---- 390 px overflow ratchet (Craig decision relayed by dr eggbot 3:33 PM PT 10/21, job bell-gate-1792620901447998740-rules)
+ BASE_OWNER = 598   # TSV #596 390 px wrap; owns overflow that is already on the base
+ CAND = os.path.join(os.path.dirname(os.path.abspath(__file__)), "gateb-cand")   # same dir as the dispatcher, whoever runs it
+ def _norm(t): return re.sub(r"\s+", " ", str(t or "")).strip().lower()

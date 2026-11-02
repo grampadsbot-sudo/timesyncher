@@ -15,6 +15,7 @@ export function canonicalBudgetPlace(trip: SharedTripPayload, placeOrId: SharedP
 export function bucketDisplayLabel(bucket: string): string;
 export function bucketIcon(bucket: string): string;
 export function formatUsd(amount: number, currency?: string): string;
+export function formatBudgetTarget(target: number | null, currency?: string): string;
 export function varianceLabel(planned: number, target: number | null, currency?: string): string | null;
 
 export type BudgetRow = {

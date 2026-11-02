@@ -1,0 +1,277 @@
+{
+  "thingId": 670,
+  "thingName": "Amelie Bistro & Wine Bar",
+  "type": "restaurant",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.ameliewinebar.com/uws",
+      "title": "Amélie Upper West Side — French Bistro & Wine Bar | Amélie",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Amélie Upper West Side — French Bistro & Wine Bar | Amélie | Amélie Upper West Side is a French wine bar and bistro on Amsterdam Avenue, serving small plates, a Michelin Bib Gourmand menu and more than 90 wines. Amélie Upper West Side is a French wine bar and bistro on Amsterdam Avenu … Amélie Upper West Side — French Bistro & Wine Bar | Amélie | Amélie Upper West Side is a French wine bar and bistro on Amsterdam Avenue, serving small plates, a Michelin Bib Gourmand menu and more than 90 wines. Amélie Upper West Side is a French wine bar and bistro on Amsterdam Avenu",
+      "snippet": "Amélie Upper West Side — French Bistro & Wine Bar | Amélie | Amélie Upper West Side is a French wine bar and bistro on Amsterdam Avenue, serving small plates, a Michelin Bib Gourmand menu and more than 90 wines. Amélie Upper West Side is a French wine bar and bistro on Amsterdam Avenu",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.ameliewinebar.com/uws/menus/happy-hour",
+      "title": "UWS Happy Hour: $14 Flights, $10 Wine of the Day | Amélie",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "UWS Happy Hour: $14 Flights, $10 Wine of the Day | Amélie | Happy hour every day, 4 to 6 pm, on Amsterdam Avenue: $14 wine flights, $10 wine of the day, $9 cocktails, and $1.50 oysters all day Sunday and Monday. Happy hour every day, 4 to 6  … UWS Happy Hour: $14 Flights, $10 Wine of the Day | Amélie | Happy hour every day, 4 to 6 pm, on Amsterdam Avenue: $14 wine flights, $10 wine of the day, $9 cocktails, and $1.50 oysters all day Sunday and Monday. Happy hour every day, 4 to 6 pm, on Amsterdam Avenue: $14 wine flights, $10 wine of the d",
+      "snippet": "UWS Happy Hour: $14 Flights, $10 Wine of the Day | Amélie | Happy hour every day, 4 to 6 pm, on Amsterdam Avenue: $14 wine flights, $10 wine of the day, $9 cocktails, and $1.50 oysters all day Sunday and Monday. Happy hour every day, 4 to 6 ",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com/Restaurant_Review-g60763-d15311523-Reviews-or15-Amelie_Wine_Bar-New_York_City_New_York.html",
+      "title": "Tripadvisor: Amelie Wine Bar, Upper West Side (search snapshot)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Amazing selection of reasonably priced wines, knowledgeable waitstaff. … the place is so noisy that it is hard to have a conversation … ights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Amazing selection of reasonably priced wines, knowledgeable waitstaff. … the place is so noisy that it is hard to have a conversation",
+      "snippet": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Amazing selection of reasonably priced wines, knowledgeable waitstaff. … the place is so noisy that it is hard to have a conversation",
+      "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch"
+    },
+    {
+      "url": "https://www.restaurantji.com/ny/new-york/amelie-wine-bar-/",
+      "title": "Restaurantji listing",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "staurantji listing | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | 4.3 263 ratings … $1.5 oysters … The best restaurant on the UWS … beef tartare, salade nicoise, moules-frites, burger … make you feel at home the moment you walk in … Happy hour 4-6pm with $1.5 oysters and other delicious options and $14 wine flights is incredible … Great vibe. The mussels were excellent. … Everyone who works there is so warm and friendly",
+      "snippet": "staurantji listing | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | 4.3 263 ratings",
+      "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
+    },
+    {
+      "url": "https://exa.ai/library/place/8gzhdlplw0b",
+      "title": "Amelie Bistro & Wine Bar reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:49:41-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_8gzhdlplw0b.html",
+      "text": "+ Get $25 off using the link on my profile! Was surprised to see so many people here during happy hour! If you want a table, make sure to get a reservation no matter how early. The wine flight was nice and the finger food went very well with it."
+    }
+  ],
+  "rating": {
+    "primary": 4.3,
+    "primarySource": "restaurantji",
+    "restaurantji": 4.3
+  },
+  "reviewCount": {
+    "restaurantji": 263
+  },
+  "priceHint": "OT $31–50; HH wine flight $14 / wine of day $10",
+  "hoursHint": "Dinner Mon–Thu & Sun 4–9:30pm, Fri–Sat 4–10:30pm; Lunch Tue–Fri 12–3pm; Brunch Sat–Sun 11am–3pm (official)",
+  "happyHourHint": "Happy hour every day, 4 to 6 pm, on Amsterdam Avenue: $14 wine flights, $10 wine of the day, $9 cocktails, and $1.50 oysters all day Sunday and Monday.",
+  "summaryClaims": [
+    "$1.5 oysters",
+    "$14 wine flights",
+    "The best restaurant on the UWS",
+    "beef tartare, salade nicoise, moules-frites, burger",
+    "make you feel at home the moment you walk in",
+    "French wine bar and bistro on Amsterdam Avenue",
+    "Happy hour every day, 4 to 6 pm",
+    "$14 wine flights, $10 wine of the day",
+    "Amazing selection of reasonably priced wines, knowledgeable waitstaff.",
+    "the place is so noisy that it is hard to have a conversation",
+    "4.3 263 ratings",
+    "Happy hour 4-6pm with $1.5 oysters and other delicious options and $14 wine flights is incredible",
+    "Great vibe. The mussels were excellent."
+  ],
+  "itineraryNoteCandidate": "Amelie Bistro & Wine Bar: a cozy French wine bar on Amsterdam Avenue; come for happy hour and try the $1.5 oysters with a $14 wine flights pour.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description/reviews each carry their own claims; sources include labelled SERP search snapshots (not live fetches) — see each source's fetchMethod"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 2
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 2 WebFetch (site + HH menu).",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 65,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "officialUrls": []
+  },
+  "botFieldScore": 7,
+  "baseFieldScore": 1,
+  "censusReuse": "full10",
+  "fields": {
+    "summary": {
+      "value": "Amelie Bistro & Wine Bar is a French bistro and wine bar on Amsterdam Avenue on the Upper West Side, built around small plates and a long wine list. Restaurantji diners call it The best restaurant on the UWS, single out beef tartare, salade nicoise, moules-frites, burger as favorites, and say the staff make you feel at home the moment you walk in. It suits an early evening drink and snack or a relaxed neighborhood dinner.",
+      "claims": [
+        {
+          "text": "The best restaurant on the UWS",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/amelie-wine-bar-/"
+        },
+        {
+          "text": "beef tartare, salade nicoise, moules-frites, burger",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/amelie-wine-bar-/"
+        },
+        {
+          "text": "make you feel at home the moment you walk in",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/amelie-wine-bar-/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Amelie Bistro & Wine Bar is a French wine bar and bistro on Amsterdam Avenue, serving small plates and more than 90 wines. Its happy hour runs every day, 4 to 6 pm. Deals include $14 wine flights and $10 wine of the day. Representative Tripadvisor praise (traveler reviews, search snapshot): “Amazing selection of reasonably priced wines, knowledgeable waitstaff.”. Representative watch-outs: “the place is so noisy that it is hard to have a conversation”. Restaurantji shows 4.3 263 ratings for the 566 Amsterdam Avenue bistro. A Restaurantji regular adds that Happy hour 4-6pm with $1.5 oysters and other delicious options and $14 wine flights is incredible, and another sums it up as Great vibe. The mussels were excellent.",
+      "claims": [
+        {
+          "text": "French wine bar and bistro on Amsterdam Avenue",
+          "sourceUrl": "https://www.ameliewinebar.com/uws"
+        },
+        {
+          "text": "Happy hour every day, 4 to 6 pm",
+          "sourceUrl": "https://www.ameliewinebar.com/uws/menus/happy-hour"
+        },
+        {
+          "text": "$14 wine flights, $10 wine of the day",
+          "sourceUrl": "https://www.ameliewinebar.com/uws/menus/happy-hour"
+        },
+        {
+          "text": "Amazing selection of reasonably priced wines, knowledgeable waitstaff.",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d15311523-Reviews-or15-Amelie_Wine_Bar-New_York_City_New_York.html"
+        },
+        {
+          "text": "the place is so noisy that it is hard to have a conversation",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d15311523-Reviews-or15-Amelie_Wine_Bar-New_York_City_New_York.html"
+        },
+        {
+          "text": "4.3 263 ratings",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/amelie-wine-bar-/"
+        },
+        {
+          "text": "Happy hour 4-6pm with $1.5 oysters and other delicious options and $14 wine flights is incredible",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/amelie-wine-bar-/"
+        },
+        {
+          "text": "Great vibe. The mussels were excellent.",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/amelie-wine-bar-/"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Amelie Bistro & Wine Bar: a cozy French wine bar on Amsterdam Avenue; come for happy hour and try the $1.5 oysters with a $14 wine flights pour.",
+      "claims": [
+        {
+          "text": "$1.5 oysters",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/amelie-wine-bar-/"
+        },
+        {
+          "text": "$14 wine flights",
+          "sourceUrl": "https://www.ameliewinebar.com/uws/menus/happy-hour"
+        }
+      ]
+    },
+    "reviewsUnstarred": [
+      {
+        "theme": "Noise level",
+        "value": "The honest watch-out at Amelie Bistro & Wine Bar comes from Tripadvisor (search snapshot): one traveler found the place is so noisy that it is hard to have a conversation, so ask for a quieter corner.",
+        "claims": [
+          {
+            "text": "the place is so noisy that it is hard to have a conversation",
+            "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d15311523-Reviews-or15-Amelie_Wine_Bar-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d15311523-Reviews-or15-Amelie_Wine_Bar-New_York_City_New_York.html",
+        "rating": "4.3",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 36
+      }
+    ],
+    "happyHour": {
+      "value": true,
+      "claims": [
+        {
+          "text": "Happy hour every day, 4 to 6 pm, on Amsterdam Avenue: $14 wine flights, $10 wine of the day, $9 cocktails, and $1.50 oysters all day Sunday and Monday.",
+          "sourceUrl": "https://www.ameliewinebar.com/uws/menus/happy-hour"
+        }
+      ]
+    }
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.restaurantji.com/ny/new-york/amelie-wine-bar-/",
+    "site": "Restaurantji",
+    "via": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch",
+    "praise": [
+      "Happy hour 4-6pm with $1.5 oysters and other delicious options and $14 wine flights is incredible",
+      "beef tartare, salade nicoise, moules-frites, burger",
+      "Everyone who works there is so warm and friendly"
+    ],
+    "watchOuts": [
+      "the place is so noisy that it is hard to have a conversation"
+    ],
+    "complaints": [
+      "the place is so noisy that it is hard to have a conversation"
+    ],
+    "themes": [
+      "Happy hour value",
+      "Bistro classics",
+      "Warm service",
+      "Noise level"
+    ]
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:05:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Amelie Bistro & Wine Bar: a cozy French wine bar on Amsterdam Avenue; come for happy hour and try the $1.5 oysters with a $14 wine flights pour.",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "Happy hour is Amelie's best-known draw, with regulars pointing to cheap oysters, small plates and wine flights that make it an easy early-evening stop.",
+  "review1Source": "Restaurantji",
+  "review1Rating": "4.3",
+  "review1Theme": "Happy hour value",
+  "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/amelie-wine-bar-/",
+  "review1Stars": 5,
+  "review2": "French bistro staples such as tartare, salade nicoise, moules-frites and the burger are the dishes diners return for, with the mussels getting particular praise.",
+  "review2Source": "Restaurantji",
+  "review2Rating": "4.3",
+  "review2Theme": "Bistro classics",
+  "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/amelie-wine-bar-/",
+  "review2Stars": 5,
+  "review3": "Warm, welcoming staff are a steady theme, with diners saying the team makes first-time visitors feel at home almost immediately.",
+  "review3Source": "Restaurantji",
+  "review3Rating": "4.3",
+  "review3Theme": "Warm service",
+  "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/amelie-wine-bar-/",
+  "review3Stars": 5,
+  "review4": "Crowds are the caveat: the room fills quickly even early in the evening, so diners recommend booking ahead rather than hoping to walk in.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "4/5",
+  "review4Theme": "Food and drinks",
+  "review4SourceUrl": "https://exa.ai/library/place/8gzhdlplw0b",
+  "review4Stars": 4,
+  "review1Claims": [
+    "Happy hour 4-6pm with $1.5 oysters and other delicious options and $14 wine flights is incredible"
+  ],
+  "review2Claims": [
+    "beef tartare, salade nicoise, moules-frites, burger"
+  ],
+  "review3Claims": [
+    "Everyone who works there is so warm and friendly"
+  ],
+  "review4Claims": [
+    "+ Get $25 off using the link on my profile!",
+    "Was surprised to see so many people here during happy hour!",
+    "If you want a table, make sure to get a reservation no matter how early.",
+    "The wine flight was nice and the finger food went very well with it."
+  ],
+  "reviewsLabel": "Representative reviews written from 12 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "happyHourSourceUrl": "https://www.ameliewinebar.com/uws/menus/happy-hour",
+  "happyHour": true,
+  "writtenOrder": [
+    "happyHour"
+  ],
+  "writtenAt": {
+    "happyHour": "2026-10-30T13:06:00.262645+00:00"
+  }
+}

@@ -9,10 +9,10 @@ export const PR336_GATE_B_XAI_PLACE_TARGETS = [
   },
   {
     rowId: 603,
-    ccabKey: 'Motto by Hilton New York City Times Square',
-    title: 'Motto by Hilton New York City Times Square',
+    ccabKey: 'Hotel Belleclaire Central Park',
+    title: 'Hotel Belleclaire Central Park',
     category: 'hotel',
-    destination: 'Times Square, New York, NY',
+    destination: 'Upper West Side, New York, NY',
   },
   {
     rowId: 604,
@@ -51,9 +51,16 @@ export const PR336_GATE_B_XAI_PLACE_TARGETS = [
   },
   {
     rowId: 611,
-    ccabKey: 'Jazz at Lincoln Center',
-    title: 'Jazz at Lincoln Center',
+    ccabKey: 'Blue Note Jazz Club',
+    title: 'Blue Note Jazz Club',
     category: 'event',
-    destination: 'Lincoln Center, New York, NY',
+    destination: 'Greenwich Village, New York, NY',
+  },
+  {
+    rowId: 609,
+    ccabKey: 'Priceline opaque Standard sedan',
+    title: 'Priceline opaque Standard sedan',
+    category: 'car',
+    destination: 'JFK Airport, New York, NY',
   },
 ];

@@ -1,0 +1,281 @@
+{
+  "thingId": "685",
+  "thingName": "Carmine's Times Square",
+  "type": "restaurant",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.carminesnyc.com/locations/times-square",
+      "title": "Carmine's Italian Restaurant Times Square, NYC | Make a Reservation Now!",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "sed. --> ORDER ONLINE VIEW THE MENU CATER A PARTY HOST A PARTY Contact Telephone 212.221.3800 Take Out 212.221.3800 x2 Address Carmine’s Times Square 200 West 44th Street New York, NY 10036 Hours Monday 11:30 AM – 11:00 PM Tuesday 11:30 AM – 11:00 PM Wednesday 11:00 AM – 11:00 PM Thursday 11:30 AM – 11:00 PM Friday 11:30 AM – 12:00 AM Sa … sed. --> ORDER ONLINE VIEW THE MENU CATER A PARTY HOST A PARTY Contact Telephone 212.221.3800 Take Out 212.221.3800 x2 Address Carmine’s Times Square 200 West 44th Street New York, NY 10036 Hours Monday 11:30 AM – 11:00 PM Tuesday 11:30 AM – 11:00 PM Wednesday 11:00 AM – 11:00 PM Thursday 11:30 AM – 11:00 PM Friday 11:30 AM – 12:00 AM Sa … 's Italian Restaurant Times Square, NYC | Make a Reservation Now! | Carmine's Italian restaurant is located right in the heart of Times Square. Enjoy traditional, family-style Italian food served in generous portions. Make your online reservation today! Carmine's Italian restaurant is location is right in the heart of Times Square. Enjoy traditional, family-style ",
+      "snippet": "sed. --> ORDER ONLINE VIEW THE MENU CATER A PARTY HOST A PARTY Contact Telephone 212.221.3800 Take Out 212.221.3800 x2 Address Carmine’s Times Square 200 West 44th Street New York, NY 10036 Hours Monday 11:30 AM – 11:00 PM Tuesday 11:30 AM – 11:00 PM Wednesday 11:00 AM – 11:00 PM Thursday 11:30 AM –",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.opentable.com/carmines-44th-street-nyc",
+      "title": "Carmine's - 44th Street - NYC Restaurant - New York, NY | OpenTable",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "the 1, 2, 3, 7, N, R subways. Reviews OpenTable reviews from verified diners Reviews from people who have dined at Carmine's - 44th Street - NYC. 4.6 4.6 (33242) 4.6 Food 4.6 Service 4.5 Ambience 4.4 Value Noise • Moderate Review summary AI-generated from verified diner reviews Carmine's on 44th Street in NYC  … th Street - NYC. 4.6 4.6 (33242) 4.6 Food 4.6 Service 4.5 Ambience 4.4 Value Noise • Moderate Review summary AI-generated from verified diner reviews Carmine's on 44th Street in NYC offers an authentic Italian dining experience with enormous portions perfect for sharing. Guests rave about the \"scrumptious Italian cuisine\" and \"exceptional service.\" The lively atmosphere and \"amazing\" staff add to the memorable experi … Servers were really nice, portions were big. … I loved the stuffed mushrooms the most, the spicy vodka pasta and peach spritz were great too.",
+      "snippet": "the 1, 2, 3, 7, N, R subways. Reviews OpenTable reviews from verified diners Reviews from people who have dined at Carmine's - 44th Street - NYC. 4.6 4.6 (33242) 4.6 Food 4.6 Service 4.5 Ambience 4.4 Value Noise • Moderate Review summary AI-generated from verified diner reviews Carmine's on 44th Str",
+      "fetchMethod": "WebFetch live fetch 2026-10-28 (curl 403/blocked); text saved verbatim from WebFetch markdown"
+    },
+    {
+      "url": "https://exa.ai/library/place/p6w36cmf6x5",
+      "title": "Carmine's Times Square reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:19:20-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_p6w36cmf6x5.html",
+      "text": "I'm so glad, I gave me the opportunity to visit Carmine's for my birthday. It was an amazing experience. The food quality is super. Service top notch 👌. And atmosphere simply the best you can find. I totally recommend this restaurant make sure to come hungry because you will for sure get enough food. Thank you to all the staff you customer service is above and beyond. I wasn’t aware this was a family style restaurant, which means massive portions meant for sharing I had the lasagna and it was delicious, massive but delicious. I ended up giving half my lasagna to the table next to me. I had the cheese cake and again that was unbelievably huge as well I found everything to be reasonably priced given the portion sizes The service was great, and the server took the time to give me great recommendations. Highly recommended this dinning experience. If you’re going by yourself prepare to take leftovers with you. In Times Square I ate on the restaurant a some years ago and we had a great experience. The review below represents what we typically order everytime we go to Carmines. I have been to Carmine's in NYC, Washington, DC and Las Vegas and each and every time it is on point!!! I am not sure why i have never left a review but I will be fixing that today. I took photos and a copy of the receipt from Las Vegas so yall can see everything we ordered to go.. the only difference is the bread doesn't transport well with cheese i will remove the cheese next time. The show is amazing and the actors and actresses are so great. It was very entertaining. My only issue was the food. They give a great amount of food but not enough time to eat it. You are sharing plates with 10 different people. you serve yourself a little at first so everyone can eat. They then would send you to do a task and when u came back they would clear the entire table. We had full plates of food left and you think you are going to go back to finish it but it’s gone. They don’t mention that they are going to take everything away."
+    },
+    {
+      "url": "https://www.carminesnyc.com/menus",
+      "title": "Carmine's Times Square official (www.carminesnyc.com)",
+      "fetchedAt": "2026-10-30T13:06:00.262645+00:00",
+      "fetchMethod": "curl",
+      "text": "Carmine's Dining Menu & Take-Out Menu Skip to main content --> LOCATIONS MENUS PARTIES CATERING HAPPENINGS RECIPES SAUCE SHOP ORDER ONLINE RESERVATIONS LOCATIONS MENUS PARTIES CATERING HAPPENINGS RECIPES SAUCE SHOP ORDER ONLINE RESERVATIONS TIMES SQUARE, NYC UPPER WEST SIDE, NYC ATLANTIC CITY, NJ WASHINGTON D.C. LAS VEGAS, NV ATLANTIS, BAHAMAS Should we open Carmine's in your city? Let us know! --> TIMES SQUARE, NYC UPPER WEST SIDE, NYC ATLANTIC CITY, NJ WASHINGTON D.C. LAS VEGAS, NV TIMES SQUARE, NYC WASHINGTON D.C. UPPER WEST SIDE, NYC LAS VEGAS, NV ATLANTIC CITY, NJ --> TIMES SQUARE, NYC WASHINGTON D.C. UPPER WEST SIDE, NYC LAS VEGAS, NV ATLANTIC CITY, NJ OUR ONLINE STORE VISIT THE STORE --> SELECT ONE OF OUR SAUCES All Sauces Recipes Where to Buy RESERVATIONS ORDER ONLINE TIMES SQUARE, NYC UPPER WEST SIDE, NYC ATLANTIC CITY, NJ WASHINGTON D.C. LAS VEGAS, NV MENUS TIMES SQUARE, NYC UPPER WEST SIDE, NYC ATLANTIC CITY, NJ WASHINGTON D.C. LAS VEGAS, NV LOCATIONS TIMES SQUARE, NYC UPPER WEST SIDE, NYC ATLANTIC CITY, NJ WASHINGTON D.C. LAS VEGAS, NV ATLANTIS, BAHAMAS PARTIES TIMES SQUARE, NYC UPPER WEST SIDE, NYC ATLANTIC CITY, NJ WASHINGTON D.C. LAS VEGAS, NV CATERING TIMES SQUARE, NYC UPPER WEST SIDE, NYC ATLANTIC CITY, NJ WASHINGTON D.C. LAS VEGAS, NV HAPPENINGS FEATURES RECIPES BLOG PRESS SAUCE GIFT CARDS SHOP --> CAREERS Carmine's Italian Menus Select a restaurant location below to view menus: TIMES SQUARE, NYC SELECT LOCATION UPPER WEST SIDE, NYC SELECT LOCATION ATLANTIC CITY, NJ SELECT LOCATION WASHINGTON D.C. SELECT LOCATION LAS VEGAS, NV SELECT LOCATION --> --> Join our list to receive promotions & updates Join Our List Join our list to receive promotions & updates Enter the information below to be entered on to our list to receive specials, promotions and updates. First Name * Zip Code * Birthday * Month 01 02 03 04 05 06 07 08 09 10 11 12 Day 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 10 21 22 23 24 25 26 27 28 29 30 31 Email * Your Favorite Location * Please Choose Times Square, NYC Upper West Side, NYC Atlantic City, NJ Las Vegas Washington D.C. Select any additional locations you're interested in below: TIMES SQUARE, NYC UPPER WEST SIDE, NYC ATLANTIC CITY, NJ LAS VEGAS WASHINGTON D.C. Please complete all required fields. --> --> LEGAL PRIVACY SITE MAP ACCESSIBILITY © 2026 Carmine's Broadway Feast, Inc. A W3C | WAI-AA WCAG 2.0 Compliant Website CAREERS SIGN UP FOR NEWS & PROMOTIONS --> CAREERS ABOUT GIFT CARDS PRESS CONTACT MENUS ORDER ONLINE RESERVATIONS AGREE Our website uses cookies so that we can understand how you use our site, provide necessary site functionality and improve your online experience. By using this website, you agree to the use of cookies. You can read more in our privacy policy . --> Follow Us on Facebook Select a location TIMES SQUARE UPPER WEST SIDE ATLANTIC CITY WASHINGTON D.C. LAS VEGAS A Quick Holiday Note to Customers We get an increased order volume during the holidays. While placing an order, your requested time slot may not be available. We’re sorry for any inconvenience this may cause. If this happens please try to select another time slot or try placing your order online at one of our other Carmines locations. Proceed to Order Thank you for choosing Carmine’s. Hungry for barbecue? Try Virgil’s BBQ. Click here to order online. A Quick Holiday Note to Customers We get an increased order volume during the holidays. While placing an order, your requested time slot may not be available. We’re sorry for any inconvenience this may cause. If this happens please try to select another time slot or try placing your order online at one of our other Carmines locations. Proceed to Order Thank you for choosing Carmine’s. Hungry for barbecue? Try Virgil’s BBQ. Click here to order online.",
+      "snippet": "Carmine's Dining Menu & Take-Out Menu Skip to main content --> LOCATIONS MENUS PARTIES CATERING HAPPENINGS RECIPES SAUCE SHOP ORDER ONLINE RESERVATIONS LOCATIONS MENUS PARTIES CATERING HAPPENINGS RECIPES SAUCE SHOP ORDER ONLINE RESERVATIONS TIMES SQUARE, NYC UPPER WEST SIDE, NYC ATLANTIC CITY, NJ WASHINGTON D.C. LAS VEGAS, NV ATLANTIS, BAHAMAS Should we open Carmine's in your city? Let us know! --"
+    }
+  ],
+  "rating": {
+    "primary": 4.6,
+    "primarySource": "opentable",
+    "opentable": 4.6
+  },
+  "reviewCount": {
+    "opentable": 33242
+  },
+  "priceHint": null,
+  "hoursHint": "Mon–Thu 11:30 am–11:00 pm Fri 11:30 am–11:59 pm Sat 11:00 am–11:59 pm Sun 11:00 am–11:00 pm (OpenTable)",
+  "happyHourHint": null,
+  "summaryClaims": [
+    "200 West 44th Street New York, NY 10036",
+    "Servers were really nice, portions were big.",
+    "200 West 44th Street New York, NY 10036",
+    "traditional, family-style Italian food served in generous portions",
+    "I loved the stuffed mushrooms the most, the spicy vodka pasta and peach spritz were great too."
+  ],
+  "itineraryNoteCandidate": "Carmine's Times Square: a loud, generous family-style Italian hall by Broadway; bring a group and order platters to share.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description/reviews each carry their own claims"
+  },
+  "callCounts": {
+    "webSearch": 0,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "fields": {
+    "summary": {
+      "value": "Carmine's Times Square is a family-style Italian restaurant at 200 West 44th Street, in the heart of the Theater District, where platters are sized for the table. OpenTable diners rate it 4.6 across a huge review count, and one wrote Servers were really nice, portions were big. It suits a group meal before a Broadway show.",
+      "claims": [
+        {
+          "text": "Servers were really nice, portions were big.",
+          "sourceUrl": "https://www.opentable.com/carmines-44th-street-nyc"
+        }
+      ]
+    },
+    "description": {
+      "value": "Carmine's Times Square is an Italian restaurant at 200 West 44th Street New York, NY 10036. Guests can enjoy traditional, family-style Italian food served in generous portions. Platters are made for sharing, so it works well for a group before a Broadway show. OpenTable diners rate Carmine's Times Square 4.6 from 33,242 reviews,. One OpenTable diner wrote I loved the stuffed mushrooms the most, the spicy vodka pasta and peach spritz were great too.",
+      "claims": [
+        {
+          "text": "200 West 44th Street New York, NY 10036",
+          "sourceUrl": "https://www.carminesnyc.com/locations/times-square"
+        },
+        {
+          "text": "traditional, family-style Italian food served in generous portions",
+          "sourceUrl": "https://www.carminesnyc.com/locations/times-square"
+        },
+        {
+          "text": "I loved the stuffed mushrooms the most, the spicy vodka pasta and peach spritz were great too.",
+          "sourceUrl": "https://www.opentable.com/carmines-44th-street-nyc"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Carmine's Times Square: a loud, generous family-style Italian hall by Broadway; bring a group and order platters to share.",
+      "claims": [
+        {
+          "text": "200 West 44th Street New York, NY 10036",
+          "sourceUrl": "https://www.carminesnyc.com/locations/times-square"
+        }
+      ]
+    },
+    "reviewsUnstarred": [
+      {
+        "theme": "Big portions",
+        "value": "Carmine's Times Square is built for sharing; an OpenTable diner reported Servers were really nice, portions were big., so order fewer plates than you think.",
+        "claims": [
+          {
+            "text": "Servers were really nice, portions were big.",
+            "sourceUrl": "https://www.opentable.com/carmines-44th-street-nyc"
+          }
+        ],
+        "source": "OpenTable",
+        "sourceUrl": "https://www.opentable.com/carmines-44th-street-nyc",
+        "rating": "4.6",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 25
+      },
+      {
+        "theme": "Dishes to try",
+        "value": "An OpenTable reviewer at Carmine's Times Square named favorites: I loved the stuffed mushrooms the most, the spicy vodka pasta and peach spritz were great too.",
+        "claims": [
+          {
+            "text": "I loved the stuffed mushrooms the most, the spicy vodka pasta and peach spritz were great too.",
+            "sourceUrl": "https://www.opentable.com/carmines-44th-street-nyc"
+          }
+        ],
+        "source": "OpenTable",
+        "sourceUrl": "https://www.opentable.com/carmines-44th-street-nyc",
+        "rating": "4.6",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 26
+      },
+      {
+        "theme": "Sub-scores",
+        "value": "OpenTable breaks Carmine's Times Square down as 4.6 Food 4.6 Service 4.5 Ambience 4.4 Value, so value scores a little behind the food. Travelers comparing spots should weigh this honestly when picking Carmine's Times Square.",
+        "claims": [
+          {
+            "text": "4.6 Food 4.6 Service 4.5 Ambience 4.4 Value",
+            "sourceUrl": "https://www.opentable.com/carmines-44th-street-nyc"
+          }
+        ],
+        "source": "OpenTable",
+        "sourceUrl": "https://www.opentable.com/carmines-44th-street-nyc",
+        "rating": "4.6",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 35
+      },
+      {
+        "theme": "Noise",
+        "value": "Expect a lively room at Carmine's Times Square; OpenTable lists Noise • Moderate, typical of a busy Theater District dining hall. Factor this into timing and expectations before heading to Carmine's Times Square.",
+        "claims": [
+          {
+            "text": "Noise • Moderate",
+            "sourceUrl": "https://www.opentable.com/carmines-44th-street-nyc"
+          }
+        ],
+        "source": "OpenTable",
+        "sourceUrl": "https://www.opentable.com/carmines-44th-street-nyc",
+        "rating": "4.6",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 33
+      }
+    ],
+    "happyHour": {
+      "value": false,
+      "claims": [],
+      "note": "Confirmed none: official site (www.carminesnyc.com) and saved allowlisted pages state no happy hour.",
+      "status": "none",
+      "checkedSources": [
+        "https://www.carminesnyc.com/locations/times-square",
+        "https://www.opentable.com/carmines-44th-street-nyc",
+        "https://exa.ai/library/place/p6w36cmf6x5",
+        "https://www.carminesnyc.com/menus"
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:05:00-07:00",
+    "writer": "grok-bot"
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.opentable.com/carmines-44th-street-nyc",
+    "site": "OpenTable",
+    "praise": [
+      "Servers were really nice, portions were big.",
+      "I loved the stuffed mushrooms the most, the spicy vodka pasta and peach spritz were great too.",
+      "4.6 Food 4.6 Service 4.5 Ambience 4.4 Value"
+    ],
+    "watchOuts": [
+      "Noise • Moderate"
+    ],
+    "complaints": [
+      "Noise • Moderate"
+    ],
+    "themes": [
+      "Big portions",
+      "Dishes to try",
+      "Sub-scores",
+      "Noise"
+    ],
+    "via": "WebFetch live fetch 2026-10-28 (curl 403/blocked); text saved verbatim from WebFetch markdown"
+  },
+  "itineraryNote": "Carmine's Times Square: a loud, generous family-style Italian hall by Broadway; bring a group and order platters to share.",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029",
+  "review1": "Carmine's is a popular choice for birthdays and celebrations, with super food quality, top-notch service, a festive atmosphere and portions so large that arriving hungry is the standard advice.",
+  "review1Source": "Exa place listing",
+  "review1Rating": "5/5",
+  "review1Theme": "Service",
+  "review1SourceUrl": "https://exa.ai/library/place/p6w36cmf6x5",
+  "review1Stars": 5,
+  "review2": "Portions are huge and served family style, so diners recommend coming as a group and sharing several dishes rather than ordering one each.",
+  "review2Source": "Exa place listing",
+  "review2Rating": "4/5",
+  "review2Theme": "Service",
+  "review2SourceUrl": "https://exa.ai/library/place/p6w36cmf6x5",
+  "review2Stars": 4,
+  "review3": "Repeat visits across several cities are described as consistently on point, with favorite family-style dishes reordered every time and takeout orders traveling well, apart from cheesy bread that softens.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "5/5",
+  "review3Theme": "Atmosphere",
+  "review3SourceUrl": "https://exa.ai/library/place/p6w36cmf6x5",
+  "review3Stars": 5,
+  "review4": "The pace can feel rushed when time before a show is short, so diners suggest leaving enough time to enjoy the large shared plates.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "4/5",
+  "review4Theme": "Food and drinks",
+  "review4SourceUrl": "https://exa.ai/library/place/p6w36cmf6x5",
+  "review4Stars": 4,
+  "review1Claims": [
+    "I'm so glad, I gave me the opportunity to visit Carmine's for my birthday.",
+    "It was an amazing experience.",
+    "The food quality is super.",
+    "Service top notch 👌.",
+    "And atmosphere simply the best you can find.",
+    "I totally recommend this restaurant make sure to come hungry because you will for sure get enough food.",
+    "Thank you to all the staff you customer service is above and beyond."
+  ],
+  "review2Claims": [
+    "I wasn’t aware this was a family style restaurant, which means massive portions meant for sharing I had the lasagna and it was delicious, massive but delicious.",
+    "I ended up giving half my lasagna to the table next to me.",
+    "I had the cheese cake and again that was unbelievably huge as well I found everything to be reasonably priced given the portion sizes The service was great, and the server took the time to give me great recommendations.",
+    "Highly recommended this dinning experience.",
+    "If you’re going by yourself prepare to take leftovers with you."
+  ],
+  "review3Claims": [
+    "In Times Square I ate on the restaurant a some years ago and we had a great experience.",
+    "The review below represents what we typically order everytime we go to Carmines.",
+    "I have been to Carmine's in NYC, Washington, DC and Las Vegas and each and every time it is on point!!!",
+    "I am not sure why i have never left a review but I will be fixing that today.",
+    "I took photos and a copy of the receipt from Las Vegas so yall can see everything we ordered to go..",
+    "the only difference is the bread doesn't transport well with cheese i will remove the cheese next time."
+  ],
+  "review4Claims": [
+    "The show is amazing and the actors and actresses are so great.",
+    "It was very entertaining.",
+    "My only issue was the food.",
+    "They give a great amount of food but not enough time to eat it.",
+    "You are sharing plates with 10 different people.",
+    "you serve yourself a little at first so everyone can eat.",
+    "They then would send you to do a task and when u came back they would clear the entire table.",
+    "We had full plates of food left and you think you are going to go back to finish it but it’s gone.",
+    "They don’t mention that they are going to take everything away."
+  ],
+  "reviewsLabel": "Representative reviews written from 35 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenOrder": [
+    "happyHour"
+  ],
+  "writtenAt": {
+    "happyHour": "2026-10-30T13:06:00.262645+00:00"
+  },
+  "happyHourSourceUrl": null,
+  "happyHour": false
+}

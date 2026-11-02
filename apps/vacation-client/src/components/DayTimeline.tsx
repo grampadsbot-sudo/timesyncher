@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 import { logoUrlForPlace, tabCategoryKey } from '../lib/listTabModel.mjs';
 import { overrideFor, placeName } from '../lib/placeHelpers';
+import { logoChipFallbackEmoji, onLogoImgError, onLogoImgLoad } from '../lib/logoChipHandlers.mjs';
 
 type TimelineMedia = {
   publicUrl?: string;
@@ -48,12 +49,6 @@ function mediaUrl(row: TimelineMedia) {
   return String(row.publicUrl || row.url || row.thumbnail_url || row.thumbnailUrl || '').trim();
 }
 
-function summarySuppressedKind(kind: string) {
-  return /^(travel|flight|hotel-wake|hotel-event|hotel-sleep|hotel-checkout|car-pickup|car-dropoff)$/.test(
-    kind,
-  );
-}
-
 function TimelineIcon({
   entry,
   trip,
@@ -80,14 +75,22 @@ function TimelineIcon({
   const logo = logoUrlForPlace(place, trip);
   const override = overrideFor(trip, place);
   const category = tabCategoryKey(place, trip);
-  const fallback =
+  const fallback = logoChipFallbackEmoji(
     entry.kind === 'hotel-event' || entry.kind === 'hotel-checkout' || category === 'hotel'
       ? '🧳'
-      : String(override.icon || place.category?.icon || place.category_icon || '📍');
+      : String(override.icon || place.category?.icon || place.category_icon || '📍'),
+  );
   return (
     <span className="tsv-timeline-icon" data-ts-timeline-icon="1" aria-hidden="true">
       {logo ? (
-        <img className="tsv-timeline-logo" src={logo} alt="" loading="lazy" />
+        <img
+          className="tsv-timeline-logo"
+          src={logo}
+          alt=""
+          loading="lazy"
+          onError={(event) => onLogoImgError(event, fallback)}
+          onLoad={(event) => onLogoImgLoad(event, fallback)}
+        />
       ) : (
         <span className="tsv-timeline-emoji">{fallback}</span>
       )}
@@ -152,11 +155,6 @@ export function DayTimeline({ trip, entries, onOpen }: Props) {
       {entries.map((entry) => {
         const isTravel = entry.kind === 'travel';
         const place = entry.place;
-        const showSummary =
-          !isTravel &&
-          !summarySuppressedKind(entry.kind) &&
-          entry.kind === 'thing' &&
-          entry.summary;
         const media = entry.media?.length ? entry.media : [];
         return (
           <li
@@ -215,13 +213,15 @@ export function DayTimeline({ trip, entries, onOpen }: Props) {
                   {entry.fare}
                 </p>
               ) : null}
-              {showSummary ? (
-                <p className="tsv-timeline-summary" data-row-summary="1">
-                  {entry.summary}
-                </p>
-              ) : null}
               {!isTravel && entry.itineraryNote ? (
-                <p className="tsv-timeline-note">{entry.itineraryNote}</p>
+                <p
+                  className="tsv-timeline-note"
+                  data-row-summary="1"
+                  data-itinerary-note="1"
+                  data-summary-stored="1"
+                >
+                  {entry.itineraryNote}
+                </p>
               ) : null}
             </div>
           </li>

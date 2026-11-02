@@ -15,6 +15,7 @@ import vacationRequest from '../routes/vacation-request.mjs';
 import keepsakeOrder from '../routes/keepsake-order.mjs';
 import version from '../routes/version.mjs';
 import workerJobs from '../routes/worker-jobs.mjs';
+import thingEvidenceDossiers from '../routes/thing-evidence-dossiers.mjs';
 
 const handlers = {
   'admin-onboardings': adminOnboardings,
@@ -31,6 +32,7 @@ const handlers = {
   'keepsake-order': keepsakeOrder,
   version,
   'worker-jobs': workerJobs,
+  'thing-evidence-dossiers': thingEvidenceDossiers,
   'bind-thing-media': vacationItinerary,
   'vacation-web-access': vacationItinerary,
   pdf: vacationItinerary,

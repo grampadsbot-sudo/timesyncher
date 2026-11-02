@@ -1,18 +1,19 @@
+import { repairExplicitLogoUrl } from './thing-logo-fallback-url.mjs';
 import { timelineIcon, timelineCategoryIcon, thingLogoUrl } from './timeline-icons.mjs';
 
 export const NAMED_THING_LOGOS = {
-  hertz: 'https://www.hertz.com/favicon.ico',
+  hertz: 'https://icons.duckduckgo.com/ip3/hertz.com.ico',
   alamo: 'https://www.alamo.com/favicon.ico',
   avis: 'https://www.avis.com/favicon.ico',
   enterprise: 'https://www.enterprise.com/favicon.ico',
   budget: 'https://www.budget.com/favicon.ico',
   national: 'https://www.nationalcar.com/favicon.ico',
-  hyatt: 'https://www.hyatt.com/hyatt/hds/images/4.0.0/favicon.ico',
-  jetblue: 'https://www.jetblue.com/favicon.ico',
-  southwest: 'https://www.southwest.com/favicon.ico',
-  united: 'https://www.united.com/favicon.ico',
-  delta: 'https://www.delta.com/favicon.ico',
-  american: 'https://www.aa.com/favicon.ico',
+  hyatt: 'https://icons.duckduckgo.com/ip3/hyatt.com.ico',
+  jetblue: 'https://icons.duckduckgo.com/ip3/jetblue.com.ico',
+  southwest: 'https://icons.duckduckgo.com/ip3/southwest.com.ico',
+  united: 'https://icons.duckduckgo.com/ip3/united.com.ico',
+  delta: 'https://icons.duckduckgo.com/ip3/delta.com.ico',
+  american: 'https://icons.duckduckgo.com/ip3/aa.com.ico',
 };
 
 const BRAND_LOGO_RULES = [
@@ -50,11 +51,14 @@ function text(value) {
 }
 
 function sourceRecord(thing = {}, override = {}) {
+  const metadata = thing.metadata && typeof thing.metadata === 'object' ? thing.metadata : {};
+  const nested = metadata.sourceRecord && typeof metadata.sourceRecord === 'object' ? metadata.sourceRecord : {};
+  const stored = thing.source_record && typeof thing.source_record === 'object' ? thing.source_record : {};
   const embedded = thing.sourceRecord && typeof thing.sourceRecord === 'object' ? thing.sourceRecord : {};
   const overrideRecord = override.sourceRecord && typeof override.sourceRecord === 'object' ? override.sourceRecord : {};
   const fromThing = thing.source && typeof thing.source === 'object' ? thing.source : {};
   const fromOverride = override.source && typeof override.source === 'object' ? override.source : {};
-  return { ...embedded, ...overrideRecord, ...fromThing, ...fromOverride };
+  return { ...nested, ...stored, ...embedded, ...overrideRecord, ...fromThing, ...fromOverride };
 }
 
 function thumbnailFromSource(source = {}) {
@@ -88,7 +92,10 @@ function brandLogoFromName(name = '') {
 function pageUrlForLogo(thing = {}, override = {}) {
   const source = sourceRecord(thing, override);
   return text(
-    source.url
+    override.url
+    || override.website
+    || override.sourceUrl
+    || source.url
     || source.website
     || source.sourceUrl
     || thing.url
@@ -165,6 +172,7 @@ export function sourceLogoUrl(thing = {}, override = {}) {
     thing.faviconUrl,
     override.logoUrl,
     override.iconUrl,
+    thing.captured_logo_url,
     thing.logoUrl,
     thing.iconUrl,
     thing.image_url,
@@ -215,6 +223,12 @@ export function resolveThingLogoUrl(thing = {}, override = {}) {
   return sourceLogoUrl(thing, override);
 }
 
+export function resolveThingLogoDisplayUrl(thing = {}, override = {}) {
+  const logo = resolveThingLogoUrl(thing, override);
+  if (!logo) return '';
+  return repairExplicitLogoUrl(logo, pageUrlForLogo(thing, override));
+}
+
 export function applyCapturedLogos(shared = {}) {
   const next = {
     ...shared,
@@ -227,10 +241,13 @@ export function applyCapturedLogos(shared = {}) {
     const key = `place:${place.id}`;
     const override = { ...(next.thingOverrides[key] || {}) };
     const resolved = timelineIcon(place, override);
-    const logoUrl = captureThingLogo(place, override);
+    const pageUrl = pageUrlForLogo(place, override);
+    const logoUrl = repairExplicitLogoUrl(captureThingLogo(place, override), pageUrl);
     if (logoUrl) {
       override.logoUrl = logoUrl;
-    } else if (!text(override.logoUrl)) {
+    } else if (text(override.logoUrl)) {
+      override.logoUrl = repairExplicitLogoUrl(override.logoUrl, pageUrl);
+    } else {
       override.logoUrl = '';
       const reason = logoCaptureMissReason(place, override);
       if (reason) override.logoCaptureReason = reason;

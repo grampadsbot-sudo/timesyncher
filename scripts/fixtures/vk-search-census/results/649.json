@@ -1,0 +1,241 @@
+{
+  "thingId": 649,
+  "thingName": "Whole Foods Market Upper West Side",
+  "type": "store",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.wholefoodsmarket.com/stores/upperwestside/",
+      "title": "Upper West Side | Grocery Store in New York 10025-5139",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "e=\"subheader\" aria-disabled=\"false\" aria-label=\"Recipes\" href=\"/recipes?ref_=US_TRF_ALL_UFG_WFM_OTHER_1002393\"> Recipes Upper West Side Store Address 808 Columbus Ave, New York, NY 10025-5139 Get directions Phone (212) 222-6160 Store Hours Monday - Friday: 7 am - 10 pm Saturday: 7 am - 10 pm Sunday: 7 am - 10 pm Shop this store Shop Cateri … e=\"subheader\" aria-disabled=\"false\" aria-label=\"Recipes\" href=\"/recipes?ref_=US_TRF_ALL_UFG_WFM_OTHER_1002393\"> Recipes Upper West Side Store Address 808 Columbus Ave, New York, NY 10025-5139 Get directions Phone (212) 222-6160 Store Hours Monday - Friday: 7 am - 10 pm Saturday: 7 am - 10 pm Sunday: 7 am - 10 pm Shop this store Shop Cateri … G_WFM_OTHER_1002393\"> Recipes Upper West Side Store Address 808 Columbus Ave, New York, NY 10025-5139 Get directions Phone (212) 222-6160 Store Hours Monday - Friday: 7 am - 10 pm Saturday: 7 am - 10 pm Sunday: 7 am - 10 pm Shop this store Shop Catering Store Amenities Grocery Delivery & Pickup Order what you need on Amazon.com … nks made to order. Whole Foods Wine Store Market Sandwich Sandwiches made to order, whether you choose our signature combinations or invent your own. Kikka Sushi Highest quality fresh tuna, all-natural seafood and responsible ingredients rolled fresh daily. Get to know your store. Store Team Leader — Tyrone Young Stop by to find expert  …  vegetarian options. WFM Coffee Bar A full service coffee shop, brewing a variety of roasts and creating drinks made to order. Whole Foods Wine Store Market Sandwich Sandwiches made to order, whether you choose our signature combinations or invent your own. Kikka Sushi Highest quality fresh tuna, all-natural seafood and responsible ingred … ily specials. Vegan and vegetarian options. WFM Coffee Bar A full service coffee shop, brewing a variety of roasts and creating drinks made to order. Whole Foods Wine Store Market Sandwich Sandwiches made to order, whether you choose our signature combinations or invent your own. Kikka Sushi Highest quality fresh tuna, a … lways high-quality ingredients: a.k.a. the best of bread. Custom Floral Arrangements We'll take your ideas to beautiful. You take them home to share. Butcher’s Cut Room Fresh cuts prepared in-store by our expert butchers. Grind Your Own Nut Butters Make your own butters and spreads with freshly ground nuts. Concierge",
+      "snippet": "e=\"subheader\" aria-disabled=\"false\" aria-label=\"Recipes\" href=\"/recipes?ref_=US_TRF_ALL_UFG_WFM_OTHER_1002393\"> Recipes Upper West Side Store Address 808 Columbus Ave, New York, NY 10025-5139 Get directions Phone (212) 222-6160 Store Hours Monday - Friday: 7 am - 10 pm Saturday: 7 am - 10 pm Sunday:",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://exa.ai/library/place/9t58jkr8sn4",
+      "title": "Exa place listing: Whole Foods Market, 808 Columbus Ave",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "uest reviews); text stored as verbatim excerpts | great fresh produce and good sales … slightly higher prices … Rating 4.2 out of 5 · 2,920 reviews … A very large supermarket serving the Upper Westside, with very fully stocked shelves and slightly higher prices …  (Exa place listing page aggregating guest reviews); text stored as verbatim excerpts | great fresh produce and good sales … slightly higher prices … Rating 4.2 out of 5 · 2,920 reviews … A very large supermarket serving the Upper Westside, with very fully stocked shelves and slightly higher prices … le Foods Market, 808 Columbus Ave | live curl fetch 2026-10-29 (Exa place listing page aggregating guest reviews); text stored as verbatim excerpts | great fresh produce and good sales … slightly higher prices … Rating 4.2 out of 5 · 2,920 reviews … A very large supermarket serving the Upper Westside, with very fully stocked shelves … ive curl fetch 2026-10-29 (Exa place listing page aggregating guest reviews); text stored as verbatim excerpts | great fresh produce and good sales … slightly higher prices … Rating 4.2 out of 5 · 2,920 reviews … A very large supermarket serving the Upper Westside, with very fully stocked shelves and slightly higher pric I’m a regular Whole Foods customer and I’ve honestly been surprised by some of the customer service and overall store experience lately. Over the past couple of weeks, I’ve had a few interactions that felt dismissive and unhelpful. At the deli counter, there’s a young woman working there who comes across as consistently uninterested and short with customers. It’s confusing to me how this level of service is being allowed to continue, especially at a store that usually prides itself on friendliness and professionalism. Friendly staff, cashiers always nice, patient, a pleasant atmosphere overall with great fresh produce and good sales— especially for Amazon Prime members. A too tempting array of bakery products, a section for vitamins and health products, a hot food bar and a cafe area where you can eat it or just stop to eat the yogurt you just bought. A Prime pick-up station, and a great, reliable delivery service!!",
+      "snippet": "uest reviews); text stored as verbatim excerpts | great fresh produce and good sales … slightly higher prices … Rating 4.2 out of 5 · 2,920 reviews … A very large supermarket serving the Upper Westside, with very fully stocked shelves and slightly higher prices",
+      "fetchMethod": "live curl fetch 2026-10-29 (Exa place listing page aggregating guest reviews); text stored as verbatim excerpts"
+    },
+    {
+      "url": "https://www.yelp.com/biz/whole-foods-market-new-york-10",
+      "title": "Yelp: Whole Foods Market, 808 Columbus Ave (search snapshot)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "search snapshot) | SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch) | 3.2 (385 reviews) … More groceries than the Columbus Circle Location. … , 808 Columbus Ave (search snapshot) | SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch) | 3.2 (385 reviews) … More groceries than the Columbus Circle Location.",
+      "snippet": "search snapshot) | SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch) | 3.2 (385 reviews) … More groceries than the Columbus Circle Location.",
+      "fetchMethod": "SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch)"
+    }
+  ],
+  "rating": {
+    "primary": 3.2,
+    "primarySource": "yelp",
+    "yelp": 3.2,
+    "aggregator": 4.2
+  },
+  "reviewCount": {
+    "yelp": 385,
+    "aggregator": 2920
+  },
+  "priceHint": "$$$ grocery",
+  "hoursHint": "Daily 7am–10pm (official store page)",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "808 Columbus Ave, New York, NY 10025-5139",
+    "808 Columbus Ave, New York, NY 10025-5139",
+    "808 Columbus Ave, New York, NY 10025-5139",
+    "Monday - Friday: 7 am - 10 pm",
+    "Kikka Sushi Highest quality fresh tuna",
+    "Market Sandwich Sandwiches made to order",
+    "Whole Foods Wine Store",
+    "Butcher’s Cut Room",
+    "A very large supermarket serving the Upper Westside, with very fully stocked shelves and slightly higher prices",
+    "More groceries than the Columbus Circle Location.",
+    "Rating 4.2 out of 5 · 2,920 reviews",
+    "3.2 (385 reviews)",
+    "great fresh produce and good sales",
+    "slightly higher prices"
+  ],
+  "itineraryNoteCandidate": "Whole Foods Market Upper West Side: a big neighborhood grocery at 808 Columbus Ave, New York, NY 10025-5139; grab sushi or a made-to-order sandwich.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text; sources include labelled SERP search snapshots (not live fetches) — see each source's fetchMethod"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 25,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Whole Foods Market Upper West Side at 808 Columbus Ave is a large neighborhood supermarket with sushi, made-to-order sandwiches, a wine store and a hot bar. Reviewers note it carries more groceries than the Columbus Circle branch, with good fresh produce and sales, though prices run slightly higher.",
+      "claims": [
+        {
+          "text": "808 Columbus Ave, New York, NY 10025-5139",
+          "sourceUrl": "https://www.wholefoodsmarket.com/stores/upperwestside/"
+        },
+        {
+          "text": "More groceries than the Columbus Circle Location.",
+          "sourceUrl": "https://www.yelp.com/biz/whole-foods-market-new-york-10"
+        }
+      ]
+    },
+    "description": {
+      "value": "Whole Foods Market Upper West Side is the big uptown grocery at 808 Columbus Ave, New York, NY 10025-5139, open Monday - Friday: 7 am - 10 pm and the same hours on weekends. The store page lists Kikka Sushi Highest quality fresh tuna, a Market Sandwich counter with Sandwiches made to order, a Whole Foods Wine Store and a Butcher’s Cut Room. An aggregated guest review (Exa listing) calls it A very large supermarket serving the Upper Westside, with very fully stocked shelves and slightly higher prices, and a Yelp highlight (search snapshot) says More groceries than the Columbus Circle Location. Ratings: Exa listing Rating 4.2 out of 5 · 2,920 reviews; Yelp search snapshot 3.2 (385 reviews). Representative aggregated guest reviews praise: “great fresh produce and good sales”. Representative watch-outs: “slightly higher prices”.",
+      "claims": [
+        {
+          "text": "808 Columbus Ave, New York, NY 10025-5139",
+          "sourceUrl": "https://www.wholefoodsmarket.com/stores/upperwestside/"
+        },
+        {
+          "text": "Monday - Friday: 7 am - 10 pm",
+          "sourceUrl": "https://www.wholefoodsmarket.com/stores/upperwestside/"
+        },
+        {
+          "text": "Kikka Sushi Highest quality fresh tuna",
+          "sourceUrl": "https://www.wholefoodsmarket.com/stores/upperwestside/"
+        },
+        {
+          "text": "Market Sandwich Sandwiches made to order",
+          "sourceUrl": "https://www.wholefoodsmarket.com/stores/upperwestside/"
+        },
+        {
+          "text": "Whole Foods Wine Store",
+          "sourceUrl": "https://www.wholefoodsmarket.com/stores/upperwestside/"
+        },
+        {
+          "text": "Butcher’s Cut Room",
+          "sourceUrl": "https://www.wholefoodsmarket.com/stores/upperwestside/"
+        },
+        {
+          "text": "A very large supermarket serving the Upper Westside, with very fully stocked shelves and slightly higher prices",
+          "sourceUrl": "https://exa.ai/library/place/9t58jkr8sn4"
+        },
+        {
+          "text": "More groceries than the Columbus Circle Location.",
+          "sourceUrl": "https://www.yelp.com/biz/whole-foods-market-new-york-10"
+        },
+        {
+          "text": "Rating 4.2 out of 5 · 2,920 reviews",
+          "sourceUrl": "https://exa.ai/library/place/9t58jkr8sn4"
+        },
+        {
+          "text": "3.2 (385 reviews)",
+          "sourceUrl": "https://www.yelp.com/biz/whole-foods-market-new-york-10"
+        },
+        {
+          "text": "great fresh produce and good sales",
+          "sourceUrl": "https://exa.ai/library/place/9t58jkr8sn4"
+        },
+        {
+          "text": "slightly higher prices",
+          "sourceUrl": "https://exa.ai/library/place/9t58jkr8sn4"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Whole Foods Market Upper West Side: a big neighborhood grocery at 808 Columbus Ave, New York, NY 10025-5139; grab sushi or a made-to-order sandwich.",
+      "claims": [
+        {
+          "text": "808 Columbus Ave, New York, NY 10025-5139",
+          "sourceUrl": "https://www.wholefoodsmarket.com/stores/upperwestside/"
+        }
+      ]
+    }
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://exa.ai/library/place/9t58jkr8sn4",
+    "site": "Exa place listing",
+    "via": "live curl fetch 2026-10-29 (Exa place listing page aggregating guest reviews); text stored as verbatim excerpts",
+    "praise": [
+      "great fresh produce and good sales",
+      "slightly higher prices"
+    ],
+    "watchOuts": [],
+    "themes": [
+      "Overall experience",
+      "Value"
+    ],
+    "complaints": []
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Whole Foods Market Upper West Side: a big neighborhood grocery at 808 Columbus Ave, New York, NY 10025-5139; grab sushi or a made-to-order sandwich.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "Whole Foods on the Upper West Side stands out for great fresh produce and good sales, with Prime member pricing adding extra value for regular grocery runs in the neighborhood.",
+  "review1Source": "Exa place listing",
+  "review1Rating": "3.2/5",
+  "review1Theme": "Overall experience",
+  "review1SourceUrl": "https://exa.ai/library/place/9t58jkr8sn4",
+  "review2": "Prices run slightly higher than at some neighborhood grocers, a trade-off many accept for the quality, the broad selection and conveniences like the hot food bar and the cafe area.",
+  "review2Source": "Exa place listing",
+  "review2Rating": "3.2/5",
+  "review2Theme": "Value",
+  "review2SourceUrl": "https://exa.ai/library/place/9t58jkr8sn4",
+  "review3": "Service has slipped for some regular shoppers, with recent accounts of dismissive or unhelpful interactions, particularly at the deli counter, at a store usually known for friendliness and professionalism.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "1/5",
+  "review3Theme": "Service",
+  "review3SourceUrl": "https://exa.ai/library/place/9t58jkr8sn4",
+  "review4": "Friendly, patient cashiers and a pleasant atmosphere still come up often, along with a tempting bakery, a vitamins and health section, a Prime pickup station and reliable delivery service.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Food and drinks",
+  "review4SourceUrl": "https://exa.ai/library/place/9t58jkr8sn4",
+  "review1Claims": [
+    "great fresh produce and good sales"
+  ],
+  "review2Claims": [
+    "slightly higher prices"
+  ],
+  "review3Claims": [
+    "I’m a regular Whole Foods customer and I’ve honestly been surprised by some of the customer service and overall store experience lately.",
+    "Over the past couple of weeks, I’ve had a few interactions that felt dismissive and unhelpful.",
+    "At the deli counter, there’s a young woman working there who comes across as consistently uninterested and short with customers.",
+    "It’s confusing to me how this level of service is being allowed to continue, especially at a store that usually prides itself on friendliness and professionalism."
+  ],
+  "review4Claims": [
+    "Friendly staff, cashiers always nice, patient, a pleasant atmosphere overall with great fresh produce and good sales— especially for Amazon Prime members.",
+    "A too tempting array of bakery products, a section for vitamins and health products, a hot food bar and a cafe area where you can eat it or just stop to eat the yogurt you just bought.",
+    "A Prime pick-up station, and a great, reliable delivery service!!",
+    "great fresh produce and good sales"
+  ],
+  "reviewStarsDropped": "mean 4.00 vs venue 3.20 >0.5",
+  "reviewsLabel": "Representative reviews written from 13 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:22:18.186259+00:00"
+  }
+}

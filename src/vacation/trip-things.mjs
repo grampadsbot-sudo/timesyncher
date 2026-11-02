@@ -167,6 +167,14 @@ export async function insertTripThing(db, { tripId, requestId, thing, env = proc
     throw new TripThingInsertError(`insertTripThing returned no row for title "${item.title}"`);
   }
   await assignTripSiteUrlWhenThingsPresent(db, tripId, env);
+  const { scheduleThingEvidenceCapture } = await import('./thing-evidence-capture-trigger.mjs');
+  scheduleThingEvidenceCapture({
+    id,
+    trip_id: tripId,
+    title: item.title,
+    category: item.category,
+    metadata: item.metadata,
+  }, { env, fetchImpl: globalThis.fetch });
   try {
     const progress = await loadTripSearchProgress(db, tripId);
     if (progress.jobId && !['failed', 'cancelled', 'ready'].includes(progress.stage)) {

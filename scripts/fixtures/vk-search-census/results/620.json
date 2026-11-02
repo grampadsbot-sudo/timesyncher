@@ -1,0 +1,211 @@
+{
+  "thingId": 620,
+  "thingName": "Hotel Edison",
+  "type": "hotel",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.edisonhotelnyc.com/",
+      "title": "Times Square Hotels | Hotel Edison",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Times Square Hotels | Hotel Edison | Enjoy an authentic New York experience at our historic, art deco hotel in the Theatre District, steps from Times Square, with three restaurants and event venues. Enjoy an authentic New York experience at our historic, art deco hotel in the Theatre District, steps from ",
+      "snippet": "Times Square Hotels | Hotel Edison | Enjoy an authentic New York experience at our historic, art deco hotel in the Theatre District, steps from Times Square, with three restaurants and event venues. Enjoy an authentic New York experience at our historic, art deco hotel in the Theatre District, steps",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Hotel_Edison",
+      "title": "Hotel Edison - Wikipedia",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": ",\"references\":{\"wt\":\"\"},\"footnotes\":{\"wt\":\"\"}},\"i\":0}}]}'> Hotel Edison The hotel as seen from 515 Madison Avenue , 1933 General information Location 228 West 47th Street , Manhattan , New York, United States Coordinates 40°45′35″N 73°59′10″W ﻿ / ﻿ 40.75968°N 73.98611°W ﻿ / 40.75968; -73.98611 [[Geographic coordinate s … ,\"references\":{\"wt\":\"\"},\"footnotes\":{\"wt\":\"\"}},\"i\":0}}]}'> Hotel Edison The hotel as seen from 515 Madison Avenue , 1933 General information Location 228 West 47th Street , Manhattan , New York, United States Coordinates 40°45′35″N 73°59′10″W ﻿ / ﻿ 40.75968°N 73.98611°W ﻿ / 40.75968; -73.98611 [[Geographic coordinate s",
+      "snippet": ",\"references\":{\"wt\":\"\"},\"footnotes\":{\"wt\":\"\"}},\"i\":0}}]}'> Hotel Edison The hotel as seen from 515 Madison Avenue , 1933 General information Location 228 West 47th Street , Manhattan , New York, United States Coordinates 40°45′35″N 73°59′10″W ﻿ / ﻿ 40.75968°N 73.98611°W ﻿ / 40.75968; -73.98611 [[Geo",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com/Hotel_Review-g60763-d93437-Reviews-Hotel_Edison_Times_Square-New_York_City_New_York.html",
+      "title": "HOTEL EDISON TIMES SQUARE - 2026 Reviews (New York City)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "26 Reviews (New York City) Location 228 West 47th Street, New York City, NY 10036-1401 1 (212) 840-5000 Reviews Tips/Q&A (4,067) All reviews (18,818) 3.9 Good (18,818)",
+      "snippet": "26 Reviews (New York City) Location 228 West 47th Street, New York City, NY 10036-1401 1 (212) 840-5000 Reviews Tips/Q&A (4,067) All reviews (18,818) 3.9 Good (18,818)",
+      "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result text (direct curl 403 / WebFetch timeout); not a live fetch"
+    },
+    {
+      "url": "https://us.trip.com/hotels/new-york-hotel-detail-2199817/hotel-edison/",
+      "text": " | Guest Reviews 8.4/10 131 verified reviews … It's a historic hotel, but the room is quite large for the price range in Times Square, and it was also very clean. … The service was usually friendly though sometimes only perfunctory. … I recommend Carve at the intersection of 47th Street and 8th Avenue for more choices. … My girlfriend is a light sleeper so she basically had 5 nights of awful sleep which really negatively impacted our trip.",
+      "title": "Trip.com reviews",
+      "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded",
+      "fetchedAt": "2026-10-29T09:06:18-07:00",
+      "fetchMethod": "live curl 2026-10-29 (drev/tripfetch.py); saved drev/raw/620.json"
+    }
+  ],
+  "rating": {
+    "primary": 3.9,
+    "primarySource": "tripadvisor",
+    "tripadvisor": 3.9,
+    "tripcom": 8.4,
+    "scale_tripcom": 10,
+    "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d93437-Reviews-Hotel_Edison_Times_Square-New_York_City_New_York.html",
+    "ratingEvidence": {
+      "site": "Tripadvisor",
+      "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d93437-Reviews-Hotel_Edison_Times_Square-New_York_City_New_York.html",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "quote": "3.9 Good (18,818)",
+      "average": 3.9,
+      "count": 18818,
+      "scale": 5
+    },
+    "reviewCount": 18818
+  },
+  "reviewCount": {
+    "tripadvisor": 18818,
+    "tripcom": 131
+  },
+  "priceHint": "4-star Times Square",
+  "hoursHint": "Hotel — 24h",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "228 West 47th Street"
+  ],
+  "itineraryNoteCandidate": "Hotel Edison: a historic, art deco hotel in the Theatre District, steps from Times Square, with big, clean rooms; base yourself here for back-to-back Broadway nights.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims; sources include labelled SERP search snapshots (not live fetches) — see each source's fetchMethod"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 225,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Hotel Edison, at 228 West 47th Street, is a big, classic Theater District hotel that guests like for surprisingly large, clean rooms at a fair price so close to Broadway. Service is friendly if sometimes routine, and street and building noise is the main warning for light sleepers.",
+      "claims": [
+        {
+          "text": "228 West 47th Street",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Hotel_Edison"
+        }
+      ]
+    },
+    "description": {
+      "value": "Hotel Edison is a historic, art deco hotel in the Theatre District, steps from Times Square, at 228 West 47th Street. Tripadvisor scores it 3.9 Good (18,818), typical of a busy, high-volume landmark. Reviews praise room size and cleanliness for the location and suggest eating along Eighth Avenue for more choice. The recurring complaint is noise: some guests lost sleep over several nights, so earplugs or a quieter room request are sensible.",
+      "claims": [
+        {
+          "text": "historic, art deco hotel in the Theatre District, steps from Times Square",
+          "sourceUrl": "https://www.edisonhotelnyc.com/"
+        },
+        {
+          "text": "228 West 47th Street",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Hotel_Edison"
+        },
+        {
+          "text": "3.9 Good (18,818)",
+          "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d93437-Reviews-Hotel_Edison_Times_Square-New_York_City_New_York.html"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Hotel Edison: a historic, art deco hotel in the Theatre District, steps from Times Square, with big, clean rooms; base yourself here for back-to-back Broadway nights.",
+      "claims": [
+        {
+          "text": "historic, art deco hotel in the Theatre District, steps from Times Square",
+          "sourceUrl": "https://www.edisonhotelnyc.com/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-hotel-essence-itinerary-note-20261029",
+    "new": false,
+    "at": "2026-10-29T08:45:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Hotel Edison: a historic, art deco hotel in the Theatre District, steps from Times Square, with big, clean rooms; base yourself here for back-to-back Broadway nights.",
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://us.trip.com/hotels/new-york-hotel-detail-2199817/hotel-edison/",
+    "site": "Trip.com",
+    "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded",
+    "praise": [
+      "It's a historic hotel, but the room is quite large for the price range in Times Square, and it was also very clean.",
+      "The service was usually friendly though sometimes only perfunctory.",
+      "I recommend Carve at the intersection of 47th Street and 8th Avenue for more choices."
+    ],
+    "watchOuts": [
+      "My girlfriend is a light sleeper so she basically had 5 nights of awful sleep which really negatively impacted our trip."
+    ],
+    "themes": [
+      "Location",
+      "Service",
+      "Overall experience",
+      "Overall experience"
+    ],
+    "complaints": [
+      "My girlfriend is a light sleeper so she basically had 5 nights of awful sleep which really negatively impacted our trip."
+    ]
+  },
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "The Edison's historic Times Square building wins guests over with rooms that feel generous for the area and the rate, and cleanliness that is regularly praised.",
+  "review1Source": "Trip.com",
+  "review1Rating": "8.7/10",
+  "review1Theme": "Location",
+  "review1SourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2199817/hotel-edison/",
+  "review1Stars": 4,
+  "review2": "Service is described as generally friendly, though some guests found the interactions routine rather than warm, which is typical for a hotel this large.",
+  "review2Source": "Trip.com",
+  "review2Rating": "8.5/10",
+  "review2Theme": "Service",
+  "review2SourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2199817/hotel-edison/",
+  "review2Stars": 4,
+  "review3": "Guests share practical tips about eating nearby, pointing to restaurants on Eighth Avenue around 47th Street when the in-house choices feel limited.",
+  "review3Source": "Trip.com",
+  "review3Rating": "8.0/10",
+  "review3Theme": "Overall experience",
+  "review3SourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2199817/hotel-edison/",
+  "review3Stars": 4,
+  "review4": "Noise is the main watch-out, with light sleepers reporting several poor nights, so earplugs or a request for a higher, quieter room are worth considering.",
+  "review4Source": "Trip.com",
+  "review4Rating": "8.5/10",
+  "review4Theme": "Overall experience",
+  "review4SourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2199817/hotel-edison/",
+  "review4Stars": 4,
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029",
+  "review1Claims": [
+    "It's a historic hotel, but the room is quite large for the price range in Times Square, and it was also very clean.",
+    "It's a historic hotel, but the room is quite large for the price range in Times Square, and it was also very clean"
+  ],
+  "review2Claims": [
+    "The service was usually friendly though sometimes only perfunctory.",
+    "The service was usually friendly though sometimes only perfunctory"
+  ],
+  "review3Claims": [
+    "I recommend Carve at the intersection of 47th Street and 8th Avenue for more choices.",
+    "I recommend Carve at the intersection of 47th Street and 8th Avenue for more choices"
+  ],
+  "review4Claims": [
+    "My girlfriend is a light sleeper so she basically had 5 nights of awful sleep which really negatively impacted our trip.",
+    "My girlfriend is a light sleeper so she basically had 5 nights of awful sleep which really negatively impacted our trip"
+  ],
+  "reviewsLabel": "Representative reviews written from 12 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
+}
