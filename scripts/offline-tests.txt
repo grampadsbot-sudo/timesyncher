@@ -113,6 +113,7 @@ scripts/test_gate_b_capture_pre_data_check.mjs
 scripts/test_capture_fixture_replay_harness.mjs
 scripts/test_onboarding_welcome_precheck.mjs
 scripts/test_pregate_one_harness.mjs
+scripts/test_postdeploy_allowance_778_harness.mjs
 scripts/test_poi_search.mjs
 scripts/test_screenshot_journey_pdf.mjs
 scripts/test_timeline_icons.mjs
