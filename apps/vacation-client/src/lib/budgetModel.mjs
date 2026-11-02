@@ -14,6 +14,10 @@ import {
   bucketTargetAmountFromMap,
 } from '../../../../src/vacation/budget-bucket-keys.mjs';
 import { assignedPlaceIds } from '../../../../src/vacation/itinerary-minimums.mjs';
+import {
+  budgetItineraryPlaces,
+  isTimelineSelectedPlace,
+} from '../../../../src/vacation/budget-itinerary-places.mjs';
 
 export { OTHER_THINGS_BUCKET, BUDGET_BUCKET_ORDER };
 
@@ -38,22 +42,8 @@ export function canonicalBudgetPlace(trip, placeOrId) {
   return catalogPlace(trip, id) || (placeOrId && typeof placeOrId === 'object' ? placeOrId : null);
 }
 
-function rememberBudgetPlace(seen, place) {
-  if (!place || place.id == null) return;
-  const id = String(place.id);
-  const prev = seen.get(id);
-  seen.set(id, prev ? { ...prev, ...place } : place);
-}
-
-function placeHasDayPlacement(place, trip) {
-  const dayIds = overrideFor(trip, place).dayIds;
-  return Array.isArray(dayIds) && dayIds.some((id) => (trip?.days || []).some((day) => String(day.id) === String(id)));
-}
-
 function placeOnTimeline(place, trip) {
-  const id = Number(place?.id);
-  if (id && assignedPlaceIds(trip).has(id)) return true;
-  return placeHasDayPlacement(place, trip);
+  return isTimelineSelectedPlace(place, trip);
 }
 
 export function budgetBucketForPlace(place, trip) {
@@ -107,19 +97,7 @@ export function tripBudgetTargetTotal(trip) {
 }
 
 export function placesForBudget(trip) {
-  const seen = new Map();
-  for (const rows of Object.values(trip?.assignments || {})) {
-    if (!Array.isArray(rows)) continue;
-    for (const row of rows) {
-      const place = resolvePlace(row, trip);
-      rememberBudgetPlace(seen, place);
-    }
-  }
-  for (const place of trip?.places || []) {
-    if (!placeHasDayPlacement(place, trip)) continue;
-    rememberBudgetPlace(seen, place);
-  }
-  return [...seen.values()];
+  return budgetItineraryPlaces(trip);
 }
 
 export function bucketDisplayLabel(bucket) {
