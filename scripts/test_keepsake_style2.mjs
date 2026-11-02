@@ -723,7 +723,7 @@ assert.match(patchedAe, /Re\.includes\("restaurant"\)\?"restaurant":Re\.includes
 assert.match(patchedAe, /tsPad=\(rows\)=>rows/);
 assert.doesNotMatch(patchedAe, /__tsLiveFill:1/);
 assert.match(patchedAe, /Qa\.flatMap\(di=>Ci\(di\)\)/);
-assert.match(patchedAe, /raw\.place_id\?\(Ft\.get\(raw\.place_id\)/);
+assert.match(patchedAe, /const pid=raw\.place_id\|\|di\.place_id;const Xi=pid\?\(Ft\.get\(pid\)/);
 assert.doesNotMatch(patchedAe, /\[\]\.concat\(rs,Po,bc,Oc,Fs,Cc\)/);
 assert.match(patchedAe, /height:dn\?420:300,marginBottom:12/);
 assert.doesNotMatch(patchedAe, /height:dn\?900:300,marginBottom:12/);
