@@ -166,15 +166,22 @@ const HOTEL_LIST_DESC_SUMMARY_NEEDLE =
   'Pn?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4},children:Pn}):null,(()=>{const tsRev=tsThingReviewLines(G);return tsRev?n.jsx("div",{"data-ts-thing-review-line":"1"';
 const HOTEL_LIST_DESC_SUMMARY_NEEDLE_400 =
   'Pn?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:400,width:"100%",minWidth:0,overflow:"visible",whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4},children:Pn}):null,(()=>{const tsRev=tsThingReviewLines(G);return tsRev?n.jsx("div",{"data-ts-thing-review-line":"1"';
-const HOTEL_LIST_DESC_SUMMARY_PATCH =
+const HOTEL_LIST_DESC_SUMMARY_NEEDLE_IIFE =
   'Pn?(()=>{const tsHotel=It(G)==="hotel"||Zi(G);const tsFull=tsHotel?String(ha(G).summary??"").replace(/\\s+/g," ").trim():"";return tsFull?n.jsx("div",{"data-ts-list-desc":"1","data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4,display:"-webkit-box",WebkitLineClamp:3,WebkitBoxOrient:"vertical",overflow:"hidden"},children:tsFull}):Pn?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4},children:Pn}):null})():null,(()=>{const tsRev=tsThingReviewLines(G);return tsRev?n.jsx("div",{"data-ts-thing-review-line":"1"';
+const HOTEL_LIST_DESC_SUMMARY_PATCH =
+  '(Pn||(It(G)==="hotel"||Zi(G)))?(()=>{const tsHotel=It(G)==="hotel"||Zi(G);const tsRow=Pn?String(Pn).replace(/\\s+/g," ").trim():"";const tsSpare=tsHotel&&!tsRow?String(ha(G).longDetails??ha(G).description??(G&&G.description)??"").replace(/\\s+/g," ").trim():"";const show=tsRow||tsSpare||(tsHotel?String(ha(G).summary??"").replace(/\\s+/g," ").trim():"");if(!show)return null;const wc=show.split(/\\s+/).filter(Boolean).length;if(tsRow&&wc>=30)return n.jsx("div",{"data-ts-list-desc":"1","data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4,display:"-webkit-box",WebkitLineClamp:3,WebkitBoxOrient:"vertical",overflow:"hidden"},children:tsRow});return n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4},children:show})})():null,(()=>{const tsRev=tsThingReviewLines(G);return tsRev?n.jsx("div",{"data-ts-thing-review-line":"1"';
 
 function patchHotelListDescCaptureLeaf(source = '') {
   let js = String(source || '');
+  if (js.includes('const tsRow=Pn?String(Pn)')) {
+    return js;
+  }
   if (js.includes(HOTEL_LIST_DESC_SUMMARY_NEEDLE)) {
     js = js.replaceAll(HOTEL_LIST_DESC_SUMMARY_NEEDLE, HOTEL_LIST_DESC_SUMMARY_PATCH);
   } else if (js.includes(HOTEL_LIST_DESC_SUMMARY_NEEDLE_400)) {
     js = js.replaceAll(HOTEL_LIST_DESC_SUMMARY_NEEDLE_400, HOTEL_LIST_DESC_SUMMARY_PATCH);
+  } else if (js.includes(HOTEL_LIST_DESC_SUMMARY_NEEDLE_IIFE)) {
+    js = js.replaceAll(HOTEL_LIST_DESC_SUMMARY_NEEDLE_IIFE, HOTEL_LIST_DESC_SUMMARY_PATCH);
   } else if (!js.includes('"data-ts-list-desc":"1"')) {
     throw new Error('hotel list desc capture leaf patch did not apply');
   }

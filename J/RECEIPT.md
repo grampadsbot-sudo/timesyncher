@@ -1,5 +1,42 @@
 # vkfill-549 round (2026-11-02, cursor-ubuntu)
 
+## Round 2026-11-02 ~19:22 UTC (hotel Oe summary guard + live-app narrative re-bind)
+
+**Start sha:** `8fd669a237fadbcb148b42f55c9d1fe8ac0517df` (PR #549 head per lane brief 11:18 AM PT)
+
+### Outcome
+
+**source-ready** — HOST PUBLICATION ONLY (uncommitted patch). Fixes CI `scripts/test_shared_tab_list_summary.mjs:89` (summary row missing when `Pn` empty) and binds hotel list display to `tsListRowDescription` / long `place.description` instead of short `ha(G).summary` alone.
+
+### Root cause
+
+`shared-trip-oe-list-row-patch.mjs` wrapped list summary in `Pn?(()=>…)` so hotels with empty composed `Pn` rendered no `[data-list-summary]`. The same patch preferred `ha(G).summary` (assignment blurb) over substantive `Pn`. CCAB merge could drop `longDetails` before the client hydrated overrides.
+
+### Changes (uncommitted — host commit/push)
+
+| File | Why |
+| --- | --- |
+| `src/vacation/shared-trip-oe-list-row-patch.mjs` | Summary block runs for hotels when `Pn` is empty; show `Pn` (≥30 words clamped) then long override/place narrative, then summary fallback |
+| `src/vacation/shared-trip-live-app-fields.mjs` | After CCAB merge, re-bind hotel `longDetails`/`description`/`summary`/`place.description` from `pickLongDetails` when generic or planning-note |
+| `public/assets/index-BKun7ofk.js` | Rebaked via `node scripts/rebake_served_trek_bundle.mjs` (sha256 `7c2ac81fae17f348a3674189ccb735ba865a5b0163b5467e236f015945b8a62c`) |
+
+### Checks (local, start `8fd669a2` + patch)
+
+| Command | Result |
+| --- | --- |
+| `node scripts/rebake_served_trek_bundle.mjs` | PASS |
+| `node scripts/test_served_trek_bundle.mjs` | PASS |
+| `node scripts/test_shared_tab_list_summary.mjs` | PASS |
+| `node scripts/test_list_row_description_substance.mjs` | PASS |
+| `node scripts/test_stored_ccab_canonical_identity.mjs` | PASS |
+| `node scripts/check-no-comments.mjs` | PASS |
+| `node scripts/test_offline_manifest.mjs` | PASS |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS |
+
+Gate B hotels-390/1280 description bar not re-run in lane (no Cursor self-proof); host structure replay required after push.
+
+---
+
 ## Round 2026-11-02 ~19:06 UTC (hotel list-row binding + bundle rebake)
 
 **Start sha:** `bea634951f5d7469ddf4b7d5a4ad780a868c7268` (PR #549 head per `bot-admin/lanes/vk-pr-handoff/pr-549` 11:02 AM PT)

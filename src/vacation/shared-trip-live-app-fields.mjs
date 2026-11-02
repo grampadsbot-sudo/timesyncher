@@ -17,6 +17,7 @@ const EXPERIENCE_CATEGORIES = new Set([
 ]);
 import { flightFieldsFromBlob } from './place-detail-extract.mjs';
 import { isGenericDescription } from './trip-thing-enrichment.mjs';
+import { isHotelPlanningNote } from './hotel-list-row-narrative.mjs';
 import { isPlaceholderLogoUrl, resolveThingLogoUrl } from './thing-logo-capture.mjs';
 
 function text(value) {
@@ -403,6 +404,21 @@ export function applyLiveAppListRowFields(shared = {}) {
     Object.assign(override, mergedCcab);
     if (!Object.prototype.hasOwnProperty.call(mergedCcab, 'longDetails')) delete override.longDetails;
     if (!Object.prototype.hasOwnProperty.call(mergedCcab, 'details')) delete override.details;
+
+    if (category === 'hotel') {
+      const hotelNarrative = pickLongDetails(place, override, source);
+      if (hotelNarrative) {
+        override.longDetails = hotelNarrative;
+        if (!text(override.details)) override.details = hotelNarrative;
+        if (isGenericDescription(override.description)) override.description = hotelNarrative;
+        if (isHotelPlanningNote(override.summary) || isGenericDescription(override.summary)) {
+          override.summary = hotelNarrative;
+        }
+        if (!text(place.description) || isGenericDescription(place.description)) {
+          place.description = hotelNarrative;
+        }
+      }
+    }
 
     const gateBPositive =
       text(next.trip?.metadata?.gateBNycFixtureVersion) === GATE_B_NYC_POSITIVE_FIXTURE_VERSION;
