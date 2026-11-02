@@ -40,6 +40,13 @@ export function budgetItineraryPlaces(shared = {}) {
     }
   }
 
+  for (const reservation of shared.reservations || []) {
+    const id = Number(reservation?.place_id);
+    if (!id) continue;
+    const place = (shared.places || []).find((p) => Number(p.id) === id);
+    if (place && typeof place === 'object') remember(place);
+  }
+
   for (const place of shared.places || []) {
     if (!isTimelineSelectedPlace(place, shared)) continue;
     remember(place);

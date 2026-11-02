@@ -157,3 +157,13 @@ Host: `git add` the two files above → commit on top of `0e07f9a0` → push →
 **Fix:** Align assertion with rebaked served bundle (same as `test_keepsake_style2.mjs`).
 
 **Verify:** `node scripts/test_shared_tab_filter_chips.mjs` → pass.
+
+## Round PR #801 Gate B fix-it (2026-11-02)
+
+**Gate B:** `budget list missing 42 itinerary things` (Amelie Bistro, Open-air bus tour candidates, Tiffany & Co., Macy's Herald Square, Bodega 88, …).
+
+**Root cause:** Day-by-day `Ci()` puts `reservations[]` rows on the timeline as `type:"transport"`. Legacy budget `Mo` dropped all `transport` rows and the interim `Ds(Gt)` patch skipped `timeline:false` reservation-only places (61/76 NYC fixture rows).
+
+**Fix:** Build live `Mo` from `Qa.flatMap(Ci)` keeping reservation-linked transport (`item.place_id`), resolve `Ft`/`Gt` place for row text; mirror in `budgetItineraryPlaces()` via `shared.reservations`.
+
+**Verify:** `node scripts/test_budget_itinerary_timeline_selected.mjs`; NYC fixture helper lists all five sample names and 76 budget places.

@@ -34,4 +34,26 @@ assert.deepEqual(
 );
 assert.equal(budgetItineraryPlaces(timelineOnlyTrip).length, budgetPlaces.length);
 
+const reservationTrip = {
+  trip: { currency: 'USD' },
+  days: [{ id: 501, day_number: 1, date: '2026-06-23' }],
+  places: [{ id: 670, name: 'Amelie Bistro & Wine Bar', category_name: 'Restaurant' }],
+  assignments: {},
+  reservations: [{
+    place_id: 670,
+    title: 'Amelie Bistro & Wine Bar',
+    day_id: 501,
+    type: 'activity',
+    start_time: '11:00',
+  }],
+  thingOverrides: {
+    'place:670': { category: 'restaurant', price: 65, timeline: false },
+  },
+};
+assert.equal(
+  placesForBudget(reservationTrip).some((place) => Number(place.id) === 670),
+  true,
+  'day itinerary reservations must appear on budget even when timeline override is false',
+);
+
 console.log('budget itinerary timeline-selected places passed');

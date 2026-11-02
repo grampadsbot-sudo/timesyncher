@@ -247,7 +247,8 @@ const IT_CATEGORY_NEEDLE = 'It=G=>Mn(ha(G).category??Fn(G))';
 const IT_CATEGORY_PATCH = 'It=G=>Mn(ha(G).category??(typeof G.category==="string"?G.category:G.category&&G.category.name)??G.category_name??Fn(G))';
 
 const MO_BUDGET_LEGACY_CI_NEEDLE = 'Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","hotel-checkout"].includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}]})).values())';
-const MO_BUDGET_NEEDLE = 'Mo=Array.from(new Map((Gt||[]).filter(Xi=>Xi&&Ds(Xi)).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}])).values())';
+const MO_BUDGET_DS_NEEDLE = 'Mo=Array.from(new Map((Gt||[]).filter(Xi=>Xi&&Ds(Xi)).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}])).values())';
+const MO_BUDGET_NEEDLE = 'Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!(["travel","travel-to-thing","hotel-wake","hotel-sleep","hotel-checkout"].includes(di.type)||di.type==="transport"&&!di.item.place_id)).map(di=>{const raw=di.item;const Xi=raw.place_id?(Ft.get(raw.place_id)||(Gt||[]).find(wn=>wn.id===raw.place_id)||raw):raw;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}]})).values())';
 const MO_BUDGET_PATCH = 'Mo=Array.from(new Map([].concat(rs,Po,bc,Oc,Fs,Cc).filter(Boolean).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}])).values())';
 
 const MAP_HEIGHT_NEEDLE = 'height:dn?900:300,marginBottom:12';
@@ -404,8 +405,7 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
   if (patched.includes(IT_CATEGORY_NEEDLE)) {
     patched = patched.replace(IT_CATEGORY_NEEDLE, IT_CATEGORY_PATCH);
   }
-  if (patched.includes(MO_BUDGET_PATCH)) patched = patched.replace(MO_BUDGET_PATCH, MO_BUDGET_NEEDLE);
-  else if (patched.includes(MO_BUDGET_LEGACY_CI_NEEDLE)) patched = patched.replace(MO_BUDGET_LEGACY_CI_NEEDLE, MO_BUDGET_NEEDLE);
+  for (const n of [MO_BUDGET_PATCH, MO_BUDGET_DS_NEEDLE, MO_BUDGET_LEGACY_CI_NEEDLE]) if (patched.includes(n)) { patched = patched.replace(n, MO_BUDGET_NEEDLE); break; }
   if (patched.includes(MAP_HEIGHT_NEEDLE)) {
     patched = patched.replace(MAP_HEIGHT_NEEDLE, MAP_HEIGHT_PATCH);
   }
@@ -724,7 +724,7 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes(QN_RENDER_PATCH) || !js.includes(GN_RENDER_PATCH) || !js.includes(KI_RENDER_PATCH)) {
     throw new Error('Style two live tab render pad did not apply.');
   }
-  if (!js.includes(MO_BUDGET_NEEDLE) || js.includes(MO_BUDGET_PATCH) || js.includes(MO_BUDGET_LEGACY_CI_NEEDLE)) {
+  if (!js.includes(MO_BUDGET_NEEDLE) || js.includes(MO_BUDGET_PATCH) || js.includes(MO_BUDGET_LEGACY_CI_NEEDLE) || js.includes(MO_BUDGET_DS_NEEDLE)) {
     throw new Error('Style two live budget must mirror timeline picks only.');
   }
   if (!js.includes(MAP_HEIGHT_PATCH) || js.includes(MAP_HEIGHT_NEEDLE)) {

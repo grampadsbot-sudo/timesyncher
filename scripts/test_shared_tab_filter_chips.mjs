@@ -63,7 +63,8 @@ assert.match(bundle, /Oa=Array\.from\(new Set\(tn\.map\(G=>En\(G\)\)\.filter\(Bo
 assert.doesNotMatch(bundle, /\$n=gt\.filter\(/);
 assert.doesNotMatch(bundle, /ci=ot\.filter\(/);
 
-assert.match(bundle, /\(Gt\|\|\[\]\)\.filter\(Xi=>Xi&&Ds\(Xi\)\)/);
+assert.match(bundle, /Qa\.flatMap\(di=>Ci\(di\)\)/);
+assert.match(bundle, /raw\.place_id\?\(Ft\.get\(raw\.place_id\)/);
 assert.doesNotMatch(bundle, /\[\]\.concat\(rs,Po,bc,Oc,Fs,Cc\)/);
 assert.match(bundle, /Xi==="car"\?"Cars"/);
 assert.doesNotMatch(bundle, /\(Gt\|\|\[\]\)\.filter\(Xi=>Xi&&Ds\(Xi\)&&!Mi\(Xi\)\)/);
