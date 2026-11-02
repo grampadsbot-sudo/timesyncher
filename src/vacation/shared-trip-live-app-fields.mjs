@@ -141,16 +141,15 @@ function applyListRowLogoFields(place, override, source, { mutatePlace = true } 
     override.website,
   );
   if (pageUrl) {
-    if (mutatePlace) {
-      place.url = text(place.url) || pageUrl;
-      place.website = text(place.website) || pageUrl;
-    }
     if (!text(override.url)) override.url = pageUrl;
     if (!text(override.website)) override.website = pageUrl;
   }
+  const lookup = mutatePlace && pageUrl
+    ? { ...place, url: text(place.url) || pageUrl, website: text(place.website) || pageUrl }
+    : place;
 
   const explicit = explicitLogo(place, override, source);
-  let logoUrl = text(resolveThingLogoUrl(place, override));
+  let logoUrl = text(resolveThingLogoUrl(lookup, override));
   if (!logoUrl && explicit && !isPlaceholderLogoUrl(explicit)) logoUrl = explicit;
   if (logoUrl && !isPlaceholderLogoUrl(logoUrl)) {
     override.logoUrl = logoUrl;

@@ -78,3 +78,46 @@ Gate B closed-gap on staging not run in lane (no Cursor self-proof). Host: commi
 **Uncommitted files:** `src/vacation/shared-trip-live-app-fields.mjs`, `src/vacation/shared-trip-fixture-replay.mjs`, `src/vacation/thing-logo-capture.mjs`, `src/vacation/keepsake-product-overrides.mjs`, `J/RECEIPT.md`
 
 Host: commit → push → Gate B structure (events/hotels 390+1280) on pushed head.
+
+## Round vkfill-590 @ 5f42857c (2026-11-02 08:28 PT lane, claude-ubuntu, HOST PUBLICATION ONLY)
+
+**Start head:** `5f42857c11385a95e3a97bef993d7eb188812f23` (matches PR head and brief). No host merge was staged in this worktree, so the base-merge TARGET did not apply. No merge, rebase or commit was made here.
+
+**CI failure (the PR's own regression):** `unit-tests` has failed on every head published today. The runs are 41463815206 (`c364a0cd`), 41471904494 (`2afbe696`) and 41480118825 (`5f42857c`, job 125395878271), and each fails at `scripts/test_gate_b_product_row_fields.mjs:279`: "candidate and base paths must hash the same finalized payload" (`188276…d4b2` vs `e3c15f…1b42`). On `d6deba0f` it was green (job 119550355468). The failure reproduces locally.
+
+**Root cause:** `applyListRowLogoFields` (added in `c364a0cd`) wrote the derived page URL onto `place.url`/`place.website` after `applyThingDetailOverrides` had already run. On the next finalize, `writeRatings` reads `place.url` and adds `thingOverrides[place:*].sourceUrl` (rows 632–634, Southwest options). So `finalizeServedSharedTripPayload` was not idempotent.
+
+**Patch (uncommitted, host push):**
+- `src/vacation/shared-trip-live-app-fields.mjs`: stop writing `place.url`/`place.website`. Give `resolveThingLogoUrl` a lookup copy that carries the page URL instead. Override `url`/`website`/`logoUrl` writes and the replay path (`mutatePlace: false`) are unchanged.
+
+**Effect check (job-dir `cmp.mjs`, old HEAD module vs patched):**
+- daybyday, pr225 and positive NYC fixtures: 0 chip changes and 0 `thingOverrides` changes.
+- The only `place` keys that change are the dropped derived `url`/`website`.
+- `applyServedListLogoOverridesOnly` (Gate B replay) output is byte-identical.
+- No visible change is expected.
+
+**Checks @ 5f42857c + patch:**
+| Command | Result |
+| --- | --- |
+| `node scripts/test_gate_b_product_row_fields.mjs` | pass (was the CI failure) |
+| `cd apps/vacation-client && npm ci && npm run typecheck && npm run lint && npm run test` (CHROME_PATH=chromium) | pass, layout suites included |
+| every entry of `scripts/offline-tests.txt` (279) | 274 pass, 5 env-only fails (below) |
+| `node scripts/check-no-comments.mjs` | pass (818 files) |
+| `node scripts/test_offline_manifest.mjs` | pass (279 offline, 17 online) |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | pass (255 report, 0 fail; local `origin/vk` = `ebaaa74`) |
+
+The 5 env-only fails, all of which CI ran green before line 150 on `5f42857c` or with a chrome shim here:
+- `test_day_by_day_map_marker_bounds_chrome` (no `/usr/bin/google-chrome-stable`)
+- `test_live_transcript_dialog_pdf` (lane PDF env)
+- `test_same_selection_capture` and `test_capture_fixture_replay_harness` ("missing but already registered worktree" under `pr-src/capture-producer-roots`)
+- `test_purchase_email_app_link` (no `google-chrome`; it passes with a job-dir chromium shim)
+
+**Still open for the host / managing dr (not codeable in this lane):**
+- **Base merge:** PR is `mergeable_state=dirty` against `vk` `cf6c9627` (357 commits behind; merge-base `e3364ac5`). The host base-merge lanes `vkfill-590-20261102075309` and `-080309` (start `2afbe696`, base_tip `ebaaa74e`) ended source-ready but stayed unpublished: "host commit refused: 508 staged paths" (their `manual-publish.log`). A real merge into `vk` needs that publisher guard decided by the host or managing dr. A read-only legacy `git merge-tree e3364ac5 HEAD cf6c9627` shows text conflicts only in `J/PR_DESCRIPTION.md`, `J/RECEIPT.md` and `public/assets/index-BKun7ofk.js`, plus `evidence/*.png` added on both sides. `vk`'s only change to the patched file (`pickLongDetails` description fallbacks) does not touch the patched lines.
+- **Gate B gap:** #588 gap-close FAIL on `d6deba0` (gateb-verdicts line 532, run 20261102-141548) and on `c364a0c` (line 534, run 20261102-144440): "generic logo on 7 of 29 rows" on events-1280. There is no Gate B verdict yet for `2afbe69`/`5f42857`, so whether the `2afbe696` replay-path enrichment closes the gap is unproven. This patch does not change the replay payload.
+
+**Seen, left alone (scope):** `c364a0cd` added `transform:"translateY(-3px)"` to the chip emoji fallback in `trek-live-product-patches.mjs` (a look change). `5f42857c` committed 42 test-generated `evidence/*.png` files. This lane restored its own `npm test` evidence rewrites to HEAD.
+
+**Uncommitted files:** `src/vacation/shared-trip-live-app-fields.mjs`, `J/RECEIPT.md`, `J/PR_DESCRIPTION.md`
+
+Host: commit → push once → CI `unit-tests` on the pushed head → Gate B structure (events/hotels 390+1280).

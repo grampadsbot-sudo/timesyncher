@@ -10,6 +10,8 @@ Merged `origin/migrate/trek-source` at `446e1913` (host): kept base `Oe()` `<str
 
 Merged `origin/migrate/trek-source` at `e3364ac5` (dirty-head requeue 2026-10-21): absorbed #597/#600 Gate B NYC fixture updates; J conflict only.
 
+2026-11-02 rounds (`c364a0cd`, `2afbe696`, `5f42857c`) drop placeholder logos, add override-only logo enrichment to fixture replay, and block the OSM favicon. The CI fix on top of `5f42857c` (`unit-tests` run 41480118825, `test_gate_b_product_row_fields.mjs:279`): the list-row logo step no longer writes derived `url`/`website` onto `place`, so `finalizeServedSharedTripPayload` is idempotent again. Logo outputs and the replay payload are unchanged. The PR is still `dirty` against `vk`; see `J/RECEIPT.md`.
+
 ## Test plan
 
 - [x] `python3 scripts/ops/dispatch/test_same_selection_capture.py`
