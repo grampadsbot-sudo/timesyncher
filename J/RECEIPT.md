@@ -1,45 +1,39 @@
-# vkfill-550 receipt — PR #550 / #547 row fill (HOST PUBLICATION ONLY)
+# vkfill-550 receipt — PR #550 / #547 BASE-MERGE (HOST PUBLICATION ONLY)
 
 ## Outcome
 
-**source-ready** — uncommitted patch on git HEAD **f524bee30dad8819152556b2c869863f9ba0e8ee** (start commit verified).
+**source-ready** — merge conflict resolution on git HEAD **f5a45b2c659ef792404786cd6df24f149613f568** (start commit verified).
 
-## Trigger
+## Base merge
 
-Gate B structure **round 12** on **f524bee3** at **2026-11-02T11:05:51-08:00** (`~/tsv-dispatch/logs/gateb-verdicts.jsonl`): named fail **row layout: description on the name line, fills the row** — v6 detail *description does not fill the row* (e.g. Blue Note Jazz Club uses 357 of 632 px). CI on **f524bee3** green per handoff (unit-tests **2026-11-02T19:03:56Z**). **feature parity vs staging** not changed this round (repro on f524bee3: budget header control lost vs staging; out of #547 row-fill scope).
-
-## Fix
-
-**`src/vacation/shared-trip-oe-list-row-patch.mjs`**
-
-1. Thing-header inline `data-ts-list-desc` leaf: drop `minWidth:"45%"` / `flexShrink:1`; use `minWidth:0`, `width:"100%"`, `display:"block"` so the flex item occupies ≥60% of row tail (Gate B `restore_check.row_layout` threshold).
-2. Upgrade path from **f524bee3** desc styles (45% min and prior flex-only) to the block fill contract.
-3. Flight `Qo` inline row: `display:flex`, route segments `flex:"0 1 auto"`, summary segment `flex:"1 1 0"` + `display:"block"` fill.
-4. Non–thing-header `OE_LIST_ROW_SR_PATCH`: name `flex:"0 1 auto"`, desc block fill (if that needle applies on rebake).
-
-**`public/assets/index-BKun7ofk.js`**: rebaked `sha256=184e4a79ee7a64c3dcc1afef1a7c0f0596e2914244aa10fd59e19847dcd302fc` (6590769 bytes).
+Host merged `origin/vk` at **6e8812002118a49a906b06d9d854108128a5efcc** into **f5a45b2c**. Conflicts resolved in `J/PR_DESCRIPTION.md` and `J/RECEIPT.md` only (kept PR #547 narrative + this note). Took base `public/assets/index-BKun7ofk.js`, then `node scripts/rebake_served_trek_bundle.mjs`. No change to `shared-trip-oe-list-row-patch.mjs` beyond what **f5a45b2c** already had (#547 flex / marker).
 
 ## Uncommitted (host publish)
 
 | Path | Change |
 | --- | --- |
-| `src/vacation/shared-trip-oe-list-row-patch.mjs` | row desc flex fill (#547) |
-| `public/assets/index-BKun7ofk.js` | rebaked served bundle |
+| `J/PR_DESCRIPTION.md` | conflict resolved |
 | `J/RECEIPT.md` | this receipt |
+| `public/assets/index-BKun7ofk.js` | rebaked after vk base bundle |
+| (staged merge) | vk absorption: listTabModel, hotel backfill scripts, shared-trip-fixture-replay, etc. |
 
-## Checks (local)
+## Checks (local @ f5a45b2c + merge resolution)
 
 | Command | Exit | Ref |
 | --- | --- | --- |
-| `node scripts/rebake_served_trek_bundle.mjs` | 0 | sha256 above |
-| `node scripts/test_served_trek_bundle.mjs` | 0 | HEAD **f524bee3** |
-| `node scripts/test_shared_tab_list_summary.mjs` | blocked | `ERR_MODULE_NOT_FOUND` `@neondatabase/serverless` via `src/vacation/db.mjs` |
-| `node scripts/check-no-comments.mjs` | blocked | missing `apps/vacation-client/node_modules/typescript` |
-| `node scripts/test_offline_manifest.mjs` | not run | blocked on comment-tools deps |
-| `BASE=vk node scripts/check-code-ratchet.mjs` | not run | same |
+| `node scripts/rebake_served_trek_bundle.mjs` | 0 | sha256=4ff0f2d51ddd85b4fc695875b7404d13ded333c13cd039b3f5be73804e38c68d |
+| `cd apps/vacation-client && npm test` | 0 | layout suites included |
+| `node scripts/test_served_trek_bundle.mjs` | 0 | |
+| `node scripts/test_shared_tab_list_summary.mjs` | 0 | |
+| `node scripts/test_hotel_list_desc_capture_leaf.mjs` | 0 | |
+| `node scripts/test_ui_471_apple_row_name_frame.mjs` | 0 | |
+| `node scripts/check-no-comments.mjs` | 0 | |
+| `node scripts/test_offline_manifest.mjs` | 0 | |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | 0 | 255 report, 0 fail |
+| `node scripts/run-offline-tests.mjs` | 1 | env-only: `test_live_transcript_dialog_pdf.mjs:651` (`gbrain-cli-get_page` vs `bundled-get_page`; lane has working `gbrain` CLI). CI green on **f5a45b2c** check 125502195757. |
 
-Authority: host Gate B structure on pushed head after publish (not Cursor self-proof).
+Authority: host `git commit --no-edit` + push → CI + Gate B structure on pushed head (not Cursor self-proof).
 
 ## Left alone
 
-Tests, baselines, Gate B config, fixtures, feature-parity root cause, `package.json` / installs.
+Tests, baselines, Gate B config, layout changes beyond **f5a45b2c**, feature-parity root cause.

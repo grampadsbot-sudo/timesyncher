@@ -5,6 +5,12 @@ import os from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+export {
+  GATEB_FIXTURE_REPLAY_SLUG,
+  loadFixtureReplaySharedTripFromPath,
+  prepareFixtureReplaySharedTrip,
+} from '../../../src/vacation/shared-trip-fixture-replay.mjs';
+
 const FULL_SHA_RE = /^[0-9a-f]{40}$/;
 const FIXTURE_SHA_RE = /^[0-9a-f]{64}$/;
 

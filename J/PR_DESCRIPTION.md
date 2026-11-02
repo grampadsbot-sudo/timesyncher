@@ -2,22 +2,22 @@ Closes #547
 
 ## What changed
 
-Re-arm 2026-11-02: merged base `vk` at **ebaaa74e** into PR #550; kept #547 row layout (description inline on the name line at every width including 390px).
+Re-arm 2026-11-02: merged base `vk` at **6e88120** into PR #550 (start **f5a45b2c**); kept #547 row layout (description inline on the name line at every width including 390px).
 
 1. **`src/vacation/shared-trip-oe-list-row-patch.mjs`**: inline `data-list-summary` flex beside `data-ts-list-row-name` (no `tsRowInlineDesc` / stacked mobile block); hotel `je()` inline-flex with `data-ts-hotel-row-head`; inherits vk events tab anchor + logo-pair nowrap rewind in `patchSharedTripListWrapping`.
-2. **`public/assets/index-BKun7ofk.js`**: rebaked via `node scripts/rebake_served_trek_bundle.mjs`.
+2. **`public/assets/index-BKun7ofk.js`**: took base served bundle then rebaked via `node scripts/rebake_served_trek_bundle.mjs`.
 3. **`scripts/test_shared_tab_list_summary.mjs`**: asserts inline summary + logo-pair nowrap; rejects stacked `marginTop:6` mobile summary path.
 
 ## Verification (local)
 
 | Command | Result |
 |---|---|
-| `node scripts/rebake_served_trek_bundle.mjs` | run on push head |
-| `node scripts/test_shared_tab_list_summary.mjs` | run on push head |
-| `node scripts/test_served_trek_bundle.mjs` | run on push head |
-| `node scripts/test_gate_b_live_tab_logo_rows.mjs` | run on push head |
-| `node scripts/check-no-comments.mjs` | run on push head |
-| `BASE=vk node scripts/check-code-ratchet.mjs` | run on push head |
+| `node scripts/rebake_served_trek_bundle.mjs` | run on merge resolution |
+| `node scripts/test_shared_tab_list_summary.mjs` | run on merge resolution |
+| `node scripts/test_served_trek_bundle.mjs` | run on merge resolution |
+| `node scripts/test_gate_b_live_tab_logo_rows.mjs` | run on merge resolution |
+| `node scripts/check-no-comments.mjs` | run on merge resolution |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | run on merge resolution |
 
 Gate B structure (`row layout: description on the name line, fills the row`) and CI green on pushed head are authority (host cron).
 

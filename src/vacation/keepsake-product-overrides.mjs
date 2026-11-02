@@ -1,7 +1,7 @@
 import { isLodgingStay } from './intake-lodging-stay.mjs';
 import { transportKind } from './intake-transport-kind.mjs';
 import { normalizeThingType, resolveThingType } from './timeline-icons.mjs';
-import { resolveThingLogoUrl } from './thing-logo-capture.mjs';
+import { resolveThingLogoUrl, isPlaceholderLogoUrl } from './thing-logo-capture.mjs';
 
 function text(value) {
   return String(value || '').trim();
@@ -81,7 +81,13 @@ function applySourcedFields(place = {}, override = {}) {
   const next = { ...override };
   copyBlank(next, 'url', place.url, place.website, place.source_url, source?.url, source?.website);
   copyBlank(next, 'website', place.website, place.url, place.source_url, source?.website, source?.url);
-  copyBlank(next, 'logoUrl', place.logoUrl, place.image_url, source?.logoUrl, source?.logo);
+  const logoCandidates = [
+    place.logoUrl,
+    place.image_url,
+    source?.logoUrl,
+    source?.logo,
+  ].filter((value) => text(value) && !isPlaceholderLogoUrl(value));
+  if (logoCandidates.length) copyBlank(next, 'logoUrl', ...logoCandidates);
   copyBlank(next, 'summary', place.summary, source?.summary);
   copyBlank(next, 'longDetails', place.longDetails, source?.longDetails, source?.details);
   copyBlank(next, 'happyHourDetails', place.happyHourDetails, source?.happyHourDetails);
