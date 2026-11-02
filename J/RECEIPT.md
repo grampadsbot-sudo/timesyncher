@@ -1,36 +1,40 @@
-# vkfill-550 receipt — PR #550 feature parity follow-up (Gate B round 16)
+# vkfill-550 receipt — flight logo/name row fix (HOST LIVE ROW CHECK reject 2026-11-02 ~21:47 UTC)
 
 ## Outcome
 
-**source-ready** on start HEAD **84e351f4561c2487a839b86ae503eaa2fe3e8e8c** (verified before edit).
+**source-ready** on start HEAD **aaffa24023bb4625e77d731f5f81923fec04f401** (verified before edit).
 
-## Root cause (Gate B round 16 still `feature parity vs staging` on 84e351f)
+## Root cause (Gate B structure, flights-* screens)
 
-Round 16 CI green on **84e351f** (`~/tsv-dispatch/logs/gateb-verdicts.jsonl` sha **84e351f**, round **16**, verdict **FAIL**, failing **feature parity vs staging**). Persist-across-tabs fix was directionally correct, but **1280px** staging reference (`~/tsv-gateb/runs/20261101-014617/gap-close/gap-587/_v6-*-1280-top.json`) requires header controls `Remove 🚗 Dollar JFK`, `Remove 🚗 Hertz JFK`, `Remove 🚗 Priceline opaque Standard seda` (40-char capture), `Remove 🚗 Thrifty JFK` after the Cars tab pass. **390-top** shots pass without those controls (staging ref has empty car-remove inventory at 390). The **84e351f** script labeled Priceline as `Priceline opaque JFK`, which fails `restore_check.feature_parity` prefix match against staging’s `Priceline opaque Standard sedan` label (simulated with `~/tsv-gateb/restore_check.py` on `_v6-cars-1280-top.json`).
+Host live row check failed **logo not centred with name** on Southwest flight rows: **missing visible name line (fail closed)** on `flights-390`, `flights-390-top`, `flights-1280`, `flights-1280-top` (capture `first_text` / `row-name-frame.mjs`).
+
+Full flight row `Qo` (airline + price + times + route) lived inside `data-ts-list-row-name` within the 55% logo–name pair. Flex `width:0` on the airline cell collapsed the `<strong>` leaf to zero visible width, so capture recorded no measurable name line for logo vertical alignment.
 
 ## Change (host publish)
 
 | Path | Why |
 | --- | --- |
-| `public/ts-car-brand-filter.js` | Keep **84e351f** persist-across-tabs behavior; fix brand strings: Priceline rows use the list-row title as-is (no `JFK` suffix); other JFK cars still `{name} JFK`; vk-style `innerText` fallback before `$`; remount on Budget tab click so bar stays warm through capture order. |
+| `src/vacation/shared-trip-oe-list-row-patch.mjs` | Flights: `Zn` is airline-only `<strong>` in the name span; `QoRest` renders price/times/route beside the logo pair; thing-header inline wrap inserts `bn(G)?n.jsx(QoRest,{item:G})`; restore default `ua` strong wrap for #471. |
+| `public/assets/index-BKun7ofk.js` | Rebaked via `node scripts/rebake_served_trek_bundle.mjs` (sha256 **89ba830a851920e09d9e0fa5c630174b7c1ff6038a6174264a6a6c6d4019cc70**). |
 
-Untouched: row layout patch, `public/assets/index-BKun7ofk.js`, tests, baselines, Gate B config.
+Untouched: row layout widths, `#471` logo–name pair markers, `data-ts-list-desc`, car remove controls, tests/baselines/Gate B config.
 
-## Checks (local)
+## Checks (local, exit 0)
 
-| Command | Exit | Ref |
-| --- | --- | --- |
-| `node scripts/check-no-comments.mjs` | 0 | |
-| `node scripts/test_offline_manifest.mjs` | 0 | |
-| `BASE=vk node scripts/check-code-ratchet.mjs` | 0 | 255 report, 0 fail |
-| `node scripts/test_real_app_entry.mjs` | 0 | |
-| `cd apps/vacation-client && npm test` | 0 | |
+| Command | Ref |
+| --- | --- |
+| `node scripts/check-no-comments.mjs` | |
+| `node scripts/test_offline_manifest.mjs` | |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | 0 fail |
+| `cd apps/vacation-client && npm test` | |
+| `node scripts/test_gate_b_row_name_frame.mjs` | |
+| `node scripts/test_ui_471_apple_row_name_frame.mjs` | |
+| `node scripts/rebake_served_trek_bundle.mjs` | |
 
-Full `scripts/offline-tests.txt` sweep not re-run this round (lane time); host should run before push if required.
+Note: `npm test` refreshed many `evidence/vacation-client-p2-*/*.png` locally; **not** part of the intended host publish set (only patch + rebaked bundle).
 
 ## Uncommitted (host only)
 
-- `public/ts-car-brand-filter.js`
+- `src/vacation/shared-trip-oe-list-row-patch.mjs`
+- `public/assets/index-BKun7ofk.js`
 - `J/RECEIPT.md` (this file)
-
-Authority: host commit + push → CI + Gate B structure on pushed head (not Cursor self-proof).

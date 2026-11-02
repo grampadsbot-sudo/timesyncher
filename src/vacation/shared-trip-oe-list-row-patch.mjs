@@ -33,7 +33,11 @@ const OE_THING_HEADER_LOGO_PAIR_NEEDLE =
 const OE_THING_HEADER_LOGO_PAIR_NESTED_DESC_NEEDLE =
   'n.jsxs("span",{"data-ts-logo-name-pair":"1",style:{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:9,minWidth:0,maxWidth:"100%"},children:[n.jsx(dc,{item:G}),n.jsxs("span",{"data-ts-list-row-name":"1",style:{minWidth:0,maxWidth:"100%",width:"100%",display:"inline-flex",alignItems:"center",lineHeight:1,gap:8,overflow:"hidden",flex:"1 1 0"},children:[n.jsx("span",{style:{minWidth:0,flex:"1 1 0",maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn}),Pn?n.jsx("span",{"data-list-summary":"1","data-summary-src":"thing","data-ts-list-desc":"1",style:{flex:"1 1 0",minWidth:0,maxWidth:"100%",flexShrink:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontSize:11,fontWeight:700,color:"#475569",lineHeight:1.4},children:Pn}):null]})]})';
 const OE_THING_HEADER_LOGO_PAIR_INLINE_DESC_PATCH =
-  'n.jsxs("span",{style:{display:"inline-flex",alignItems:"center",gap:8,minWidth:0,maxWidth:"100%",overflow:"hidden",flex:"1 1 0",width:"100%"},children:[n.jsxs("span",{"data-ts-logo-name-pair":"1",style:{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:9,minWidth:0,maxWidth:"55%",flex:"0 1 auto",overflow:"hidden"},children:[n.jsx(dc,{item:G}),n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,maxWidth:"100%",flex:"1 1 auto",display:"inline-flex",alignItems:"center",lineHeight:1,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"},children:Zn})]}),Pn?n.jsx("span",{"data-list-summary":"1","data-summary-src":"thing","data-ts-list-desc":"1",style:{flex:"1 1 0",minWidth:"35%",width:"100%",maxWidth:"100%",display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontSize:11,fontWeight:700,color:"#475569",lineHeight:1.4},children:Pn}):null]})';
+  'n.jsxs("span",{style:{display:"inline-flex",alignItems:"center",gap:8,minWidth:0,maxWidth:"100%",overflow:"hidden",flex:"1 1 0",width:"100%"},children:[n.jsxs("span",{"data-ts-logo-name-pair":"1",style:{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:9,minWidth:0,maxWidth:"55%",flex:"0 1 auto",overflow:"hidden"},children:[n.jsx(dc,{item:G}),n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,maxWidth:"100%",flex:"1 1 auto",display:"inline-flex",alignItems:"center",lineHeight:1,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"},children:Zn})]}),bn(G)?n.jsx(QoRest,{item:G}):null,Pn?n.jsx("span",{"data-list-summary":"1","data-summary-src":"thing","data-ts-list-desc":"1",style:{flex:"1 1 0",minWidth:"35%",width:"100%",maxWidth:"100%",display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontSize:11,fontWeight:700,color:"#475569",lineHeight:1.4},children:Pn}):null]})';
+const FLIGHT_HEADER_REST_AFTER_PAIR_NEEDLE =
+  'children:Zn})]}),Pn?n.jsx("span",{"data-list-summary":"1","data-summary-src":"thing","data-ts-list-desc":"1"';
+const FLIGHT_HEADER_REST_AFTER_PAIR_PATCH =
+  'children:Zn})]}),bn(G)?n.jsx(QoRest,{item:G}):null,Pn?n.jsx("span",{"data-list-summary":"1","data-summary-src":"thing","data-ts-list-desc":"1"';
 const OE_THING_HEADER_LOGO_PAIR_FLEX_OLD =
   '"data-ts-logo-name-pair":"1",style:{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:9,minWidth:0,maxWidth:"100%"}';
 const OE_THING_HEADER_LOGO_PAIR_FLEX_NEW =
@@ -54,12 +58,32 @@ const OE_THING_HEADER_INLINE_DESC_WRAP_MARK =
   'style:{display:"inline-flex",alignItems:"center",gap:8,minWidth:0,maxWidth:"100%",overflow:"hidden",flex:"1 1 0",width:"100%"},children:[n.jsxs("span",{"data-ts-logo-name-pair":"1"';
 const FLIGHT_QO_INLINE_NEEDLE =
   'Qo=({item:G})=>{const parts=eu(G);return n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto auto auto",gap:8,width:"100%",alignItems:"center",minWidth:0},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:parts[0]||""}),n.jsx("span",{style:{whiteSpace:"nowrap",flexShrink:0,color:"#0f766e",fontWeight:900},children:parts[1]||""}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:parts[2]||""}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:parts[3]||""})]})}';
+const FLIGHT_QO_AIRLINE_STRONG_STYLE =
+  'lineHeight:1,display:"block",fontWeight:800,minWidth:0,maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"';
+const FLIGHT_QO_AIRLINE_CELL_STYLE =
+  'overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,flex:"1 1 0",width:0,maxWidth:"100%"';
 const FLIGHT_QO_INLINE_PATCH =
-  'Qo=({item:G})=>{const parts=eu(G);return n.jsxs("span",{style:{display:"flex",alignItems:"center",gap:6,minWidth:0,maxWidth:"100%",overflow:"hidden",width:"100%"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,flex:"0 1 auto"},children:n.jsx("strong",{style:{lineHeight:1,display:"block",fontWeight:800},children:parts[0]||""})}),n.jsx("span",{style:{whiteSpace:"nowrap",flexShrink:0,color:"#0f766e",fontWeight:900},children:parts[1]||""}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,flex:"0 1 auto"},children:parts[2]||""}),n.jsx("span",{style:{flex:"1 1 0",minWidth:0,width:"100%",maxWidth:"100%",display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:parts[3]||""})]})}';
+  `Qo=({item:G})=>{const parts=eu(G);return n.jsxs("span",{style:{display:"flex",alignItems:"center",gap:6,minWidth:0,maxWidth:"100%",overflow:"hidden",width:"100%"},children:[n.jsx("span",{style:{${FLIGHT_QO_AIRLINE_CELL_STYLE}},children:n.jsx("strong",{style:{${FLIGHT_QO_AIRLINE_STRONG_STYLE}},children:parts[0]||""})}),n.jsx("span",{style:{whiteSpace:"nowrap",flexShrink:0,color:"#0f766e",fontWeight:900},children:parts[1]||""}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,flex:"0 1 auto"},children:parts[2]||""}),n.jsx("span",{style:{flex:"1 1 0",minWidth:0,width:0,maxWidth:"100%",display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:parts[3]||""})]})}`;
 const FLIGHT_QO_AIRLINE_STRONG_NEEDLE =
   'Qo=({item:G})=>{const parts=eu(G);return n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto auto auto",gap:8,width:"100%",alignItems:"center",minWidth:0},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,flexShrink:0},children:n.jsx("strong",{style:{lineHeight:1,display:"block",fontWeight:800},children:parts[0]||""})}),n.jsx("span",{style:{whiteSpace:"nowrap",flexShrink:0,color:"#0f766e",fontWeight:900},children:parts[1]||""})';
 const FLIGHT_QO_AIRLINE_STRONG_PATCH =
-  'Qo=({item:G})=>{const parts=eu(G);return n.jsxs("span",{style:{display:"flex",alignItems:"center",gap:6,minWidth:0,maxWidth:"100%",overflow:"hidden",width:"100%"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,flex:"0 1 auto"},children:n.jsx("strong",{style:{lineHeight:1,display:"block",fontWeight:800},children:parts[0]||""})}),n.jsx("span",{style:{whiteSpace:"nowrap",flexShrink:0,color:"#0f766e",fontWeight:900},children:parts[1]||""})';
+  `Qo=({item:G})=>{const parts=eu(G);return n.jsxs("span",{style:{display:"flex",alignItems:"center",gap:6,minWidth:0,maxWidth:"100%",overflow:"hidden",width:"100%"},children:[n.jsx("span",{style:{${FLIGHT_QO_AIRLINE_CELL_STYLE}},children:n.jsx("strong",{style:{${FLIGHT_QO_AIRLINE_STRONG_STYLE}},children:parts[0]||""})}),n.jsx("span",{style:{whiteSpace:"nowrap",flexShrink:0,color:"#0f766e",fontWeight:900},children:parts[1]||""})`;
+const FLIGHT_QO_AIRLINE_ELLIPSIS_UPGRADE_NEEDLE =
+  'overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,flex:"0 1 auto"},children:n.jsx("strong",{style:{lineHeight:1,display:"block",fontWeight:800},children:parts[0]||""})';
+const FLIGHT_QO_AIRLINE_ELLIPSIS_UPGRADE_PATCH =
+  `style:{${FLIGHT_QO_AIRLINE_CELL_STYLE}},children:n.jsx("strong",{style:{${FLIGHT_QO_AIRLINE_STRONG_STYLE}},children:parts[0]||""})`;
+const FLIGHT_QO_ROUTE_CELL_WIDTH_NEEDLE =
+  'flex:"1 1 0",minWidth:0,width:"100%",maxWidth:"100%",display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:parts[3]||""})]})}';
+const FLIGHT_QO_ROUTE_CELL_WIDTH_PATCH =
+  'flex:"1 1 0",minWidth:0,width:0,maxWidth:"100%",display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:parts[3]||""})]})}';
+const FLIGHT_QO_REST_INLINE =
+  'QoRest=({item:G})=>{const parts=eu(G);return n.jsxs("span",{style:{display:"flex",alignItems:"center",gap:6,minWidth:0,flex:"1 1 0",maxWidth:"100%",overflow:"hidden"},children:[n.jsx("span",{style:{whiteSpace:"nowrap",flexShrink:0,color:"#0f766e",fontWeight:900},children:parts[1]||""}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,flex:"0 1 auto"},children:parts[2]||""}),n.jsx("span",{style:{flex:"1 1 0",minWidth:0,width:0,maxWidth:"100%",display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:parts[3]||""})]})},';
+const OE_ROW_ZN_FLIGHT_AIRLINE_NEEDLE = 'Zn=bn(G)?n.jsx(Qo,{item:G}):';
+const OE_ROW_ZN_FLIGHT_AIRLINE_PATCH =
+  'Zn=bn(G)?n.jsx("strong",{style:{lineHeight:1,display:"block",fontWeight:800,minWidth:0,maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:(eu(G)[0]||"")}):';
+const OE_ROW_ZN_DEFAULT_STRONG_NEEDLE = ':Zi(G)?n.jsx(je,{item:G,title:ua}):ua,sr=n.jsxs';
+const OE_ROW_ZN_DEFAULT_STRONG_PATCH =
+  ':Zi(G)?n.jsx(je,{item:G,title:ua}):n.jsx("strong",{style:{lineHeight:1,display:"block"},children:ua}),sr=n.jsxs';
 const OE_STACKED_ROW_SUMMARY_NEEDLE =
   'Pn?(()=>{const tsHotel=It(G)==="hotel"||Zi(G);const tsFull=tsHotel?String(ha(G).summary??"").replace(/\\s+/g," ").trim():"";return tsFull?n.jsx("div",{"data-ts-list-desc":"1","data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4,display:"-webkit-box",WebkitLineClamp:3,WebkitBoxOrient:"vertical",overflow:"hidden"},children:tsFull}):Pn?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4},children:Pn}):null})():null,';
 const OE_STACKED_ROW_SUMMARY_PATCH =
@@ -128,11 +152,31 @@ const OE_HOTEL_JE_TITLE_INLINE_PATCH = 'je=({item:G,title:Re})=>n.jsxs("span",{"
 const WR_SORT_ROW_NEEDLE = 'Wr=({listKey:G})=>{const Re=K[G]||{key:"name",dir:"asc"},zt=ua=>Re.key===ua?Re.dir==="asc"?" ↑":" ↓":"";return n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2},children:';
 const WR_SORT_ROW_PATCH = 'Wr=({listKey:G})=>{const Re=K[G]||{key:"name",dir:"asc"},zt=ua=>Re.key===ua?Re.dir==="asc"?" ↑":" ↓":"";return n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2,minWidth:0,maxWidth:"100%"},children:';
 
+function injectFlightQoRest(js = '') {
+  if (js.includes('QoRest=({item:G})')) return js;
+  const afterQo = '})},uc=G=>';
+  const idx = js.indexOf(afterQo);
+  if (idx < 0 || !js.includes('Qo=({item:G})')) {
+    throw new Error('flight QoRest inject anchor missing');
+  }
+  return `${js.slice(0, idx + 4)}${FLIGHT_QO_REST_INLINE}${js.slice(idx + 4)}`;
+}
+
 function patchFlightQoAirlineNameFrame(js = '') {
-  if (js.includes('Qo=({item:G})=>{const parts=eu(G);return n.jsxs("span",{style:{display:"flex",alignItems:"center",gap:6,minWidth:0,maxWidth:"100%",overflow:"hidden",width:"100%"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,flex:"0 1 auto"},children:n.jsx("strong",{style:{lineHeight:1,display:"block",fontWeight:800},children:parts[0]||""})})')) {
+  js = injectFlightQoRest(js);
+  if (js.includes(FLIGHT_QO_AIRLINE_ELLIPSIS_UPGRADE_NEEDLE)) {
+    js = js.replace(FLIGHT_QO_AIRLINE_ELLIPSIS_UPGRADE_NEEDLE, FLIGHT_QO_AIRLINE_ELLIPSIS_UPGRADE_PATCH);
+  }
+  if (js.includes(FLIGHT_QO_ROUTE_CELL_WIDTH_NEEDLE)) {
+    js = js.replace(FLIGHT_QO_ROUTE_CELL_WIDTH_NEEDLE, FLIGHT_QO_ROUTE_CELL_WIDTH_PATCH);
+  }
+  if (js.includes(`children:n.jsx("strong",{style:{${FLIGHT_QO_AIRLINE_STRONG_STYLE}},children:parts[0]||""})`)) {
     return js;
   }
   if (js.includes('Qo=({item:G})=>{const parts=eu(G);return n.jsxs("span",{style:{display:"inline-flex",alignItems:"center",gap:6,minWidth:0,maxWidth:"100%",overflow:"hidden",width:"100%"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,flexShrink:0},children:n.jsx("strong",{style:{lineHeight:1,display:"block",fontWeight:800},children:parts[0]||""})})')) {
+    if (js.includes(FLIGHT_QO_AIRLINE_ELLIPSIS_UPGRADE_NEEDLE)) {
+      return js.replace(FLIGHT_QO_AIRLINE_ELLIPSIS_UPGRADE_NEEDLE, FLIGHT_QO_AIRLINE_ELLIPSIS_UPGRADE_PATCH);
+    }
     return js.replace(FLIGHT_QO_INLINE_NEEDLE, FLIGHT_QO_INLINE_PATCH);
   }
   if (js.includes(FLIGHT_QO_INLINE_NEEDLE)) {
@@ -150,6 +194,9 @@ function patchFlightQoAirlineNameFrame(js = '') {
 export function patchInlineListRowDescriptionOnThingHeader(source = '') {
   let js = String(source || '');
   if (!js.includes('data-ts-thing-header":"1"')) return js;
+  if (js.includes(FLIGHT_HEADER_REST_AFTER_PAIR_NEEDLE)) {
+    js = js.replaceAll(FLIGHT_HEADER_REST_AFTER_PAIR_NEEDLE, FLIGHT_HEADER_REST_AFTER_PAIR_PATCH);
+  }
   if (js.includes(OE_THING_HEADER_LOGO_PAIR_NESTED_DESC_NEEDLE)) {
     js = js.replaceAll(OE_THING_HEADER_LOGO_PAIR_NESTED_DESC_NEEDLE, OE_THING_HEADER_LOGO_PAIR_INLINE_DESC_PATCH);
   } else if (js.includes(OE_THING_HEADER_LOGO_PAIR_NEEDLE)) {
@@ -261,10 +308,18 @@ export function patchSharedTripOeListRows(source = '') {
   if (js.includes(OE_ROW_TITLE_SPAN_NEEDLE)) {
     js = js.replaceAll(OE_ROW_TITLE_SPAN_NEEDLE, OE_ROW_TITLE_SPAN_PATCH);
   }
+  if (js.includes(OE_ROW_ZN_FLIGHT_AIRLINE_NEEDLE)) {
+    js = js.replace(OE_ROW_ZN_FLIGHT_AIRLINE_NEEDLE, OE_ROW_ZN_FLIGHT_AIRLINE_PATCH);
+  } else if (!js.includes('Zn=bn(G)?n.jsx("strong",{style:{lineHeight:1,display:"block",fontWeight:800')) {
+    throw new Error('shared trip Oe() flight row title must expose airline in strong for Gate B name line');
+  }
+  if (js.includes(OE_ROW_ZN_DEFAULT_STRONG_NEEDLE)) {
+    js = js.replace(OE_ROW_ZN_DEFAULT_STRONG_NEEDLE, OE_ROW_ZN_DEFAULT_STRONG_PATCH);
+  } else if (!js.includes('"strong",{style:{lineHeight:1,display:"block"},children:ua})')) {
+    throw new Error('shared trip Oe() default row title must wrap ua in strong for Gate B name line');
+  }
   if (js.includes(OE_ROW_ZN_STRONG_NEEDLE)) {
     js = js.replace(OE_ROW_ZN_STRONG_NEEDLE, OE_ROW_ZN_STRONG_PATCH);
-  } else if (!js.includes('Zi(G)?n.jsx(je,{item:G,title:ua}):n.jsx("strong",{style:{lineHeight:1,display:"block"},children:ua})')) {
-    throw new Error('shared trip Oe() default row title must wrap ua in strong for Gate B name line');
   }
   if (js.includes(OE_LIST_ROW_TITLE_BTN_STYLE_NEEDLE)) {
     js = js.replaceAll(OE_LIST_ROW_TITLE_BTN_STYLE_NEEDLE, OE_LIST_ROW_TITLE_BTN_STYLE_PATCH);
