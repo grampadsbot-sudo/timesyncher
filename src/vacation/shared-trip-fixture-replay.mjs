@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
+import { applyServedListLogoOverridesOnly } from './shared-trip-live-app-fields.mjs';
 
 export const GATEB_FIXTURE_REPLAY_SLUG = 'gateb-fixture-replay';
 
@@ -27,9 +28,10 @@ export function prepareFixtureReplaySharedTrip(bytes) {
   const source = Buffer.isBuffer(bytes) ? bytes : Buffer.from(bytes);
   const parsed = JSON.parse(source.toString('utf8'));
   const { trip, selectedPlaceKeys } = normalizeTimelineSelections(parsed);
-  const payload = Buffer.from(JSON.stringify(trip));
+  const served = applyServedListLogoOverridesOnly(trip);
+  const payload = Buffer.from(JSON.stringify(served));
   return {
-    served: trip,
+    served,
     payload,
     timelineReplay: {
       policy: 'timeline-explicit-v1',

@@ -129,6 +129,61 @@ function explicitLogo(place = {}, override = {}, source = null) {
   );
 }
 
+function applyListRowLogoFields(place, override, source, { mutatePlace = true } = {}) {
+  const pageUrl = firstPresent(
+    source?.url,
+    source?.website,
+    source?.sourceUrl,
+    place.url,
+    place.website,
+    place.source_url,
+    override.url,
+    override.website,
+  );
+  if (pageUrl) {
+    if (mutatePlace) {
+      place.url = text(place.url) || pageUrl;
+      place.website = text(place.website) || pageUrl;
+    }
+    if (!text(override.url)) override.url = pageUrl;
+    if (!text(override.website)) override.website = pageUrl;
+  }
+
+  const explicit = explicitLogo(place, override, source);
+  let logoUrl = text(resolveThingLogoUrl(place, override));
+  if (!logoUrl && explicit && !isPlaceholderLogoUrl(explicit)) logoUrl = explicit;
+  if (logoUrl && !isPlaceholderLogoUrl(logoUrl)) {
+    override.logoUrl = logoUrl;
+    if (mutatePlace && (!text(place.logoUrl) || isPlaceholderLogoUrl(place.logoUrl))) {
+      place.logoUrl = logoUrl;
+    }
+  } else {
+    if (isPlaceholderLogoUrl(override.logoUrl)) delete override.logoUrl;
+    if (mutatePlace && isPlaceholderLogoUrl(place.logoUrl)) delete place.logoUrl;
+    if (mutatePlace && isPlaceholderLogoUrl(place.iconUrl)) delete place.iconUrl;
+  }
+}
+
+export function applyServedListLogoOverridesOnly(shared = {}) {
+  if (!Array.isArray(shared.places)) return shared;
+  const thingOverrides = shared.thingOverrides && typeof shared.thingOverrides === 'object'
+    ? { ...shared.thingOverrides }
+    : {};
+  for (const place of shared.places) {
+    const key = `place:${place.id}`;
+    const override = { ...(thingOverrides[key] || {}) };
+    const source = sourceObject(
+      override.sourceRecord,
+      place.sourceRecord,
+      override.source,
+      place.source,
+    );
+    applyListRowLogoFields(place, override, source, { mutatePlace: false });
+    thingOverrides[key] = override;
+  }
+  return { ...shared, thingOverrides };
+}
+
 export function applyLiveAppListRowFields(shared = {}) {
   const next = {
     ...shared,
@@ -148,34 +203,7 @@ export function applyLiveAppListRowFields(shared = {}) {
     );
     const category = productThingCategory(place, override);
 
-    const pageUrl = firstPresent(
-      source?.url,
-      source?.website,
-      source?.sourceUrl,
-      place.url,
-      place.website,
-      place.source_url,
-      override.url,
-      override.website,
-    );
-    if (pageUrl) {
-      place.url = text(place.url) || pageUrl;
-      place.website = text(place.website) || pageUrl;
-      if (!text(override.url)) override.url = pageUrl;
-      if (!text(override.website)) override.website = pageUrl;
-    }
-
-    const explicit = explicitLogo(place, override, source);
-    let logoUrl = text(resolveThingLogoUrl(place, override));
-    if (!logoUrl && explicit && !isPlaceholderLogoUrl(explicit)) logoUrl = explicit;
-    if (logoUrl && !isPlaceholderLogoUrl(logoUrl)) {
-      override.logoUrl = logoUrl;
-      if (!text(place.logoUrl) || isPlaceholderLogoUrl(place.logoUrl)) place.logoUrl = logoUrl;
-    } else {
-      if (isPlaceholderLogoUrl(override.logoUrl)) delete override.logoUrl;
-      if (isPlaceholderLogoUrl(place.logoUrl)) delete place.logoUrl;
-      if (isPlaceholderLogoUrl(place.iconUrl)) delete place.iconUrl;
-    }
+    applyListRowLogoFields(place, override, source, { mutatePlace: true });
 
     const price = priceFromRecords(place, override, source);
     const keepPriceOnPlaceOnly = provenanceBlocksSourcedPrice(override, place);

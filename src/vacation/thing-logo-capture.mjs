@@ -31,7 +31,7 @@ const BRAND_LOGO_RULES = [
 ];
 
 const BOUND_MEDIA_RE = /\/api\/bind-thing-media\b|\/ts-thing-media\//i;
-const PLACEHOLDER_LOGO_RE = /admit\s*one|pDe|family-event-placeholder|data:image\/svg\+xml/i;
+const PLACEHOLDER_LOGO_RE = /admit\s*one|pDe|family-event-placeholder|data:image\/svg\+xml|openstreetmap\.org\/favicon/i;
 
 export function isBoundStoryMediaUrl(value = '') {
   return BOUND_MEDIA_RE.test(String(value || ''));
@@ -189,6 +189,7 @@ export function sourceLogoUrl(thing = {}, override = {}) {
   const page = httpUrl(pageUrlForLogo(thing, override));
   if (!page) return '';
   const named = brandLogoFromName(thing.name || thing.title || override.title);
+  if (/\.openstreetmap\.org$/i.test(page.hostname)) return named || '';
   if (named) return named;
   if (/\.hyatt\.com$/i.test(page.hostname)) {
     const hyattIcon = usableLogo(NAMED_THING_LOGOS.hyatt);

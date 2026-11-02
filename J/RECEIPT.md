@@ -53,3 +53,28 @@ Base-merge tip `ce70be64` (merge `27c0ea8a` + J) ready for host push; CI `unit-t
 | `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pass |
 
 Gate B closed-gap on staging not run in lane (no Cursor self-proof). Host: commit → push → Gate B structure on events/hotels 390+1280.
+
+## Round vkfill-590 @ 2afbe696 (2026-11-02 lane, HOST PUBLICATION ONLY)
+
+**Root cause:** Gate B capture serves fixture replay payload where TREK `_l(G)` reads `ha(G).logoUrl` before `G.logoUrl`. Replay only normalized timeline flags; empty or placeholder overrides left rows on shared fallbacks (and OSM `favicon.ico` clusters). Live API already ran `finalizeServedSharedTripPayload`; replay did not.
+
+**Patch (uncommitted, host push @ 2afbe696):**
+- `src/vacation/shared-trip-live-app-fields.mjs`: `applyServedListLogoOverridesOnly` + shared `applyListRowLogoFields` (override-only logo/url for replay; same logic for live mutate path).
+- `src/vacation/shared-trip-fixture-replay.mjs`: after timeline normalize, apply override-only logo enrichment; `places` array identity preserved for `test_same_selection_capture.py`.
+- `src/vacation/thing-logo-capture.mjs`: treat OpenStreetMap page URLs as non-logo sources; block OSM favicon as generic placeholder.
+- `src/vacation/keepsake-product-overrides.mjs`: do not copy placeholder logos into overrides.
+
+**Checks @ 2afbe696 + patch:**
+| Command | Result |
+| --- | --- |
+| `cd apps/vacation-client && npm test` | pass |
+| `node scripts/test_gate_b_live_tab_logo_rows.mjs` | pass |
+| `node scripts/test_trip_thing_logo_metadata.mjs` | pass |
+| `node scripts/test_shared_trip_live_tab_logos.mjs` | pass |
+| `node scripts/check-no-comments.mjs` | pass |
+| `node scripts/test_offline_manifest.mjs` | pass |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | pass |
+
+**Uncommitted files:** `src/vacation/shared-trip-live-app-fields.mjs`, `src/vacation/shared-trip-fixture-replay.mjs`, `src/vacation/thing-logo-capture.mjs`, `src/vacation/keepsake-product-overrides.mjs`, `J/RECEIPT.md`
+
+Host: commit → push → Gate B structure (events/hotels 390+1280) on pushed head.
