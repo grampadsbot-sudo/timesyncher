@@ -1,13 +1,10 @@
 import { captureThingLogo } from './thing-logo-capture.mjs';
 import { estimateSearchPlacePrice } from './search-place-price-estimate.mjs';
-import { descriptionPassesDetailJudge } from './thing-detail-fields.mjs';
+import { descriptionPassesDetailJudge, isGenericDescription } from './thing-detail-fields.mjs';
+import { applySourcedHotelDescriptionToRecord, composeSourcedHotelDescriptionFromRecord } from './xai-sourced-hotel-description.mjs';
 
 export { estimateSearchPlacePrice } from './search-place-price-estimate.mjs';
-const GENERIC_DESCRIPTION_RES = [
-  /^Documented NYC option\b/i,
-  /^Documented .+ option\b/i,
-  /^[A-Za-z ]+ option \([^)]+\)\.?$/,
-];
+export { isGenericDescription } from './thing-detail-fields.mjs';
 
 const AIRLINE_LOGOS = [
   [/\bjetblue\b/i, 'https://icons.duckduckgo.com/ip3/jetblue.com.ico'],
@@ -23,15 +20,6 @@ function text(value, max = 4000) {
 
 function wordCount(value = '') {
   return text(value, 4000).split(/\s+/).filter(Boolean).length;
-}
-
-export function isGenericDescription(value = '') {
-  const row = text(value, 4000);
-  if (!row) return true;
-  if (GENERIC_DESCRIPTION_RES.some((re) => re.test(row))) return true;
-  if (wordCount(row) < 6) return true;
-  if (/^\S+\s+\S+\s*,\s*New York/i.test(row) && wordCount(row) < 10) return true;
-  return false;
 }
 
 function parsePriceValue(value) {
@@ -324,7 +312,10 @@ function descriptionWhenJudgeFails({
   rawDescription = '',
 } = {}) {
   const cat = text(category, 80).toLowerCase();
-  if ((cat === 'hotel' || cat === 'lodging') && /Neighborhood:\s*[^;]+/i.test(ccabFactText(sourceRecord, place))) return '';
+  if (cat === 'hotel' || cat === 'lodging') {
+    const composed = composeSourcedHotelDescriptionFromRecord({ ...sourceRecord, ...place, title }, { title, address });
+    if (composed) return composed;
+  }
   return buildCategoryDescription({ category: cat, title, sourceRecord, address, rawDescription });
 }
 
@@ -364,7 +355,7 @@ export function enrichSearchPlace(place = {}) {
       rawDescription: sourcedLongDescription(next, sourceRecord),
     });
   }
-  const summary = sourcedShortSummary(next, sourceRecord, description, title);
+  let summary = sourcedShortSummary(next, sourceRecord, description, title);
   const explicitBannedZero = next.price === 0 || sourceRecord.price === 0;
   let price = firstPrice(
     next.price,
@@ -397,7 +388,7 @@ export function enrichSearchPlace(place = {}) {
     });
   }
   const logoUrl = logoUrlFromSearchPlace(next, sourceRecord);
-  const enrichedSource = {
+  let enrichedSource = {
     ...sourceRecord,
     ...(description ? { description, longDetails: description } : {}),
     ...(summary ? { summary } : {}),
@@ -405,6 +396,11 @@ export function enrichSearchPlace(place = {}) {
     ...(logoUrl ? { logoUrl } : {}),
     ...(next.url ? { url: next.url, website: next.url } : {}),
   };
+  if (category === 'hotel' || category === 'lodging') {
+    enrichedSource = applySourcedHotelDescriptionToRecord(enrichedSource, { title, category, address: next.address || '' });
+    description = text(enrichedSource.longDetails || enrichedSource.description, 4000);
+    if (enrichedSource.summary) summary = text(enrichedSource.summary, 500);
+  }
   next.description = description;
   next.summary = summary;
   next.sourceRecord = enrichedSource;

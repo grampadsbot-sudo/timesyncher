@@ -28,6 +28,21 @@ export function text(value, max = 5000) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
 
+const GENERIC_DESCRIPTION_RES = [
+  /^Documented NYC option\b/i,
+  /^Documented .+ option\b/i,
+  /^[A-Za-z ]+ option \([^)]+\)\.?$/,
+];
+
+export function isGenericDescription(value = '') {
+  const row = text(value, 4000);
+  if (!row) return true;
+  if (GENERIC_DESCRIPTION_RES.some((re) => re.test(row))) return true;
+  if (wordCount(row) < 6) return true;
+  if (/^\S+\s+\S+\s*,\s*New York/i.test(row) && wordCount(row) < 10) return true;
+  return false;
+}
+
 function wordCount(value) {
   return text(value, 20000).split(/\s+/).filter(Boolean).length;
 }

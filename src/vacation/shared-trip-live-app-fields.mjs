@@ -1,6 +1,7 @@
 import { productThingCategory } from './keepsake-product-overrides.mjs';
 import { flightFieldsFromBlob } from './place-detail-extract.mjs';
 import { resolveThingLogoUrl } from './thing-logo-capture.mjs';
+import { estimateThingTravelPrice } from './thing-price.mjs';
 
 function text(value) {
   return String(value || '').trim();
@@ -157,11 +158,20 @@ export function applyLiveAppListRowFields(shared = {}) {
       if (!text(place.logoUrl)) place.logoUrl = logoUrl;
     }
 
-    const price = priceFromRecords(place, override, source);
+    let price = priceFromRecords(place, override, source);
+    let storedPrice = null;
+    if (price == null && (category === 'flight' || category === 'hotel' || category === 'car')) {
+      const estimated = estimateThingTravelPrice(place, override, category);
+      if (estimated != null && estimated !== '') {
+        storedPrice = typeof estimated === 'number' ? estimated : String(estimated);
+        price = parsePrice(storedPrice);
+      }
+    }
     const keepPriceOnPlaceOnly = provenanceBlocksSourcedPrice(override, place);
-    if (price != null) {
-      if (place.price == null || place.price === '') place.price = price;
-      if (!keepPriceOnPlaceOnly) override.price = price;
+    const priceToStore = storedPrice ?? price;
+    if (priceToStore != null && priceToStore !== '') {
+      if (place.price == null || place.price === '') place.price = priceToStore;
+      if (!keepPriceOnPlaceOnly) override.price = priceToStore;
     }
 
     if (category === 'car') {

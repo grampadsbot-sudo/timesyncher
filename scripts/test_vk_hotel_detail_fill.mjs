@@ -6,6 +6,10 @@ function wordCount(value = '') {
 
 import { descriptionPassesDetailJudge } from '../src/vacation/thing-detail-fields.mjs';
 import {
+  applySourcedHotelDescriptionToRecord,
+  composeSourcedHotelDescriptionFromRecord,
+} from '../src/vacation/xai-sourced-hotel-description.mjs';
+import {
   mergeWebDetailIntoSearchPlace,
   searchPlaceNeedsWebDetailEnrichment,
 } from '../src/vacation/search-place-detail-enrichment.mjs';
@@ -56,3 +60,22 @@ assert.ok(
   && finalized.sourceRecord.summarySourceUrls.length >= 2,
   'summarySourceUrls must persist',
 );
+
+const thinHotel = applySourcedHotelDescriptionToRecord({
+  category: 'hotel',
+  googleRating: '4.2',
+  googleReviewCount: '900',
+  reviewThemes: { praise: ['great location near Lincoln Center', 'quiet rooms for NYC', 'helpful front desk'] },
+  websiteFlavour: 'Upper West Side hotel with classic pre-war charm and walkable access to Central Park.',
+  price: 518,
+}, { title: 'Hotel Belleclaire Central Park', category: 'hotel' });
+assert.equal(descriptionPassesDetailJudge(thinHotel.description, 'Hotel Belleclaire Central Park'), true);
+
+const composedOnly = composeSourcedHotelDescriptionFromRecord({
+  websiteFlavour: 'Times Square micro-hotel with compact rooms and strong transit links.',
+  googleRating: '4.0',
+  googleReviewCount: '500',
+  price: 210,
+}, { title: 'Sample Hotel', address: 'New York, NY' });
+assert.ok(composedOnly.split(/\s+/).length >= 30);
+assert.equal(descriptionPassesDetailJudge(composedOnly, 'Sample Hotel'), true);
