@@ -1,4 +1,7 @@
-import { buildCategoryDescription, isGenericDescription } from './trip-thing-enrichment.mjs';
+import { isGenericDescription, isHotelPlanningNote } from './list-row-generic-description.mjs';
+import { buildCategoryDescription } from './trip-thing-enrichment.mjs';
+
+export { hotelListRowUnboundNarrative } from './hotel-list-row-unbound.mjs';
 
 function text(value, max = 4000) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
@@ -23,22 +26,7 @@ function shortLineFromSourceText(value = '', max = 120) {
   return text(row.split(/\s+/).slice(0, 10).join(' '), max);
 }
 
-export function isHotelPlanningNote(value = '') {
-  const row = text(value, 4000);
-  if (!row) return false;
-  if (!/^Neighborhood:/i.test(row)) return false;
-  return /Rating:/i.test(row) || /Status:\s*candidate/i.test(row) || /Price:\s*\$/i.test(row);
-}
-
-export function hotelListRowUnboundNarrative(title = '', address = '') {
-  const name = text(title, 120) || 'This hotel';
-  const area = text(address, 160) || 'the planned area';
-  return text(
-    `${name} is a planning row on the Hotels tab without a bound property identity for this trip. `
-    + `Use it to compare stay options near ${area}, but verify the real hotel name, nightly rate, check-in rules, and guest reviews on an official listing before you book.`,
-    4000,
-  );
-}
+export { isHotelPlanningNote } from './list-row-generic-description.mjs';
 
 export function hotelStoredCcabListNarrative(title = '', ccabRecord = {}) {
   if (!ccabRecord || typeof ccabRecord !== 'object') return null;

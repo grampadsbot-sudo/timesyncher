@@ -4,20 +4,11 @@ import REVIEW_ENRICHMENT from '../../scripts/fixtures/pr336-gate-b-vk-reviews.js
 import { resolveNycCcabKey } from '../../scripts/fixtures/nyc-vk-list-tab-rows.mjs';
 
 import {
-  enrichSearchPlace,
   isGenericDescription,
+  isHotelPlanningNote,
   isListRowPipelineDiagnostic,
-} from './trip-thing-enrichment.mjs';
-import {
-  hotelStoredCcabListNarrative,
-  isHotelPlanningNote,
-} from './hotel-list-row-narrative.mjs';
-
-export {
-  hotelListRowUnboundNarrative,
-  hotelStoredCcabListNarrative,
-  isHotelPlanningNote,
-} from './hotel-list-row-narrative.mjs';
+} from './list-row-generic-description.mjs';
+import { storedCcabHotelListNarrative } from './hotel-list-row-unbound.mjs';
 
 function mergeCcabEnrichmentLayers(base = {}, ...patches) {
   const merged = { ...base };
@@ -70,6 +61,8 @@ export function createStoredCcabNarrativeMerge(
   function narrativeWordCount(value) {
     return text(value).split(/\s+/).filter(Boolean).length;
   }
+
+  const ccabHelpers = { text, narrativeWordCount, isHotelPlanningNote, isGenericDescription };
 
   function listNarrativeCandidateText(place = {}, override = {}) {
     const row = text(
@@ -271,12 +264,32 @@ export function createStoredCcabNarrativeMerge(
     const hit = storedCcabRecordForPlace(place, override);
     if (!hit) return null;
     const cat = text(categoryHint || override.category || place.category_name, 40).toLowerCase();
-    return enrichSearchPlace(rawSearchPlaceFromCcab({
-      title: text(place.name || place.title || hit.ccabKey, 240),
+    const title = text(place.name || place.title || hit.ccabKey, 240);
+    const record = { ...hit.ccabRecord };
+    const hotelNarrative = (cat === 'hotel' || cat.includes('lodging'))
+      ? storedCcabHotelListNarrative(title, record, ccabHelpers)
+      : null;
+    if (hotelNarrative?.summary) record.summary = hotelNarrative.summary;
+    if (hotelNarrative?.longDetails) {
+      record.longDetails = hotelNarrative.longDetails;
+      record.description = hotelNarrative.longDetails;
+    }
+    if (hotelNarrative?.neighborhood) record.neighborhood = hotelNarrative.neighborhood;
+    if (hotelNarrative?.websiteFlavour) record.websiteFlavour = hotelNarrative.websiteFlavour;
+    const description = text(
+      record.longDetails ||
+        record.description ||
+        record.summary ||
+        hit.ccabRecord.longDetails ||
+        hit.ccabRecord.description,
+    );
+    if (!description) return null;
+    return {
+      title,
       category: cat || hit.ccabRecord.category,
-      ccabKey: hit.ccabKey,
-      ccabRecord: hit.ccabRecord,
-    }));
+      description,
+      sourceRecord: record,
+    };
   }
 
   function enrichListRowFromStoredCcabTitle(title = '', categoryHint = '') {
@@ -328,9 +341,10 @@ export function createStoredCcabNarrativeMerge(
     const hotelNarrative = (hotelCategory === 'hotel' || hotelCategory.includes('lodging'))
       && !text(record.websiteFlavour)
       && isHotelPlanningNote(record.description || record.summary)
-      ? hotelStoredCcabListNarrative(
+      ? storedCcabHotelListNarrative(
         place.name || place.title || hit.ccabKey,
         record,
+        ccabHelpers,
       )
       : null;
     if (hotelNarrative) {

@@ -13,11 +13,11 @@ import {
   resolveThingLogoUrl,
 } from '../../../../src/vacation/thing-logo-capture.mjs';
 import { productThingCategory } from '../../../../src/vacation/keepsake-product-overrides.mjs';
+import { hotelListRowUnboundNarrative } from '../../../../src/vacation/hotel-list-row-unbound.mjs';
 import {
-  hotelListRowUnboundNarrative,
   isGenericDescription,
   isListRowPipelineDiagnostic,
-} from '../../../../src/vacation/trip-thing-enrichment.mjs';
+} from '../../../../src/vacation/list-row-generic-description.mjs';
 
 export const LIST_TAB_IDS = ['flights', 'hotels', 'cars', 'restaurants', 'stores', 'events'];
 

@@ -1,6 +1,5 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-
 import {
   bindPr336GateBCanonicalIdentity,
   mergeStoredCcabNarrativeIntoOverride,
@@ -11,8 +10,7 @@ import {
   applyServedListLogoOverridesOnly,
 } from './shared-trip-live-app-fields.mjs';
 
-const GATEB_FIXTURE_REPLAY_SLUG = 'gateb-fixture-replay';
-void GATEB_FIXTURE_REPLAY_SLUG;
+export const GATEB_FIXTURE_REPLAY_SLUG = 'gateb-fixture-replay';
 
 function normalizeTimelineSelections(trip = {}) {
   if (!Array.isArray(trip.places)) throw new TypeError('places must be an array');
@@ -69,7 +67,7 @@ export function prepareFixtureReplaySharedTrip(bytes) {
   };
 }
 
-function loadFixtureReplaySharedTripFromPath(fixturePath = '') {
+export function loadFixtureReplaySharedTripFromPath(fixturePath = '') {
   const path = String(fixturePath || '').trim();
   if (!path) return null;
   return prepareFixtureReplaySharedTrip(readFileSync(path));

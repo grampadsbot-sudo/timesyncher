@@ -4,6 +4,8 @@ Closes #546
 
 Gate B / Craig Hotels tab requirement: **every hotel list row** shows sourced, non-generic description text inline with the name (≥30 words, substance cues), not only Motto.
 
+Host merged `origin/vk` at `6e8812002118a49a906b06d9d854108128a5efcc` into `27fc0e18204adaf6be71abacf69816de57b3e50b` (2026-11-02 BASE-MERGE round); kept PR hotel/ccab list substance plus vk xAI hotel enrichment and exported fixture-replay helpers.
+
 ## Changes (this round on `origin/vk`)
 
 - **`trip-thing-enrichment.mjs`** + **`hotel-list-row-narrative.mjs`**: after vk detail-judge search fill, hotels get stored-ccab list narratives so trip-fill persists substantive `description`/`longDetails` (not raw planning-note templates).

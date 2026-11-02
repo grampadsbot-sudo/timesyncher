@@ -1,5 +1,36 @@
 # vkfill-549 round (2026-11-02, cursor-ubuntu)
 
+## Round 2026-11-02 BASE-MERGE (origin/vk `6e881200` into `27fc0e18`)
+
+**Start sha:** `27fc0e18204adaf6be71abacf69816de57b3e50b` (PR #549 head per chief brief 12:53 PM PT)
+
+### Outcome
+
+**source-ready** — HOST PUBLICATION ONLY. Resolved host merge of `origin/vk` `6e881200` into `27fc0e18`; rebaked bundle; client-safe ccab merge (no dossier import in vacation-client build).
+
+### Checks
+
+| Command | Result |
+| --- | --- |
+| `node scripts/rebake_served_trek_bundle.mjs` | PASS (sha256 `40cfc83548bc49fdf2a30d06c2b52cf47d95c9e631d3c36c04aa1587a162acc0`) |
+| `node scripts/test_served_trek_bundle.mjs` | PASS |
+| `node scripts/test_list_row_description_substance.mjs` | PASS |
+| `node scripts/test_stored_ccab_canonical_identity.mjs` | PASS |
+| `node scripts/test_vk_hotel_gate_b_description_acceptance.mjs` | PASS |
+| `node scripts/test_vk_hotel_detail_fill.mjs` | PASS |
+| `node scripts/test_gate_b_product_row_fields.mjs` | PASS |
+| `node scripts/test_shared_trip_api_budget_lines.mjs` | PASS |
+| `node scripts/check-no-comments.mjs` | PASS |
+| `node scripts/test_offline_manifest.mjs` | PASS |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS |
+| `cd apps/vacation-client && npm test` | PASS |
+
+Gate B hotels description bar not re-run in lane (no Cursor self-proof).
+
+**Host:** stage resolved files + rebaked bundle; `git commit --no-edit` for merge, then push once.
+
+---
+
 ## Round 2026-11-02 ~19:22 UTC (hotel Oe summary guard + live-app narrative re-bind)
 
 **Start sha:** `8fd669a237fadbcb148b42f55c9d1fe8ac0517df` (PR #549 head per lane brief 11:18 AM PT)
@@ -113,10 +144,6 @@ PR #549 dropped vk’s `applyListRowLogoFields` / `applyServedListLogoOverridesO
 
 **Descriptions (item 1):** Not re-scored to 12/15 in lane (no Cursor self-proof). Small composer/snippet lift only; host Gate B judgment required.
 
-**Merge conflicts vs vk:** Product paths reconciled toward vk logo + PR #546 substance; full git merge still blocked on `J/PR_DESCRIPTION.md`, `J/RECEIPT.md`, `scripts/offline-tests.txt` — host resolves J/ on publish, not edited here beyond this receipt.
-
 ## Left alone
 
-Baselines, Gate B thresholds, workflows, fixtures, `offline-tests.txt`, deploy config. No git commit in lane (HOST PUBLICATION ONLY).
-
-**Host:** stage the four product files above + this receipt; commit on `cursor/tsv-546-known-gap-on-migrate-trek-source-description-substance-and-quality-4c4d`, push once, re-run Gate B structure on pushed head.
+Baselines, Gate B thresholds, workflows, fixtures, deploy config. No git commit in lane (HOST PUBLICATION ONLY).
