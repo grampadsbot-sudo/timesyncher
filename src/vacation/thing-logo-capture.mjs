@@ -240,11 +240,12 @@ export function applyCapturedLogos(shared = {}) {
       override.icon = timelineCategoryIcon(resolved.type);
     }
     next.thingOverrides[key] = override;
-    if (!place.image_url || isBoundStoryMediaUrl(place.image_url)) {
+    if (!place.image_url || isBoundStoryMediaUrl(place.image_url) || isPlaceholderLogoUrl(place.image_url)) {
       place.logoUrl = logoUrl;
     } else {
       place.logoUrl = place.image_url;
     }
+    if (isPlaceholderLogoUrl(place.logoUrl)) delete place.logoUrl;
     place.captured_logo_url = logoUrl;
   }
   return next;

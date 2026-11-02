@@ -32,3 +32,24 @@ Second dirty-head merge: merged `origin/migrate/trek-source` at `e3364ac5b3d4479
 ## Verdict
 
 Base-merge tip `ce70be64` (merge `27c0ea8a` + J) ready for host push; CI `unit-tests` + Gate B on pushed head are merge authority.
+
+## Round vkfill-590 @ c364a0cd (2026-11-02, HOST PUBLICATION ONLY)
+
+**Root cause:** Served list chips use TREK `_l(G)` (`Re.logoUrl || G.logoUrl || oi(cc(G))`). Shared placeholder SVGs stayed on `place.logoUrl` when `thingOverrides.logoUrl` was cleared and no resolved favicon was written, so many event/hotel rows shared one `G.logoUrl` (Gate B #588 generic logos).
+
+**Patch (uncommitted, host push):**
+- `src/vacation/shared-trip-live-app-fields.mjs`: drop placeholder `logoUrl`/`iconUrl` from place + override when resolve fails so `_l` can fall through to `oi(cc(G))`.
+- `src/vacation/thing-logo-capture.mjs`: do not persist placeholder `image_url` as `place.logoUrl` in `applyCapturedLogos`.
+
+**Checks @ c364a0cd base + patch:**
+| Command | Result |
+| --- | --- |
+| `cd apps/vacation-client && npm test` | pass |
+| `node scripts/test_gate_b_live_tab_logo_rows.mjs` | pass |
+| `node scripts/test_trip_thing_logo_metadata.mjs` | pass |
+| `node scripts/test_shared_trip_live_tab_logos.mjs` | pass |
+| `node scripts/check-no-comments.mjs` | pass |
+| `node scripts/test_offline_manifest.mjs` | pass |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pass |
+
+Gate B closed-gap on staging not run in lane (no Cursor self-proof). Host: commit → push → Gate B structure on events/hotels 390+1280.

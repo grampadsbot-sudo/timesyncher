@@ -171,8 +171,10 @@ export function applyLiveAppListRowFields(shared = {}) {
     if (logoUrl && !isPlaceholderLogoUrl(logoUrl)) {
       override.logoUrl = logoUrl;
       if (!text(place.logoUrl) || isPlaceholderLogoUrl(place.logoUrl)) place.logoUrl = logoUrl;
-    } else if (isPlaceholderLogoUrl(override.logoUrl)) {
-      delete override.logoUrl;
+    } else {
+      if (isPlaceholderLogoUrl(override.logoUrl)) delete override.logoUrl;
+      if (isPlaceholderLogoUrl(place.logoUrl)) delete place.logoUrl;
+      if (isPlaceholderLogoUrl(place.iconUrl)) delete place.iconUrl;
     }
 
     const price = priceFromRecords(place, override, source);
