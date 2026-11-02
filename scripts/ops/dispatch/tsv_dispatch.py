@@ -336,6 +336,11 @@ from gateb_exemption import (  # noqa: E402
     gateb_exempt_commit_description,
 )
 
+from postdeploy_screens import (  # noqa: E402
+    postdeploy_regressed,
+    screens_match,
+)
+
 
 def pregate_one_compare_run_dir(
     compare: Mapping[str, Any] | None,
