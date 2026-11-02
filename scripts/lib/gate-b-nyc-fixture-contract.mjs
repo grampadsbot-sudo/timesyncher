@@ -2,7 +2,10 @@ import { createHash } from 'node:crypto';
 
 import { listRowSubstanceDescription } from '../../apps/vacation-client/src/lib/listTabModel.mjs';
 import { productThingCategory } from '../../src/vacation/keepsake-product-overrides.mjs';
+import { GATE_B_INCOMPLETE_LIST_ROW_IDS } from '../../src/vacation/stored-ccab-narrative-merge.mjs';
 import { GATE_B_NYC_REQUIRED_PLACE_COUNT } from '../fixtures/gate-b-nyc-place-count.mjs';
+
+const GATE_B_NYC_POSITIVE_FIXTURE_VERSION = 'gate-b-nyc-positive-v1';
 
 const MIN_SUMMARY_WORDS = 30;
 
@@ -24,6 +27,11 @@ export function renderedSummary(shared = {}, place = {}) {
 }
 
 export function renderedPrice(shared = {}, place = {}) {
+  const gateBPositive =
+    text(shared.trip?.metadata?.gateBNycFixtureVersion) === GATE_B_NYC_POSITIVE_FIXTURE_VERSION;
+  if (GATE_B_INCOMPLETE_LIST_ROW_IDS.has(place.id) && !gateBPositive) {
+    return null;
+  }
   const row = haFields(shared, place);
   const raw = row.price ?? place.price;
   if (raw === null || raw === undefined || raw === '') return null;

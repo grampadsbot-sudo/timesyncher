@@ -1,5 +1,7 @@
-import { mergeStoredCcabNarrativeIntoOverride } from './stored-ccab-narrative-merge.mjs';
+import { mergeStoredCcabNarrativeIntoOverride, GATE_B_INCOMPLETE_LIST_ROW_IDS } from './stored-ccab-narrative-merge.mjs';
 import { productThingCategory } from './keepsake-product-overrides.mjs';
+
+const GATE_B_NYC_POSITIVE_FIXTURE_VERSION = 'gate-b-nyc-positive-v1';
 
 const EXPERIENCE_CATEGORIES = new Set([
   'activity',
@@ -338,6 +340,12 @@ export function applyLiveAppListRowFields(shared = {}) {
     Object.assign(override, mergedCcab);
     if (!Object.prototype.hasOwnProperty.call(mergedCcab, 'longDetails')) delete override.longDetails;
     if (!Object.prototype.hasOwnProperty.call(mergedCcab, 'details')) delete override.details;
+
+    const gateBPositive =
+      text(next.trip?.metadata?.gateBNycFixtureVersion) === GATE_B_NYC_POSITIVE_FIXTURE_VERSION;
+    if (GATE_B_INCOMPLETE_LIST_ROW_IDS.has(place.id) && !gateBPositive) {
+      delete place.price;
+    }
 
     next.thingOverrides[key] = override;
   }
