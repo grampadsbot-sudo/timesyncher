@@ -142,7 +142,7 @@ export function ratingQuoteSupportsAggregate(quote = '', average, count) {
   if (!new RegExp(`(^|[^\\d.])${avgEsc}([^\\d.]|$)`).test(q)) return false;
   const digits = String(cnt);
   const compact = q.replace(/,/g, '');
-  if (!compact.includes(digits)) return false;
+  if (!new RegExp(`(^|\\D)${digits}(\\D|$)`).test(compact)) return false;
   if (/\b\d{3}[\s.-]\d{3}[\s.-]\d{4}\b/.test(q) && !/\breviews?\b/i.test(q)) return false;
   return true;
 }
