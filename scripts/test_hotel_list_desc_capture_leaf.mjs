@@ -114,9 +114,14 @@ try {
         return r.width > 0 && r.height > 0;
       }
       function rowDescBox(li) {
+        const listDescEl = li.querySelector('[data-ts-list-desc="1"]');
+        const listDescLeaf = listDescEl && visible(listDescEl)
+          ? (listDescEl.textContent || '').replace(/\s+/g, ' ').trim()
+          : null;
+
         const nameEl = li.querySelector('[data-ts-list-row-name]');
         const nmTxt = nameEl ? (nameEl.textContent || '').trim() : '';
-        const descLine = (() => {
+        const descLineFromInnerText = (() => {
           const ls = (li.innerText || '')
             .split('\n')
             .map((s) => s.replace(/\s+/g, ' ').trim())
@@ -134,15 +139,28 @@ try {
           ls.sort((a, b) => b.length - a.length);
           return ls.length ? ls[0].slice(0, 1200) : null;
         })();
+        const descLine = listDescLeaf || descLineFromInnerText;
         if (!descLine) return { descLine: null, descBox: null, listDescLeaf: null };
-        const el = [...li.querySelectorAll('*')].find(
-          (e) => !e.children.length && (e.textContent || '').replace(/\s+/g, ' ').trim() === descLine && visible(e),
-        );
-        const listDescLeaf = li.querySelector('[data-ts-list-desc="1"]');
+
+        const leafMatchesDesc = (e, line) => {
+          if (!e || !visible(e)) return false;
+          const t = (e.textContent || '').replace(/\s+/g, ' ').trim();
+          return t === line || (t.length >= 8 && line.startsWith(t)) || (line.length >= 8 && t.startsWith(line));
+        };
+
+        let descBox = null;
+        if (listDescEl && leafMatchesDesc(listDescEl, descLine)) {
+          descBox = true;
+        } else {
+          const el = [...li.querySelectorAll('*')].find(
+            (e) => !e.children.length && leafMatchesDesc(e, descLine),
+          );
+          descBox = el ? true : null;
+        }
         return {
           descLine,
-          descBox: el ? true : null,
-          listDescLeaf: listDescLeaf ? (listDescLeaf.textContent || '').replace(/\s+/g, ' ').trim() : null,
+          descBox,
+          listDescLeaf,
         };
       }
       const root = document.querySelector('[data-shared-live-tab="hotels"]');
