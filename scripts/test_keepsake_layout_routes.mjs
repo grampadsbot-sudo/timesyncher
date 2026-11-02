@@ -249,7 +249,7 @@ const js = patchStyleTwoToConfigRenderer(jsSource);
 assert.match(js, /\/shared\/:token\/journey/);
 assert.match(js, /G==="keepsake-style-2"\?Ae\(!0\)/);
 assert.equal([...js.matchAll(/\{"data-keepsake-admin-root":!0/g)].length, 1);
-assert.equal(js.includes('children:"Trip View"'), false);
+assert.equal(js.includes('children:"Trip View"'), true);
 const gearOpensAdmin = '"aria-label":"Config Options","aria-expanded":Qe,onClick:()=>{Mt("config"),Ye(!1),Jt(!1),ht(!0),it(!0),Pt(!0)}';
 const adminToggle = '{"data-keepsake-admin-root":!0,style:{position:"relative"},children:[n.jsx("button",{type:"button",onClick:()=>Pt(G=>!G)';
 assert.equal(js.includes(gearOpensAdmin), true);

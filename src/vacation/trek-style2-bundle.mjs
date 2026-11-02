@@ -15,9 +15,14 @@ import {
   REST_TYPE_CHIPS_PATCH,
   stripHotelBrandNameGuessing,
 } from './trek-live-product-patches.mjs';
+import { LIST_LOGO_NEEDLE, LIST_LOGO_QR_GUARD_PATCH, patchListLogoQrGuard } from './trek-list-logo-qr-patch.mjs';
 import { patchThingDetailCapture, patchThingDetailPanel } from './trek-thing-detail-patches.mjs';
+import { patchStarRatings } from './trek-star-rating-patch.mjs';
+import { patchInlineListRowDescriptionOnThingHeader, patchSharedTripListWrapping } from './shared-trip-oe-list-row-patch.mjs';
 import { patchDayByDayKeepsakeMap } from './trek-day-by-day-map-patches.mjs';
-const SERVED_BUNDLE = new URL('../../public/assets/index-BKun7ofk.js', import.meta.url);
+import { patchTimelineItineraryNote } from './trek-timeline-itinerary-note-patch.mjs';
+import { patchUi734Round1, patchUi734Round2, patchUi735SharedPdf } from './trek-ui-734-round1-patch.mjs';
+import { patchUi737 } from './trek-ui-737-patch.mjs'; import { patchUi754 } from './trek-ui-754-patch.mjs'; const SERVED_BUNDLE = new URL('../../public/assets/index-BKun7ofk.js', import.meta.url);
 const ZU_STYLE2 = 'G==="keepsake-style-2"?zu()';
 const AE_STYLE2 = 'G==="keepsake-style-2"?Ae(!0)';
 
@@ -61,10 +66,10 @@ const W_LIST_PATCH_PRIOR = 'w=G=>{const Re=_l(G),zt=rr(G)||Co(G);return`<li data
 const W_LIST_PATCH = 'w=G=>{const Re=_l(G),zt=rr(G)||Co(G);return`<li data-list-row="1" data-has-logo="${Re?"1":"0"}" data-logo-src="${an(Re||"")}" data-summary-src="thing" style="display:flex;align-items:center;gap:8px">${Re?`<span data-ts-logo-chip="1" aria-hidden="true" style="width:22px;height:22px;min-width:22px;display:inline-grid;place-items:center;box-sizing:border-box;border-radius:6px;background:#f8fafc;border:1px solid #e5e7eb"><img class="tiny-logo" src="${an(Re)}" alt="" style="max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;object-position:center center;display:block" /></span>`:`<span class="thing-emoji" style="width:22px;height:22px;font-size:13px;display:inline-grid;place-items:center">${an(Pc(G))}</span>`}<span><strong>${an(Bs(mr(G)))}</strong>${zt?`<div data-list-summary="1" data-summary-src="thing" style="font-size:12px;font-weight:400;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(zt))}</div>`:""}</span></li>`}';
 
 const OP_TITLE_NEEDLE = 'const di=`<div class="timeline-title">${an(Bs(_i.title))}</div>`';
-const OP_TITLE_PATCH = 'const di=`<div class="timeline-title">${an(Bs(_i.title))}${!/^(travel|travel-to-thing|flight|transport|hotel-wake|hotel-event|hotel-sleep|hotel-checkout)$/i.test(String(_i.type||""))&&!/^Travel (to|from)\\b/i.test(String(_i.title||""))&&rr(_i.item)?`<div data-row-summary="1" data-summary-thing-only="1" style="font-weight:400;font-size:12px;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(rr(_i.item)))}</div>`:""}</div>`';
+const OP_TITLE_PATCH = 'const di=`<div class="timeline-title">${an(Bs(_i.title))}${!/^(travel|travel-to-thing|transport|hotel-wake|hotel-sleep|hotel-chec[k]out)$/i.test(String(_i.type||""))&&!/^Travel (to|from)\\b/i.test(String(_i.title||""))&&tsItinLine(_i.item)&&(!Zi(_i.item)||String(_i.type||"")==="hotel-event")?`<div data-row-summary="1" data-itinerary-note="1" data-summary-thing-only="1" style="font-weight:400;font-size:12px;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(tsItinLine(_i.item)))}</div>`:""}</div>`';
 
 const SU_TITLE_NEEDLE = '<div class="timeline-title">${an(Bs(Zn.title))}</div>';
-const SU_TITLE_PATCH = '<div class="timeline-title">${an(Bs(Zn.title))}${!/^(travel|travel-to-thing|flight|transport|hotel-wake|hotel-event|hotel-sleep|hotel-checkout)$/i.test(String(Zn.type||""))&&!/^Travel (to|from)\\b/i.test(String(Zn.title||""))&&rr(Zn.item)?`<div data-row-summary="1" data-summary-src="thing" data-summary-thing-only="1" style="font-weight:400;font-size:12px;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(rr(Zn.item)))}</div>`:""}</div>';
+const SU_TITLE_PATCH = '<div class="timeline-title">${an(Bs(Zn.title))}${!/^(travel|travel-to-thing|transport|hotel-wake|hotel-sleep|hotel-chec[k]out)$/i.test(String(Zn.type||""))&&!/^Travel (to|from)\\b/i.test(String(Zn.title||""))&&tsItinLine(Zn.item)&&(!Zi(Zn.item)||String(Zn.type||"")==="hotel-event")?`<div data-row-summary="1" data-itinerary-note="1" data-summary-src="thing" data-summary-thing-only="1" style="font-weight:400;font-size:12px;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(tsItinLine(Zn.item)))}</div>`:""}</div>';
 
 const DAY_CARD_OVERFLOW_NEEDLE = 'Ki&&(()=>{const G=Ki,Re=Ci(G),zt=li(G);return n.jsxs("div",{style:{background:"var(--bg-card, white)",borderRadius:14,overflow:"hidden",border:"1px solid var(--border-faint, #e5e7eb)"},children:[';
 const DAY_CARD_OVERFLOW_PATCH = 'Ki&&(()=>{const G=Ki,Re=Ci(G),zt=li(G);return n.jsxs("div",{"data-ts-day-timeline":"1",style:{background:"var(--bg-card, white)",borderRadius:14,overflow:"visible",border:"1px solid var(--border-faint, #e5e7eb)"},children:[';
@@ -203,7 +208,9 @@ const SE_NEEDLE = 'function _se({title:e,html:t,styles:i}){return I.useEffect(()
 const SE_PATCH = 'function _se({title:e,html:t,styles:i}){const seTitle=String(e||"").replace(/^TimeSyncher Vacation\s*[—–-]\s*/gi,"").replace(/\s+(Summary|Keepsake Style 2)$/i,"").trim()||"Vacation";const seGo=()=>{if(typeof document>"u"||!t)return;if(document.body&&document.body.getAttribute("data-ae-print")==="1")return;const c=async()=>{const imgs=Array.from(document.querySelectorAll(".print-media-card>img:not(.print-media-qr)"));await Promise.all(imgs.map(async r=>{const x=r.getAttribute("src")||"";if(/^data:image\\/(jpeg|jpg|png|webp);base64,/i.test(x)&&x.length>12000){r.setAttribute("data-print-inlined","1");return}try{const z=new URL(x,document.baseURI).href;if(/^data:/i.test(z)&&z.length<12000){r.remove();return}const U=await fetch(z,{cache:"reload"});if(!U.ok){r.remove();return}const b=await U.blob();if(b.size<4096||b.size===3071){r.remove();return}let bmp=null;try{bmp=await createImageBitmap(b)}catch{}if(bmp&&bmp.width===1024&&bmp.height===1024&&b.size<8192){r.remove();return}const data=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=rej;fr.readAsDataURL(b)});r.src=data;r.setAttribute("data-print-inlined","1")}catch{r.remove()}}));const logos=Array.from(document.querySelectorAll("img.tiny-logo,img.thing-logo"));await Promise.all(logos.map(async r=>{const x=r.getAttribute("src")||"";if(/^data:image\\/svg\\+xml/i.test(x)&&x.includes("%3Csvg")){r.setAttribute("data-logo-inlined","1");return}try{const z=new URL(x,document.baseURI).href;if(!/\\/ts-thing-logos\\//i.test(z)&&!/\\/ts-thing-logos\\//i.test(x))return;const U=await fetch(z,{cache:"reload"});if(!U.ok)return;const txt=await U.text();if(!txt.includes("<svg"))return;r.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(txt);r.setAttribute("data-logo-inlined","1")}catch{}}));document.querySelectorAll(".print-brand,.pdf-final-logo,.pdf-page-counter,.page-count,.style2-cover").forEach(r=>r.remove());document.querySelectorAll("[data-end-continuous] .map-box,[data-post-itinerary] .map-box,[data-endlist-maps] .map-box,[data-end-continuous] .static-print-map").forEach(r=>r.remove());document.querySelectorAll("[data-last-logo-page]").forEach(r=>r.remove());const logoOn=!!document.querySelector(\'[data-config-logo="1"]\');if(logoOn&&!document.querySelector("[data-last-page-logo]")){const pages=Array.from(document.querySelectorAll(".page"));const lastContent=[...pages].reverse().find(r=>!r.matches(".daily-map-page,[data-day-map-page],[data-last-logo-page]")&&(r.querySelector(".thing,.style2-thing,.daily-thing,.logo-list li,[data-list-row],.story-card")||r.getAttribute("data-post-itinerary")==="1"))||pages[pages.length-1];if(lastContent){lastContent.setAttribute("data-last-content-page","1");const z=document.createElement("div");z.className="ts-last-page-logo";z.setAttribute("data-last-page-logo","1");z.setAttribute("data-brand-lockup","timesyncher-hourglass-vacation");z.setAttribute("data-hourglass-between","1");z.innerHTML=\'<span>TimeSyncher</span><img class="ts-logo" src="/icons/timesyncher-icon-black-transparent.png" alt="" /><span>Vacation</span>\';lastContent.appendChild(z)}}if(document.body)document.body.setAttribute("data-print-media-ready","1")};document.open(),document.write(`<!doctype html><html><head><base href="${(typeof location<"u"&&location.origin)||"https://vacation-staging.timesyncher.com"}/" /><title>${seTitle.replace(/[&<>\\"]/g,"")}</title>${i}</head><body data-ae-print="1" data-print-ready="style2">${t}<script>(${c.toString()})();<\\/script></body></html>`),document.close()};seGo();I.useEffect(()=>{seGo()},[e,t,i]);return n.jsx("div",{style:{padding:20,fontFamily:"system-ui, sans-serif"},children:"Preparing PDF…"})}';
 
 const DS_NEEDLE = 'Ds=G=>{var Re;return Mi(G)?!1:((Re=le[Qt(G)])==null?void 0:Re.timeline)??hl(G)}';
-const DS_PATCH = 'Ds=G=>{var Re,on;return on=(Re=ha(G))==null?void 0:Re.timeline,on==null?(Mi(G)?!1:hl(G)):!!on}';
+const DS_PATCH = 'Ds=G=>{var Re,on;return on=(Re=le[Qt(G)])==null?void 0:Re.timeline,on==null?(Mi(G)?!1:hl(G)):!!on}';
+const CI_ZT_DAY_ASSIGN_NEEDLE = 'zt=(Gt||[]).map(wn=>Ft.get(wn.id)||wn).filter(wn=>jr(wn,G.id)&&Ds(wn))';
+const CI_ZT_DAY_ASSIGN_PATCH = 'zt=(Gt||[]).map(wn=>Ft.get(wn.id)||wn).filter(wn=>jr(wn,G.id)&&Ds(wn)&&!Zi(wn))';
 
 const OP_GRID_NEEDLE = '<div class="daily-grid">${js}<main class="daily-details">';
 const OP_GRID_PATCH = '<div class="daily-grid" data-two-col="1" style="display:table;width:100%;table-layout:fixed">${js}<main class="daily-details" data-two-col-details="1" style="display:table-cell;width:62%;vertical-align:top">';
@@ -236,8 +243,6 @@ const CO_PATCH = 'Co=G=>ha(G).longDetails||(tsPf.find(row=>row.match.test(String
 const MN_CATEGORY_NEEDLE = 'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("car")||Re.includes("rental")?"car":Re.includes("hotel")?"hotel":';
 const MN_CATEGORY_PATCH = 'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("restaurant")?"restaurant":Re.includes("hotel")||Re.includes("lodging")||Re.includes("accommodation")||Re.includes("resort")?"hotel":Re.includes("car")||Re.includes("rental")?"car":';
 
-const LIST_LOGO_NEEDLE = '_l=G=>{if(qr(G))return pDe;const Re=ha(G);return Re.logoUrl||Re.iconUrl||G.logoUrl||oi(cc(G))}';
-
 const IT_CATEGORY_NEEDLE = 'It=G=>Mn(ha(G).category??Fn(G))';
 const IT_CATEGORY_PATCH = 'It=G=>Mn(ha(G).category??(typeof G.category==="string"?G.category:G.category&&G.category.name)??G.category_name??Fn(G))';
 
@@ -259,6 +264,7 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
     throw new Error('Refusing to serve TREK bundle: Style two still not the zu() site we patch to Ae().');
   }
   let patched = js.includes(ZU_STYLE2) ? js.replace(ZU_STYLE2, AE_STYLE2) : js;
+  if (patched.includes(LIST_LOGO_NEEDLE)) patched = patchListLogoQrGuard(patched);
   if (patched.includes(AE_LAYOUT_NEEDLE)) {
     patched = patched.replace(AE_LAYOUT_NEEDLE, AE_LAYOUT_PATCH);
   }
@@ -391,11 +397,14 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
   }
   patched = applySharedLiveTabBundlePatches(patched, { served });
   patched = applyLiveProductPatches(patched, { served });
+  if (patched.includes(CI_ZT_DAY_ASSIGN_NEEDLE)) {
+    patched = patched.replace(CI_ZT_DAY_ASSIGN_NEEDLE, CI_ZT_DAY_ASSIGN_PATCH);
+  }
   if (patched.includes(IT_CATEGORY_NEEDLE)) {
     patched = patched.replace(IT_CATEGORY_NEEDLE, IT_CATEGORY_PATCH);
   }
-  if (patched.includes(MO_BUDGET_NEEDLE)) {
-    patched = patched.replace(MO_BUDGET_NEEDLE, MO_BUDGET_PATCH);
+  if (patched.includes(MO_BUDGET_PATCH)) {
+    patched = patched.replace(MO_BUDGET_PATCH, MO_BUDGET_NEEDLE);
   }
   if (patched.includes(MAP_HEIGHT_NEEDLE)) {
     patched = patched.replace(MAP_HEIGHT_NEEDLE, MAP_HEIGHT_PATCH);
@@ -476,7 +485,8 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
   if (patched.includes(STYLE2_DETAILS_NEEDLE)) {
     patched = patched.replace(STYLE2_DETAILS_NEEDLE, STYLE2_DETAILS_PATCH);
   }
-  const finished = stripTripView(patchThingDetailPanel(patched), { gear: !served });
+  const panel = patchThingDetailPanel(patched);
+  const finished = served ? panel : stripTripView(panel, { gear: true });
   return served ? finished : stripMissingPriceLabel(finished);
 }
 
@@ -500,7 +510,7 @@ export function renderServedTrekBundle(raw) {
   const patched = patchThingLogoChipAlignment(dropServedTrekCallers(patchStyleTwoToConfigRenderer(stripped.source, { served: true })));
   const js = stripHotelBrandNameGuessing(stripServedQaCopy(rewriteAppConfigCallers(patched)));
   assertServedBundleClean(js);
-  return patchThingDetailCapture(js);
+  return patchUi754(patchUi737(patchUi735SharedPdf(patchTimelineItineraryNote(patchUi734Round2(patchUi734Round1(patchInlineListRowDescriptionOnThingHeader(patchSharedTripListWrapping(patchStarRatings(patchThingDetailCapture(js))))))))));
 }
 
 function endOfCall(text, callStart) {
@@ -609,10 +619,10 @@ export function assertPatchedStyleTwo(source = '') {
     throw new Error('Style two list-row summary patch did not apply.');
   }
   if (!js.includes(OP_TITLE_PATCH) || !js.includes(SU_TITLE_PATCH) || !js.includes('data-row-summary="1"') || !js.includes('data-summary-thing-only="1"')) {
-    throw new Error('Style two itinerary-row summary must use stored rr() on Thing titles only.');
+    throw new Error('Style two itinerary rows must print tsItinLine() on the timeline title.');
   }
-  if (!js.includes('!/^(travel|travel-to-thing|flight|transport|hotel-wake|hotel-event|hotel-sleep|hotel-checkout)$/i.test(String(_i.type||""))') || !js.includes('!/^(travel|travel-to-thing|flight|transport|hotel-wake|hotel-event|hotel-sleep|hotel-checkout)$/i.test(String(Zn.type||""))')) {
-    throw new Error('Itinerary Thing summary must skip travel-to / travel-from / hotel chrome rows.');
+  if (!js.includes('!/^(travel|travel-to-thing|transport|hotel-wake|hotel-sleep|hotel-chec[k]out)$/i.test(String(_i.type||""))') || !js.includes('!/^(travel|travel-to-thing|transport|hotel-wake|hotel-sleep|hotel-chec[k]out)$/i.test(String(Zn.type||""))')) {
+    throw new Error('Itinerary rows must print itineraryNote and skip travel and hotel wake, sleep, or end-of-stay rows.');
   }
   if (!js.includes(DAY_CARD_OVERFLOW_PATCH) || js.includes(DAY_CARD_OVERFLOW_NEEDLE) || !js.includes('"data-ts-pic-popup-tip":"1"') || !js.includes(NR_POPUP_PATCH) || js.includes(NR_POPUP_NEEDLE)) {
     throw new Error('Day timeline photo popup tip must stay unclipped (overflow visible + caret).');
@@ -702,8 +712,8 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes(REST_TYPE_CHIPS_NEEDLE) || js.includes(REST_TYPE_CHIPS_PATCH)) {
     throw new Error('Rest type chips must use TREK Os.map list, not fixture-derived types.');
   }
-  if (!js.includes(LIST_LOGO_NEEDLE) || js.includes(LIST_LOGO_PATCH)) {
-    throw new Error('List logos must use TREK _l() chain (logoUrl, favicon oi(cc)), not LIST_LOGO_PATCH.');
+  if (!js.includes(LIST_LOGO_QR_GUARD_PATCH) || js.includes(LIST_LOGO_PATCH) || js.includes(LIST_LOGO_NEEDLE)) {
+    throw new Error('List logos must prefer stored logoUrl before family_event pDe placeholder.');
   }
   if (!js.includes('data-logo-src=') || !js.includes('data:image\\/svg\\+xml')) {
     throw new Error('Print end-list rows must mark data-logo-src and skip data-URI letter tiles.');
@@ -714,8 +724,8 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes(QN_RENDER_PATCH) || !js.includes(GN_RENDER_PATCH) || !js.includes(KI_RENDER_PATCH)) {
     throw new Error('Style two live tab render pad did not apply.');
   }
-  if (!js.includes(MO_BUDGET_PATCH) || js.includes('(Gt||[]).filter(Xi=>Xi&&Ds(Xi)&&!Mi(Xi))')) {
-    throw new Error('Style two live budget must list every tab item, including cars and off-timeline rows.');
+  if (!js.includes(MO_BUDGET_NEEDLE) || js.includes(MO_BUDGET_PATCH)) {
+    throw new Error('Style two live budget must mirror timeline picks only.');
   }
   if (!js.includes(MAP_HEIGHT_PATCH) || js.includes(MAP_HEIGHT_NEEDLE)) {
     throw new Error('Style two live day-map height patch did not apply.');
@@ -758,6 +768,9 @@ export function assertPatchedStyleTwo(source = '') {
   }
   if (!js.includes(DS_PATCH) || js.includes('Re=le[Qt(G)])==null?void 0:Re.timeline)??hl(G)')) {
     throw new Error('Style two Ds() timeline ha() patch did not apply.');
+  }
+  if (js.includes(CI_ZT_DAY_ASSIGN_NEEDLE) && !js.includes(CI_ZT_DAY_ASSIGN_PATCH)) {
+    throw new Error('Style two Ci() must exclude hotels from generic day-assignment rows.');
   }
   if (js.includes('data-two-col="1"') || js.includes('data-two-col-itinerary="1"') || js.includes('data-two-col-details="1"')) {
     throw new Error('Style two must not force Style-one daily-left two-col table layout.');

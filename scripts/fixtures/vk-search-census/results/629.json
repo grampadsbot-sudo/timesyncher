@@ -1,0 +1,311 @@
+{
+  "thingId": 629,
+  "thingName": "Romer Hell's Kitchen",
+  "type": "hotel",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.romerhotels.com/hells-kitchen",
+      "title": "Hell’s Kitchen Hotel in Manhattan | Romer NYC",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Hell’s Kitchen Hotel in Manhattan | Romer NYC | Stay at Romer Hell’s Kitchen in Manhattan, steps from Times Square and Broadway. Stylish rooms, local dining, and a true neighborhood feel in Midtown NYC. Stay at Romer Hell’s Kitchen in Manhattan, steps from Times Square and Bro … Hell’s Kitchen Hotel in Manhattan | Romer NYC | Stay at Romer Hell’s Kitchen in Manhattan, steps from Times Square and Broadway. Stylish rooms, local dining, and a true neighborhood feel in Midtown NYC. Stay at Romer Hell’s Kitchen in Manhattan, steps from Times Square and Bro … Hell’s Kitchen Hotel in Manhattan | Romer NYC | Stay at Romer Hell’s Kitchen in Manhattan, steps from Times Square and Broadway. Stylish rooms, local dining, and a true neighborhood feel in Midtown NYC. Stay at Romer Hell’s Kitchen in Manhattan, steps from Times Square and Broadway. Stylish rooms, local dining, and a true ne … Romer Hell's Kitchen is a neighborhood gathering place and a reprieve from Times Square. … You just might feel like you wandered into a local legend's living room. … Neighborhood Café is an all-day reprieve from the city's unrelenting energy, serving local coffee and bites to fuel the day. … Come evening, So & So's fires up hot dishes and cool tunes in a plush piano bar and restaurant neatly tucked through the back entrance on 52nd street. … nightly live entertainment where anybody just might drop in … Bring along your pet and we’ll provide the treats, bed, and bowls to make their visit extra special. … Stay with us and enjoy parking included in your reservation. … 851 Eighth Ave. New York City, New York 10019 … Romer Hell's Kitchen is a neighborhood gathering place and a reprieve from Times Square. … You just might feel like you wandered into a local legend's living room. … Neighborhood Café is an all-day reprieve from the city's unrelenting energy, serving local coffee and bites to fuel the day. … Come evening, So & So's fires up hot dishes and cool tunes in a plush piano bar and restaurant neatly tucked through the back entrance on 52nd street. … nightly live entertainment where anybody just might drop in … Bring along your pet and we’ll provide the treats, bed, and bowls to make their visit extra special. … Stay with us and enjoy parking included in your reservation. … 851 Eighth Ave. New York City, New York 10019 … Romer Hell's Kitchen is a neighborhood gathering place and a reprieve from Times Square. … You just might feel like you wandered into a local legend's living room. … Neighborhood Café is an all-day reprieve from the city's unrelenting energy, serving local coffee and bites to fuel the day. … Come evening, So & So's fires up hot dishes and cool tunes in a plush piano bar and restaurant neatly tucked through the back entrance on 52nd street. … nightly live entertainment where anybody just might drop in … Bring along your pet and we’ll provide the treats, bed, and bowls to make their visit extra special. … Stay with us and enjoy parking included in your reservation. … 851 Eighth Ave. New York City, New York 10019",
+      "snippet": "Hell’s Kitchen Hotel in Manhattan | Romer NYC | Stay at Romer Hell’s Kitchen in Manhattan, steps from Times Square and Broadway. Stylish rooms, local dining, and a true neighborhood feel in Midtown NYC. Stay at Romer Hell’s Kitchen in Manhattan, steps from Times Square and Bro",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.romerhotels.com/hells-kitchen/rooms",
+      "title": "Midtown NYC Hotel Rooms & Suites | Romer Hell's Kitchen",
+      "fetchedAt": "2026-10-29T08:45:00-07:00",
+      "text": "Choose from accessible king, two-queen and one-bedroom suite layouts for two to four guests. … One Bedroom King Suite 1 King 650SF Sleeps 4 This pre-war inspired room embodies a New York theater couple's quintessential dream apartment. … the Corner King welcomes guests with a sprawling velvet couch … Like a true New Yorker's Hell's Kitchen apartment, Two Queens makes room for a crew without sacrificing style. … Choose from accessible king, two-queen and one-bedroom suite layouts for two to four guests. … One Bedroom King Suite 1 King 650SF Sleeps 4 This pre-war inspired room embodies a New York theater couple's quintessential dream apartment. … the Corner King welcomes guests with a sprawling velvet couch … Like a true New Yorker's Hell's Kitchen apartment, Two Queens makes room for a crew without sacrificing style. … Choose from accessible king, two-queen and one-bedroom suite layouts for two to four guests. … One Bedroom King Suite 1 King 650SF Sleeps 4 This pre-war inspired room embodies a New York theater couple's quintessential dream apartment. … the Corner King welcomes guests with a sprawling velvet couch … Like a true New Yorker's Hell's Kitchen apartment, Two Queens makes room for a crew without sacrificing style.",
+      "snippet": "Choose from accessible king, two-queen and one-bedroom suite layouts for two to four guests. … One Bedroom King Suite 1 King 650SF Sleeps 4 This pre-war inspired room embodies a New York theater couple's quintessential dream apartment. … the Corner King welcomes guests with a sprawling velvet couch ",
+      "fetchMethod": "live curl fetch 2026-10-29 (official hotel page); text stored as verbatim excerpts"
+    },
+    {
+      "url": "https://www.tripadvisor.com/Hotel_Review-g60763-d26345642-Reviews-Romer_Hell_s_Kitchen-New_York_City_New_York.html",
+      "title": "ROMER HELL'S KITCHEN - Updated 2026 Reviews (New York City) (search snapshot)",
+      "fetchedAt": "2026-10-29T08:45:00-07:00",
+      "text": "Reviews 4.5 Very Good (616) … Rooms Spacious … Value Reasonable … Cleanliness Spotless … Service Friendly … Reviews 4.5 Very Good (616) … Rooms Spacious … Value Reasonable … Cleanliness Spotless … Service Friendly … Reviews 4.5 Very Good (616) … Rooms Spacious … Value Reasonable … Cleanliness Spotless … Service Friendly",
+      "snippet": "Reviews 4.5 Very Good (616) … Rooms Spacious … Value Reasonable … Cleanliness Spotless … Service Friendly",
+      "fetchMethod": "SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch)"
+    },
+    {
+      "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d26345642-r945592110-Romer_Hell_s_Kitchen-New_York_City_New_York.html",
+      "title": "Nice Theater District Hotel - Review of Romer Hell's Kitchen (search snapshot)",
+      "fetchedAt": "2026-10-29T08:45:00-07:00",
+      "text": "It’s in a great location, easy walk to Times Square, Theater District, MOMA, and 5th Avenue. … The room was a good size and quiet for the city. … The bathroom was too cramped … It’s in a great location, easy walk to Times Square, Theater District, MOMA, and 5th Avenue. … The room was a good size and quiet for the city. … The bathroom was too cramped … It’s in a great location, easy walk to Times Square, Theater District, MOMA, and 5th Avenue. … The room was a good size and quiet for the city. … The bathroom was too cramped",
+      "snippet": "It’s in a great location, easy walk to Times Square, Theater District, MOMA, and 5th Avenue. … The room was a good size and quiet for the city. … The bathroom was too cramped",
+      "fetchMethod": "SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch)"
+    },
+    {
+      "url": "https://www.tripadvisor.ca/Hotel_Review-g60763-d26345642-Reviews-Romer_Hell_s_Kitchen-New_York_City_New_York.html",
+      "title": "Romer Hell's Kitchen - Tripadvisor (CA) (search snapshot)",
+      "fetchedAt": "2026-10-29T08:45:00-07:00",
+      "text": "The beds were super comfortable and the bathroom was modern. … Our room was quiet and well soundproofed … The bathrooms were fairly tiny though, including the showers. … The beds were super comfortable and the bathroom was modern. … Our room was quiet and well soundproofed … The bathrooms were fairly tiny though, including the showers. … The beds were super comfortable and the bathroom was modern. … Our room was quiet and well soundproofed … The bathrooms were fairly tiny though, including the showers. … The bathroom was too cramped",
+      "snippet": "The beds were super comfortable and the bathroom was modern. … Our room was quiet and well soundproofed … The bathrooms were fairly tiny though, including the showers.",
+      "fetchMethod": "SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch)"
+    },
+    {
+      "url": "https://www.tripadvisor.ie/Hotel_Feature-g60763-d26345642-zft1-Romer_Hell_s_Kitchen.html",
+      "title": "Romer Hell's Kitchen Rooms: Pictures & Reviews - Tripadvisor (search snapshot)",
+      "fetchedAt": "2026-10-29T08:45:00-07:00",
+      "text": "Amazing hotel. Lovely staff, comfortable and well designed room and great location. The piano bar was fantastic … Amazing hotel. Lovely staff, comfortable and well designed room and great location. The piano bar was fantastic … Amazing hotel. Lovely staff, comfortable and well designed room and great location. The piano bar was fantastic",
+      "snippet": "Amazing hotel. Lovely staff, comfortable and well designed room and great location. The piano bar was fantastic",
+      "fetchMethod": "SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch)"
+    },
+    {
+      "url": "https://www.timeout.com/newyork/hotels/romer-hells-kitchen-hotel",
+      "title": "The friendly Romer hotel debuts as a welcome addition to Hell’s Kitchen (Time Out, search snapshot)",
+      "fetchedAt": "2026-10-29T08:45:00-07:00",
+      "text": "Guestrooms measure up to 600 square feet—larger than some Manhattan apartments—so there was plenty of room to stretch out and enjoy the views. … The 295-guestroom hotel took over a former Hampton Inn … The bathroom—tiny even for New York standards … Guestrooms measure up to 600 square feet—larger than some Manhattan apartments—so there was plenty of room to stretch out and enjoy the views. … The 295-guestroom hotel took over a former Hampton Inn … The bathroom—tiny even for New York standards … Guestrooms measure up to 600 square feet—larger than some Manhattan apartments—so there was plenty of room to stretch out and enjoy the views. … The 295-guestroom hotel took over a former Hampton Inn … The bathroom—tiny even for New York standards",
+      "snippet": "Guestrooms measure up to 600 square feet—larger than some Manhattan apartments—so there was plenty of room to stretch out and enjoy the views. … The 295-guestroom hotel took over a former Hampton Inn … The bathroom—tiny even for New York standards",
+      "fetchMethod": "SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch)"
+    }
+  ],
+  "rating": {
+    "primary": null,
+    "primarySource": null,
+    "booking": 8.6,
+    "primaryPrevious": {
+      "value": 4.5,
+      "source": "tripadvisor",
+      "note": "unknown per eggbot 2026-10-29 11:50 PT: TA search-index snapshot rejected; no saved page shows avg+count"
+    }
+  },
+  "reviewCount": {
+    "tripadvisor": 615,
+    "booking": 1265
+  },
+  "priceHint": "4-star Hell's Kitchen",
+  "hoursHint": "Hotel — 24h",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "851 Eighth Ave. New York City, New York 10019"
+  ],
+  "itineraryNoteCandidate": "Romer Hell's Kitchen: a neighborhood gathering place and a reprieve from Times Square with comfy, quiet rooms; after a show, try So & So's plush piano bar and restaurant neatly tucked through the back entrance on 52nd street.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims; sources include labelled SERP search snapshots (not live fetches) — see each source's fetchMethod"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 425,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Romer Hell's Kitchen, at 851 Eighth Ave. New York City, New York 10019, is a design-led Midtown West hotel that guests praise for an easy walk to the theaters, very comfortable beds, quiet rooms and a fun piano bar. The one consistent complaint is tight bathrooms and showers.",
+      "claims": [
+        {
+          "text": "851 Eighth Ave. New York City, New York 10019",
+          "sourceUrl": "https://www.romerhotels.com/hells-kitchen"
+        }
+      ]
+    },
+    "description": {
+      "value": "Romer Hell's Kitchen sits at 851 Eighth Ave. New York City, New York 10019; The 295-guestroom hotel took over a former Hampton Inn and now promises you just might feel like you wandered into a local legend's living room. Guestrooms measure up to 600 square feet, and evenings center on So & So's, with nightly live entertainment where anybody just might drop in. Guests describe a great location, easy walk to Times Square, Theater District, MOMA, and 5th Avenue, and say The beds were super comfortable and the bathroom was modern and Our room was quiet and well soundproofed. The watch-out is bathrooms: The bathroom was too cramped for some, and The bathrooms were fairly tiny.",
+      "claims": [
+        {
+          "text": "851 Eighth Ave. New York City, New York 10019",
+          "sourceUrl": "https://www.romerhotels.com/hells-kitchen"
+        },
+        {
+          "text": "The 295-guestroom hotel took over a former Hampton Inn",
+          "sourceUrl": "https://www.timeout.com/newyork/hotels/romer-hells-kitchen-hotel"
+        },
+        {
+          "text": "just might feel like you wandered into a local legend's living room",
+          "sourceUrl": "https://www.romerhotels.com/hells-kitchen"
+        },
+        {
+          "text": "great location, easy walk to Times Square, Theater District, MOMA, and 5th Avenue",
+          "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d26345642-r945592110-Romer_Hell_s_Kitchen-New_York_City_New_York.html"
+        },
+        {
+          "text": "Guestrooms measure up to 600 square feet",
+          "sourceUrl": "https://www.timeout.com/newyork/hotels/romer-hells-kitchen-hotel"
+        },
+        {
+          "text": "nightly live entertainment where anybody just might drop in",
+          "sourceUrl": "https://www.romerhotels.com/hells-kitchen"
+        },
+        {
+          "text": "The bathroom was too cramped",
+          "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d26345642-r945592110-Romer_Hell_s_Kitchen-New_York_City_New_York.html"
+        },
+        {
+          "text": "The beds were super comfortable and the bathroom was modern",
+          "sourceUrl": "https://www.tripadvisor.ca/Hotel_Review-g60763-d26345642-Reviews-Romer_Hell_s_Kitchen-New_York_City_New_York.html"
+        },
+        {
+          "text": "Our room was quiet and well soundproofed",
+          "sourceUrl": "https://www.tripadvisor.ca/Hotel_Review-g60763-d26345642-Reviews-Romer_Hell_s_Kitchen-New_York_City_New_York.html"
+        },
+        {
+          "text": "The bathrooms were fairly tiny",
+          "sourceUrl": "https://www.tripadvisor.ca/Hotel_Review-g60763-d26345642-Reviews-Romer_Hell_s_Kitchen-New_York_City_New_York.html"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Romer Hell's Kitchen: a neighborhood gathering place and a reprieve from Times Square with comfy, quiet rooms; after a show, try So & So's plush piano bar and restaurant neatly tucked through the back entrance on 52nd street.",
+      "claims": [
+        {
+          "text": "a neighborhood gathering place and a reprieve from Times Square",
+          "sourceUrl": "https://www.romerhotels.com/hells-kitchen"
+        },
+        {
+          "text": "plush piano bar and restaurant neatly tucked through the back entrance on 52nd street",
+          "sourceUrl": "https://www.romerhotels.com/hells-kitchen"
+        }
+      ]
+    },
+    "reviewsUnstarred": [
+      {
+        "theme": "Rooms",
+        "value": "Tripadvisor reviewer on Romer Hell's Kitchen: The beds were super comfortable and the bathroom was modern. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "The beds were super comfortable and the bathroom was modern",
+            "sourceUrl": "https://www.tripadvisor.ca/Hotel_Review-g60763-d26345642-Reviews-Romer_Hell_s_Kitchen-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.ca/Hotel_Review-g60763-d26345642-Reviews-Romer_Hell_s_Kitchen-New_York_City_New_York.html",
+        "rating": "4.5/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 31
+      },
+      {
+        "theme": "Rooms",
+        "value": "Watch-out from a Tripadvisor reviewer at Romer Hell's Kitchen: The bathrooms were fairly tiny. Worth weighing alongside the overall 4.5/5 score before locking in the plan.",
+        "claims": [
+          {
+            "text": "The bathrooms were fairly tiny",
+            "sourceUrl": "https://www.tripadvisor.ca/Hotel_Review-g60763-d26345642-Reviews-Romer_Hell_s_Kitchen-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.ca/Hotel_Review-g60763-d26345642-Reviews-Romer_Hell_s_Kitchen-New_York_City_New_York.html",
+        "rating": "4.5/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "watchOut",
+        "words": 26
+      },
+      {
+        "theme": "Rooms",
+        "value": "Watch-out from a Tripadvisor reviewer at Romer Hell's Kitchen: The bathroom was too cramped. Keep that in mind when choosing timing, a room, or an arrival plan.",
+        "claims": [
+          {
+            "text": "The bathroom was too cramped",
+            "sourceUrl": "https://www.tripadvisor.ca/Hotel_Review-g60763-d26345642-Reviews-Romer_Hell_s_Kitchen-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.ca/Hotel_Review-g60763-d26345642-Reviews-Romer_Hell_s_Kitchen-New_York_City_New_York.html",
+        "rating": "4.5/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "watchOut",
+        "words": 27
+      },
+      {
+        "theme": "Rooms",
+        "value": "Tripadvisor reviewer on Romer Hell's Kitchen: Our room was quiet and well soundproofed. A practical point to factor into the decision before the trip. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "Our room was quiet and well soundproofed",
+            "sourceUrl": "https://www.tripadvisor.ca/Hotel_Review-g60763-d26345642-Reviews-Romer_Hell_s_Kitchen-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.ca/Hotel_Review-g60763-d26345642-Reviews-Romer_Hell_s_Kitchen-New_York_City_New_York.html",
+        "rating": "4.5/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 39
+      }
+    ]
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-hotel-essence-itinerary-note-20261029",
+    "new": false,
+    "at": "2026-10-29T08:45:00-07:00",
+    "writer": "grok-bot"
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.tripadvisor.ca/Hotel_Review-g60763-d26345642-Reviews-Romer_Hell_s_Kitchen-New_York_City_New_York.html",
+    "site": "Tripadvisor",
+    "via": "SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch)",
+    "praise": [
+      "The beds were super comfortable and the bathroom was modern",
+      "Our room was quiet and well soundproofed"
+    ],
+    "watchOuts": [
+      "The bathrooms were fairly tiny",
+      "The bathroom was too cramped"
+    ],
+    "themes": [
+      "Rooms",
+      "Rooms",
+      "Rooms",
+      "Rooms"
+    ],
+    "complaints": [
+      "The bathrooms were fairly tiny",
+      "The bathroom was too cramped"
+    ]
+  },
+  "itineraryNote": "Romer Hell's Kitchen: a neighborhood gathering place and a reprieve from Times Square with comfy, quiet rooms; after a show, try So & So's plush piano bar and restaurant neatly tucked through the back entrance on 52nd street.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "Guests regularly highlight Romer Hell's Kitchen's location, an easy walk to Times Square, the theater district, MoMA and Fifth Avenue shopping.",
+  "review1Claims": [
+    "It’s in a great location, easy walk to Times Square, Theater District, MOMA, and 5th Avenue"
+  ],
+  "review1Source": "Tripadvisor",
+  "review1SourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d26345642-r945592110-Romer_Hell_s_Kitchen-New_York_City_New_York.html",
+  "review2": "Beds are described as very comfortable and rooms as quiet and well soundproofed, which helps guests rest despite the busy surrounding streets.",
+  "review2Claims": [
+    "The beds were super comfortable",
+    "Our room was quiet and well soundproofed"
+  ],
+  "review2Source": "Tripadvisor",
+  "review2SourceUrl": "https://www.tripadvisor.ca/Hotel_Review-g60763-d26345642-Reviews-Romer_Hell_s_Kitchen-New_York_City_New_York.html",
+  "review3": "The staff and the hotel's piano bar come up as highlights, with guests describing an enjoyable, well-designed hotel with a lively evening option.",
+  "review3Claims": [
+    "Lovely staff, comfortable and well designed room and great location. The piano bar was fantastic"
+  ],
+  "review3Source": "Tripadvisor",
+  "review3SourceUrl": "https://www.tripadvisor.ie/Hotel_Feature-g60763-d26345642-zft1-Romer_Hell_s_Kitchen.html",
+  "review4": "Bathrooms are the recurring weak spot, with guests describing them and the showers as cramped or tiny compared with the rest of the room.",
+  "review4Claims": [
+    "The bathrooms were fairly tiny",
+    "The bathroom was too cramped"
+  ],
+  "review4Source": "Tripadvisor",
+  "review4SourceUrl": "https://www.tripadvisor.ca/Hotel_Review-g60763-d26345642-Reviews-Romer_Hell_s_Kitchen-New_York_City_New_York.html",
+  "reviewsLabel": "Representative reviews written from 7 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
+}

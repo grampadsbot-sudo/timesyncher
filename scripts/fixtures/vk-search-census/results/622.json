@@ -1,0 +1,195 @@
+{
+  "thingId": 622,
+  "thingName": "Hyatt Grand Central New York",
+  "type": "hotel",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://en.wikipedia.org/wiki/Grand_Hyatt_New_York",
+      "title": "Hyatt Grand Central New York - Wikipedia",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "ng team Architect Gruzen Samton Other information Number of rooms 1306 Website https://newyork.grand.hyatt.com/ The Hyatt Grand Central New York is a hotel located at 109 East 42nd Street , adjoining Grand Central Terminal , in the Midtown Manhattan neighborhood of New York City . It operated as the 2,000-room Commodore Hotel between 1 … ng team Architect Gruzen Samton Other information Number of rooms 1306 Website https://newyork.grand.hyatt.com/ The Hyatt Grand Central New York is a hotel located at 109 East 42nd Street , adjoining Grand Central Terminal , in the Midtown Manhattan neighborhood of New York City . It operated as the 2,000-room Commodore Hotel between 1 … formation Number of rooms 1306 Website https://newyork.grand.hyatt.com/ The Hyatt Grand Central New York is a hotel located at 109 East 42nd Street , adjoining Grand Central Terminal , in the Midtown Manhattan neighborhood of New York City . It operated as the 2,000-room Commodore Hotel between 1919 and 1976, before hotel chain Hy",
+      "snippet": "ng team Architect Gruzen Samton Other information Number of rooms 1306 Website https://newyork.grand.hyatt.com/ The Hyatt Grand Central New York is a hotel located at 109 East 42nd Street , adjoining Grand Central Terminal , in the Midtown Manhattan neighborhood of New York City . It operated as the",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://ca.trip.com/hotels/new-york-hotel-detail-1643571/grand-hyatt-new-york/review.html",
+      "title": "Hyatt Grand Central New York: 207 Reviews | Trip.com",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Hyatt Grand Central New York: 207 Reviews | Trip.com | | Guest Reviews of Hyatt Grand Central New York 7.9 / 10 Good 207 reviews … right next to Grand Central Station, making it super convenient for getting around … the staff were very impatient when answering the phone … iews of Hyatt Grand Central New York 7.9 / 10 Good 207 reviews … right next to Grand Central Station, making it super convenient for getting around … the staff were very impatient when answering the phone … Hyatt Grand Central New York: 207 Reviews | Trip.com | | Guest Reviews of Hyatt Grand Central New York 7.9 / 10 Good 207 reviews … right next to Grand Central Station, making it super convenient for getting around … the staff were very impatient when answering the phone … The room was also very spacious – really great! … The FC fitness center offers self-service water, which is very convenient.",
+      "snippet": "Hyatt Grand Central New York: 207 Reviews | Trip.com | | Guest Reviews of Hyatt Grand Central New York 7.9 / 10 Good 207 reviews … right next to Grand Central Station, making it super convenient for getting around … the staff were very impatient when answering the phone",
+      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
+    }
+  ],
+  "rating": {
+    "primary": 7.9,
+    "primarySource": "trip.com",
+    "tripcom": 7.9,
+    "scale": 10,
+    "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1643571/grand-hyatt-new-york/review.html",
+    "ratingEvidence": {
+      "site": "Trip.com",
+      "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1643571/grand-hyatt-new-york/review.html",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "quote": "7.9 / 10 Good 207 reviews",
+      "average": 7.9,
+      "count": 207,
+      "scale": 10
+    },
+    "reviewCount": 207
+  },
+  "reviewCount": {
+    "tripcom": 207
+  },
+  "priceHint": "Hyatt near Grand Central",
+  "hoursHint": null,
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "adjoining Grand Central Terminal"
+  ],
+  "itineraryNoteCandidate": "Hyatt Grand Central New York: sleep adjoining Grand Central Terminal in a spacious room and use it as your rail and subway hub for Midtown East days.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 262,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Hyatt Grand Central New York, adjoining Grand Central Terminal, is the convenience pick: guests rave about walking straight into the station and find rooms larger than expected for Midtown. Small touches in the gym get noticed, while phone service is the weak spot reviewers mention.",
+      "claims": [
+        {
+          "text": "adjoining Grand Central Terminal",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Grand_Hyatt_New_York"
+        }
+      ]
+    },
+    "description": {
+      "value": "Hyatt Grand Central New York, the hotel located at 109 East 42nd Street, stands adjoining Grand Central Terminal, which makes rail day trips and subway hops effortless. Trip.com shows 7.9 / 10 Good 207 reviews, and guests say it is right next to Grand Central Station, making it super convenient for getting around. Rooms are described as spacious and the fitness center as thoughtfully stocked. The honest watch-out is that the staff were very impatient when answering the phone, so handle requests at the desk.",
+      "claims": [
+        {
+          "text": "adjoining Grand Central Terminal",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Grand_Hyatt_New_York"
+        },
+        {
+          "text": "hotel located at 109 East 42nd Street",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Grand_Hyatt_New_York"
+        },
+        {
+          "text": "right next to Grand Central Station, making it super convenient for getting around",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1643571/grand-hyatt-new-york/review.html"
+        },
+        {
+          "text": "7.9 / 10 Good 207 reviews",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1643571/grand-hyatt-new-york/review.html"
+        },
+        {
+          "text": "the staff were very impatient when answering the phone",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1643571/grand-hyatt-new-york/review.html"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Hyatt Grand Central New York: sleep adjoining Grand Central Terminal in a spacious room and use it as your rail and subway hub for Midtown East days.",
+      "claims": [
+        {
+          "text": "adjoining Grand Central Terminal",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Grand_Hyatt_New_York"
+        }
+      ]
+    }
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://ca.trip.com/hotels/new-york-hotel-detail-1643571/grand-hyatt-new-york/review.html",
+    "site": "Trip.com",
+    "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded",
+    "praise": [
+      "right next to Grand Central Station, making it super convenient for getting around",
+      "The room was also very spacious – really great!",
+      "The FC fitness center offers self-service water, which is very convenient."
+    ],
+    "watchOuts": [
+      "the staff were very impatient when answering the phone"
+    ],
+    "themes": [
+      "Location",
+      "Rooms",
+      "Service",
+      "Service"
+    ],
+    "complaints": [
+      "the staff were very impatient when answering the phone"
+    ]
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-hotel-essence-itinerary-note-20261029",
+    "new": false,
+    "at": "2026-10-29T08:45:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Hyatt Grand Central New York: sleep adjoining Grand Central Terminal in a spacious room and use it as your rail and subway hub for Midtown East days.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "Location is the clear winner for the Hyatt Grand Central, with guests stressing how convenient it is to step straight into the station for subway and train trips.",
+  "review1Source": "Trip.com",
+  "review1Rating": "10.0/10",
+  "review1Theme": "Location",
+  "review1SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1643571/grand-hyatt-new-york/review.html",
+  "review2": "Rooms get positive marks for size, which guests find surprising for Midtown, and they describe them as comfortable for unpacking and resting.",
+  "review2Source": "Trip.com",
+  "review2Rating": "10.0/10",
+  "review2Theme": "Rooms",
+  "review2SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1643571/grand-hyatt-new-york/review.html",
+  "review3": "Small extras such as the fitness center's self-service water station are appreciated and make the facilities feel thoughtfully run. This pattern shows up across many of the saved reviews.",
+  "review3Source": "Trip.com",
+  "review3Rating": "10.0/10",
+  "review3Theme": "Service",
+  "review3SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1643571/grand-hyatt-new-york/review.html",
+  "review4": "The recurring complaint is phone service, with guests describing staff as impatient on calls, so handling requests at the desk in person may go more smoothly.",
+  "review4Source": "Trip.com",
+  "review4Rating": "6.7/10",
+  "review4Theme": "Service",
+  "review4SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1643571/grand-hyatt-new-york/review.html",
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029",
+  "review1Claims": [
+    "right next to Grand Central Station, making it super convenient for getting around"
+  ],
+  "review2Claims": [
+    "The room was also very spacious – really great"
+  ],
+  "review3Claims": [
+    "The FC fitness center offers self-service water, which is very convenient.",
+    "The FC fitness center offers self-service water, which is very convenient"
+  ],
+  "review4Claims": [
+    "the staff were very impatient when answering the phone"
+  ],
+  "reviewStarsDropped": "mean 4.50 vs venue 3.95 >0.5",
+  "reviewsLabel": "Representative reviews written from 10 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
+}

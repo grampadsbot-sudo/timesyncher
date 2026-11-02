@@ -1,0 +1,191 @@
+{
+  "thingId": 665,
+  "thingName": "Open-air bus tour candidates",
+  "type": "attraction",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://en.wikipedia.org/wiki/Big_Bus_Tours",
+      "title": "Big Bus Tours - Wikipedia",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "ent Private Equity (85%) Merlin Entertainments (15%) Website bigbustours.com Big Bus Tours (formerly Les Cars Rouges and The Big Bus Company ), is an operator of open top bus sightseeing tours formed in May 2011 after \"Les Cars Rouges\" and the \"Big Bus Company\" merged. The company operates in 28 cities of 18 countries with 444 buses operati … ent Private Equity (85%) Merlin Entertainments (15%) Website bigbustours.com Big Bus Tours (formerly Les Cars Rouges and The Big Bus Company ), is an operator of open top bus sightseeing tours formed in May 2011 after \"Les Cars Rouges\" and the \"Big Bus Company\" merged. The company operates in 28 cities of 18 countries with 444 buses operati …  Company ), is an operator of open top bus sightseeing tours formed in May 2011 after \"Les Cars Rouges\" and the \"Big Bus Company\" merged. The company operates in 28 cities of 18 countries with 444 buses operating around the world. [ 4 ] Most of the cities it serves are in the United States . Typically, Big Bus Tours use open top double-decker buses i … ies of 18 countries with 444 buses operating around the world. [ 4 ] Most of the cities it serves are in the United States . Typically, Big Bus Tours use open top double-decker buses in burgundy and cream-coloured livery. History [ edit ] Big Bus company kiosk and bus queue at Speakers' Corner , London \"Les Cars Rouges\" was founded in 1990 by Abdallah El Azm in Paris  …  United States [ edit ] A Big Bus driving past the US Capitol in Washington, D.C. Big Bus Chicago Big Bus Las Vegas Big Bus Los Angeles Big Bus Miami Big Bus New York Big Bus Philadelphia Big Bus San Francisco Big Bus Washington, D.C. Gallery [ edit ] The Big Bus Company shield on the side of a vehicle East Lancs L",
+      "snippet": "ent Private Equity (85%) Merlin Entertainments (15%) Website bigbustours.com Big Bus Tours (formerly Les Cars Rouges and The Big Bus Company ), is an operator of open top bus sightseeing tours formed in May 2011 after \"Les Cars Rouges\" and the \"Big Bus Company\" merged. The company operates in 28 cit",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://exa.ai/library/place/vt9hb9kt6bh",
+      "title": "Open-air bus tour candidates reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:20:53-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_vt9hb9kt6bh.html",
+      "text": "JR and Maria are the best!! I ended my 6-day trip to New York with the Big Bus Tour, and it was honestly the perfect way to wrap things up! The guide was amazing — super friendly, gave clear and interesting explanations about every spot, and made the whole ride so much fun. The driver was also excellent — smooth, safe, and professional. I really enjoyed every minute of it. Thank you for making my last day in New York such a memorable one! Great guided tour from Midtown Manhattan to Dumbo and back. Shelley and Manny took great care of us. Great photo opportunities and Shelly help you with all your photos. Also excellent insight about the city history and fun facts. Highly recommended! 4.7 out of 5 · 19,429 reviews Shelley and Sergio were beyond fantastic! We took the 2 hour non-stop night tour with them and it was phenomenal!! It started off with Shelley’s genuine smile greeting everyone and introducing herself. She asked where everyone was from, and you can tell she absolutely loves her job and meeting new people! Also, she has unique access to change the colors of the spiral on top of the Bank of America building, which truly made it a very special experience you can’t get anywhere else!! This bus tour is a hit or miss. Santana was a great driver and I enjoyed my first day on the bus. She was informative and helpful. Day 2 on the bus I had a very long wait for each bus. You can see in the screenshot that the wait was 95 minutes and that was after I had waited for 20 minutes already. I was very disappointed. The driver that day talked on the phone the entire time and skipped a few streets to hurry to the next stop. On my 3rd day the driver, Libni, was so much nicer again. He was very fun and knowledgeable."
+    }
+  ],
+  "rating": {
+    "primary": 4.7,
+    "primarySource": "exa",
+    "exa": 4.7
+  },
+  "reviewCount": {
+    "exa": 19429
+  },
+  "priceHint": "From ~$62/24h Downtown; ~$83/48h both routes",
+  "hoursHint": null,
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "operator of open top bus sightseeing tours"
+  ],
+  "itineraryNoteCandidate": "Open-air bus tour candidates: a first-day orientation ride; hop on open top double-decker buses to see the city fast.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 55,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Open-air bus tour candidates are best for a first-day orientation: guides on the Big Bus routes are praised as friendly and knowledgeable, the night loop wins raves for skyline views, and photo stops help on the Midtown to Dumbo route. The weak point is hop-on reliability, with long waits between buses on busy days; it is an operator of open top bus sightseeing tours.",
+      "claims": [
+        {
+          "text": "operator of open top bus sightseeing tours",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Big_Bus_Tours"
+        }
+      ]
+    },
+    "description": {
+      "value": "Open-air bus tour candidates start with Big Bus Tours, an operator of open top bus sightseeing tours that operates in 28 cities of 18 countries with 444 buses, and that typically will use open top double-decker buses in burgundy and cream-coloured livery; Big Bus New York runs the local loops. What reviewers value most is the people on board, with guides described as warm and full of city history, and the night route is a highlight for lights and views. The practical caveat is wait time between buses on crowded days, so start early and treat the hop-off stops as optional.",
+      "claims": [
+        {
+          "text": "open top double-decker buses",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Big_Bus_Tours"
+        },
+        {
+          "text": "operator of open top bus sightseeing tours",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Big_Bus_Tours"
+        },
+        {
+          "text": "operates in 28 cities of 18 countries with 444 buses",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Big_Bus_Tours"
+        },
+        {
+          "text": "use open top double-decker buses in burgundy and cream-coloured livery",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Big_Bus_Tours"
+        },
+        {
+          "text": "Big Bus New York",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Big_Bus_Tours"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Open-air bus tour candidates: a first-day orientation ride; hop on open top double-decker buses to see the city fast.",
+      "claims": [
+        {
+          "text": "open top double-decker buses",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Big_Bus_Tours"
+        }
+      ]
+    },
+    "reviewsScope": "Reviews are for Big Bus Tours New York (operator named in summary), not every candidate in this row"
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Open-air bus tour candidates: a first-day orientation ride; hop on open top double-decker buses to see the city fast.",
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029",
+  "ratingNote": "Exa place listing for Big Bus Tours New York (723 7th Ave): \"4.7 out of 5 · 19,429 reviews\"; saved r8/exa_vt9hb9kt6bh.html",
+  "review1": "Big Bus tour guides are frequently praised for being friendly, knowledgeable and engaging, making it a good end to a trip.",
+  "review1Source": "Exa place listing",
+  "review1Rating": "5/5",
+  "review1Theme": "Atmosphere",
+  "review1SourceUrl": "https://exa.ai/library/place/vt9hb9kt6bh",
+  "review1Stars": 5,
+  "review2": "Guided routes such as Midtown to Dumbo offer great photo stops, with staff helping with pictures and sharing city history.",
+  "review2Source": "Exa place listing",
+  "review2Rating": "5/5",
+  "review2Theme": "Atmosphere",
+  "review2SourceUrl": "https://exa.ai/library/place/vt9hb9kt6bh",
+  "review2Stars": 5,
+  "review3": "Night tours stand out, with welcoming, enthusiastic guides who engage the whole group and spectacular views of the lit skyline, making the two-hour non-stop evening loop feel truly special.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "5/5",
+  "review3Theme": "Building and design",
+  "review3SourceUrl": "https://exa.ai/library/place/vt9hb9kt6bh",
+  "review3Stars": 5,
+  "review4": "The hop-on service can be hit or miss, with very long waits between buses on some days and uneven drivers, so building extra time into the schedule avoids frustration.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "4/5",
+  "review4Theme": "Crowds",
+  "review4SourceUrl": "https://exa.ai/library/place/vt9hb9kt6bh",
+  "review4Stars": 4,
+  "review1Claims": [
+    "JR and Maria are the best!!",
+    "I ended my 6-day trip to New York with the Big Bus Tour, and it was honestly the perfect way to wrap things up!",
+    "The guide was amazing — super friendly, gave clear and interesting explanations about every spot, and made the whole ride so much fun.",
+    "The driver was also excellent — smooth, safe, and professional.",
+    "I really enjoyed every minute of it.",
+    "Thank you for making my last day in New York such a memorable one!"
+  ],
+  "review2Claims": [
+    "Great guided tour from Midtown Manhattan to Dumbo and back.",
+    "Shelley and Manny took great care of us.",
+    "Great photo opportunities and Shelly help you with all your photos.",
+    "Also excellent insight about the city history and fun facts.",
+    "Highly recommended!"
+  ],
+  "review3Claims": [
+    "Shelley and Sergio were beyond fantastic!",
+    "We took the 2 hour non-stop night tour with them and it was phenomenal!!",
+    "It started off with Shelley’s genuine smile greeting everyone and introducing herself.",
+    "She asked where everyone was from, and you can tell she absolutely loves her job and meeting new people!",
+    "Also, she has unique access to change the colors of the spiral on top of the Bank of America building, which truly made it a very special experience you can’t get anywhere else!!"
+  ],
+  "review4Claims": [
+    "This bus tour is a hit or miss.",
+    "Santana was a great driver and I enjoyed my first day on the bus.",
+    "She was informative and helpful.",
+    "Day 2 on the bus I had a very long wait for each bus.",
+    "You can see in the screenshot that the wait was 95 minutes and that was after I had waited for 20 minutes already.",
+    "I was very disappointed.",
+    "The driver that day talked on the phone the entire time and skipped a few streets to hurry to the next stop.",
+    "On my 3rd day the driver, Libni, was so much nicer again.",
+    "He was very fun and knowledgeable."
+  ],
+  "reviewsLabel": "Representative reviews written from 29 reviews",
+  "reviewsRepresentative": true,
+  "reviewThemes": {
+    "representative": true
+  },
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenAt": {
+    "reviews": "2026-10-29T20:22:18.188413+00:00"
+  },
+  "writtenOrder": [
+    "reviews"
+  ]
+}

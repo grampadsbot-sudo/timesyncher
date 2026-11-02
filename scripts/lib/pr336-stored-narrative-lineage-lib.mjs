@@ -14,7 +14,7 @@ const GATE_B_ROW_META = {
   606: { name: 'Afternoon matinee show', cat: 'activity' },
   607: { name: 'Friend meetup at Bryant Park', cat: 'activity' },
   610: { name: 'Carbone', cat: 'restaurant' },
-  611: { name: 'Jazz at Lincoln Center', cat: 'activity' },
+  611: { name: 'Blue Note Jazz Club', cat: 'activity' },
 };
 
 const OVERLAY_PATH = fileURLToPath(new URL('../fixtures/pr336-gate-b-ccab-overlay.json', import.meta.url));

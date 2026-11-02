@@ -1,0 +1,169 @@
+{
+  "thingId": 612,
+  "thingName": "Chelsea Market",
+  "type": "store",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.chelseamarket.com/visit",
+      "title": "Visit — Chelsea Market",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "st Food and Beverage Arts and Culture Shopping and Services Chelsea Local Nationwide Shipping Shop Visit Events Our Story Chelsea Local Visit Address 75 Ninth Avenue (between 15th & 16th St.) New York, NY 10011 Directions By Subway – A, C, E, or L train to the 14th Street (8th Avenue) station. Walk West to Ninth Avenue and 15th Street. By  … st Food and Beverage Arts and Culture Shopping and Services Chelsea Local Nationwide Shipping Shop Visit Events Our Story Chelsea Local Visit Address 75 Ninth Avenue (between 15th & 16th St.) New York, NY 10011 Directions By Subway – A, C, E, or L train to the 14th Street (8th Avenue) station. Walk West to Ninth Avenue and 15th Street. By ",
+      "snippet": "st Food and Beverage Arts and Culture Shopping and Services Chelsea Local Nationwide Shipping Shop Visit Events Our Story Chelsea Local Visit Address 75 Ninth Avenue (between 15th & 16th St.) New York, NY 10011 Directions By Subway – A, C, E, or L train to the 14th Street (8th Avenue) station. Walk ",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.yelp.com/biz/chelsea-market-new-york",
+      "title": "CHELSEA MARKET - Updated October 2026 - 2638 Reviews - 7240 Photos - 75 9th Ave, New York, New York - Public Markets - Phone Number - Yelp",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "CHELSEA MARKET - Updated October 2026 - 2638 Reviews - 7240 Photos - 75 9th Ave, New York, New York - Public Markets - Phone Number - Yelp | | CHELSEA MARKET - Updated October 2026 - 2638 Reviews - 7240 Photos - 75 9th Ave, New Y",
+      "snippet": "CHELSEA MARKET - Updated October 2026 - 2638 Reviews - 7240 Photos - 75 9th Ave, New York, New York - Public Markets - Phone Number - Yelp | | CHELSEA MARKET - Updated October 2026 - 2638 Reviews - 7240 Photos - 75 9th Ave, New Y",
+      "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result text (direct curl 403 / WebFetch timeout); not a live fetch"
+    },
+    {
+      "url": "https://exa.ai/library/place/l2vthp9k49x",
+      "title": "Chelsea Market reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:19:07-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_l2vthp9k49x.html",
+      "text": "Awesome place to visit, kids loved it, nice food and veggie/vegan options, about 3 hours with a solid break for some dinner. They had a Chinese new year event that was simple but nice for the children. Lots of little indie shops with really interesting items and few other gift types shops. Must visit after doing the high line (if you ended at 10th side exit). It's a great place with a wonderful atmosphere where you can find a wide variety of delicious dishes. We had oysters and really liked them. This was our 1st time visiting Chelsea Market and Wow is all I can say. This place left us speechless. First of all the building is beautiful, then all the restaurant and shops are just amazing. This is such a unique place and we will definitely be back to explore more spots. • Really glad I finally got to visit Chelsea Market! • Such a great variety of food and shopping stalls—you really can’t go wrong with any of them. My favorites were the fresh noodle spot and Seed + Mill for dessert. • We also loved the artist flea market area—so many amazing finds! Picked up some souvenirs and bath + skincare goodies from IE. • Beautiful, spacious interiors and clean restrooms. • Chelsea Market is definitely a must-visit when you’re in NYC! 💛"
+    }
+  ],
+  "rating": {
+    "primary": 4.6,
+    "primarySource": "google",
+    "google": 4.6,
+    "yelp": 4.3,
+    "tripadvisor": 4.4
+  },
+  "reviewCount": {
+    "yelp": 2638
+  },
+  "priceHint": "$$ food hall / market",
+  "hoursHint": "Daily 7:00 AM – 10:00 PM (official visit page; vendor hours vary)",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "75 Ninth Avenue (between 15th & 16th St.)",
+    "75 Ninth Avenue (between 15th & 16th St.)",
+    "75 Ninth Avenue (between 15th & 16th St.)",
+    "2638 Reviews - 7240 Photos - 75 9th Ave"
+  ],
+  "itineraryNoteCandidate": "Chelsea Market: a food hall in an old factory at 75 Ninth Avenue (between 15th & 16th St.); graze through lunch, then walk up to the High Line.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 1
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 1 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 22,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Chelsea Market is the indoor food hall at 75 Ninth Avenue between 15th and 16th Streets. Chelsea Market sits beside the High Line, and it is best treated as a grazing stop across several food stalls and indie shops rather than one sit-down meal.",
+      "claims": [
+        {
+          "text": "75 Ninth Avenue (between 15th & 16th St.)",
+          "sourceUrl": "https://www.chelseamarket.com/visit"
+        }
+      ]
+    },
+    "description": {
+      "value": "Chelsea Market is an indoor food hall and shopping arcade at 75 Ninth Avenue (between 15th & 16th St.). It sits next to the High Line in the Meatpacking District edge of Chelsea. Plan to graze through several food stalls rather than one sit-down meal. Its Yelp page shows 2638 Reviews - 7240 Photos - 75 9th Ave in Chelsea.",
+      "claims": [
+        {
+          "text": "75 Ninth Avenue (between 15th & 16th St.)",
+          "sourceUrl": "https://www.chelseamarket.com/visit"
+        },
+        {
+          "text": "2638 Reviews - 7240 Photos - 75 9th Ave",
+          "sourceUrl": "https://www.yelp.com/biz/chelsea-market-new-york"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Chelsea Market: a food hall in an old factory at 75 Ninth Avenue (between 15th & 16th St.); graze through lunch, then walk up to the High Line.",
+      "claims": [
+        {
+          "text": "75 Ninth Avenue (between 15th & 16th St.)",
+          "sourceUrl": "https://www.chelseamarket.com/visit"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Chelsea Market: a food hall in an old factory at 75 Ninth Avenue (between 15th & 16th St.); graze through lunch, then walk up to the High Line.",
+  "review1": "Chelsea Market's small independent shops are a draw, with shoppers finding unusual items and gifts beyond the typical souvenir stores.",
+  "review1Source": "Exa place listing",
+  "review1Rating": "5/5",
+  "review1Theme": "Indie shops",
+  "review1SourceUrl": "https://exa.ai/library/place/l2vthp9k49x",
+  "review1Stars": 5,
+  "review2": "The food stalls are a main reason to come, with a broad mix of vendors, good vegetarian and vegan choices, and enough variety to anchor a relaxed family dinner.",
+  "review2Source": "Exa place listing",
+  "review2Rating": "4/5",
+  "review2Theme": "Food stalls",
+  "review2SourceUrl": "https://exa.ai/library/place/l2vthp9k49x",
+  "review2Stars": 4,
+  "review3": "Visitors admire the building itself, a handsome converted industrial space that makes wandering between restaurants and shops part of the fun.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "5/5",
+  "review3Theme": "Building and design",
+  "review3SourceUrl": "https://exa.ai/library/place/l2vthp9k49x",
+  "review3Stars": 5,
+  "review4": "The artist and flea market area earns special mention for creative finds, adding a craft-market feel to a food-focused visit.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Artist market",
+  "review4SourceUrl": "https://exa.ai/library/place/l2vthp9k49x",
+  "review4Stars": 5,
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029",
+  "review1Claims": [
+    "Lots of little indie shops with really interesting items and few other gift types shops."
+  ],
+  "review2Claims": [
+    "Awesome place to visit, kids loved it, nice food and veggie/vegan options, about 3 hours with a solid break for some dinner."
+  ],
+  "review3Claims": [
+    "First of all the building is beautiful, then all the restaurant and shops are just amazing."
+  ],
+  "review4Claims": [
+    "We also loved the artist flea market area—so many amazing finds!"
+  ],
+  "reviewsLabel": "Representative reviews written from 4 reviews",
+  "reviewsRepresentative": true,
+  "reviewThemes": {
+    "representative": true
+  },
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:08:57.957389+00:00"
+  }
+}

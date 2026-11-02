@@ -1,0 +1,254 @@
+{
+  "thingId": 647,
+  "thingName": "Saks Fifth Avenue",
+  "type": "store",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.saksfifthavenue.com/locations/newyork/",
+      "title": "Saks Fifth Avenue | Saks NYC",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Sale Designers New Clothing Shoes Accessories Grooming Kids Home Gifts Sale Sign In Create an Account Wishlist Back to store locator Saks NYC Address 611 Fifth Avenue New York, NY 10022 Contact 212-753-4000 conciergenyc@s5a.com About this Store This location, on Fifth Avenue in Midtown Manhattan, features curated arrivals from top de … Sale Designers New Clothing Shoes Accessories Grooming Kids Home Gifts Sale Sign In Create an Account Wishlist Back to store locator Saks NYC Address 611 Fifth Avenue New York, NY 10022 Contact 212-753-4000 conciergenyc@s5a.com About this Store This location, on Fifth Avenue in Midtown Manhattan, features curated arrivals from top de … re. Plus, enjoy refreshments and light bites at Honeybrains or the Café at Saks, or drinks and a decadent Parisian-inspired meal at L'Avenue at Saks. Store Hours 11:00 AM - 7:00 PM Mon - Sat 12:00 PM - 6:00 PM Sun Get Directions Amenities Fois gras, caviar, dover sole, filet mignon--it's haute French cuisine here at L'Avenue, tastefully designed by interior des … s Grooming Kids Home Gifts Sale Sign In Create an Account Wishlist Back to store locator Saks NYC Address 611 Fifth Avenue New York, NY 10022 Contact 212-753-4000 conciergenyc@s5a.com About this Store This location, on Fifth Avenue in Midtown Manhattan, features curated arrivals from top designers in women's an … 's and men's fashion, beauty, handbags, shoes, fine jewelry and more. Plus, enjoy refreshments and light bites at Honeybrains or the Café at Saks, or drinks and a decadent Parisian-inspired meal at L'Avenue at Saks. Store Hours 11:00 AM - 7:00 PM Mon - Sat 12:00 PM - 6:00 PM Sun Get Directions Amenities Fois gras, caviar, dover sole, filet mignon--it's haute Fre",
+      "snippet": "Sale Designers New Clothing Shoes Accessories Grooming Kids Home Gifts Sale Sign In Create an Account Wishlist Back to store locator Saks NYC Address 611 Fifth Avenue New York, NY 10022 Contact 212-753-4000 conciergenyc@s5a.com About this Store This location, on Fifth Avenue in Midtown Manhattan, fe",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.ie/ShowUserReviews-g60763-d208852-r613314920-Saks_Fifth_Avenue-New_York_City_New_York.html",
+      "title": "Tripadvisor: Saks Fifth Avenue, 611 5th Avenue (search snapshot)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | It is a real treat to see this flag ship store. … Their employees were very snobby in the store. …  WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | It is a real treat to see this flag ship store. … Their employees were very snobby in the store.",
+      "snippet": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | It is a real treat to see this flag ship store. … Their employees were very snobby in the store.",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://exa.ai/library/place/qh4zp9t6vdv",
+      "title": "Saks Fifth Avenue reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:19:09-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_qh4zp9t6vdv.html",
+      "text": "Visited Saks 5th Ave to put my nose on a few new scents. Michael & another sales associate were super helpful at the Creed counter. I only travel with my 1 carry on and personal item when I fly, so I couldn’t buy a big bottle; though I was able to get a small flask and they were kind enough to not only fill my atomizer with the scent I really enjoyed but they have me a few samples as well. If you have a budget on splurge on fragrance and want top tier service, don’t hesitate to stop by the Creed counter. You’ll be in good hands. Unika B. & Co. Going during the holidays is really the experience. The interior design of the store is incredible. I particularly love the interior wooden design of the elevators, very classic look. During Christmas, the window displays are a sight to see. Saks puts on one of, if not the, best Christmas light displays on Fifth Avenue, as they use their block-long facade to coordinate lights and music to turn it into a whole show. Truly excellent. Juxtaposed beside the great Rockefeller Center, Saks fifth avenue is absolutely a stop you should take. Very high quality customer service and shops impossible to find in smaller cities. Champagne from Dior was a positive, thank you Louis!"
+    }
+  ],
+  "rating": {
+    "primary": 4.1,
+    "primarySource": "tripadvisor",
+    "tripadvisor": 4.1,
+    "yelp": 3.1
+  },
+  "reviewCount": {
+    "tripadvisor": 769,
+    "yelp": 978
+  },
+  "priceHint": "$$$$ luxury department store",
+  "hoursHint": "Mon–Sat 11am–7pm; Sun noon–6pm (Saks NYC location page)",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "611 Fifth Avenue New York, NY 10022",
+    "L'Avenue at Saks",
+    "611 Fifth Avenue New York, NY 10022",
+    "611 Fifth Avenue New York, NY 10022",
+    "Store Hours 11:00 AM - 7:00 PM Mon - Sat 12:00 PM - 6:00 PM Sun",
+    "212-753-4000",
+    "drinks and a decadent Parisian-inspired meal at L'Avenue at Saks",
+    "It is a real treat to see this flag ship store.",
+    "Their employees were very snobby in the store."
+  ],
+  "itineraryNoteCandidate": "Saks Fifth Avenue: the classic Fifth Avenue department store at 611 Fifth Avenue New York, NY 10022; pause for a meal at L'Avenue at Saks.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 150,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Saks Fifth Avenue is the flagship department store at 611 Fifth Avenue across from Rockefeller Center. Plus, enjoy refreshments and light bites at Honeybrains or the Café at Saks, or drinks and a decadent Parisian-inspired meal at L'Avenue at Saks.",
+      "claims": [
+        {
+          "text": "611 Fifth Avenue New York, NY 10022",
+          "sourceUrl": "https://www.saksfifthavenue.com/locations/newyork/"
+        },
+        {
+          "text": "Plus, enjoy refreshments and light bites at Honeybrains or the Café at Saks, or drinks and a decadent Parisian-inspired meal at L'Avenue at Saks.",
+          "sourceUrl": "https://www.saksfifthavenue.com/locations/newyork/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Saks Fifth Avenue is the flagship department store at 611 Fifth Avenue New York, NY 10022. Its store page lists Store Hours 11:00 AM - 7:00 PM Mon - Sat 12:00 PM - 6:00 PM Sun, and the concierge line is 212-753-4000. For a break, shoppers can stop for drinks and a decadent Parisian-inspired meal at L'Avenue at Saks. The store faces Rockefeller Center and St. Patrick's Cathedral in Midtown. Representative Tripadvisor praise (search snapshot): “It is a real treat to see this flag ship store.”. Representative watch-outs: “Their employees were very snobby in the store.”.",
+      "claims": [
+        {
+          "text": "611 Fifth Avenue New York, NY 10022",
+          "sourceUrl": "https://www.saksfifthavenue.com/locations/newyork/"
+        },
+        {
+          "text": "Store Hours 11:00 AM - 7:00 PM Mon - Sat 12:00 PM - 6:00 PM Sun",
+          "sourceUrl": "https://www.saksfifthavenue.com/locations/newyork/"
+        },
+        {
+          "text": "212-753-4000",
+          "sourceUrl": "https://www.saksfifthavenue.com/locations/newyork/"
+        },
+        {
+          "text": "drinks and a decadent Parisian-inspired meal at L'Avenue at Saks",
+          "sourceUrl": "https://www.saksfifthavenue.com/locations/newyork/"
+        },
+        {
+          "text": "It is a real treat to see this flag ship store.",
+          "sourceUrl": "https://www.tripadvisor.ie/ShowUserReviews-g60763-d208852-r613314920-Saks_Fifth_Avenue-New_York_City_New_York.html"
+        },
+        {
+          "text": "Their employees were very snobby in the store.",
+          "sourceUrl": "https://www.tripadvisor.ie/ShowUserReviews-g60763-d208852-r613314920-Saks_Fifth_Avenue-New_York_City_New_York.html"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Saks Fifth Avenue: the classic Fifth Avenue department store at 611 Fifth Avenue New York, NY 10022; pause for a meal at L'Avenue at Saks.",
+      "claims": [
+        {
+          "text": "611 Fifth Avenue New York, NY 10022",
+          "sourceUrl": "https://www.saksfifthavenue.com/locations/newyork/"
+        },
+        {
+          "text": "L'Avenue at Saks",
+          "sourceUrl": "https://www.saksfifthavenue.com/locations/newyork/"
+        }
+      ]
+    },
+    "reviewsUnstarred": [
+      {
+        "theme": "Overall experience",
+        "value": "Tripadvisor reviewer on Saks Fifth Avenue: It is a real treat to see this flag ship store. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "It is a real treat to see this flag ship store.",
+            "sourceUrl": "https://www.tripadvisor.ie/ShowUserReviews-g60763-d208852-r613314920-Saks_Fifth_Avenue-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.ie/ShowUserReviews-g60763-d208852-r613314920-Saks_Fifth_Avenue-New_York_City_New_York.html",
+        "rating": "4.1/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 32
+      },
+      {
+        "theme": "Overall experience",
+        "value": "Tripadvisor reviewer on Saks Fifth Avenue: Their employees were very snobby in the store. Worth weighing alongside the overall 4.1/5 score before locking in the plan.",
+        "claims": [
+          {
+            "text": "Their employees were very snobby in the store.",
+            "sourceUrl": "https://www.tripadvisor.ie/ShowUserReviews-g60763-d208852-r613314920-Saks_Fifth_Avenue-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.ie/ShowUserReviews-g60763-d208852-r613314920-Saks_Fifth_Avenue-New_York_City_New_York.html",
+        "rating": "4.1/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 26
+      }
+    ]
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.tripadvisor.ie/ShowUserReviews-g60763-d208852-r613314920-Saks_Fifth_Avenue-New_York_City_New_York.html",
+    "site": "Tripadvisor",
+    "via": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch",
+    "praise": [
+      "It is a real treat to see this flag ship store.",
+      "Their employees were very snobby in the store."
+    ],
+    "watchOuts": [],
+    "themes": [
+      "Overall experience",
+      "Overall experience"
+    ],
+    "complaints": []
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Saks Fifth Avenue: the classic Fifth Avenue department store at 611 Fifth Avenue New York, NY 10022; pause for a meal at L'Avenue at Saks.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "Sales associates at Saks Fifth Avenue, especially around the fragrance counters, are described as helpful and generous, offering small sizes, atomizer refills and samples for travelers who pack light.",
+  "review1Source": "Exa place listing",
+  "review1Rating": "5/5",
+  "review1Theme": "Service",
+  "review1SourceUrl": "https://exa.ai/library/place/qh4zp9t6vdv",
+  "review2": "The store is at its best during the holidays, with an interior design and classic elevators that visitors find memorable.",
+  "review2Source": "Exa place listing",
+  "review2Rating": "5/5",
+  "review2Theme": "Building and design",
+  "review2SourceUrl": "https://exa.ai/library/place/qh4zp9t6vdv",
+  "review3": "Saks' holiday light show on its facade is widely considered one of the best on Fifth Avenue and a reason to visit at night.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "5/5",
+  "review3Theme": "Music",
+  "review3SourceUrl": "https://exa.ai/library/place/qh4zp9t6vdv",
+  "review4": "Visitors near Rockefeller Center call the flagship a worthwhile stop for high-quality service and brands, though some find staff aloof.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Service",
+  "review4SourceUrl": "https://exa.ai/library/place/qh4zp9t6vdv",
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029",
+  "review1Claims": [
+    "Visited Saks 5th Ave to put my nose on a few new scents.",
+    "Michael & another sales associate were super helpful at the Creed counter.",
+    "I only travel with my 1 carry on and personal item when I fly, so I couldn’t buy a big bottle; though I was able to get a small flask and they were kind enough to not only fill my atomizer with the scent I really enjoyed but they have me a few samples as well.",
+    "If you have a budget on splurge on fragrance and want top tier service, don’t hesitate to stop by the Creed counter.",
+    "You’ll be in good hands."
+  ],
+  "review2Claims": [
+    "Going during the holidays is really the experience.",
+    "The interior design of the store is incredible.",
+    "I particularly love the interior wooden design of the elevators, very classic look.",
+    "During Christmas, the window displays are a sight to see."
+  ],
+  "review3Claims": [
+    "Saks puts on one of, if not the, best Christmas light displays on Fifth Avenue, as they use their block-long facade to coordinate lights and music to turn it into a whole show.",
+    "Truly excellent."
+  ],
+  "review4Claims": [
+    "Juxtaposed beside the great Rockefeller Center, Saks fifth avenue is absolutely a stop you should take.",
+    "Very high quality customer service and shops impossible to find in smaller cities.",
+    "Champagne from Dior was a positive, thank you Louis!"
+  ],
+  "reviewStarsDropped": "mean 5.00 vs venue 4.10 >0.5",
+  "reviewsLabel": "Representative reviews written from 20 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:22:18.185444+00:00"
+  }
+}

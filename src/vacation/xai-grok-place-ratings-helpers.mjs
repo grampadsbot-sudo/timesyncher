@@ -1,3 +1,5 @@
+import { writeDossierReviews } from './thing-dossier-fields.mjs';
+
 function text(value, max = 4000) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
@@ -161,47 +163,8 @@ export function applyXaiPlaceRatingsToRecord(record = {}, parsed = {}) {
   delete record.ratingMix;
 }
 
-function distinctThemes(parsed = {}) {
-  const praise = Array.isArray(parsed.reviewThemes?.praise) ? parsed.reviewThemes.praise : [];
-  const complaints = Array.isArray(parsed.reviewThemes?.complaints) ? parsed.reviewThemes.complaints : [];
-  const seen = new Set();
-  const rows = [];
-  for (const theme of [...praise, ...complaints]) {
-    const key = text(theme, 500).toLowerCase();
-    if (!key || seen.has(key)) continue;
-    seen.add(key);
-    rows.push(text(theme, 500));
-  }
-  return rows;
-}
-
-function reviewStarsForAverage(average, slot) {
-  const avg = numericRating(average);
-  if (avg == null) return '4';
-  const rounded = [Math.ceil(avg), Math.floor(avg), Math.round(avg), Math.min(5, Math.round(avg + 0.2))];
-  const star = rounded[(slot - 1) % rounded.length] ?? Math.round(avg);
-  return String(Math.min(5, Math.max(1, star)));
-}
-
-function buildReviewBody(theme, flavour) {
-  const themeText = text(theme, 1500);
-  const flavourText = text(flavour, 800);
-  if (themeText && flavourText) return text(`${themeText}. ${flavourText}`, 2000);
-  return text(themeText || flavourText, 2000);
-}
-
-export function writeRepresentativeReviews(record = {}, parsed = {}, { title = '' } = {}) {
-  const themes = distinctThemes(parsed);
-  if (themes.length < 4) return;
-  const average = primaryAverage(parsed);
-  const flavour = text(parsed.websiteFlavour, 800);
-  for (let index = 1; index <= 4; index += 1) {
-    const theme = themes[index - 1];
-    record[`review${index}`] = buildReviewBody(theme, flavour);
-    record[`review${index}Rating`] = reviewStarsForAverage(average, index);
-    delete record[`review${index}Source`];
-    delete record[`review${index}Url`];
-  }
+export function writeRepresentativeReviews(record = {}, parsed = {}) {
+  return writeDossierReviews(record, parsed.evidenceDossier || {});
 }
 
 export function searchProductCategoryFromPlace(place = {}) {
@@ -216,6 +179,15 @@ export function xaiThemesReviewPath(record = {}) {
   return record?.xaiRatingsFetched === true
     && record?.reviewThemes
     && typeof record.reviewThemes === 'object';
+}
+
+export function xaiDossierReviewPath(record = {}) {
+  const dossier = record?.evidenceDossier;
+  return record?.xaiRatingsFetched === true
+    && dossier
+    && typeof dossier === 'object'
+    && Array.isArray(dossier.pages)
+    && dossier.pages.length > 0;
 }
 
 export function reviewThemesDistinctCount(record = {}) {

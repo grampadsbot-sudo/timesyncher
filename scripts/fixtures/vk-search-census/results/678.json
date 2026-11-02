@@ -1,0 +1,166 @@
+{
+  "thingId": 678,
+  "thingName": "Famous Original Ray's Pizza",
+  "type": "restaurant",
+  "provider": "vk-search",
+  "sources": [
+    {
+      "url": "https://www.rayspizza.com/",
+      "title": "Best Italian Pizza Restaurant in Manhattan | Famous Original Rays Pizza",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": " Italian Pizza Restaurant in Manhattan | Famous Original Rays Pizza | Enjoy authentic Italian pizza, pastas, and more at Famous Original Ray’s Pizza. Family-owned Manhattan pizzeria serving Midtown, Times Square & Upper West. | Best Italian Pizza Restaurant in Manhattan | Famous Original Rays Pizza Skip to main content Get 10% off when you order direct with code DIRECT10  … Best Italian Pizza Restaurant in Manhattan | Famous Original Rays Pizza | Enjoy authentic Italian pizza, pastas, and more at Famous Original Ray’s Pizza. Family-owned Manhattan pizzeria serving Midtown, Times Square & Upper West. | Best Italian Pizza Restaurant in Manhattan | Famous Original Rays Pizz …  Italian Pizza Restaurant in Manhattan | Famous Original Rays Pizza | Enjoy authentic Italian pizza, pastas, and more at Famous Original Ray’s Pizza. Family-owned Manhattan pizzeria serving Midtown, Times Square & Upper West. | Best Italian Pizza Restaurant in Manhattan | Famous Original Rays Pizza Skip to main content Get 10% off when you order direct with code DIRECT10 ",
+      "snippet": " Italian Pizza Restaurant in Manhattan | Famous Original Rays Pizza | Enjoy authentic Italian pizza, pastas, and more at Famous Original Ray’s Pizza. Family-owned Manhattan pizzeria serving Midtown, Times Square & Upper West. | Best Italian Pizza Restaurant in Manhattan | Famous Original Rays Pizza ",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://exa.ai/library/place/wf26hjkh6mk",
+      "title": "Famous Original Ray's Pizza reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:50:04-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_wf26hjkh6mk.html",
+      "text": "Big pizza place that likes to overcharge and has deceitful pricing. First of all they hide the regular plain pizza under the counter so you think that it’s not an option and that you have to order the slices with the overpriced toppings. I know better so we got three plain slices and one bottled seltzer. When it was rung up the cashier said it was $19.30. I pushed back and she said the slices were $4 each without tax. I told her that the bottled seltzer would then have to be $6!! Then she did a few clicks on her screen and said $16.33. Loaded up supreme slice at a reasonable price. Finding a slice of pizza in NY is pretty easy. Finding a good slice of pizza gets a little more tricky. Ray’s is worth the trip uptown to get a slice. The hand-tossed crust was done to perfection and the toppings were generous. And all for a price that won’t break the bank. Ray’s Pizza is a fantastic spot and one of our go-to places. The staff is always incredibly friendly, sweet, and welcoming, which makes every visit feel special. We go often and genuinely love the food, especially the options from the food bar. Everything is consistently fresh and delicious, and the chicken wings are especially great. The atmosphere is warm, the service is delightful, and it’s just an all-around enjoyable place to visit. We always leave happy and looking forward to coming back. There was a wide selection of vegetation and meat pizzas. The pizza was delicious and the vibe of the restaurant was great. Plenty of seating friendly atmosphere. 462 Columbus Ave, New York, NY 10024"
+    }
+  ],
+  "summaryClaims": [
+    "Family-owned Manhattan pizzeria serving Midtown, Times Square & Upper West",
+    "Family-owned Manhattan pizzeria serving Midtown, Times Square & Upper West",
+    "authentic Italian pizza, pastas, and more",
+    "Enjoy authentic Italian pizza, pastas, and more at Famous Original Ray’s Pizza",
+    "Family-owned Manhattan pizzeria serving Midtown, Times Square & Upper West"
+  ],
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description/reviews each carry their own claims"
+  },
+  "evidenceReuse": {
+    "source": "READY preview saved evidenceDossier.pages",
+    "sha": "6d32a103602be23e3f0c38d0cf9fc506f2220e2d",
+    "reviewedAt": "2026-10-28",
+    "notes": "Selected narrative statements from saved page bytes; no new provider or model call."
+  },
+  "fields": {
+    "summary": {
+      "value": "Famous Original Ray's Pizza is a Family-owned Manhattan pizzeria serving Midtown, Times Square & Upper West, offering authentic Italian pizza, pastas, and more. It suits a quick, casual slice wherever the day lands, so pick the branch closest to that day's plans.",
+      "claims": [
+        {
+          "text": "Family-owned Manhattan pizzeria serving Midtown, Times Square & Upper West",
+          "sourceUrl": "https://www.rayspizza.com/"
+        },
+        {
+          "text": "authentic Italian pizza, pastas, and more",
+          "sourceUrl": "https://www.rayspizza.com/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Famous Original Ray's Pizza is a family-owned Manhattan pizzeria. Its site says to enjoy authentic Italian pizza, pastas, and more at Famous Original Ray’s Pizza. It serves Midtown, Times Square & Upper West, so a slice is never far from the hotel. Order a slice at the counter for a cheap, fast stop between sights rather than a sit-down dinner.",
+      "claims": [
+        {
+          "text": "Enjoy authentic Italian pizza, pastas, and more at Famous Original Ray’s Pizza",
+          "sourceUrl": "https://www.rayspizza.com/"
+        },
+        {
+          "text": "Family-owned Manhattan pizzeria serving Midtown, Times Square & Upper West",
+          "sourceUrl": "https://www.rayspizza.com/"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Famous Original Ray's Pizza: a family-owned Manhattan slice chain; grab a quick slice between sights.",
+      "claims": [
+        {
+          "text": "Family-owned Manhattan pizzeria serving Midtown, Times Square & Upper West",
+          "sourceUrl": "https://www.rayspizza.com/"
+        }
+      ]
+    },
+    "reviewsScope": "Reviews are for the Famous Original Ray's Pizza branch at 462 Columbus Ave (Upper West Side), not every branch",
+    "happyHour": {
+      "value": false,
+      "claims": [],
+      "note": "Confirmed none: official site (www.rayspizza.com) and saved allowlisted pages state no happy hour.",
+      "status": "none",
+      "checkedSources": [
+        "https://www.rayspizza.com/",
+        "https://exa.ai/library/place/wf26hjkh6mk"
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:05:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Famous Original Ray's Pizza: a family-owned Manhattan slice chain; grab a quick slice between sights.",
+  "itineraryNoteCandidate": "Famous Original Ray's Pizza: a family-owned Manhattan slice chain; grab a quick slice between sights.",
+  "review1": "Pricing is the biggest complaint at Famous Original Ray's, with some diners feeling steered toward pricier topped slices over the basic plain slice.",
+  "review1Source": "Exa place listing",
+  "review1Rating": "1/5",
+  "review1Theme": "Food and drinks",
+  "review1SourceUrl": "https://exa.ai/library/place/wf26hjkh6mk",
+  "review1Stars": 1,
+  "review2": "Fans say the supreme slice and the hand-tossed crust are worth the trip uptown, calling it a genuinely good New York slice.",
+  "review2Source": "Exa place listing",
+  "review2Rating": "5/5",
+  "review2Theme": "Food and drinks",
+  "review2SourceUrl": "https://exa.ai/library/place/wf26hjkh6mk",
+  "review2Stars": 5,
+  "review3": "Friendly, sweet and welcoming staff make this a dependable go-to for pizza, with fresh food from the food bar and especially good chicken wings rounding out the warm atmosphere.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "5/5",
+  "review3Theme": "Food and drinks",
+  "review3SourceUrl": "https://exa.ai/library/place/wf26hjkh6mk",
+  "review3Stars": 5,
+  "review4": "Diners like the wide range of meat and vegetable pies, plus plenty of seating and a relaxed, friendly atmosphere for a casual meal.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Food and drinks",
+  "review4SourceUrl": "https://exa.ai/library/place/wf26hjkh6mk",
+  "review4Stars": 5,
+  "review1Claims": [
+    "Big pizza place that likes to overcharge and has deceitful pricing.",
+    "First of all they hide the regular plain pizza under the counter so you think that it’s not an option and that you have to order the slices with the overpriced toppings.",
+    "I know better so we got three plain slices and one bottled seltzer.",
+    "When it was rung up the cashier said it was $19.30.",
+    "I pushed back and she said the slices were $4 each without tax.",
+    "I told her that the bottled seltzer would then have to be $6!!",
+    "Then she did a few clicks on her screen and said $16.33."
+  ],
+  "review2Claims": [
+    "Loaded up supreme slice at a reasonable price.",
+    "Finding a slice of pizza in NY is pretty easy.",
+    "Finding a good slice of pizza gets a little more tricky.",
+    "Ray’s is worth the trip uptown to get a slice.",
+    "The hand-tossed crust was done to perfection and the toppings were generous.",
+    "And all for a price that won’t break the bank."
+  ],
+  "review3Claims": [
+    "Ray’s Pizza is a fantastic spot and one of our go-to places.",
+    "The staff is always incredibly friendly, sweet, and welcoming, which makes every visit feel special.",
+    "We go often and genuinely love the food, especially the options from the food bar.",
+    "Everything is consistently fresh and delicious, and the chicken wings are especially great.",
+    "The atmosphere is warm, the service is delightful, and it’s just an all-around enjoyable place to visit.",
+    "We always leave happy and looking forward to coming back."
+  ],
+  "review4Claims": [
+    "There was a wide selection of vegetation and meat pizzas.",
+    "The pizza was delicious and the vibe of the restaurant was great.",
+    "Plenty of seating friendly atmosphere."
+  ],
+  "reviewsLabel": "Representative reviews written from 26 reviews",
+  "reviewsRepresentative": true,
+  "reviewThemes": {
+    "representative": true
+  },
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenOrder": [
+    "happyHour"
+  ],
+  "writtenAt": {
+    "happyHour": "2026-10-30T13:06:00.262645+00:00"
+  },
+  "happyHourHint": null,
+  "happyHourSourceUrl": null,
+  "happyHour": false
+}

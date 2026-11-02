@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { vkSearchResultToDossier } from '../src/vacation/dossier-vk-search.mjs';
+
+const load = (id) => JSON.parse(readFileSync(new URL(`./fixtures/vk-search-census/results/${id}.json`, import.meta.url), 'utf8'));
+const trip = vkSearchResultToDossier(load(623), {});
+assert.equal(trip.ratingEvidence.average, 8.4);
+assert.equal(trip.ratingEvidence.count, 121);
+assert.equal(trip.ratingEvidence.scaleMax, 10);
+assert.equal(trip.rating, 4.2, 'a /10 venue score is shown on the 5-point card scale');
+const beacon = vkSearchResultToDossier(load(619), {});
+assert.equal(beacon.ratingEvidence.quote, '4.5 of 5 bubbles (5,535 reviews)');
+const unknown = vkSearchResultToDossier(load(629), {});
+assert.equal(unknown.ratingEvidence, undefined, 'no rating evidence means the venue rating stays unknown');
+const forged = load(623);
+forged.rating.ratingEvidence = { ...forged.rating.ratingEvidence, quote: '9.9 / 10 Exceptional 5000 reviews', average: 9.9, count: 5000 };
+assert.equal(vkSearchResultToDossier(forged, {}).ratingEvidence, undefined, 'a quote the cited page does not show is rejected');
+const offSite = load(623);
+offSite.rating.ratingEvidence = { ...offSite.rating.ratingEvidence, site: 'Some Travel Blog' };
+assert.equal(vkSearchResultToDossier(offSite, {}).ratingEvidence, undefined, 'only known review sites count');
+console.log('ok vk search rating evidence');

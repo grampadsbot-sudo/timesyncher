@@ -1,5 +1,5 @@
 import { enrichSearchPlace } from './trip-thing-enrichment.mjs';
-import { reviewThemesDistinctCount, xaiThemesReviewPath } from './xai-grok-place-ratings-helpers.mjs';
+import { reviewThemesDistinctCount, xaiDossierReviewPath, xaiThemesReviewPath } from './xai-grok-place-ratings-helpers.mjs';
 
 const SEARCH_PRODUCT_CATEGORIES = new Set([
   'hotel',
@@ -122,6 +122,9 @@ function isAllowedReviewSource(source = '') {
 
 function reviewBodyIsPresent(place = {}, index = 1) {
   const record = sourceRecordOnPlace(place);
+  if (xaiDossierReviewPath(record)) {
+    return xaiRepresentativeReviewBodyPresent(place, index);
+  }
   if (xaiThemesReviewPath(record) && reviewThemesDistinctCount(record) >= 4) {
     return xaiRepresentativeReviewBodyPresent(place, index);
   }
@@ -219,6 +222,9 @@ function reviewAggregateAllowsStoredReviews(place = {}, distinctBodyPresentCount
   if (!numericAverageOnPlace(place)) return false;
   const ratingCount = ratingCountOnPlace(place);
   if (ratingCount == null) return false;
+  if (xaiDossierReviewPath(sourceRecordOnPlace(place)) && xaiRepresentativeReviewsComplete(place)) {
+    return distinctBodyPresentCount >= requiredDistinctReviewCount(place);
+  }
   if (xaiAverageCountThemesPath(place)) {
     return distinctBodyPresentCount >= requiredDistinctReviewCount(place);
   }

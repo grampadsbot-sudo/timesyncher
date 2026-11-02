@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 
 import { finalizeServedSharedTripPayload } from '../../src/vacation/shared-trip-served-page.mjs';
 import { buildNycCraigKimDaybydayTrip } from './nyc-craig-kim-daybyday-trip.mjs';
+import { resolveNycCcabKey } from './nyc-vk-list-tab-rows.mjs';
 
 export const NYC_POSITIVE_FIXTURE_VERSION = 'gate-b-nyc-positive-v1';
 export const NYC_POSITIVE_FIXTURE_PROVENANCE =
@@ -53,7 +54,7 @@ const SYNTHETIC_BY_PLACE_ID = {
   },
   608: {
     summary:
-      'Midtown sample hotel remains a list-only Hotels tab row while the PR336 VK snapshot keeps identity, logo, coordinates, and sourced nightly rate blocked because no ccab capture matches this title. Gate B positive capture still uses synthetic $389 nightly math here for offline budget screenshots only; that price is not VK source evidence and must not be treated as a booked or Manhattan Club reservation.',
+      'The Manhattan Club remains a list-only Hotels tab row while the PR336 VK snapshot keeps identity, logo, coordinates, and sourced nightly rate blocked because no ccab capture matches this title. Gate B positive capture still uses synthetic $389 nightly math here for offline budget screenshots only; that price is not VK source evidence and must not be treated as a booked or Manhattan Club reservation.',
     price: 389,
   },
   635: {
@@ -100,7 +101,8 @@ function enrichmentForPlace(place = {}) {
   if (ENRICHMENT_KEY_BY_PLACE_ID[place.id]) {
     return ENRICHMENT_BY_NAME[ENRICHMENT_KEY_BY_PLACE_ID[place.id]] || null;
   }
-  return ENRICHMENT_BY_NAME[place.name] || null;
+  const ccabKey = resolveNycCcabKey(place.name);
+  return ENRICHMENT_BY_NAME[ccabKey] || ENRICHMENT_BY_NAME[place.name] || null;
 }
 
 function storePrice(enrich, priorPrice) {

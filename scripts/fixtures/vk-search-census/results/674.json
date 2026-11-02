@@ -1,0 +1,337 @@
+{
+  "thingId": 674,
+  "thingName": "Rosa Mexicano - Lincoln Center",
+  "type": "restaurant",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://rosamexicano.com/happy-hour/",
+      "title": "Happy Hour NYC & Weekly Specials | Rosa Mexicano",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "other offer, discount or promotion. Not available in our Orlando or Las Vegas locations. FIESTA HOUR, MONDAY TO FRIDAY Where and When Happy Hour Runs Fiesta Hour runs Monday to Friday, 4–7pm, in the bar area, at Boston, Ardmore, Riverside Square, National Harbor and all NYC locations — including Lincoln Center on the Upper West Side, across from the Metro … e is something festive happening every day of the week: · Margarita Mondays: Raise a glass to $5 margaritas! Ask a server to see our rotating menu. · Taco Tuesdays: Enjoy half-price tacos all day, every Tuesday (dine-in only) · Wednesday Fajita & Frozen: Our sizzling fajitas and a frozen margarita for $49 · Thirsty Thursdays: Extended Fiesta Hours, 3-9pm *Specials cannot b",
+      "snippet": "other offer, discount or promotion. Not available in our Orlando or Las Vegas locations. FIESTA HOUR, MONDAY TO FRIDAY Where and When Happy Hour Runs Fiesta Hour runs Monday to Friday, 4–7pm, in the bar area, at Boston, Ardmore, Riverside Square, National Harbor and all NYC locations — including Lin",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com.au/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html",
+      "title": "Tripadvisor: Rosa Mexicano, 61 Columbus Ave (search snapshot)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | The decor is gorgeous, the waitstaff attentive … Service is indifferent at best. … a WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | The decor is gorgeous, the waitstaff attentive … Service is indifferent at best.",
+      "snippet": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | The decor is gorgeous, the waitstaff attentive … Service is indifferent at best.",
+      "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch"
+    },
+    {
+      "url": "https://www.tripadvisor.ie/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html",
+      "title": "Tripadvisor (IE): Rosa Mexicano, 61 Columbus Ave (search snapshot)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": ") | SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch) | 4.1 of 5 bubbles (1,460 reviews) … 61 Columbus Ave The Empire Hotel … Our new flagship space, located on the hotel’s mezzanine floor, offers expanded dining areas, multiple bars … Its signature dish is guacamole prepa … s) … 61 Columbus Ave The Empire Hotel … Our new flagship space, located on the hotel’s mezzanine floor, offers expanded dining areas, multiple bars … Its signature dish is guacamole prepared by the table. … the pork and beef Enchiladas were disappointing … -10-29 via WebSearch result highlights (verbatim page text; not a live fetch) | 4.1 of 5 bubbles (1,460 reviews) … 61 Columbus Ave The Empire Hotel … Our new flagship space, located on the hotel’s mezzanine floor, offers expanded dining areas, multiple bars … Its signature dish is guacamole prepared by the table. … the pork and beef Enchiladas were disappointing … s) … 61 Columbus Ave The Empire Hotel … Our new flagship space, located on the hotel’s mezzanine floor, offers expanded dining areas, multiple bars … Its signature dish is guacamole prepared by the table. … the pork and beef Enchiladas were disappointing … o, 61 Columbus Ave (search snapshot) | SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch) | 4.1 of 5 bubbles (1,460 reviews) … 61 Columbus Ave The Empire Hotel … Our new flagship space, located on the hotel’s mezzanine floor, offers expanded dining areas, multiple bars … It … space, located on the hotel’s mezzanine floor, offers expanded dining areas, multiple bars … Its signature dish is guacamole prepared by the table. … the pork and beef Enchiladas were disappointing",
+      "snippet": ") | SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch) | 4.1 of 5 bubbles (1,460 reviews) … 61 Columbus Ave The Empire Hotel … Our new flagship space, located on the hotel’s mezzanine floor, offers expanded dining areas, multiple bars … Its s",
+      "fetchMethod": "SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch)"
+    },
+    {
+      "url": "https://www.opentable.com/r/rosa-mexicano-by-lincoln-center-new-york-3",
+      "title": "OpenTable: Rosa Mexicano by Lincoln Center (search snapshot)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": " by Lincoln Center (search snapshot) | SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch) | Rosa Mexicano by Lincoln Center 4.4 (9790) … 61 Columbus Ave, New York, NY 10023",
+      "snippet": " by Lincoln Center (search snapshot) | SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch) | Rosa Mexicano by Lincoln Center 4.4 (9790) … 61 Columbus Ave, New York, NY 10023",
+      "fetchMethod": "SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch)"
+    },
+    {
+      "url": "https://exa.ai/library/place/45vl1yn2y18",
+      "title": "Rosa Mexicano - Lincoln Center reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:19:20-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_45vl1yn2y18.html",
+      "text": "Wonderful restaurant. The food is spectacular. The drinks are wonderful. It’s a very noisy place, but that lets us know that it’s a very popular place. I highly recommend getting the guacamole which is made fresh at your table. We didn’t have to wait for a table because we arrive quite early that evening. We had a great experience at Rose Mexican Restaurant. I ordered the chicken mullet and it was delicious. My daughter had the mignon — she enjoyed it, though the mashed potatoes were a little cold. That said, the way the staff handled it was outstanding; they more than made it up to us, which says everything about their commitment to great customer service. The calamari was excellent, the flan was absolutely amazing, and the margaritas were delicious. Overall, the service was beyond exceptional. Special shout-out to Danny, his customer service truly stood out. We’ll definitely be coming back. This restaurant has one of the best locations in New York city! Across the street from The iconic Lincoln Center. This place is surrounded by elegance. My wife and I ate upstairs here and it took a while for the waitress to serve our table but it was worth the wait! The food was awesome and the drinks kept us happy. Our usual spot is the bar . I remember on one occasion after the ballet we walked In and it was busy the bar seemed full but one of the amazing bartenders look over ar us and called us over to the bar .we sat down and enjoyed our drinks and appetizers. Came here for dinner and drinks before seeing the nutcracker at the lincoln center which is literally across the street. Very charming inside with large bar seating area, great ambiance and relaxing atmosphere. Sat at the bar and mario our server was fantastic. I had the spicy cucumber margarita which was so good and well balanced. Order some apps..honestly best chicken quesadillas i can remember having. The oaxacan eggs roll were also delicious. Will for sure be back very soon. The bottomless brunch im looking forward to trying."
+    }
+  ],
+  "rating": {
+    "primary": 4.4,
+    "primarySource": "opentable",
+    "opentable": 4.4,
+    "tripadvisor": 4.1
+  },
+  "reviewCount": {
+    "opentable": 9790,
+    "tripadvisor": 1460
+  },
+  "priceHint": "OT $30 and under; Margarita Mondays $5; Fiesta Hour bar specials",
+  "hoursHint": "Mon–Wed 7am–11pm; Thu–Sat 7am–midnight (Fri/Sat late to 1am on some pages); Sun 7am–10pm (official location)",
+  "happyHourHint": "Fiesta Hour Mon–Fri 4–7pm bar area only; Margarita Mondays $5; Taco Tuesdays half-price (official)",
+  "summaryClaims": [
+    "Fiesta Hour runs Monday to Friday, 4–7pm",
+    "61 Columbus Ave The Empire Hotel",
+    "Our new flagship space, located on the hotel’s mezzanine floor, offers expanded dining areas, multiple bars",
+    "Its signature dish is guacamole prepared by the table.",
+    "Our new flagship space, located on the hotel’s mezzanine floor, offers expanded dining areas, multiple bars",
+    "Its signature dish is guacamole prepared by the table.",
+    "Fiesta Hour runs Monday to Friday, 4–7pm, in the bar area",
+    "Taco Tuesdays: Enjoy half-price tacos all day, every Tuesday (dine-in only)",
+    "Rosa Mexicano by Lincoln Center 4.4 (9790)",
+    "4.1 of 5 bubbles (1,460 reviews)",
+    "The decor is gorgeous, the waitstaff attentive",
+    "Service is indifferent at best.",
+    "the pork and beef Enchiladas were disappointing"
+  ],
+  "itineraryNoteCandidate": "Rosa Mexicano - Lincoln Center: a festive pre-show Mexican spot across from Lincoln Center; order the table-side guacamole and come for Fiesta Hour runs Monday to Friday, 4–7pm.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description/reviews each carry their own claims; sources include labelled SERP search snapshots (not live fetches) — see each source's fetchMethod"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 2
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 2 WebFetch.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 42,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "officialUrls": []
+  },
+  "botFieldScore": 7,
+  "baseFieldScore": 1,
+  "censusReuse": "full10",
+  "fields": {
+    "summary": {
+      "value": "Rosa Mexicano - Lincoln Center has moved into 61 Columbus Ave The Empire Hotel, where Our new flagship space, located on the hotel’s mezzanine floor, offers expanded dining areas, multiple bars. The draw is theater-adjacent fun: Its signature dish is guacamole prepared by the table. Reviews are mixed, with Tripadvisor travelers praising the look and staff yet flagging uneven service and some weaker mains, so treat it as a lively, convenient pre-show choice.",
+      "claims": [
+        {
+          "text": "61 Columbus Ave The Empire Hotel",
+          "sourceUrl": "https://www.tripadvisor.ie/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html"
+        },
+        {
+          "text": "Our new flagship space, located on the hotel’s mezzanine floor, offers expanded dining areas, multiple bars",
+          "sourceUrl": "https://www.tripadvisor.ie/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html"
+        },
+        {
+          "text": "Its signature dish is guacamole prepared by the table.",
+          "sourceUrl": "https://www.tripadvisor.ie/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html"
+        }
+      ]
+    },
+    "description": {
+      "value": "Rosa Mexicano - Lincoln Center has moved around the corner into the Empire Hotel. Its listing says Our new flagship space, located on the hotel’s mezzanine floor, offers expanded dining areas, multiple bars, and a Tripadvisor reviewer notes that Its signature dish is guacamole prepared by the table. Fiesta Hour runs Monday to Friday, 4–7pm, in the bar area, and Taco Tuesdays: Enjoy half-price tacos all day, every Tuesday (dine-in only), which suits a pre-show meal at Rosa Mexicano across from Lincoln Center. Search snapshots show OpenTable at Rosa Mexicano by Lincoln Center 4.4 (9790) and Tripadvisor at 4.1 of 5 bubbles (1,460 reviews). Representative Tripadvisor praise (search snapshot): “The decor is gorgeous, the waitstaff attentive”. Representative watch-outs: “Service is indifferent at best.” and “the pork and beef Enchiladas were disappointing”.",
+      "claims": [
+        {
+          "text": "Our new flagship space, located on the hotel’s mezzanine floor, offers expanded dining areas, multiple bars",
+          "sourceUrl": "https://www.tripadvisor.ie/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html"
+        },
+        {
+          "text": "Its signature dish is guacamole prepared by the table.",
+          "sourceUrl": "https://www.tripadvisor.ie/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html"
+        },
+        {
+          "text": "Fiesta Hour runs Monday to Friday, 4–7pm, in the bar area",
+          "sourceUrl": "https://rosamexicano.com/happy-hour/"
+        },
+        {
+          "text": "Taco Tuesdays: Enjoy half-price tacos all day, every Tuesday (dine-in only)",
+          "sourceUrl": "https://rosamexicano.com/happy-hour/"
+        },
+        {
+          "text": "Rosa Mexicano by Lincoln Center 4.4 (9790)",
+          "sourceUrl": "https://www.opentable.com/r/rosa-mexicano-by-lincoln-center-new-york-3"
+        },
+        {
+          "text": "4.1 of 5 bubbles (1,460 reviews)",
+          "sourceUrl": "https://www.tripadvisor.ie/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html"
+        },
+        {
+          "text": "The decor is gorgeous, the waitstaff attentive",
+          "sourceUrl": "https://www.tripadvisor.com.au/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html"
+        },
+        {
+          "text": "Service is indifferent at best.",
+          "sourceUrl": "https://www.tripadvisor.com.au/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html"
+        },
+        {
+          "text": "the pork and beef Enchiladas were disappointing",
+          "sourceUrl": "https://www.tripadvisor.ie/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Rosa Mexicano - Lincoln Center: a festive pre-show Mexican spot across from Lincoln Center; order the table-side guacamole and come for Fiesta Hour runs Monday to Friday, 4–7pm.",
+      "claims": [
+        {
+          "text": "Fiesta Hour runs Monday to Friday, 4–7pm",
+          "sourceUrl": "https://rosamexicano.com/happy-hour/"
+        }
+      ]
+    },
+    "reviewsUnstarred": [
+      {
+        "theme": "Decor and staff",
+        "value": "A Tripadvisor traveler (search snapshot) found Rosa Mexicano - Lincoln Center a handsome room with good people on the floor: The decor is gorgeous, the waitstaff attentive.",
+        "claims": [
+          {
+            "text": "The decor is gorgeous, the waitstaff attentive",
+            "sourceUrl": "https://www.tripadvisor.com.au/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com.au/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html",
+        "rating": "4.4",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 27
+      },
+      {
+        "theme": "Table-side guacamole",
+        "value": "The dish to order at Rosa Mexicano - Lincoln Center is the guacamole; the Tripadvisor listing says Its signature dish is guacamole prepared by the table., which makes a good start before a show.",
+        "claims": [
+          {
+            "text": "Its signature dish is guacamole prepared by the table.",
+            "sourceUrl": "https://www.tripadvisor.ie/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.ie/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html",
+        "rating": "4.4",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 34
+      },
+      {
+        "theme": "Uneven service",
+        "value": "Service experiences vary at Rosa Mexicano - Lincoln Center; one Tripadvisor reviewer (search snapshot) wrote that Service is indifferent at best., so allow extra time before curtain.",
+        "claims": [
+          {
+            "text": "Service is indifferent at best.",
+            "sourceUrl": "https://www.tripadvisor.com.au/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com.au/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html",
+        "rating": "4.4",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 27
+      },
+      {
+        "theme": "Mains to skip",
+        "value": "Some mains draw complaints at Rosa Mexicano - Lincoln Center: a Tripadvisor traveler said the pork and beef Enchiladas were disappointing, so lean on the guacamole and tacos.",
+        "claims": [
+          {
+            "text": "the pork and beef Enchiladas were disappointing",
+            "sourceUrl": "https://www.tripadvisor.ie/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.ie/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html",
+        "rating": "4.4",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 28
+      }
+    ]
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.tripadvisor.com.au/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html",
+    "site": "Tripadvisor",
+    "via": "SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch)",
+    "praise": [
+      "The decor is gorgeous, the waitstaff attentive",
+      "Its signature dish is guacamole prepared by the table."
+    ],
+    "watchOuts": [
+      "Service is indifferent at best.",
+      "the pork and beef Enchiladas were disappointing"
+    ],
+    "complaints": [
+      "Service is indifferent at best.",
+      "the pork and beef Enchiladas were disappointing"
+    ],
+    "themes": [
+      "Decor and staff",
+      "Table-side guacamole",
+      "Uneven service",
+      "Mains to skip"
+    ]
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:05:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Rosa Mexicano - Lincoln Center: a festive pre-show Mexican spot across from Lincoln Center; order the table-side guacamole and come for Fiesta Hour runs Monday to Friday, 4–7pm.",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "Rosa Mexicano's guacamole made fresh at the table is the most recommended order, alongside spectacular food and strong drinks, though the popular dining room runs noisy and arriving early avoids waits.",
+  "review1Source": "Exa place listing",
+  "review1Rating": "5/5",
+  "review1Theme": "Food and drinks",
+  "review1SourceUrl": "https://exa.ai/library/place/45vl1yn2y18",
+  "review1Stars": 5,
+  "review2": "Service generally earns good marks, though a few diners mention dishes arriving lukewarm, so it is worth flagging anything that needs fixing.",
+  "review2Source": "Exa place listing",
+  "review2Rating": "4/5",
+  "review2Theme": "Service",
+  "review2SourceUrl": "https://exa.ai/library/place/45vl1yn2y18",
+  "review2Stars": 4,
+  "review3": "The location across from Lincoln Center is a big plus for pre-show dinners, although some diners report slow service on the upper floor.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "5/5",
+  "review3Theme": "Crowds",
+  "review3SourceUrl": "https://exa.ai/library/place/45vl1yn2y18",
+  "review3Stars": 5,
+  "review4": "Diners like the attractive room and bar seating for a relaxed meal before a performance, with the decor and atmosphere earning steady praise.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Food and drinks",
+  "review4SourceUrl": "https://exa.ai/library/place/45vl1yn2y18",
+  "review4Stars": 5,
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029",
+  "review1Claims": [
+    "Wonderful restaurant.",
+    "The food is spectacular.",
+    "The drinks are wonderful.",
+    "It’s a very noisy place, but that lets us know that it’s a very popular place.",
+    "I highly recommend getting the guacamole which is made fresh at your table.",
+    "We didn’t have to wait for a table because we arrive quite early that evening."
+  ],
+  "review2Claims": [
+    "We had a great experience at Rose Mexican Restaurant.",
+    "I ordered the chicken mullet and it was delicious.",
+    "My daughter had the mignon — she enjoyed it, though the mashed potatoes were a little cold.",
+    "That said, the way the staff handled it was outstanding; they more than made it up to us, which says everything about their commitment to great customer service.",
+    "The calamari was excellent, the flan was absolutely amazing, and the margaritas were delicious.",
+    "Overall, the service was beyond exceptional.",
+    "Special shout-out to Danny, his customer service truly stood out.",
+    "We’ll definitely be coming back."
+  ],
+  "review3Claims": [
+    "This restaurant has one of the best locations in New York city!",
+    "Across the street from The iconic Lincoln Center.",
+    "This place is surrounded by elegance.",
+    "My wife and I ate upstairs here and it took a while for the waitress to serve our table but it was worth the wait!",
+    "The food was awesome and the drinks kept us happy.",
+    "Our usual spot is the bar .",
+    "I remember on one occasion after the ballet we walked In and it was busy the bar seemed full but one of the amazing bartenders look over ar us and called us over to the bar .we sat down and enjoyed our drinks and appetizers."
+  ],
+  "review4Claims": [
+    "Came here for dinner and drinks before seeing the nutcracker at the lincoln center which is literally across the street.",
+    "Very charming inside with large bar seating area, great ambiance and relaxing atmosphere.",
+    "Sat at the bar and mario our server was fantastic.",
+    "I had the spicy cucumber margarita which was so good and well balanced.",
+    "Order some apps..honestly best chicken quesadillas i can remember having.",
+    "The oaxacan eggs roll were also delicious.",
+    "Will for sure be back very soon.",
+    "The bottomless brunch im looking forward to trying."
+  ],
+  "reviewsLabel": "Representative reviews written from 37 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:22:18.267014+00:00"
+  }
+}

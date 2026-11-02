@@ -1,0 +1,175 @@
+{
+  "thingId": 669,
+  "thingName": "Village Vanguard / Smoke / Birdland / Jazz Gallery",
+  "type": "attraction",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.birdlandjazz.com/faq/",
+      "title": "FAQ - Birdland Jazz Club & Theater",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": " Follow Follow Follow Frequently Asked Questions Venue Seating Ticketing Dining Venue Where is Birdland and how should I get there? We are located at 315 West 44th St, between 8th and 9th Ave’s. The closest subway station is 42nd St Port Authority, and there are multiple parking garages on this street as well. What … Shop Follow Follow Follow Follow Frequently Asked Questions Venue Seating Ticketing Dining Venue Where is Birdland and how should I get there? We are located at 315 West 44th St, between 8th and 9th Ave’s. The closest subway station is 42nd St Port Authority, and there are multiple parking garages on this street as well. What is the difference between  … d dinner. Simply arrive early to be seated and dine. We serve dinner and drinks before and during shows. Do you require a minimum spend at the table? There is a $20 minimum on food or drinks (per person.) Can I bring a birthday cake? Yes, there is a $5 per person plating fee. Is there a corkage fee to bring wine into the club? $40 Still have questions?",
+      "snippet": " Follow Follow Follow Frequently Asked Questions Venue Seating Ticketing Dining Venue Where is Birdland and how should I get there? We are located at 315 West 44th St, between 8th and 9th Ave’s. The closest subway station is 42nd St Port Authority, and there are multiple parking garages on this stre",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://exa.ai/library/place/mxkhk1g69s8",
+      "title": "Village Vanguard / Smoke / Birdland / Jazz Gallery reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:20:53-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_mxkhk1g69s8.html",
+      "text": "Amazing experience - strong drinks, friendly service and great music. We didn’t have any food because vegan options were not exciting at all but still had a lovely evening with great cocktails. Would definitely recommend booking this experience in advance and also coming early if you want nice seats! Sat at the bar for Afro Latin Jazz Orchestra. Wonderful and awesome. Had amaretto coffee drinks and cheesecake bc we had already eaten dinner. Dessert chef is amazing, best cheesecake ive ever had. Very fluffy and delicious. Barkeep said desserts were the shining stars of menu. Such a wonderful place with great vibes and tasty food. The live performance by the drummer, pianist, and double bassist was fantastic! I left my clothes there by mistake, and even though they were busy, a kind lady took the time during the performance break to find them for me. I really appreciated her kindness. I’d love to come back again someday. We had an amazing evening at this jazz club! The atmosphere was vibrant yet cozy, with incredible live music that set the perfect tone for the night. The musicians were extremely talented and kept the crowd entertained from start to finish. Dinner was just pretty tasty—we had lasagna and Cajun jambalaya. The service was excellent too: friendly, attentive, and made the whole experience seamless. It’s not easy to find a place that combines great food, top-notch live music, and a welcoming vibe, but this spot does it all. Highly recommend for anyone looking for a fun and memorable night out!"
+    }
+  ],
+  "rating": {
+    "primary": 4.1,
+    "primarySource": "tripadvisor",
+    "tripadvisor": 4.1
+  },
+  "reviewCount": {},
+  "priceHint": "$20 F&B minimum at Birdland (official FAQ)",
+  "hoursHint": "Birdland box office daily ~2–11pm; show doors vary (birdlandjazz.com FAQ)",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "315 West 44th St",
+    "We are located at 315 West 44th St, between 8th and 9th Ave’s.",
+    "The closest subway station is 42nd St Port Authority, and there are multiple parking garages on this street as well."
+  ],
+  "itineraryNoteCandidate": "Village Vanguard / Smoke / Birdland / Jazz Gallery: high-energy trio nights with friendly service; Birdland at 315 West 44th St is the pre- or post-show pick, so arrive early for good seats.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 40,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 5,
+  "baseFieldScore": 2,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Village Vanguard / Smoke / Birdland / Jazz Gallery jazz plan, anchored by Birdland at 315 West 44th St. Reviews favor booking ahead and arriving early for good seats, and they single out tight trio musicianship and friendly, attentive service. The closest subway station is 42nd St Port Authority, and there are multiple parking garages on this street as well.",
+      "claims": [
+        {
+          "text": "315 West 44th St",
+          "sourceUrl": "https://www.birdlandjazz.com/faq/"
+        },
+        {
+          "text": "We are located at 315 West 44th St, between 8th and 9th Ave’s.",
+          "sourceUrl": "https://www.birdlandjazz.com/faq/"
+        },
+        {
+          "text": "The closest subway station is 42nd St Port Authority, and there are multiple parking garages on this street as well.",
+          "sourceUrl": "https://www.birdlandjazz.com/faq/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Village Vanguard / Smoke / Birdland / Jazz Gallery is a jazz-night shortlist anchored by Birdland. Birdland says we are located at 315 West 44th St, between 8th and 9th Ave’s. There is a $20 minimum on food or drinks (per person.) on top of the ticket, plus a $5 per person plating fee. The club serves dinner and drinks before and during shows, so arrive early to be seated and dine.",
+      "claims": [
+        {
+          "text": "located at 315 West 44th St, between 8th and 9th Ave’s",
+          "sourceUrl": "https://www.birdlandjazz.com/faq/"
+        },
+        {
+          "text": "There is a $20 minimum on food or drinks (per person.)",
+          "sourceUrl": "https://www.birdlandjazz.com/faq/"
+        },
+        {
+          "text": "there is a $5 per person plating fee",
+          "sourceUrl": "https://www.birdlandjazz.com/faq/"
+        },
+        {
+          "text": "We serve dinner and drinks before and during shows",
+          "sourceUrl": "https://www.birdlandjazz.com/faq/"
+        },
+        {
+          "text": "arrive early to be seated and dine",
+          "sourceUrl": "https://www.birdlandjazz.com/faq/"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Village Vanguard / Smoke / Birdland / Jazz Gallery: high-energy trio nights with friendly service; Birdland at 315 West 44th St is the pre- or post-show pick, so arrive early for good seats.",
+      "claims": [
+        {
+          "text": "315 West 44th St",
+          "sourceUrl": "https://www.birdlandjazz.com/faq/"
+        }
+      ]
+    },
+    "reviewsScope": "Reviews are for Birdland Jazz Club, 315 W 44th St (anchor named in summary), not every candidate in this row"
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Village Vanguard / Smoke / Birdland / Jazz Gallery: high-energy trio nights with friendly service; Birdland at 315 West 44th St is the pre- or post-show pick, so arrive early for good seats.",
+  "review1": "Booking jazz club tickets well in advance and arriving early is the most repeated advice, since the best seats go to those who come first on popular nights.",
+  "review1Source": "Exa place listing",
+  "review1Rating": "4/5",
+  "review1Theme": "Seating",
+  "review1SourceUrl": "https://exa.ai/library/place/mxkhk1g69s8",
+  "review2": "Live trio performances featuring drums, piano and double bass are praised for their energy and musicianship, delivering memorable shows that justify the cover and the trip to the club.",
+  "review2Source": "Exa place listing",
+  "review2Rating": "5/5",
+  "review2Theme": "Live performance",
+  "review2SourceUrl": "https://exa.ai/library/place/mxkhk1g69s8",
+  "review3": "The musicians come across as extremely talented and skilled at holding a room, keeping the audience engaged and entertained from the first song of the set through the very last.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "5/5",
+  "review3Theme": "Music",
+  "review3SourceUrl": "https://exa.ai/library/place/mxkhk1g69s8",
+  "review4": "Service is described as friendly and attentive, with staff keeping drinks and orders moving quietly during the set and helping the whole evening run smoothly from arrival to the final song.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Service",
+  "review4SourceUrl": "https://exa.ai/library/place/mxkhk1g69s8",
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029",
+  "review1Claims": [
+    "Would definitely recommend booking this experience in advance and also coming early if you want nice seats!"
+  ],
+  "review2Claims": [
+    "The live performance by the drummer, pianist, and double bassist was fantastic!"
+  ],
+  "review3Claims": [
+    "The musicians were extremely talented and kept the crowd entertained from start to finish."
+  ],
+  "review4Claims": [
+    "The service was excellent too",
+    "friendly, attentive, and made the whole experience seamless."
+  ],
+  "reviewStarsDropped": "mean 4.75 vs venue 4.10 >0.5",
+  "reviewsLabel": "Representative reviews written from 6 reviews",
+  "reviewsRepresentative": true,
+  "reviewThemes": {
+    "representative": true
+  },
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenAt": {
+    "reviews": "2026-10-29T20:22:18.265681+00:00"
+  },
+  "writtenOrder": [
+    "reviews"
+  ]
+}

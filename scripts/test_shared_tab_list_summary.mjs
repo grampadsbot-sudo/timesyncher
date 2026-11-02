@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { productThingCategory } from '../src/vacation/keepsake-product-overrides.mjs';
+import { pickFlightListRowSummaryText, STORED_SUMMARY_LIST_ROW_PICK_BUNDLE } from '../src/vacation/flight-list-row-summary.mjs';
 
 import { compareColumnRows, nextColumnSort, rowPriceAmount, LIST_SORT_PRESENTATION } from '../src/vacation/list-column-sort.mjs';
 import { finalizeServedSharedTripPayload } from '../src/vacation/shared-trip-served-page.mjs';
@@ -24,7 +25,7 @@ const flightPlaces = (payload.places || []).filter((place) => {
 assert.ok(hotelPlaces.length > 0, 'hotels in places');
 assert.ok(carPlaces.length > 0, 'cars in places');
 assert.ok(flightPlaces.length > 0, 'flights in places');
-assert.match(String(hotelPlaces[0].name || ''), /Midtown sample hotel/i);
+assert.match(String(hotelPlaces[0].name || ''), /The Manhattan Club/i);
 assert.match(String(carPlaces[0].name || ''), /Priceline opaque/i);
 assert.equal(payload.thingOverrides[`place:${carPlaces[0].id}`]?.rentalCompany, 'Priceline opaque');
 assert.equal(payload.thingOverrides[`place:${flightPlaces[0].id}`]?.fareDirection, 'one-way');
@@ -62,7 +63,7 @@ assert.doesNotMatch(bundle, /tsRowInlineDesc/);
 assert.doesNotMatch(bundle, /matchMedia\("\(max-width:640px\)"\)/);
 assert.match(
   bundle,
-  /n\.jsxs\("span",\{style:\{display:"flex",alignItems:"center",gap:8,minWidth:0,width:"100%",maxWidth:"100%",overflow:"hidden",flex:"1 1 0"\},children:\[n\.jsx\("span",\{"data-ts-list-row-name":"1",style:\{minWidth:0,flex:"1 1 0",maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"\},children:Zn\}\),Pn\?n\.jsx\("span",\{"data-list-summary":"1","data-summary-src":"thing"/,
+  /"data-ts-list-row-name":"1",style:\{minWidth:0,maxWidth:"100%",width:"100%",display:"inline-flex",alignItems:"center",lineHeight:1,gap:8,overflow:"hidden",flex:"1 1 0"\},children:\[n\.jsx\("span",\{style:\{minWidth:0,flex:"1 1 0",maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"\},children:Zn\}\),Pn\?n\.jsx\("span",\{"data-list-summary":"1","data-summary-src":"thing"/,
 );
 const oeListRow = bundle.slice(bundle.indexOf('Oe=(G,Re,zt=!1)=>'), bundle.indexOf('},tt=G=>', bundle.indexOf('Oe=(G,Re,zt=!1)=>')));
 assert.doesNotMatch(oeListRow, /\):n\.jsxs\("div",\{style:\{background:"var\(--bg-card, white\)"/);
@@ -77,6 +78,7 @@ assert.doesNotMatch(
   /!tsRowInlineDesc&&Pn\?n\.jsx\("div",\{"data-list-summary":"1","data-summary-src":"thing",style:\{marginTop:6/,
 );
 assert.doesNotMatch(bundle, /maxWidth:"42%"/);
+assert.match(bundle, /color:"#0f766e",fontWeight:900,flexShrink:0\},children:ie\(G\)/);
 
 const named = [{ name: 'North' }, { name: 'south' }, { name: 'East' }];
 assert.deepEqual([...named].sort((a, b) => compareColumnRows(a, b, 'name', 'asc')).map((row) => row.name), ['East', 'North', 'south']);
@@ -88,4 +90,57 @@ assert.equal(rowPriceAmount('no amount'), null);
 assert.deepEqual(nextColumnSort({ key: 'price', dir: 'asc' }, 'name'), { key: 'name', dir: 'asc' });
 assert.deepEqual(nextColumnSort({ key: 'name', dir: 'asc' }, 'name'), { key: 'name', dir: 'desc' });
 
-console.log('shared tab list summary tests passed');
+const bundledFlightPick = Function(`return (${STORED_SUMMARY_LIST_ROW_PICK_BUNDLE})`)();
+const flightSummaryCases = [
+  {
+    name: 'Southwest one stop base f7be729',
+    input: 'Airline: Southwest; Route: LAS-LGA; Stops: 1 stop;',
+    expected: 'Airline: Southwest; Route: LAS-LGA; Stops: 1 stop;',
+  },
+  {
+    name: 'Southwest via DAL base f7be729',
+    input: 'Airline: Southwest; Route: LAS-LGA; Stops: 1 stop via DAL;',
+    expected: 'Airline: Southwest; Route: LAS-LGA; Stops: 1 stop via DAL;',
+  },
+  {
+    name: 'long Airline semicolon base f7be729',
+    input: 'Airline: Southwest; Route: LAS-LGA; Stops: 1 stop; Outbound travel departs in the morning and arrives later that same afternoon with fares listed separately.',
+    expected: 'Airline: Southwest;  Route: LAS-LGA;  Stops: 1 stop;',
+  },
+  {
+    name: 'long Airline period base f7be729',
+    input: 'Airline: Southwest; Route: LAS-LGA; Stops: 1 stop. Outbound travel departs in the morning and arrives later that same afternoon with fares listed separately.',
+    expected: 'Airline: Southwest;  Route: LAS-LGA;  Stops: 1 stop.',
+  },
+  {
+    name: 'non-Airline base f7be729',
+    input: 'Neighborhood bistro with a short wine list and late seating. Book ahead on weekends for the dining room and outdoor tables.',
+    expected: 'Neighborhood bistro with a short wine list and late seating.',
+  },
+  {
+    name: 'Documented option base f7be729',
+    input: 'Documented flight option with Airline: Southwest; Route: LAS-LGA; Stops: 1 stop; Outbound travel departs in the morning and arrives later that afternoon.',
+    expected: 'Documented flight option with Airline: Southwest; Route: LAS-LGA; Stops: 1 stop; Outbound travel departs in the morning and arrives later that afternoon.',
+  },
+  {
+    name: 'whitespace base f7be729',
+    input: '  Airline: Southwest;  Route: LAS-LGA;\tStops: 1 stop;  ',
+    expected: 'Airline: Southwest;  Route: LAS-LGA;\tStops: 1 stop;',
+  },
+  ...[';', '.'].map((terminator) => ({
+    name: `Airline fallback preserves ${terminator}`,
+    input: `Airline: Example Air has a route; Route: AAA-BBB; Stops: no stops; Out: at dawn; Back: at dusk${terminator}`,
+    expected: `Airline: Example Air has a route; Route: AAA-BBB; Stops: no stops; Out: at dawn; Back: at dusk${terminator}`,
+  })),
+  { name: 'short non-Airline', input: 'No saved flight details', expected: 'No saved flight details' },
+  { name: 'empty', input: '', expected: '' },
+  { name: 'null', input: null, expected: '' },
+  { name: 'zero', input: 0, expected: '0' },
+];
+for (const { name, input, expected } of flightSummaryCases) {
+  const picked = pickFlightListRowSummaryText(input);
+  assert.equal(picked, expected, name);
+  assert.equal(bundledFlightPick(input), picked, `${name} bundle parity`);
+}
+
+console.log(`shared tab list summary tests passed (${flightSummaryCases.length} flight picker expectations and bundle parity cases)`);

@@ -1,0 +1,210 @@
+{
+  "thingId": "687",
+  "thingName": "Cilantro UWS",
+  "type": "restaurant",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.opentable.com/r/cilantro-new-york",
+      "title": "Cilantro - Updated 2026, Mexican Restaurant in New York, NY",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "ew York, NY 10024-4628 ## About this restaurant - Neighborhood gem - Charming - Good for groups Cilantro, located in New York City's Upper West Side, serves authentic Mexican and Southwestern American cuisine in a casual, upbeat atmosphere. Each meal is made with bold flavors and fresh ingredients to ensure an enjoyable experience. Cilantro has a full bar which features specialty cockta … dated 2026, Mexican Restaurant in New York, NY | | Cilantro - Updated 2026, Mexican Restaurant in New York, NY # Cilantro 4.1 (23) $31 to $50 Mexican 485 Columbus Ave, New York, NY 10024-4628 ## About this restaurant - Neighborhood gem - Charming - Good for groups Cilantro, located in New York City's Upper West Side, serves authentic Mexic … dated 2026, Mexican Restaurant in New York, NY | | Cilantro - Updated 2026, Mexican Restaurant in New York, NY # Cilantro 4.1 (23) $31 to $50 Mexican 485 Columbus Ave, New York, NY 10024-4628 ## About this restaurant - Neighborhood gem - Charming - Good for groups Cilantro, located in New York City's Upper West Side, serves authentic Mexic … western American cuisine in a casual, upbeat atmosphere. Each meal is made with bold flavors and fresh ingredients to ensure an enjoyable experience. Cilantro has a full bar which features specialty cocktails as well as many varieties of tequila. Start out your meal with one of Cilantro's appetizers to share like the guacamole or the nachos. Choose from menu items like fajitas, tacos, burrito … alty cocktails as well as many varieties of tequila. Start out your meal with one of Cilantro's appetizers to share like the guacamole or the nachos. Choose from menu items like fajitas, tacos, burritos, enchiladas and more. The menu includes plenty of vegetarian options as well as gluten-sensitive options so that everyone in the group can find something to enjoy regardl … 's appetizers to share like the guacamole or the nachos. Choose from menu items like fajitas, tacos, burritos, enchiladas and more. The menu includes plenty of vegetarian options as well as gluten-sensitive options so that everyone in the group can find something to enjoy regardless of dietary restrictions. ## Not available on OpenTable Unfortunately, this resta … ails, Delivery, Dog Friendly, Full Bar, Happy Hour, Late Night, Non-Smoking, Patio/Outdoor Dining, Weekend Brunch, Wheelchair Access, Wine ### Brunch (Friday, Saturday, Sunday 11am-4pm Only) ## Reviews OpenTable reviews from verified diners Reviews from people who have dined at Cilantro. 4.1 (23) - 4.0 Food - 3.8 Service - 4.1 Ambience -  … Cilantro - Updated 2026, Mexican Restaurant in New York, NY | | Cilantro - Updated 2026, Mexican Restaurant in New York, NY # Cilantro 4.1 (23) $31 to $50 Mexican 485 Columbus Ave, New York, NY 10024-4628 ## About this restaurant - Neighborhood gem - Charming - Good for groups Cilantro, locat",
+      "snippet": "ew York, NY 10024-4628 ## About this restaurant - Neighborhood gem - Charming - Good for groups Cilantro, located in New York City's Upper West Side, serves authentic Mexican and Southwestern American cuisine in a casual, upbeat atmosphere. Each meal is made with bold flavors and fresh ingredients t",
+      "fetchMethod": "WebFetch live fetch 2026-10-28 (curl 403/blocked); text saved verbatim from WebFetch markdown"
+    },
+    {
+      "url": "https://www.restaurantji.com/ny/new-york/cilantro-/",
+      "title": "Cilantro UWS reviews | Restaurantji",
+      "fetchedAt": "2026-10-29T09:05:00-07:00",
+      "text": "Cilantro UWS | Restaurantji listing | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | 4.1 425 ratings … Great brunch spot right by the museum of natural history … for margaritas … very pleasant outdoor sitting … great hamburger and fries , great omelette..good drinks, and very pleasant outdoor sitting … Amazing food! Great customer service would definitely recommend … service was ok, but the food was delicious",
+      "snippet": "4.1 425 ratings",
+      "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
+    }
+  ],
+  "rating": {
+    "primary": 4.1,
+    "primarySource": "opentable",
+    "opentable": 4.1
+  },
+  "reviewCount": {
+    "opentable": 23
+  },
+  "priceHint": null,
+  "hoursHint": "Mon–Thu 1:00 pm–10:00 pm Fri–Sun 11:00 am–11:00 pm (OpenTable)",
+  "happyHourHint": null,
+  "summaryClaims": [
+    "serves authentic Mexican and Southwestern American cuisine in a casual, upbeat atmosphere",
+    "4.1 425 ratings",
+    "Great brunch spot right by the museum of natural history",
+    "485 Columbus Ave, New York, NY 10024-4628",
+    "Cilantro has a full bar which features specialty cocktails as well as many varieties of tequila",
+    "Choose from menu items like fajitas, tacos, burritos, enchiladas and more",
+    "plenty of vegetarian options as well as gluten-sensitive options",
+    "(Friday, Saturday, Sunday 11am-4pm Only)",
+    "4.1 (23)",
+    "for margaritas",
+    "very pleasant outdoor sitting"
+  ],
+  "itineraryNoteCandidate": "Cilantro UWS: a lively Mexican spot by the Natural History Museum; grab weekend brunch and a margarita on the patio.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description/reviews each carry their own claims"
+  },
+  "callCounts": {
+    "webSearch": 0,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "fields": {
+    "summary": {
+      "value": "Cilantro UWS is a casual Mexican and Southwestern restaurant at 485 Columbus Ave, around the corner from the American Museum of Natural History, with a tequila-heavy bar and weekend brunch. Restaurantji diners rate it 4.1 425 ratings and call it a Great brunch spot right by the museum of natural history. It suits a post-museum lunch with outdoor seating.",
+      "claims": [
+        {
+          "text": "4.1 425 ratings",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/cilantro-/"
+        },
+        {
+          "text": "Great brunch spot right by the museum of natural history",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/cilantro-/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Cilantro UWS is a casual Mexican restaurant at 485 Columbus Ave on the Upper West Side. OpenTable describes authentic Mexican and Southwestern American cuisine in a casual, upbeat atmosphere, with a full bar of specialty cocktails and many varieties of tequila. The menu runs from guacamole and nachos to fajitas, tacos, burritos and enchiladas, with vegetarian and gluten-sensitive options. Brunch is served Friday through Sunday from 11am to 4pm, and OpenTable diners rate Cilantro UWS 4.1 from 23 reviews. Restaurantji diners recommend it for margaritas and mention very pleasant outdoor sitting.",
+      "claims": [
+        {
+          "text": "485 Columbus Ave, New York, NY 10024-4628",
+          "sourceUrl": "https://www.opentable.com/r/cilantro-new-york"
+        },
+        {
+          "text": "Cilantro has a full bar which features specialty cocktails as well as many varieties of tequila",
+          "sourceUrl": "https://www.opentable.com/r/cilantro-new-york"
+        },
+        {
+          "text": "Choose from menu items like fajitas, tacos, burritos, enchiladas and more",
+          "sourceUrl": "https://www.opentable.com/r/cilantro-new-york"
+        },
+        {
+          "text": "plenty of vegetarian options as well as gluten-sensitive options",
+          "sourceUrl": "https://www.opentable.com/r/cilantro-new-york"
+        },
+        {
+          "text": "(Friday, Saturday, Sunday 11am-4pm Only)",
+          "sourceUrl": "https://www.opentable.com/r/cilantro-new-york"
+        },
+        {
+          "text": "4.1 (23)",
+          "sourceUrl": "https://www.opentable.com/r/cilantro-new-york"
+        },
+        {
+          "text": "for margaritas",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/cilantro-/"
+        },
+        {
+          "text": "very pleasant outdoor sitting",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/cilantro-/"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Cilantro UWS: a lively Mexican spot by the Natural History Museum; grab weekend brunch and a margarita on the patio.",
+      "claims": [
+        {
+          "text": "serves authentic Mexican and Southwestern American cuisine in a casual, upbeat atmosphere",
+          "sourceUrl": "https://www.opentable.com/r/cilantro-new-york"
+        }
+      ]
+    },
+    "happyHour": {
+      "value": false,
+      "claims": [],
+      "note": "Soft/unconfirmed: only delivery-app listings (Uber Eats/Postmates, not allowlisted) show Monday - Thursday 3:00 PM - 7:00 PM Happy Hour; official cilantrony.com fetch returned 404 and Restaurantji shows none. Not cited.",
+      "status": "soft",
+      "checkedSources": [
+        "https://www.opentable.com/r/cilantro-new-york",
+        "https://www.restaurantji.com/ny/new-york/cilantro-/"
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:05:00-07:00",
+    "writer": "grok-bot"
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.restaurantji.com/ny/new-york/cilantro-/",
+    "site": "Restaurantji",
+    "praise": [
+      "Great brunch spot right by the museum of natural history",
+      "Amazing food! Great customer service would definitely recommend"
+    ],
+    "watchOuts": [
+      "great hamburger and fries , great omelette..good drinks, and very pleasant outdoor sitting",
+      "service was ok, but the food was delicious"
+    ],
+    "complaints": [
+      "great hamburger and fries , great omelette..good drinks, and very pleasant outdoor sitting",
+      "service was ok, but the food was delicious"
+    ],
+    "themes": [
+      "Museum-day brunch",
+      "Outdoor seating",
+      "Friendly service",
+      "Service can be middling"
+    ],
+    "via": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
+  },
+  "itineraryNote": "Cilantro UWS: a lively Mexican spot by the Natural History Museum; grab weekend brunch and a margarita on the patio.",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "Cilantro is a convenient brunch stop next to the American Museum of Natural History, and diners often recommend the margaritas.",
+  "review1Source": "Restaurantji",
+  "review1Rating": "4.1",
+  "review1Theme": "Museum-day brunch",
+  "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/cilantro-/",
+  "review1Stars": 5,
+  "review2": "On good days the outdoor seating is a plus, with diners praising the burger, fries, omelettes and drinks served outside.",
+  "review2Source": "Restaurantji",
+  "review2Rating": "4.1",
+  "review2Theme": "Outdoor seating",
+  "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/cilantro-/",
+  "review2Stars": 4,
+  "review3": "Friendly customer service and good food are common threads in reviews, making it an easy recommendation for a casual meal.",
+  "review3Source": "Restaurantji",
+  "review3Rating": "4.1",
+  "review3Theme": "Friendly service",
+  "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/cilantro-/",
+  "review3Stars": 5,
+  "review4": "Service can be uneven, with some diners calling it only adequate, though they add that the food still makes the visit worthwhile.",
+  "review4Source": "Restaurantji",
+  "review4Rating": "4.1",
+  "review4Theme": "Service can be middling",
+  "review4SourceUrl": "https://www.restaurantji.com/ny/new-york/cilantro-/",
+  "review4Stars": 4,
+  "review1Claims": [
+    "Great brunch spot right by the museum of natural history"
+  ],
+  "review2Claims": [
+    "great hamburger and fries , great omelette..good drinks, and very pleasant outdoor sitting"
+  ],
+  "review3Claims": [
+    "Great customer service would definitely recommend",
+    "Amazing food! Great customer service would definitely recommend"
+  ],
+  "review4Claims": [
+    "service was ok, but the food was delicious"
+  ],
+  "reviewsLabel": "Representative reviews written from 9 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "happyHourSourceUrl": null,
+  "happyHour": false,
+  "writtenOrder": [
+    "happyHour"
+  ],
+  "writtenAt": {
+    "happyHour": "2026-10-30T13:06:00.262645+00:00"
+  }
+}

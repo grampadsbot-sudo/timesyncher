@@ -1,0 +1,207 @@
+{
+  "thingId": 677,
+  "thingName": "La Traviata Pizzeria",
+  "type": "restaurant",
+  "provider": "vk-search",
+  "sources": [
+    {
+      "url": "https://www.latraviatapizzany.com/",
+      "title": "La Traviata Pizza - New York, NY - 101 West 68th Street - Hours, Menu, Order",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "La Traviata Pizza - New York, NY - 101 West 68th Street - Hours, Menu, Order | View the menu, hours, address, and photos for La Traviata Pizza in New York, NY. Order online for delivery or pickup on Slicel … La Traviata Pizza - New York, NY - 101 West 68th Street - Hours, Menu, Order | View the menu, hours, address, and photos for La Traviata Pizza in New York, NY. Order online for delivery or pickup on Slicel … La Traviata Pizza - New York, NY - 101 West 68th Street - Hours, Menu, Order | View the menu, hours, address, and photos for La Traviata Pizza in New York, NY. Order online for delivery or pickup on Slicelife.com | La Traviata Pizza - New York, NY - 101 West 68th Street - Hours, Menu, Order Skip to main con",
+      "snippet": "La Traviata Pizza - New York, NY - 101 West 68th Street - Hours, Menu, Order | View the menu, hours, address, and photos for La Traviata Pizza in New York, NY. Order online for delivery or pickup on Slicel",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/",
+      "title": "La Traviata Pizzeria, New York - Menu, Reviews (168), Photos (62) - Restaurantji",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "La Traviata Pizzeria, New York - Menu, Reviews (168), Photos (62) - Restaurantji | | 4.2 168 ratings … The service was quick and the pizza good. … Only 4 small tables inside and a few standing tables outside. … La Traviata Pizzeria, New York - Menu, Reviews (168), Photos (62) - Restaurantji | | 4.2 168 ratings … The service was quick and the pizza good. … Only 4 small tables inside and a few standing tables outside. … La Traviata Pizzeria, New York - Menu, Reviews (168), Photos (62) - Restaurantji | | 4.2 168 ratings … The service was quick and the pizza good. … Only 4 small tables inside and a few standing tables outside. … A simple NY-style pizza place … Excellent place to grab a quick slice before a movie … about $5.50 … Lovely owners and good pizza. … for a quick bite",
+      "snippet": "La Traviata Pizzeria, New York - Menu, Reviews (168), Photos (62) - Restaurantji | | 4.2 168 ratings … The service was quick and the pizza good. … Only 4 small tables inside and a few standing tables outside.",
+      "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
+    }
+  ],
+  "summaryClaims": [
+    "101 West 68th Street",
+    "A simple NY-style pizza place",
+    "The service was quick and the pizza good",
+    "Excellent place to grab a quick slice before a movie",
+    "101 West 68th Street",
+    "the menu, hours, address, and photos for La Traviata Pizza in New York, NY",
+    "The service was quick and the pizza good",
+    "Only 4 small tables inside and a few standing tables outside",
+    "4.2 168 ratings",
+    "about $5.50",
+    "Lovely owners and good pizza."
+  ],
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description/reviews each carry their own claims"
+  },
+  "evidenceReuse": {
+    "source": "READY preview saved evidenceDossier.pages",
+    "sha": "6d32a103602be23e3f0c38d0cf9fc506f2220e2d",
+    "reviewedAt": "2026-10-28",
+    "notes": "Selected narrative statements from saved page bytes; no new provider or model call."
+  },
+  "fields": {
+    "summary": {
+      "value": "La Traviata Pizzeria is a simple New York pizza counter at 101 West 68th Street, steps from Lincoln Center, built for speed rather than lingering. Restaurantji diners describe A simple NY-style pizza place where The service was quick and the pizza good, and one calls it an Excellent place to grab a quick slice before a movie. It suits a fast, cheap bite between plans.",
+      "claims": [
+        {
+          "text": "A simple NY-style pizza place",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/"
+        },
+        {
+          "text": "The service was quick and the pizza good",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/"
+        },
+        {
+          "text": "Excellent place to grab a quick slice before a movie",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/"
+        }
+      ]
+    },
+    "description": {
+      "value": "La Traviata Pizzeria is a neighborhood pizza shop at 101 West 68th Street on the Upper West Side. Its site lists the menu, hours, address, and photos for La Traviata Pizza in New York, NY. It is a quick slice stop a block from Lincoln Center. Restaurantji shows 4.2 168 ratings. Representative Restaurantji praise (diner reviews): “The service was quick and the pizza good”. Representative watch-outs: “Only 4 small tables inside and a few standing tables outside”. A Restaurantji reviewer paid about $5.50 for a slice and soda, and another mentions Lovely owners and good pizza.",
+      "claims": [
+        {
+          "text": "101 West 68th Street",
+          "sourceUrl": "https://www.latraviatapizzany.com/"
+        },
+        {
+          "text": "the menu, hours, address, and photos for La Traviata Pizza in New York, NY",
+          "sourceUrl": "https://www.latraviatapizzany.com/"
+        },
+        {
+          "text": "The service was quick and the pizza good",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/"
+        },
+        {
+          "text": "Only 4 small tables inside and a few standing tables outside",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/"
+        },
+        {
+          "text": "4.2 168 ratings",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/"
+        },
+        {
+          "text": "about $5.50",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/"
+        },
+        {
+          "text": "Lovely owners and good pizza.",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "La Traviata Pizzeria: a tiny slice shop a block from Lincoln Center; grab a quick NY slice before a show.",
+      "claims": [
+        {
+          "text": "101 West 68th Street",
+          "sourceUrl": "https://www.latraviatapizzany.com/"
+        }
+      ]
+    },
+    "happyHour": {
+      "value": false,
+      "claims": [],
+      "note": "Confirmed none: official site (www.latraviatapizzany.com) and saved allowlisted pages state no happy hour.",
+      "status": "none",
+      "checkedSources": [
+        "https://www.latraviatapizzany.com/",
+        "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/"
+      ]
+    }
+  },
+  "rating": {
+    "primary": 4.2,
+    "primarySource": "restaurantji",
+    "restaurantji": 4.2
+  },
+  "reviewCount": {
+    "restaurantji": 168
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/",
+    "site": "Restaurantji",
+    "via": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews",
+    "praise": [
+      "The service was quick and the pizza good",
+      "Lovely owners and good pizza.",
+      "about $5.50"
+    ],
+    "watchOuts": [
+      "Only 4 small tables inside and a few standing tables outside"
+    ],
+    "complaints": [
+      "Only 4 small tables inside and a few standing tables outside"
+    ],
+    "themes": [
+      "Quick slice",
+      "Owners",
+      "Value",
+      "Limited seating"
+    ]
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:05:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "La Traviata Pizzeria: a tiny slice shop a block from Lincoln Center; grab a quick NY slice before a show.",
+  "itineraryNoteCandidate": "La Traviata Pizzeria: a tiny slice shop a block from Lincoln Center; grab a quick NY slice before a show.",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "La Traviata is valued as a fast stop near Lincoln Center, with diners describing quick service and good pizza when time is short.",
+  "review1Source": "Restaurantji",
+  "review1Rating": "4.2",
+  "review1Theme": "Quick slice",
+  "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/",
+  "review1Stars": 4,
+  "review2": "The owners are a recurring positive, and regulars mention the friendly, personal welcome as part of why they come back.",
+  "review2Source": "Restaurantji",
+  "review2Rating": "4.2",
+  "review2Theme": "Owners",
+  "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/",
+  "review2Stars": 5,
+  "review3": "Prices stay low for the neighborhood, with a slice and a drink costing about five dollars and fifty cents, making it one of the cheapest quick meals in the area.",
+  "review3Source": "Restaurantji",
+  "review3Rating": "4.2",
+  "review3Theme": "Value",
+  "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/",
+  "review3Stars": 4,
+  "review4": "Seating is very limited inside, so plan to take the slice to go or stand at the small tables outside.",
+  "review4Source": "Restaurantji",
+  "review4Rating": "4.2",
+  "review4Theme": "Limited seating",
+  "review4SourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/",
+  "review4Stars": 4,
+  "review1Claims": [
+    "The service was quick and the pizza good"
+  ],
+  "review2Claims": [
+    "Lovely owners and good pizza."
+  ],
+  "review3Claims": [
+    "about $5.50"
+  ],
+  "review4Claims": [
+    "Only 4 small tables inside and a few standing tables outside"
+  ],
+  "reviewsLabel": "Representative reviews written from 8 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenOrder": [
+    "happyHour"
+  ],
+  "writtenAt": {
+    "happyHour": "2026-10-30T13:06:00.262645+00:00"
+  },
+  "happyHourHint": null,
+  "happyHourSourceUrl": null,
+  "happyHour": false
+}

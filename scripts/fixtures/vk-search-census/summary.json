@@ -1,0 +1,116 @@
+{
+  "generated_at_pt": "2026-10-27 ~9:45 PM America/Los_Angeles",
+  "craig_turn": "t2682u",
+  "live_fill_unchanged": true,
+  "total_things": 76,
+  "counts_by_type": {
+    "store": 15,
+    "attraction": 15,
+    "restaurant": 7,
+    "hotel": 22,
+    "flight": 16,
+    "car": 1
+  },
+  "WTL": {
+    "wins": 71,
+    "ties": 5,
+    "losses": 0,
+    "mixed": 0,
+    "winner_breakdown": {
+      "grok-bot": 71,
+      "tie-brave-deeper-pages": 5
+    }
+  },
+  "by_type": {
+    "attraction": {
+      "n": 15,
+      "W": 13,
+      "T": 2,
+      "L": 0,
+      "mixed": 0,
+      "bot_avg": 5.53,
+      "base_avg": 2.87,
+      "searches": 15,
+      "fetches": 11
+    },
+    "car": {
+      "n": 1,
+      "W": 0,
+      "T": 1,
+      "L": 0,
+      "mixed": 0,
+      "bot_avg": 4.0,
+      "base_avg": 4.0,
+      "searches": 1,
+      "fetches": 0
+    },
+    "flight": {
+      "n": 16,
+      "W": 16,
+      "T": 0,
+      "L": 0,
+      "mixed": 0,
+      "bot_avg": 4.0,
+      "base_avg": 2.06,
+      "searches": 16,
+      "fetches": 0
+    },
+    "hotel": {
+      "n": 22,
+      "W": 22,
+      "T": 0,
+      "L": 0,
+      "mixed": 0,
+      "bot_avg": 6.05,
+      "base_avg": 2.59,
+      "searches": 22,
+      "fetches": 4
+    },
+    "restaurant": {
+      "n": 7,
+      "W": 6,
+      "T": 1,
+      "L": 0,
+      "mixed": 0,
+      "bot_avg": 6.86,
+      "base_avg": 1.86,
+      "searches": 8,
+      "fetches": 10
+    },
+    "store": {
+      "n": 15,
+      "W": 14,
+      "T": 1,
+      "L": 0,
+      "mixed": 0,
+      "bot_avg": 6.0,
+      "base_avg": 2.47,
+      "searches": 15,
+      "fetches": 6
+    }
+  },
+  "tool_usage": {
+    "webSearch_sum_per_thing_callCounts": 77,
+    "webFetch_sum_per_thing_callCounts": 31,
+    "actual_WebSearch_calls_this_census_turn": 52,
+    "actual_WebFetch_calls_this_census_turn": 14,
+    "reused_full10_WebSearch": 11,
+    "reused_full10_WebFetch": 15,
+    "total_attributed_WebSearch": 63,
+    "total_attributed_WebFetch": 29,
+    "brave_rebill": 0,
+    "tavily_rebill": 0,
+    "xai_rebill": 0,
+    "approx_wall_clock_min": 20,
+    "note": "Full10 (10 Things) reused from earlier same-evening real calls. Remaining 66 got new WebSearch this turn; 14 official URLs WebFetched. Flights share airline/route research but each Thing attributed \u22651 search."
+  },
+  "recommendation": "bot-primary-brave-fallback",
+  "recommendation_detail": "Promote Grok Bot as primary discovery+voice for NYC Things. Keep Brave/Tavily as fallback when bot returns thin fields or claim-support fails, and optionally for SERP breadth on already-rich ledgers. Do NOT live-wire until Craig says go. Manage availability via plan caps.",
+  "what_we_might_be_missing": [
+    "Bot does not accumulate 70-page Brave ledgers \u2014 product fields win, raw page count does not.",
+    "Flight/car fares are not live-bookable quotes; schedule/fare hints only.",
+    "A few inventory mismatches (Blue Note\u2192Dizzy URL; Manhattan Club\u2192Library Hotel website) \u2014 bot corrected with flags.",
+    "Plan caps / latency under overnight fill concurrency not load-tested.",
+    "Nordstrom official fetch bot-blocked once \u2014 search SERP still supplied hours."
+  ]
+}

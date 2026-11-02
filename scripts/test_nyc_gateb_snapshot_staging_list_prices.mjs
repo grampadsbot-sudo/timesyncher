@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
+import { GATE_B_NYC_REQUIRED_PLACE_COUNT } from './fixtures/gate-b-nyc-place-count.mjs';
 import {
   buildPr336GateBRegenerateRows,
   buildPr336VkSearchPlacesByRowId,
@@ -14,6 +15,8 @@ const snapshot = JSON.parse(readFileSync(snapshotPath, 'utf8'));
 const rows = buildPr336GateBRegenerateRows();
 const built = materializePr336GateBSnapshotPlaces(buildPr336VkSearchPlacesByRowId(rows));
 
+assert.equal(Object.keys(snapshot).length, GATE_B_NYC_REQUIRED_PLACE_COUNT);
+assert.equal(Object.keys(built).length, GATE_B_NYC_REQUIRED_PLACE_COUNT);
 assert.equal(Object.keys(snapshot).length, Object.keys(built).length, 'checked-in snapshot must match regenerate row count');
 
 const pricedCategories = new Set(['flight', 'hotel', 'car']);

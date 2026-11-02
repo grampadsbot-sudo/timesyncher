@@ -1,0 +1,316 @@
+{
+  "thingId": 668,
+  "thingName": "Village Vanguard",
+  "type": "attraction",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://villagevanguard.com/faq",
+      "title": "FAQ - Village Vanguard",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": " | FAQ - Village Vanguard --> Calendar Shop FAQ Cart Skip to content Calendar Shop FAQ Cart Frequently Asked Questions: What time do the shows start? 8:00 p.m. and 10:00 p.m. What time do the doors open? Seating for the first show starts at 7:00 p.m. Seating for the second show starts at 9:30 p.m. Does the admission price  … .m. Does the admission price include drinks? No. The door admission is separate, and is paid in advance. In addition to the door admission there is a one drink minimum per person. This includes soft drinks, juices, and bottled water. Does the Vanguard serve food? No — we don’t serve any food at all — not even a peanut. Food fr",
+      "snippet": " | FAQ - Village Vanguard --> Calendar Shop FAQ Cart Skip to content Calendar Shop FAQ Cart Frequently Asked Questions: What time do the shows start? 8:00 p.m. and 10:00 p.m. What time do the doors open? Seating for the first show starts at 7:00 p.m. Seating for the second show starts at 9:30 p.m. D",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Village_Vanguard",
+      "title": "Village Vanguard - Wikipedia",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": " and beat poetry , but it became primarily a jazz music venue in 1957. It has hosted many highly renowned jazz musicians since then, and today is the oldest operating jazz club in New York City. History [ edit ] Early years [ edit ] Max Gordon opened the Village Vanguard in 1934 on Charles Street and Greenwich Avenue in Manhattan , New York  …  and beat poetry , but it became primarily a jazz music venue in 1957. It has hosted many highly renowned jazz musicians since then, and today is the oldest operating jazz club in New York City. History [ edit ] Early years [ edit ] Max Gordon opened the Village Vanguard in 1934 on Charles Street and Greenwich Avenue in Manhattan , New York ",
+      "snippet": " and beat poetry , but it became primarily a jazz music venue in 1957. It has hosted many highly renowned jazz musicians since then, and today is the oldest operating jazz club in New York City. History [ edit ] Early years [ edit ] Max Gordon opened the Village Vanguard in 1934 on Charles Street an",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com.sg/ShowUserReviews-g60763-d548583-r1061521622-The_Village_Vanguard-New_York_City_New_York.html",
+      "title": "Great jazz experience - The Village Vanguard, New York City Traveller Reviews - Tripadvisor",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Great jazz experience - The Village Vanguard, New York City Traveller Reviews - Tripadvisor | | This place definitely lives up to the reputation … the focus is truly on the music … I sat behind a pole … be careful at the steep stairs taking you to the basement room … Reviews (467) … Great jazz experience - The Village Vanguard, New York City Traveller Reviews - Tripadvisor | | This place definitely lives up to the reputation … the focus is truly on the music … I sat behind a pole … be careful at the steep stairs taking you to the basement room … Reviews (467) … lage Vanguard, New York City Traveller Reviews - Tripadvisor | | This place definitely lives up to the reputation … the focus is truly on the music … I sat behind a pole … be careful at the steep stairs taking you to the basement room … Reviews (467) … k City Traveller Reviews - Tripadvisor | | This place definitely lives up to the reputation … the focus is truly on the music … I sat behind a pole … be careful at the steep stairs taking you to the basement room … Reviews (467) … lives up to the reputation … the focus is truly on the music … I sat behind a pole … be careful at the steep stairs taking you to the basement room … Reviews (467)",
+      "snippet": "Great jazz experience - The Village Vanguard, New York City Traveller Reviews - Tripadvisor | | This place definitely lives up to the reputation … the focus is truly on the music … I sat behind a pole … be careful at the steep stairs taking you to the basement room … Reviews (467)",
+      "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch"
+    },
+    {
+      "url": "https://exa.ai/library/place/5063cy89qms",
+      "title": "Village Vanguard reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:16:09-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r7/raw/st_85504581fa.html",
+      "text": "The oldest jazz club in NYC—basement venue, photos of legends covering walls, no photos allowed during shows . Acoustics are flawless, sound stays rich everywhere in the room . Tickets $45+, worth every penny. Crowd is older, focused, here to actually listen . Spiritual experience for jazz lovers . Reserve in advance, arrives early . The Village Vanguard may be the center of the jazz universe. You can feel and sense it as you descend from the sidewalk into this amazing space. The acoustics are awesome. Only the best play there. I saw Christian McBride there twice in December. A place for legends and those destined to be legends. The musicians and the music are marvelous. And so are the staff. Wonderful cocktails and whiskeys. So excited to come and experience this famous NYC jazz club. It is everything it advertises itself to be: classic music, classic atmosphere, iconic history, and a can’t miss jazz club if you are trying to find the best NYC has to offer. There are 4-5 others I would put up there with Village Vanguard, but then again, there are ZERO jazz clubs in the world that I know of that come close to NYC’s top 5. Kind of mind-blowing that there is such a concentration of the best jazz in the world. But that’s why I come. We had tickets to the 10 PM Monday show and were able to get inside around 9:30-9:45. You are required to buy one drink per ticket. Overall, the show was enjoyable but very crammed inside. For true lovers of jazz, this is a great place to come. If you are looking for a less formal/sociable atmosphere, this may not be the place to come. The musicians were phenomenal and we are glad we came but I likely wouldn’t go back."
+    }
+  ],
+  "rating": {
+    "primary": 4.1,
+    "primarySource": "yelp",
+    "yelp": 4.1
+  },
+  "reviewCount": {
+    "tripadvisor": 467
+  },
+  "priceHint": "Cover separate from drinks; one-drink minimum; cover often ~$35–50 (guide/search; confirm ticket page)",
+  "hoursHint": "Shows 8pm & 10pm; doors/seating 7pm first show, 9:30pm second (official FAQ)",
+  "happyHourHint": null,
+  "summaryClaims": [
+    "oldest operating jazz club in New York City",
+    "oldest operating jazz club in New York City",
+    "oldest operating jazz club in New York City",
+    "8:00 p.m. and 10:00 p.m.",
+    "one drink minimum per person",
+    "This place definitely lives up to the reputation",
+    "the focus is truly on the music",
+    "I sat behind a pole",
+    "be careful at the steep stairs taking you to the basement room",
+    "Reviews (467)"
+  ],
+  "itineraryNoteCandidate": "Village Vanguard: the oldest operating jazz club in New York City; book the 8 pm set and soak up the history.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 1
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 1 WebFetch.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 40,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "officialUrls": []
+  },
+  "botFieldScore": 6,
+  "baseFieldScore": 1,
+  "censusReuse": "full10",
+  "fields": {
+    "summary": {
+      "value": "Village Vanguard is the oldest operating jazz club in New York City, on Seventh Avenue South. The door admission is separate, and is paid in advance. In addition to the door admission there is a one drink minimum per person.",
+      "claims": [
+        {
+          "text": "oldest operating jazz club in New York City",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Village_Vanguard"
+        },
+        {
+          "text": "The door admission is separate, and is paid in advance.",
+          "sourceUrl": "https://villagevanguard.com/faq"
+        },
+        {
+          "text": "In addition to the door admission there is a one drink minimum per person.",
+          "sourceUrl": "https://villagevanguard.com/faq"
+        }
+      ]
+    },
+    "description": {
+      "value": "Village Vanguard is a jazz club at Seventh Avenue South in Greenwich Village and the oldest operating jazz club in New York City. Shows start at 8:00 p.m. and 10:00 p.m. There is a one drink minimum per person, and the club serves no food. Tripadvisor shows Reviews (467). Representative Tripadvisor praise (search snapshot): “This place definitely lives up to the reputation”; “the focus is truly on the music”. Representative watch-outs: “I sat behind a pole”; “be careful at the steep stairs taking you to the basement room”.",
+      "claims": [
+        {
+          "text": "oldest operating jazz club in New York City",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Village_Vanguard"
+        },
+        {
+          "text": "8:00 p.m. and 10:00 p.m.",
+          "sourceUrl": "https://villagevanguard.com/faq"
+        },
+        {
+          "text": "one drink minimum per person",
+          "sourceUrl": "https://villagevanguard.com/faq"
+        },
+        {
+          "text": "This place definitely lives up to the reputation",
+          "sourceUrl": "https://www.tripadvisor.com.sg/ShowUserReviews-g60763-d548583-r1061521622-The_Village_Vanguard-New_York_City_New_York.html"
+        },
+        {
+          "text": "the focus is truly on the music",
+          "sourceUrl": "https://www.tripadvisor.com.sg/ShowUserReviews-g60763-d548583-r1061521622-The_Village_Vanguard-New_York_City_New_York.html"
+        },
+        {
+          "text": "I sat behind a pole",
+          "sourceUrl": "https://www.tripadvisor.com.sg/ShowUserReviews-g60763-d548583-r1061521622-The_Village_Vanguard-New_York_City_New_York.html"
+        },
+        {
+          "text": "be careful at the steep stairs taking you to the basement room",
+          "sourceUrl": "https://www.tripadvisor.com.sg/ShowUserReviews-g60763-d548583-r1061521622-The_Village_Vanguard-New_York_City_New_York.html"
+        },
+        {
+          "text": "Reviews (467)",
+          "sourceUrl": "https://www.tripadvisor.com.sg/ShowUserReviews-g60763-d548583-r1061521622-The_Village_Vanguard-New_York_City_New_York.html"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Village Vanguard: the oldest operating jazz club in New York City; book the 8 pm set and soak up the history.",
+      "claims": [
+        {
+          "text": "oldest operating jazz club in New York City",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Village_Vanguard"
+        }
+      ]
+    },
+    "reviewsUnstarred": [
+      {
+        "theme": "Overall experience",
+        "value": "Tripadvisor reviewer on Village Vanguard: This place definitely lives up to the reputation. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "This place definitely lives up to the reputation",
+            "sourceUrl": "https://www.tripadvisor.com.sg/ShowUserReviews-g60763-d548583-r1061521622-The_Village_Vanguard-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com.sg/ShowUserReviews-g60763-d548583-r1061521622-The_Village_Vanguard-New_York_City_New_York.html",
+        "rating": "4.1/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 28
+      },
+      {
+        "theme": "Rooms",
+        "value": "Tripadvisor reviewer on Village Vanguard: be careful at the steep stairs taking you to the basement room. Worth weighing alongside the overall 4.1/5 score before locking in the plan.",
+        "claims": [
+          {
+            "text": "be careful at the steep stairs taking you to the basement room",
+            "sourceUrl": "https://www.tripadvisor.com.sg/ShowUserReviews-g60763-d548583-r1061521622-The_Village_Vanguard-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com.sg/ShowUserReviews-g60763-d548583-r1061521622-The_Village_Vanguard-New_York_City_New_York.html",
+        "rating": "4.1/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 29
+      },
+      {
+        "theme": "Overall experience",
+        "value": "Tripadvisor reviewer on Village Vanguard: the focus is truly on the music. Keep that in mind when choosing timing, a room, or an arrival plan.",
+        "claims": [
+          {
+            "text": "the focus is truly on the music",
+            "sourceUrl": "https://www.tripadvisor.com.sg/ShowUserReviews-g60763-d548583-r1061521622-The_Village_Vanguard-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com.sg/ShowUserReviews-g60763-d548583-r1061521622-The_Village_Vanguard-New_York_City_New_York.html",
+        "rating": "4.1/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 25
+      },
+      {
+        "theme": "Overall experience",
+        "value": "Tripadvisor reviewer on Village Vanguard: I sat behind a pole. A practical point to factor into the decision before the trip. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "I sat behind a pole",
+            "sourceUrl": "https://www.tripadvisor.com.sg/ShowUserReviews-g60763-d548583-r1061521622-The_Village_Vanguard-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com.sg/ShowUserReviews-g60763-d548583-r1061521622-The_Village_Vanguard-New_York_City_New_York.html",
+        "rating": "4.1/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 36
+      }
+    ]
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.tripadvisor.com.sg/ShowUserReviews-g60763-d548583-r1061521622-The_Village_Vanguard-New_York_City_New_York.html",
+    "site": "Tripadvisor",
+    "via": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch",
+    "praise": [
+      "This place definitely lives up to the reputation",
+      "be careful at the steep stairs taking you to the basement room",
+      "the focus is truly on the music",
+      "I sat behind a pole"
+    ],
+    "watchOuts": [],
+    "themes": [
+      "Overall experience",
+      "Rooms",
+      "Overall experience",
+      "Overall experience"
+    ],
+    "complaints": []
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Village Vanguard: the oldest operating jazz club in New York City; book the 8 pm set and soak up the history.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "The Village Vanguard is celebrated as New York's oldest jazz club, with excellent acoustics and walls lined with legends' photos.",
+  "review1Source": "Exa place listing",
+  "review1Rating": "5/5",
+  "review1Theme": "Music",
+  "review1SourceUrl": "https://exa.ai/library/place/5063cy89qms",
+  "review2": "Often described as the center of the jazz universe, the historic basement room has superb acoustics, top musicians on stage nightly, attentive staff and good cocktails and whiskeys at the bar.",
+  "review2Source": "Exa place listing",
+  "review2Rating": "5/5",
+  "review2Theme": "Music",
+  "review2SourceUrl": "https://exa.ai/library/place/5063cy89qms",
+  "review3": "The club lives up to its reputation with classic music, a classic atmosphere and iconic history, and it ranks among the essential stops for anyone seeking the best jazz in the city.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "5/5",
+  "review3Theme": "Music",
+  "review3SourceUrl": "https://exa.ai/library/place/5063cy89qms",
+  "review4": "Expect a crammed room and a one-drink minimum per ticket, with doors opening shortly before showtime, but the musicians are phenomenal and serious jazz lovers consider the visit essential.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "4/5",
+  "review4Theme": "Music",
+  "review4SourceUrl": "https://exa.ai/library/place/5063cy89qms",
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029",
+  "review1Claims": [
+    "The oldest jazz club in NYC—basement venue, photos of legends covering walls, no photos allowed during shows .",
+    "Acoustics are flawless, sound stays rich everywhere in the room .",
+    "Tickets $45+, worth every penny.",
+    "Crowd is older, focused, here to actually listen .",
+    "Spiritual experience for jazz lovers .",
+    "Reserve in advance, arrives early ."
+  ],
+  "review2Claims": [
+    "The Village Vanguard may be the center of the jazz universe.",
+    "You can feel and sense it as you descend from the sidewalk into this amazing space.",
+    "The acoustics are awesome.",
+    "Only the best play there.",
+    "I saw Christian McBride there twice in December.",
+    "A place for legends and those destined to be legends.",
+    "The musicians and the music are marvelous.",
+    "And so are the staff.",
+    "Wonderful cocktails and whiskeys."
+  ],
+  "review3Claims": [
+    "So excited to come and experience this famous NYC jazz club.",
+    "It is everything it advertises itself to be",
+    "classic music, classic atmosphere, iconic history, and a can’t miss jazz club if you are trying to find the best NYC has to offer.",
+    "There are 4-5 others I would put up there with Village Vanguard, but then again, there are ZERO jazz clubs in the world that I know of that come close to NYC’s top 5.",
+    "Kind of mind-blowing that there is such a concentration of the best jazz in the world.",
+    "But that’s why I come."
+  ],
+  "review4Claims": [
+    "We had tickets to the 10 PM Monday show and were able to get inside around 9:30-9:45.",
+    "You are required to buy one drink per ticket.",
+    "Overall, the show was enjoyable but very crammed inside.",
+    "For true lovers of jazz, this is a great place to come.",
+    "If you are looking for a less formal/sociable atmosphere, this may not be the place to come.",
+    "The musicians were phenomenal and we are glad we came but I likely wouldn’t go back."
+  ],
+  "reviewStarsDropped": "mean 4.75 vs venue 4.10 >0.5",
+  "reviewsLabel": "Representative reviews written from 35 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:22:18.265131+00:00"
+  }
+}

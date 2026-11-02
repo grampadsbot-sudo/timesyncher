@@ -32,7 +32,7 @@ function nycThings() {
     {
       id: 'hotel-midtown-sample',
       category: 'hotel',
-      title: 'Midtown sample hotel',
+      title: 'The Manhattan Club',
       description: 'Strong transit access and easy walk to dinner reservations.',
       source: 'brave',
       location: { lat: 40.758, lng: -73.9855, address: 'W 47th St, New York, NY' },
@@ -139,7 +139,7 @@ function nycThings() {
 function wirePr225Timeline(shared) {
   const bySlug = (needle) => shared.places.find((place) => String(place.name || '').includes(needle));
   const flight = bySlug('JetBlue');
-  const hotel = bySlug('Midtown sample');
+  const hotel = bySlug('The Manhattan Club');
   const car = bySlug('Priceline opaque');
   if (!flight || !hotel || !car) {
     throw new Error('NYC PR225 fixture missing flight, hotel, or car place row');

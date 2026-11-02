@@ -25,8 +25,13 @@ assert.match(
 );
 assert.match(
   listMobile,
-  /\[data-shared-live-tab='events'\]\s+\.tsv-row-flight-main\s+\.tsv-row-name[\s\S]*white-space:\s*normal/,
+  /\[data-shared-live-tab='events'\]\s+\.tsv-row-main\s+\.tsv-row-name[\s\S]*white-space:\s*nowrap/,
 );
+assert.match(
+  listMobile,
+  /\[data-shared-live-tab='events'\]\s+\.tsv-row-main\s+\.tsv-row-name[\s\S]*text-overflow:\s*ellipsis/,
+);
+assert.doesNotMatch(listMobile, /\[data-shared-live-tab='events'\]\s+\.tsv-row-desc/);
 
 assert.match(css, /\.tsv-row-desc[\s\S]*white-space:\s*nowrap/);
 assert.match(css, /\.tsv-row-name[\s\S]*white-space:\s*nowrap/);

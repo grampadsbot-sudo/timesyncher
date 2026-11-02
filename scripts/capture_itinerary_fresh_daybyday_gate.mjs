@@ -256,7 +256,7 @@ async function captureListTab(page, tag, tabLabel, waitRe = /Zabar|Strand Book/i
     await page.waitForFunction(
       (label) => {
         const body = document.body?.innerText || '';
-        if (/hotels/i.test(label)) return /Midtown sample hotel/i.test(body);
+        if (/hotels/i.test(label)) return /The Manhattan Club/i.test(body);
         if (/cars/i.test(label)) return /Priceline opaque/i.test(body);
         return /Zabar|Strand Book/i.test(body);
       },
@@ -311,7 +311,7 @@ async function shotPage(js, html, css, tripPayload, slug, width, { candidate = f
     const listTab = await captureListTab(page, String(width), 'Stores');
     const listTabs = {};
     for (const { label, stem, waitRe } of [
-      { label: 'Hotels', stem: 'hotels', waitRe: /Midtown sample hotel/i },
+      { label: 'Hotels', stem: 'hotels', waitRe: /The Manhattan Club/i },
       { label: 'Cars', stem: 'cars', waitRe: /Priceline opaque/i },
     ]) {
       listTabs[stem] = await captureListTab(page, String(width), label, waitRe, { requireListRows: true });
