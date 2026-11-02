@@ -63,7 +63,7 @@ assert.doesNotMatch(bundle, /tsRowInlineDesc/);
 assert.doesNotMatch(bundle, /matchMedia\("\(max-width:640px\)"\)/);
 assert.match(
   bundle,
-  /"data-ts-list-row-name":"1",style:\{minWidth:0,maxWidth:"100%",width:"100%",display:"inline-flex",alignItems:"center",lineHeight:1,gap:8,overflow:"hidden",flex:"1 1 0"\},children:\[n\.jsx\("span",\{style:\{minWidth:0,flex:"1 1 0",maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"\},children:Zn\}\),Pn\?n\.jsx\("span",\{"data-list-summary":"1","data-summary-src":"thing"/,
+  /style:\{display:"inline-flex",alignItems:"center",gap:8,minWidth:0,maxWidth:"100%",overflow:"hidden",flex:"1 1 0",width:"100%"\},children:\[n\.jsxs\("span",\{"data-ts-logo-name-pair":"1",style:\{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:9,minWidth:0,maxWidth:"100%"\},children:\[n\.jsx\(dc,\{item:G\}\),n\.jsx\("span",\{"data-ts-list-row-name":"1",style:\{minWidth:0,maxWidth:"100%",width:"100%",display:"inline-flex",alignItems:"center",lineHeight:1,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"\},children:Zn\}\)\]\}\),Pn\?n\.jsx\("span",\{"data-list-summary":"1","data-summary-src":"thing"/,
 );
 const oeListRow = bundle.slice(bundle.indexOf('Oe=(G,Re,zt=!1)=>'), bundle.indexOf('},tt=G=>', bundle.indexOf('Oe=(G,Re,zt=!1)=>')));
 assert.doesNotMatch(oeListRow, /\):n\.jsxs\("div",\{style:\{background:"var\(--bg-card, white\)"/);

@@ -1,22 +1,23 @@
-# vkfill-550 receipt (#547 flights-390 logo/name row fix)
+# vkfill-550 receipt (#547 thing-header inline desc + #471 name frame)
 
 ## Outcome
 
-**source-ready** on git HEAD **18548e1f68d882a845a2762b50d50586078bb084** (HOST LIVE ROW CHECK kickback: `flights-390.png` + `flights-390-top.png` Southwest logo not centred with name / missing visible name line).
+**source-ready** on git HEAD **3e38db7ce36d23bc3ed4be80b36c8cbb27bb9872** (dr handoff: CI `test_ui_471_apple_row_name_frame.mjs` vs nested description inside `data-ts-list-row-name`).
 
-## Fix (flights only)
+## Fix
 
-Gate B capture picks the first leaf `span`/`strong` under `[data-ts-list-row-name]` for `first_text`. Flight rows used `Qo()` as a 4-column **grid** inside the thing-header name flex; at 390px the airline column could collapse to zero width (`visible: false` → fail closed).
+**`src/vacation/shared-trip-oe-list-row-patch.mjs`**: `patchInlineListRowDescriptionOnThingHeader` — keep `#471` `data-ts-logo-name-pair` + inner `data-ts-list-row-name` (Zn only, nowrap/ellipsis) byte-identical; wrap logo-name-pair and `data-list-summary` in an outer inline-flex sibling row so description stays on the name line (#547).
 
-**`src/vacation/shared-trip-oe-list-row-patch.mjs`**: `patchFlightQoAirlineNameFrame` — `Qo()` now uses **inline-flex** (like cars/hotels), wraps the airline in **`<strong>`** with `lineHeight:1` / `flexShrink:0`, keeps price + times on the same row.
+**`scripts/test_shared_tab_list_summary.mjs`**: assert the wrapper contract (same #547 rule; description no longer nested inside `data-ts-list-row-name`).
 
-**`public/assets/index-BKun7ofk.js`**: rebaked (`sha256=0d88712493ccdb1e4f7bf8c693cac5e7ac95ff911183f2005414895941ff40f3`, 6590643 bytes).
+**`public/assets/index-BKun7ofk.js`**: rebaked (`sha256=c1f8248e42ce90e29d76bd9c12bb4521b4fea713b059f930caf91c0f0b839022`, 6590685 bytes).
 
 ## Uncommitted (host publish)
 
 | Path | Change |
 | --- | --- |
-| `src/vacation/shared-trip-oe-list-row-patch.mjs` | flight Qo inline-flex + airline strong for Gate B name line |
+| `src/vacation/shared-trip-oe-list-row-patch.mjs` | thing-header inline desc as sibling after logo-name-pair |
+| `scripts/test_shared_tab_list_summary.mjs` | contract regex for wrapper layout |
 | `public/assets/index-BKun7ofk.js` | rebaked |
 | `J/RECEIPT.md` | this receipt |
 
@@ -25,18 +26,19 @@ Gate B capture picks the first leaf `span`/`strong` under `[data-ts-list-row-nam
 | Command | Exit | Ref |
 | --- | --- | --- |
 | `node scripts/rebake_served_trek_bundle.mjs` | 0 | sha256 above |
-| `node scripts/test_shared_tab_list_summary.mjs` | 0 | HEAD **18548e1f** |
+| `node scripts/test_ui_471_apple_row_name_frame.mjs` | 0 | HEAD **3e38db7c** |
+| `node scripts/test_shared_tab_list_summary.mjs` | 0 | |
 | `node scripts/test_served_trek_bundle.mjs` | 0 | |
 | `node scripts/test_gate_b_live_tab_logo_rows.mjs` | 0 | |
 | `node scripts/test_gate_b_row_name_frame.mjs` | 0 | |
 | `node scripts/check-no-comments.mjs` | 0 | |
 | `node scripts/test_offline_manifest.mjs` | 0 | |
 | `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 | 0 fail |
-| `cd apps/vacation-client && npm test` | 0 | HEAD **18548e1f** |
-| `node --check public/assets/index-BKun7ofk.js` | 0 | |
+| `cd apps/vacation-client && npm test` | 0 | HEAD **3e38db7c** |
+| `node scripts/run-offline-tests.mjs` | 1 | `test_live_transcript_dialog_pdf.mjs:651` env: `gbrain-cli-get_page` vs `bundled-get_page` (pre-existing lane env; not #547) |
 
-Authority: host re-run Gate B structure on pushed build after publish (not Cursor self-proof).
+Authority: CI on pushed head + host Gate B structure (not Cursor self-proof).
 
 ## Left alone
 
-Baselines, Gate B thresholds, other tabs, tests/asserts, host git mutations.
+Base merge (worktree still at **3e38db7c**, clean merge not in progress). Baselines, Gate B config, workflows, dependencies, evidence PNGs (restored after accidental vacation-client test writes).

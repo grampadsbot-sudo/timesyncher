@@ -28,10 +28,14 @@ const OE_LIST_ROW_SR_PATCH = 'sr=n.jsxs("span",{style:{display:"grid",gridTempla
 const OE_LIST_ROW_TITLE_BTN_STYLE_NEEDLE = 'fontWeight:800,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",textDecoration:"underline"';
 const OE_LIST_ROW_TITLE_BTN_WRAP_NEEDLE = 'fontWeight:800,width:"100%",minWidth:0,maxWidth:"100%",whiteSpace:"normal",overflowWrap:"anywhere",textDecoration:"underline"';
 const OE_LIST_ROW_TITLE_BTN_STYLE_PATCH = 'fontWeight:800,width:"100%",minWidth:0,maxWidth:"100%",overflow:"hidden",display:"block",textDecoration:"underline"';
-const OE_THING_HEADER_NAME_ONLY_NEEDLE =
-  'n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,maxWidth:"100%",width:"100%",display:"inline-flex",alignItems:"center",lineHeight:1,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"},children:Zn})';
-const OE_THING_HEADER_NAME_INLINE_PATCH =
-  'n.jsxs("span",{"data-ts-list-row-name":"1",style:{minWidth:0,maxWidth:"100%",width:"100%",display:"inline-flex",alignItems:"center",lineHeight:1,gap:8,overflow:"hidden",flex:"1 1 0"},children:[n.jsx("span",{style:{minWidth:0,flex:"1 1 0",maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn}),Pn?n.jsx("span",{"data-list-summary":"1","data-summary-src":"thing",style:{flex:"1 1 0",minWidth:0,maxWidth:"100%",flexShrink:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontSize:11,fontWeight:700,color:"#475569",lineHeight:1.4},children:Pn}):null]})';
+const OE_THING_HEADER_LOGO_PAIR_NEEDLE =
+  'n.jsxs("span",{"data-ts-logo-name-pair":"1",style:{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:9,minWidth:0,maxWidth:"100%"},children:[n.jsx(dc,{item:G}),n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,maxWidth:"100%",width:"100%",display:"inline-flex",alignItems:"center",lineHeight:1,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"},children:Zn})]})';
+const OE_THING_HEADER_LOGO_PAIR_NESTED_DESC_NEEDLE =
+  'n.jsxs("span",{"data-ts-logo-name-pair":"1",style:{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:9,minWidth:0,maxWidth:"100%"},children:[n.jsx(dc,{item:G}),n.jsxs("span",{"data-ts-list-row-name":"1",style:{minWidth:0,maxWidth:"100%",width:"100%",display:"inline-flex",alignItems:"center",lineHeight:1,gap:8,overflow:"hidden",flex:"1 1 0"},children:[n.jsx("span",{style:{minWidth:0,flex:"1 1 0",maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn}),Pn?n.jsx("span",{"data-list-summary":"1","data-summary-src":"thing",style:{flex:"1 1 0",minWidth:0,maxWidth:"100%",flexShrink:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontSize:11,fontWeight:700,color:"#475569",lineHeight:1.4},children:Pn}):null]})]})';
+const OE_THING_HEADER_LOGO_PAIR_INLINE_DESC_PATCH =
+  'n.jsxs("span",{style:{display:"inline-flex",alignItems:"center",gap:8,minWidth:0,maxWidth:"100%",overflow:"hidden",flex:"1 1 0",width:"100%"},children:[n.jsxs("span",{"data-ts-logo-name-pair":"1",style:{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:9,minWidth:0,maxWidth:"100%"},children:[n.jsx(dc,{item:G}),n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,maxWidth:"100%",width:"100%",display:"inline-flex",alignItems:"center",lineHeight:1,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"},children:Zn})]}),Pn?n.jsx("span",{"data-list-summary":"1","data-summary-src":"thing",style:{flex:"1 1 0",minWidth:0,maxWidth:"100%",flexShrink:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontSize:11,fontWeight:700,color:"#475569",lineHeight:1.4},children:Pn}):null]})';
+const OE_THING_HEADER_INLINE_DESC_WRAP_MARK =
+  'style:{display:"inline-flex",alignItems:"center",gap:8,minWidth:0,maxWidth:"100%",overflow:"hidden",flex:"1 1 0",width:"100%"},children:[n.jsxs("span",{"data-ts-logo-name-pair":"1"';
 const FLIGHT_QO_INLINE_NEEDLE =
   'Qo=({item:G})=>{const parts=eu(G);return n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto auto auto",gap:8,width:"100%",alignItems:"center",minWidth:0},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:parts[0]||""}),n.jsx("span",{style:{whiteSpace:"nowrap",flexShrink:0,color:"#0f766e",fontWeight:900},children:parts[1]||""}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:parts[2]||""}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:parts[3]||""})]})}';
 const FLIGHT_QO_INLINE_PATCH =
@@ -127,9 +131,11 @@ function patchFlightQoAirlineNameFrame(js = '') {
 export function patchInlineListRowDescriptionOnThingHeader(source = '') {
   let js = String(source || '');
   if (!js.includes('data-ts-thing-header":"1"')) return js;
-  if (js.includes(OE_THING_HEADER_NAME_ONLY_NEEDLE)) {
-    js = js.replaceAll(OE_THING_HEADER_NAME_ONLY_NEEDLE, OE_THING_HEADER_NAME_INLINE_PATCH);
-  } else if (!js.includes(OE_INLINE_SUMMARY_FLEX_MARK)) {
+  if (js.includes(OE_THING_HEADER_LOGO_PAIR_NESTED_DESC_NEEDLE)) {
+    js = js.replaceAll(OE_THING_HEADER_LOGO_PAIR_NESTED_DESC_NEEDLE, OE_THING_HEADER_LOGO_PAIR_INLINE_DESC_PATCH);
+  } else if (js.includes(OE_THING_HEADER_LOGO_PAIR_NEEDLE)) {
+    js = js.replaceAll(OE_THING_HEADER_LOGO_PAIR_NEEDLE, OE_THING_HEADER_LOGO_PAIR_INLINE_DESC_PATCH);
+  } else if (!js.includes(OE_THING_HEADER_INLINE_DESC_WRAP_MARK)) {
     throw new Error('thing-header inline row summary patch did not apply');
   }
   if (js.includes(OE_STACKED_ROW_SUMMARY_NEEDLE)) {
