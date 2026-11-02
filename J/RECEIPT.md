@@ -25,4 +25,4 @@ BASE=vk node scripts/check-code-ratchet.mjs
 
 Baselines, Gate B checker config/thresholds, workflows, deploy. No layout change beyond existing `.tsv-row-desc` inline hotel copy.
 
-**Tip sha:** (set at commit)
+**Tip sha:** `9eac3741`
