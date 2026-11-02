@@ -1,12 +1,29 @@
 (function () {
   const removed = new Set();
+  const knownBrands = new Map();
 
   function rowBrandName(node) {
     const nameEl = node.querySelector('[data-ts-list-row-name="1"]');
-    let brand = nameEl ? nameEl.textContent : node.innerText;
-    brand = String(brand || '').replace(/\s+/g, ' ').trim();
-    brand = brand.replace(/^[\p{Extended_Pictographic}\uFE0F\s]+/u, '').split(' $')[0].trim();
-    return brand;
+    const strong = nameEl ? nameEl.querySelector('strong') : null;
+    let short = strong ? String(strong.textContent || '').trim() : String(nameEl?.textContent || '').trim();
+    short = short.replace(/^[\p{Extended_Pictographic}\uFE0F\s]+/u, '').split('$')[0].trim();
+
+    const blob = `${node.innerText || ''} ${node.querySelector('[data-ts-list-desc="1"]')?.textContent || ''}`.toLowerCase();
+    const atJfk = /\bjfk\b/.test(blob);
+    if (atJfk && short && !/\bjfk\b/i.test(short)) {
+      if (/priceline/i.test(short)) return 'Priceline opaque JFK';
+      return `${short} JFK`;
+    }
+
+    const line = String(node.innerText || '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .split(/\s+\$/)[0]
+      .replace(/^[\p{Extended_Pictographic}\uFE0F\s]+/u, '')
+      .trim();
+    const emDash = line.split(' \u2014 ')[0].split(' — ')[0].trim();
+    if (emDash && emDash.length <= 48) return emDash;
+    return short;
   }
 
   function carRows() {
@@ -19,6 +36,14 @@
       const category = (node.closest('[data-category]')?.getAttribute('data-category') || '').toLowerCase();
       return category === 'car' || /\$\d+/.test(label);
     });
+  }
+
+  function rememberBrands(rows) {
+    for (const row of rows) {
+      const brand = rowBrandName(row);
+      const key = brand.toLowerCase();
+      if (brand) knownBrands.set(key, brand);
+    }
   }
 
   function removeControlLabel(brand) {
@@ -36,10 +61,12 @@
   function mount() {
     if (!document.body) return;
     const rows = carRows();
-    if (!rows.length) {
+    if (rows.length) rememberBrands(rows);
+    if (!knownBrands.size) {
       document.querySelector('[data-ts-car-brands]')?.remove();
       return;
     }
+
     let bar = document.querySelector('[data-ts-car-brands]');
     if (!bar) {
       bar = document.createElement('div');
@@ -50,12 +77,9 @@
       bar.appendChild(title);
       document.body.prepend(bar);
     }
-    const seen = new Set();
-    for (const row of rows) {
-      const brand = rowBrandName(row);
-      const key = brand.toLowerCase();
-      if (!brand || seen.has(key) || removed.has(key)) continue;
-      seen.add(key);
+
+    for (const [key, brand] of knownBrands) {
+      if (removed.has(key)) continue;
       if (bar.querySelector(`[data-ts-remove-brand="${CSS.escape(brand)}"]`)) continue;
       const button = document.createElement('button');
       button.type = 'button';
