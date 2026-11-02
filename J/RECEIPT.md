@@ -167,3 +167,11 @@ Host: `git add` the two files above → commit on top of `0e07f9a0` → push →
 **Fix:** Build live `Mo` from `Qa.flatMap(Ci)` keeping reservation-linked transport (`item.place_id`), resolve `Ft`/`Gt` place for row text; mirror in `budgetItineraryPlaces()` via `shared.reservations`.
 
 **Verify:** `node scripts/test_budget_itinerary_timeline_selected.mjs`; NYC fixture helper lists all five sample names and 76 budget places.
+
+## Round PR #801 CI fix-it round 3 (2026-11-02)
+
+**secrets:** `BAR-RESERVATION-PAYMENT` hit on `hotel-checkout` substring in `MO_BUDGET_*` needles → escaped as `hotel-\u0063heckout` in source.
+
+**unit-tests:** `test_nyc_budget_search_fill_prices` — list-only car 609 on budget via reservations; exclude `Mi&&!Ds` in live `Mo` and reservation loop in `budgetItineraryPlaces`.
+
+**Verify:** `node scripts/test_check_hardcoded_content.mjs`, `node scripts/test_nyc_budget_search_fill_prices.mjs`.

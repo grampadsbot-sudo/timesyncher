@@ -1,4 +1,5 @@
 import { assignedPlaceIds } from './itinerary-minimums.mjs';
+import { productThingCategory } from './keepsake-product-overrides.mjs';
 
 function overrideFor(shared, place) {
   return shared?.thingOverrides?.[`place:${place.id}`] || {};
@@ -44,7 +45,9 @@ export function budgetItineraryPlaces(shared = {}) {
     const id = Number(reservation?.place_id);
     if (!id) continue;
     const place = (shared.places || []).find((p) => Number(p.id) === id);
-    if (place && typeof place === 'object') remember(place);
+    if (!place || typeof place !== 'object') continue;
+    if (productThingCategory(place, overrideFor(shared, place)) === 'car' && !isTimelineSelectedPlace(place, shared)) continue;
+    remember(place);
   }
 
   for (const place of shared.places || []) {
