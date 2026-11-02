@@ -7,7 +7,7 @@ import {
   placesForBudget,
 } from '../apps/vacation-client/src/lib/budgetModel.mjs';
 import { LIST_TAB_IDS, placesForCategoryTab } from '../apps/vacation-client/src/lib/listTabModel.mjs';
-import { assignedPlaceIds } from '../src/vacation/itinerary-minimums.mjs';
+import { budgetItineraryPlaces } from '../src/vacation/budget-itinerary-places.mjs';
 import { buildNycCraigKimDaybydayTripPositiveV1 } from './fixtures/nyc-craig-kim-daybyday-positive-v1.mjs';
 
 const unscheduledSavedTrip = {
@@ -40,16 +40,21 @@ assert.equal(
 );
 
 const positiveFixture = buildNycCraigKimDaybydayTripPositiveV1();
-const timelineIds = assignedPlaceIds(positiveFixture);
+const itineraryBudgetPlaces = budgetItineraryPlaces(positiveFixture);
 const budgetPlaces = placesForBudget(positiveFixture);
+const itineraryBudgetIds = new Set(itineraryBudgetPlaces.map((place) => Number(place.id)));
 assert.equal(
   budgetPlaces.length,
-  timelineIds.size,
-  'Gate B NYC fixture budget inventory must match distinct timeline assignments',
+  itineraryBudgetPlaces.length,
+  'Gate B NYC fixture budget inventory must match day-itinerary budget places',
+);
+assert.deepEqual(
+  new Set(budgetPlaces.map((place) => Number(place.id))),
+  itineraryBudgetIds,
 );
 for (const place of positiveFixture.places || []) {
   const id = Number(place.id);
-  if (timelineIds.has(id)) continue;
+  if (itineraryBudgetIds.has(id)) continue;
   assert.equal(
     budgetPlaces.some((row) => Number(row.id) === id),
     false,

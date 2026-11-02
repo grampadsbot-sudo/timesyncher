@@ -175,3 +175,9 @@ Host: `git add` the two files above → commit on top of `0e07f9a0` → push →
 **unit-tests:** `test_nyc_budget_search_fill_prices` — list-only car 609 on budget via reservations; exclude `Mi&&!Ds` in live `Mo` and reservation loop in `budgetItineraryPlaces`.
 
 **Verify:** `node scripts/test_check_hardcoded_content.mjs`, `node scripts/test_nyc_budget_search_fill_prices.mjs`.
+
+## Round PR #801 CI fix-it round 4 (2026-11-02)
+
+**unit-tests:** `test_budget_timeline_only_rows` expected budget size = assignment count (15); #793 budget includes day-itinerary reservations (87). Test now asserts `placesForBudget` matches `budgetItineraryPlaces`; `placeOnTimeline` treats non-car reservation rows as on-itinerary for completeness checks.
+
+**Verify:** `node scripts/test_budget_timeline_only_rows.mjs`.

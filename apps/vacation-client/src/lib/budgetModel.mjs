@@ -18,6 +18,7 @@ import {
   budgetItineraryPlaces,
   isTimelineSelectedPlace,
 } from '../../../../src/vacation/budget-itinerary-places.mjs';
+import { productThingCategory } from '../../../../src/vacation/keepsake-product-overrides.mjs';
 
 export { OTHER_THINGS_BUCKET, BUDGET_BUCKET_ORDER };
 
@@ -43,7 +44,12 @@ export function canonicalBudgetPlace(trip, placeOrId) {
 }
 
 function placeOnTimeline(place, trip) {
-  return isTimelineSelectedPlace(place, trip);
+  if (isTimelineSelectedPlace(place, trip)) return true;
+  const id = Number(place?.id);
+  if (!id) return false;
+  const override = overrideFor(trip, place);
+  if (productThingCategory(place, override) === 'car') return false;
+  return (trip.reservations || []).some((row) => Number(row.place_id) === id);
 }
 
 export function budgetBucketForPlace(place, trip) {
