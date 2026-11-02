@@ -1,5 +1,62 @@
 # vkfill-549 round (2026-11-02, cursor-ubuntu)
 
+## Round 2026-11-02 ~21:30 UTC (claude-ubuntu, tier-1 rethink after Gate B round 22)
+
+**Start sha:** `d0dbedfdf7a0a8d4b43185ed6c559acfe3a3872f` (PR #549 head; CI green, unit-tests check 125536652209; Gate B round 22 FAIL 1:05 PM PT, `gateb-verdicts.jsonl` line for sha `d0dbedf`).
+
+### Outcome
+
+**source-ready**, HOST PUBLICATION ONLY. Clears the three checks this PR caused (feature parity, logo lost, generic logos) in a local Gate B structure replay. The owned description gap stays open: the weak rows have thin fixture data, which the UI cannot fix.
+
+### Root cause (verified, not the brief's hunch)
+
+The bea63495 logo-replay hunch does not hold. Gate B serves `fixture-nyc/heads/<sha>.json` verbatim, and the replay gives the same car `logoUrl` on vk and on this head (`https://www.dollar.com/favicon.ico`, which falls back to DuckDuckGo in both). The cause is row height:
+
+- PR list rows render the full composed description with no clamp. The Priceline car row is 696 px tall (about 500 words), and pages at 390 px grew from 1450 to 5205 px (cars) and from 3546 to 5300 px (restaurants). Staging is capture `staging-6e88120-fixture-f43fbc6f7bcce741`.
+- Row logo `<img>` in `dc()` is `loading:"lazy"`. Logos lower than about y≈3800 had not been requested when the capture recorded regions, so `loaded:false`: Dollar JFK $402 (y=4437), restaurants Zinc Bar to Cafe Luxembourg, and events Open-air bus to Village Vanguard. Staging rows are short, so every logo there sits above the cutoff.
+- On cars-390-top the only row inside the viewport was the list-only Priceline row, so the check counted 0 rows.
+
+### The 4 checks
+
+| check | change |
+| --- | --- |
+| 1. feature parity: "Cars list empty: 3 fixture things, 0 rows" (cars-390-top) | `src/vacation/shared-trip-oe-list-row-patch.mjs`: non-hotel list rows now use vk's existing hotel clamp (3 lines when the text is ≥30 words). The full text stays in the DOM and the details view. Car rows went from 696 px to 142 px; cars-390-top shows 4 rows. |
+| 2. logo lost vs staging (Dollar JFK $402, events, restaurants) | Same clamp, plus `src/vacation/thing-logo-ink-center.mjs`: the `dc()` row logo is `loading:"eager"`. These are small favicons, and longer rows must not leave them unrequested below the fold. All 25 restaurant logos load. |
+| 3. generic logos (restaurants-390) | Same as 2. The shared placeholder came from unloaded lazy logos, not from logo data. |
+| 4. description substance and quality (#546) | No change. Clamped text is identical in `innerText`, so the recorded verdicts carry over unchanged: events 8/15, flights 5/10, restaurants 4/25, stores 9/15, cars 7/7, hotels 21/22. The weak rows are thin fixture data. For example, Piccola Cucina is "Uptown Sicilian trattoria … $42 entree floor" with no address or dish, Blue Note has no set time, and the Southwest rows have no return fare. Under `vk-thing-data-contract` that is a DATA fault. Text would have to be invented to fix it in UI code, and the brief bans that. |
+
+`public/assets/index-BKun7ofk.js` was rebaked with `node scripts/rebake_served_trek_bundle.mjs`.
+
+### Proof (local Gate B structure replay)
+
+Built `dist` (`vite build`), served it with `serve-preview.sh` on port 4549 (since stopped), captured with `~/tsv-dispatch/capture/capture.mjs` on fixture `heads/d0dbedf….json` (sha256 `f43fbc6f…`), then ran `restore_check.check_dir` (allow `546`, staging `staging-6e88120-fixture-f43fbc6f7bcce741`) with a read-only receipt judge. Capture and replay outputs are in job dir `vkfill-549-20261102132700-job` (`cap2/`, `rc.py`).
+
+- Control: the pipeline capture `gateb-cand/pr549-d0dbedf` replays to the same failing checks as round 22.
+- Patched capture `cap2`: feature parity, logo lost and generic logos are **gone**. 0 unjudged rows.
+- Still failing, unchanged: description substance (data), plus the base gaps budget complete, centred logos and row layout. Centred logos now also lists cars-1280 (Thrifty $395, 1.5 px). Car rows at 1280 are now 98 px with a fractional pitch, and the clamp-only capture shows the same line. It is the same base-gap check the brief says to leave alone.
+
+### Checks (local, start `d0dbedfd` + patch)
+
+| Command | Result |
+| --- | --- |
+| `node scripts/rebake_served_trek_bundle.mjs` | PASS (sha256 `16252c3ed4b657bcd236512cd559f5536b859df3856fc6417d56678a87b0a0af`) |
+| `node scripts/test_served_trek_bundle.mjs` | PASS |
+| `node scripts/test_list_row_description_substance.mjs` | PASS |
+| `node scripts/test_hotel_list_desc_capture_leaf.mjs` | PASS |
+| every script in `scripts/offline-tests.txt` (399) | 396 PASS, 3 env-only FAIL (below) |
+| `cd apps/vacation-client && npm test` | PASS (rewritten `evidence/*.png` restored to HEAD) |
+| `node scripts/check-no-comments.mjs` | PASS |
+| `node scripts/test_offline_manifest.mjs` | PASS (399 offline, 18 online) |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS (0 fail) |
+
+Env-only failures, none touching the bundle or logos:
+- `test_live_transcript_dialog_pdf.mjs:651` fails with `gbrain` on PATH. With it removed, line 861 fails because the `pdftotext` binary isn't installed in this lane.
+- `test_same_selection_capture.mjs` and `test_capture_fixture_replay_harness.mjs` fail on a host `~/tsv-dispatch/pr-src/capture-producer-roots/<sha>` "missing but already registered worktree".
+
+CI on the start head `d0dbedfd` was green (unit-tests 125536652209).
+
+**Host:** commit `src/vacation/shared-trip-oe-list-row-patch.mjs`, `src/vacation/thing-logo-ink-center.mjs`, `public/assets/index-BKun7ofk.js`, `J/RECEIPT.md` and `J/PR_DESCRIPTION.md`, then push once. Description-quality judgments on the new capture will carry over, because the row text is byte-identical.
+
 ## Round 2026-11-02 ~20:08 UTC (CI budget harness — trim live-app imports)
 
 **Start sha:** `d39f865a865f84f5ada6b296d0a244310562e4da` (PR #549 head per lane brief 12:08 PM PT)

@@ -2,30 +2,25 @@ Closes #546
 
 ## Summary
 
-Gate B / Craig Hotels tab requirement: **every hotel list row** shows sourced, non-generic description text inline with the name (≥30 words, substance cues), not only Motto.
+List rows show long sourced `places[]` / ccab copy (≥30 words), not short day-assignment blurbs. Hotels, cars and experiences use `tsListRowDescription` in the served TREK bundle.
 
-Host merged `origin/vk` at `6e8812002118a49a906b06d9d854108128a5efcc` into `27fc0e18204adaf6be71abacf69816de57b3e50b` (2026-11-02 BASE-MERGE round); kept PR hotel/ccab list substance plus vk xAI hotel enrichment and exported fixture-replay helpers.
+This round (start `d0dbedfd`, Gate B round 22) clears the three checks this PR caused against base vk `6e88120`: feature parity (Cars list empty on cars-390-top), logo lost vs staging, and generic logos.
 
-## Changes (this round on `origin/vk`)
+## Changes (this round)
 
-- **`trip-thing-enrichment.mjs`** + **`hotel-list-row-narrative.mjs`**: after vk detail-judge search fill, hotels get stored-ccab list narratives so trip-fill persists substantive `description`/`longDetails` (not raw planning-note templates).
-- **`stored-ccab-narrative-merge.mjs`**: ccab key lookup uses `resolveNycCcabKey` (straight vs curly apostrophe aliases, e.g. Romer Hell's Kitchen).
-- **`pr336-vk-search-trip-sources.mjs`**: re-export stored-ccab merge helpers + `bindPr336GateBCanonicalIdentity` on vk's `buildNycCraigKimDaybydayFixtureRows` / row-description overrides.
-- **`listTabModel.mjs`**: incomplete hotel row **608** uses `hotelListRowUnboundNarrative` when composed copy is under 30 words.
-- **Tests**: `test_stored_ccab_canonical_identity.mjs` covers every staging-capture hotel row + Romer alias.
+- **`src/vacation/shared-trip-oe-list-row-patch.mjs`**: non-hotel list rows now use vk's existing hotel row clamp (3 lines when the text is ≥30 words). Before this, the unclamped car row was 696 px tall, so the list-only Priceline row was the only row on cars-390-top. Pages at 390 px were 1.4–3.6× taller than staging (cars 5205 vs 1450 px).
+- **`src/vacation/thing-logo-ink-center.mjs`**: the `dc()` row logo `<img>` is now `loading:"eager"` (it was `lazy`). Logos below about y≈3800 were never requested, so rows lower down showed the placeholder chip (the logo-lost and generic-logo checks).
+- **`public/assets/index-BKun7ofk.js`**: rebaked via `node scripts/rebake_served_trek_bundle.mjs`.
 
-Prior #549 work retained: `composeListRowDescription`, `listRowSubstanceDescription`, trek bundle `tsListRowDescription`, car/hotel list substance, incomplete row **608** contract.
+The brief's hunch about the bea63495 logo-URL replay did not hold. The served fixture's car `logoUrl` is the same on vk and on this head.
 
-## Verification
+## Verification (local)
 
-```bash
-node scripts/test_stored_ccab_canonical_identity.mjs
-node scripts/test_list_row_description_substance.mjs
-node scripts/test_gate_b_product_row_fields.mjs
-node scripts/check-no-comments.mjs && node scripts/test_offline_manifest.mjs
-BASE=vk node scripts/check-code-ratchet.mjs
-```
+- Gate B structure replay: `vite build`, then `serve-preview.sh`, then `~/tsv-dispatch/capture/capture.mjs` on fixture `heads/d0dbedf….json`, then `restore_check.check_dir` against `staging-6e88120-fixture-f43fbc6f7bcce741` with recorded receipts. Feature parity, logo lost and generic logos are gone. Description verdicts are unchanged.
+- `node scripts/test_served_trek_bundle.mjs`, `node scripts/test_list_row_description_substance.mjs`, `node scripts/test_hotel_list_desc_capture_leaf.mjs`, every script in `scripts/offline-tests.txt`, `cd apps/vacation-client && npm test`, `node scripts/check-no-comments.mjs`, `node scripts/test_offline_manifest.mjs`, `BASE=vk node scripts/check-code-ratchet.mjs`. Results are in `J/RECEIPT.md`.
 
-## Left alone
+## Left alone (scope)
 
-No baseline/threshold/workflow edits. No deploy.
+- **Description quality** (events 8/15, flights 5/10, restaurants 4/25, stores 9/15) is still failing. The weak rows have thin fixture data: no address, dish, set time or return fare. That is a DATA fault under `vk-thing-data-contract`, and the UI cannot fix it without inventing text.
+- **Known base gaps** (budget complete, centred logos, row layout) are untouched. Centred logos now also lists cars-1280 (1.5 px, sub-pixel row pitch). That is the same base-gap check.
+- No baseline, threshold, fixture, test or Gate B edits. No merge of `vk`.
