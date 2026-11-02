@@ -1,7 +1,17 @@
 (function () {
   const removed = new Set();
 
+  function rowBrandName(node) {
+    const nameEl = node.querySelector('[data-ts-list-row-name="1"]');
+    let brand = nameEl ? nameEl.textContent : node.innerText;
+    brand = String(brand || '').replace(/\s+/g, ' ').trim();
+    brand = brand.replace(/^[\p{Extended_Pictographic}\uFE0F\s]+/u, '').split(' $')[0].trim();
+    return brand;
+  }
+
   function carRows() {
+    const marked = [...document.querySelectorAll('li[data-list-row][data-thing-category="car"]')];
+    if (marked.length) return marked;
     return [...document.querySelectorAll('button, article, li')].filter((node) => {
       const label = (node.innerText || '').replace(/\s+/g, ' ').trim();
       if (!label || label.length > 80) return false;
@@ -11,10 +21,22 @@
     });
   }
 
+  function removeControlLabel(brand) {
+    return `Remove 🚗 ${brand}`;
+  }
+
+  function rowMatchesBrand(node, brandKey) {
+    const name = rowBrandName(node).toLowerCase();
+    if (!name) return false;
+    if (name === brandKey) return true;
+    const label = (node.innerText || '').replace(/\s+/g, ' ').trim().toLowerCase();
+    return label.startsWith(`${brandKey} `) || label.includes(` ${brandKey} `);
+  }
+
   function mount() {
     if (!document.body) return;
-    const onCars = /cars/i.test(document.body.innerText || '') && carRows().length > 0;
-    if (!onCars) {
+    const rows = carRows();
+    if (!rows.length) {
       document.querySelector('[data-ts-car-brands]')?.remove();
       return;
     }
@@ -29,8 +51,8 @@
       document.body.prepend(bar);
     }
     const seen = new Set();
-    for (const row of carRows()) {
-      const brand = (row.innerText || '').replace(/\s+/g, ' ').trim().split(' $')[0];
+    for (const row of rows) {
+      const brand = rowBrandName(row);
       const key = brand.toLowerCase();
       if (!brand || seen.has(key) || removed.has(key)) continue;
       seen.add(key);
@@ -38,22 +60,34 @@
       const button = document.createElement('button');
       button.type = 'button';
       button.dataset.tsRemoveBrand = brand;
-      button.textContent = `Remove ${brand}`;
+      const label = removeControlLabel(brand);
+      button.textContent = label;
+      button.setAttribute('aria-label', label);
       button.addEventListener('click', () => {
         removed.add(key);
         button.remove();
         for (const node of carRows()) {
-          const label = (node.innerText || '').replace(/\s+/g, ' ').trim().toLowerCase();
-          if (label === key || label.startsWith(`${key} `)) node.style.display = 'none';
+          if (rowMatchesBrand(node, key)) node.style.display = 'none';
         }
       });
       bar.appendChild(button);
     }
   }
 
+  function scheduleMount() {
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(mount);
+    else mount();
+  }
+
   window.__tsMountCarBrands = mount;
   document.addEventListener('click', (event) => {
     const text = (event.target?.innerText || event.target?.textContent || '').replace(/\s+/g, ' ').trim();
-    if (/^cars\b/i.test(text) && text.length < 40) mount();
+    if (/^cars\b/i.test(text) && text.length < 40) scheduleMount();
   });
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', scheduleMount, { once: true });
+  } else {
+    scheduleMount();
+  }
+  new MutationObserver(scheduleMount).observe(document.documentElement, { childList: true, subtree: true });
 })();
