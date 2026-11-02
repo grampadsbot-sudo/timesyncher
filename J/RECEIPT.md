@@ -121,3 +121,29 @@ The 5 env-only fails, all of which CI ran green before line 150 on `5f42857c` or
 **Uncommitted files:** `src/vacation/shared-trip-live-app-fields.mjs`, `J/RECEIPT.md`, `J/PR_DESCRIPTION.md`
 
 Host: commit → push once → CI `unit-tests` on the pushed head → Gate B structure (events/hotels 390+1280).
+
+## Round vkfill-590 fresh rebuild @ 0e07f9a0 (2026-11-02 lane, cursor-ubuntu, HOST PUBLICATION ONLY)
+
+**Start head:** `0e07f9a0652bb5c62b2d1bbb41009e2ebbf7ce2b` (host merge: PR `5f42857c` + vk `1e2c56ad`; 9 paths vs `origin/vk` before this round).
+
+**Change:** Re-applied PR #588 list-row logo intent on vk resolver path in `apps/vacation-client/src/lib/listTabModel.mjs`: `logoUrlForPlace` uses `resolveThingLogoDisplayUrl` first (vk repair path), then explicit override/place/source logo or favicon when resolver returns empty, skipping `isPlaceholderLogoUrl`. Ran `node scripts/rebake_served_trek_bundle.mjs` (no served bundle diff).
+
+**Checks @ 0e07f9a0 + patch:**
+| Command | Result |
+| --- | --- |
+| `cd apps/vacation-client && npm test` | pass (layout suites included) |
+| `node scripts/rebake_served_trek_bundle.mjs` | pass |
+| `node scripts/test_gate_b_product_row_fields.mjs` | pass |
+| `node scripts/test_gate_b_live_tab_logo_rows.mjs` | pass |
+| `node scripts/test_shared_trip_live_tab_logos.mjs` | pass |
+| `node scripts/test_tsv415_thing_logo_capture.mjs` | pass |
+| `node scripts/check-no-comments.mjs` | pass |
+| `node scripts/test_offline_manifest.mjs` | pass |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | pass |
+| `scripts/offline-tests.txt` (full loop) | **FAIL** `scripts/test_live_transcript_dialog_pdf.mjs:651` — `rules.via` is `gbrain-cli-get_page`, expected `bundled-get_page` (Ubuntu lane has working `gbrain` CLI; same env-only class as prior round @ `5f42857c`) |
+
+**Uncommitted files (host commit):** `apps/vacation-client/src/lib/listTabModel.mjs`, `J/RECEIPT.md`
+
+**Diff vs `origin/vk`:** 10 paths (`listTabModel.mjs` + prior 9).
+
+Host: `git add` the two files above → commit on top of `0e07f9a0` → push → CI.
