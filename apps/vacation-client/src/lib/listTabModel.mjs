@@ -7,6 +7,7 @@ import {
   mergeStoredCcabNarrativeIntoOverride,
 } from '../../../../src/vacation/stored-ccab-narrative-merge.mjs';
 import {
+  isPlaceholderLogoUrl,
   resolveThingLogoDisplayUrl,
   resolveThingLogoUrl,
 } from '../../../../src/vacation/thing-logo-capture.mjs';
@@ -440,16 +441,22 @@ export function logoUrlForPlace(place, trip) {
   const mergedOverride = mergeStoredCcabNarrativeIntoOverride(place, {
     ...(overrideFor(trip, place) || {}),
   });
+  const resolved = text(resolveThingLogoDisplayUrl(place, mergedOverride));
+  if (resolved && !isPlaceholderLogoUrl(resolved)) return resolved;
+  const fromResolver = text(resolveThingLogoUrl(place, mergedOverride));
+  if (fromResolver && !isPlaceholderLogoUrl(fromResolver)) return fromResolver;
   const source = sourceRecord(place, mergedOverride);
-  return text(
-    resolveThingLogoDisplayUrl(place, mergedOverride)
-      || resolveThingLogoUrl(place, mergedOverride)
-      || mergedOverride.logoUrl
+  const explicit = text(
+    mergedOverride.logoUrl
       || mergedOverride.iconUrl
       || place.logoUrl
       || place.captured_logo_url
-      || source.logoUrl,
+      || source.logoUrl
+      || source.logo
+      || source.favicon,
   );
+  if (explicit && !isPlaceholderLogoUrl(explicit)) return explicit;
+  return '';
 }
 
 export function hotelFirstRowNote(place, trip, isFirstHotel) {

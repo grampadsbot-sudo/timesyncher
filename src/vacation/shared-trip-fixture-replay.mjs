@@ -6,7 +6,10 @@ import {
   mergeStoredCcabNarrativeIntoOverride,
   shouldMergeStoredCcabOnFixtureReplay,
 } from '../../scripts/fixtures/pr336-vk-search-trip-sources.mjs';
-import { applyLiveAppListRowFields } from './shared-trip-live-app-fields.mjs';
+import {
+  applyLiveAppListRowFields,
+  applyServedListLogoOverridesOnly,
+} from './shared-trip-live-app-fields.mjs';
 
 const GATEB_FIXTURE_REPLAY_SLUG = 'gateb-fixture-replay';
 void GATEB_FIXTURE_REPLAY_SLUG;
@@ -44,7 +47,8 @@ function enrichFixtureReplayServedTrip(shared = {}) {
       ? mergeStoredCcabNarrativeIntoOverride(place, withIdentity)
       : withIdentity;
   }
-  return applyLiveAppListRowFields({ ...shared, places, thingOverrides });
+  const enriched = applyLiveAppListRowFields({ ...shared, places, thingOverrides });
+  return applyServedListLogoOverridesOnly(enriched);
 }
 
 export function prepareFixtureReplaySharedTrip(bytes) {

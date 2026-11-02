@@ -157,6 +157,7 @@ export function composeListRowDescription({ category = '', summary = '', fields 
     if (isExperienceCategory(cat)) {
       push('Start', fields.startTime || fields.place_time || fields.start_time);
       push('Duration', fields.duration);
+      push('Set time', fields.showTime || fields.eventTime || fields.startTime || fields.place_time);
     }
     const joined = () => parts.join(' · ');
     const what = text(fields.longDetails || fields.details || fields.description, 4000);
@@ -266,7 +267,7 @@ export function listRowDescriptionBundleSnippet() {
     'if(experience.has(cat)||cat==="restaurant"||cat==="store"||cat==="flight"){const note=String(row.itineraryNote||row.itinerary_note||"").replace(/\\s+/g," ").trim();',
     'if(hook)parts.push(hook);if(note&&!parts.includes(note))parts.push(note);',
     'const when=String(row.startTime||row.start_time||(G&&G.place_time?G.place_time:"")||"").replace(/\\s+/g," ").trim();',
-    'if(experience.has(cat)){push("Start",when);push("Duration",row.duration);}',
+    'if(experience.has(cat)){push("Start",when);push("Duration",row.duration);push("Set time",row.showTime||row.eventTime||row.startTime||when);}',
     'const joined=()=>parts.join(" · ");',
     'const what=String(row.longDetails||row.details||row.description||"").replace(/\\s+/g," ").trim();',
     'if(what&&!isDiag(what)&&!isGeneric(what)&&!joined().includes(what))parts.push(what);',
