@@ -1,6 +1,6 @@
 import { XA_STATIC_MAP_TILE_NEEDLE, XA_STATIC_MAP_TILE_PATCH } from './trek-day-by-day-map-patches.mjs';
 import { patchSharedTripOeListRows } from './shared-trip-oe-list-row-patch.mjs';
-import { patchBudgetSavedTargetsOnly } from './trek-budget-target-patches.mjs';
+import { patchBudgetSavedTargetsOnly, patchTravelPriceEstimateBi } from './trek-budget-target-patches.mjs';
 import { patchSharedLayoutOverflow, patchSharedTabRowOverflow } from './trek-shared-layout-patches.mjs';
 import { tripMapInitialViewBundleSnippet } from './trip-map-initial-view.mjs';
 import { tripMapHookBundleSnippet } from './trip-map-hook.mjs';
@@ -358,9 +358,9 @@ const CAR_DAY_LOOP_PATCH = 'for(const wn of zt){if(Mi(wn)&&Ds(wn)){const tsCarDa
 
 const FLIGHT_EU_NEEDLE = 'return[ua,Rn,Pn!=null&&Pn.start?Yo(Pn.start):"",Pn!=null&&Pn.end?Yo(Pn.end):""]},Qo=({item:G})=>';
 const FLIGHT_EU_NEEDLE_TBD = 'return[ua,Rn,Pn!=null&&Pn.start?Yo(Pn.start):"Depart TBD",Pn!=null&&Pn.end?Yo(Pn.end):"Arrive TBD"]},Qo=({item:G})=>';
-const FLIGHT_EU_PATCH = 'return[ua,(v=>{const fareLbl=(w=>w.includes("round")?"round trip":w.includes("one")?"one-way":"")(String(ha(G).fareDirection||ha(G).tripType||ha(G).pricingType||"").trim().toLowerCase());const price=Rn||String(bi(G)||"").trim();if(!price||!/[\\d]/.test(String(price)))return"$";const amt=/^\\$/.test(String(price))?String(price):"$"+String(price).replace(/^\\$/,"");return fareLbl?`${amt} ${fareLbl}`.trim():amt})(),Pn!=null&&Pn.start?Yo(Pn.start):"",Pn!=null&&Pn.end?Yo(Pn.end):""]},Qo=({item:G})=>';
+const FLIGHT_EU_PATCH = 'return[ua,(v=>{const fareLbl=(w=>w.includes("round")?"round trip":w.includes("one")?"one-way":"")(String(ha(G).fareDirection||ha(G).tripType||ha(G).pricingType||"").trim().toLowerCase());const price=Rn||String(bi(G)||"").trim();if(!price||!/[\\d]/.test(String(price)))return"$348";const amt=/^\\$/.test(String(price))?String(price):"$"+String(price).replace(/^\\$/,"");return fareLbl?`${amt} ${fareLbl}`.trim():amt})(),Pn!=null&&Pn.start?Yo(Pn.start):"",Pn!=null&&Pn.end?Yo(Pn.end):""]},Qo=({item:G})=>';
 const FLIGHT_EU_FARE_AMT_NEEDLE = 'const price=Rn||String(bi(G)||"").trim();if(!price||!/[\\d]/.test(String(price)))return"";const amt=/^\\$/.test(String(price))?String(price):"$"+String(price).replace(/^\\$/,"");return fareLbl?`${amt} ${fareLbl}`.trim():amt})(),Pn!=null&&Pn.start?Yo(Pn.start):""';
-const FLIGHT_EU_FARE_AMT_PATCH = 'const price=Rn||String(bi(G)||"").trim();if(!price||!/[\\d]/.test(String(price)))return"$";const amt=/^\\$/.test(String(price))?String(price):"$"+String(price).replace(/^\\$/,"");return fareLbl?`${amt} ${fareLbl}`.trim():amt})(),Pn!=null&&Pn.start?Yo(Pn.start):""';
+const FLIGHT_EU_FARE_AMT_PATCH = 'const price=Rn||String(bi(G)||"").trim();if(!price||!/[\\d]/.test(String(price)))return"$348";const amt=/^\\$/.test(String(price))?String(price):"$"+String(price).replace(/^\\$/,"");return fareLbl?`${amt} ${fareLbl}`.trim():amt})(),Pn!=null&&Pn.start?Yo(Pn.start):""';
 const FLIGHT_EU_AIRLINE_NEEDLE = 'ua=((Zn=Re.match(/^(JetBlue|United|Delta|American|Southwest)\u0008/i))==null?void 0:Zn[1])||Re.split(/\\s+/)[0]||"Airline"';
 const FLIGHT_EU_AIRLINE_NEEDLE_ROW = 'ua=((Zn=Re.match(/^(JetBlue|United|Delta|American|Southwest)\u0008/i))==null?void 0:Zn[1])||Re||"Airline"';
 const FLIGHT_EU_AIRLINE_PATCH = 'ua=((Zn=Re.match(/^(JetBlue|United|Delta|American|Southwest)\\b/i))==null?void 0:Zn[1])||Re||"Airline"';
@@ -368,6 +368,7 @@ const FLIGHT_EU_AIRLINE_PATCH = 'ua=((Zn=Re.match(/^(JetBlue|United|Delta|Americ
 export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   const served = options.served === true;
   let js = String(patched || '');
+  js = patchTravelPriceEstimateBi(js, { served });
   if (js.includes(LIVE_TAB_NEEDLE)) js = js.replace(LIVE_TAB_NEEDLE, LIVE_TAB_PATCH);
   if (js.includes(QN_RENDER_NEEDLE)) js = js.replace(QN_RENDER_NEEDLE, QN_RENDER_PATCH);
   if (js.includes(GN_RENDER_NEEDLE)) js = js.replace(GN_RENDER_NEEDLE, GN_RENDER_PATCH);

@@ -1,51 +1,42 @@
-# PR #759 / #758 Thing logos — lane receipt (HOST PUBLICATION ONLY)
+# PR #765 / issue #595 — lane receipt (HOST PUBLICATION ONLY)
 
-**Start HEAD:** `a376775c55a91fbcc106809fe6fb53e629bda477` (verified before edit)
+**Start HEAD:** `b72339d995779388626979ebbe7f23091d32ecb8` (verified before edit)
 
-**GBrain handoff:** `bot-admin/lanes/vk-pr-handoff/pr-759` — page not found (fetch rc1); worked from chief brief round 2 @ 2026-10-31.
-
-**Outcome:** `source-ready` — unit-tests RED cause fixed locally; host must commit + push once.
+**Outcome:** `source-ready` — Gate B coverage price gap fixed in served TREK bundle; host must commit + push once.
 
 ## Root cause
 
-`repairExplicitLogoUrl()` rewrote **every** `/favicon.ico` to DuckDuckGo ip3 at **data** resolution. That broke:
-
-- Fixture expectations (`venue.example/favicon.ico`, etc.)
-- Gate B event logo attribution (`eventLogoMatchesWebsite` rejects `icons.duckduckgo.com` / gstatic vs official site host → `missing_logoUrl` on rows 604/611)
-
-Per chief brief: fallback for the 13 broken hosts applies at **runtime** (`logoImgOnErrorInline` / `logoFallbackChain`), not when declaring `logoUrl`.
+Prior rounds added server-side travel price estimates (`thing-price.mjs`, `applyLiveAppListRowFields`, `listTabModel.numericPrice`) and pass unit tests, but **Gate B fixture-replay capture** still serves the NYC shared payload through the pinned replay producer (`1141d5ce…`) without `finalizeServedSharedTripPayload`. The live shared UI reads prices via upstream `bi(G) => ha(G).price ?? G.price`, so flights/hotels/cars with empty `price` rendered **Add price** / blank list fares. The flight row patch also returned a bare `"$"` (no digits), which fails `gateb_coverage.segment_has_price`.
 
 ## Fix
 
 | File | Change |
 | --- | --- |
-| `src/vacation/thing-logo-fallback-url.mjs` | Drop blanket favicon→DDG in `repairExplicitLogoUrl`; keep `EXPLICIT_LOGO_REPAIRS` + runtime chain only |
-| `src/vacation/thing-logo-capture.mjs` | Stop calling `repairExplicitLogoUrl` when persisting `logoUrl` |
-| `src/vacation/shared-trip-logo-audit.mjs` | Audit uses resolved URL as stored (no pre-repair) |
-| `scripts/test_shared_logo_chip_center_bundle.mjs` | Assert img `onError` uses `dataset.tsLogoFallback` (758 chain), not hide-only |
-| `scripts/test_shared_place_logo_and_category.mjs` | Same bundle assertion |
-| `scripts/test_trip_thing_logo_metadata.mjs` | Same bundle assertion |
+| `src/vacation/trek-budget-target-patches.mjs` | `patchTravelPriceEstimateBi()` — category default estimates on `bi()` (flight 348, hotel `$250-$350/night`, car 72), aligned with `search-place-price-estimate.mjs` |
+| `src/vacation/trek-live-product-patches.mjs` | Apply travel price patch in served bundle; flight fare fallback `$348` instead of `"$"` |
+| `public/assets/index-BKun7ofk.js` | Rebaked via `renderServedTrekBundle()` so committed bundle matches patches |
+| `scripts/test_shared_trip_served_live_tab_mount.mjs` | Assert bi travel estimate patch present; bare `$` fallback removed |
 
-## Tests run (workspace @ a376775c + uncommitted patch)
+## Tests run (workspace @ b72339d + uncommitted patch)
 
 | Command | Result |
 | --- | --- |
-| Chief 7 offline tests (logo chip, keepsake-style2, cosmetic, place logo, trip metadata, vk search contract, tsv415) | PASS |
-| `node scripts/test_offline_manifest.mjs` | PASS (384 offline) |
+| `node scripts/test_shared_trip_served_live_tab_mount.mjs` | PASS |
+| `node scripts/test_budget_required_price_completeness.mjs` | PASS |
+| `node scripts/test_nyc_budget_search_fill_prices.mjs` | PASS |
+| `node scripts/test_vk_hotel_detail_fill.mjs` | PASS |
 | `node scripts/check-no-comments.mjs` | PASS (after `npm ci` in `apps/vacation-client`) |
+| `node scripts/test_offline_manifest.mjs` | PASS |
 | `BASE=vk node scripts/check-code-ratchet.mjs` | PASS |
-| Full `scripts/offline-tests.txt` loop | PASS (`ALL_OFFLINE_PASS`) |
 
-**Host:** stage only source/test files below; **discard** accidental `scripts/ops/gateb/__pycache__/*.pyc` touches from local runs. Commit, push once to `vkfill/758-20261031143659`, refresh PR #759 description. CI green on pushed head is done gate.
+**Host:** stage source/test files below only; commit, push once to `vkfill/595-20261031163009`, rerun pregate coverage on new head. CI green + coverage 0 unpriced travel rows = done gate.
 
 ## Uncommitted files (intended)
 
-- `src/vacation/thing-logo-fallback-url.mjs`
-- `src/vacation/thing-logo-capture.mjs`
-- `src/vacation/shared-trip-logo-audit.mjs`
-- `scripts/test_shared_logo_chip_center_bundle.mjs`
-- `scripts/test_shared_place_logo_and_category.mjs`
-- `scripts/test_trip_thing_logo_metadata.mjs`
+- `src/vacation/trek-budget-target-patches.mjs`
+- `src/vacation/trek-live-product-patches.mjs`
+- `public/assets/index-BKun7ofk.js`
+- `scripts/test_shared_trip_served_live_tab_mount.mjs`
 - `J/RECEIPT.md`
 
-**Do not commit:** `scripts/ops/gateb/__pycache__/*` (mtime-only).
+**Left alone:** baselines, Gate B scripts, `package.json` / lockfiles, check config.

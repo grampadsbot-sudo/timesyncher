@@ -25,5 +25,7 @@ assert.match(committed, /tsCarDays=Yi\(wn\)\.map\(ua=>ve\(ua\)\)/);
 
 const repatched = applySharedLiveTabBundlePatches(raw, { served: true });
 assert.doesNotMatch(repatched, /GBrain|Coming soon/);
+assert.match(repatched, /if\(cat==="flight"\)return 348/);
+assert.doesNotMatch(repatched, /if\(!price\|\|!\/\[\\d\]\/.test\(String\(price\)\)\)return"\$"/);
 
 console.log('shared trip served live tab mount tests passed');

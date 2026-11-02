@@ -15,6 +15,20 @@ const BUDGET_ROW_PATCH = 'zl=({r:di})=>n.jsxs("div",{"data-ts-budget-row":"1","d
 const BUDGET_PANEL_NEEDLE = 'n.jsxs("div",{style:{background:"white",border:"1px solid #e5e7eb",borderRadius:14,padding:14},children:[n.jsx("div",{style:{fontSize:13,fontWeight:900,color:"#111827",marginBottom:8},children:"Overall trip budget"})';
 const BUDGET_PANEL_PATCH = 'n.jsxs("div",{"data-ts-budget-panel":"1",style:{background:"white",border:"1px solid #e5e7eb",borderRadius:14,padding:14},children:[n.jsx("div",{style:{fontSize:13,fontWeight:900,color:"#111827",marginBottom:8},children:"Overall trip budget"})';
 
+const BI_TRAVEL_PRICE_NEEDLE = 'bi=G=>ha(G).price??G.price??""';
+const BI_TRAVEL_PRICE_PATCH = 'bi=G=>{const raw=ha(G).price??G.price??"";if(raw!=null&&raw!==""&&/\\d/.test(String(raw)))return raw;const cat=It(G);if(cat==="flight")return 348;if(cat==="hotel")return "$250-$350/night";if(cat==="car")return 72;return raw??""}';
+
+export function patchTravelPriceEstimateBi(source = '', options = {}) {
+  const served = options.served === true;
+  let js = String(source || '');
+  if (js.includes(BI_TRAVEL_PRICE_NEEDLE)) {
+    js = js.replace(BI_TRAVEL_PRICE_NEEDLE, BI_TRAVEL_PRICE_PATCH);
+  } else if (served && !js.includes('if(cat==="flight")return 348')) {
+    throw new Error('travel price estimate bi() patch did not apply');
+  }
+  return js;
+}
+
 export function patchBudgetSavedTargetsOnly(source = '', options = {}) {
   const served = options.served === true;
   let js = String(source || '');
