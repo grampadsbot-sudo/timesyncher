@@ -1,5 +1,43 @@
 # vkfill-549 round (2026-11-02, cursor-ubuntu)
 
+## Round 2026-11-02 ~19:06 UTC (hotel list-row binding + bundle rebake)
+
+**Start sha:** `bea634951f5d7469ddf4b7d5a4ad780a868c7268` (PR #549 head per `bot-admin/lanes/vk-pr-handoff/pr-549` 11:02 AM PT)
+
+### Outcome
+
+**source-ready** — HOST PUBLICATION ONLY (uncommitted patch). Fixes CI `scripts/test_served_trek_bundle.mjs:69` and binds hotel list rows to substantive `places[].description` instead of generic assignment blurbs.
+
+### Root cause
+
+Generic `thingOverrides` / assignment `description` and itinerary `summary` won over long `place.description` in `pickLongDetails`, `storedListNarrativeFallback`, and TREK `tsListRowDescription` spare text. Committed bundle was stale after prior `list-row-description.mjs` edits.
+
+### Changes (uncommitted — host commit/push)
+
+| File | Why |
+| --- | --- |
+| `src/vacation/list-row-description.mjs` | `pickSubstantiveListNarrative`; hotel rows omit short hook when ≥30-word narrative exists; spare prefers `place.description`; bundle snippet aligned; `minWords` in finalize |
+| `apps/vacation-client/src/lib/listTabModel.mjs` | Same narrative pick + hotel hook suppression; 30-word finalize for hotels |
+| `src/vacation/shared-trip-live-app-fields.mjs` | Skip generic override text in `pickLongDetails`; replace generic hotel `description`; copy place narrative into overrides |
+| `public/assets/index-BKun7ofk.js` | Rebaked via `node scripts/rebake_served_trek_bundle.mjs` (sha256 `c39b01c1ecb080a5a5a6717d761e374e48e29bb25f749686401cd0e21627110a`) |
+
+### Checks (local, start `bea63495` + patch)
+
+| Command | Result |
+| --- | --- |
+| `node scripts/rebake_served_trek_bundle.mjs` | PASS |
+| `node scripts/test_served_trek_bundle.mjs` | PASS |
+| `node scripts/test_list_row_description_substance.mjs` | PASS |
+| `node scripts/test_stored_ccab_canonical_identity.mjs` | PASS |
+| `node scripts/test_gate_b_product_row_fields.mjs` | PASS |
+| `node scripts/check-no-comments.mjs` | PASS |
+| `node scripts/test_offline_manifest.mjs` | PASS |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS |
+
+Gate B hotels-390/1280 description bar not re-run in lane (no Cursor self-proof); host structure replay required after push.
+
+---
+
 **Start sha:** `b1fda040f752527cbcf1323922d3af22aedab86b` (PR #549 head; ref `bot-admin/lanes/vk-pr-handoff/pr-549` 10:58 AM PT)
 
 ## Outcome

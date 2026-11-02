@@ -55,6 +55,15 @@ function isGenericListDescription(value = '') {
   return false;
 }
 
+export function pickSubstantiveListNarrative(...candidates) {
+  for (const value of candidates) {
+    const row = text(value, 4000);
+    if (!row || isPipelineDiagnostic(row) || isGenericListDescription(row)) continue;
+    return row;
+  }
+  return '';
+}
+
 function isPipelineDiagnostic(value = '') {
   const row = text(value, 4000);
   if (!row) return false;
@@ -127,13 +136,23 @@ export function composeListRowDescription({ category = '', summary = '', fields 
       push('Location', fields.address);
       return parts.join(' · ') || hook;
     }
-    if (hook) parts.push(hook);
+    const hotelDetailRaw = text(fields.longDetails || fields.details || fields.description, 4000);
+    const hotelDetail = text(
+      pickSubstantiveListNarrative(
+        fields.longDetails,
+        fields.details,
+        fields.description,
+        fields.placeDescription,
+      ) || (isPipelineDiagnostic(hotelDetailRaw) ? hotelDetailRaw : ''),
+      4000,
+    );
+    const hotelDetailSubstantive = hotelDetail && wordCount(hotelDetail) >= 30;
+    if (hook && !hotelDetailSubstantive) parts.push(hook);
     push('Check-in', fields.checkInTime);
     push('Check-out', fields.checkOutTime);
     push('Area', fields.neighborhood);
     push('Location', fields.address);
-    const hotelDetail = text(fields.longDetails || fields.details || fields.description, 4000);
-    if (hotelDetail && !isGenericListDescription(hotelDetail) && !parts.join(' · ').includes(hotelDetail)) {
+    if (hotelDetail && !parts.join(' · ').includes(hotelDetail)) {
       parts.push(hotelDetail);
     }
     push('', fields.websiteFlavour);
@@ -198,23 +217,23 @@ export function composeListRowDescription({ category = '', summary = '', fields 
   return hook;
 }
 
-export function finalizeListRowDisplayDescription(composed = '', { spare = '' } = {}) {
+export function finalizeListRowDisplayDescription(composed = '', { spare = '', minWords = 0 } = {}) {
   let row = text(composed, 4000);
   const fallback = text(spare, 4000);
-  if (
-    (
-      wordCount(row) < 6
-      || isGenericListDescription(row)
-      || isTimingShell(row)
-      || isPipelineDiagnostic(row)
-    )
-    && fallback
-  ) {
+  const needsFallback = (
+    wordCount(row) < 6
+    || isGenericListDescription(row)
+    || isTimingShell(row)
+    || isPipelineDiagnostic(row)
+    || (minWords > 0 && wordCount(row) < minWords)
+  );
+  if (needsFallback && fallback) {
     if (!isPipelineDiagnostic(fallback) && !isGenericListDescription(fallback)) {
       row = fallback;
     }
   }
   if (isPipelineDiagnostic(row) || isTimingShell(row) || isGenericListDescription(row)) return '';
+  if (minWords > 0 && wordCount(row) < minWords) return '';
   return row;
 }
 
@@ -229,8 +248,10 @@ export function listRowDescriptionBundleSnippet() {
     'const isDiag=v=>{const s=String(v||"").replace(/\\s+/g," ").trim();return!s?false:/\\bBlocked:/i.test(s)||/\\bccab capture\\b/i.test(s)||/^List-only row until/i.test(s);};',
     'const isGeneric=v=>{const s=String(v||"").replace(/\\s+/g," ").trim();if(!s)return true;if(/^Documented NYC option\\b/i.test(s))return true;if(/^Documented .+ option\\b/i.test(s))return true;return wc(s)<6;};',
     'const isShell=v=>{const s=String(v||"").replace(/\\s+/g," ").trim();if(!s||wc(s)>=12)return false;const stripped=s.replace(/\\b(?:Start|Duration|Price estimate):[^·;]+/gi,"").replace(/[·;]/g," ").trim();return wc(stripped)<4;};',
-    'const spare=String(row.longDetails||row.details||row.description||(G&&G.description)||"").replace(/\\s+/g," ").trim();',
-    'const finalizeRow=out=>{let row=String(out||"").replace(/\\s+/g," ").trim();if((wc(row)<6||isShell(row)||isDiag(row)||isGeneric(row))&&spare&&!isDiag(spare)&&!isGeneric(spare))row=spare;if(isDiag(row)||isShell(row)||isGeneric(row))return"";return row;};',
+    'const pickNarrative=(...vals)=>{for(const val of vals){const s=String(val||"").replace(/\\s+/g," ").trim();if(!s||isDiag(s)||isGeneric(s))continue;return s;}return"";};',
+    'const placeNarrative=String((G&&G.description)||"").replace(/\\s+/g," ").trim();',
+    'const spare=pickNarrative(row.longDetails,row.details,placeNarrative,row.description);',
+    'const finalizeRow=(out,minWords)=>{let row=String(out||"").replace(/\\s+/g," ").trim();const need=wc(row)<6||isShell(row)||isDiag(row)||isGeneric(row)||(minWords>0&&wc(row)<minWords);if(need&&spare&&!isDiag(spare)&&!isGeneric(spare))row=spare;if(isDiag(row)||isShell(row)||isGeneric(row))return"";if(minWords>0&&wc(row)<minWords)return"";return row;};',
     'let hook=String(row.summary||row.itineraryNote||row.itinerary_note||"").replace(/\\s+/g," ").trim();if(isDiag(hook))hook="";',
     'const cat=String(It(G)||"").toLowerCase();',
     'const parts=[],push=(label,val)=>{const s=String(val||"").replace(/\\s+/g," ").trim();if(s)parts.push(label?label+": "+s:s);};',
@@ -248,12 +269,13 @@ export function listRowDescriptionBundleSnippet() {
     'const carPrice=money(row.price??(blocked.includes("price")?"":bi(G)));if(hasPriceDigits(carPrice))push("",carPrice+" total");',
     'const themes=Array.isArray(row.reviewThemes)?row.reviewThemes.map(t=>String(t||"").trim()).filter(Boolean).join("; "):"";',
     'push("Reputation",row.reputationNote||themes);',
-    'return finalizeRow(parts.join(" · ")||hook);}',
-    'if(cat==="hotel"){if(G&&Number(G.id)===608){if(hook)parts.push(hook);push("Area",row.neighborhood);push("Location",row.address);return finalizeRow(parts.join(" · ")||hook);}if(hook)parts.push(hook);',
+    'return finalizeRow(parts.join(" · ")||hook,0);}',
+    'if(cat==="hotel"){if(G&&Number(G.id)===608){if(hook)parts.push(hook);push("Area",row.neighborhood);push("Location",row.address);return finalizeRow(parts.join(" · ")||hook,0);}',
+    'const hotelDetail=pickNarrative(row.longDetails,row.details,placeNarrative,row.description);',
+    'const hotelDetailLong=hotelDetail&&wc(hotelDetail)>=30;if(hook&&!hotelDetailLong)parts.push(hook);',
     'push("Check-in",row.checkInTime||row.check_in_time);push("Check-out",row.checkOutTime||row.check_out_time);',
     'push("Area",row.neighborhood);push("Location",row.address);',
-    'const hotelDetail=String(row.longDetails||row.details||row.description||"").replace(/\\s+/g," ").trim();',
-    'if(hotelDetail&&!isDiag(hotelDetail)&&!parts.join(" · ").includes(hotelDetail))parts.push(hotelDetail);',
+    'if(hotelDetail&&!parts.join(" · ").includes(hotelDetail))parts.push(hotelDetail);',
     'push("Note",row.hotelNote||row.hotel_note);',
     'push("",row.websiteFlavour);push("Amenities",Array.isArray(row.amenities)?row.amenities.join(", "):row.amenities);push("Price level",row.priceLevel);',
     'const hotelPrice=money(row.price??(blocked.includes("price")?"":bi(G)));if(hasPriceDigits(hotelPrice))push("",hotelPrice+"/night");',
@@ -262,7 +284,7 @@ export function listRowDescriptionBundleSnippet() {
     'row.thirdPartyRating?(row.thirdPartySource||"Rating")+" "+row.thirdPartyRating+(row.thirdPartyReviewCount?" ("+row.thirdPartyReviewCount+")":""):""].filter(Boolean).join("; ");',
     'const note=String(row.hotelNote||row.hotel_note||"").replace(/\\s+/g," ").trim();push("Reputation",rep||(note&&note!==hook?note:""));',
     'if(row.reviewThemes&&typeof row.reviewThemes==="object"){for(const [key,label] of [["praise","Common praise"],["complaints","Common complaints"]]){const themes=row.reviewThemes[key];if(Array.isArray(themes))push(label,themes.map(t=>String(t||"").trim()).filter(Boolean).join("; "));}}',
-    'return finalizeRow(parts.join(" · ")||hook);}',
+    'return finalizeRow(parts.join(" · ")||hook,30);}',
     'const experience=new Set(["activity","event","attraction","music","tour","sightseeing","theatre","tickets","family_event","other"]);',
     'if(experience.has(cat)||cat==="restaurant"||cat==="store"||cat==="flight"){const note=String(row.itineraryNote||row.itinerary_note||"").replace(/\\s+/g," ").trim();',
     'if(hook)parts.push(hook);if(note&&!parts.includes(note))parts.push(note);',
@@ -279,7 +301,7 @@ export function listRowDescriptionBundleSnippet() {
     'let praise="";if(row.reviewThemes&&typeof row.reviewThemes==="object"&&Array.isArray(row.reviewThemes.praise))praise=row.reviewThemes.praise.map(t=>String(t||"").trim()).filter(Boolean).join("; ");',
     'push("Why go",row.worthNote||praise||expRep);',
     'let expRow=parts.join(" · ")||hook||note;if((wc(expRow)<6||isShell(expRow)||isGeneric(expRow))&&what&&!isDiag(what)&&!isGeneric(what))expRow=what;if(isGeneric(expRow))return"";',
-    'return finalizeRow(expRow);}',
-    'return finalizeRow(hook);},',
+    'return finalizeRow(expRow,0);}',
+    'return finalizeRow(hook,0);},',
   ].join('');
 }

@@ -16,6 +16,7 @@ const EXPERIENCE_CATEGORIES = new Set([
   'other',
 ]);
 import { flightFieldsFromBlob } from './place-detail-extract.mjs';
+import { isGenericDescription } from './trip-thing-enrichment.mjs';
 import { isPlaceholderLogoUrl, resolveThingLogoUrl } from './thing-logo-capture.mjs';
 
 function text(value) {
@@ -122,15 +123,21 @@ function priceFromRecords(place = {}, override = {}, source = null) {
 }
 
 function pickLongDetails(place = {}, override = {}, source = null) {
-  return firstPresent(
+  for (const value of [
     override.longDetails,
     place.longDetails,
     source?.longDetails,
     source?.details,
-    override.description,
     place.description,
+    override.description,
     source?.description,
-  );
+  ]) {
+    const row = text(value);
+    if (!row) continue;
+    if (isGenericDescription(row)) continue;
+    return row;
+  }
+  return firstPresent(override.description, place.description, source?.description);
 }
 
 function explicitLogo(place = {}, override = {}, source = null) {
@@ -257,6 +264,9 @@ export function applyLiveAppListRowFields(shared = {}) {
     if (longDetails) {
       override.longDetails = longDetails;
       if (!text(override.details)) override.details = longDetails;
+      if (category === 'hotel' && isGenericDescription(override.description)) {
+        override.description = longDetails;
+      }
     }
 
     if (category === 'flight') {
@@ -335,6 +345,8 @@ export function applyLiveAppListRowFields(shared = {}) {
       if (source?.stayDays != null && override.stayDays == null) {
         override.stayDays = source.stayDays;
       }
+      copyIfBlank(override, 'description', place.description, source?.longDetails, source?.description);
+      copyIfBlank(override, 'longDetails', place.description, source?.longDetails, source?.description);
     } else if (EXPERIENCE_CATEGORIES.has(category)) {
       if (category) override.category = category;
       copyIfBlank(override, 'startTime', source?.startTime, source?.start_time, place.place_time);

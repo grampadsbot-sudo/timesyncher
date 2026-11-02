@@ -1,6 +1,7 @@
 import {
   composeListRowDescription,
   finalizeListRowDisplayDescription,
+  pickSubstantiveListNarrative,
 } from '../../../../src/vacation/list-row-description.mjs';
 import {
   GATE_B_INCOMPLETE_LIST_ROW_IDS,
@@ -341,21 +342,25 @@ function wordCount(value) {
 }
 
 function storedListNarrativeFallback(place, override, source) {
-  const spare = text(
-    override.longDetails ||
-      override.details ||
-      override.description ||
-      source.longDetails ||
-      source.details ||
-      source.description ||
-      place.description,
+  return pickSubstantiveListNarrative(
+    override.longDetails,
+    override.details,
+    source?.longDetails,
+    source?.details,
+    place.description,
+    place.longDetails,
+    override.description,
+    source?.description,
   );
-  if (isListRowPipelineDiagnostic(spare)) return '';
-  if (wordCount(spare) < 6 || isGenericDescription(spare)) return '';
-  return spare;
 }
 
-function listRowHook(override, source) {
+function listRowHook(override, source, place, category) {
+  if (category === 'hotel') {
+    const placeNarrative = text(place?.description);
+    if (wordCount(placeNarrative) >= 30 && !isGenericDescription(placeNarrative)) {
+      return '';
+    }
+  }
   const hook = text(
     override.summary ||
       source.summary ||
@@ -376,6 +381,16 @@ export function listRowSubstanceDescription(
   });
   const source = sourceRecord(place, mergedOverride);
   const category = productThingCategory(place, mergedOverride);
+  const boundNarrative = pickSubstantiveListNarrative(
+    mergedOverride.longDetails,
+    mergedOverride.details,
+    source.longDetails,
+    source.details,
+    place.description,
+    place.longDetails,
+    mergedOverride.description,
+    source.description,
+  );
   const fields = {
     ...source,
     ...mergedOverride,
@@ -383,13 +398,14 @@ export function listRowSubstanceDescription(
     price: mergedOverride.price ?? place.price ?? source.price,
     startTime: mergedOverride.startTime || source.startTime || place.place_time,
     place_time: place.place_time,
-    description: mergedOverride.description || source.description || place.description,
-    longDetails:
-      mergedOverride.longDetails ||
-      mergedOverride.details ||
-      source.longDetails ||
-      source.details ||
-      place.description,
+    description: boundNarrative || mergedOverride.description || source.description || place.description,
+    longDetails: boundNarrative
+      || mergedOverride.longDetails
+      || mergedOverride.details
+      || source.longDetails
+      || source.details
+      || place.description,
+    placeDescription: place.description,
   };
   if (GATE_B_INCOMPLETE_LIST_ROW_IDS.has(place.id)) {
     const listSummary = text(mergedOverride.summary || source.summary || place.summary);
@@ -397,7 +413,7 @@ export function listRowSubstanceDescription(
     fields.longDetails = listSummary;
     delete fields.price;
   }
-  const hook = listRowHook(mergedOverride, source);
+  const hook = listRowHook(mergedOverride, source, place, category);
   let composed = text(
     composeListRowDescription({
       category,
@@ -421,7 +437,10 @@ export function listRowSubstanceDescription(
   ) {
     spare = hotelListRowUnboundNarrative(place.name || place.title, fields.address);
   }
-  const display = finalizeListRowDisplayDescription(composed, { spare });
+  const display = finalizeListRowDisplayDescription(composed, {
+    spare,
+    minWords: category === 'hotel' ? 30 : 0,
+  });
   if (
     category === 'hotel'
     && GATE_B_INCOMPLETE_LIST_ROW_IDS.has(place.id)
