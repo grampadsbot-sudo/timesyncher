@@ -56,12 +56,18 @@ function isGenericListDescription(value = '') {
 }
 
 export function pickSubstantiveListNarrative(...candidates) {
+  let best = '';
+  let bestWords = 0;
   for (const value of candidates) {
     const row = text(value, 4000);
     if (!row || isPipelineDiagnostic(row) || isGenericListDescription(row)) continue;
-    return row;
+    const count = wordCount(row);
+    if (count > bestWords) {
+      best = row;
+      bestWords = count;
+    }
   }
-  return '';
+  return best;
 }
 
 function isPipelineDiagnostic(value = '') {
@@ -248,7 +254,7 @@ export function listRowDescriptionBundleSnippet() {
     'const isDiag=v=>{const s=String(v||"").replace(/\\s+/g," ").trim();return!s?false:/\\bBlocked:/i.test(s)||/\\bccab capture\\b/i.test(s)||/^List-only row until/i.test(s);};',
     'const isGeneric=v=>{const s=String(v||"").replace(/\\s+/g," ").trim();if(!s)return true;if(/^Documented NYC option\\b/i.test(s))return true;if(/^Documented .+ option\\b/i.test(s))return true;return wc(s)<6;};',
     'const isShell=v=>{const s=String(v||"").replace(/\\s+/g," ").trim();if(!s||wc(s)>=12)return false;const stripped=s.replace(/\\b(?:Start|Duration|Price estimate):[^·;]+/gi,"").replace(/[·;]/g," ").trim();return wc(stripped)<4;};',
-    'const pickNarrative=(...vals)=>{for(const val of vals){const s=String(val||"").replace(/\\s+/g," ").trim();if(!s||isDiag(s)||isGeneric(s))continue;return s;}return"";};',
+    'const pickNarrative=(...vals)=>{let best="",bestW=0;for(const val of vals){const s=String(val||"").replace(/\\s+/g," ").trim();if(!s||isDiag(s)||isGeneric(s))continue;const w=wc(s);if(w>bestW){best=s;bestW=w;}}return best;};',
     'const placeNarrative=String((G&&G.description)||"").replace(/\\s+/g," ").trim();',
     'const spare=pickNarrative(row.longDetails,row.details,placeNarrative,row.description);',
     'const finalizeRow=(out,minWords)=>{let row=String(out||"").replace(/\\s+/g," ").trim();const need=wc(row)<6||isShell(row)||isDiag(row)||isGeneric(row)||(minWords>0&&wc(row)<minWords);if(need&&spare&&!isDiag(spare)&&!isGeneric(spare))row=spare;if(isDiag(row)||isShell(row)||isGeneric(row))return"";if(minWords>0&&wc(row)<minWords)return"";return row;};',
