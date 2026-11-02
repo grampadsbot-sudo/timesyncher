@@ -10,20 +10,24 @@
 
     const blob = `${node.innerText || ''} ${node.querySelector('[data-ts-list-desc="1"]')?.textContent || ''}`.toLowerCase();
     const atJfk = /\bjfk\b/.test(blob);
-    if (atJfk && short && !/\bjfk\b/i.test(short)) {
-      if (/priceline/i.test(short)) return 'Priceline opaque JFK';
-      return `${short} JFK`;
+    if (short) {
+      if (/priceline/i.test(short)) return short;
+      if (atJfk && !/\bjfk\b/i.test(short)) return `${short} JFK`;
+      return short;
     }
 
     const line = String(node.innerText || '')
       .replace(/\s+/g, ' ')
       .trim()
       .split(/\s+\$/)[0]
+      .split('$')[0]
       .replace(/^[\p{Extended_Pictographic}\uFE0F\s]+/u, '')
       .trim();
     const emDash = line.split(' \u2014 ')[0].split(' — ')[0].trim();
-    if (emDash && emDash.length <= 48) return emDash;
-    return short;
+    if (!emDash) return '';
+    if (/priceline/i.test(emDash)) return emDash;
+    if (atJfk && !/\bjfk\b/i.test(emDash)) return `${emDash} JFK`;
+    return emDash;
   }
 
   function carRows() {
@@ -106,7 +110,7 @@
   window.__tsMountCarBrands = mount;
   document.addEventListener('click', (event) => {
     const text = (event.target?.innerText || event.target?.textContent || '').replace(/\s+/g, ' ').trim();
-    if (/^cars\b/i.test(text) && text.length < 40) scheduleMount();
+    if (/^(cars|budget)\b/i.test(text) && text.length < 40) scheduleMount();
   });
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', scheduleMount, { once: true });
