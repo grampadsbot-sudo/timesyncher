@@ -58,6 +58,7 @@ scripts/test_star_rating_model.mjs
 scripts/test_trip_map_initial_view.mjs
 scripts/test_trip_map_initial_view_bundle.mjs
 scripts/test_trip_map_harness_hook_bundle.mjs
+scripts/test_shared_events_390_text_wrap.mjs
 scripts/test_shared_hotels_390_text_wrap.mjs
 scripts/test_shared_logo_chip_center_bundle.mjs
 scripts/test_map_marker_logo_fallback_758.mjs
