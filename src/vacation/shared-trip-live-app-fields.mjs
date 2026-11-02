@@ -16,8 +16,7 @@ const EXPERIENCE_CATEGORIES = new Set([
   'other',
 ]);
 import { flightFieldsFromBlob } from './place-detail-extract.mjs';
-import { isGenericDescription } from './trip-thing-enrichment.mjs';
-import { isHotelPlanningNote } from './hotel-list-row-narrative.mjs';
+import { isGenericDescription, isHotelPlanningNote } from './list-row-generic-description.mjs';
 import { isPlaceholderLogoUrl, resolveThingLogoUrl } from './thing-logo-capture.mjs';
 
 function text(value) {

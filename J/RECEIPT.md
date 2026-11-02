@@ -1,5 +1,47 @@
 # vkfill-549 round (2026-11-02, cursor-ubuntu)
 
+## Round 2026-11-02 ~20:08 UTC (CI budget harness — trim live-app imports)
+
+**Start sha:** `d39f865a865f84f5ada6b296d0a244310562e4da` (PR #549 head per lane brief 12:08 PM PT)
+
+### Outcome
+
+**source-ready** — HOST PUBLICATION ONLY. Fixes CI `scripts/test_budget_checkout_harness.mjs` / `gateb_head_budget_lines exit 1` on Actions run 41505578516 class failure at repo head.
+
+### Root cause
+
+`shared-trip-live-app-fields.mjs` imported `isGenericDescription` from `trip-thing-enrichment.mjs` and `isHotelPlanningNote` from `hotel-list-row-narrative.mjs`. That pulled `trip-thing-enrichment` → dossier/search → `poi-search` → `provider-env.mjs`, which reads `scripts/deploy-required-env.json` at module load. `budget_archive_paths` for head `d39f865a` does not include that JSON (only `scripts/fixtures`, `src`, etc.), so archived `gateb_head_budget_lines` crashed with ENOENT.
+
+### Changes (uncommitted — host commit/push)
+
+| File | Why |
+| --- | --- |
+| `src/vacation/shared-trip-live-app-fields.mjs` | Import `isGenericDescription` and `isHotelPlanningNote` from `list-row-generic-description.mjs` only; keeps budget driver import graph on `src` + fixtures without reply-rules/provider-env |
+
+Hotel list-row substance remains on prior head (`listTabModel.mjs`, CCAB merge, trek patch). No rebake delta after fix (bundle already matched `renderServedTrekBundle`).
+
+### Checks (local, start `d39f865a` + patch)
+
+| Command | Result |
+| --- | --- |
+| Patched archive sim (`budget_checkout` + copied `shared-trip-live-app-fields.mjs`) → `fill_budget` | PASS |
+| `node scripts/test_served_trek_bundle.mjs` | PASS |
+| `node scripts/test_list_row_description_substance.mjs` | PASS |
+| `node scripts/test_stored_ccab_canonical_identity.mjs` | PASS |
+| `node scripts/test_vk_hotel_gate_b_description_acceptance.mjs` | PASS |
+| `node scripts/test_gate_b_product_row_fields.mjs` | PASS |
+| `node scripts/test_shared_trip_api_budget_lines.mjs` | PASS |
+| `node scripts/check-no-comments.mjs` | PASS |
+| `node scripts/test_offline_manifest.mjs` | PASS |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS |
+| `cd apps/vacation-client && npm test` | PASS |
+| `node scripts/test_budget_checkout_harness.mjs` | FAIL until host commits patch (archives committed HEAD without import fix) |
+| `node scripts/run-offline-tests.mjs` | Stops at budget harness (same) |
+
+**Host:** commit `shared-trip-live-app-fields.mjs`; re-run `node scripts/test_budget_checkout_harness.mjs` then push once.
+
+---
+
 ## Round 2026-11-02 BASE-MERGE (origin/vk `6e881200` into `27fc0e18`)
 
 **Start sha:** `27fc0e18204adaf6be71abacf69816de57b3e50b` (PR #549 head per chief brief 12:53 PM PT)
