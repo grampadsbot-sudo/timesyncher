@@ -46,11 +46,14 @@ function wordCount(value = '') {
   return text(value, 4000).split(/\s+/).filter(Boolean).length;
 }
 
+import { isCcabCandidateStubDescription } from './list-row-generic-description.mjs';
+
 function isGenericListDescription(value = '') {
   const row = text(value, 4000);
   if (!row) return true;
   if (/^Documented NYC option\b/i.test(row)) return true;
   if (/^Documented .+ option\b/i.test(row)) return true;
+  if (isCcabCandidateStubDescription(row)) return true;
   if (wordCount(row) < 6) return true;
   return false;
 }
@@ -185,7 +188,20 @@ export function composeListRowDescription({ category = '', summary = '', fields 
       push('Set time', fields.showTime || fields.eventTime || fields.startTime || fields.place_time);
     }
     const joined = () => parts.join(' · ');
-    const what = text(fields.longDetails || fields.details || fields.description, 4000);
+    const praise = reputationFromThemes(
+      fields.reviewThemes && typeof fields.reviewThemes === 'object' && !Array.isArray(fields.reviewThemes)
+        ? fields.reviewThemes.praise
+        : fields.reviewThemes,
+    );
+    const what = text(
+      pickSubstantiveListNarrative(
+        fields.longDetails,
+        fields.details,
+        fields.description,
+        fields.placeDescription,
+      ) || '',
+      4000,
+    );
     if (
       what
       && !isPipelineDiagnostic(what)
@@ -195,15 +211,10 @@ export function composeListRowDescription({ category = '', summary = '', fields 
       parts.push(what);
     }
     const flavour = text(fields.websiteFlavour, 2000);
-    if (flavour && !joined().includes(flavour)) parts.push(flavour);
+    if (flavour && flavour !== what && !joined().includes(flavour)) parts.push(flavour);
     push('Where', fields.address || fields.location);
     const price = formatMoney(fields.price);
     if (!omitListPrice && hasPriceDigits(price)) push('Price estimate', price);
-    const praise = reputationFromThemes(
-      fields.reviewThemes && typeof fields.reviewThemes === 'object' && !Array.isArray(fields.reviewThemes)
-        ? fields.reviewThemes.praise
-        : fields.reviewThemes,
-    );
     const rating = fields.thirdPartyRating
       ? `${text(fields.thirdPartySource, 40) || 'Rating'} ${fields.thirdPartyRating}${text(fields.thirdPartyReviewCount) ? ` (${fields.thirdPartyReviewCount})` : ''}`
       : '';
@@ -252,7 +263,7 @@ export function listRowDescriptionBundleSnippet() {
     'if(!row.address&&G&&G.address)row.address=G.address;if(row.price==null&&G&&G.price!=null&&!blocked.includes("price"))row.price=G.price;',
     'const wc=v=>String(v||"").replace(/\\s+/g," ").trim().split(/\\s+/).filter(Boolean).length;',
     'const isDiag=v=>{const s=String(v||"").replace(/\\s+/g," ").trim();return!s?false:/\\bBlocked:/i.test(s)||/\\bccab capture\\b/i.test(s)||/^List-only row until/i.test(s);};',
-    'const isGeneric=v=>{const s=String(v||"").replace(/\\s+/g," ").trim();if(!s)return true;if(/^Documented NYC option\\b/i.test(s))return true;if(/^Documented .+ option\\b/i.test(s))return true;return wc(s)<6;};',
+    'const isGeneric=v=>{const s=String(v||"").replace(/\\s+/g," ").trim();if(!s)return true;if(/^Documented NYC option\\b/i.test(s))return true;if(/^Documented .+ option\\b/i.test(s))return true;if(/Airline:/i.test(s)&&/(?:Outbound:|Route:)/i.test(s))return false;if(/Status:\\s*candidate only/i.test(s))return true;if(/Price:\\s*\\$[\\d,]+.*\\bfloor\\b/i.test(s)&&wc(s)<40)return true;if(/Price:\\s*\\$[\\d,]+.*\\bplanning estimate\\b/i.test(s)&&wc(s)<28)return true;return wc(s)<6;};',
     'const isShell=v=>{const s=String(v||"").replace(/\\s+/g," ").trim();if(!s||wc(s)>=12)return false;const stripped=s.replace(/\\b(?:Start|Duration|Price estimate):[^·;]+/gi,"").replace(/[·;]/g," ").trim();return wc(stripped)<4;};',
     'const pickNarrative=(...vals)=>{let best="",bestW=0;for(const val of vals){const s=String(val||"").replace(/\\s+/g," ").trim();if(!s||isDiag(s)||isGeneric(s))continue;const w=wc(s);if(w>bestW){best=s;bestW=w;}}return best;};',
     'const placeNarrative=String((G&&G.description)||"").replace(/\\s+/g," ").trim();',
@@ -297,14 +308,14 @@ export function listRowDescriptionBundleSnippet() {
     'const when=String(row.startTime||row.start_time||(G&&G.place_time?G.place_time:"")||"").replace(/\\s+/g," ").trim();',
     'if(experience.has(cat)){push("Start",when);push("Duration",row.duration);push("Set time",row.showTime||row.eventTime||row.startTime||when);}',
     'const joined=()=>parts.join(" · ");',
-    'const what=String(row.longDetails||row.details||row.description||"").replace(/\\s+/g," ").trim();',
+    'let praise="";if(row.reviewThemes&&typeof row.reviewThemes==="object"&&Array.isArray(row.reviewThemes.praise))praise=row.reviewThemes.praise.map(t=>String(t||"").trim()).filter(Boolean).join("; ");',
+    'const what=pickNarrative(row.longDetails,row.details,placeNarrative,row.description);',
     'if(what&&!isDiag(what)&&!isGeneric(what)&&!joined().includes(what))parts.push(what);',
     'const flavour=String(row.websiteFlavour||"").replace(/\\s+/g," ").trim();',
-    'if(flavour&&!joined().includes(flavour))parts.push(flavour);',
+    'if(flavour&&flavour!==what&&!joined().includes(flavour))parts.push(flavour);',
     'push("Where",row.address||row.location);',
     'const expPrice=money(row.price??(blocked.includes("price")?"":bi(G)));if(hasPriceDigits(expPrice))push("Price estimate",expPrice);',
     'const expRep=row.thirdPartyRating?(row.thirdPartySource||"Rating")+" "+row.thirdPartyRating+(row.thirdPartyReviewCount?" ("+row.thirdPartyReviewCount+")":""):"";',
-    'let praise="";if(row.reviewThemes&&typeof row.reviewThemes==="object"&&Array.isArray(row.reviewThemes.praise))praise=row.reviewThemes.praise.map(t=>String(t||"").trim()).filter(Boolean).join("; ");',
     'push("Why go",row.worthNote||praise||expRep);',
     'let expRow=parts.join(" · ")||hook||note;if((wc(expRow)<6||isShell(expRow)||isGeneric(expRow))&&what&&!isDiag(what)&&!isGeneric(what))expRow=what;if(isGeneric(expRow))return"";',
     'return finalizeRow(expRow,0);}',

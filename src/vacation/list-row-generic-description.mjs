@@ -12,10 +12,21 @@ function wordCount(value = '') {
   return text(value, 4000).split(/\s+/).filter(Boolean).length;
 }
 
+export function isCcabCandidateStubDescription(value = '') {
+  const row = text(value, 4000);
+  if (!row) return false;
+  if (/Airline:/i.test(row) && /(?:Outbound:|Route:)/i.test(row)) return false;
+  if (/Status:\s*candidate only/i.test(row)) return true;
+  if (/Price:\s*\$[\d,]+.*\bfloor\b/i.test(row) && wordCount(row) < 40) return true;
+  if (/Price:\s*\$[\d,]+.*\bplanning estimate\b/i.test(row) && wordCount(row) < 28) return true;
+  return false;
+}
+
 export function isGenericDescription(value = '') {
   const row = text(value, 4000);
   if (!row) return true;
   if (GENERIC_DESCRIPTION_RES.some((re) => re.test(row))) return true;
+  if (isCcabCandidateStubDescription(row)) return true;
   if (wordCount(row) < 6) return true;
   if (/^\S+\s+\S+\s*,\s*New York/i.test(row) && wordCount(row) < 10) return true;
   return false;
