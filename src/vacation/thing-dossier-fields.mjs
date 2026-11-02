@@ -147,6 +147,41 @@ export function ratingQuoteSupportsAggregate(quote = '', average, count) {
   return true;
 }
 
+// Saved-page ratings are judged on the page text. The writer's quote does not
+// have to be a contiguous substring. The average and the count must sit near
+// a rating word (80-char window), as whole numeric tokens.
+const RATING_PAGE_WINDOW = 80;
+
+export function pageTextSupportsRating(pageText = '', average, count) {
+  const raw = norm(pageText);
+  if (!raw || !RATING_QUOTE_MARK.test(raw)) return false;
+  const avg = Number(average);
+  const cnt = Number(count);
+  if (!(avg > 0) || !(Number.isInteger(cnt) && cnt > 0)) return false;
+  const avgEsc = String(avg).replace('.', '\\.');
+  const digits = String(cnt);
+  const avgRe = new RegExp(`(?:^|[^\\d.])(${avgEsc})(?![\\d.])`, 'g');
+  let match;
+  while ((match = avgRe.exec(raw))) {
+    const at = match.index + match[0].length - match[1].length;
+    const slice = raw.slice(Math.max(0, at - RATING_PAGE_WINDOW), at + match[1].length + RATING_PAGE_WINDOW);
+    if (!RATING_QUOTE_MARK.test(slice)) continue;
+    if (new RegExp(`(?:^|\\D)${digits}(?:\\D|$)`).test(slice.replace(/,/g, ''))) return true;
+  }
+  return false;
+}
+
+function savedRatingPage(dossier, rating) {
+  if (!rating?.url) return null;
+  return (dossier.pages || []).find((page) => page.url === rating.url) || null;
+}
+
+function ratingHeld(dossier, rating, average, count) {
+  const page = savedRatingPage(dossier, rating);
+  if (page && pageTextSupportsRating(page.text, average, count)) return true;
+  return cited(dossier, rating) && ratingQuoteSupportsAggregate(rating?.quote, average, count);
+}
+
 export function prepareDossierFindings(dossier, findings = {}) {
   const next = { ...dossier, fields: {}, reviews: [], knownFor: [], reviewsRead: 0 };
   if (!dossierPagesVerified(dossier)) return next;
@@ -163,14 +198,18 @@ export function prepareDossierFindings(dossier, findings = {}) {
     .map(reviewSourceHost).filter(Boolean))];
   const braveRating = (dossier.pages || []).find((page) => page.via === 'brave' && page.braveRating)?.braveRating;
   const writerRating = findings.rating;
-  const writerOk = writerRating && cited(dossier, writerRating);
+  const writerPage = savedRatingPage(dossier, writerRating);
+  const writerOk = Boolean(writerRating && (
+    (writerPage && pageTextSupportsRating(writerPage.text, writerRating.average, writerRating.count))
+    || cited(dossier, writerRating)
+  ));
   const rating = writerOk || !braveRating ? writerRating : { ...braveRating, provider: 'brave' };
   const average = Number(rating?.average);
   const count = Number(rating?.count);
   const scale = Number(rating?.scaleMax);
-  if (cited(dossier, rating) && average > 0 && [5, 10].includes(scale) && average <= scale
+  if (average > 0 && [5, 10].includes(scale) && average <= scale
     && Number.isInteger(count) && count > 0
-    && ratingQuoteSupportsAggregate(rating.quote, average, count)) {
+    && ratingHeld(dossier, rating, average, count)) {
     next.rating = average * 5 / scale;
     next.reviewsAvailable = count;
     next.ratingEvidence = rating;
@@ -401,7 +440,12 @@ export function applyDossierFields(record = {}, dossier = {}) {
     if (next.price) next.priceUnit = dossier.fields.price.unit;
     if (next.happyHourDetails && next.happyHourDetails !== NO_HAPPY_HOUR_FOUND) next.happyHour = true;
     if (dossier.fields?.happyHour?.value === false) next.happyHour = false;
-    if (dossier.ratingEvidence && cited(dossier, dossier.ratingEvidence)) {
+    if (dossier.ratingEvidence && ratingHeld(
+      dossier,
+      dossier.ratingEvidence,
+      dossier.ratingEvidence.average ?? dossier.rating,
+      dossier.ratingEvidence.count ?? dossier.reviewsAvailable,
+    )) {
       next.thirdPartyRating = String(dossier.rating);
       next.thirdPartyReviewCount = String(dossier.reviewsAvailable);
       next.ratingCount = dossier.reviewsAvailable;
