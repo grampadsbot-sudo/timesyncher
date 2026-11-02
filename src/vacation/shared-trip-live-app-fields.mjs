@@ -1,6 +1,6 @@
 import { productThingCategory } from './keepsake-product-overrides.mjs';
 import { flightFieldsFromBlob } from './place-detail-extract.mjs';
-import { resolveThingLogoUrl } from './thing-logo-capture.mjs';
+import { isPlaceholderLogoUrl, resolveThingLogoUrl } from './thing-logo-capture.mjs';
 
 function text(value) {
   return String(value || '').trim();
@@ -148,10 +148,31 @@ export function applyLiveAppListRowFields(shared = {}) {
     );
     const category = productThingCategory(place, override);
 
-    const logoUrl = resolveThingLogoUrl(place, override) || explicitLogo(place, override, source);
-    if (logoUrl) {
+    const pageUrl = firstPresent(
+      source?.url,
+      source?.website,
+      source?.sourceUrl,
+      place.url,
+      place.website,
+      place.source_url,
+      override.url,
+      override.website,
+    );
+    if (pageUrl) {
+      place.url = text(place.url) || pageUrl;
+      place.website = text(place.website) || pageUrl;
+      if (!text(override.url)) override.url = pageUrl;
+      if (!text(override.website)) override.website = pageUrl;
+    }
+
+    const explicit = explicitLogo(place, override, source);
+    let logoUrl = text(resolveThingLogoUrl(place, override));
+    if (!logoUrl && explicit && !isPlaceholderLogoUrl(explicit)) logoUrl = explicit;
+    if (logoUrl && !isPlaceholderLogoUrl(logoUrl)) {
       override.logoUrl = logoUrl;
-      if (!text(place.logoUrl)) place.logoUrl = logoUrl;
+      if (!text(place.logoUrl) || isPlaceholderLogoUrl(place.logoUrl)) place.logoUrl = logoUrl;
+    } else if (isPlaceholderLogoUrl(override.logoUrl)) {
+      delete override.logoUrl;
     }
 
     const price = priceFromRecords(place, override, source);
