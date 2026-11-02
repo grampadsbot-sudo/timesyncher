@@ -588,7 +588,7 @@ const aeFixture = [
   'Qn.map(G=>Oe(G)),Qn.length===0',
   'Gn.map(G=>Oe(G)),Gn.length===0',
   'ki.map(G=>Oe(G))',
-  'Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","hotel-checkout"].includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}]})).values())',
+  'Mo=Array.from(new Map((Gt||[]).filter(Xi=>Xi&&Ds(Xi)).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}])).values())',
   'height:dn?900:300,marginBottom:12',
   'ha=G=>le[Qt(G)]||{},Sn=',
   'getSharedTrip:e=>Rt.get(`/shared/${e}`,{params:{_ts:Date.now()},headers:{"Cache-Control":"no-cache"}}).then(t=>t.data)',
@@ -712,7 +712,6 @@ assert.match(patchedAe, /data-end-list="1"/);
 assert.match(patchedAe, /style2-thing-media/);
 assert.match(patchedAe, /data-print-ready="style2"/);
 assert.doesNotMatch(patchedAe, /data-two-col="1"/);
-assert.match(patchedAe, /\$\{Mc\(nr\)\}/);
 assert.deepEqual(KEEPSAKE_LIST_MINIMUMS, {
   Restaurants: DEFAULT_FIRST_PASS_MINIMUMS.restaurant,
   Stores: DEFAULT_FIRST_PASS_MINIMUMS.store,
@@ -724,6 +723,7 @@ assert.match(patchedAe, /Re\.includes\("restaurant"\)\?"restaurant":Re\.includes
 assert.match(patchedAe, /tsPad=\(rows\)=>rows/);
 assert.doesNotMatch(patchedAe, /__tsLiveFill:1/);
 assert.match(patchedAe, /Qa\.flatMap\(di=>Ci\(di\)\)/);
+assert.match(patchedAe, /const pid=raw\.place_id\|\|di\.place_id;const Xi=pid\?\(Ft\.get\(pid\)/);
 assert.doesNotMatch(patchedAe, /\[\]\.concat\(rs,Po,bc,Oc,Fs,Cc\)/);
 assert.match(patchedAe, /height:dn\?420:300,marginBottom:12/);
 assert.doesNotMatch(patchedAe, /height:dn\?900:300,marginBottom:12/);
