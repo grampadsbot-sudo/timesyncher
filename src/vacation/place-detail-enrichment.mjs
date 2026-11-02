@@ -1,4 +1,5 @@
 import { fetchXaiPlaceRatings, enrichPlaceRecordWithXaiRatings } from './xai-grok-place-ratings.mjs';
+import { enrichSearchPlaceHotelSourceRecord } from './xai-sourced-hotel-description.mjs';
 import {
   mergeThingDetailMetadata,
   missingDetailFieldsForCategory,
@@ -14,7 +15,12 @@ export async function enrichPlaceDetail({
   const { parsed } = await fetchXaiPlaceRatings({ ...place, title, category: cat }, {
     destination, env, fetchImpl, searchImpl,
   });
-  const sourceRecord = enrichPlaceRecordWithXaiRatings(place.sourceRecord || {}, parsed);
+  let sourceRecord = enrichPlaceRecordWithXaiRatings(place.sourceRecord || {}, parsed);
+  sourceRecord = enrichSearchPlaceHotelSourceRecord(sourceRecord, {
+    title,
+    category: cat,
+    address: place.address || sourceRecord.address || '',
+  });
   const detail = { ...sourceRecord, title, category: cat };
   const missing = missingDetailFieldsForCategory(detail, cat);
   return { detail, sourceRecord, missingDetailFields: missing, detailEnriched: missing.length === 0 };
