@@ -31,8 +31,9 @@ assert.match(rendered, /data-ts-thing-review="1"/);
 
 assert.match(
   rendered,
-  /Mo=Array\.from\(new Map\(Qa\.flatMap\(di=>Ci\(di\)\)\.filter\(di=>\(di==null\?void 0:di\.item\)&&!\[/,
+  /Mo=Array\.from\(new Map\(\[\]\.concat\(Qa\.flatMap\(di=>Ci\(di\)\)/,
 );
+assert.match(rendered, /\(Ut\|\|\[\]\)\.filter\(wn=>wn&&wn\.place_id\)/);
 assert.doesNotMatch(rendered, /\]\.concat\(rs,Po,bc,Oc,Fs,Cc\)/);
 
 assert.doesNotMatch(rendered, /children:ot\.map\(G=>\{const Re=or\(Dt\)\.includes\(G\)/);

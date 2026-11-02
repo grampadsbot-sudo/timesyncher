@@ -40,22 +40,34 @@ assert.equal(
 );
 
 const positiveFixture = buildNycCraigKimDaybydayTripPositiveV1();
-const timelineIds = assignedPlaceIds(positiveFixture);
 const budgetPlaces = placesForBudget(positiveFixture);
+const timelineAssigned = assignedPlaceIds(positiveFixture);
+const budgetIds = new Set(budgetPlaces.map((place) => Number(place.id)));
 assert.equal(
   budgetPlaces.length,
-  timelineIds.size,
-  'Gate B NYC fixture budget inventory must match distinct timeline assignments',
+  87,
+  'Gate B NYC positive fixture budget inventory must include day-itinerary reservations',
 );
-for (const place of positiveFixture.places || []) {
-  const id = Number(place.id);
-  if (timelineIds.has(id)) continue;
-  assert.equal(
-    budgetPlaces.some((row) => Number(row.id) === id),
-    false,
-    `list-only place ${id} must stay off the budget tab`,
+assert.ok(
+  budgetPlaces.length > timelineAssigned.size,
+  'budget must list reservation itinerary rows beyond assignment-only timeline ids',
+);
+for (const name of [
+  'Amelie Bistro',
+  'Tiffany & Co.',
+  "Macy's Herald Square",
+  'Bodega 88',
+]) {
+  assert.ok(
+    budgetPlaces.some((place) => String(place.name || '').includes(name)),
+    `budget must include ${name}`,
   );
 }
+assert.equal(
+  budgetIds.has(609),
+  false,
+  'list-only car 609 must stay off the budget tab',
+);
 
 const completeness = budgetCompletenessScore(positiveFixture);
 for (const row of buildBudgetModel(positiveFixture).rows) {

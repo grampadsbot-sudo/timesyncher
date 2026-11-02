@@ -64,6 +64,8 @@ assert.doesNotMatch(bundle, /\$n=gt\.filter\(/);
 assert.doesNotMatch(bundle, /ci=ot\.filter\(/);
 
 assert.match(bundle, /Qa\.flatMap\(di=>Ci\(di\)\)/);
+assert.match(bundle, /const pid=raw\.place_id\|\|di\.place_id;const Xi=pid\?\(Ft\.get\(pid\)/);
+assert.match(bundle, /\(Ut\|\|\[\]\)\.filter\(wn=>wn&&wn\.place_id\)/);
 assert.doesNotMatch(bundle, /\[\]\.concat\(rs,Po,bc,Oc,Fs,Cc\)/);
 assert.match(bundle, /Xi==="car"\?"Cars"/);
 assert.doesNotMatch(bundle, /\(Gt\|\|\[\]\)\.filter\(Xi=>Xi&&Ds\(Xi\)&&!Mi\(Xi\)\)/);
