@@ -313,7 +313,10 @@ export function carSubtitle(place, trip) {
 }
 
 import { pickFlightListRowSummaryText } from '../../../../src/vacation/flight-list-row-summary.mjs';
-import { resolveThingLogoDisplayUrl } from '../../../../src/vacation/thing-logo-capture.mjs';
+import {
+  isPlaceholderLogoUrl,
+  resolveThingLogoDisplayUrl,
+} from '../../../../src/vacation/thing-logo-capture.mjs';
 
 export { pickFlightListRowSummaryText };
 
@@ -339,7 +342,20 @@ export function rowSummary(place, trip) {
 
 export function logoUrlForPlace(place, trip) {
   const override = overrideFor(trip, place);
-  return text(resolveThingLogoDisplayUrl(place, override));
+  const resolved = text(resolveThingLogoDisplayUrl(place, override));
+  if (resolved) return resolved;
+  const source = sourceRecord(place, override);
+  const explicit = text(
+    override.logoUrl ||
+      override.iconUrl ||
+      place.logoUrl ||
+      place.captured_logo_url ||
+      source.logoUrl ||
+      source.logo ||
+      source.favicon,
+  );
+  if (explicit && !isPlaceholderLogoUrl(explicit)) return explicit;
+  return '';
 }
 
 export function hotelFirstRowNote(place, trip, isFirstHotel) {

@@ -1,4 +1,4 @@
-import { logoCaptureMissReason, resolveThingLogoUrl } from './thing-logo-capture.mjs';
+import { isPlaceholderLogoUrl, logoCaptureMissReason, resolveThingLogoUrl } from './thing-logo-capture.mjs';
 
 function textField(value) {
   return String(value || '').trim();
@@ -48,8 +48,9 @@ export function logoFieldsForSharedPlace(place, priorOverride = {}) {
     source: place.source,
     ...(pageUrl ? { url: pageUrl, website: pageUrl } : {}),
   };
-  const logoUrl = resolveThingLogoUrl(place, presentationOverride)
-    || textField(place.image_url || place.logoUrl || priorOverride.logoUrl);
+  const resolved = textField(resolveThingLogoUrl(place, presentationOverride));
+  const fallback = textField(place.image_url || place.logoUrl || priorOverride.logoUrl);
+  const logoUrl = resolved || (fallback && !isPlaceholderLogoUrl(fallback) ? fallback : '');
   const extra = { ...(logoUrl ? { logoUrl } : {}) };
   if (!logoUrl) {
     const reason = logoCaptureMissReason(place, presentationOverride);

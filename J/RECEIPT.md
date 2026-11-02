@@ -1,135 +1,149 @@
-# PR #776 / issue #613 — escalated try 1 (lane vkfill-776-20261101145818)
+# VK PR #590 / issue #588 receipt (cursor-ubuntu vkfill-590 BASE-MERGE)
 
-**Start HEAD:** `ae2679948fa35b238c46059fb9ddaa61e9d97822`
+**Branch:** `vkfill/588-20261021125728`  
+**Start head:** `6e029f24ddc3314c2f62f7af97774944af557a6d`  
+**Tip head:** `ce70be64`  
+**Authority:** GBrain `bot-admin/lanes/vk-pr-handoff/pr-590` + chief-dr dirty-head merge brief
 
-## Restatement (written before editing)
+## Base merge
 
-On the shared trip at 390 px, the Events tab ("The Rest") lets some row
-**titles** run past the right edge of the screen. On base `8793b8e`
-(`gateb-cand/base-8793b8e-fixture-1fc60c083ad28555/capture-regions.json`,
-events-390 `struct.text_overflow`) there are 8 `past_right` boxes, and every one is
-a `strong` name: the 7 "Flight option: …" titles run 52–94 px past, and
-"Village Vanguard / Smoke / Birdland / Jazz Gallery" runs 2 px past. They are
-`white-space: nowrap` with `overflow-x: visible`, so nothing stops them.
-The descriptions are not part of the problem. On base they wrap inside the
-row (for example the Statue of Liberty row is 142 px, `desc_box` 46 px tall).
+Host merged `origin/migrate/trek-source` at `446e19137ebe9c6ee0dab651dca078f2cd35f13f` into `bf232ddd`. Conflicts resolved in `J/` only; took base `public/assets/index-BKun7ofk.js` then `node scripts/rebake_served_trek_bundle.mjs`; kept base `src/vacation/shared-trip-oe-list-row-patch.mjs` (`<strong>` default list-row title for Gate B `first_text`).
 
-The two earlier pushes on this PR each went too far in one direction:
-- `8850e3b` wrapped everything. The titles broke onto extra lines, and Gate B
-  failed events-390-top (3.20%) and events-390 (2.04%).
-- `ae26799` forced every Events description (`[data-list-summary="1"]`, which is
-  `.tsv-row-desc` in vacation-client) onto one line with an ellipsis. That hides
-  5 descriptions by up to 324 px (Statue City Cruises 317, TKTS 324, Blue Note
-  239/86/21) and shortens rows 7–12, cutting 108 px of page height (list 2619 → 2511).
-  That hides content Craig wants to see.
+Second dirty-head merge: merged `origin/migrate/trek-source` at `e3364ac5b3d44795cd3b2d9c857e9c940a9f6790` into `6e029f24` (PR #600 / #597 Gate B NYC fixture on base). Conflicts resolved in `J/RECEIPT.md` only; `node scripts/rebake_served_trek_bundle.mjs` (no served bundle diff).
 
-So the fix: titles stay on one line and get an ellipsis only when they don't fit
-(the Flight option rows and the jazz title). Descriptions go back to base behaviour
-and wrap in full. The containment chain (row, button, header, logo/name pair) stays,
-so the ellipsis can engage.
+## Change (PR #588)
 
-## Fix (uncommitted; host publishes)
+- `src/vacation/shared-trip-fixture-replay.mjs`: served `places` shape unchanged on replay (CI fix for `test_same_selection_capture.py`).
+- `apps/vacation-client/src/lib/listTabModel.mjs`: generic list logos at render time via `resolveThingLogoUrl`.
 
-- `public/assets/index-CbEHlMj6.css`: removed the Events 390px rule
-  `[data-shared-live-tab="events"] [data-list-summary="1"]{…white-space:nowrap…ellipsis}`.
-  Descriptions fall back to the bundle's own inline `whiteSpace:"normal",overflowWrap:"anywhere"`,
-  which is the base behaviour. Name containment is unchanged: row `overflow-x:clip`, the button,
-  header, logo/name pair and name with `min-width:0` + `overflow:hidden`, and the name `strong`
-  with `nowrap` + `ellipsis`.
-- `apps/vacation-client/src/styles.css`: removed `[data-shared-live-tab='events'] .tsv-row-desc` nowrap
-  and ellipsis. The generic mobile `.tsv-row-desc` wrap applies again. The name ellipsis is kept.
-- `scripts/test_shared_events_390_text_wrap.mjs`: rewritten to parse the single Events `@media` block.
-  It asserts the full containment chain (row clip, then button/header/pair/name `min-width:0`, `max-width:100%`,
-  `overflow:hidden`), and that the name `strong` uses nowrap + ellipsis + overflow hidden + max-width 100%. It also
-  asserts no `white-space:normal` on names, no `[data-list-summary]` rule in the Events block,
-  and that the bundle's description element wraps. It fails on ae26799 (summary rule) and on base (no Events block).
-- `scripts/test_vacation_client_list_row_390_text_wrap.mjs`: new assertion that there is no Events `.tsv-row-desc` override.
-
-## Local measurement (built dist at this tree, `capture/capture.mjs`, fixture `fixture-nyc/heads/ae26799….json`, out `vkfill-776-20261101145818-job/cap`)
-
-- `look_screen_rules.check` → `live_accept.classify_screen`: **overflow_390 = 0**. Events has 0 true
-  overflow boxes and 9 intended ellipses, each with `right` 355 ≤ `container_right` 355.
-  Same classifier on base `8793b8e` capture: overflow_390 = 4 (events-390/-top).
-- events-390 rows 0–21: every row box and `desc_box` is identical to base (list 2619 px, doc 3209 px; ae26799 was 3101).
-  `body_text` is identical to base.
-- events-390-top: 0 px different from the pipeline's ae26799 capture.
-
-## Screens expected to differ from base `8793b8e` (Gate B on the pushed head)
-
-| screen | expected | why |
-|---|---|---|
-| events-390-top.png | small diff (local 843 px / 0.26% raw; Gate B scored the identical ae26799 top at 0.039%) | 4 visible "Flight option: …" titles now end in "…" at 355 px instead of running off the card |
-| events-390.png | small diff (local 3581 px / 0.29% raw; no height change) | 7 Flight option titles, "Statue of Liberty / Ellis Island tour candidate" (6 px) and "Village Vanguard / Smoke / Birdland / Jazz Gallery" (37 px) end in "…". Descriptions and row heights match base |
-| all other 30 screens | no change from this patch | every rule is scoped under `[data-shared-live-tab="events"]` @media ≤480px. Local diffs of ≤69 px on logo chips/tiles (cars/flights/restaurants/stores/daybyday) also show between the two pipeline captures base↔ae26799, so they are capture noise |
-
-Per brief: do not chase 0 px on events-390 by clipping descriptions; the remaining diff is the intended name ellipsis.
-
-## Checks (this tree, uncommitted)
-
-| command | result |
-|---|---|
-| `node scripts/test_shared_events_390_text_wrap.mjs` | PASS |
-| `node scripts/test_vacation_client_list_row_390_text_wrap.mjs` | PASS |
-| `node scripts/test_shared_hotels_390_text_wrap.mjs` | PASS |
-| all 394 `scripts/offline-tests.txt` entries (job-dir `run-all-offline.mjs`) | 390 PASS, 4 env-only FAIL: `test_purchase_email_app_link` (no google-chrome), `test_live_transcript_dialog_pdf` (reportlab/gbrain PATH), `test_same_selection_capture` + `test_capture_fixture_replay_harness` (host `git worktree add` in `~/tsv-dispatch/pr-src` refused); none touch this diff |
-| `node scripts/check-no-comments.mjs` | PASS (1042 files) |
-| `node scripts/test_offline_manifest.mjs` | PASS (394 offline, 18 online) |
-| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS (255 report, 0 fail) |
-
-The offline loop rewrote 4 tracked `scripts/ops/gateb/__pycache__/*.pyc`. They were restored from HEAD and are not in the diff.
-Remote `refs/pull/776/head` = `ae2679948fa35b238c46059fb9ddaa61e9d97822` at DONE (no race).
-Gate B / CI ids: none claimed. The pipeline runs Gate B on the pushed head.
-
----
-
-# PR #776 / issue #613 — Gate B fix-it receipt
-
-**GBrain handoff:** `bot-admin/lanes/vk-pr-handoff/pr-776` — page not found at lane start (noted per handoff).
-
-**Start HEAD:** `8850e3b1223f2e7b8fb1ff46c6f71b0235d94afa`
-
-**Fix-it:** First push used wrap at 390px; Gate B failed `events-390-top.png` (3.20%) and `events-390.png` (2.04%) vs baseline (single-line ellipsis). Reverted Events mobile rules to `nowrap` + ellipsis + `overflow-x:clip` / `min-width:0` containment; kept `data-shared-live-tab="events"`. Served CSS: Events `@media` block ordered before Hotels so `test_shared_hotels_390_text_wrap.mjs` greedy regex does not cross-match.
-
-**Commit:** `64b230f0` on branch `cursor/tsv-613-vk-live-accept-no-text-past-the-right-edge-at-390-px-live-staging-74f5`
-
----
-
-# PR #773 / issue #471 — lane vkfill-773 receipt
-
-**Start HEAD:** `4ec3250b7f07d494568ce8c255715eb530cd875c` (unchanged; host publishes)
-
-## Root cause (Gate B on 4ec3250b)
-
-`patchSharedTripListWrapping` set `whiteSpace:"normal"` on every `data-ts-list-row-name` span, including rows inside `data-ts-logo-name-pair`. Multi-line names vertically center the 28px chip against the full text block, so logo ink (nudged to the first name line) fails Gate B **logo not centred with name** on flights/hotels/restaurants/events/stores/cars captures. Price lines in the brief are data-only (ignored per Craig 10/20).
-
-## Fix
-
-Keep #471 Apple leaf alignment (`lineHeight:1`, `strong` block, ink → `tsListRowNameLeafCenterY`) but restore **single-line** list titles inside logo+name pairs (`nowrap` + ellipsis) so chip center and first name line stay aligned.
-
-## Files touched
-
-- `src/vacation/shared-trip-oe-list-row-patch.mjs` — `OE_LOGO_PAIR_LIST_ROW_NAME_*` rewind after wrap patch
-- `public/assets/index-BKun7ofk.js` — rebaked (`node scripts/rebake_served_trek_bundle.mjs`, sha256 `dd89d02ba17d8ecf57060706c3925d1a600e07a24b5dd273800dd1912f3ee469`)
-- `scripts/test_ui_471_apple_row_name_frame.mjs` — assert logo-pair bundle anchor
-- `scripts/test_shared_tab_list_summary.mjs` — list row name `nowrap` under logo pair
-
-## Checks (local, uncommitted tree)
+## Local verification
 
 | Command | Result |
 | --- | --- |
-| `node scripts/rebake_served_trek_bundle.mjs` | PASS |
-| `node scripts/test_ui_471_apple_row_name_frame.mjs` | PASS |
-| `node scripts/test_shared_tab_list_summary.mjs` | PASS |
-| `node scripts/test_gate_b_row_name_frame.mjs` | PASS |
-| `node scripts/test_thing_logo_ink_center.mjs` | PASS |
-| `node scripts/test_gate_b_live_tab_logo_rows.mjs` | PASS |
-| `node scripts/test_served_trek_bundle.mjs` | PASS |
-| `node scripts/check-no-comments.mjs` | PASS |
-| `node scripts/test_offline_manifest.mjs` | PASS |
-| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS |
+| `python3 scripts/ops/dispatch/test_same_selection_capture.py` | OK (11 tests) |
+| `cd apps/vacation-client && npm test` | OK (layout shell skipped without CHROME_PATH) |
+| `node scripts/rebake_served_trek_bundle.mjs` | OK |
+| `node scripts/check-no-comments.mjs` | pass |
+| `node scripts/test_offline_manifest.mjs` | pass |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pass |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | pass |
+| `node scripts/run-offline-tests.mjs` | FAIL lane host: `test_day_by_day_map_marker_bounds_chrome.mjs` hardcodes `/usr/bin/google-chrome-stable` (missing on Ubuntu lane; not PR diff) |
 
-Gate B pixel re-run on Ubuntu staging not executed in lane (host CI + `restore_check.py` on push).
+## Verdict
 
-## Scope left alone
+Base-merge tip `ce70be64` (merge `27c0ea8a` + J) ready for host push; CI `unit-tests` + Gate B on pushed head are merge authority.
 
-Budget/flight/hotel/car **price** gaps on NYC fixture — data harness, not UI (brief + decisions-log #65/#773 handoff).
+## Round vkfill-590 @ c364a0cd (2026-11-02, HOST PUBLICATION ONLY)
+
+**Root cause:** Served list chips use TREK `_l(G)` (`Re.logoUrl || G.logoUrl || oi(cc(G))`). Shared placeholder SVGs stayed on `place.logoUrl` when `thingOverrides.logoUrl` was cleared and no resolved favicon was written, so many event/hotel rows shared one `G.logoUrl` (Gate B #588 generic logos).
+
+**Patch (uncommitted, host push):**
+- `src/vacation/shared-trip-live-app-fields.mjs`: drop placeholder `logoUrl`/`iconUrl` from place + override when resolve fails so `_l` can fall through to `oi(cc(G))`.
+- `src/vacation/thing-logo-capture.mjs`: do not persist placeholder `image_url` as `place.logoUrl` in `applyCapturedLogos`.
+
+**Checks @ c364a0cd base + patch:**
+| Command | Result |
+| --- | --- |
+| `cd apps/vacation-client && npm test` | pass |
+| `node scripts/test_gate_b_live_tab_logo_rows.mjs` | pass |
+| `node scripts/test_trip_thing_logo_metadata.mjs` | pass |
+| `node scripts/test_shared_trip_live_tab_logos.mjs` | pass |
+| `node scripts/check-no-comments.mjs` | pass |
+| `node scripts/test_offline_manifest.mjs` | pass |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pass |
+
+Gate B closed-gap on staging not run in lane (no Cursor self-proof). Host: commit → push → Gate B structure on events/hotels 390+1280.
+
+## Round vkfill-590 @ 2afbe696 (2026-11-02 lane, HOST PUBLICATION ONLY)
+
+**Root cause:** Gate B capture serves fixture replay payload where TREK `_l(G)` reads `ha(G).logoUrl` before `G.logoUrl`. Replay only normalized timeline flags; empty or placeholder overrides left rows on shared fallbacks (and OSM `favicon.ico` clusters). Live API already ran `finalizeServedSharedTripPayload`; replay did not.
+
+**Patch (uncommitted, host push @ 2afbe696):**
+- `src/vacation/shared-trip-live-app-fields.mjs`: `applyServedListLogoOverridesOnly` + shared `applyListRowLogoFields` (override-only logo/url for replay; same logic for live mutate path).
+- `src/vacation/shared-trip-fixture-replay.mjs`: after timeline normalize, apply override-only logo enrichment; `places` array identity preserved for `test_same_selection_capture.py`.
+- `src/vacation/thing-logo-capture.mjs`: treat OpenStreetMap page URLs as non-logo sources; block OSM favicon as generic placeholder.
+- `src/vacation/keepsake-product-overrides.mjs`: do not copy placeholder logos into overrides.
+
+**Checks @ 2afbe696 + patch:**
+| Command | Result |
+| --- | --- |
+| `cd apps/vacation-client && npm test` | pass |
+| `node scripts/test_gate_b_live_tab_logo_rows.mjs` | pass |
+| `node scripts/test_trip_thing_logo_metadata.mjs` | pass |
+| `node scripts/test_shared_trip_live_tab_logos.mjs` | pass |
+| `node scripts/check-no-comments.mjs` | pass |
+| `node scripts/test_offline_manifest.mjs` | pass |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | pass |
+
+**Uncommitted files:** `src/vacation/shared-trip-live-app-fields.mjs`, `src/vacation/shared-trip-fixture-replay.mjs`, `src/vacation/thing-logo-capture.mjs`, `src/vacation/keepsake-product-overrides.mjs`, `J/RECEIPT.md`
+
+Host: commit → push → Gate B structure (events/hotels 390+1280) on pushed head.
+
+## Round vkfill-590 @ 5f42857c (2026-11-02 08:28 PT lane, claude-ubuntu, HOST PUBLICATION ONLY)
+
+**Start head:** `5f42857c11385a95e3a97bef993d7eb188812f23` (matches PR head and brief). No host merge was staged in this worktree, so the base-merge TARGET did not apply. No merge, rebase or commit was made here.
+
+**CI failure (the PR's own regression):** `unit-tests` has failed on every head published today. The runs are 41463815206 (`c364a0cd`), 41471904494 (`2afbe696`) and 41480118825 (`5f42857c`, job 125395878271), and each fails at `scripts/test_gate_b_product_row_fields.mjs:279`: "candidate and base paths must hash the same finalized payload" (`188276…d4b2` vs `e3c15f…1b42`). On `d6deba0f` it was green (job 119550355468). The failure reproduces locally.
+
+**Root cause:** `applyListRowLogoFields` (added in `c364a0cd`) wrote the derived page URL onto `place.url`/`place.website` after `applyThingDetailOverrides` had already run. On the next finalize, `writeRatings` reads `place.url` and adds `thingOverrides[place:*].sourceUrl` (rows 632–634, Southwest options). So `finalizeServedSharedTripPayload` was not idempotent.
+
+**Patch (uncommitted, host push):**
+- `src/vacation/shared-trip-live-app-fields.mjs`: stop writing `place.url`/`place.website`. Give `resolveThingLogoUrl` a lookup copy that carries the page URL instead. Override `url`/`website`/`logoUrl` writes and the replay path (`mutatePlace: false`) are unchanged.
+
+**Effect check (job-dir `cmp.mjs`, old HEAD module vs patched):**
+- daybyday, pr225 and positive NYC fixtures: 0 chip changes and 0 `thingOverrides` changes.
+- The only `place` keys that change are the dropped derived `url`/`website`.
+- `applyServedListLogoOverridesOnly` (Gate B replay) output is byte-identical.
+- No visible change is expected.
+
+**Checks @ 5f42857c + patch:**
+| Command | Result |
+| --- | --- |
+| `node scripts/test_gate_b_product_row_fields.mjs` | pass (was the CI failure) |
+| `cd apps/vacation-client && npm ci && npm run typecheck && npm run lint && npm run test` (CHROME_PATH=chromium) | pass, layout suites included |
+| every entry of `scripts/offline-tests.txt` (279) | 274 pass, 5 env-only fails (below) |
+| `node scripts/check-no-comments.mjs` | pass (818 files) |
+| `node scripts/test_offline_manifest.mjs` | pass (279 offline, 17 online) |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | pass (255 report, 0 fail; local `origin/vk` = `ebaaa74`) |
+
+The 5 env-only fails, all of which CI ran green before line 150 on `5f42857c` or with a chrome shim here:
+- `test_day_by_day_map_marker_bounds_chrome` (no `/usr/bin/google-chrome-stable`)
+- `test_live_transcript_dialog_pdf` (lane PDF env)
+- `test_same_selection_capture` and `test_capture_fixture_replay_harness` ("missing but already registered worktree" under `pr-src/capture-producer-roots`)
+- `test_purchase_email_app_link` (no `google-chrome`; it passes with a job-dir chromium shim)
+
+**Still open for the host / managing dr (not codeable in this lane):**
+- **Base merge:** PR is `mergeable_state=dirty` against `vk` `cf6c9627` (357 commits behind; merge-base `e3364ac5`). The host base-merge lanes `vkfill-590-20261102075309` and `-080309` (start `2afbe696`, base_tip `ebaaa74e`) ended source-ready but stayed unpublished: "host commit refused: 508 staged paths" (their `manual-publish.log`). A real merge into `vk` needs that publisher guard decided by the host or managing dr. A read-only legacy `git merge-tree e3364ac5 HEAD cf6c9627` shows text conflicts only in `J/PR_DESCRIPTION.md`, `J/RECEIPT.md` and `public/assets/index-BKun7ofk.js`, plus `evidence/*.png` added on both sides. `vk`'s only change to the patched file (`pickLongDetails` description fallbacks) does not touch the patched lines.
+- **Gate B gap:** #588 gap-close FAIL on `d6deba0` (gateb-verdicts line 532, run 20261102-141548) and on `c364a0c` (line 534, run 20261102-144440): "generic logo on 7 of 29 rows" on events-1280. There is no Gate B verdict yet for `2afbe69`/`5f42857`, so whether the `2afbe696` replay-path enrichment closes the gap is unproven. This patch does not change the replay payload.
+
+**Seen, left alone (scope):** `c364a0cd` added `transform:"translateY(-3px)"` to the chip emoji fallback in `trek-live-product-patches.mjs` (a look change). `5f42857c` committed 42 test-generated `evidence/*.png` files. This lane restored its own `npm test` evidence rewrites to HEAD.
+
+**Uncommitted files:** `src/vacation/shared-trip-live-app-fields.mjs`, `J/RECEIPT.md`, `J/PR_DESCRIPTION.md`
+
+Host: commit → push once → CI `unit-tests` on the pushed head → Gate B structure (events/hotels 390+1280).
+
+## Round vkfill-590 fresh rebuild @ 0e07f9a0 (2026-11-02 lane, cursor-ubuntu, HOST PUBLICATION ONLY)
+
+**Start head:** `0e07f9a0652bb5c62b2d1bbb41009e2ebbf7ce2b` (host merge: PR `5f42857c` + vk `1e2c56ad`; 9 paths vs `origin/vk` before this round).
+
+**Change:** Re-applied PR #588 list-row logo intent on vk resolver path in `apps/vacation-client/src/lib/listTabModel.mjs`: `logoUrlForPlace` uses `resolveThingLogoDisplayUrl` first (vk repair path), then explicit override/place/source logo or favicon when resolver returns empty, skipping `isPlaceholderLogoUrl`. Ran `node scripts/rebake_served_trek_bundle.mjs` (no served bundle diff).
+
+**Checks @ 0e07f9a0 + patch:**
+| Command | Result |
+| --- | --- |
+| `cd apps/vacation-client && npm test` | pass (layout suites included) |
+| `node scripts/rebake_served_trek_bundle.mjs` | pass |
+| `node scripts/test_gate_b_product_row_fields.mjs` | pass |
+| `node scripts/test_gate_b_live_tab_logo_rows.mjs` | pass |
+| `node scripts/test_shared_trip_live_tab_logos.mjs` | pass |
+| `node scripts/test_tsv415_thing_logo_capture.mjs` | pass |
+| `node scripts/check-no-comments.mjs` | pass |
+| `node scripts/test_offline_manifest.mjs` | pass |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | pass |
+| `scripts/offline-tests.txt` (full loop) | **FAIL** `scripts/test_live_transcript_dialog_pdf.mjs:651` — `rules.via` is `gbrain-cli-get_page`, expected `bundled-get_page` (Ubuntu lane has working `gbrain` CLI; same env-only class as prior round @ `5f42857c`) |
+
+**Uncommitted files (host commit):** `apps/vacation-client/src/lib/listTabModel.mjs`, `J/RECEIPT.md`
+
+**Diff vs `origin/vk`:** 10 paths (`listTabModel.mjs` + prior 9).
+
+Host: `git add` the two files above → commit on top of `0e07f9a0` → push → CI.
