@@ -147,9 +147,6 @@ export function ratingQuoteSupportsAggregate(quote = '', average, count) {
   return true;
 }
 
-// Saved-page ratings are judged on the page text. The writer's quote does not
-// have to be a contiguous substring. The average and the count must sit near
-// a rating word (80-char window), as whole numeric tokens.
 const RATING_PAGE_WINDOW = 80;
 
 export function pageTextSupportsRating(pageText = '', average, count) {
