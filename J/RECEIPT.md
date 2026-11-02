@@ -147,3 +147,13 @@ Host: commit → push once → CI `unit-tests` on the pushed head → Gate B str
 **Diff vs `origin/vk`:** 10 paths (`listTabModel.mjs` + prior 9).
 
 Host: `git add` the two files above → commit on top of `0e07f9a0` → push → CI.
+
+## Round PR #801 / issue #793 CI fix-it (2026-11-02)
+
+**Handoff:** GBrain `bot-admin/lanes/vk-pr-handoff/pr-801` fetch failed (`page_not_found`); no lane handoff page at read time.
+
+**CI failure:** `scripts/test_shared_tab_filter_chips.mjs` still asserted legacy budget needle `Qa.flatMap(di=>Ci(di))` after budget membership moved to `(Gt||[]).filter(Xi=>Xi&&Ds(Xi))`.
+
+**Fix:** Align assertion with rebaked served bundle (same as `test_keepsake_style2.mjs`).
+
+**Verify:** `node scripts/test_shared_tab_filter_chips.mjs` → pass.
