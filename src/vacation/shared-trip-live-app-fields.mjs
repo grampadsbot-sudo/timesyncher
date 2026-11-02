@@ -16,8 +16,7 @@ const EXPERIENCE_CATEGORIES = new Set([
   'other',
 ]);
 import { flightFieldsFromBlob } from './place-detail-extract.mjs';
-import { isGenericDescription, isHotelPlanningNote, isCcabCandidateStubDescription } from './list-row-generic-description.mjs';
-import { pickSubstantiveListNarrative } from './list-row-description.mjs';
+import { isGenericDescription, isHotelPlanningNote } from './list-row-generic-description.mjs';
 import { isPlaceholderLogoUrl, resolveThingLogoUrl } from './thing-logo-capture.mjs';
 
 function text(value) {
@@ -124,11 +123,7 @@ function priceFromRecords(place = {}, override = {}, source = null) {
 }
 
 function pickLongDetails(place = {}, override = {}, source = null) {
-  const themes = override.reviewThemes || source?.reviewThemes;
-  const praise = themes && typeof themes === 'object' && Array.isArray(themes.praise)
-    ? themes.praise.map((row) => text(row, 200)).filter(Boolean).join('; ')
-    : '';
-  const picked = pickSubstantiveListNarrative(
+  for (const value of [
     override.longDetails,
     place.longDetails,
     source?.longDetails,
@@ -136,13 +131,12 @@ function pickLongDetails(place = {}, override = {}, source = null) {
     place.description,
     override.description,
     source?.description,
-    override.websiteFlavour,
-    source?.websiteFlavour,
-    override.worthNote,
-    source?.worthNote,
-    praise,
-  );
-  if (picked) return picked;
+  ]) {
+    const row = text(value);
+    if (!row) continue;
+    if (isGenericDescription(row)) continue;
+    return row;
+  }
   return firstPresent(override.description, place.description, source?.description);
 }
 
@@ -270,7 +264,7 @@ export function applyLiveAppListRowFields(shared = {}) {
     if (longDetails) {
       override.longDetails = longDetails;
       if (!text(override.details)) override.details = longDetails;
-      if (isGenericDescription(override.description) || isCcabCandidateStubDescription(override.description)) {
+      if (category === 'hotel' && isGenericDescription(override.description)) {
         override.description = longDetails;
       }
     }

@@ -1,56 +1,5 @@
 # vkfill-549 round (2026-11-02, cursor-ubuntu)
 
-## Round 2026-11-02 ~22:35 UTC (cursor-ubuntu composer-2.5, chief brief description rethink)
-
-**Start sha:** `221cb70b59bd61b221bb2dbfdaea90c598eca868` (PR #549 head at dispatch).
-
-### Outcome
-
-**source-ready**, HOST PUBLICATION ONLY. Rebaked `public/assets/index-BKun7ofk.js`. List rows now prefer substantive stored narrative over ccab `Status: candidate only` card stubs and bind richer sibling ccab enrichment when the primary key is thin.
-
-### Changes
-
-- `isCcabCandidateStubDescription` in `list-row-generic-description.mjs`: treats short ccab card copy (`Status: candidate only`, price-floor stubs) as generic; full `Airline:` + `Outbound:` itinerary blobs stay substantive.
-- `stored-ccab-narrative-merge.mjs`: re-merge on stubs; pick richest text among name-prefix ccab keys (e.g. Blue Note → Blue Note Jazz Club overlay); `pickSubstantiveListNarrative` across longDetails, websiteFlavour, praise.
-- `list-row-description.mjs` + served bundle snippet: experience rows use longest-wins on longDetails/details/place description; bundle `isGeneric` matches stub rules.
-- `shared-trip-live-app-fields.mjs` + `listTabModel.mjs`: `pickLongDetails` / spare / flight rows keep full outbound copy when ≥30 words; flights with `Outbound:` no longer clip to a 6-word airline prefix.
-
-### Weak rows (offline `rowSummary` after `applyLiveAppListRowFields`, start `221cb70b`)
-
-| id | place | words | `descriptionPassesDetailJudge` |
-| --- | --- | --- | --- |
-| 659 | Blue Note | 146 | pass |
-| 660 | Blue Note Jazz Club | 173 | pass |
-| 651 | Delta LAS-JFK flight option | 45 | pass |
-| 602 | Zabar's | 104 | pass |
-| 605 | Strand Book Store | 130 | pass |
-| 604 | Statue City Cruises | 120 | pass |
-
-Gate B rescoring not run in lane (no self-certify). Prior round-23 aggregate was 8/15 good on the judged sample; host should re-run structure capture after host-publish.
-
-### Verification (local, start `221cb70b`)
-
-```bash
-node scripts/rebake_served_trek_bundle.mjs
-node scripts/test_served_trek_bundle.mjs
-node scripts/test_list_row_description_substance.mjs
-node apps/vacation-client/test/listRows.unit.mjs
-node scripts/test_stored_ccab_canonical_identity.mjs
-```
-
-All exit 0. `node scripts/check-no-comments.mjs` **blocked** in this sandbox: missing `apps/vacation-client/node_modules/typescript` (MODULE_NOT_FOUND); CI on pushed head should still run the check.
-
-### Uncommitted files (host publish)
-
-- `apps/vacation-client/src/lib/listTabModel.mjs`
-- `public/assets/index-BKun7ofk.js`
-- `src/vacation/list-row-description.mjs`
-- `src/vacation/list-row-generic-description.mjs`
-- `src/vacation/shared-trip-live-app-fields.mjs`
-- `src/vacation/stored-ccab-narrative-merge.mjs`
-
----
-
 ## Round 2026-11-02 ~21:30 UTC (claude-ubuntu, tier-1 rethink after Gate B round 22)
 
 **Start sha:** `d0dbedfdf7a0a8d4b43185ed6c559acfe3a3872f` (PR #549 head; CI green, unit-tests check 125536652209; Gate B round 22 FAIL 1:05 PM PT, `gateb-verdicts.jsonl` line for sha `d0dbedf`).
