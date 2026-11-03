@@ -53,6 +53,7 @@ const EXPLICIT_LOGO_REPAIRS = new Map([
   ['https://villagevanguard.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/villagevanguard.com.ico'],
   ['https://smokejazz.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/smokejazz.com.ico'],
   ['https://www.circleline.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/circleline.com.ico'],
+  ['https://carbonenewyork.com/assets/favicons/carbone.png', 'https://icons.duckduckgo.com/ip3/carbonenewyork.com.ico'],
 ]);
 
 export function declaredIconFetchLooksBroken(status, contentType = '', byteLength = 0) {
