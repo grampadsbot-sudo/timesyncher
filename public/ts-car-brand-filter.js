@@ -37,6 +37,8 @@
       const label = (node.innerText || '').replace(/\s+/g, ' ').trim();
       if (!label || label.length > 80) return false;
       if (/^car type$/i.test(label) || /^cars$/i.test(label) || /^remove /i.test(label)) return false;
+      const rowCategory = (node.closest('[data-thing-category]')?.getAttribute('data-thing-category') || '').toLowerCase();
+      if (rowCategory && rowCategory !== 'car') return false;
       const category = (node.closest('[data-category]')?.getAttribute('data-category') || '').toLowerCase();
       return category === 'car' || /\$\d+/.test(label);
     });
