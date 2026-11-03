@@ -1,27 +1,22 @@
+Closes #805
+
 ## Summary
 
-Fixes `unit-tests` failures on `scripts/ops/dispatch/test_same_selection_capture.py` (CI run 39667545911): fixture replay must not rewrite served `places` (category strings stay strings; no replay-time `logoUrl`/`website` injection).
+On live `7fd26c53`, `ui_logo_gate` failed only place 610 Carbone. Its `logoUrl` is `https://carbonenewyork.com/assets/favicons/carbone.png`, and that host sometimes answers hotlinks with 403 text/html.
 
-Generic list logos for #588 are resolved in the vacation client at render time via `logoUrlForPlace` → `resolveThingLogoUrl` in `apps/vacation-client/src/lib/listTabModel.mjs`, not by mutating the served trip payload.
+- **Data fix:** I added Carbone's brand asset to `EXPLICIT_LOGO_REPAIRS` (`src/vacation/thing-logo-fallback-url.mjs`). Every served shared-trip path already runs this map through `finalizeServedSharedTripPayload` (#758). The served `places[].logoUrl` and `thingOverrides['place:610'].logoUrl` become `https://icons.duckduckgo.com/ip3/carbonenewyork.com.ico`. That is the favicon of Carbone's own sourced domain, the same DDG ip3 source 40 other places use. It is byte-identical to the brand file (569 bytes, same md5), so nothing changes visually.
+- **Browser hardening:** The served bundle `public/assets/index-BKun7ofk.js` already falls back on `onerror` at every logo site: timeline `tsTimelineLogoFallback`, Thing-card chip `onError`, and the map-marker `onerror`. The order is domain DDG ip3 → Google favicon → category emoji, never `?`. This PR pins that path for a blocked brand asset path (not just `/favicon.ico`) by executing the bundle's real fallback functions in `scripts/test_map_marker_logo_fallback_758.mjs`. No bundle change, so no rebake.
 
-Reverted the prior round’s fixture/ccab harness churn and restored the subprocess sanctioned-producer binding in `scripts/ops/capture/timeline-replay.mjs`.
+## Checks run
 
-Merged `origin/migrate/trek-source` at `446e1913` (host): kept base `Oe()` `<strong>` list-row title wrap + rebaked served bundle alongside this PR’s replay/logo fixes.
-
-Merged `origin/migrate/trek-source` at `e3364ac5` (dirty-head requeue 2026-10-21): absorbed #597/#600 Gate B NYC fixture updates; J conflict only.
-
-2026-11-02 rounds (`c364a0cd`, `2afbe696`, `5f42857c`) drop placeholder logos, add override-only logo enrichment to fixture replay, and block the OSM favicon. The CI fix on top of `5f42857c` (`unit-tests` run 41480118825, `test_gate_b_product_row_fields.mjs:279`): the list-row logo step no longer writes derived `url`/`website` onto `place`, so `finalizeServedSharedTripPayload` is idempotent again. Logo outputs and the replay payload are unchanged. The PR is still `dirty` against `vk`; see `J/RECEIPT.md`.
-
-## Test plan
-
-- [x] `python3 scripts/ops/dispatch/test_same_selection_capture.py`
-- [x] `node scripts/test_capture_fixture_replay_harness.mjs`
-- [x] `cd apps/vacation-client && npm run typecheck && npm run test`
-- [x] Pre-DONE: `check-no-comments`, `test_offline_manifest`, `BASE=migrate/trek-source check-code-ratchet`
-- [ ] CI `unit-tests` green on PR head (host)
-- [ ] Gate B structure mode on 32 screens (host)
+- Logo gate rules (`ui_logo_gate.audit`, same headless-Chromium `logo_probe.mjs` plus net probe) on the live shared payload with this patch applied: `94/94 logos load (>=16px, not placeholder)`; place 610 serves the DDG ip3 icon.
+- `node scripts/test_served_payload_logo_repair_758.mjs`, `test_map_marker_logo_fallback_758`, `test_served_logo_url_repair_758`, `test_thing_logo_fallback_758`, `test_ui_758_punchlist`, `test_tsv470_declared_icon_logo_repairs`, `test_served_trek_bundle`, `test_gate_b_product_row_fields`, `test_shared_trip_live_tab_logos`, `test_shared_place_logo_and_category`, `test_trip_thing_logo_metadata`, `test_shared_logo_chip_center_bundle`, `check-hardcoded-content` (0 fail), and `apps/vacation-client` `test/run-all.mjs`: all passed.
+- Pre-DONE: `check-no-comments` passed, `test_offline_manifest` ok, `BASE=vk check-code-ratchet` 0 fail.
+- Not reproduced on this pass: the brand URL returned 200 image/png on 3 rounds (the hotlink block is intermittent). The live payload also scored 94/94 at that moment.
 
 ## Left alone (scope)
 
-- Baselines, capture/Gate B thresholds, `offline-tests.txt`, NYC reference screenshots
-- Fixture/snapshot edits for logo chips (reverted)
+- Fixture copies of the old Carbone URL (`scripts/fixtures/gate-b-nyc-shared-staging.json`, `pr336-*`). The serve path repairs them at runtime.
+- The Thing-card chip `onError` stage 0 lacks the `duckduckgo|gstatic` host guard that the timeline fallback has. This is pre-existing.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)

@@ -6,6 +6,7 @@ const cases = [
   [613, 'https://www.macys.com/favicon.ico', 'macys.com'],
   [651, 'https://www.delta.com/favicon.ico', 'delta.com'],
   [710, 'https://www.hertz.com/favicon.ico', 'hertz.com'],
+  [610, 'https://carbonenewyork.com/assets/favicons/carbone.png', 'carbonenewyork.com'],
 ];
 const shared = {
   places: cases.map(([id, logo]) => ({ id, name: `Thing ${id}`, logoUrl: logo })),
