@@ -248,6 +248,13 @@ export async function refreshSearchProgressFromTripThings(db, tripId, { jobId, s
   });
 }
 
+export async function searchProgressForVacationAppTrip(db, trip) {
+  if (!trip?.id) return null;
+  await refreshSearchProgressFromTripThings(db, trip.id, { stage: 'searching' });
+  const synced = await syncSearchProgressStage(db, trip.id, { publicUrl: trip?.publicUrl || '' });
+  return searchProgressForClient(synced);
+}
+
 export function throttleUiCounts(lastSnapshot, nextSnapshot, minIntervalMs = 1000) {
   const lastAt = lastSnapshot?.updatedAt ? Date.parse(lastSnapshot.updatedAt) : 0;
   const nextAt = nextSnapshot?.updatedAt ? Date.parse(nextSnapshot.updatedAt) : Date.now();

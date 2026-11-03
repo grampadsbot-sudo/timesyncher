@@ -1,5 +1,10 @@
 import { sql } from './db.mjs';
-import { cleanText, headerValue, sendJson, vacationAppErrorBody } from './http.mjs';
+import { cleanText, headerValue, sendJson, sendSharedTripJson, vacationAppErrorBody } from './http.mjs';
+import {
+  readCachedUpstreamShared,
+  sharedUpstreamCacheKey,
+  writeCachedUpstreamShared,
+} from './shared-trip-upstream-cache.mjs';
 import { applyThingPresentation, intakeShareSlug, sharedTripFromIntake, thingRecordFromTripRow, windLookupPointsFromThings } from './intake-shared-trip.mjs';
 import { lookupWindBackup } from './wind-backup.mjs';
 import { applyCapturedLogos } from './thing-logo-capture.mjs';
@@ -155,7 +160,11 @@ async function readUpstreamSharedResponse(shareToken, req) {
   const url = new URL(req.url || '/', 'https://timesyncher.com');
   const incomingQuery = new URLSearchParams(url.search);
   incomingQuery.delete('trekPath');
-  const dest = `${trekUpstreamBase()}/api/shared/${encodeURIComponent(shareToken)}/${incomingQuery.toString() ? `?${incomingQuery}` : ''}`;
+  const queryString = incomingQuery.toString();
+  const cacheKey = sharedUpstreamCacheKey(shareToken, queryString);
+  const cached = readCachedUpstreamShared(cacheKey);
+  if (cached) return cached;
+  const dest = `${trekUpstreamBase()}/api/shared/${encodeURIComponent(shareToken)}/${queryString ? `?${queryString}` : ''}`;
   const headers = {};
   for (const name of ['accept', 'content-type', 'cookie', 'authorization']) {
     const value = headerValue(req, name);
@@ -180,7 +189,13 @@ async function readUpstreamSharedResponse(shareToken, req) {
       json = null;
     }
   }
-  return { status: upstream.status, body, json, contentType };
+  const value = { status: upstream.status, body, json, contentType };
+  if (upstream.status === 200) writeCachedUpstreamShared(cacheKey, value);
+  return value;
+}
+
+function sendSharedTripPayload(res, status, payload) {
+  return sendSharedTripJson(res, status, payload);
 }
 
 function sendUpstreamSharedResponse(res, upstream) {
@@ -206,13 +221,13 @@ function sendSlugMiss(res, shareToken) {
 async function respondSharedTripGet(req, res, shareToken) {
   try {
     const payload = await loadSharedTripPayload(shareToken, req);
-    if (payload) return sendJson(res, 200, payload);
+    if (payload) return sendSharedTripPayload(res, 200, payload);
     if (String(shareToken || '').startsWith('intake-')) return sendSlugMiss(res, shareToken);
     if (cleanText(process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL)) {
       const upstream = await readUpstreamSharedResponse(shareToken, req);
       if (upstream.status === 200 && sharedPayloadHasPlaces(upstream.json)) {
         const withDossiers = await applyStoredDossiersToSharedTrip(upstream.json, { env: process.env });
-        return sendJson(res, 200, finalizeServedSharedTripPayload(withDossiers));
+        return sendSharedTripPayload(res, 200, finalizeServedSharedTripPayload(withDossiers));
       }
       return sendUpstreamSharedResponse(res, upstream);
     }
@@ -221,7 +236,7 @@ async function respondSharedTripGet(req, res, shareToken) {
   } catch (error) {
     if (error?.code === 'shared_trip_upstream_unconfigured') {
       const offline = await offlineApprovedSharedResponse(shareToken);
-      if (offline) return sendJson(res, 200, offline);
+      if (offline) return sendSharedTripPayload(res, 200, offline);
     }
     logSharedTripFailure('shared_trip_lookup_failed', shareToken, error);
     return sendJson(res, 500, {

@@ -88,6 +88,7 @@ import { resolveVacationAppQueueIntake } from '../src/vacation/vacation-app-queu
 import {
   refreshSearchProgressFromTripThings,
   searchProgressForClient,
+  searchProgressForVacationAppTrip,
   syncSearchProgressStage,
 } from '../src/vacation/search-progress.mjs';
 
@@ -894,6 +895,16 @@ async function handleVacationApp(req, res, db, url) {
   }
 
   if (req.method === 'GET') {
+    if (url.searchParams.get('progressOnly') === '1') {
+      const requestedTripId = cleanText(url.searchParams.get('tripId') || url.searchParams.get('trip_id'), 80);
+      const selected = pickVacationAppTrip(await loadVacationAppTrips(db, session), session, requestedTripId);
+      return sendJson(res, 200, {
+        ok: true,
+        publicUrl: selected?.publicUrl || '',
+        trip: selected ? { id: selected.id, publicUrl: selected.publicUrl || '' } : null,
+        searchProgress: await searchProgressForVacationAppTrip(db, selected),
+      });
+    }
     const requestedTripId = cleanText(url.searchParams.get('tripId') || url.searchParams.get('trip_id'), 80);
     const seatPrefetch = seatFromSession(session);
     if (seatPrefetch?.ownerTripId) await publishIntakeShare(db, seatPrefetch.ownerTripId);
