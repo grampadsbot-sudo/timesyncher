@@ -31,17 +31,13 @@
   }
 
   function carRows() {
-    const marked = [...document.querySelectorAll('li[data-list-row][data-thing-category="car"]')];
-    if (marked.length) return marked;
-    return [...document.querySelectorAll('button, article, li')].filter((node) => {
-      const label = (node.innerText || '').replace(/\s+/g, ' ').trim();
-      if (!label || label.length > 80) return false;
-      if (/^car type$/i.test(label) || /^cars$/i.test(label) || /^remove /i.test(label)) return false;
-      const rowCategory = (node.closest('[data-thing-category]')?.getAttribute('data-thing-category') || '').toLowerCase();
-      if (rowCategory && rowCategory !== 'car') return false;
-      const category = (node.closest('[data-category]')?.getAttribute('data-category') || '').toLowerCase();
-      return category === 'car' || /\$\d+/.test(label);
-    });
+    // Real car rows only. A price fallback treated every short priced li as a
+    // car. List rows do not set data-thing-category; they use tsv-row-car.
+    // That fallback built a tall "Remove a brand" bar over the 390px tabs.
+    return [
+      ...document.querySelectorAll('li.tsv-row-car[data-ts-list-row="1"]'),
+      ...document.querySelectorAll('li[data-list-row][data-thing-category="car"]'),
+    ];
   }
 
   function rememberBrands(rows) {
@@ -77,7 +73,7 @@
     if (!bar) {
       bar = document.createElement('div');
       bar.dataset.tsCarBrands = '1';
-      bar.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;padding:8px 12px;background:#fff;color:#111;position:relative;z-index:30;';
+      bar.style.cssText = 'display:flex;flex-wrap:nowrap;gap:8px;padding:8px 12px;background:#fff;color:#111;position:relative;z-index:30;overflow-x:auto;max-width:100%;';
       const title = document.createElement('div');
       title.textContent = 'Remove a brand';
       bar.appendChild(title);

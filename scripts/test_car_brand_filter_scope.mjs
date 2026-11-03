@@ -15,8 +15,9 @@ function loadPuppeteer() {
   }
 }
 const script = await readFile(path.join(root, 'public/ts-car-brand-filter.js'), 'utf8');
-const hotelRow = '<li data-list-row="1" data-thing-category="hotel"><button><span data-ts-list-row-name="1"><strong>The Wallace Hotel</strong></span> $310</button><div>Below-row summary</div></li>';
-const carRow = '<div data-category="car"><button>Hertz JFK $64</button></div>';
+const hotelRow = '<li class="tsv-row" data-ts-list-row="1"><span data-ts-list-row-name="1"><strong>The Wallace Hotel</strong></span> $310</li>';
+const taggedHotelRow = '<li data-list-row="1" data-thing-category="hotel"><button><span data-ts-list-row-name="1"><strong>Hotel Edison</strong></span> $182</button></li>';
+const carRow = '<li class="tsv-row tsv-row-car" data-ts-list-row="1"><span data-ts-list-row-name="1"><strong>Hertz JFK</strong></span> $64</li>';
 const browser = await loadPuppeteer().launch({
   executablePath: process.env.CHROME_PATH || process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser',
   headless: true,
@@ -32,8 +33,9 @@ async function brands(body) {
   return out;
 }
 try {
-  assert.deepEqual(await brands(hotelRow), [], 'hotel rows with a short priced button are not car brands');
-  assert.deepEqual(await brands(hotelRow + carRow), ['Hertz JFK'], 'car rows still get remove controls');
+  assert.deepEqual(await brands(hotelRow), [], 'list rows without tsv-row-car are not car brands');
+  assert.deepEqual(await brands(taggedHotelRow), [], 'tagged hotel rows are not car brands');
+  assert.deepEqual(await brands(hotelRow + taggedHotelRow + carRow), ['Hertz JFK'], 'tsv-row-car rows still get remove controls');
 } finally {
   await browser.close();
 }
