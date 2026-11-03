@@ -1,10 +1,21 @@
-export function sendJson(res, status, body) {
+export function sendJson(res, status, body, options = {}) {
   res.statusCode = status;
   res.setHeader('content-type', 'application/json; charset=utf-8');
   if (!res.getHeader || !res.getHeader('cache-control')) {
     res.setHeader('cache-control', 'no-store');
   }
-  res.end(JSON.stringify(body, null, 2) + '\n');
+  const pretty = options.pretty === true;
+  const serialized = pretty ? `${JSON.stringify(body, null, 2)}\n` : JSON.stringify(body);
+  res.end(serialized);
+}
+
+export const SHARED_TRIP_JSON_CACHE_CONTROL = 'public, max-age=60, s-maxage=300, stale-while-revalidate=600';
+
+export function sendSharedTripJson(res, status, body) {
+  res.statusCode = status;
+  res.setHeader('content-type', 'application/json; charset=utf-8');
+  res.setHeader('cache-control', SHARED_TRIP_JSON_CACHE_CONTROL);
+  res.end(JSON.stringify(body));
 }
 
 export async function readJson(req) {

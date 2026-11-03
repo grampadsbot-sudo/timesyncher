@@ -198,10 +198,17 @@ export function journeyBookGate({ pdfPath = '', report = '' } = {}) {
   return { ok: true, status: 200, kind: isProductStyleTwo(report) ? 'style-two' : 'trek-report' };
 }
 
+const SHARED_REPORT_PDF_CACHE_CONTROL = 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800';
+const sharedReportPdfCache = new Map();
+
+function sharedReportPdfCacheKey(shareToken, report, dayNumber) {
+  return `${shareToken}|${report}|${dayNumber}`;
+}
+
 function sendPdf(res, buffer) {
   res.statusCode = 200;
   res.setHeader('content-type', 'application/pdf');
-  res.setHeader('cache-control', 'no-store');
+  res.setHeader('cache-control', SHARED_REPORT_PDF_CACHE_CONTROL);
   res.end(buffer);
 }
 
@@ -246,13 +253,18 @@ export default async function handler(req, res) {
     if (daily && (!Number.isFinite(dayNumber) || dayNumber <= 0)) {
       return sendJson(res, 400, { ok: false, error: 'daily day_number is required' });
     }
+    const reportKind = daily ? 'daily' : listSlug;
+    const pdfCacheKey = sharedReportPdfCacheKey(shareToken, reportKind, dayNumber);
+    const cachedPdf = sharedReportPdfCache.get(pdfCacheKey);
+    if (cachedPdf) return sendPdf(res, cachedPdf);
     const pdf = renderSharedTripReportPdf(payload, {
-      report: daily ? 'daily' : listSlug,
+      report: reportKind,
       dayNumber,
     });
     if (!pdf) {
       return sendJson(res, 400, { ok: false, error: 'unknown report slug', report: reportName });
     }
+    sharedReportPdfCache.set(pdfCacheKey, pdf);
     return sendPdf(res, pdf);
   }
 

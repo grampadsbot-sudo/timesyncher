@@ -1,6 +1,6 @@
 import { requireWorkerAuth } from '../src/vacation/auth.mjs';
 import { sql } from '../src/vacation/db.mjs';
-import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
+import { cleanText, headerValue, readJson, sendJson } from '../src/vacation/http.mjs';
 import { insertTripThing } from '../src/vacation/trip-things.mjs';
 import { classifyTurnWithModel } from '../src/vacation/turn-tags.mjs';
 
@@ -184,6 +184,18 @@ export default async function handler(req, res) {
       const workerId = cleanText(url.searchParams.get('workerId') || 'TimeStopper', 120);
       const limit = Math.max(1, Math.min(10, Number.parseInt(url.searchParams.get('limit') || '1', 10)));
       const jobs = await claimJobs(db, { workerId, limit });
+      if (!jobs.length) {
+        const etag = '"worker-jobs-empty"';
+        if (headerValue(req, 'if-none-match') === etag) {
+          res.statusCode = 304;
+          res.setHeader('etag', etag);
+          res.setHeader('cache-control', 'private, max-age=15');
+          return res.end();
+        }
+        res.setHeader('etag', etag);
+        res.setHeader('cache-control', 'private, max-age=15');
+        return sendJson(res, 200, { ok: true, jobs: [] });
+      }
       return sendJson(res, 200, { ok: true, jobs });
     }
 
