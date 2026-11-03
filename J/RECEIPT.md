@@ -81,3 +81,5 @@ All passed on this pass.
 ## Host
 
 Uncommitted files: `src/vacation/trek-style2-bundle.mjs`, `public/assets/index-BKun7ofk.js`, `scripts/test_budget_timeline_only_rows.mjs`, `scripts/test_shared_tab_filter_chips.mjs`, `scripts/test_thing_card_ui_keep.mjs`, `scripts/test_keepsake_style2.mjs`. Host commit + push required; CI/Gate B not run in lane.
+
+- Merged #549 (e344ee6) into this branch. The #549 wrapped below-row summary is kept; the inline list description is removed (summaries wrap, no ellipsis, #731). Row layout, price, car filter and Southwest fixes are kept. Bundle rebaked sha256=942d1b5e6ec3635f3bc7f0f901d56022cd1d582e78d8f57c420e8d11b13bc92c. All 25 receipt scripts pass.

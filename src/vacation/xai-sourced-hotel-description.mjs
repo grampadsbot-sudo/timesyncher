@@ -1,4 +1,4 @@
-import { isGenericDescription } from './trip-thing-enrichment.mjs';
+import { isGenericDescription } from './list-row-generic-description.mjs';
 import { searchProductCategoryFromPlace } from './xai-grok-place-ratings-helpers.mjs';
 
 function text(value, max = 4000) {

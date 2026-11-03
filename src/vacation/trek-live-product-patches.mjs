@@ -7,6 +7,7 @@ import { tripMapInitialViewBundleSnippet } from './trip-map-initial-view.mjs';
 import { tripMapHookBundleSnippet } from './trip-map-hook.mjs';
 import { patchLiveProductDetailBundle } from './trek-thing-detail-patches.mjs';
 import { patchBudgetUpstreamMiscBucket } from './trek-budget-upstream-misc-patch.mjs';
+import { patchListRowDescription } from './trek-list-row-description-patch.mjs';
 import { patchThingLogoInkCenterInBundle } from './thing-logo-ink-center.mjs';
 import { patchTabIconVerticalCenter } from './trek-tab-icon-center-patches.mjs';
 import { forceSharedDayByDayUi } from './shared-day-by-day-ui.mjs';
@@ -14,7 +15,6 @@ import { buildListLogoPatch } from './thing-logo-fallback-url.mjs';
 import { LIST_LOGO_NEEDLE, patchListLogoQrGuard } from './trek-list-logo-qr-patch.mjs';
 
 export { LIST_LOGO_QR_GUARD_PATCH, patchListLogoQrGuard } from './trek-list-logo-qr-patch.mjs';
-
 export const LIST_LOGO_PATCH = buildListLogoPatch();
 const LIST_LOGO_PATCH_NEEDLE = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"");if(raw&&!/^data:image\\/svg\\+xml/i.test(raw))return raw;return ""}';
 const REST_ALL_TAGS_NEEDLE = 'q==="restaurants"&&n.jsxs("div",{style:{display:"flex",flexDirection:"column",gap:10},children:[ci.length>0&&n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2},children:[n.jsx("button",{onClick:()=>qt([])';
@@ -424,6 +424,10 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   else if (served && js.includes('Rn=Bs(rr(G)||Co(G)||Fl(G))')) {
     throw new Error('live tab row summary must read stored rr() only');
   }
+  js = patchListRowDescription(js);
+  if (served && !js.includes('Rn=Bs(tsListRowDescription(G))')) {
+    throw new Error('live tab row summary substance patch did not apply');
+  }
   if (js.includes(OE_LIST_LOGO_WRAP_NEEDLE)) js = js.replace(OE_LIST_LOGO_WRAP_NEEDLE, OE_LIST_LOGO_WRAP_PATCH);
   else if (served && !js.includes('data-ts-list-row-name":"1",style:{minWidth:0,maxWidth:"100%",width:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})')) {
     throw new Error('live tab list-row name marker patch did not apply');
@@ -488,13 +492,9 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
     throw new Error('served shared bundle must use original Wr Name/Price sort pills');
   }
   js = patchSharedTripOeListRows(js);
-  if (served) {
-    if (!['hotels', 'cars', 'events'].every((tab) => js.includes(`data-shared-live-tab":"${tab}"`))) {
-      throw new Error('served shared live tab panels missing data-shared-live-tab anchor');
-    }
-    if (!js.includes('"data-list-row":"1","data-has-logo":tsRowHasLogo')) {
-      throw new Error('served shared Oe() rows missing Gate B list row markers');
-    }
+  if (served && (!['hotels', 'cars', 'events'].every((tab) => js.includes(`data-shared-live-tab":"${tab}"`))
+    || !js.includes('"data-list-row":"1","data-has-logo":tsRowHasLogo'))) {
+    throw new Error('served shared live tab panels or Gate B list row markers missing');
   }
   return js;
 }

@@ -30,7 +30,7 @@ assert.match(String(carPlaces[0].name || ''), /Priceline opaque/i);
 assert.equal(payload.thingOverrides[`place:${carPlaces[0].id}`]?.rentalCompany, 'Priceline opaque');
 assert.equal(payload.thingOverrides[`place:${flightPlaces[0].id}`]?.fareDirection, 'one-way');
 assert.equal(payload.thingOverrides[`place:${carPlaces[0].id}`]?.price, 172);
-assert.match(String(payload.thingOverrides[`place:${hotelPlaces[0].id}`]?.summary || ''), /transit access/i);
+assert.match(String(payload.thingOverrides[`place:${hotelPlaces[0].id}`]?.summary || ''), /subway access|transit access|walkable neighborhood access/i);
 
 const flightId = flightPlaces[0].id;
 const hotelId = hotelPlaces[0].id;
@@ -53,32 +53,46 @@ assert.doesNotMatch(bundle, /data-ts-list-sort-header":"1"/);
 assert.match(bundle, /vi\(kn,"hotels"\)\.map\(\(G,Re\)=>Oe\(G,"hotel",Re===0\)\)/);
 assert.match(bundle, /vi\(bc,"cars"\)\.map\(G=>Oe\(G\)\)/);
 assert.doesNotMatch(bundle, /tsSharedLiveTabListMount/);
-assert.match(bundle, /Rn=Bs\(rr\(G\)\)/);
+assert.match(bundle, /Rn=Bs\(tsListRowDescription\(G\)\)/);
 assert.doesNotMatch(bundle, /Rn=Bs\(rr\(G\)\|\|Co\(G\)\|\|Fl\(G\)\)/);
 assert.match(bundle, /data-summary-stored":"1"/);
 assert.match(bundle, /flexWrap:"wrap",justifyContent:"center"/);
 assert.doesNotMatch(bundle, /marginLeft:-8,marginRight:-8,width:"calc\(100% \+ 16px\)"/);
 assert.doesNotMatch(bundle, /data-day-itinerary-mount|data-trek-list/);
-assert.doesNotMatch(bundle, /tsRowInlineDesc/);
-assert.doesNotMatch(bundle, /matchMedia\("\(max-width:640px\)"\)/);
-assert.match(
-  bundle,
-  /style:\{display:"inline-flex",alignItems:"center",gap:8,minWidth:0,maxWidth:"100%",overflow:"hidden",flex:"1 1 0",width:"100%"\},children:\[n\.jsxs\("span",\{"data-ts-logo-name-pair":"1",style:\{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:9,minWidth:0,maxWidth:"55%",flex:"0 1 auto",overflow:"hidden"\},children:\[n\.jsx\(dc,\{item:G\}\),n\.jsx\("span",\{"data-ts-list-row-name":"1",style:\{minWidth:0,maxWidth:"100%",flex:"1 1 auto",display:"inline-flex",alignItems:"center",lineHeight:1,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"\},children:Zn\}\)\]\}\),bn\(G\)\?n\.jsx\(QoRest,\{item:G\}\):null,Pn\?n\.jsx\("span",\{"data-list-summary":"1","data-summary-src":"thing","data-ts-list-desc":"1",style:\{flex:"1 1 0",minWidth:"35%"/,
-);
-const oeListRow = bundle.slice(bundle.indexOf('Oe=(G,Re,zt=!1)=>'), bundle.indexOf('},tt=G=>', bundle.indexOf('Oe=(G,Re,zt=!1)=>')));
-assert.doesNotMatch(oeListRow, /\):n\.jsxs\("div",\{style:\{background:"var\(--bg-card, white\)"/);
-assert.match(
-  oeListRow,
-  /\):n\.jsxs\("li",\{"data-list-row":"1","data-has-logo":tsRowHasLogo,"data-logo-src":tsRowLogo/,
-);
-assert.match(bundle, /maxWidth:"100%",overflow:"hidden",display:"block",textDecoration:"underline"/);
-assert.doesNotMatch(bundle, /fontWeight:800,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",textDecoration:"underline"/);
-assert.doesNotMatch(
-  bundle,
-  /!tsRowInlineDesc&&Pn\?n\.jsx\("div",\{"data-list-summary":"1","data-summary-src":"thing",style:\{marginTop:6/,
-);
-assert.doesNotMatch(bundle, /maxWidth:"42%"/);
+assert.match(bundle, /"data-ts-list-row-name":"1",style:\{minWidth:0,maxWidth:"100%",flex:"1 1 auto",display:"inline-flex",alignItems:"center",lineHeight:1,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"\}/);
+assert.match(bundle, /"data-list-summary":"1","data-summary-src":"thing",style:\{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere"/);
 assert.match(bundle, /color:"#0f766e",fontWeight:900,flexShrink:0\},children:ie\(G\)/);
+
+const headerStart = bundle.indexOf('be=({item:G})=>');
+const rowEnd = bundle.indexOf(',tt=G=>', headerStart);
+assert.ok(headerStart > 0 && rowEnd > headerStart);
+const jsx = (type, props) => typeof type === 'function' ? type(props) : { type, props };
+function renderedRow(place, expanded) {
+  const env = { n: { jsx, jsxs: jsx }, J: (p) => p.name, ie: (p) => p.price, uc: () => 'Car', Bs: String,
+    mr: (p) => p.name, rr: (p) => p.summary, Mi: (p) => p.category === 'car', Zi: (p) => p.category === 'hotel', bn: () => false,
+    tsPrimaryPlaceStarRating: () => '', tsRenderStarRatingHtml: () => '', tsThingReviewLines: () => '', ha: (p) => p, fo: () => [], _l: (p) => p.logoUrl,
+    Qt: (p) => p.id, It: (p) => p.category, Sa: expanded, xt: null, kl: () => null, Ce: false, Ds: () => false, Nr: () => null, dc: () => null };
+  return new Function(...Object.keys(env), `const ${bundle.slice(headerStart, rowEnd)};return Oe`)(...Object.values(env))(place);
+}
+function descendants(node) {
+  if (!node || typeof node !== 'object') return [];
+  return [node, ...[node.props?.children].flat(Infinity).flatMap(descendants)];
+}
+for (const expanded of [false, true]) {
+  const name = 'A long hotel name with enough words to wrap on a phone';
+  const summary = 'A stored description that should remain readable in full at phone width.';
+  const row = renderedRow({ id: 44, category: 'hotel', name, summary, price: '$1,234' }, expanded);
+  const nodes = descendants(row);
+  const nameNode = nodes.find((v) => v.props['data-ts-list-row-name']);
+  const summaryNode = nodes.find((v) => v.props['data-list-summary']);
+  assert.equal(nameNode.props.style.whiteSpace, 'nowrap');
+  assert.equal(summaryNode.props.children, summary);
+  assert.equal(summaryNode.props.style.whiteSpace, 'normal');
+  assert.equal(nodes.find((v) => v.type === 'strong').props.children, name);
+  const priceNode = nodes.find((v) => v.props.children === '$1,234');
+  assert.equal(priceNode.props.style.flexShrink, 0);
+  assert.equal(priceNode.props.style.whiteSpace, 'nowrap');
+}
 
 const named = [{ name: 'North' }, { name: 'south' }, { name: 'East' }];
 assert.deepEqual([...named].sort((a, b) => compareColumnRows(a, b, 'name', 'asc')).map((row) => row.name), ['East', 'North', 'south']);

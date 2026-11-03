@@ -191,18 +191,38 @@ export function ListRow({
   return (
     <li className="tsv-row" data-ts-list-row="1">
       <div className="tsv-row-car-grid">
-        <button type="button" className="tsv-row-main" onClick={() => onOpen(place)}>
-          <LogoChip place={place} trip={trip} />
-          <span className="tsv-row-title-stack">
-            <span className="tsv-row-name" data-ts-list-row-name="1">
-              {name}
-            </span>
-            {rowRating != null ? (
-              <span className="tsv-row-rating" data-ts-list-row-rating="1">
-                <StarRating value={rowRating} />
+        <button
+          type="button"
+          className={`tsv-row-main${tab === 'hotels' || category === 'hotel' ? ' tsv-row-hotel-main' : ''}`}
+          onClick={() => onOpen(place)}
+        >
+          {tab === 'hotels' || category === 'hotel' ? (
+            <span className="tsv-row-hotel-head">
+              <LogoChip place={place} trip={trip} />
+              <span className="tsv-row-name" data-ts-list-row-name="1">
+                {name}
               </span>
-            ) : null}
-          </span>
+              {rowRating != null ? (
+                <span className="tsv-row-rating" data-ts-list-row-rating="1">
+                  <StarRating value={rowRating} />
+                </span>
+              ) : null}
+            </span>
+          ) : (
+            <>
+              <LogoChip place={place} trip={trip} />
+              <span className="tsv-row-title-stack">
+                <span className="tsv-row-name" data-ts-list-row-name="1">
+                  {name}
+                </span>
+                {rowRating != null ? (
+                  <span className="tsv-row-rating" data-ts-list-row-rating="1">
+                    <StarRating value={rowRating} />
+                  </span>
+                ) : null}
+              </span>
+            </>
+          )}
           {price ? <span className="tsv-row-price">{price}</span> : null}
           {note ? <span className="tsv-row-hotel-note">{note}</span> : null}
           {summary ? <span className="tsv-row-desc">{summary}</span> : null}
