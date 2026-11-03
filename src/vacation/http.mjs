@@ -1,7 +1,22 @@
+export function responseHeader(res, name) {
+  const key = String(name || '').toLowerCase();
+  if (res && typeof res.getHeader === 'function') {
+    const fromGetter = res.getHeader(name);
+    if (fromGetter != null && fromGetter !== '') return fromGetter;
+  }
+  const headers = res?.headers;
+  if (headers && typeof headers === 'object') {
+    const value = headers[key] ?? headers[name];
+    if (value == null || value === '') return undefined;
+    return Array.isArray(value) ? value[0] : value;
+  }
+  return undefined;
+}
+
 export function sendJson(res, status, body, options = {}) {
   res.statusCode = status;
   res.setHeader('content-type', 'application/json; charset=utf-8');
-  if (!res.getHeader || !res.getHeader('cache-control')) {
+  if (!responseHeader(res, 'cache-control')) {
     res.setHeader('cache-control', 'no-store');
   }
   const pretty = options.pretty === true;

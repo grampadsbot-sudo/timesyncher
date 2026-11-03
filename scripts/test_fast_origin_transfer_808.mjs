@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import sharedTripHandler from '../src/vacation/shared-trip-handler.mjs';
-import { SHARED_TRIP_JSON_CACHE_CONTROL, sendSharedTripJson } from '../src/vacation/http.mjs';
+import { responseHeader, SHARED_TRIP_JSON_CACHE_CONTROL, sendJson, sendSharedTripJson } from '../src/vacation/http.mjs';
 import {
   readCachedUpstreamShared,
   resetSharedUpstreamCacheForTests,
@@ -71,6 +71,11 @@ await versionHandler({
 }, versionRes);
 assert.equal(versionRes.statusCode, 304);
 assert.equal(versionRes.body, '');
+
+const minimalRes = { statusCode: 0, headers: {}, setHeader(name, value) { this.headers[String(name).toLowerCase()] = value; }, end() {} };
+assert.equal(responseHeader(minimalRes, 'cache-control'), undefined);
+sendJson(minimalRes, 200, { ok: true });
+assert.equal(minimalRes.headers['cache-control'], 'no-store');
 
 const versionBodyRes = mockRes();
 await versionHandler({ method: 'GET', url: '/api/version?poll=1', headers: {} }, versionBodyRes);

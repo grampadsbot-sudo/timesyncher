@@ -1,5 +1,5 @@
 import { checkoutConfigHealth } from '../src/vacation/checkout-pricing.mjs';
-import { headerValue } from '../src/vacation/http.mjs';
+import { headerValue, responseHeader } from '../src/vacation/http.mjs';
 
 const VERSION_POLL_CACHE_CONTROL = 'public, max-age=15, s-maxage=15, stale-while-revalidate=30';
 
@@ -7,7 +7,7 @@ function send(res, status, body, headers = {}) {
   res.statusCode = status;
   res.setHeader('content-type', 'application/json; charset=utf-8');
   for (const [key, value] of Object.entries(headers)) res.setHeader(key, value);
-  if (!res.getHeader('cache-control')) res.setHeader('cache-control', 'no-store');
+  if (!responseHeader(res, 'cache-control')) res.setHeader('cache-control', 'no-store');
   res.end(JSON.stringify(body));
 }
 
