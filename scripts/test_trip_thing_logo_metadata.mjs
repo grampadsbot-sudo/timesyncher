@@ -5,10 +5,10 @@ import { placeToTripThing } from '../src/vacation/place-search.mjs';
 import {
   buildCategoryDescription,
   enrichSearchPlace,
-  enrichTripThing,
   isGenericDescription,
   logoUrlFromSearchPlace,
 } from '../src/vacation/trip-thing-enrichment.mjs';
+import { enrichTripThing } from '../src/vacation/trip-thing-enrich-row.mjs';
 import { searchPlaceOutputViolations } from '../src/vacation/search-place-output.mjs';
 import { buildVkSearchContractSamplePlaces } from './fixtures/pr336-vk-search-trip-sources.mjs';
 import { applyCapturedLogos, resolveThingLogoUrl } from '../src/vacation/thing-logo-capture.mjs';

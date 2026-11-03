@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import { enrichSearchPlace } from '../../src/vacation/trip-thing-enrichment.mjs';
+import { createStoredCcabNarrativeMerge } from '../../src/vacation/stored-ccab-narrative-merge.mjs';
 import { buildNycCraigKimDaybydayFixtureRows } from './nyc-craig-kim-daybyday-rows.mjs';
 import { resolveNycCcabKey } from './nyc-vk-list-tab-rows.mjs';
 
@@ -55,6 +56,21 @@ export const NYC_GATE_B_ROW_CCAB_KEYS = {
 
 export const GATE_B_INCOMPLETE_CONTRACT_ROW_IDS = new Set([608]);
 
+const pr336StoredCcabNarrative = createStoredCcabNarrativeMerge(ENRICHMENT, {
+  fixtureRowCcabKeys: NYC_GATE_B_ROW_CCAB_KEYS,
+  incompleteContractRowIds: GATE_B_INCOMPLETE_CONTRACT_ROW_IDS,
+});
+
+export const {
+  enrichListRowFromStoredCcab,
+  enrichListRowFromStoredCcabTitle,
+  mergeStoredCcabNarrativeIntoOverride,
+  resolveStoredCcabKey,
+  shouldMergeStoredCcabOnFixtureReplay,
+  storedCcabRecordForPlace,
+  storedCcabRecordForTitle,
+} = pr336StoredCcabNarrative;
+
 export function buildPr336GateBRegenerateRows() {
   return buildNycCraigKimDaybydayFixtureRows();
 }
@@ -102,6 +118,31 @@ export function assertPr336GateBSnapshotWriteAllowed(placesById = {}, rows = [])
   if (!rows.length || unverified.length) {
     throw new Error(`pr336 gate-b snapshot write blocked: source evidence unverified for rows ${unverified.map((row) => row.id).join(', ')}`);
   }
+}
+
+function placeMetadata(place = {}) {
+  return place.metadata && typeof place.metadata === 'object' && !Array.isArray(place.metadata)
+    ? place.metadata
+    : {};
+}
+
+export function bindPr336GateBCanonicalIdentity(placeId, place = {}, override = {}) {
+  const ccabKey = NYC_GATE_B_ROW_CCAB_KEYS[placeId];
+  if (!ccabKey) return override;
+  place.externalId = ccabKey;
+  const meta = placeMetadata(place);
+  const priorRecord = {
+    ...(typeof meta.sourceRecord === 'object' ? meta.sourceRecord : {}),
+    ...(typeof override.sourceRecord === 'object' ? override.sourceRecord : {}),
+  };
+  place.metadata = {
+    ...meta,
+    externalId: ccabKey,
+    sourceRecord: { ...priorRecord, ccabKey },
+  };
+  const next = { ...override, externalId: ccabKey };
+  next.sourceRecord = { ...priorRecord, ccabKey };
+  return next;
 }
 
 export function materializePr336GateBSnapshotPlace(place = {}) {

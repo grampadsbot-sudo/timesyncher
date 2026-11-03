@@ -1,14 +1,20 @@
 import { captureThingLogo } from './thing-logo-capture.mjs';
 import { estimateSearchPlacePrice } from './search-place-price-estimate.mjs';
 import { ccabNeighborhoodTaglineFromRecord, descriptionPassesDetailJudge } from './thing-detail-fields.mjs';
+import { hotelStoredCcabListNarrative } from './hotel-list-row-narrative.mjs';
 import { enrichSearchPlaceHotelSourceRecord } from './xai-sourced-hotel-description.mjs';
+import {
+  isGenericDescription,
+  isListRowPipelineDiagnostic,
+} from './list-row-generic-description.mjs';
 
+export { isGenericDescription, isListRowPipelineDiagnostic } from './list-row-generic-description.mjs';
 export { estimateSearchPlacePrice } from './search-place-price-estimate.mjs';
-const GENERIC_DESCRIPTION_RES = [
-  /^Documented NYC option\b/i,
-  /^Documented .+ option\b/i,
-  /^[A-Za-z ]+ option \([^)]+\)\.?$/,
-];
+export {
+  hotelListRowUnboundNarrative,
+  hotelStoredCcabListNarrative,
+  isHotelPlanningNote,
+} from './hotel-list-row-narrative.mjs';
 
 const AIRLINE_LOGOS = [
   [/\bjetblue\b/i, 'https://icons.duckduckgo.com/ip3/jetblue.com.ico'],
@@ -24,15 +30,6 @@ function text(value, max = 4000) {
 
 function wordCount(value = '') {
   return text(value, 4000).split(/\s+/).filter(Boolean).length;
-}
-
-export function isGenericDescription(value = '') {
-  const row = text(value, 4000);
-  if (!row) return true;
-  if (GENERIC_DESCRIPTION_RES.some((re) => re.test(row))) return true;
-  if (wordCount(row) < 6) return true;
-  if (/^\S+\s+\S+\s*,\s*New York/i.test(row) && wordCount(row) < 10) return true;
-  return false;
 }
 
 function parsePriceValue(value) {
@@ -364,7 +361,22 @@ export function enrichSearchPlace(place = {}) {
       rawDescription: sourcedLongDescription(next, sourceRecord),
     });
   }
-  const summary = sourcedShortSummary(next, sourceRecord, description, title);
+  let summary = sourcedShortSummary(next, sourceRecord, description, title);
+  let hotelNarrative = null;
+  if (category === 'hotel' || category === 'lodging') {
+    hotelNarrative = hotelStoredCcabListNarrative(title, {
+      ...sourceRecord,
+      description,
+      summary,
+    });
+    if (
+      hotelNarrative?.longDetails
+      && !isListRowPipelineDiagnostic(hotelNarrative.longDetails)
+    ) {
+      description = hotelNarrative.longDetails;
+      if (hotelNarrative.summary) summary = hotelNarrative.summary;
+    }
+  }
   const explicitBannedZero = next.price === 0 || sourceRecord.price === 0;
   let price = firstPrice(
     next.price,
@@ -401,6 +413,8 @@ export function enrichSearchPlace(place = {}) {
     ...sourceRecord,
     ...(description ? { description, longDetails: description } : {}),
     ...(summary ? { summary } : {}),
+    ...(hotelNarrative?.neighborhood ? { neighborhood: hotelNarrative.neighborhood } : {}),
+    ...(hotelNarrative?.websiteFlavour ? { websiteFlavour: hotelNarrative.websiteFlavour } : {}),
     ...(price != null ? { price } : {}),
     ...(logoUrl ? { logoUrl } : {}),
     ...(next.url ? { url: next.url, website: next.url } : {}),
@@ -412,89 +426,4 @@ export function enrichSearchPlace(place = {}) {
   if (logoUrl) next.logoUrl = logoUrl;
   if (category) next.category = category;
   return next;
-}
-
-export function enrichTripThing(thing = {}) {
-  const meta = thing.metadata && typeof thing.metadata === 'object' ? { ...thing.metadata } : {};
-  const sourceRecord = meta.sourceRecord && typeof meta.sourceRecord === 'object'
-    ? { ...meta.sourceRecord }
-    : {};
-  const category = text(thing.category, 80).toLowerCase();
-  const location = thing.location && typeof thing.location === 'object' ? thing.location : {};
-  const title = text(thing.title, 240);
-  const sourcedLong = text(
-    meta.thingDetail?.longDetails
-    || sourceRecord.longDetails
-    || thing.description,
-    4000,
-  );
-  let description = '';
-  if (descriptionPassesDetailJudge(sourcedLong, title)) {
-    description = sourcedLong;
-  } else {
-    description = descriptionWhenJudgeFails({
-      category,
-      title: thing.title,
-      sourceRecord,
-      address: location.address || '',
-      place: { description: thing.description, summary: thing.summary },
-      rawDescription: thing.description,
-    });
-  }
-  let price = firstPrice(
-    thing.price,
-    meta.price,
-    sourceRecord.price,
-    thing.description,
-    description,
-  );
-  if (price == null && thing.price !== 0) {
-    price = estimateSearchPlacePrice({
-      category,
-      title: thing.title,
-      description,
-      summary: sourceRecord.summary || thing.summary,
-      sourceRecord,
-    });
-  }
-  const logoUrl = logoUrlFromSearchPlace(
-    {
-      title: thing.title,
-      category,
-      url: sourceRecord.url || sourceRecord.website,
-      sourceRecord,
-    },
-    sourceRecord,
-  );
-  const nextMeta = {
-    ...meta,
-    ...(price != null ? { price } : {}),
-    ...(logoUrl ? { logoUrl } : {}),
-    sourceRecord: {
-      ...sourceRecord,
-      ...(description ? { summary: description, description } : {}),
-      ...(price != null ? { price } : {}),
-      ...(logoUrl ? { logoUrl } : {}),
-    },
-  };
-  return {
-    ...thing,
-    description,
-    metadata: nextMeta,
-    ...(price != null ? { price } : {}),
-  };
-}
-
-export function rowNeedsProductEnrichment(row = {}) {
-  const meta = row?.metadata && typeof row.metadata === 'object' ? row.metadata : {};
-  if (isGenericDescription(row?.description)) return true;
-  const sourceRecord = meta.sourceRecord && typeof meta.sourceRecord === 'object' ? meta.sourceRecord : {};
-  if (!text(meta.logoUrl || sourceRecord.logoUrl || row.logoUrl)) return true;
-  const price = firstPrice(row?.price, meta.price, sourceRecord.price);
-  const category = text(row?.category, 80).toLowerCase();
-  if (['flight', 'hotel', 'car'].includes(category) && price == null) {
-    const blob = `${row?.description || ''} ${sourceRecord.summary || ''}`;
-    if (/\$\s*\d/.test(blob)) return true;
-  }
-  return false;
 }
