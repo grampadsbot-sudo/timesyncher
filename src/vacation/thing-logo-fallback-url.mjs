@@ -31,6 +31,7 @@ const BUNDLE_LIST_LOGO_REPAIRS = new Map([
   ['https://www.macys.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/macys.com.ico'],
   ['https://www.wholefoodsmarket.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/wholefoodsmarket.com.ico'],
   ['https://www.hyatt.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/hyatt.com.ico'],
+  ['https://www.thepodhotel.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/thepodhotel.com.ico'],
   ['https://www.tiffany.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/tiffany.com.ico'],
   ['https://www.delta.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/delta.com.ico'],
   ['https://www.united.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/united.com.ico'],
