@@ -136,3 +136,11 @@ Uncommitted files: `src/vacation/trek-style2-bundle.mjs`, `public/assets/index-B
 
 - Merged #549 (e344ee6) into this branch. The #549 wrapped below-row summary is kept; the inline list description is removed (summaries wrap, no ellipsis, #731). Row layout, price, car filter and Southwest fixes are kept. Bundle rebaked sha256=942d1b5e6ec3635f3bc7f0f901d56022cd1d582e78d8f57c420e8d11b13bc92c. All 25 receipt scripts pass.
 - Fixed a Gate B capture failure (cars-390 click blocked): the car-brand fallback no longer counts priced buttons inside non-car rows. After #549, the summary moved below the row, so short hotel buttons matched. Test: node scripts/test_car_brand_filter_scope.mjs
+
+## PR #821 CI fix-it — 2026-11-05
+
+GBrain handoff page `bot-admin/lanes/vk-pr-handoff/pr-821`: **not found** (MCP `get_page` returned `page_not_found` on 2026-11-05).
+
+CI `unit-tests` failed on `dayTimeline.unit.mjs` because day-by-day row notes now read stored `description`, not dossier claim / `itineraryNote` fallbacks. Updated `apps/vacation-client/test/dayTimeline.unit.mjs` and `listRows.unit.mjs` fixtures/assertions accordingly.
+
+Local: `node --test test/dayTimeline.unit.mjs test/listRows.unit.mjs` pass; pre-push gates pass on branch head after commit.

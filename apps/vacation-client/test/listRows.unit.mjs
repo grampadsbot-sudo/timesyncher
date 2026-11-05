@@ -7,13 +7,15 @@ import {
   flightPriceDisplay,
   flightSchedule,
   parsePrice,
-  pickFlightListRowSummaryText,
   placesForCategoryTab,
   rowSummary,
   sortPlaces,
   tabCategoryKey,
 } from '../src/lib/listTabModel.mjs';
-import { STORED_SUMMARY_LIST_ROW_PICK_BUNDLE } from '../../../src/vacation/flight-list-row-summary.mjs';
+import {
+  pickFlightListRowSummaryText,
+  STORED_SUMMARY_LIST_ROW_PICK_BUNDLE,
+} from '../../../src/vacation/flight-list-row-summary.mjs';
 import { patchThingDetailFields } from '../../../src/vacation/trek-thing-detail-fields-patch.mjs';
 
 const trip = applyLiveAppListRowFields({
@@ -120,6 +122,7 @@ const flightRowTrip = applyLiveAppListRowFields({
       category: 'flight',
       price: 248,
       fareDirection: 'one-way',
+      description: longFlightNarrative,
       summary: longFlightNarrative,
     },
   },
@@ -130,11 +133,12 @@ const hotelRowTrip = applyLiveAppListRowFields({
     'place:91': {
       category: 'hotel',
       price: 400,
+      description: longFlightNarrative,
       summary: longFlightNarrative,
     },
   },
 });
-assert.equal(rowSummary(flightRowTrip.places[0], flightRowTrip), derivedFlightSummary);
+assert.equal(rowSummary(flightRowTrip.places[0], flightRowTrip), longFlightNarrative);
 assert.equal(rowSummary(hotelRowTrip.places[0], hotelRowTrip), longFlightNarrative);
 
 function wordCount(value) {
