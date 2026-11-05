@@ -68,9 +68,9 @@ const rebaked = renderServedTrekBundle(raw.toString('utf8'));
 const committed = await readFile(path.join(root, 'public/assets/index-BKun7ofk.js'), 'utf8');
 assert.equal(rebaked, committed, 'rebake served bundle before running this test');
 
-assert.match(committed, /if\(hotel\)\{const summary=String\(ha\(G\)\.summary/);
 assert.match(committed, /"data-ts-list-desc":"1"/);
-assert.doesNotMatch(committed, /if\(hotel\)\{const summary=pick\(ha\(G\)\.summary/);
+assert.doesNotMatch(committed, /tsLong=tsHotel/);
+assert.doesNotMatch(committed, /tsSpare=tsHotel/);
 
 const tripPayload = finalizeServedSharedTripPayload(buildNycCraigKimDaybydayTrip());
 let hotelExpect = 0;

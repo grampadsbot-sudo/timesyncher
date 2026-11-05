@@ -7,14 +7,8 @@ import { GATE_B_NYC_REQUIRED_PLACE_COUNT } from '../fixtures/gate-b-nyc-place-co
 
 const GATE_B_NYC_POSITIVE_FIXTURE_VERSION = 'gate-b-nyc-positive-v1';
 
-const MIN_SUMMARY_WORDS = 30;
-
 function text(value) {
   return String(value || '').replace(/\s+/g, ' ').trim();
-}
-
-export function wordCount(value) {
-  return text(value).split(/\s+/).filter(Boolean).length;
 }
 
 function haFields(shared = {}, place = {}) {
@@ -101,8 +95,10 @@ export function assessGateBNycFixtureContract(shared = {}, options = {}) {
     const price = renderedPrice(shared, place);
     const label = `${place.id}:${place.name}`;
 
-    if (wordCount(summary) < MIN_SUMMARY_WORDS) {
-      violations.push(`${label} summary under ${MIN_SUMMARY_WORDS} words (${wordCount(summary)})`);
+    const source = override.sourceRecord || place.sourceRecord || place.metadata?.sourceRecord || {};
+    const description = String(override.description ?? source.description ?? place.description ?? '');
+    if (summary !== description) {
+      violations.push(`${label} description differs from stored value`);
     }
     if (price === null) {
       violations.push(`${label} missing price after finalization`);

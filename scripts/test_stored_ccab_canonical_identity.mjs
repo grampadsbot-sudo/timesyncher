@@ -173,10 +173,9 @@ const liveFields = applyLiveAppListRowFields({
 });
 const composed = composeListRowDescription({
   category: 'activity',
-  summary: '',
   fields: liveFields.thingOverrides['place:903'],
 });
-assert.match(composed, /Greenwich Village jazz/i);
+assert.equal(composed, String(liveFields.thingOverrides['place:903'].description || '').replace(/\s+/g, ' ').trim());
 
 function blueNoteDescriptionFields(trip = {}) {
   const override = trip.thingOverrides?.['place:611'] || {};

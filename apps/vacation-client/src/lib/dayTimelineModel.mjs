@@ -209,9 +209,9 @@ export function estimateTravelMinutes(fromPlace, toPlace) {
   return Math.max(5, Math.round(rawMinutes / 5) * 5);
 }
 
-export function itineraryNoteFor(place, trip, assignmentNotes) {
+export function itineraryNoteFor(place, trip) {
   const override = overrideFor(trip, place);
-  return itineraryLineText(override) || text(assignmentNotes || override.notes);
+  return itineraryLineText(override, place);
 }
 
 function endMinutes(entry) {

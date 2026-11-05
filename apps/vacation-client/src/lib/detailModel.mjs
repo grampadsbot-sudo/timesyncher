@@ -86,20 +86,6 @@ export function detailCategoryLabel(category) {
   return CATEGORY_LABELS[key] || (key ? key.charAt(0).toUpperCase() + key.slice(1) : '');
 }
 
-function descriptionPassesDetailJudge(description, placeName = '') {
-  const body = text(description, 4000);
-  if (wordCount(body) < 30) return false;
-  const name = text(placeName, 160);
-  if (name) {
-    const tokens = name.split(/\s+/).filter((token) => token.length > 3);
-    if (tokens.some((token) => new RegExp(`\\b${token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(body))) {
-      return true;
-    }
-  }
-  const genericOnly = /^(this (is a )?good option|highly rated|popular spot|worth a visit)\.?$/i.test(body);
-  return !genericOnly;
-}
-
 function coordValue(primary, ...fallbacks) {
   if (typeof primary === 'number' && Number.isFinite(primary)) return primary;
   if (primary === null || primary === undefined || primary === '') {
@@ -204,18 +190,7 @@ export function detailHeaderLabel(categoryLabel, source) {
 export function detailSummary(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
-  const name = placeName(place);
-  const candidate = text(
-    override.longDetails ||
-      override.details ||
-      override.summary ||
-      source.longDetails ||
-      source.summary ||
-      place.description,
-  );
-  if (wordCount(candidate) < 30) return '';
-  if (!descriptionPassesDetailJudge(candidate, name)) return '';
-  return candidate;
+  return String(override.description ?? source.description ?? place.description ?? '');
 }
 
 export function detailItineraryNote(place, trip) {

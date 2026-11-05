@@ -88,21 +88,19 @@ async function closeDetail(page) {
   await page.waitForFunction(() => !document.querySelector('[data-ts-detail-panel="1"]'), { timeout: 5000 });
 }
 
-async function probeEnrichedDetail(page, slug) {
-  return page.evaluate((kind) => {
+async function probeEnrichedDetail(page, slug, expectedDescription) {
+  return page.evaluate(({ kind, expected }) => {
     const fields = [...document.querySelectorAll('[data-ts-detail-field]')].map((node) =>
       node.getAttribute('data-ts-detail-field'),
     );
     const reviewCount = document.querySelectorAll('[data-ts-detail-review="1"]').length;
     const totals = document.querySelector('[data-ts-detail-review-totals="1"]')?.textContent?.trim() || '';
-    const summaryLen = (document.querySelector('[data-ts-detail-field="summary"]')?.textContent || '')
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean).length;
+    const summaryNode = document.querySelector('[data-ts-detail-field="summary"]');
+    const summary = summaryNode?.textContent ?? '';
     const composite = document.querySelector('[data-ts-detail-review-composite="1"]')?.textContent?.trim() || '';
     const needsReviews = !['flight', 'car'].includes(kind);
     const okCoords = fields.includes('coordinates');
-    const okSummary = summaryLen >= 30;
+    const okSummary = summary === expected && Boolean(summaryNode) === Boolean(expected);
     const okReviews = !needsReviews || reviewCount >= 4;
     const okTotals = !needsReviews || /Based on \d+ reviews, avg/i.test(totals);
     const okSources = !needsReviews || document.querySelectorAll('.tsv-detail-sources li').length >= 2;
@@ -129,7 +127,7 @@ async function probeEnrichedDetail(page, slug) {
         okItinerary &&
         (kind !== 'bar' || /Composite of/i.test(composite)),
     };
-  }, slug);
+  }, { kind: slug, expected: expectedDescription });
 }
 
 async function runNycLayoutChecks(page, app, screenshotRoot) {
@@ -211,7 +209,13 @@ async function runEnrichedAcceptanceChecks(page, app, screenshotRoot) {
       if (measure.scrollWidth > measure.innerWidth) {
         acceptanceFailures.push({ width, ...scenario, rule: 'overflow', ...measure });
       }
-      const probe = await probeEnrichedDetail(page, scenario.slug);
+      const shared = finalizeServedSharedTripPayload(buildEnrichedDetailSharedTrip());
+      const place = shared.places.find((row) => scenario.namePattern.test(row.name || ''));
+      assert.ok(place, `enriched ${scenario.slug} place`);
+      const override = shared.thingOverrides?.[`place:${place.id}`] || {};
+      const source = override.sourceRecord || place.sourceRecord || place.metadata?.sourceRecord || {};
+      const expected = String(override.description ?? source.description ?? place.description ?? '');
+      const probe = await probeEnrichedDetail(page, scenario.slug, expected);
       if (!probe.pass) {
         acceptanceFailures.push({ width, ...scenario, rule: 'enriched-detail', ...probe });
       }

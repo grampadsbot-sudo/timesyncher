@@ -38,7 +38,6 @@ import {
   gateBNycFixturePayloadSha256,
   renderedPrice,
   renderedSummary,
-  wordCount,
 } from './lib/gate-b-nyc-fixture-contract.mjs';
 import { GATE_B_INCOMPLETE_CONTRACT_ROW_IDS } from './fixtures/pr336-vk-search-trip-sources.mjs';
 
@@ -297,7 +296,9 @@ assert.equal(positiveFixtureOnce.trip.metadata.gateBNycFixtureVersion, NYC_POSIT
 
 for (const place of positiveFixtureOnce.places || []) {
   const summary = renderedSummary(positiveFixtureOnce, place);
-  assert.ok(wordCount(summary) >= 30, `${place.name} summary must survive finalization (${wordCount(summary)} words)`);
+  const override = positiveFixtureOnce.thingOverrides?.[`place:${place.id}`] || {};
+  const source = override.sourceRecord || place.sourceRecord || place.metadata?.sourceRecord || {};
+  assert.equal(summary, String(override.description ?? source.description ?? place.description ?? ''), `${place.name} description must survive finalization verbatim`);
   const price = renderedPrice(positiveFixtureOnce, place);
   assert.ok(price !== null, `${place.name} must expose a price after finalization`);
 }

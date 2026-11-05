@@ -248,9 +248,19 @@ assert.equal(
 const dossierTrip = {
   days: [{ id: 1, day_number: 1, title: 'Day 1' }],
   places: [
-    { id: 8, name: 'Zabars', category_name: 'Store' },
-    { id: 9, name: 'Hotel Belleclaire', category_name: 'Hotel' },
-    { id: 11, name: 'Delta LAS to JFK', category_name: 'Flight' },
+    { id: 8, name: 'Zabars', category_name: 'Store', description: 'Grab the nova and a coffee.' },
+    {
+      id: 9,
+      name: 'Hotel Belleclaire',
+      category_name: 'Hotel',
+      description: 'Stay here, then walk to the park.',
+    },
+    {
+      id: 11,
+      name: 'Delta LAS to JFK',
+      category_name: 'Flight',
+      description: 'Take the morning Delta nonstop and keep the aisle.',
+    },
   ],
   assignments: {
     1: [
@@ -263,6 +273,7 @@ const dossierTrip = {
     'place:8': {
       timeline: true,
       category: 'store',
+      description: 'Grab the nova and a coffee.',
       summary: 'Zabars is the Upper West Side food store at 2245 Broadway, open every day.',
       evidenceDossier: {
         fields: {
@@ -277,6 +288,7 @@ const dossierTrip = {
       timeline: true,
       category: 'hotel',
       stayDays: 1,
+      description: 'Stay here, then walk to the park.',
       summary: 'Hotel Belleclaire is an Upper West Side hotel near the park.',
       evidenceDossier: {
         fields: {
@@ -291,8 +303,8 @@ const dossierTrip = {
       timeline: true,
       category: 'flight',
       dayIds: [1],
+      description: 'Take the morning Delta nonstop and keep the aisle.',
       summary: 'Airline: Delta; Route: LAS-JFK; Stops: nonstop; Outbound: 2026-06-23; Price: $257.',
-      itineraryNote: 'Take the morning Delta nonstop and keep the aisle.',
     },
   },
 };
