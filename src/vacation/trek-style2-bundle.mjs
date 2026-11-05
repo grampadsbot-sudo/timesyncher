@@ -985,20 +985,17 @@ export function assertPatchedStyleTwo(source = '') {
   return true;
 }
 
+const SERVED_TREK_BUNDLE_ASSET = '/assets/index-BKun7ofk.js';
+
 export default async function handler(req, res) {
-  let source;
-  try {
-    source = await readFile(SERVED_BUNDLE, 'utf8');
-    assertPatchedStyleTwo(source);
-  } catch (error) {
-    res.statusCode = 500;
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    res.statusCode = 405;
     res.setHeader('content-type', 'text/plain; charset=utf-8');
-    res.end(error.message || 'Served TREK bundle is missing.');
+    res.end('method not allowed');
     return;
   }
-  res.statusCode = 200;
-  res.setHeader('content-type', 'application/javascript; charset=utf-8');
-  res.setHeader('cache-control', 'no-store');
-  res.setHeader('access-control-allow-origin', '*');
-  res.end(source);
+  res.statusCode = 307;
+  res.setHeader('location', SERVED_TREK_BUNDLE_ASSET);
+  res.setHeader('cache-control', 'public, max-age=31536000, immutable');
+  res.end();
 }

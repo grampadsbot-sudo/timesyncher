@@ -47,9 +47,18 @@ window.tsVacationAppProgress = {
     function stopProgressPoll() {
       const state = getState();
       if (state.progressPollTimer) {
-        clearInterval(state.progressPollTimer);
+        clearTimeout(state.progressPollTimer);
         setState({ progressPollTimer: null });
       }
+      if (state.progressPollVisibilityBound) {
+        document.removeEventListener('visibilitychange', state.progressPollVisibilityBound);
+        setState({ progressPollVisibilityBound: null });
+      }
+    }
+
+    function progressPollTerminal(stage) {
+      const value = String(stage || '');
+      return ['failed', 'cancelled', 'ready', 'idle'].includes(value);
     }
 
     function paintSearchProgress(progress) {
@@ -104,20 +113,49 @@ window.tsVacationAppProgress = {
       stopProgressPoll();
       const token = getSessionToken();
       if (!tripId || !token) return;
-      const poll = async () => {
+      let delayMs = 15000;
+      const onVisibilityChange = () => {
+        if (document.hidden) return;
+        const state = getState();
+        if (!state.progressPollTimer) return;
+        clearTimeout(state.progressPollTimer);
+        const timer = setTimeout(runPoll, 0);
+        setState({ progressPollTimer: timer });
+      };
+      document.addEventListener('visibilitychange', onVisibilityChange);
+      setState({ progressPollVisibilityBound: onVisibilityChange });
+      const runPoll = async () => {
+        if (document.hidden) {
+          const timer = setTimeout(runPoll, Math.max(delayMs, 60000));
+          setState({ progressPollTimer: timer });
+          return;
+        }
         try {
-          const query = new URLSearchParams({ app: '1', session: token, tripId });
+          const query = new URLSearchParams({ app: '1', session: token, tripId, progressOnly: '1' });
           const res = await fetch(`/api/vacation-itinerary?${query.toString()}`);
           const data = await res.json();
-          if (!res.ok || data.ok === false) return;
-          applyServerProgress(data.searchProgress, data.vacation || data.trip || currentTrip(), data.publicUrl || data.vacation?.publicUrl);
+          if (!res.ok || data.ok === false) {
+            const timer = setTimeout(runPoll, delayMs);
+            setState({ progressPollTimer: timer });
+            return;
+          }
+          applyServerProgress(
+            data.searchProgress,
+            data.trip || currentTrip(),
+            data.publicUrl || data.trip?.publicUrl,
+          );
+          if (progressPollTerminal(data.searchProgress?.stage)) {
+            stopProgressPoll();
+            return;
+          }
+          delayMs = Math.min(Math.round(delayMs * 1.5), 120000);
         } catch (error) {
           void error;
         }
+        const timer = setTimeout(runPoll, delayMs);
+        setState({ progressPollTimer: timer });
       };
-      const timer = setInterval(poll, 1000);
-      setState({ progressPollTimer: timer });
-      poll();
+      runPoll();
     }
 
     return { searchProgressActive, stopProgressPoll, startProgressPoll, applyServerProgress, paintSearchProgress };
