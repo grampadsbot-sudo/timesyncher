@@ -280,7 +280,7 @@ export function finalizeListRowDisplayDescription(composed = '', { spare = '', m
 
 export function listRowDescriptionBundleSnippet() {
   return [
-    'tsListRowDescription=function(G){',
+    'tsListRowDescription=function(G,omitListPrice){',
     'const ov=ha(G)||{},meta=(G&&G.metadata&&typeof G.metadata==="object")?G.metadata:{},sr=(ov.sourceRecord&&typeof ov.sourceRecord==="object")?ov.sourceRecord:(G&&G.sourceRecord&&typeof G.sourceRecord==="object")?G.sourceRecord:(meta.sourceRecord&&typeof meta.sourceRecord==="object")?meta.sourceRecord:{},row={...sr,...ov};',
     'const blocked=Array.isArray(ov.provenanceBlocked)?ov.provenanceBlocked:(Array.isArray(row.provenanceBlocked)?row.provenanceBlocked:[]);',
     'if(blocked.includes("price")){delete row.price;delete row.totalPrice;delete row.total_price;}',
@@ -307,7 +307,7 @@ export function listRowDescriptionBundleSnippet() {
     'push("Drop-off",row.returnLocation||row.return_location||row.dropoffLocation);push("Drop-off hours",row.dropoffHours||row.dropoff_hours||row.returnHours);',
     'push("Drop-off time",row.dropoffTime||row.returnTime||row.endTime);',
     'if(carDetail&&!isGeneric(carDetail)&&!parts.join(" · ").includes(carDetail))parts.push(carDetail);',
-    'const carPrice=money(row.price??(blocked.includes("price")?"":bi(G)));if(hasPriceDigits(carPrice))push("",carPrice+" total");',
+    'const carPrice=money(row.price??(blocked.includes("price")?"":bi(G)));if(!omitListPrice&&hasPriceDigits(carPrice))push("",carPrice+" total");',
     'const themes=Array.isArray(row.reviewThemes)?row.reviewThemes.map(t=>String(t||"").trim()).filter(Boolean).join("; "):"";',
     'push("Reputation",row.reputationNote||themes);',
     'return finalizeRow(parts.join(" · ")||hook,30);}',
@@ -319,7 +319,7 @@ export function listRowDescriptionBundleSnippet() {
     'if(hotelDetail&&!parts.join(" · ").includes(hotelDetail))parts.push(hotelDetail);',
     'push("Note",row.hotelNote||row.hotel_note);',
     'push("",row.websiteFlavour);push("Amenities",Array.isArray(row.amenities)?row.amenities.join(", "):row.amenities);push("Price level",row.priceLevel);',
-    'const hotelPrice=money(row.price??(blocked.includes("price")?"":bi(G)));if(hasPriceDigits(hotelPrice))push("",hotelPrice+"/night");',
+    'const hotelPrice=money(row.price??(blocked.includes("price")?"":bi(G)));if(!omitListPrice&&hasPriceDigits(hotelPrice))push("",hotelPrice+"/night");',
     'const rep=[row.googleRating?"Google "+row.googleRating+(row.googleReviewCount?" ("+row.googleReviewCount+")":""):"",',
     'row.yelpRating?"Yelp "+row.yelpRating+(row.yelpReviewCount?" ("+row.yelpReviewCount+")":""):"",',
     'row.thirdPartyRating?(row.thirdPartySource||"Rating")+" "+row.thirdPartyRating+(row.thirdPartyReviewCount?" ("+row.thirdPartyReviewCount+")":""):""].filter(Boolean).join("; ");',
@@ -337,7 +337,7 @@ export function listRowDescriptionBundleSnippet() {
     'const flavour=String(row.websiteFlavour||"").replace(/\\s+/g," ").trim();',
     'if(flavour&&!joined().includes(flavour))parts.push(flavour);',
     'push("Where",row.address||row.location);',
-    'const expPrice=money(row.price??(blocked.includes("price")?"":bi(G)));if(hasPriceDigits(expPrice))push("Price estimate",expPrice);',
+    'const expPrice=money(row.price??(blocked.includes("price")?"":bi(G)));if(!omitListPrice&&hasPriceDigits(expPrice))push("Price estimate",expPrice);',
     'const expRep=row.thirdPartyRating?(row.thirdPartySource||"Rating")+" "+row.thirdPartyRating+(row.thirdPartyReviewCount?" ("+row.thirdPartyReviewCount+")":""):"";',
     'let praise="";if(row.reviewThemes&&typeof row.reviewThemes==="object"&&Array.isArray(row.reviewThemes.praise))praise=row.reviewThemes.praise.map(t=>String(t||"").trim()).filter(Boolean).join("; ");',
     'push("Why go",row.worthNote||praise||expRep);',

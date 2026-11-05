@@ -42,7 +42,7 @@ assert.match(
   committed,
   /Zi\(G\)\?n\.jsx\(je,\{item:G,title:ua\}\):n\.jsx\("strong",\{style:\{lineHeight:1,display:"block"\},children:ua\}\)/,
 );
-assert.match(committed, /Rn=Bs\(tsListRowDescription\(G\)\)/);
+assert.match(committed, /Rn=Bs\(tsListRowDescription\(G,!0\)\)/);
 assert.match(committed, /data-row-video-qr":"1"/);
 assert.match(committed, /zr\.length\?n\.jsx\(Nr,\{items:zr/);
 assert.match(committed, /data-ts-day-map":"1"/);

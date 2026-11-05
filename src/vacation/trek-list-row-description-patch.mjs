@@ -3,14 +3,16 @@ import { listRowDescriptionBundleSnippet } from './list-row-description.mjs';
 const LIST_ROW_DESC_ANCHOR = 'Oe=(G,Re,zt=!1)=>';
 const OE_ROW_SUMMARY_LEGACY = 'Rn=Bs(rr(G)||Co(G)||Fl(G))';
 const OE_ROW_SUMMARY_RR_ONLY = 'Rn=Bs(rr(G))';
-const OE_ROW_SUMMARY_SUBSTANCE = 'Rn=Bs(tsListRowDescription(G))';
+const OE_ROW_SUMMARY_SUBSTANCE = 'Rn=Bs(tsListRowDescription(G,!0))';
+const OE_ROW_SUMMARY_SUBSTANCE_LEGACY = 'Rn=Bs(tsListRowDescription(G))';
 
 function bundleHasLiveTabListRows(js = '') {
   return js.includes(LIST_ROW_DESC_ANCHOR)
     || js.includes('tsListRowDescription=function(G){')
     || js.includes(OE_ROW_SUMMARY_LEGACY)
     || js.includes(OE_ROW_SUMMARY_RR_ONLY)
-    || js.includes(OE_ROW_SUMMARY_SUBSTANCE);
+    || js.includes(OE_ROW_SUMMARY_SUBSTANCE)
+    || js.includes(OE_ROW_SUMMARY_SUBSTANCE_LEGACY);
 }
 
 export function patchListRowDescription(source = '') {
@@ -29,6 +31,9 @@ export function patchListRowDescription(source = '') {
   }
   if (js.includes(OE_ROW_SUMMARY_RR_ONLY)) {
     js = js.replaceAll(OE_ROW_SUMMARY_RR_ONLY, OE_ROW_SUMMARY_SUBSTANCE);
+  }
+  if (js.includes(OE_ROW_SUMMARY_SUBSTANCE_LEGACY)) {
+    js = js.replaceAll(OE_ROW_SUMMARY_SUBSTANCE_LEGACY, OE_ROW_SUMMARY_SUBSTANCE);
   }
   if (!js.includes(OE_ROW_SUMMARY_SUBSTANCE)) {
     throw new Error('live tab row summary must use tsListRowDescription()');

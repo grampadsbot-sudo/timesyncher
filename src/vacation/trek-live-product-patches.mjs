@@ -425,7 +425,7 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
     throw new Error('live tab row summary must read stored rr() only');
   }
   js = patchListRowDescription(js);
-  if (served && !js.includes('Rn=Bs(tsListRowDescription(G))')) {
+  if (served && !js.includes('Rn=Bs(tsListRowDescription(G,!0))')) {
     throw new Error('live tab row summary substance patch did not apply');
   }
   if (js.includes(OE_LIST_LOGO_WRAP_NEEDLE)) js = js.replace(OE_LIST_LOGO_WRAP_NEEDLE, OE_LIST_LOGO_WRAP_PATCH);

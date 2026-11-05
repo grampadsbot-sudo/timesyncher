@@ -124,12 +124,12 @@ const raw = execFileSync('git', ['show', `${UPSTREAM_COMMIT}:public/assets/upstr
   maxBuffer: 25 * 1024 * 1024,
 }).toString('utf8');
 const bundle = renderServedTrekBundle(raw);
-assert.match(bundle, /tsListRowDescription=function\(G\)/);
-assert.match(bundle, /Rn=Bs\(tsListRowDescription\(G\)\)/);
+assert.match(bundle, /tsListRowDescription=function\(G,omitListPrice\)/);
+assert.match(bundle, /Rn=Bs\(tsListRowDescription\(G,!0\)\)/);
 assert.doesNotMatch(bundle, /Rn=Bs\(rr\(G\)\)/);
 
 function renderedDescription(js, shared, id) {
-  const start = js.indexOf('tsListRowDescription=function(G){');
+  const start = js.indexOf('tsListRowDescription=function(G,omitListPrice){');
   const end = js.indexOf(',Oe=', start);
   assert.ok(start >= 0 && end > start);
   const override = (place) => shared.thingOverrides[`place:${place.id}`] || {};
