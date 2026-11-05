@@ -242,7 +242,15 @@ export function patchInlineListRowDescriptionOnThingHeader(source = '') {
     .replaceAll('whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"', 'whiteSpace:"normal",overflowWrap:"anywhere"')
     .replaceAll('maxWidth:"55%",flex:"0 1 auto",overflow:"hidden"', 'maxWidth:"100%",flex:"1 1 auto",overflowWrap:"anywhere"')
     .replaceAll('maxWidth:"100%",overflow:"hidden"', 'maxWidth:"100%",overflow:"visible"');
-  return js.slice(0, start) + rows + js.slice(end);
+  const ratingRow = 'tsRowStars?n.jsx("span",{"data-ts-list-row-rating":"1",style:{display:"flex",flexDirection:"row",flexWrap:"nowrap",alignItems:"center",justifyContent:"flex-end"},dangerouslySetInnerHTML:{__html:tsRowStars},role:"img","aria-label":tsStarRatingAria(tsRowRating)}):n.jsx("span",{"aria-hidden":"true"})';
+  const headerRows = rows
+    .replace('"data-ts-thing-header":"1",style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto minmax(0,1fr)",alignItems:"center",columnGap:8,width:"100%",minWidth:0},children:[n.jsx("span",{"aria-hidden":"true"}),', '"data-ts-thing-header":"1",style:{display:"flex",flexWrap:Zi(G)?"wrap":"nowrap",alignItems:"center",columnGap:8,width:"100%",minWidth:0},children:[')
+    .replace('overflow:"visible",flex:"1 1 0",width:"100%"', 'overflow:"visible",flex:"1 1 auto",width:Zi(G)?"auto":"100%"')
+    .replace(',n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)})', '')
+    .replace(ratingRow, `Zi(G)?n.jsxs("span",{style:{display:"inline-flex",alignItems:"center",gap:8,marginLeft:"auto",flexShrink:0},children:[n.jsx("span",{style:{whiteSpace:"nowrap",color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)}),${ratingRow}]}):${ratingRow}`)
+    .replaceAll('whiteSpace:"normal",overflowWrap:"anywhere",minWidth:0,flex:"1 1 0"},children:n.jsx("strong"', 'whiteSpace:"normal",overflowWrap:"anywhere",minWidth:0,flex:"1 1 auto"},children:n.jsx("strong"')
+    .replaceAll('"data-ts-list-row-rating":"1",style:{display:"flex",flexDirection:"row",flexWrap:"nowrap",alignItems:"center",justifyContent:"flex-end"}', '"data-ts-list-row-rating":"1",style:{display:"flex",flexDirection:"row",flexWrap:"nowrap",alignItems:"center",justifyContent:"flex-end",flexShrink:0}');
+  return js.slice(0, start) + headerRows + js.slice(end);
 }
 
 export function patchSharedTripOeListRows(source = '') {
