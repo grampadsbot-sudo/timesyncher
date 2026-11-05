@@ -46,7 +46,7 @@ const raw = execFileSync('git', ['show', `${UPSTREAM_COMMIT}:public/assets/upstr
 }).toString('utf8');
 const bundle = renderServedTrekBundle(raw);
 assert.match(bundle, /tsListRowDescription=function\(G\)/);
-assert.match(bundle, /Rn=Bs\(tsListRowDescription\(G\)\)/);
+assert.match(bundle, /Rn=tsListRowDescription\(G\)/);
 assert.doesNotMatch(bundle, /Rn=Bs\(rr\(G\)\)/);
 assert.match(
   bundle,
@@ -66,9 +66,7 @@ function renderedDescription(js, shared, id) {
   const place = shared.places.find((row) => row.id === id);
   const ov = override(place);
   const sr = ov.sourceRecord && typeof ov.sourceRecord === 'object' ? ov.sourceRecord : {};
-  const expected = String(ov.description ?? sr.description ?? place.description ?? '')
-    .replace(/\s+/g, ' ')
-    .trim();
+  const expected = String(ov.description ?? sr.description ?? place.description ?? '');
   const description = describe(place);
   assert.equal(description, expected, `place ${id} description not as stored`);
   assert.doesNotMatch(description, COMPOSED_LABEL);

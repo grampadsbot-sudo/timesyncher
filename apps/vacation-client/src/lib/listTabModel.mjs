@@ -322,11 +322,9 @@ export function carSubtitle(place, trip) {
 }
 
 export function listRowSubstanceDescription(place, trip) {
-  const mergedOverride = mergeStoredCcabNarrativeIntoOverride(place, {
-    ...(overrideFor(trip, place) || {}),
-  });
-  const source = sourceRecord(place, mergedOverride);
-  return pickStoredThingDescription({ override: mergedOverride, source, place });
+  const override = overrideFor(trip, place);
+  const source = sourceRecord(place, override);
+  return pickStoredThingDescription({ override, source, place });
 }
 
 export function rowSummary(place, trip) {

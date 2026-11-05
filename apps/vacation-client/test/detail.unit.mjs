@@ -21,13 +21,6 @@ import {
 } from '../src/lib/starRatingModel.mjs';
 import { buildEnrichedDetailSharedTrip } from './fixtures/enriched-detail-shared-trip.mjs';
 
-function wordCount(value) {
-  return String(value || '')
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean).length;
-}
-
 assert.equal(safeHttpUrl('https://example.com/path'), 'https://example.com/path');
 assert.equal(safeHttpUrl('javascript:alert(1)'), null);
 assert.equal(safeHttpUrl('example.com'), null);
@@ -64,7 +57,11 @@ assert.ok(
 assert.equal(restaurantModel.reviewFootnote, '');
 assert.match(restaurantModel.reviewTotalsLine, /Based on 820 reviews, avg 4\.6 \(other ratings\)/i);
 assert.match(restaurantModel.headerLabel, /Restaurant · Brave/i);
-assert.ok(wordCount(restaurantModel.summary) >= 30);
+assert.equal(restaurantModel.summary, String(restaurantOverride.description ?? restaurantOverride.sourceRecord?.description ?? restaurant.description ?? ''));
+for (const description of ['', '  Stored\t description\n at 09:30  ', 'x'.repeat(4101)]) {
+  const place = { id: 999, description, summary: 'Summary is not a description', notes: 'Notes are not a description' };
+  assert.equal(detailSummary(place, { thingOverrides: {} }), description);
+}
 assert.match(restaurantModel.happyHourDetails, /oyster/i);
 assert.match(restaurantModel.itineraryNote, /Harbor Room/i);
 assert.equal(restaurantModel.summarySourceUrls.length, 2);

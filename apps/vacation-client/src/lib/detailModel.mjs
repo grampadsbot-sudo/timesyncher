@@ -190,7 +190,7 @@ export function detailHeaderLabel(categoryLabel, source) {
 export function detailSummary(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
-  return text(override.description ?? source.description ?? place.description);
+  return String(override.description ?? source.description ?? place.description ?? '');
 }
 
 export function detailItineraryNote(place, trip) {

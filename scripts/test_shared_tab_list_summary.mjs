@@ -53,7 +53,7 @@ assert.doesNotMatch(bundle, /data-ts-list-sort-header":"1"/);
 assert.match(bundle, /vi\(kn,"hotels"\)\.map\(\(G,Re\)=>Oe\(G,"hotel",Re===0\)\)/);
 assert.match(bundle, /vi\(bc,"cars"\)\.map\(G=>Oe\(G\)\)/);
 assert.doesNotMatch(bundle, /tsSharedLiveTabListMount/);
-assert.match(bundle, /Rn=Bs\(tsListRowDescription\(G\)\)/);
+assert.match(bundle, /Rn=tsListRowDescription\(G\)/);
 assert.doesNotMatch(bundle, /Rn=Bs\(rr\(G\)\|\|Co\(G\)\|\|Fl\(G\)\)/);
 assert.match(bundle, /data-summary-stored":"1"/);
 assert.match(bundle, /flexWrap:"wrap",justifyContent:"center"/);
@@ -81,17 +81,23 @@ function descendants(node) {
 for (const expanded of [false, true]) {
   const name = 'A long hotel name with enough words to wrap on a phone';
   const summary = 'A stored description that should remain readable in full at phone width.';
-  const row = renderedRow({ id: 44, category: 'hotel', name, summary, price: '$1,234' }, expanded);
-  const nodes = descendants(row);
-  const nameNode = nodes.find((v) => v.props['data-ts-list-row-name']);
-  const summaryNode = nodes.find((v) => v.props['data-list-summary']);
-  assert.equal(nameNode.props.style.whiteSpace, 'nowrap');
-  assert.equal(summaryNode.props.children, summary);
-  assert.equal(summaryNode.props.style.whiteSpace, 'normal');
-  assert.equal(nodes.find((v) => v.type === 'strong').props.children, name);
-  const priceNode = nodes.find((v) => v.props.children === '$1,234');
-  assert.equal(priceNode.props.style.flexShrink, 0);
-  assert.equal(priceNode.props.style.whiteSpace, 'nowrap');
+  for (const description of [undefined, '']) {
+    const emptyRow = renderedRow({ id: 44, category: 'hotel', name, summary, description, price: '$1,234' }, expanded);
+    assert.equal(descendants(emptyRow).find((v) => v.props['data-list-summary']), undefined);
+  }
+  for (const description of [summary, '  Stored\t description\n at 09:30  ', 'x'.repeat(4101)]) {
+    const row = renderedRow({ id: 44, category: 'hotel', name, summary, description, price: '$1,234' }, expanded);
+    const nodes = descendants(row);
+    const nameNode = nodes.find((v) => v.props['data-ts-list-row-name']);
+    const summaryNode = nodes.find((v) => v.props['data-list-summary']);
+    assert.equal(nameNode.props.style.whiteSpace, 'nowrap');
+    assert.equal(summaryNode.props.children, description);
+    assert.equal(summaryNode.props.style.whiteSpace, 'normal');
+    assert.equal(nodes.find((v) => v.type === 'strong').props.children, name);
+    const priceNode = nodes.find((v) => v.props.children === '$1,234');
+    assert.equal(priceNode.props.style.flexShrink, 0);
+    assert.equal(priceNode.props.style.whiteSpace, 'nowrap');
+  }
 }
 
 const named = [{ name: 'North' }, { name: 'south' }, { name: 'East' }];
