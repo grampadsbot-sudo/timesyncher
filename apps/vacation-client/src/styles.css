@@ -505,6 +505,35 @@ body {
   grid-column: 2;
 }
 
+.tsv-row-hotel-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 8px;
+  row-gap: 4px;
+  align-items: center;
+  min-width: 0;
+  grid-column: 1 / 3;
+}
+
+.tsv-row-hotel-head .tsv-logo-chip {
+  grid-row: 1;
+  grid-column: 1;
+  align-self: center;
+}
+
+.tsv-row-hotel-head .tsv-row-name {
+  grid-row: 1;
+  grid-column: 2;
+  align-self: center;
+}
+
+.tsv-row-hotel-head .tsv-row-rating {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: start;
+}
+
 .tsv-row-car-sub {
   font-size: 11px;
   color: var(--muted);

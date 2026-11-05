@@ -1,22 +1,26 @@
-Closes #805
+Closes #546
 
 ## Summary
 
-On live `7fd26c53`, `ui_logo_gate` failed only place 610 Carbone. Its `logoUrl` is `https://carbonenewyork.com/assets/favicons/carbone.png`, and that host sometimes answers hotlinks with 403 text/html.
+List rows show long sourced `places[]` / ccab copy (≥30 words), not short day-assignment blurbs. Hotels, cars and experiences use `tsListRowDescription` in the served TREK bundle.
 
-- **Data fix:** I added Carbone's brand asset to `EXPLICIT_LOGO_REPAIRS` (`src/vacation/thing-logo-fallback-url.mjs`). Every served shared-trip path already runs this map through `finalizeServedSharedTripPayload` (#758). The served `places[].logoUrl` and `thingOverrides['place:610'].logoUrl` become `https://icons.duckduckgo.com/ip3/carbonenewyork.com.ico`. That is the favicon of Carbone's own sourced domain, the same DDG ip3 source 40 other places use. It is byte-identical to the brand file (569 bytes, same md5), so nothing changes visually.
-- **Browser hardening:** The served bundle `public/assets/index-BKun7ofk.js` already falls back on `onerror` at every logo site: timeline `tsTimelineLogoFallback`, Thing-card chip `onError`, and the map-marker `onerror`. The order is domain DDG ip3 → Google favicon → category emoji, never `?`. This PR pins that path for a blocked brand asset path (not just `/favicon.ico`) by executing the bundle's real fallback functions in `scripts/test_map_marker_logo_fallback_758.mjs`. No bundle change, so no rebake.
+This round (start `d0dbedfd`, Gate B round 22) clears the three checks this PR caused against base vk `6e88120`: feature parity (Cars list empty on cars-390-top), logo lost vs staging, and generic logos.
 
-## Checks run
+## Changes (this round)
 
-- Logo gate rules (`ui_logo_gate.audit`, same headless-Chromium `logo_probe.mjs` plus net probe) on the live shared payload with this patch applied: `94/94 logos load (>=16px, not placeholder)`; place 610 serves the DDG ip3 icon.
-- `node scripts/test_served_payload_logo_repair_758.mjs`, `test_map_marker_logo_fallback_758`, `test_served_logo_url_repair_758`, `test_thing_logo_fallback_758`, `test_ui_758_punchlist`, `test_tsv470_declared_icon_logo_repairs`, `test_served_trek_bundle`, `test_gate_b_product_row_fields`, `test_shared_trip_live_tab_logos`, `test_shared_place_logo_and_category`, `test_trip_thing_logo_metadata`, `test_shared_logo_chip_center_bundle`, `check-hardcoded-content` (0 fail), and `apps/vacation-client` `test/run-all.mjs`: all passed.
-- Pre-DONE: `check-no-comments` passed, `test_offline_manifest` ok, `BASE=vk check-code-ratchet` 0 fail.
-- Not reproduced on this pass: the brand URL returned 200 image/png on 3 rounds (the hotlink block is intermittent). The live payload also scored 94/94 at that moment.
+- **`src/vacation/shared-trip-oe-list-row-patch.mjs`**: non-hotel list rows now use vk's existing hotel row clamp (3 lines when the text is ≥30 words). Before this, the unclamped car row was 696 px tall, so the list-only Priceline row was the only row on cars-390-top. Pages at 390 px were 1.4–3.6× taller than staging (cars 5205 vs 1450 px).
+- **`src/vacation/thing-logo-ink-center.mjs`**: the `dc()` row logo `<img>` is now `loading:"eager"` (it was `lazy`). Logos below about y≈3800 were never requested, so rows lower down showed the placeholder chip (the logo-lost and generic-logo checks).
+- **`public/assets/index-BKun7ofk.js`**: rebaked via `node scripts/rebake_served_trek_bundle.mjs`.
+
+The brief's hunch about the bea63495 logo-URL replay did not hold. The served fixture's car `logoUrl` is the same on vk and on this head.
+
+## Verification (local)
+
+- Gate B structure replay: `vite build`, then `serve-preview.sh`, then `~/tsv-dispatch/capture/capture.mjs` on fixture `heads/d0dbedf….json`, then `restore_check.check_dir` against `staging-6e88120-fixture-f43fbc6f7bcce741` with recorded receipts. Feature parity, logo lost and generic logos are gone. Description verdicts are unchanged.
+- `node scripts/test_served_trek_bundle.mjs`, `node scripts/test_list_row_description_substance.mjs`, `node scripts/test_hotel_list_desc_capture_leaf.mjs`, every script in `scripts/offline-tests.txt`, `cd apps/vacation-client && npm test`, `node scripts/check-no-comments.mjs`, `node scripts/test_offline_manifest.mjs`, `BASE=vk node scripts/check-code-ratchet.mjs`. Results are in `J/RECEIPT.md`.
 
 ## Left alone (scope)
 
-- Fixture copies of the old Carbone URL (`scripts/fixtures/gate-b-nyc-shared-staging.json`, `pr336-*`). The serve path repairs them at runtime.
-- The Thing-card chip `onError` stage 0 lacks the `duckduckgo|gstatic` host guard that the timeline fallback has. This is pre-existing.
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
+- **Description quality** (events 8/15, flights 5/10, restaurants 4/25, stores 9/15) is still failing. The weak rows have thin fixture data: no address, dish, set time or return fare. That is a DATA fault under `vk-thing-data-contract`, and the UI cannot fix it without inventing text.
+- **Known base gaps** (budget complete, centred logos, row layout) are untouched. Centred logos now also lists cars-1280 (1.5 px, sub-pixel row pitch). That is the same base-gap check.
+- No baseline, threshold, fixture, test or Gate B edits. No merge of `vk`.

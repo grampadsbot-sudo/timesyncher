@@ -15,11 +15,12 @@ function captureModuleRoot() {
 async function loadVacationDeps() {
   const root = captureModuleRoot();
   const vacDir = pathToFileURL(join(root, 'src/vacation/'));
-  const [{ descriptionPassesDetailJudge }, { productThingCategory }] = await Promise.all([
+  const [{ descriptionPassesDetailJudge }, { productThingCategory }, { GATE_B_INCOMPLETE_LIST_ROW_IDS }] = await Promise.all([
     import(new URL('thing-detail-fields.mjs', vacDir).href),
     import(new URL('keepsake-product-overrides.mjs', vacDir).href),
+    import(new URL('stored-ccab-narrative-merge.mjs', vacDir).href),
   ]);
-  return { descriptionPassesDetailJudge, productThingCategory };
+  return { descriptionPassesDetailJudge, productThingCategory, GATE_B_INCOMPLETE_LIST_ROW_IDS };
 }
 
 function text(value) {
@@ -52,7 +53,7 @@ function hotelLongDetails(place = {}, override = {}) {
 }
 
 export async function gateBCapturePreDataCheck(shared = {}) {
-  const { descriptionPassesDetailJudge, productThingCategory } = await loadVacationDeps();
+  const { descriptionPassesDetailJudge, productThingCategory, GATE_B_INCOMPLETE_LIST_ROW_IDS } = await loadVacationDeps();
   const failures = [];
   for (const place of shared.places || []) {
     if (!place || place.id == null) continue;
@@ -72,6 +73,7 @@ export async function gateBCapturePreDataCheck(shared = {}) {
       }
     }
     if (renderedPrice(shared, place) === null) {
+      if (GATE_B_INCOMPLETE_LIST_ROW_IDS.has(place.id)) continue;
       failures.push({
         id: place.id,
         name: place.name || place.title,

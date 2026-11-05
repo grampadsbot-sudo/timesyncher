@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 
 import { mergeBindingsIntoShared } from '../../src/vacation/thing-media-bind.mjs';
 import { finalizeServedSharedTripPayload } from '../../src/vacation/shared-trip-served-page.mjs';
+import { bindPr336GateBCanonicalIdentity } from './pr336-vk-search-trip-sources.mjs';
 import { enrichSearchPlace } from '../../src/vacation/trip-thing-enrichment.mjs';
 import {
   applyLiveAppTimelineSelections,
@@ -529,7 +530,7 @@ function buildPayload() {
     if (row.id === 616) {
       override.logoUrl = 'https://www.wholefoodsmarket.com/favicon.ico';
     }
-    thingOverrides[`place:${row.id}`] = override;
+    thingOverrides[`place:${row.id}`] = bindPr336GateBCanonicalIdentity(row.id, place, override);
   }
   const reservations = rows.map((row) => {
     const day = days.find((d) => d.day_number === row.day);
@@ -629,7 +630,12 @@ function buildPayload() {
       };
     }
   }
-  return finalizeServedSharedTripPayload(mergeBindingsIntoShared(withTimeline, bindings));
+  const served = finalizeServedSharedTripPayload(mergeBindingsIntoShared(withTimeline, bindings));
+  const listOnlyHotel = served.places.find((place) => place.id === 608);
+  if (listOnlyHotel) {
+    delete listOnlyHotel.price;
+  }
+  return served;
 }
 
 export function buildNycCraigKimDaybydayTrip() {
