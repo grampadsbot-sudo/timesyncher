@@ -56,11 +56,12 @@ function reviewFields(prefix, { compositeIndex = 0 } = {}) {
 }
 
 function placeRow({ id, category, title, lat, lng, address, detail, price, logoUrl, source = 'brave' }) {
+  const description = detail.description || detail.summary || '';
   return thingRecordFromTripRow({
     id,
     category,
     title,
-    description: detail.summary,
+    description,
     source,
     location: { lat, lng, address },
     metadata: {
@@ -126,6 +127,8 @@ export function buildEnrichedDetailSharedTrip() {
       detail: {
         summary:
           'Morning nonstop with one checked bag included and a schedule that lands before lunch on the West Coast, which reviewers say beats connections when you want a full arrival day.',
+        description:
+          'Morning nonstop with one checked bag included and a schedule that lands before lunch on the West Coast, which reviewers say beats connections when you want a full arrival day.',
         itineraryNote: 'Delta JFK → LAX — arrive at the gate early for overhead bin space.',
         airline: 'Delta',
         flightNumber: 'DL 123',
@@ -149,6 +152,8 @@ export function buildEnrichedDetailSharedTrip() {
       price: 192,
       detail: {
         summary:
+          'Mid-size sedan pickup near the hotel with unlimited mileage and an airport return option that travelers mention when they want a simple automatic for city driving and longer day trips.',
+        description:
           'Mid-size sedan pickup near the hotel with unlimited mileage and an airport return option that travelers mention when they want a simple automatic for city driving and longer day trips.',
         itineraryNote: 'Hertz Midtown sedan — confirm return hours before the trip.',
         rentalCompany: 'Hertz',

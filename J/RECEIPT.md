@@ -144,3 +144,5 @@ GBrain handoff page `bot-admin/lanes/vk-pr-handoff/pr-821`: **not found** (MCP `
 CI `unit-tests` failed on `dayTimeline.unit.mjs` because day-by-day row notes now read stored `description`, not dossier claim / `itineraryNote` fallbacks. Updated `apps/vacation-client/test/dayTimeline.unit.mjs` and `listRows.unit.mjs` fixtures/assertions accordingly.
 
 Local: `node --test test/dayTimeline.unit.mjs test/listRows.unit.mjs` pass; pre-push gates pass on branch head after commit.
+
+CI round 3: `detail-layout.mjs` enriched flight failed `okSummary` because `detailSummary` reads stored `description` only; flight/car fixture had `summary` without `description`. Fixed in `enriched-detail-shared-trip.mjs` (verified `detailSummary` word count ≥ 30 for Delta flight).
