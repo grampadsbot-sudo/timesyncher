@@ -19,19 +19,15 @@ assert.doesNotMatch(committed, /children:Bs\(rr\(ua\.item\)\)/);
 assert.match(committed, /data-summary-stored":"1"/);
 const readLine = new Function('ha', `return (${ITINERARY_LINE_BUNDLE})`)((row) => row);
 const downgraded = {
+  description: 'Grab the nova and a coffee.',
   summary: 'Zabars is the Upper West Side food store at 2245 Broadway, open every day.',
-  evidenceDossier: {
-    fields: {
-      itineraryNote: {
-        value: '',
-        claims: [{ text: 'Grab the nova and a coffee.', supported: false }],
-      },
-    },
-  },
 };
 assert.equal(readLine(downgraded), 'Grab the nova and a coffee.');
 assert.equal(itineraryLineText(downgraded), 'Grab the nova and a coffee.');
-assert.equal(itineraryLineText({ itineraryNote: 'Book the corner booth.', summary: downgraded.summary }), 'Book the corner booth.');
+assert.equal(
+  itineraryLineText({ itineraryNote: 'Book the corner booth.', description: 'Stored day row copy.' }),
+  'Stored day row copy.',
+);
 assert.equal(itineraryLineText({ summary: downgraded.summary }), '');
 assert.match(committed, /data-ts-list-row-name":"1"/);
 assert.match(committed, /data-ts-thing-header":"1",style:\{display:"grid",gridTemplateColumns:"minmax\(0,1fr\) auto minmax\(0,1fr\)",alignItems:"center"/);

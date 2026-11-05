@@ -211,7 +211,7 @@ export function estimateTravelMinutes(fromPlace, toPlace) {
 
 export function itineraryNoteFor(place, trip, assignmentNotes) {
   const override = overrideFor(trip, place);
-  return itineraryLineText(override) || text(assignmentNotes || override.notes);
+  return itineraryLineText(override, place) || text(assignmentNotes || override.notes);
 }
 
 function endMinutes(entry) {

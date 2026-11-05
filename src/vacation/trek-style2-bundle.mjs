@@ -238,7 +238,8 @@ const HH_CHECK_PATCH = 'checked:!!(ha(Dt).happyHour||tsPf.some(row=>row.happyHou
 const HH_DETAILS_NEEDLE = 'value:ha(Dt).happyHourDetails??"",onChange:G=>Xa(Dt,"happyHourDetails",G.target.value)';
 const HH_DETAILS_PATCH = 'value:(ha(Dt).happyHourDetails||(tsPf.find(row=>row.match.test(String(Dt.name||Dt.title||"")))||{}).happyHourDetails||""),onChange:G=>Xa(Dt,"happyHourDetails",G.target.value)';
 const CO_NEEDLE = 'Co=G=>ha(G).longDetails??Fl(G)';
-const CO_PATCH = 'Co=G=>ha(G).longDetails||(tsPf.find(row=>row.match.test(String(G.name||G.title||"")))||{}).longDetails||Fl(G)';
+const CO_PATCH =
+  'Co=G=>{const d=ha(G)||{};return String(d.description??(G&&G.description)??"").replace(/\\s+/g," ").trim()}';
 
 const MN_CATEGORY_NEEDLE = 'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("car")||Re.includes("rental")?"car":Re.includes("hotel")?"hotel":';
 const MN_CATEGORY_PATCH = 'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("restaurant")?"restaurant":Re.includes("hotel")||Re.includes("lodging")||Re.includes("accommodation")||Re.includes("resort")?"hotel":Re.includes("car")||Re.includes("rental")?"car":';

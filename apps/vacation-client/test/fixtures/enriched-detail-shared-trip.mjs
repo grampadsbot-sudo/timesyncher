@@ -36,6 +36,7 @@ function reviewFields(prefix, { compositeIndex = 0 } = {}) {
     sources: ['Google', 'Yelp'],
   };
   fields.summary = SUMMARY.replace('Harbor Room', prefix);
+  fields.description = fields.summary;
   fields.longDetails = fields.summary;
   fields.summarySourceUrls = [
     `https://example-${prefix.toLowerCase().replace(/\s+/g, '-')}.example.com/`,
