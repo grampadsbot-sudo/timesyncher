@@ -83,6 +83,15 @@ function isPipelineDiagnostic(value = '') {
   return false;
 }
 
+function appendSpareNarrative(row = '', spare = '') {
+  const base = text(row, 4000);
+  const extra = text(spare, 4000);
+  if (!extra || isPipelineDiagnostic(extra) || isGenericListDescription(extra)) return base;
+  if (!base) return extra;
+  if (base.includes(extra)) return base;
+  return `${base} · ${extra}`;
+}
+
 function isTimingShell(value = '') {
   const row = text(value, 4000);
   if (!row) return false;
@@ -196,7 +205,15 @@ export function composeListRowDescription({ category = '', summary = '', fields 
       push('Set time', fields.showTime || fields.eventTime || fields.startTime || fields.place_time);
     }
     const joined = () => parts.join(' · ');
-    const what = text(fields.longDetails || fields.details || fields.description, 4000);
+    const what = text(
+      pickSubstantiveListNarrative(
+        fields.longDetails,
+        fields.details,
+        fields.description,
+        fields.placeDescription,
+      ) || '',
+      4000,
+    );
     if (
       what
       && !isPipelineDiagnostic(what)
@@ -219,6 +236,10 @@ export function composeListRowDescription({ category = '', summary = '', fields 
       ? `${text(fields.thirdPartySource, 40) || 'Rating'} ${fields.thirdPartyRating}${text(fields.thirdPartyReviewCount) ? ` (${fields.thirdPartyReviewCount})` : ''}`
       : '';
     push('Why go', text(fields.worthNote, 500) || praise || rating);
+    if (cat === 'restaurant' || cat === 'store') {
+      push('Common praise', reputationFromThemes(fields.reviewThemes?.praise));
+      push('Common complaints', reputationFromThemes(fields.reviewThemes?.complaints));
+    }
     const experienceRow = parts.join(' · ') || hook || note;
     if (
       (wordCount(experienceRow) < 6 || isGenericListDescription(experienceRow))
@@ -246,7 +267,7 @@ export function finalizeListRowDisplayDescription(composed = '', { spare = '', m
   );
   if (needsFallback && fallback) {
     if (!isPipelineDiagnostic(fallback) && !isGenericListDescription(fallback)) {
-      row = fallback;
+      row = appendSpareNarrative(row, fallback);
     }
   }
   if (isPipelineDiagnostic(row) || isTimingShell(row) || isGenericListDescription(row)) return '';
@@ -271,7 +292,7 @@ export function listRowDescriptionBundleSnippet() {
     'const pickNarrative=(...vals)=>{let best="",bestW=0;for(const val of vals){const s=String(val||"").replace(/\\s+/g," ").trim();if(!s||isDiag(s)||isGeneric(s))continue;const w=wc(s);if(w>bestW){best=s;bestW=w;}}return best;};',
     'const placeNarrative=String((G&&G.description)||"").replace(/\\s+/g," ").trim();',
     'const spare=pickNarrative(row.longDetails,row.details,placeNarrative,row.description);',
-    'const finalizeRow=(out,minWords)=>{let row=String(out||"").replace(/\\s+/g," ").trim();const need=wc(row)<6||isShell(row)||isDiag(row)||isGeneric(row)||(minWords>0&&wc(row)<minWords);if(need&&spare&&!isDiag(spare)&&!isGeneric(spare))row=spare;if(isDiag(row)||isShell(row)||isGeneric(row))return"";if(minWords>0&&wc(row)<minWords){if(wc(row)>=6&&!isGeneric(row))return row;return "";}return row;};',
+    'const finalizeRow=(out,minWords)=>{let row=String(out||"").replace(/\\s+/g," ").trim();const need=wc(row)<6||isShell(row)||isDiag(row)||isGeneric(row)||(minWords>0&&wc(row)<minWords);if(need&&spare&&!isDiag(spare)&&!isGeneric(spare)){if(row&&!row.includes(spare))row=row+" · "+spare;else if(!row)row=spare;}if(isDiag(row)||isShell(row)||isGeneric(row))return"";if(minWords>0&&wc(row)<minWords){if(wc(row)>=6&&!isGeneric(row))return row;return "";}return row;};',
     'let hook=String(row.summary||row.itineraryNote||row.itinerary_note||"").replace(/\\s+/g," ").trim();if(isDiag(hook))hook="";',
     'const cat=String(It(G)||"").toLowerCase();',
     'const parts=[],push=(label,val)=>{const s=String(val||"").replace(/\\s+/g," ").trim();if(s)parts.push(label?label+": "+s:s);};',
@@ -311,7 +332,7 @@ export function listRowDescriptionBundleSnippet() {
     'const when=String(row.startTime||row.start_time||(G&&G.place_time?G.place_time:"")||"").replace(/\\s+/g," ").trim();',
     'if(experience.has(cat)){push("Start",when);push("Duration",row.duration);push("Set time",row.showTime||row.eventTime||row.startTime||when);}',
     'const joined=()=>parts.join(" · ");',
-    'const what=String(row.longDetails||row.details||row.description||"").replace(/\\s+/g," ").trim();',
+    'const what=pickNarrative(row.longDetails,row.details,placeNarrative,row.description);',
     'if(what&&!isDiag(what)&&!isGeneric(what)&&!joined().includes(what))parts.push(what);',
     'const flavour=String(row.websiteFlavour||"").replace(/\\s+/g," ").trim();',
     'if(flavour&&!joined().includes(flavour))parts.push(flavour);',
@@ -320,6 +341,7 @@ export function listRowDescriptionBundleSnippet() {
     'const expRep=row.thirdPartyRating?(row.thirdPartySource||"Rating")+" "+row.thirdPartyRating+(row.thirdPartyReviewCount?" ("+row.thirdPartyReviewCount+")":""):"";',
     'let praise="";if(row.reviewThemes&&typeof row.reviewThemes==="object"&&Array.isArray(row.reviewThemes.praise))praise=row.reviewThemes.praise.map(t=>String(t||"").trim()).filter(Boolean).join("; ");',
     'push("Why go",row.worthNote||praise||expRep);',
+    'if(cat==="restaurant"||cat==="store"){let complaints="";if(row.reviewThemes&&typeof row.reviewThemes==="object"&&Array.isArray(row.reviewThemes.complaints))complaints=row.reviewThemes.complaints.map(t=>String(t||"").trim()).filter(Boolean).join("; ");push("Common praise",praise);push("Common complaints",complaints);}',
     'let expRow=parts.join(" · ")||hook||note;if((wc(expRow)<6||isShell(expRow)||isGeneric(expRow))&&what&&!isDiag(what)&&!isGeneric(what))expRow=what;if(isGeneric(expRow))return"";',
     'return finalizeRow(expRow,30);}',
     'return finalizeRow(hook,30);},',

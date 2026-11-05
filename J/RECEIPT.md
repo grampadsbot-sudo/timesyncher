@@ -136,3 +136,7 @@ Uncommitted files: `src/vacation/trek-style2-bundle.mjs`, `public/assets/index-B
 
 - Merged #549 (e344ee6) into this branch. The #549 wrapped below-row summary is kept; the inline list description is removed (summaries wrap, no ellipsis, #731). Row layout, price, car filter and Southwest fixes are kept. Bundle rebaked sha256=942d1b5e6ec3635f3bc7f0f901d56022cd1d582e78d8f57c420e8d11b13bc92c. All 25 receipt scripts pass.
 - Fixed a Gate B capture failure (cars-390 click blocked): the car-brand fallback no longer counts priced buttons inside non-car rows. After #549, the summary moved below the row, so short hotel buttons matched. Test: node scripts/test_car_brand_filter_scope.mjs
+
+## PR #819 fix-it — 2026-11-05
+
+GBrain handoff `bot-admin/lanes/vk-pr-handoff/pr-819` was not found (`gbrain get_page` returned `page_not_found`, including with `include_deleted: true` on this pass). CI fix: rebaked `public/assets/index-BKun7ofk.js` after list-row description patch changes (`node scripts/rebake_served_trek_bundle.mjs`). Gate B quality fix: append stored narrative instead of replacing labeled list copy; restaurant/store rows emit Common praise/complaints; experience rows use substantive longDetails and copy show/event times when serving.

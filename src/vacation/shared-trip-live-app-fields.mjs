@@ -351,6 +351,8 @@ export function applyLiveAppListRowFields(shared = {}) {
     } else if (EXPERIENCE_CATEGORIES.has(category)) {
       if (category) override.category = category;
       copyIfBlank(override, 'startTime', source?.startTime, source?.start_time, place.place_time);
+      copyIfBlank(override, 'showTime', source?.showTime, source?.show_time, source?.eventTime, source?.event_time);
+      copyIfBlank(override, 'eventTime', source?.eventTime, source?.event_time, source?.showTime, source?.show_time);
       copyIfBlank(override, 'duration', source?.duration);
       copyIfBlank(override, 'itineraryNote', source?.itineraryNote, source?.itinerary_note);
       copyIfBlank(override, 'description', source?.description, place.description);

@@ -99,6 +99,20 @@ assert.match(tourText, /Why go:/i);
 assert.match(tourText, /engaging guides/i);
 assert.doesNotMatch(tourText, TEMPLATE_TEXT);
 
+const restaurantText = composeListRowDescription({
+  category: 'restaurant',
+  summary: 'Upper West Side bistro with a short wine list.',
+  fields: {
+    address: '427 Amsterdam Ave, New York, NY',
+    websiteFlavour: 'Seasonal American plates and a focused wine list.',
+    reviewThemes: { praise: ['excellent pastas'], complaints: ['noisy when full'] },
+    longDetails: 'Neighborhood bistro with a short wine list and late seating. Book ahead on weekends.',
+  },
+});
+assert.match(restaurantText, /Common praise: excellent pastas/);
+assert.match(restaurantText, /Common complaints: noisy when full/);
+assert.ok(restaurantText.split(/\s+/).length >= 30);
+
 const payload = finalizeServedSharedTripPayload(buildNycCraigKimDaybydayTrip());
 const carOverride = payload.thingOverrides['place:609'] || {};
 const hotelOverride = payload.thingOverrides['place:603'] || {};

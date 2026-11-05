@@ -355,7 +355,7 @@ function storedListNarrativeFallback(place, override, source) {
 }
 
 function listRowHook(override, source, place, category) {
-  if (category === 'hotel' || category === 'car') {
+  if (category === 'hotel' || category === 'car' || category === 'restaurant' || category === 'store') {
     const placeNarrative = text(place?.description);
     if (wordCount(placeNarrative) >= 30 && !isGenericDescription(placeNarrative)) {
       return '';
