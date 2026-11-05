@@ -46,6 +46,8 @@ function wordCount(value = '') {
   return text(value, 4000).split(/\s+/).filter(Boolean).length;
 }
 
+const LIST_ROW_MIN_WORDS = 30;
+
 function isGenericListDescription(value = '') {
   const row = text(value, 4000);
   if (!row) return true;
@@ -117,7 +119,17 @@ export function composeListRowDescription({ category = '', summary = '', fields 
   };
 
   if (cat === 'car') {
-    if (hook) parts.push(hook);
+    const carDetail = text(
+      pickSubstantiveListNarrative(
+        fields.longDetails,
+        fields.details,
+        fields.description,
+        fields.placeDescription,
+      ) || '',
+      4000,
+    );
+    const carDetailSubstantive = carDetail && wordCount(carDetail) >= LIST_ROW_MIN_WORDS;
+    if (hook && !carDetailSubstantive) parts.push(hook);
     push('Class', fields.carType || fields.vehicleClass);
     push('Pickup', fields.pickupLocation);
     push('Pickup hours', fields.pickupHours);
@@ -125,7 +137,6 @@ export function composeListRowDescription({ category = '', summary = '', fields 
     push('Drop-off', fields.returnLocation);
     push('Drop-off hours', fields.dropoffHours);
     push('Drop-off time', fields.dropoffTime || fields.returnTime || fields.endTime);
-    const carDetail = text(fields.longDetails || fields.details || fields.description, 4000);
     if (carDetail && !isGenericListDescription(carDetail) && !parts.join(' · ').includes(carDetail)) {
       parts.push(carDetail);
     }
@@ -239,7 +250,10 @@ export function finalizeListRowDisplayDescription(composed = '', { spare = '', m
     }
   }
   if (isPipelineDiagnostic(row) || isTimingShell(row) || isGenericListDescription(row)) return '';
-  if (minWords > 0 && wordCount(row) < minWords) return '';
+  if (minWords > 0 && wordCount(row) < minWords) {
+    if (wordCount(row) >= 6 && !isGenericListDescription(row)) return row;
+    return '';
+  }
   return row;
 }
 
@@ -257,25 +271,25 @@ export function listRowDescriptionBundleSnippet() {
     'const pickNarrative=(...vals)=>{let best="",bestW=0;for(const val of vals){const s=String(val||"").replace(/\\s+/g," ").trim();if(!s||isDiag(s)||isGeneric(s))continue;const w=wc(s);if(w>bestW){best=s;bestW=w;}}return best;};',
     'const placeNarrative=String((G&&G.description)||"").replace(/\\s+/g," ").trim();',
     'const spare=pickNarrative(row.longDetails,row.details,placeNarrative,row.description);',
-    'const finalizeRow=(out,minWords)=>{let row=String(out||"").replace(/\\s+/g," ").trim();const need=wc(row)<6||isShell(row)||isDiag(row)||isGeneric(row)||(minWords>0&&wc(row)<minWords);if(need&&spare&&!isDiag(spare)&&!isGeneric(spare))row=spare;if(isDiag(row)||isShell(row)||isGeneric(row))return"";if(minWords>0&&wc(row)<minWords)return"";return row;};',
+    'const finalizeRow=(out,minWords)=>{let row=String(out||"").replace(/\\s+/g," ").trim();const need=wc(row)<6||isShell(row)||isDiag(row)||isGeneric(row)||(minWords>0&&wc(row)<minWords);if(need&&spare&&!isDiag(spare)&&!isGeneric(spare))row=spare;if(isDiag(row)||isShell(row)||isGeneric(row))return"";if(minWords>0&&wc(row)<minWords){if(wc(row)>=6&&!isGeneric(row))return row;return "";}return row;};',
     'let hook=String(row.summary||row.itineraryNote||row.itinerary_note||"").replace(/\\s+/g," ").trim();if(isDiag(hook))hook="";',
     'const cat=String(It(G)||"").toLowerCase();',
     'const parts=[],push=(label,val)=>{const s=String(val||"").replace(/\\s+/g," ").trim();if(s)parts.push(label?label+": "+s:s);};',
     'const money=v=>{if(v==null||v==="")return"";let out="";if(typeof v==="number"&&isFinite(v))out="$"+v;else{const raw=String(v).replace(/\\s+/g," ").trim();if(!raw)return"";out=/^\\$/.test(raw)?raw:/[\\d]/.test(raw)?"$"+raw.replace(/^\\$/,""):"";}',
     'return out&&/[\\d]/.test(out)?out:"";};',
     'const hasPriceDigits=v=>/[\\d]/.test(String(v||""));',
-    'if(cat==="car"){if(hook)parts.push(hook);',
+    'if(cat==="car"){const carDetail=pickNarrative(row.longDetails,row.details,placeNarrative,row.description);',
+    'const carDetailLong=carDetail&&wc(carDetail)>=30;if(hook&&!carDetailLong)parts.push(hook);',
     'push("Class",row.carType||row.vehicleClass);',
     'push("Pickup",row.pickupLocation||row.pickup_location);push("Pickup hours",row.pickupHours||row.pickup_hours);',
     'push("Pickup time",row.pickupTime||row.startTime);',
     'push("Drop-off",row.returnLocation||row.return_location||row.dropoffLocation);push("Drop-off hours",row.dropoffHours||row.dropoff_hours||row.returnHours);',
     'push("Drop-off time",row.dropoffTime||row.returnTime||row.endTime);',
-    'const carDetail=String(row.longDetails||row.details||row.description||"").replace(/\\s+/g," ").trim();',
-    'if(carDetail&&!parts.join(" · ").includes(carDetail))parts.push(carDetail);',
+    'if(carDetail&&!isGeneric(carDetail)&&!parts.join(" · ").includes(carDetail))parts.push(carDetail);',
     'const carPrice=money(row.price??(blocked.includes("price")?"":bi(G)));if(hasPriceDigits(carPrice))push("",carPrice+" total");',
     'const themes=Array.isArray(row.reviewThemes)?row.reviewThemes.map(t=>String(t||"").trim()).filter(Boolean).join("; "):"";',
     'push("Reputation",row.reputationNote||themes);',
-    'return finalizeRow(parts.join(" · ")||hook,0);}',
+    'return finalizeRow(parts.join(" · ")||hook,30);}',
     'if(cat==="hotel"){if(G&&Number(G.id)===608){if(hook)parts.push(hook);push("Area",row.neighborhood);push("Location",row.address);return finalizeRow(parts.join(" · ")||hook,0);}',
     'const hotelDetail=pickNarrative(row.longDetails,row.details,placeNarrative,row.description);',
     'const hotelDetailLong=hotelDetail&&wc(hotelDetail)>=30;if(hook&&!hotelDetailLong)parts.push(hook);',
@@ -307,7 +321,7 @@ export function listRowDescriptionBundleSnippet() {
     'let praise="";if(row.reviewThemes&&typeof row.reviewThemes==="object"&&Array.isArray(row.reviewThemes.praise))praise=row.reviewThemes.praise.map(t=>String(t||"").trim()).filter(Boolean).join("; ");',
     'push("Why go",row.worthNote||praise||expRep);',
     'let expRow=parts.join(" · ")||hook||note;if((wc(expRow)<6||isShell(expRow)||isGeneric(expRow))&&what&&!isDiag(what)&&!isGeneric(what))expRow=what;if(isGeneric(expRow))return"";',
-    'return finalizeRow(expRow,0);}',
-    'return finalizeRow(hook,0);},',
+    'return finalizeRow(expRow,30);}',
+    'return finalizeRow(hook,30);},',
   ].join('');
 }

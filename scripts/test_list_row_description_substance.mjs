@@ -7,7 +7,7 @@ import { productThingCategory } from '../src/vacation/keepsake-product-overrides
 import { applyLiveAppListRowFields } from '../src/vacation/shared-trip-live-app-fields.mjs';
 import { finalizeServedSharedTripPayload } from '../src/vacation/shared-trip-served-page.mjs';
 import { renderServedTrekBundle } from '../src/vacation/trek-style2-bundle.mjs';
-import { rowSummary } from '../apps/vacation-client/src/lib/listTabModel.mjs';
+import { listRowSubstanceDescription, rowSummary } from '../apps/vacation-client/src/lib/listTabModel.mjs';
 import { buildNycCraigKimDaybydayTrip } from './fixtures/nyc-craig-kim-daybyday-trip.mjs';
 import { buildGateBApprovedSharedTrip } from './fixtures/gate-b-approved-shared-trip.mjs';
 
@@ -215,6 +215,8 @@ const sourceOnly = applyLiveAppListRowFields({
   places: [{ id: 7, name: 'Airport rental', category_name: 'Car', metadata: { sourceRecord: {
     vehicleClass: 'Compact', pickupLocation: 'Airport terminal', returnLocation: 'Downtown counter',
     pickupTime: '09:00', returnTime: '18:00', price: 145,
+    longDetails:
+      'Compact automatic from the airport terminal counter with downtown return, useful when you want a small footprint for city parking and moderate luggage. Fixture copy for offline list-row substance checks only; verify live rates, mileage, insurance, and fuel policy before booking.',
   } } }],
 });
 assert.equal(sourceOnly.thingOverrides['place:7'].carType, 'Compact');
@@ -224,6 +226,26 @@ assert.match(sourceText, /Compact/);
 assert.match(sourceText, /09:00/);
 assert.match(sourceText, /18:00/);
 assert.match(sourceText, /\$145/);
+assert.ok(sourceText.split(/\s+/).length >= 30, 'car row with stored narrative should reach list substance minimum');
+
+const sparseHertzTrip = applyLiveAppListRowFields({
+  places: [{ id: 710, name: 'Hertz JFK — Compact SUV', category_name: 'Car', price: 366 }],
+  thingOverrides: {
+    'place:710': {
+      summary: 'Hertz JFK rental.',
+      carType: 'Compact SUV',
+      pickupLocation: 'JFK Federal Circle',
+      returnLocation: 'JFK Federal Circle',
+      price: 366,
+    },
+  },
+});
+const sparseHertzPlace = sparseHertzTrip.places[0];
+const sparseHertzDesc = listRowSubstanceDescription(sparseHertzPlace, sparseHertzTrip);
+assert.ok(
+  sparseHertzDesc.split(/\s+/).length >= 30,
+  `Hertz JFK list row should hydrate stored narrative (${sparseHertzDesc.slice(0, 120)})`,
+);
 
 const gateTrip = buildGateBApprovedSharedTrip();
 for (const id of [604, 606, 608, 609, 611]) {

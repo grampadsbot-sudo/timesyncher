@@ -355,7 +355,7 @@ function storedListNarrativeFallback(place, override, source) {
 }
 
 function listRowHook(override, source, place, category) {
-  if (category === 'hotel') {
+  if (category === 'hotel' || category === 'car') {
     const placeNarrative = text(place?.description);
     if (wordCount(placeNarrative) >= 30 && !isGenericDescription(placeNarrative)) {
       return '';
@@ -439,7 +439,7 @@ export function listRowSubstanceDescription(
   }
   const display = finalizeListRowDisplayDescription(composed, {
     spare,
-    minWords: category === 'hotel' ? 30 : 0,
+    minWords: 30,
   });
   if (
     category === 'hotel'

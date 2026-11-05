@@ -88,7 +88,10 @@ export function createStoredCcabNarrativeMerge(
     const ccabCat = text(hit.ccabRecord?.category, 40).toLowerCase();
     const placeCat = placeCategoryLabel(place, override);
     if (/^flight option:/i.test(ccabKey) || ccabCat === 'flight') {
-      return placeCat.includes('flight');
+      if (placeCat.includes('flight')) return true;
+      const carLike = (placeCat.includes('car') || placeCat.includes('rental'))
+        && /\b(jfk|rental|sedan|suv|corolla|hertz|avis|enterprise|thrifty|dollar|alamo|national|budget|sixt|ace)\b/i.test(`${ccabKey} ${place.name || place.title || override.title || ''}`);
+      return carLike;
     }
     if (ccabCat === 'car') {
       return placeCat.includes('car') || placeCat.includes('rental');

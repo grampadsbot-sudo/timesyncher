@@ -16,6 +16,7 @@ const EXPERIENCE_CATEGORIES = new Set([
   'other',
 ]);
 import { flightFieldsFromBlob } from './place-detail-extract.mjs';
+import { hydrateCarListRowNarrative } from './car-list-row-narrative-hydrate.mjs';
 import { isGenericDescription, isHotelPlanningNote } from './list-row-generic-description.mjs';
 import { isPlaceholderLogoUrl, resolveThingLogoUrl } from './thing-logo-capture.mjs';
 
@@ -417,6 +418,10 @@ export function applyLiveAppListRowFields(shared = {}) {
           place.description = hotelNarrative;
         }
       }
+    }
+
+    if (category === 'car') {
+      hydrateCarListRowNarrative(place, override, source, pickLongDetails);
     }
 
     const gateBPositive =
