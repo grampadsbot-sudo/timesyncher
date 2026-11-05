@@ -9,7 +9,7 @@ export function estimateTravelMinutes(fromPlace: SharedPlace, toPlace: SharedPla
 export function itineraryNoteFor(
   place: SharedPlace,
   trip: SharedTripPayload,
-  assignmentNotes: string,
+  assignmentNotes?: string,
 ): string;
 
 export type TimelineEntry = {
@@ -34,3 +34,15 @@ export function mapPlacesForTimeline(
 ): SharedPlace[];
 export function shiftDayIndex(trip: SharedTripPayload, currentIndex: number, delta: number): number;
 export function timeRangeLabel(entry: TimelineEntry): string;
+
+export function mediaForPlace(trip: SharedTripPayload, place: SharedPlace): Array<{
+  kind?: string;
+  mediaKind?: string;
+  mimeType?: string;
+  mime_type?: string;
+  publicUrl?: string;
+  url?: string;
+  thumbnailUrl?: string;
+  thumbnail_url?: string;
+  caption?: string;
+}>;

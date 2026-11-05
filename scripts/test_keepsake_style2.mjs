@@ -740,7 +740,7 @@ assert.doesNotMatch(patchedAe, /pe\(tsMergeLe\(G\)\)/);
 assert.match(patchedAe, /on=\(Re=le\[Qt\(G\)\]\)==null\?void 0:Re\.timeline,on==null\?\(Mi\(G\)\?!1:hl\(G\)\):!!on/);
 assert.doesNotMatch(patchedAe, /on=\(Re=ha\(G\)\)==null\?void 0:Re\.timeline/);
 assert.match(patchedAe, /data-stories-grid="2"/);
-assert.match(patchedAe, /tsItinLine\(Zn\.item\)/);
+assert.match(patchedAe, /tsItinLine\(Zn\.item,Zn\.notes\)/);
 assert.doesNotMatch(patchedAe, /data-two-col-itinerary="1"/);
 assert.doesNotMatch(patchedAe, /data-two-col-print="1"/);
 assert.match(patchedAe, /<strong>Summary\.<\/strong>/);

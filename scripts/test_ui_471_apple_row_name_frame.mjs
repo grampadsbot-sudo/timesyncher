@@ -86,7 +86,7 @@ const raw = execFileSync(
 const bundle = renderServedTrekBundle(raw.toString('utf8'));
 assert.match(
   bundle,
-  /"data-ts-logo-name-pair":"1",style:\{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:9,minWidth:0,maxWidth:"55%",flex:"0 1 auto",overflow:"hidden"\},children:\[n\.jsx\(dc,\{item:G\}\),n\.jsx\("span",\{"data-ts-list-row-name":"1",style:\{minWidth:0,maxWidth:"100%",flex:"1 1 auto",display:"inline-flex",alignItems:"center",lineHeight:1,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"\},children:Zn\}\)\]/,
+  /"data-ts-logo-name-pair":"1",style:\{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:9,minWidth:0,maxWidth:"100%",flex:"1 1 auto",overflowWrap:"anywhere"\},children:\[n\.jsx\(dc,\{item:G\}\),n\.jsx\("span",\{"data-ts-list-row-name":"1",style:\{minWidth:0,maxWidth:"100%",flex:"1 1 auto",display:"inline-flex",alignItems:"center",lineHeight:1,whiteSpace:"normal",overflowWrap:"anywhere"\},children:Zn\}\)\]/,
 );
 assert.match(bundle, /"strong",\{style:\{lineHeight:1,display:"block"\},children:ua\}/);
 assert.match(thingLogoInkCenterBundleSnippet(), /tsListRowNameLeafCenterY/);

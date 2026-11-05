@@ -25,15 +25,15 @@ assert.match(rendered, /data-ts-logo-name-pair":"1",style:\{display:"inline-flex
 assert.match(rendered, /data-ts-list-row-rating":"1",style:\{display:"flex",flexDirection:"row",flexWrap:"nowrap",alignItems:"center",justifyContent:"flex-end"/);
 assert.doesNotMatch(rendered, /data-ts-list-row-rating":"1"[\s\S]{0,80}flexDirection:"column"/);
 assert.match(rendered, /data-ts-detail-header-stars":"1"/);
-assert.match(rendered, /data-ts-thing-review-line":"1"/);
+assert.doesNotMatch(rendered, /data-ts-thing-review-line":"1"/);
 assert.match(rendered, /tsThingReviewLines=G=>/);
 assert.match(rendered, /data-ts-thing-review="1"/);
 
 assert.match(
   rendered,
-  /Mo=Array\.from\(new Map\(\[\]\.concat\(Qa\.flatMap\(di=>Ci\(di\)\)/,
+  /Mo=Array\.from\(new Map\(Qa\.flatMap\(di=>Ci\(di\)\)/,
 );
-assert.match(rendered, /\(Ut\|\|\[\]\)\.filter\(wn=>wn&&wn\.place_id\)/);
+assert.doesNotMatch(rendered, /\(Ut\|\|\[\]\)\.filter\(wn=>wn&&wn\.place_id\)/);
 assert.doesNotMatch(rendered, /\]\.concat\(rs,Po,bc,Oc,Fs,Cc\)/);
 
 assert.doesNotMatch(rendered, /children:ot\.map\(G=>\{const Re=or\(Dt\)\.includes\(G\)/);
@@ -51,7 +51,7 @@ assert.doesNotMatch(css, /\[data-shared-live-tab="hotels"\] \[data-list-summary=
 assert.match(css, /\.ts-star-rating\{display:inline-flex!important;flex-direction:row!important/);
 assert.match(
   rendered,
-  /"data-list-summary":"1","data-summary-src":"thing",style:\{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal"/,
+  /"data-list-summary":"1","data-summary-src":"thing",style:\{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"visible",whiteSpace:"normal"/,
 );
 
 console.log('thing card ui keep checks passed');

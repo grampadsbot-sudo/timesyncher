@@ -1,8 +1,8 @@
 import { itineraryLineText } from '../../../../src/vacation/itinerary-line.mjs';
 import {
+  logoUrlForPlace,
   flightPriceDisplay,
   flightSchedule,
-  hotelFirstRowNote,
   placeName,
   rowSummary,
   tabCategoryKey,
@@ -180,9 +180,14 @@ export function mediaForPlace(trip, place) {
     const thingId = Number(row?.thingId ?? row?.thing_id ?? row?.place_id);
     return thingId === placeId;
   });
-  if (fromTrip.length) return fromTrip;
-  const bound = place?.photos || place?.bound_media || place?.media;
-  return Array.isArray(bound) ? bound : [];
+  const override = overrideFor(trip, place);
+  const bound = override.photos || override.bound_media || place?.photos || place?.bound_media || place?.media;
+  const rows = fromTrip.length ? fromTrip : Array.isArray(bound) ? bound : [];
+  const logo = logoUrlForPlace(place, trip);
+  return rows.filter((row) => {
+    const urls = [row.publicUrl, row.public_url, row.url, row.thumbnailUrl, row.thumbnail_url].filter(Boolean);
+    return urls.length && urls.every((url) => url !== logo && !/favicon|\.ico(?:[?#]|$)/i.test(url));
+  });
 }
 
 function haversineMiles(from, to) {
@@ -209,9 +214,9 @@ export function estimateTravelMinutes(fromPlace, toPlace) {
   return Math.max(5, Math.round(rawMinutes / 5) * 5);
 }
 
-export function itineraryNoteFor(place, trip) {
+export function itineraryNoteFor(place, trip, assignmentNotes) {
   const override = overrideFor(trip, place);
-  return itineraryLineText(override, place);
+  return itineraryLineText(override) || String(assignmentNotes || override.notes || '');
 }
 
 function endMinutes(entry) {
@@ -281,24 +286,13 @@ function pushCarRows(entries, trip, day) {
 
 function pushHotelRows(entries, trip, day) {
   const dayNumber = Number(day.day_number);
-  const firstTimelineHotelId = (trip.places || []).find((place) => {
-    const override = overrideFor(trip, place);
-    return override.timeline && tabCategoryKey(place, trip) === 'hotel';
-  })?.id;
   for (const place of trip.places || []) {
     const override = overrideFor(trip, place);
     if (!override.timeline || tabCategoryKey(place, trip) !== 'hotel') continue;
     const span = hotelStayDayNumbers(place, trip);
     if (!span) continue;
     const name = placeName(place);
-    const note =
-      dayNumber === span.start
-        ? hotelFirstRowNote(
-            place,
-            trip,
-            String(place.id) === String(firstTimelineHotelId),
-          ) || itineraryNoteFor(place, trip, '')
-        : itineraryNoteFor(place, trip, '');
+    const note = itineraryNoteFor(place, trip, '');
 
     if (dayNumber > span.start && dayNumber <= span.end + 1) {
       entries.push({

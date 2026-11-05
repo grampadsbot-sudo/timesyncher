@@ -90,3 +90,50 @@ for (const place of payload.places) {
 }
 
 console.log('PASS test_list_row_description_substance');
+
+for (const file of ['shared-trip-oe-list-row-patch.mjs', 'trek-list-row-description-patch.mjs']) {
+  const source = readFileSync(new URL('../src/vacation/' + file, import.meta.url), 'utf8');
+  assert.doesNotMatch(source, /WebkitLineClamp|WebkitBoxOrient|-webkit-box|data-ts-thing-review-line/);
+}
+const rowStart = bundle.indexOf('Oe=(G,Re,zt=!1)=>');
+const rowEnd = bundle.indexOf(',tt=G=>', rowStart);
+assert.doesNotMatch(bundle.slice(rowStart, rowEnd), /tsThingReviewLines|data-ts-thing-review-line|WebkitLineClamp|WebkitBoxOrient|-webkit-box/);
+const summaryStart = bundle.indexOf('const sum=String(d.description');
+const summaryEnd = bundle.indexOf('const rev=[1,2,3,4]', summaryStart);
+assert.ok(summaryStart > 0 && summaryEnd > summaryStart);
+assert.doesNotMatch(bundle.slice(summaryStart, summaryEnd), /WebkitLineClamp|WebkitBoxOrient|-webkit-box|overflow:"hidden"/);
+const detailStart = bundle.indexOf('(()=>{const note=tsItinLine(Dt)');
+const detailEnd = bundle.indexOf('})(),hhShow?', detailStart);
+assert.ok(detailStart > 0 && detailEnd > detailStart);
+const jsx = (type, props) => ({ type, props });
+const renderExtra = new Function('n', 'Dt', 'd', 'tsItinLine', 'tsThingPhotos', 'kl', 'Ds', 'Ce', 'lc', 'return ' + bundle.slice(detailStart, detailEnd + 4));
+const detailExtra = (data, photos = []) => renderExtra({ jsx, jsxs: jsx, Fragment: 'fragment' }, data, data, (row) => row.itineraryNote || '', () => photos, () => ({ type: 'day-chip' }), () => true, false, () => { throw new Error('view-only write'); });
+const details = '  Stored Details.\nKeep every word.  ';
+const note = '  Stored note.  ';
+const nodes = detailExtra({ itineraryNote: note, longDetails: details }, [{ id: 'photo', url: '/photo.jpg' }]).props.children;
+assert.deepEqual(nodes.map((row) => row.props['data-ts-detail-field'] || (row.props['data-ts-detail-timeline'] ? 'timeline' : 'photos')), ['itineraryNote', 'longDetails', 'timeline', 'photos']);
+assert.equal(nodes[0].props.children[1].props.children, note);
+assert.equal(nodes[1].props.children[1].props.children, details);
+const toggle = nodes[2].props.children[1].props.children[0];
+assert.equal(toggle.props.checked, true);
+assert.equal(toggle.props.disabled, true);
+assert.equal(toggle.props.readOnly, true);
+assert.equal(detailExtra({}).props.children[0], null);
+assert.equal(detailExtra({}).props.children[1], null);
+assert.equal(detailExtra({}).props.children[3], null);
+const photoStart = bundle.indexOf('tsThingPhotos=G=>');
+const photoEnd = bundle.indexOf(',tsDetailCapturePayload=', photoStart);
+assert.ok(photoStart > 0 && photoEnd > photoStart);
+const photosFor = new Function('_l', 'fo', 'let ' + bundle.slice(photoStart, photoEnd) + ';return tsThingPhotos')(() => '/brand-logo.png', () => [
+  { kind: 'photo', url: '/brand-logo.png' },
+  { kind: 'photo', url: 'https://example.test/favicon.ico' },
+  { kind: 'photo', url: '/real-photo.jpg' },
+  { kind: 'video', url: '/movie.mp4' },
+]);
+assert.deepEqual(photosFor({}).map((row) => row.url), ['/real-photo.jpg']);
+const reviewsStart = bundle.indexOf('const rev=[1,2,3,4].map');
+const reviewsEnd = bundle.indexOf('})(),(()=>{const note=', reviewsStart);
+const renderReviews = new Function('n', 'd', 'tsRenderStarRatingHtml', 'tsStarRatingAria', bundle.slice(reviewsStart, reviewsEnd));
+const reviewData = { review1: 'First', review1Rating: '4', review2: 'Second', review3: 'Third', review3Rating: '3', review4: 'Fourth', review4Rating: '2' };
+const reviews = renderReviews({ jsx, jsxs: jsx }, reviewData, String, String).props.children[1];
+assert.deepEqual(reviews.map((row) => row.props.children[0]?.props.dangerouslySetInnerHTML.__html || ''), ['4', '', '3', '2']);

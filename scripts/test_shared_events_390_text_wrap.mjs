@@ -44,16 +44,16 @@ for (const box of [
   const decls = declsFor(box);
   assert.match(decls, /min-width:0!important/, `${box} must be allowed to shrink at 390px`);
   assert.match(decls, /max-width:100%!important/, `${box} must stay inside its row at 390px`);
-  assert.match(decls, /overflow:hidden!important/, `${box} must contain the event name at 390px`);
+  assert.match(decls, /overflow:visible!important/, `${box} must contain the event name at 390px`);
 }
 
 const name = declsFor(`${EVENTS} [data-ts-list-row-name="1"] strong`);
-assert.match(name, /white-space:nowrap!important/, 'event names stay single-line at 390px');
-assert.match(name, /text-overflow:ellipsis!important/, 'long event names (Flight option rows) end in an ellipsis');
-assert.match(name, /overflow:hidden!important/, 'event names cannot run past the right edge');
+assert.match(name, /white-space:normal!important/, 'event names wrap at 390px');
+assert.match(name, /overflow-wrap:anywhere!important/, 'long event names wrap in full');
+assert.match(name, /overflow:visible!important/, 'event names cannot run past the right edge');
 assert.match(name, /max-width:100%!important/, 'event names are capped at their container');
 
-assert.doesNotMatch(eventsCss, /white-space:\s*normal!important/, 'event names must not wrap at 390px');
+assert.doesNotMatch(eventsCss, /text-overflow:\s*ellipsis!important/, 'event names must not be ellipsized');
 assert.ok(!eventsCss.includes('[data-list-summary="1"]'), 'event descriptions must not be clipped at 390px');
 assert.match(
   bundle,
@@ -62,4 +62,4 @@ assert.match(
 );
 assert.match(bundle, /data-shared-live-tab":"events"/, 'served bundle must mark events tab panel for mobile CSS');
 
-console.log('shared events 390px name ellipsis + description wrap contract OK');
+console.log('shared events 390px name + description wrap contract OK');
