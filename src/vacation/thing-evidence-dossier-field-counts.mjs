@@ -5,7 +5,7 @@ import {
   MIN_REVIEW_SOURCES,
   descriptionNamesThing,
 } from './thing-dossier-fields.mjs';
-import { reviewSourceHost } from './thing-evidence-dossier.mjs';
+import { reviewSourceHost } from './dossier-review-url.mjs';
 import {
   isBarOrRestaurant,
   isFlightOrCarOrDecision,

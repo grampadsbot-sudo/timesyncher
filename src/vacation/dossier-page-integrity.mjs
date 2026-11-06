@@ -49,6 +49,12 @@ export function dossierPageFailure(page = {}) {
   return null;
 }
 
+export function dossierPagesVerified(dossier = {}) {
+  return Array.isArray(dossier.pages) && dossier.pages.length > 0 && dossier.pages.every((page) =>
+    /^https?:\/\//.test(page.url || '') && Number.isFinite(Date.parse(page.fetchedAt)) && page.text?.trim()
+    && createHash('sha256').update(page.text).digest('hex') === page.sha256);
+}
+
 export function sanitizeDossierPages(dossier = {}, trace) {
   const original = Array.isArray(dossier.pages) ? dossier.pages : [];
   const kept = [], remap = new Map();

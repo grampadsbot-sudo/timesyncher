@@ -1,4 +1,5 @@
-import { dossierPageFailure } from './dossier-page-integrity.mjs';
+import { dossierPageFailure, dossierPagesVerified } from './dossier-page-integrity.mjs';
+import { reviewSourceHost } from './dossier-review-url.mjs';
 import { gatherVkSearchEvidence, VK_SEARCH_PROVIDER } from './dossier-vk-search.mjs';
 import { flightRecordEvidence } from './dossier-flight-record.mjs';
 import { createHash } from 'node:crypto';
@@ -107,10 +108,6 @@ const REVIEW_PAGE_CHARS = 40000;
 
 const REVIEW_HOST_RE = /yelp\.|tripadvisor\.|google\.|opentable\.|booking\.com/i;
 
-export function reviewSourceHost(url = '') {
-  try { return new URL(url).hostname.replace(/^(www|m|en)\./, ''); } catch { return ''; }
-}
-
 function isReviewUrl(url = '') {
   return REVIEW_HOST_RE.test(reviewSourceHost(url));
 }
@@ -127,11 +124,7 @@ function blockedPageText(text = '') {
 
 export const DEFAULT_DOSSIER_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
-export function dossierPagesVerified(dossier = {}) {
-  return Array.isArray(dossier.pages) && dossier.pages.length > 0 && dossier.pages.every((page) =>
-    /^https?:\/\//.test(page.url || '') && Number.isFinite(Date.parse(page.fetchedAt)) && page.text?.trim()
-    && createHash('sha256').update(page.text).digest('hex') === page.sha256);
-}
+export { dossierPagesVerified };
 
 export function dossierNeedsRefresh(dossier = {}, maxAgeMs = DEFAULT_DOSSIER_MAX_AGE_MS, nowMs = Date.now()) {
   if (!dossierPagesVerified(dossier)) return true;

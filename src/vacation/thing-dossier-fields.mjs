@@ -7,9 +7,13 @@ import {
 import { applyDossierRatingsAndReviews } from './thing-dossier-ratings-copy.mjs';
 import { dossierThingTitle, placeSupportsDossierReviews } from './dossier-brave-queries.mjs';
 import { dossierScalarClaimRejected } from './dossier-evidence-hydrate.mjs';
-import { dossierPagesVerified, reviewSourceHost } from './thing-evidence-dossier.mjs';
+import { dossierPagesVerified } from './dossier-page-integrity.mjs';
+import { reviewSourceHost } from './dossier-review-url.mjs';
+import { pageTextSupportsRating, ratingQuoteSupportsAggregate } from './dossier-rating-evidence.mjs';
+import { resolveDossierReviewRatings } from './dossier-review-ratings.mjs';
 
 export { applyDossierRatingsAndReviews } from './thing-dossier-ratings-copy.mjs';
+export { pageTextSupportsRating, ratingQuoteSupportsAggregate } from './dossier-rating-evidence.mjs';
 export { dossierPageIdForUrl, ensureBraveSnippetCitationPages } from './dossier-brave-snippet-pages.mjs';
 
 function text(value) {
@@ -130,45 +134,6 @@ function claimUrls(dossier, owner) {
     .map((id) => dossierPageById(dossier, id)?.url).filter(Boolean))].join(',');
 }
 
-const RATING_QUOTE_MARK = /\b(?:stars?|rated|rating|reviews?|out of|\/\s*5)\b/i;
-
-export function ratingQuoteSupportsAggregate(quote = '', average, count) {
-  const q = norm(quote);
-  if (!q || q.length < 6 || !RATING_QUOTE_MARK.test(q)) return false;
-  const avg = Number(average);
-  const cnt = Number(count);
-  if (!(avg > 0) || !(Number.isInteger(cnt) && cnt > 0)) return false;
-  const avgEsc = String(avg).replace('.', '\\.');
-  if (!new RegExp(`(^|[^\\d.])${avgEsc}([^\\d.]|$)`).test(q)) return false;
-  const digits = String(cnt);
-  const compact = q.replace(/,/g, '');
-  if (!new RegExp(`(^|\\D)${digits}(\\D|$)`).test(compact)) return false;
-  if (/\b\d{3}[\s.-]\d{3}[\s.-]\d{4}\b/.test(q) && !/\breviews?\b/i.test(q)) return false;
-  return true;
-}
-
-const RATING_PAGE_WINDOW = 80;
-
-export function pageTextSupportsRating(pageText = '', average, count) {
-  const raw = norm(pageText);
-  if (!raw || !RATING_QUOTE_MARK.test(raw)) return false;
-  const avg = Number(average);
-  const cnt = Number(count);
-  if (!(avg > 0) || !(Number.isInteger(cnt) && cnt > 0)) return false;
-  const avgEsc = String(avg).replace('.', '\\.');
-  const avgPart = Number.isInteger(avg) ? `${avgEsc}(?:\\.0+)?` : avgEsc;
-  const digits = String(cnt);
-  const avgRe = new RegExp(`(?:^|[^\\d.])(${avgPart})(?![\\d.])`, 'g');
-  let match;
-  while ((match = avgRe.exec(raw))) {
-    const at = match.index + match[0].length - match[1].length;
-    const slice = raw.slice(Math.max(0, at - RATING_PAGE_WINDOW), at + match[1].length + RATING_PAGE_WINDOW);
-    if (!RATING_QUOTE_MARK.test(slice)) continue;
-    if (new RegExp(`(?:^|\\D)${digits}(?:\\D|$)`).test(slice.replace(/,/g, ''))) return true;
-  }
-  return false;
-}
-
 function savedRatingPage(dossier, rating) {
   if (!rating?.url) return null;
   return (dossier.pages || []).find((page) => page.url === rating.url) || null;
@@ -264,13 +229,21 @@ export function dossierRepresentativeReviews(dossier = {}) {
   return /^Representative reviews written from \d+ reviews$/.test(String(dossier.reviewsLabel || ''))
     && dossierPagesVerified(dossier) && dossier.reviews?.length === 4
     && dossier.reviews.every((review) => review?.representative === true && String(review.text || '').trim()
+      && Number.isInteger(review.rating) && review.rating >= 1 && review.rating <= 5
       && review.claims?.length > 0 && claimsSupported(dossier, review));
 }
 
 function dossierReviewsWritable(dossier = {}) {
-  return dossierPagesVerified(dossier) && dossier.reviews?.length === 4
-    && dossier.reviews.every((review) => Number.isInteger(review.rating) && review.rating >= 1 && review.rating <= 5
-      && claimsSupported(dossier, review));
+  if (!dossierPagesVerified(dossier) || dossier.reviews?.length !== 4) return false;
+  return dossier.reviews.every((review) => {
+    if (!Number.isInteger(review.rating) || review.rating < 1 || review.rating > 5) return false;
+    const claims = Array.isArray(review.claims) ? review.claims : [];
+    const dropped = Number(review.droppedClaims) || 0;
+    const hadInputClaims = claims.length + dropped > 0;
+    if (hadInputClaims && claims.length === 0) return false;
+    if (claims.length === 0) return true;
+    return claimsSupported(dossier, review);
+  });
 }
 
 function dossierReviewsValid(dossier = {}) {
@@ -313,6 +286,7 @@ export function writeDossierReviews(record = {}, dossier = {}, { useShortcomingM
     clearPublicReviewFields(record);
     return record;
   }
+  dossier = resolveDossierReviewRatings(dossier);
   clearPublicReviewFields(record);
   const missing = useShortcomingMissing
     ? new Set()
@@ -323,11 +297,12 @@ export function writeDossierReviews(record = {}, dossier = {}, { useShortcomingM
     record.reviewsLabel = dossier.reviewsLabel;
     dossier.reviews.forEach((review, index) => {
       const key = `review${index + 1}`;
+      const claims = Array.isArray(review.claims) ? review.claims : [];
       record[key] = review.text;
-      if (Number.isInteger(review.rating) && review.rating >= 1 && review.rating <= 5) record[`${key}Rating`] = String(review.rating);
+      record[`${key}Rating`] = String(review.rating);
       if (review.source) record[`${key}Source`] = review.source;
-      record[`${key}Cites`] = [...new Set(review.claims.flatMap((claim) => claim.pages))];
-      record[`${key}Claims`] = review.claims.map((claim) => ({ text: claim.text, pages: [...claim.pages], supported: claim.supported === true }));
+      record[`${key}Cites`] = [...new Set(claims.flatMap((claim) => claim.pages))];
+      record[`${key}Claims`] = claims.map((claim) => ({ text: claim.text, pages: [...claim.pages], supported: claim.supported === true }));
       record[`${key}Label`] = record.reviewsLabel;
       record[`${key}CompositeLabel`] = record.reviewsLabel;
     });
@@ -339,10 +314,11 @@ export function writeDossierReviews(record = {}, dossier = {}, { useShortcomingM
       : limitedReviewsLabel(readCount);
     dossier.reviews.forEach((review, index) => {
       const key = `review${index + 1}`;
+      const claims = Array.isArray(review.claims) ? review.claims : [];
       record[key] = review.text;
       record[`${key}Rating`] = String(review.rating);
-      record[`${key}Cites`] = [...new Set(review.claims.flatMap((claim) => claim.pages))];
-      record[`${key}Claims`] = review.claims.map((claim) => ({ text: claim.text, pages: [...claim.pages], supported: claim.supported === true }));
+      record[`${key}Cites`] = [...new Set(claims.flatMap((claim) => claim.pages))];
+      record[`${key}Claims`] = claims.map((claim) => ({ text: claim.text, pages: [...claim.pages], supported: claim.supported === true }));
       record[`${key}Label`] = record.reviewsLabel;
       record[`${key}CompositeLabel`] = record.reviewsLabel;
     });
@@ -354,7 +330,8 @@ export function writeDossierReviews(record = {}, dossier = {}, { useShortcomingM
   }
   if (!record.review1 && placeSupportsDossierReviews({ category: record.category })) {
     clearPublicReviewFields(record, { persistNull: true });
-    if (!useShortcomingMissing) missing.add('reviews');
+    missing.add('reviews');
+    record.missingFields = [...new Set([...(record.missingFields || []), 'reviews'])];
     const shortcomings = Array.isArray(record.dataShortcomings) ? [...record.dataShortcomings] : [];
     if (!shortcomings.some((row) => row.field === 'reviews')) {
       shortcomings.push({

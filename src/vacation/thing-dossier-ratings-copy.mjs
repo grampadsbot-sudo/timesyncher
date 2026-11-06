@@ -1,5 +1,5 @@
 import { isFlightOrCarOrDecision, placeSupportsDossierReviews } from './dossier-brave-queries.mjs';
-import { reviewSourceHost } from './thing-evidence-dossier.mjs';
+import { reviewSourceHost } from './dossier-review-url.mjs';
 
 function scalarFieldValue(value) {
   if (value == null) return '';

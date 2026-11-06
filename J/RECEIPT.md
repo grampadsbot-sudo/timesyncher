@@ -1,47 +1,50 @@
-# PR #826 / #825 — Cursor lane receipt (#728 budget fixture timeline-only)
+# #830 / #827 — CI fix: synthesized reviews + rating resolution (cursor-ubuntu 2026-11-06)
 
-Result: **source-ready**, uncommitted patch for host publication. Starting HEAD: `d8169910f3291c57574592e307b5d03846e4624b` (unchanged; no commit in lane). Branch: `vkfill/825-20261105070213`. Model: composer-2.5 (cursor-ubuntu). Chief-dr ruling: bot-admin/lanes/vk-pr-handoff/pr-826 (9:16 PM PT 2026-11-05).
+**Start HEAD (verified):** `669b3a2e818dbfabeff8f3dcbc92b98d69af4ef0`
 
-## Change
+**Base merge:** Host merged `origin/vk` at `a503e6870f6739c51fee8b348b3beb8945f7a611` into this worktree; `J/RECEIPT.md` conflict resolved keeping PR #830 receipt plus this line.
 
-GitHub unit-tests on head `d8169910` failed at `scripts/test_728_budget_data.mjs:50`: `buildBudgetModel(served).rows` was `[]` because `budgetItineraryPlaces` uses `buildDayTimeline`, which requires `thingOverrides['place:N'].timeline === true`. The #728 mini-trip fixture had timeline-selected places only via assignments/dayIds without `timeline: true`.
+## Uncommitted patch (host publishes; not committed in this sandbox)
 
-**Fix (test/fixture only):** update ONLY `scripts/test_728_budget_data.mjs`:
+**Goal:** Align `resolveDossierReviewRatings` / vk-search path so page-supported synthesized reviews still map when per-review stars are omitted, preserve fail-closed + venue mean-drift when grounded, fix ESM import cycle that prevented loading `dossier-review-ratings.mjs` without `@neondatabase/serverless`, and tighten Trip.com-only `/10` handling per tests.
 
-- Set `timeline: true` on `thingOverrides` for `place:1`, `place:3`, and `place:5`.
-- Add `{ place_id: 3 }` to `assignments[10]` (place 3 was dayIds-only; timeline builder does not scan dayIds).
-- Adjust expected `buildBudgetModel` row order to live assignment order `[1, 3, 5]` (was `[1, 5, 3]`).
+**This round (2026-11-06):** `writeDossierReviews` + `dossierReviewsWritable` — four grounded integer star ratings on verified dossier pages suffice to write review slots without per-quote `claims` (Craig: stars on every shown review; never invent). Representative / full-valid paths unchanged (still require `claimsSupported`). Avoids leaving `reviews` in `missingFields` when review text is emitted. Safe `claims` iteration when absent.
 
-All price asserts, API place budget lines `[1, 3, 5]`, and idempotency asserts unchanged. No product budget algorithm changes.
+**Files touched**
 
-**Files (uncommitted):**
+- `src/vacation/dossier-page-integrity.mjs` — `dossierPagesVerified` moved here (no cycle).
+- `src/vacation/dossier-rating-evidence.mjs` — **new** — `ratingQuoteSupportsAggregate`, `pageTextSupportsRating` (shared with review ratings).
+- `src/vacation/dossier-review-url.mjs` — **new** — `reviewSourceHost` (breaks `thing-dossier-fields` ↔ `thing-evidence-dossier` cycle).
+- `src/vacation/dossier-review-ratings.mjs` — Early return when no `reviews` array; keep unrated reviews that are not explicitly ungrounded; integer 1–5 `rating`; mean-drift only when every row has a finite rating; preserve pre-set `starsEvidence` when merging stars; strip reviews only when explicit rating fails parse and venue absent.
+- `src/vacation/dossier-vk-search.mjs` — Trip.com: `/10` only when `review{N}Source` is Trip.com; prefer `review{N}Rating` x/10 over Stars/Score10; when both stars and x/10 present, keep raw `review{N}Rating` as `starsEvidence`.
+- `src/vacation/thing-dossier-fields.mjs` — Imports from `dossier-page-integrity`, `dossier-rating-evidence`, `dossier-review-url`; re-exports rating helpers; writable-review + missingFields fix (this round).
+- `src/vacation/thing-evidence-dossier.mjs` — Re-export `dossierPagesVerified` from page-integrity; drop duplicate `reviewSourceHost` export.
+- `src/vacation/dossier-review-extract.mjs`, `thing-dossier-ratings-copy.mjs`, `thing-evidence-dossier-field-counts.mjs` — import `reviewSourceHost` from `dossier-review-url.mjs`.
 
-- `scripts/test_728_budget_data.mjs`
-
-Prior branch fixes unchanged: product_row_fields `mr(G)`, filter_chips, `data-ts-list-desc`, ui_754 two-arg `tsItinLine`.
-
-## Local verification (starting HEAD `d8169910`)
+## Tests run (this worktree)
 
 | Command | Result |
-| --- | --- |
-| `node scripts/test_728_budget_data.mjs` | exit 0 |
-| `node scripts/test_ui_754_punchlist.mjs` | exit 0 |
-| `node scripts/test_hotel_list_desc_capture_leaf.mjs` | exit 0 |
-| `node scripts/test_ui_734_round2_punchlist.mjs` | exit 0 |
-| `node scripts/test_shared_tab_filter_chips.mjs` | exit 0 |
-| `node scripts/test_gate_b_product_row_fields.mjs` | exit 0 |
-| `node scripts/test_budget_timeline_only_rows.mjs` | exit 0 |
-| `node scripts/test_budget_required_price_completeness.mjs` | exit 0 |
-| `node scripts/check-no-comments.mjs` | exit 0 |
-| `node scripts/test_offline_manifest.mjs` | exit 0 |
-| `BASE=vk node scripts/check-code-ratchet.mjs` | exit 0 |
-| `git diff --check` | exit 0 |
+|---------|--------|
+| `node scripts/test_dossier_evidence_hydrate_682.mjs` | **PASS** |
+| `node scripts/test_thing_evidence_dossier.mjs` | **PASS** |
+| `node scripts/test_vk_search_review_lines.mjs` | **PASS** |
+| `node scripts/test_dossier_representative_reviews_written.mjs` | **PASS** |
+| `node scripts/test_apply_dossier_ratings_copy.mjs` | **PASS** |
+| `node scripts/test_vk_search_rating_evidence.mjs` | **PASS** |
+| `node scripts/test_dossier_rejected_claims_shortcomings_682.mjs` | **PASS** |
+| `node scripts/test_dossier_reviews_identity_682.mjs` | **PASS** |
+| `cd apps/vacation-client && npm test` | **PASS** (after root `npm ci` for `@neondatabase/serverless`) |
+| `node scripts/test_offline_manifest.mjs` | **PASS** |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | **PASS** |
+| `node scripts/check-no-comments.mjs` | **PASS** (needs root `node_modules` / `apps/vacation-client` deps for TypeScript API) |
+| `git diff --check` | **PASS** |
 
-## Not done in lane (host)
+**Scope / not done:** No commit, push, or merge (host publication only). CI not run here.
 
-- No commit, push, or PR head move — HOST PUBLICATION ONLY.
-- GitHub CI / Gate B not run on a new head here.
+---
 
-## Scope left alone
+## Earlier: eggbot host graft 2026-11-06 8:32 AM PT
 
-Product `budgetItineraryPlaces` / `buildDayTimeline`, Gate B pixel/overflow/price noise, baselines, checkers, workflows, #827, deploy.
+Grafted code files from local tip 519498b6 onto PR tip 313af5a7 (diverged siblings off be0d5486). PR tip had evidence PNG churn + stale #820 receipt; wt tip had the rating generator/tests.
+
+Host does not invent ratings.
