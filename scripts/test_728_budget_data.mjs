@@ -15,13 +15,13 @@ const trip = {
     { id: 4, name: 'Stale day selection', category_name: 'Store' },
     { id: 5, name: 'Selected unpriced visit', category_name: 'Event' },
   ],
-  assignments: { 10: [{ place_id: 1 }, { place_id: 5 }] },
+  assignments: { 10: [{ place_id: 1 }, { place_id: 3 }, { place_id: 5 }] },
   thingOverrides: {
-    'place:1': { category: 'restaurant', pricePerPerson: 12.25, price: 99 },
+    'place:1': { category: 'restaurant', pricePerPerson: 12.25, price: 99, timeline: true },
     'place:2': { category: 'restaurant', price: 60 },
-    'place:3': { category: 'event', pricePerPerson: 25, people: 4, dayIds: [10] },
+    'place:3': { category: 'event', pricePerPerson: 25, people: 4, dayIds: [10], timeline: true },
     'place:4': { category: 'store', price: 50, dayIds: [999] },
-    'place:5': { category: 'event' },
+    'place:5': { category: 'event', timeline: true },
   },
   permissions: { share_budget: true },
   budget: [
@@ -47,7 +47,7 @@ assert.deepEqual(
 );
 assert.deepEqual(trip.budget.map((line) => line.total_price), [999, 120, 5000], 'input stays intact');
 const model = buildBudgetModel(served);
-assert.deepEqual(model.rows.map((row) => Number(row.place.id)), [1, 5, 3]);
+assert.deepEqual(model.rows.map((row) => Number(row.place.id)), [1, 3, 5]);
 for (const row of model.rows) {
   const apiLine = served.budget.find((line) => line.place_id === row.place.id);
   assert.equal(row.amount, apiLine.total_price, 'API and client use identical quantity math');

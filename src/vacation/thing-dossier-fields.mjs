@@ -234,9 +234,16 @@ export function dossierRepresentativeReviews(dossier = {}) {
 }
 
 function dossierReviewsWritable(dossier = {}) {
-  return dossierPagesVerified(dossier) && dossier.reviews?.length === 4
-    && dossier.reviews.every((review) => Number.isInteger(review.rating) && review.rating >= 1 && review.rating <= 5
-      && claimsSupported(dossier, review));
+  if (!dossierPagesVerified(dossier) || dossier.reviews?.length !== 4) return false;
+  return dossier.reviews.every((review) => {
+    if (!Number.isInteger(review.rating) || review.rating < 1 || review.rating > 5) return false;
+    const claims = Array.isArray(review.claims) ? review.claims : [];
+    const dropped = Number(review.droppedClaims) || 0;
+    const hadInputClaims = claims.length + dropped > 0;
+    if (hadInputClaims && claims.length === 0) return false;
+    if (claims.length === 0) return true;
+    return claimsSupported(dossier, review);
+  });
 }
 
 function dossierReviewsValid(dossier = {}) {
@@ -290,11 +297,12 @@ export function writeDossierReviews(record = {}, dossier = {}, { useShortcomingM
     record.reviewsLabel = dossier.reviewsLabel;
     dossier.reviews.forEach((review, index) => {
       const key = `review${index + 1}`;
+      const claims = Array.isArray(review.claims) ? review.claims : [];
       record[key] = review.text;
       record[`${key}Rating`] = String(review.rating);
       if (review.source) record[`${key}Source`] = review.source;
-      record[`${key}Cites`] = [...new Set(review.claims.flatMap((claim) => claim.pages))];
-      record[`${key}Claims`] = review.claims.map((claim) => ({ text: claim.text, pages: [...claim.pages], supported: claim.supported === true }));
+      record[`${key}Cites`] = [...new Set(claims.flatMap((claim) => claim.pages))];
+      record[`${key}Claims`] = claims.map((claim) => ({ text: claim.text, pages: [...claim.pages], supported: claim.supported === true }));
       record[`${key}Label`] = record.reviewsLabel;
       record[`${key}CompositeLabel`] = record.reviewsLabel;
     });
@@ -306,10 +314,11 @@ export function writeDossierReviews(record = {}, dossier = {}, { useShortcomingM
       : limitedReviewsLabel(readCount);
     dossier.reviews.forEach((review, index) => {
       const key = `review${index + 1}`;
+      const claims = Array.isArray(review.claims) ? review.claims : [];
       record[key] = review.text;
       record[`${key}Rating`] = String(review.rating);
-      record[`${key}Cites`] = [...new Set(review.claims.flatMap((claim) => claim.pages))];
-      record[`${key}Claims`] = review.claims.map((claim) => ({ text: claim.text, pages: [...claim.pages], supported: claim.supported === true }));
+      record[`${key}Cites`] = [...new Set(claims.flatMap((claim) => claim.pages))];
+      record[`${key}Claims`] = claims.map((claim) => ({ text: claim.text, pages: [...claim.pages], supported: claim.supported === true }));
       record[`${key}Label`] = record.reviewsLabel;
       record[`${key}CompositeLabel`] = record.reviewsLabel;
     });

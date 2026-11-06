@@ -16,7 +16,7 @@ const EVENTS_TAB_PANEL_PATCH =
   'q==="events"&&n.jsxs("div",{"data-shared-live-tab":"events",style:{display:"flex",flexDirection:"column",gap:10},children:[n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2},children:[n.jsx("button",{onClick:()=>qe([])';
 
 const OE_ROW_SUMMARY_NEEDLE = 'n.jsx("button",{"aria-label":"Open thing details",onClick:()=>Ne(Qt(G)),title:Pn||"Open details",style:{marginTop:6,border:0,padding:0,background:"transparent",textAlign:"left",cursor:"pointer",color:Pn?"#475569":"#9ca3af",fontSize:11,fontWeight:700,width:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Pn||"Open details for summary"})';
-const OE_ROW_SUMMARY_PATCH = 'Pn?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:400,width:"100%",minWidth:0,overflow:"visible",whiteSpace:"normal",color:"#475569",lineHeight:1.4},children:Pn}):null';
+const OE_ROW_SUMMARY_PATCH = 'Pn?n.jsx("div",{"data-ts-list-desc":"1","data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"visible",whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4},children:Pn}):null';
 const OE_ROW_SUMMARY_BELOW_DIV_NEEDLE = 'Pn?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#475569",lineHeight:1.4},children:Pn}):null,';
 const OE_ROW_SUMMARY_BELOW_DIV_PATCH = '';
 const OE_ROW_INLINE_DESC_FLAG_NEEDLE = 'Pn=(Mi(G),Rn),tsRowInlineDesc=typeof window>"u"||!(window.matchMedia&&window.matchMedia("(max-width:640px)").matches),Zn=';
@@ -89,25 +89,21 @@ const OE_ROW_ZN_DEFAULT_STRONG_NEEDLE = ':Zi(G)?n.jsx(je,{item:G,title:ua}):ua,s
 const OE_ROW_ZN_DEFAULT_STRONG_PATCH =
   ':Zi(G)?n.jsx(je,{item:G,title:ua}):n.jsx("strong",{style:{lineHeight:1,display:"block"},children:ua}),sr=n.jsxs';
 const OE_STACKED_ROW_SUMMARY_NEEDLE =
-  'Pn?(()=>{const tsHotel=It(G)==="hotel"||Zi(G);const tsFull=tsHotel?String(ha(G).summary??"").replace(/\\s+/g," ").trim():"";return tsFull?n.jsx("div",{"data-ts-list-desc":"1","data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4,display:"-webkit-box",WebkitLineClamp:3,WebkitBoxOrient:"vertical",overflow:"hidden"},children:tsFull}):Pn?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4},children:Pn}):null})():null,';
+  'Pn?(()=>{const tsHotel=It(G)==="hotel"||Zi(G);const tsFull=tsHotel?String(ha(G).summary??"").replace(/\\s+/g," ").trim():"";return tsFull?n.jsx("div",{"data-ts-list-desc":"1","data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4},children:tsFull}):Pn?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4},children:Pn}):null})():null,';
 const OE_STACKED_ROW_SUMMARY_PATCH =
-  'Pn?n.jsx("div",{"data-ts-list-desc":"1","data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4,display:"-webkit-box",WebkitLineClamp:3,WebkitBoxOrient:"vertical",overflow:"hidden"},children:Pn}):null,';
+  'Pn?n.jsx("div",{"data-ts-list-desc":"1","data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4},children:Pn}):null,';
 const OE_INLINE_SUMMARY_FLEX_MARK =
   '"data-list-summary":"1","data-summary-src":"thing","data-ts-list-desc":"1",style:{flex:"1 1 0",minWidth:"35%",width:"100%",maxWidth:"100%",display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontSize:11,fontWeight:700,color:"#475569",lineHeight:1.4},children:Pn}):null]})';
-const OE_THING_HEADER_REVIEW_NEEDLE =
-  'aria-label":tsStarRatingAria(tsRowRating)}):n.jsx("span",{"aria-hidden":"true"})]}),Xr=fo(G)';
-const OE_THING_HEADER_REVIEW_PATCH =
-  'aria-label":tsStarRatingAria(tsRowRating)}):n.jsx("span",{"aria-hidden":"true"})]}),(()=>{const tsRev=tsThingReviewLines(G);return tsRev?n.jsx("div",{"data-ts-thing-review-line":"1",style:{marginTop:4,fontSize:12,lineHeight:1.45,color:"#334155",whiteSpace:"normal",overflowWrap:"anywhere"},dangerouslySetInnerHTML:{__html:tsRev}}):null})(),Xr=fo(G)';
-const OE_SA_ROW_HOTEL_REVIEW_BEFORE_NR =
-  'Pn?n.jsx("div",{"data-ts-list-desc":"1","data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4,display:"-webkit-box",WebkitLineClamp:3,WebkitBoxOrient:"vertical",overflow:"hidden"},children:Pn}):null,(()=>{const tsRev=tsThingReviewLines(G);return tsRev?n.jsx("div",{"data-ts-thing-review-line":"1",style:{marginTop:4,fontSize:12,lineHeight:1.45,color:"#334155",whiteSpace:"normal",overflowWrap:"anywhere"},dangerouslySetInnerHTML:{__html:tsRev}}):null})(),';
+const OE_SA_ROW_DESCRIPTION_BEFORE_NR =
+  'Pn?n.jsx("div",{"data-ts-list-desc":"1","data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4},children:Pn}):null,';
 const OE_SA_ROW_MEDIA_NEEDLE =
   '})]}),,n.jsx(Nr,{items:Xr,scopeKey:Qt(G),compact:!0})]},`${It(G)}-${Qt(G)}-${ua}`):n.jsxs("li",';
 const OE_SA_ROW_MEDIA_PATCH =
-  `})]}),${OE_SA_ROW_HOTEL_REVIEW_BEFORE_NR}n.jsx(Nr,{items:Xr,scopeKey:Qt(G),compact:!0})]},\`\${It(G)}-\${Qt(G)}-\${ua}\`):n.jsxs("li",`;
+  `})]}),${OE_SA_ROW_DESCRIPTION_BEFORE_NR}n.jsx(Nr,{items:Xr,scopeKey:Qt(G),compact:!0})]},\`\${It(G)}-\${Qt(G)}-\${ua}\`):n.jsxs("li",`;
 const OE_ROW_SUMMARY_MOBILE_SA_NEEDLE = '})]}),,n.jsx(Nr,{items:Xr,scopeKey:Qt(G),compact:!0})]},`${It(G)}-${Qt(G)}-${ua}`):n.jsxs("li",';
-const OE_ROW_SUMMARY_MOBILE_SA_PATCH = '})]}),!tsRowInlineDesc&&Pn?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#475569",lineHeight:1.4},children:Pn}):null,n.jsx(Nr,{items:Xr,scopeKey:Qt(G),compact:!0})]},`${It(G)}-${Qt(G)}-${ua}`):n.jsxs("li",';
+const OE_ROW_SUMMARY_MOBILE_SA_PATCH = '})]}),!tsRowInlineDesc&&Pn?n.jsx("div",{"data-ts-list-desc":"1","data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#475569",lineHeight:1.4},children:Pn}):null,n.jsx(Nr,{items:Xr,scopeKey:Qt(G),compact:!0})]},`${It(G)}-${Qt(G)}-${ua}`):n.jsxs("li",';
 const OE_ROW_SUMMARY_MOBILE_ALT_NEEDLE = 'children:sr}),,n.jsxs("div",{style:{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:8,marginTop:7,paddingTop:7,borderTop:"1px solid #f3f4f6",flexWrap:"nowrap",minWidth:0,maxWidth:"100%"},children:[kl(G),';
-const OE_ROW_SUMMARY_MOBILE_ALT_PATCH = 'children:sr}),!tsRowInlineDesc&&Pn?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#475569",lineHeight:1.4},children:Pn}):null,n.jsxs("div",{style:{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:8,marginTop:7,paddingTop:7,borderTop:"1px solid #f3f4f6",flexWrap:"nowrap",minWidth:0,maxWidth:"100%"},children:[kl(G),';
+const OE_ROW_SUMMARY_MOBILE_ALT_PATCH = 'children:sr}),!tsRowInlineDesc&&Pn?n.jsx("div",{"data-ts-list-desc":"1","data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#475569",lineHeight:1.4},children:Pn}):null,n.jsxs("div",{style:{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:8,marginTop:7,paddingTop:7,borderTop:"1px solid #f3f4f6",flexWrap:"nowrap",minWidth:0,maxWidth:"100%"},children:[kl(G),';
 
 const OE_ROW_TITLE_SPAN_NEEDLE = 'n.jsx("span",{style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})';
 const OE_ROW_TITLE_SPAN_PATCH = 'n.jsx("span",{style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",width:"100%"},children:Mi(G)||Zi(G)||bn(G)?Zn:n.jsx("strong",{children:Bs(mr(G))})})';
@@ -231,10 +227,30 @@ export function patchInlineListRowDescriptionOnThingHeader(source = '') {
   }
   if (js.includes(OE_SA_ROW_MEDIA_NEEDLE)) {
     js = js.replaceAll(OE_SA_ROW_MEDIA_NEEDLE, OE_SA_ROW_MEDIA_PATCH);
-  } else if (js.includes('data-ts-thing-header":"1"') && !js.includes('data-ts-thing-review-line":"1"')) {
-    throw new Error('thing-header Sa row hotel/review patch did not apply');
+  } else if (js.includes('data-ts-thing-header":"1"') && !js.includes('data-list-summary":"1"')) {
+    throw new Error('thing-header Sa row description patch did not apply');
   }
-  return js;
+  const start = js.indexOf('be=({item:G})=>');
+  const end = js.indexOf(',tt=G=>', start);
+  if (start < 0 || end < 0) throw new Error('list row name wrapping anchors missing');
+  const rows = js.slice(start, end)
+    .replace('const ua=Bs(mr(G))', 'const ua=mr(G)')
+    .replace('children:(eu(G)[0]||"")', 'children:ua')
+    .replace('children:J(G)||"Rental"', 'children:mr(G)')
+    .replaceAll('overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,flex:"1 1 0"},children:n.jsx("strong"', 'whiteSpace:"normal",overflowWrap:"anywhere",minWidth:0,flex:"1 1 0"},children:n.jsx("strong"')
+    .replaceAll('maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:ua', 'maxWidth:"100%",whiteSpace:"normal",overflowWrap:"anywhere"},children:ua')
+    .replaceAll('whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"', 'whiteSpace:"normal",overflowWrap:"anywhere"')
+    .replaceAll('maxWidth:"55%",flex:"0 1 auto",overflow:"hidden"', 'maxWidth:"100%",flex:"1 1 auto",overflowWrap:"anywhere"')
+    .replaceAll('maxWidth:"100%",overflow:"hidden"', 'maxWidth:"100%",overflow:"visible"');
+  const ratingRow = 'tsRowStars?n.jsx("span",{"data-ts-list-row-rating":"1",style:{display:"flex",flexDirection:"row",flexWrap:"nowrap",alignItems:"center",justifyContent:"flex-end"},dangerouslySetInnerHTML:{__html:tsRowStars},role:"img","aria-label":tsStarRatingAria(tsRowRating)}):n.jsx("span",{"aria-hidden":"true"})';
+  const headerRows = rows
+    .replace('"data-ts-thing-header":"1",style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto minmax(0,1fr)",alignItems:"center",columnGap:8,width:"100%",minWidth:0},children:[n.jsx("span",{"aria-hidden":"true"}),', '"data-ts-thing-header":"1",style:{display:"flex",flexWrap:Zi(G)?"wrap":"nowrap",alignItems:"center",columnGap:8,width:"100%",minWidth:0},children:[')
+    .replace('overflow:"visible",flex:"1 1 0",width:"100%"', 'overflow:"visible",flex:"1 1 auto",width:Zi(G)?"auto":"100%"')
+    .replace(',n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)})', '')
+    .replace(ratingRow, `Zi(G)?n.jsxs("span",{style:{display:"inline-flex",alignItems:"center",gap:8,marginLeft:"auto",flexShrink:0},children:[n.jsx("span",{style:{whiteSpace:"nowrap",color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)}),${ratingRow}]}):${ratingRow}`)
+    .replaceAll('whiteSpace:"normal",overflowWrap:"anywhere",minWidth:0,flex:"1 1 0"},children:n.jsx("strong"', 'whiteSpace:"normal",overflowWrap:"anywhere",minWidth:0,flex:"1 1 auto"},children:n.jsx("strong"')
+    .replaceAll('"data-ts-list-row-rating":"1",style:{display:"flex",flexDirection:"row",flexWrap:"nowrap",alignItems:"center",justifyContent:"flex-end"}', '"data-ts-list-row-rating":"1",style:{display:"flex",flexDirection:"row",flexWrap:"nowrap",alignItems:"center",justifyContent:"flex-end",flexShrink:0}');
+  return js.slice(0, start) + headerRows + js.slice(end);
 }
 
 export function patchSharedTripOeListRows(source = '') {
@@ -277,6 +293,15 @@ export function patchSharedTripOeListRows(source = '') {
   }
   if (js.includes(OE_ROW_SUMMARY_NEEDLE)) {
     js = js.replaceAll(OE_ROW_SUMMARY_NEEDLE, OE_ROW_SUMMARY_PATCH);
+  }
+  if (js.includes(OE_STACKED_ROW_SUMMARY_NEEDLE)) {
+    js = js.replaceAll(OE_STACKED_ROW_SUMMARY_NEEDLE, OE_STACKED_ROW_SUMMARY_PATCH);
+  }
+  if (js.includes(OE_ROW_SUMMARY_BELOW_DIV_NEEDLE)) {
+    js = js.replaceAll(
+      OE_ROW_SUMMARY_BELOW_DIV_NEEDLE,
+      'Pn?n.jsx("div",{"data-ts-list-desc":"1","data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#475569",lineHeight:1.4},children:Pn}):null,',
+    );
   }
   if (js.includes(OE_ROW_INLINE_DESC_FLAG_NEEDLE)) {
     js = js.replace(OE_ROW_INLINE_DESC_FLAG_NEEDLE, OE_ROW_INLINE_DESC_FLAG_PATCH);
@@ -385,51 +410,20 @@ export function patchSharedTripListWrapping(source = '') {
     if (oeIdx < 0) throw new Error('shared trip list wrapping lost Oe() anchor');
     rows = rows.slice(0, oeIdx) + jeBlock + rows.slice(oeIdx);
   }
-  let next = js.slice(0, start) + rows + js.slice(end);
-  const summaryClose700 = '"data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4},children:Pn}):null';
-  const summaryClose400 = '"data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:400,width:"100%",minWidth:0,overflow:"visible",whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4},children:Pn}):null';
-  const reviewLine700 = '"data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4},children:Pn}):null,(()=>{const tsRev=tsThingReviewLines(G);return tsRev?n.jsx("div",{"data-ts-thing-review-line":"1",style:{marginTop:4,fontSize:12,lineHeight:1.45,color:"#334155",whiteSpace:"normal",overflowWrap:"anywhere"},dangerouslySetInnerHTML:{__html:tsRev}}):null})()';
-  const reviewLine400 = '"data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:400,width:"100%",minWidth:0,overflow:"visible",whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4},children:Pn}):null,(()=>{const tsRev=tsThingReviewLines(G);return tsRev?n.jsx("div",{"data-ts-thing-review-line":"1",style:{marginTop:4,fontSize:12,lineHeight:1.45,color:"#334155",whiteSpace:"normal",overflowWrap:"anywhere"},dangerouslySetInnerHTML:{__html:tsRev}}):null})()';
-  if (next.includes(summaryClose700)) {
-    next = next.replaceAll(summaryClose700, reviewLine700);
-  } else if (next.includes(summaryClose400)) {
-    next = next.replaceAll(summaryClose400, reviewLine400);
-  } else {
-    throw new Error('thing card review line anchor missing');
-  }
-  return patchHotelListDescCaptureLeaf(next);
+  const next = js.slice(0, start) + rows + js.slice(end);
+  return ensureListDescCaptureLeaf(next);
 }
 
-const HOTEL_LIST_DESC_SUMMARY_NEEDLE =
-  'Pn?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4},children:Pn}):null,(()=>{const tsRev=tsThingReviewLines(G);return tsRev?n.jsx("div",{"data-ts-thing-review-line":"1"';
-const HOTEL_LIST_DESC_SUMMARY_NEEDLE_400 =
-  'Pn?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:400,width:"100%",minWidth:0,overflow:"visible",whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4},children:Pn}):null,(()=>{const tsRev=tsThingReviewLines(G);return tsRev?n.jsx("div",{"data-ts-thing-review-line":"1"';
-const HOTEL_LIST_DESC_SUMMARY_NEEDLE_IIFE =
-  'Pn?(()=>{const tsHotel=It(G)==="hotel"||Zi(G);const tsFull=tsHotel?String(ha(G).summary??"").replace(/\\s+/g," ").trim():"";return tsFull?n.jsx("div",{"data-ts-list-desc":"1","data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4,display:"-webkit-box",WebkitLineClamp:3,WebkitBoxOrient:"vertical",overflow:"hidden"},children:tsFull}):Pn?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4},children:Pn}):null})():null,(()=>{const tsRev=tsThingReviewLines(G);return tsRev?n.jsx("div",{"data-ts-thing-review-line":"1"';
-const HOTEL_LIST_DESC_SUMMARY_NEEDLE_TS_SPARE =
-  '(Pn||(It(G)==="hotel"||Zi(G)))?(()=>{const tsHotel=It(G)==="hotel"||Zi(G);const tsRow=Pn?String(Pn).replace(/\\s+/g," ").trim():"";const tsSpare=tsHotel&&!tsRow?String(ha(G).longDetails??ha(G).description??(G&&G.description)??"").replace(/\\s+/g," ").trim():"";const show=tsRow||tsSpare||(tsHotel?String(ha(G).summary??"").replace(/\\s+/g," ").trim():"");if(!show)return null;const wc=show.split(/\\s+/).filter(Boolean).length;if(tsRow&&wc>=30)return n.jsx("div",{"data-ts-list-desc":"1","data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4,display:"-webkit-box",WebkitLineClamp:3,WebkitBoxOrient:"vertical",overflow:"hidden"},children:tsRow});return n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4},children:show})})():null,(()=>{const tsRev=tsThingReviewLines(G);return tsRev?n.jsx("div",{"data-ts-thing-review-line":"1"';
-const HOTEL_LIST_DESC_SUMMARY_PATCH =
-  'Pn?n.jsx("div",{"data-ts-list-desc":"1","data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4,display:"-webkit-box",WebkitLineClamp:3,WebkitBoxOrient:"vertical",overflow:"hidden"},children:Pn}):null,(()=>{const tsRev=tsThingReviewLines(G);return tsRev?n.jsx("div",{"data-ts-thing-review-line":"1"';
-
-function patchHotelListDescCaptureLeaf(source = '') {
-  let js = String(source || '');
-  if (
-    js.includes('Pn?n.jsx("div",{"data-ts-list-desc":"1"')
-    && !js.includes('tsLong=tsHotel')
-    && !js.includes('tsSpare=tsHotel')
-  ) {
-    return js;
-  }
-  if (js.includes(HOTEL_LIST_DESC_SUMMARY_NEEDLE)) {
-    js = js.replaceAll(HOTEL_LIST_DESC_SUMMARY_NEEDLE, HOTEL_LIST_DESC_SUMMARY_PATCH);
-  } else if (js.includes(HOTEL_LIST_DESC_SUMMARY_NEEDLE_400)) {
-    js = js.replaceAll(HOTEL_LIST_DESC_SUMMARY_NEEDLE_400, HOTEL_LIST_DESC_SUMMARY_PATCH);
-  } else if (js.includes(HOTEL_LIST_DESC_SUMMARY_NEEDLE_TS_SPARE)) {
-    js = js.replaceAll(HOTEL_LIST_DESC_SUMMARY_NEEDLE_TS_SPARE, HOTEL_LIST_DESC_SUMMARY_PATCH);
-  } else if (js.includes(HOTEL_LIST_DESC_SUMMARY_NEEDLE_IIFE)) {
-    js = js.replaceAll(HOTEL_LIST_DESC_SUMMARY_NEEDLE_IIFE, HOTEL_LIST_DESC_SUMMARY_PATCH);
-  } else if (!js.includes('"data-ts-list-desc":"1"')) {
-    throw new Error('hotel list desc capture leaf patch did not apply');
-  }
-  return js;
+function ensureListDescCaptureLeaf(js = '') {
+  let out = String(js || '');
+  if (!out.includes('data-list-summary":"1"')) return out;
+  out = out.replaceAll(
+    'n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",',
+    'n.jsx("div",{"data-ts-list-desc":"1","data-list-summary":"1","data-summary-src":"thing",',
+  );
+  out = out.replaceAll(
+    'n.jsx("span",{"data-list-summary":"1","data-summary-src":"thing",',
+    'n.jsx("span",{"data-ts-list-desc":"1","data-list-summary":"1","data-summary-src":"thing",',
+  );
+  return out;
 }

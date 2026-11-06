@@ -7,7 +7,7 @@ import {
   placesForBudget,
 } from '../apps/vacation-client/src/lib/budgetModel.mjs';
 import { LIST_TAB_IDS, placesForCategoryTab } from '../apps/vacation-client/src/lib/listTabModel.mjs';
-import { assignedPlaceIds } from '../src/vacation/itinerary-minimums.mjs';
+import { buildDayTimeline } from '../apps/vacation-client/src/lib/dayTimelineModel.mjs';
 import { buildNycCraigKimDaybydayTripPositiveV1 } from './fixtures/nyc-craig-kim-daybyday-positive-v1.mjs';
 
 const unscheduledSavedTrip = {
@@ -19,7 +19,7 @@ const unscheduledSavedTrip = {
   ],
   assignments: { 50: [{ place_id: 30, place: { id: 30, name: 'Scheduled cafe' } }] },
   thingOverrides: {
-    'place:30': { price: 40, category: 'restaurant' },
+    'place:30': { price: 40, category: 'restaurant', timeline: true },
     'place:31': { price: 55, category: 'restaurant', timeline: false },
   },
 };
@@ -41,28 +41,9 @@ assert.equal(
 
 const positiveFixture = buildNycCraigKimDaybydayTripPositiveV1();
 const budgetPlaces = placesForBudget(positiveFixture);
-const timelineAssigned = assignedPlaceIds(positiveFixture);
 const budgetIds = new Set(budgetPlaces.map((place) => Number(place.id)));
-assert.equal(
-  budgetPlaces.length,
-  87,
-  'Gate B NYC positive fixture budget inventory must include day-itinerary reservations',
-);
-assert.ok(
-  budgetPlaces.length > timelineAssigned.size,
-  'budget must list reservation itinerary rows beyond assignment-only timeline ids',
-);
-for (const name of [
-  'Amelie Bistro',
-  'Tiffany & Co.',
-  "Macy's Herald Square",
-  'Bodega 88',
-]) {
-  assert.ok(
-    budgetPlaces.some((place) => String(place.name || '').includes(name)),
-    `budget must include ${name}`,
-  );
-}
+const timelineIds = new Set(positiveFixture.days.flatMap((day) => buildDayTimeline(positiveFixture, day)).flatMap((row) => row.place ? [Number(row.place.id)] : []));
+assert.deepEqual(budgetIds, timelineIds, 'budget must equal the rendered timeline things');
 assert.equal(
   budgetIds.has(609),
   false,

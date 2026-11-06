@@ -79,7 +79,7 @@ Live TREK button labels for the same panel (not extra options): **TimeSyncher Va
 | Keepsake config | Keepsakes ▸ → **Admin ▸** | `keepsakes-config.md` |
 | List PDFs | Restaurants / Stores / The Rest / Complete List | `print-pdf.md` |
 | Order | **Order Keepsakes** | `order-keepsakes.md` |
-| Tabs (shared) | Day-by-Day, Flights, Hotels, Cars, Restaurants, Stores, The Rest, Budget (Budget when `share_budget`) | `itinerary-surfaces.md` |
+| Tabs (shared) | Day-by-Day, Flights, Hotels, Cars, Restaurants, Stores, The Rest, Budget (Budget when `share_budget`) | `itinerary-surfaces.md`, `description-as-stored.md` (#825 stored notes, full rows, detail content, timeline-only Budget) |
 | Flag tabs | Packing when `share_packing`; Chat when `share_collab` | `packing.md`, `collaborators.md` |
 | Day view | Vacation Day View, Day 1/2/3, timeline, day map copy | `day-view.md` |
 | Map | “Only things tagged for this day + Timeline appear on the map below.” | `maps.md` |

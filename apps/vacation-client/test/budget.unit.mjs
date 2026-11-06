@@ -21,7 +21,7 @@ const hotelTrip = {
   places: [{ id: 1, name: 'The Manhattan Club', category_name: 'Hotel' }],
   assignments: { 50: [{ place_id: 1, place: { id: 1, name: 'The Manhattan Club' } }] },
   thingOverrides: {
-    'place:1': { price: 389, stayDays: 4, category: 'hotel' },
+    'place:1': { price: 389, stayDays: 4, category: 'hotel', timeline: true },
   },
 };
 
@@ -57,8 +57,8 @@ const targetsTrip = {
   },
   thingOverrides: {
     __budgetTargets: { 'overall:Cars': '200' },
-    'place:10': { price: 45, category: 'car' },
-    'place:11': { price: 55, category: 'car' },
+    'place:10': { price: 45, category: 'car', timeline: true, dayIds: [50] },
+    'place:11': { price: 55, category: 'car', timeline: true, dayIds: [50] },
   },
 };
 assert.equal(bucketTargetAmount(targetsTrip, 'Cars'), 200);
@@ -86,7 +86,7 @@ const unionTrip = {
   ],
   assignments: { 50: [{ place_id: 20, place: { id: 20, name: 'On day flight' } }] },
   thingOverrides: {
-    'place:20': { dayIds: [50], category: 'flight', price: 100 },
+    'place:20': { dayIds: [50], category: 'flight', price: 100, timeline: true },
     'place:21': { category: 'hotel', price: 50 },
   },
 };
@@ -104,6 +104,7 @@ assert.equal(score.pass, score.total);
 assert.ok(score.total >= 4);
 
 const partialAssignmentTrip = {
+  thingOverrides: { 'place:1': { timeline: true } },
   trip: { currency: 'USD' },
   days: [{ id: 50, day_number: 1 }],
   places: [{ id: 1, name: 'Known hotel', category_name: 'Hotel', price: 100 }],
@@ -146,7 +147,7 @@ const legacyTargetsTrip = {
   assignments: { 50: [{ place_id: 40, place: { id: 40, name: 'Broadway show' } }] },
   thingOverrides: {
     __budgetTargets: { [legacyMiscTargetKey]: '500' },
-    'place:40': { price: 120, category: 'event' },
+    'place:40': { price: 120, category: 'event', timeline: true },
   },
 };
 assert.equal(bucketTargetAmount(legacyTargetsTrip, OTHER_THINGS_BUCKET), 500);
@@ -178,7 +179,7 @@ const unscheduledSavedTrip = {
   ],
   assignments: { 50: [{ place_id: 30, place: { id: 30, name: 'Scheduled cafe' } }] },
   thingOverrides: {
-    'place:30': { price: 40, category: 'restaurant' },
+    'place:30': { price: 40, category: 'restaurant', timeline: true },
     'place:31': { price: 55, category: 'restaurant', timeline: false },
   },
 };

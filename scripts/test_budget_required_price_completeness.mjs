@@ -17,7 +17,10 @@ function miniTrip(places, overrides = {}) {
     days: [{ id: dayId, day_number: 1 }],
     places,
     assignments,
-    thingOverrides: overrides,
+    thingOverrides: Object.fromEntries(places.map((place) => [
+      `place:${place.id}`,
+      { timeline: true, ...overrides[`place:${place.id}`] },
+    ])),
   };
 }
 
@@ -62,5 +65,11 @@ const optionalReport = budgetCompletenessChecks(optionalOnlyTrip).find(
 );
 assert.equal(optionalReport?.name, 'report_optional_budget_missing_prices_2');
 assert.equal(optionalReport?.pass, true);
+
+const unpickedFlightTrip = miniTrip(missingFlightTrip.places, {
+  ...missingFlightTrip.thingOverrides,
+  'place:1': { timeline: false },
+});
+assert.equal(gateBBudgetPriceCompleteness(unpickedFlightTrip).pass, true, 'unpicked flight candidates stay outside the budget price checks');
 
 console.log('budget required price completeness tests passed');

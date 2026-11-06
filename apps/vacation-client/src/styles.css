@@ -625,9 +625,9 @@ body {
   font-weight: 700;
   color: #94a3b8;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  white-space: normal;
   grid-column: -1;
 }
 
@@ -680,9 +680,9 @@ body {
     overflow-wrap: anywhere;
   }
   [data-shared-live-tab='events'] .tsv-row-main .tsv-row-name {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow: visible;
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
   [data-shared-live-tab='events'] .tsv-row-price {
     overflow: hidden;
