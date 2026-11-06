@@ -1,3 +1,4 @@
+import { itineraryNoteFor } from './dayTimelineModel.mjs';
 
 
 import {
@@ -134,10 +135,8 @@ function xaiRepresentativeReviews(override) {
 function reviewIsComplete(override, index) {
   const body = text(override[`review${index}`], 2000);
   const source = text(override[`review${index}Source`], 40);
-  const rating = text(override[`review${index}Rating`], 20);
   const minWords = xaiRepresentativeReviews(override) ? XAI_REPRESENTATIVE_REVIEW_MIN_WORDS : 25;
   if (wordCount(body) < minWords) return false;
-  if (!/\d/.test(rating)) return false;
   if (xaiRepresentativeReviews(override)) return true;
   return REVIEW_SOURCES.has(source);
 }
@@ -194,9 +193,7 @@ export function detailSummary(place, trip) {
 }
 
 export function detailItineraryNote(place, trip) {
-  const override = overrideFor(trip, place);
-  const source = sourceRecord(place, override);
-  return text(override.itineraryNote || override.itinerary_note || source.itineraryNote);
+  return itineraryNoteFor(place, trip);
 }
 
 export function detailHappyHour(override) {

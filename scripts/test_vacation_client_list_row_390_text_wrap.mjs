@@ -25,16 +25,16 @@ assert.match(
 );
 assert.match(
   listMobile,
-  /\[data-shared-live-tab='events'\]\s+\.tsv-row-main\s+\.tsv-row-name[\s\S]*white-space:\s*nowrap/,
+  /\[data-shared-live-tab='events'\]\s+\.tsv-row-main\s+\.tsv-row-name[\s\S]*white-space:\s*normal/,
 );
 assert.match(
   listMobile,
-  /\[data-shared-live-tab='events'\]\s+\.tsv-row-main\s+\.tsv-row-name[\s\S]*text-overflow:\s*ellipsis/,
+  /\[data-shared-live-tab='events'\]\s+\.tsv-row-main\s+\.tsv-row-name[\s\S]*overflow-wrap:\s*anywhere/,
 );
 assert.doesNotMatch(listMobile, /\[data-shared-live-tab='events'\]\s+\.tsv-row-desc/);
 
-assert.match(css, /\.tsv-row-desc[\s\S]*white-space:\s*nowrap/);
-assert.match(css, /\.tsv-row-name[\s\S]*white-space:\s*nowrap/);
+assert.match(css, /\.tsv-row-desc[^}]*white-space:\s*normal/);
+assert.match(css, /\.tsv-row-name[\s\S]*white-space:\s*normal/);
 assert.match(css, /\.tsv-budget-line-name[\s\S]*white-space:\s*nowrap/);
 
 console.log('vacation-client list row 390px text wrap CSS contract OK');

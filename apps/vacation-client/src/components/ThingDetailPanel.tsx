@@ -2,6 +2,8 @@ import { useEffect, useId, useRef } from 'react';
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 import { buildDetailViewModel } from '../lib/detailModel.mjs';
 import { onLogoImgError, onLogoImgLoad } from '../lib/logoChipHandlers.mjs';
+import { mediaForPlace } from '../lib/dayTimelineModel.mjs';
+import { overrideFor } from '../lib/placeHelpers';
 import { StarRating } from './StarRating';
 import type { DetailAddressHoursLine } from '../lib/detailModel.mjs';
 
@@ -27,6 +29,12 @@ function DetailLogo({ logoUrl }: { logoUrl: string }) {
 
 export function ThingDetailPanel({ place, trip, onClose }: Props) {
   const model = buildDetailViewModel(place, trip);
+  const override = overrideFor(trip, place);
+  const details = String(override.longDetails ?? '');
+  const photos = mediaForPlace(trip, place).filter((row) => String(row.kind || row.mediaKind || '') !== 'video' && !String(row.mimeType || row.mime_type || '').startsWith('video/') && !/\.mp4(?:[?#]|$)/i.test(String(row.url || row.publicUrl || '')));
+  const dayIds = Array.isArray(override.dayIds) ? override.dayIds : (trip.days || []).filter((day) =>
+    (trip.assignments?.[String(day.id)] || []).some((row) => String(row.place_id ?? row.item?.id) === String(place.id)),
+  ).map((day) => day.id);
   const titleId = useId();
   const sheetRef = useRef<HTMLElement>(null);
   const backdropDownRef = useRef(false);
@@ -139,11 +147,6 @@ export function ThingDetailPanel({ place, trip, onClose }: Props) {
               <strong>Happy hour:</strong> {model.happyHourDetails}
             </p>
           ) : null}
-          {model.itineraryNote ? (
-            <p className="tsv-detail-note" data-ts-detail-field="itineraryNote">
-              <strong>Itinerary note:</strong> {model.itineraryNote}
-            </p>
-          ) : null}
           {model.reviews.length ? (
             <section className="tsv-detail-reviews" data-ts-detail-reviews="1">
               <h3>Reviews</h3>
@@ -175,6 +178,33 @@ export function ThingDetailPanel({ place, trip, onClose }: Props) {
                 </p>
               ) : null}
             </section>
+          ) : null}
+          {model.itineraryNote ? (
+            <p className="tsv-detail-note" data-ts-detail-field="itineraryNote">
+              <strong>Itinerary note:</strong> {model.itineraryNote}
+            </p>
+          ) : null}
+          {details ? (
+            <section className="tsv-detail-note" data-ts-detail-field="longDetails">
+              <h3>Details</h3>
+              <p style={{ whiteSpace: 'pre-wrap' }}>{details}</p>
+            </section>
+          ) : null}
+          <div className="tsv-row-chips" data-ts-detail-timeline="1">
+            {dayIds.map((id) => {
+              const day = (trip.days || []).find((row) => String(row.id) === String(id));
+              return day ? <span key={String(id)}>D{day.day_number}</span> : null;
+            })}
+            <label className="tsv-timeline-toggle">
+              <input type="checkbox" checked={Boolean(override.timeline)} disabled readOnly /> Timeline
+            </label>
+          </div>
+          {photos.length ? (
+            <div className="tsv-row-chips" data-ts-detail-photos="1">
+              {photos.map((photo, index) => (
+                <img key={index} src={photo.thumbnailUrl || photo.thumbnail_url || photo.publicUrl || photo.url} alt={photo.caption || ''} width={58} height={58} style={{ objectFit: 'cover', borderRadius: 10 }} />
+              ))}
+            </div>
           ) : null}
           {model.summarySourceUrls.length ? (
             <section className="tsv-detail-sources">

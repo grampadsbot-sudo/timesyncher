@@ -167,3 +167,7 @@ assert.equal(detailReviews(flightTrip.thingOverrides['place:2'], 'flight').lengt
 assert.equal(buildDetailViewModel(flightTrip.places[0], flightTrip).priceLabel, '$248 one-way');
 
 console.log('vacation-client detail unit checks passed');
+
+const unratedReviews = detailReviews({ review1: xaiReviewBody, review1Source: 'TripAdvisor', xaiRatingsFetched: true }, 'restaurant');
+assert.equal(unratedReviews.length, 1);
+assert.equal(unratedReviews[0].ratingValue, null);

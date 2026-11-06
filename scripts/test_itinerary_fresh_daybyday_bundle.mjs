@@ -14,7 +14,7 @@ assert.equal(rendered, committed);
 
 assert.match(committed, /data-summary-thing-only":"1","data-summary-src":"thing"/);
 assert.match(committed, /data-itinerary-note":"1"/);
-assert.match(committed, /tsItinLine\(ua\.item\)/);
+assert.match(committed, /tsItinLine\(ua\.item,ua\.notes\)/);
 assert.doesNotMatch(committed, /children:Bs\(rr\(ua\.item\)\)/);
 assert.match(committed, /data-summary-stored":"1"/);
 const readLine = new Function('ha', `return (${ITINERARY_LINE_BUNDLE})`)((row) => row);
@@ -22,11 +22,11 @@ const downgraded = {
   description: 'Grab the nova and a coffee.',
   summary: 'Zabars is the Upper West Side food store at 2245 Broadway, open every day.',
 };
-assert.equal(readLine(downgraded), 'Grab the nova and a coffee.');
-assert.equal(itineraryLineText(downgraded), 'Grab the nova and a coffee.');
+assert.equal(readLine(downgraded), '');
+assert.equal(itineraryLineText(downgraded), '');
 assert.equal(
-  itineraryLineText({ itineraryNote: 'Book the corner booth.', description: 'Stored day row copy.' }),
-  'Stored day row copy.',
+  itineraryLineText({ itineraryNote: 'Book the corner booth.', description: 'x' }),
+  'Book the corner booth.',
 );
 assert.equal(itineraryLineText({ summary: downgraded.summary }), '');
 assert.match(committed, /data-ts-list-row-name":"1"/);
@@ -71,3 +71,16 @@ assert.equal(row({ time: '' }).props.children[0].props.children, 'TBD');
 assert.equal(row({ time: '' }).props.children[2].props.style.alignSelf, 'baseline');
 
 console.log('itinerary fresh day-by-day bundle checks passed');
+
+for (const bag of [
+  { itinerary_note: '  Keep the 09:30 slot.\nBring a coat.  ' },
+  { evidenceDossier: { fields: { itineraryNote: { value: '  Dossier note.  ' } } } },
+  { evidenceDossier: { fields: { itineraryNote: { claims: [{ text: '  Claim note.  ' }] } } } },
+  { description: 'Long description', summary: 'Summary' },
+]) {
+  assert.equal(readLine(bag), itineraryLineText(bag));
+}
+assert.equal(readLine({ description: 'Never use this.' }, '  Assignment note.  '), '  Assignment note.  ');
+assert.equal(readLine({ notes: '  Override note.  ' }), '  Override note.  ');
+assert.equal(readLine({ itineraryNote: 'Stored note.', notes: 'Override note.' }, 'Assignment note.'), 'Stored note.');
+assert.equal(readLine({ evidenceDossier: { fields: { itineraryNote: { value: 'Dossier note.' } } }, notes: 'Override note.' }, 'Assignment note.'), 'Dossier note.');

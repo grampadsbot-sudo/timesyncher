@@ -303,6 +303,7 @@ const dossierTrip = {
       timeline: true,
       category: 'flight',
       dayIds: [1],
+      itineraryNote: 'Take the morning Delta nonstop and keep the aisle.',
       description: 'Take the morning Delta nonstop and keep the aisle.',
       summary: 'Airline: Delta; Route: LAS-JFK; Stops: nonstop; Outbound: 2026-06-23; Price: $257.',
     },
