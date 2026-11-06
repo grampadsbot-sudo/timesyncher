@@ -16,7 +16,7 @@ const EVENTS_TAB_PANEL_PATCH =
   'q==="events"&&n.jsxs("div",{"data-shared-live-tab":"events",style:{display:"flex",flexDirection:"column",gap:10},children:[n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2},children:[n.jsx("button",{onClick:()=>qe([])';
 
 const OE_ROW_SUMMARY_NEEDLE = 'n.jsx("button",{"aria-label":"Open thing details",onClick:()=>Ne(Qt(G)),title:Pn||"Open details",style:{marginTop:6,border:0,padding:0,background:"transparent",textAlign:"left",cursor:"pointer",color:Pn?"#475569":"#9ca3af",fontSize:11,fontWeight:700,width:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Pn||"Open details for summary"})';
-const OE_ROW_SUMMARY_PATCH = 'Pn?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"visible",whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4},children:Pn}):null';
+const OE_ROW_SUMMARY_PATCH = 'Pn?n.jsx("div",{"data-ts-list-desc":"1","data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"visible",whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4},children:Pn}):null';
 const OE_ROW_SUMMARY_BELOW_DIV_NEEDLE = 'Pn?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#475569",lineHeight:1.4},children:Pn}):null,';
 const OE_ROW_SUMMARY_BELOW_DIV_PATCH = '';
 const OE_ROW_INLINE_DESC_FLAG_NEEDLE = 'Pn=(Mi(G),Rn),tsRowInlineDesc=typeof window>"u"||!(window.matchMedia&&window.matchMedia("(max-width:640px)").matches),Zn=';
@@ -101,9 +101,9 @@ const OE_SA_ROW_MEDIA_NEEDLE =
 const OE_SA_ROW_MEDIA_PATCH =
   `})]}),${OE_SA_ROW_DESCRIPTION_BEFORE_NR}n.jsx(Nr,{items:Xr,scopeKey:Qt(G),compact:!0})]},\`\${It(G)}-\${Qt(G)}-\${ua}\`):n.jsxs("li",`;
 const OE_ROW_SUMMARY_MOBILE_SA_NEEDLE = '})]}),,n.jsx(Nr,{items:Xr,scopeKey:Qt(G),compact:!0})]},`${It(G)}-${Qt(G)}-${ua}`):n.jsxs("li",';
-const OE_ROW_SUMMARY_MOBILE_SA_PATCH = '})]}),!tsRowInlineDesc&&Pn?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#475569",lineHeight:1.4},children:Pn}):null,n.jsx(Nr,{items:Xr,scopeKey:Qt(G),compact:!0})]},`${It(G)}-${Qt(G)}-${ua}`):n.jsxs("li",';
+const OE_ROW_SUMMARY_MOBILE_SA_PATCH = '})]}),!tsRowInlineDesc&&Pn?n.jsx("div",{"data-ts-list-desc":"1","data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#475569",lineHeight:1.4},children:Pn}):null,n.jsx(Nr,{items:Xr,scopeKey:Qt(G),compact:!0})]},`${It(G)}-${Qt(G)}-${ua}`):n.jsxs("li",';
 const OE_ROW_SUMMARY_MOBILE_ALT_NEEDLE = 'children:sr}),,n.jsxs("div",{style:{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:8,marginTop:7,paddingTop:7,borderTop:"1px solid #f3f4f6",flexWrap:"nowrap",minWidth:0,maxWidth:"100%"},children:[kl(G),';
-const OE_ROW_SUMMARY_MOBILE_ALT_PATCH = 'children:sr}),!tsRowInlineDesc&&Pn?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#475569",lineHeight:1.4},children:Pn}):null,n.jsxs("div",{style:{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:8,marginTop:7,paddingTop:7,borderTop:"1px solid #f3f4f6",flexWrap:"nowrap",minWidth:0,maxWidth:"100%"},children:[kl(G),';
+const OE_ROW_SUMMARY_MOBILE_ALT_PATCH = 'children:sr}),!tsRowInlineDesc&&Pn?n.jsx("div",{"data-ts-list-desc":"1","data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#475569",lineHeight:1.4},children:Pn}):null,n.jsxs("div",{style:{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:8,marginTop:7,paddingTop:7,borderTop:"1px solid #f3f4f6",flexWrap:"nowrap",minWidth:0,maxWidth:"100%"},children:[kl(G),';
 
 const OE_ROW_TITLE_SPAN_NEEDLE = 'n.jsx("span",{style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})';
 const OE_ROW_TITLE_SPAN_PATCH = 'n.jsx("span",{style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",width:"100%"},children:Mi(G)||Zi(G)||bn(G)?Zn:n.jsx("strong",{children:Bs(mr(G))})})';
@@ -294,6 +294,15 @@ export function patchSharedTripOeListRows(source = '') {
   if (js.includes(OE_ROW_SUMMARY_NEEDLE)) {
     js = js.replaceAll(OE_ROW_SUMMARY_NEEDLE, OE_ROW_SUMMARY_PATCH);
   }
+  if (js.includes(OE_STACKED_ROW_SUMMARY_NEEDLE)) {
+    js = js.replaceAll(OE_STACKED_ROW_SUMMARY_NEEDLE, OE_STACKED_ROW_SUMMARY_PATCH);
+  }
+  if (js.includes(OE_ROW_SUMMARY_BELOW_DIV_NEEDLE)) {
+    js = js.replaceAll(
+      OE_ROW_SUMMARY_BELOW_DIV_NEEDLE,
+      'Pn?n.jsx("div",{"data-ts-list-desc":"1","data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#475569",lineHeight:1.4},children:Pn}):null,',
+    );
+  }
   if (js.includes(OE_ROW_INLINE_DESC_FLAG_NEEDLE)) {
     js = js.replace(OE_ROW_INLINE_DESC_FLAG_NEEDLE, OE_ROW_INLINE_DESC_FLAG_PATCH);
   } else if (js.includes('tsRowInlineDesc=typeof window>"u"')) {
@@ -402,5 +411,19 @@ export function patchSharedTripListWrapping(source = '') {
     rows = rows.slice(0, oeIdx) + jeBlock + rows.slice(oeIdx);
   }
   const next = js.slice(0, start) + rows + js.slice(end);
-  return next;
+  return ensureListDescCaptureLeaf(next);
+}
+
+function ensureListDescCaptureLeaf(js = '') {
+  let out = String(js || '');
+  if (!out.includes('data-list-summary":"1"')) return out;
+  out = out.replaceAll(
+    'n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",',
+    'n.jsx("div",{"data-ts-list-desc":"1","data-list-summary":"1","data-summary-src":"thing",',
+  );
+  out = out.replaceAll(
+    'n.jsx("span",{"data-list-summary":"1","data-summary-src":"thing",',
+    'n.jsx("span",{"data-ts-list-desc":"1","data-list-summary":"1","data-summary-src":"thing",',
+  );
+  return out;
 }
