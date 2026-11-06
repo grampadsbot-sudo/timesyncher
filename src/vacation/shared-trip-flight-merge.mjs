@@ -1,0 +1,79 @@
+import { flightFieldsFromBlob } from './place-detail-extract.mjs';
+import { isPipelineFlightStubSummary, stripPipelineFlightStubPrefix } from './flight-list-row-summary.mjs';
+
+function text(value) {
+  return String(value || '').trim();
+}
+
+function firstPresent(...values) {
+  for (const value of values) {
+    const row = text(value);
+    if (row) return row;
+  }
+  return '';
+}
+
+function copyIfBlank(target, key, ...values) {
+  if (text(target[key])) return;
+  const row = firstPresent(...values);
+  if (row) target[key] = row;
+}
+
+export function stripFlightOptionPrefix(value = '') {
+  return text(value).replace(/^\s*Flight option:\s*/i, '');
+}
+
+export function applyFlightThingFields(place, override, source) {
+  place.category_name = place.category_name || 'Flight';
+  place.category = place.category && typeof place.category === 'object'
+    ? { ...place.category, name: place.category.name || 'Flight' }
+    : { name: 'Flight', icon: '✈️' };
+  override.category = 'flight';
+  const rawTitle = firstPresent(place.name, place.title, override.name, override.title);
+  const cleanedTitle = stripFlightOptionPrefix(rawTitle);
+  if (cleanedTitle && cleanedTitle !== rawTitle) {
+    place.name = cleanedTitle;
+    place.title = cleanedTitle;
+    override.name = cleanedTitle;
+    override.title = cleanedTitle;
+  }
+  copyIfBlank(override, 'fareDirection', source?.fareDirection, source?.tripType, source?.pricingType);
+  const flightBlob = firstPresent(
+    source?.summary,
+    source?.description,
+    place.description,
+    place.notes,
+  );
+  let flightFields = flightFieldsFromBlob(flightBlob, '');
+  if (!flightFields.departureTime) {
+    flightFields = {
+      ...flightFields,
+      ...flightFieldsFromBlob(firstPresent(place.name, place.title), ''),
+    };
+  }
+  copyIfBlank(override, 'departureTime', source?.departureTime, source?.departTime, flightFields.departureTime);
+  copyIfBlank(override, 'arrivalTime', source?.arrivalTime, source?.arriveTime, flightFields.arrivalTime);
+  copyIfBlank(override, 'duration', source?.duration, flightFields.duration);
+}
+
+export function mergeFlightThingOverrideAfterCcab(place, override, source) {
+  copyIfBlank(
+    override,
+    'itineraryNote',
+    source?.itineraryNote,
+    source?.itinerary_note,
+    place.itineraryNote,
+    place.itinerary_note,
+  );
+  if (text(override.itineraryNote) && text(override.summary) === text(override.itineraryNote)) {
+    delete override.summary;
+  }
+  if (isPipelineFlightStubSummary(override.summary)) {
+    const next = text(stripPipelineFlightStubPrefix(override.summary));
+    if (next) override.summary = next;
+  }
+  if (isPipelineFlightStubSummary(override.longDetails)) {
+    const next = text(stripPipelineFlightStubPrefix(override.longDetails));
+    if (next) override.longDetails = next;
+  }
+}

@@ -15,9 +15,9 @@ const EXPERIENCE_CATEGORIES = new Set([
   'family_event',
   'other',
 ]);
-import { flightFieldsFromBlob } from './place-detail-extract.mjs';
 import { isGenericDescription, isHotelPlanningNote } from './list-row-generic-description.mjs';
 import { isPlaceholderLogoUrl, resolveThingLogoUrl } from './thing-logo-capture.mjs';
+import { applyFlightThingFields, mergeFlightThingOverrideAfterCcab } from './shared-trip-flight-merge.mjs';
 
 function text(value) {
   return String(value || '').trim();
@@ -270,28 +270,8 @@ export function applyLiveAppListRowFields(shared = {}) {
     }
 
     if (category === 'flight') {
-      place.category_name = place.category_name || 'Flight';
-      place.category = place.category && typeof place.category === 'object'
-        ? { ...place.category, name: place.category.name || 'Flight' }
-        : { name: 'Flight', icon: '✈️' };
-      override.category = 'flight';
-      copyIfBlank(override, 'fareDirection', source?.fareDirection, source?.tripType, source?.pricingType);
-      const flightBlob = firstPresent(
-        source?.summary,
-        source?.description,
-        place.description,
-        place.notes,
-      );
-      let flightFields = flightFieldsFromBlob(flightBlob, '');
-      if (!flightFields.departureTime) {
-        flightFields = {
-          ...flightFields,
-          ...flightFieldsFromBlob(firstPresent(place.name, place.title), ''),
-        };
-      }
-      copyIfBlank(override, 'departureTime', source?.departureTime, source?.departTime, flightFields.departureTime);
-      copyIfBlank(override, 'arrivalTime', source?.arrivalTime, source?.arriveTime, flightFields.arrivalTime);
-      copyIfBlank(override, 'duration', source?.duration, flightFields.duration);
+      applyFlightThingFields(place, override, source);
+      copyIfBlank(override, 'itineraryNote', source?.itineraryNote, source?.itinerary_note, place.itineraryNote, place.itinerary_note);
     } else if (category === 'car') {
       override.category = 'car';
       copyIfBlank(override, 'pickupLocation', source?.pickupLocation, source?.pickup_location, place.address);
@@ -403,6 +383,8 @@ export function applyLiveAppListRowFields(shared = {}) {
     Object.assign(override, mergedCcab);
     if (!Object.prototype.hasOwnProperty.call(mergedCcab, 'longDetails')) delete override.longDetails;
     if (!Object.prototype.hasOwnProperty.call(mergedCcab, 'details')) delete override.details;
+
+    if (category === 'flight') mergeFlightThingOverrideAfterCcab(place, override, source);
 
     if (category === 'hotel') {
       const hotelNarrative = pickLongDetails(place, override, source);
