@@ -79,19 +79,9 @@ export function personFramedReview(body) {
 }
 
 function reviewStars(result, n) {
-  const tripCom = /trip\.com/i.test(text(result[`review${n}Source`]));
-  const tenMatch = text(result[`review${n}Rating`]).match(/^(\d+(?:\.\d+)?)\s*\/\s*10$/);
-  const fromStars = parseReviewStars(result[`review${n}Stars`]);
-  if (fromStars) {
-    return { rating: fromStars.rating, evidence: tripCom && tenMatch ? `${tenMatch[1]}/10` : fromStars.evidence };
-  }
-  const fromRating = parseReviewStars(result[`review${n}Rating`]);
-  if (fromRating) return fromRating;
-  if (!tripCom) return null;
-  const raw = text(result[`review${n}Score10`]) || (tenMatch ? tenMatch[1] : '');
-  const fromTen = parseReviewStars(raw, 10);
-  if (!fromTen || !raw) return null;
-  return { rating: fromTen.rating, evidence: `${raw}/10` };
+  return parseReviewStars(result[`review${n}Stars`])
+    || parseReviewStars(result[`review${n}Rating`])
+    || parseReviewStars(result[`review${n}Score10`], 10);
 }
 
 export function loadVkSearchCensusResult(place, { env = process.env, censusDir } = {}) {

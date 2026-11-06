@@ -13,16 +13,21 @@ export function parseReviewStars(value, scaleMax = 5) {
   return { rating: Math.max(1, Math.round(score * 5 / scale)), evidence: `${score}/${scale}` };
 }
 
+function quotedScaleMax(quote = '') {
+  const q = norm(quote);
+  const slash = q.match(/(\d+(?:\.\d+)?)\s*(?:\/|(?:out )?of)\s*(5|10)\b/);
+  return slash ? Number(slash[2]) : null;
+}
+
 function citedVenueRating(dossier) {
   const evidence = dossier.ratingEvidence;
   if (!evidence || evidence.supported === false || !dossierPagesVerified(dossier)) return null;
   const average = Number(evidence.average);
   const count = Number(evidence.count);
   const scale = Number(evidence.scaleMax ?? evidence.scale ?? 5);
+  if (![5, 10].includes(scale) || quotedScaleMax(evidence.quote) && quotedScaleMax(evidence.quote) !== scale) return null;
   const stars = parseReviewStars(average, scale);
   if (!stars || !Number.isInteger(count) || count <= 0) return null;
-  const quoteScale = String(evidence.quote || '').match(/(?:out of|\/)\s*(5|10)\b/i);
-  if (quoteScale && Number(quoteScale[1]) !== scale) return null;
   const page = dossier.pages.find((row) => row.url === (evidence.url || evidence.sourceUrl));
   if (!page || page.claimSupportOk === false) return null;
   const quoteHeld = norm(evidence.quote) && norm(page.text).includes(norm(evidence.quote))
@@ -49,58 +54,26 @@ function excerptStars(dossier, review) {
   return null;
 }
 
-function reviewHasGroundedStars(dossier, review, venue) {
-  const excerpt = excerptStars(dossier, review);
-  if (excerpt) return excerpt;
-  if (review.starsEvidence) {
-    const stars = parseReviewStars(review.rating);
-    if (stars) return { rating: stars.rating, evidence: review.starsEvidence };
-  }
-  return venue || null;
-}
-
-function stripReviewRating(review) {
-  const next = { ...review };
-  delete next.rating;
-  delete next.starsEvidence;
-  return next;
-}
-
-function allReviewsRated(reviews = []) {
-  return reviews.length > 0
-    && reviews.every((row) => Number.isInteger(row.rating) && row.rating >= 1 && row.rating <= 5);
-}
-
 export function resolveDossierReviewRatings(dossier = {}) {
   const venue = citedVenueRating(dossier);
-  const input = dossier.reviews || [];
-  if (!input.length) return dossier;
-  let reviews = input.map((review) => {
-    const stars = reviewHasGroundedStars(dossier, review, venue);
-    return stars ? { ...review, rating: stars.rating, starsEvidence: stars.evidence } : stripReviewRating(review);
+  const reviews = (dossier.reviews || []).map((review) => {
+    const stars = excerptStars(dossier, review) || parseReviewStars(review.rating) || venue;
+    return stars ? { ...review, rating: stars.rating, starsEvidence: stars.evidence } : null;
   });
+  const rated = reviews.filter(Boolean);
   const average = venue?.average ?? dossier.rating;
-  if (allReviewsRated(reviews) && average > 0) {
-    const mean = reviews.reduce((sum, row) => sum + row.rating, 0) / reviews.length;
+  if (rated.length && average > 0) {
+    const mean = rated.reduce((sum, row) => sum + row.rating, 0) / rated.length;
     if (Math.abs(mean - average) > 0.5) {
-      if (venue) {
-        reviews = reviews.map((review) => ({ ...review, rating: venue.rating, starsEvidence: venue.evidence }));
-      } else {
-        reviews = reviews.map((review) => stripReviewRating(review));
-      }
+      if (venue) for (const row of rated) Object.assign(row, { rating: venue.rating, starsEvidence: venue.evidence });
+      else rated.length = 0;
     }
   }
-  if (!allReviewsRated(reviews) && input.length === 4
-    && input.every((row) => row?.rating != null || row?.starsEvidence)) {
-    reviews = [];
-    const shortcomings = (dossier.shortcomings || []).filter((row) => row.field !== 'reviews');
-    shortcomings.push({ field: 'reviews', reason: 'review ratings could not be grounded in saved evidence' });
-    return { ...dossier, reviews, shortcomings,
-      missingFields: [...new Set([...(dossier.missingFields || []), 'reviews'])] };
+  if (rated.length === (dossier.reviews || []).length && (rated.length || !dossier.reviews?.length)) {
+    return { ...dossier, reviews: rated };
   }
-  if (allReviewsRated(reviews) || !reviews.length) return { ...dossier, reviews };
   const shortcomings = (dossier.shortcomings || []).filter((row) => row.field !== 'reviews');
   shortcomings.push({ field: 'reviews', reason: 'review ratings could not be grounded in saved evidence' });
-  return { ...dossier, reviews, shortcomings,
+  return { ...dossier, reviews: rated, shortcomings,
     missingFields: [...new Set([...(dossier.missingFields || []), 'reviews'])] };
 }
