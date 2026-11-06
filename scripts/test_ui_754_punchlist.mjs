@@ -16,7 +16,7 @@ assert.equal(rebaked, committed);
 
 assert.match(committed, /return js\.filter\(wn=>\{const tp=String\(wn\.type\|\|""\);if\(!xn\("flights"\)&&\(tp==="flight"\|\|bn\(wn\.item\)/);
 assert.match(committed, /!xn\("cars"\)&&\(Mi\(wn\.item\)\|\|\/\^\(Pickup\|Drop-off\):\/i\.test\(String\(wn\.title\|\|""\)\)\)/);
-assert.match(committed, /\(!Zi\(ua\.item\)\|\|String\(ua\.type\|\|""\)==="hotel-event"\)&&tsItinLine\(ua\.item\)/);
+assert.match(committed, /\(!Zi\(ua\.item\)\|\|String\(ua\.type\|\|""\)==="hotel-event"\)&&tsItinLine\(ua\.item,ua\.notes\)/);
 assert.match(committed, /!ua\.endTime&&!ua\.isConflict\?n\.jsx\("div",\{"data-ts-timeline-time":"1"/);
 assert.match(committed, /children:ua\.time\?Yo\(ua\.time\):"TBD"/);
 assert.match(committed, /"data-ts-tag-picker":"1"/);
@@ -24,7 +24,7 @@ assert.match(committed, /\["flights","hotels","cars"\]\.map/);
 assert.match(committed, /timesyncher-section-visibility:\$\{r\}/);
 assert.match(committed, /Nt=\(G,Re\)=>\{Ce&&ge\(!0\);const tsVis=/);
 assert.match(committed, /"data-trip-view-root":!0/);
-assert.match(committed, /tsItinLine\(_i\.item\)&&\(!Zi\(_i\.item\)\|\|String\(_i\.type\|\|""\)==="hotel-event"\)/);
+assert.match(committed, /tsItinLine\(_i\.item,_i\.notes\)&&\(!Zi\(_i\.item\)\|\|String\(_i\.type\|\|""\)==="hotel-event"\)/);
 
 const round754Only = patchUi754(committed);
 assert.equal(round754Only, committed);
