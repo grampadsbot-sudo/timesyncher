@@ -79,9 +79,25 @@ export function personFramedReview(body) {
 }
 
 function reviewStars(result, n) {
-  return parseReviewStars(result[`review${n}Stars`])
-    || parseReviewStars(result[`review${n}Rating`])
-    || parseReviewStars(result[`review${n}Score10`], 10);
+  const isTrip = String(result[`review${n}Source`] || '').toLowerCase().replace(/\s+/g, '') === 'trip.com';
+  const ratingRaw = result[`review${n}Rating`];
+  const starsRaw = result[`review${n}Stars`];
+  const score10Raw = result[`review${n}Score10`];
+  if (isTrip) {
+    const fromStars = parseReviewStars(starsRaw);
+    const ratingIs10 = ratingRaw != null && /\/\s*10\b/.test(String(ratingRaw))
+      ? parseReviewStars(ratingRaw, 10) : null;
+    if (fromStars && ratingIs10) {
+      const rawRating = String(ratingRaw ?? '').trim();
+      return { ...fromStars, evidence: rawRating || ratingIs10.evidence };
+    }
+    if (ratingIs10) return ratingIs10;
+    const from10 = parseReviewStars(score10Raw, 10);
+    if (from10) return from10;
+    if (fromStars) return fromStars;
+    return parseReviewStars(ratingRaw);
+  }
+  return parseReviewStars(starsRaw) || parseReviewStars(ratingRaw);
 }
 
 export function loadVkSearchCensusResult(place, { env = process.env, censusDir } = {}) {

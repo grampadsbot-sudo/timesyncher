@@ -5,7 +5,7 @@ import {
   ensureBraveSnippetCitationPages,
 } from './thing-dossier-fields.mjs';
 import { evidencePageMatchesPlace, pageNamesOtherVenue } from './dossier-evidence-hydrate.mjs';
-import { reviewSourceHost } from './thing-evidence-dossier.mjs';
+import { reviewSourceHost } from './dossier-review-url.mjs';
 
 const MAX_WORDS = 80;
 const OPINION = /\b(i|we|my|our|us|me|great|good|bad|terrible|amazing|awesome|loved?|recommend|avoid|worst|best|excellent|disappointing|friendly|rude|delicious|overpriced|worth|clean|dirty|noisy)\b/i;

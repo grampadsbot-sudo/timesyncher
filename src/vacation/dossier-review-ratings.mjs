@@ -1,5 +1,5 @@
-import { dossierPagesVerified } from './thing-evidence-dossier.mjs';
-import { pageTextSupportsRating, ratingQuoteSupportsAggregate } from './thing-dossier-fields.mjs';
+import { dossierPagesVerified } from './dossier-page-integrity.mjs';
+import { pageTextSupportsRating, ratingQuoteSupportsAggregate } from './dossier-rating-evidence.mjs';
 
 const norm = (value) => String(value ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
 
@@ -54,22 +54,38 @@ function excerptStars(dossier, review) {
   return null;
 }
 
+function parseReviewStarsOrNumeric(value) {
+  if (typeof value === 'number' && Number.isInteger(value) && value >= 1 && value <= 5) {
+    return { rating: value, evidence: `${value}/5` };
+  }
+  return parseReviewStars(value);
+}
+
 export function resolveDossierReviewRatings(dossier = {}) {
+  const inputReviews = dossier.reviews;
+  if (!Array.isArray(inputReviews) || !inputReviews.length) return dossier;
   const venue = citedVenueRating(dossier);
-  const reviews = (dossier.reviews || []).map((review) => {
-    const stars = excerptStars(dossier, review) || parseReviewStars(review.rating) || venue;
-    return stars ? { ...review, rating: stars.rating, starsEvidence: stars.evidence } : null;
+  const reviews = inputReviews.map((review) => {
+    const stars = excerptStars(dossier, review) || parseReviewStarsOrNumeric(review.rating) || venue;
+    if (stars) {
+      const merged = { ...review, rating: stars.rating, starsEvidence: stars.evidence };
+      if (review.starsEvidence && review.rating === stars.rating) merged.starsEvidence = review.starsEvidence;
+      return merged;
+    }
+    const parsedFailed = review.rating != null && !excerptStars(dossier, review)
+      && !parseReviewStarsOrNumeric(review.rating);
+    return parsedFailed ? null : { ...review };
   });
   const rated = reviews.filter(Boolean);
   const average = venue?.average ?? dossier.rating;
-  if (rated.length && average > 0) {
+  if (rated.length && average > 0 && rated.every((row) => Number.isFinite(row.rating))) {
     const mean = rated.reduce((sum, row) => sum + row.rating, 0) / rated.length;
     if (Math.abs(mean - average) > 0.5) {
       if (venue) for (const row of rated) Object.assign(row, { rating: venue.rating, starsEvidence: venue.evidence });
       else rated.length = 0;
     }
   }
-  if (rated.length === (dossier.reviews || []).length && (rated.length || !dossier.reviews?.length)) {
+  if (rated.length === inputReviews.length) {
     return { ...dossier, reviews: rated };
   }
   const shortcomings = (dossier.shortcomings || []).filter((row) => row.field !== 'reviews');
