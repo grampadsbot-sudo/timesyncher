@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseReviewStars, resolveDossierReviewRatings } from './dossier-review-ratings.mjs';
 import { claimTextSupportedByPage, claimTextWasRejected, claimTextVerdictEligible } from './dossier-claim-support.mjs';
 
 export const VK_SEARCH_BOT_ID = 'aa90bc69-c4eb-4237-a2f9-bcd76cd14dce';
@@ -80,12 +81,17 @@ export function personFramedReview(body) {
 function reviewStars(result, n) {
   const tripCom = /trip\.com/i.test(text(result[`review${n}Source`]));
   const tenMatch = text(result[`review${n}Rating`]).match(/^(\d+(?:\.\d+)?)\s*\/\s*10$/);
-  const stars = Number(result[`review${n}Stars`]);
-  if (Number.isInteger(stars) && stars >= 1 && stars <= 5) return { rating: stars, evidence: tripCom && tenMatch ? `${tenMatch[1]}/10` : `${stars}/5` };
-  const raw = text(result[`review${n}Score10`]) || (tripCom && tenMatch ? tenMatch[1] : '');
-  const score = Number(raw);
-  if (!raw || !/trip\.com/i.test(text(result[`review${n}Source`])) || !Number.isFinite(score) || score <= 0 || score > 10) return null;
-  return { rating: Math.min(5, Math.max(1, Math.round(score / 2))), evidence: `${raw}/10` };
+  const fromStars = parseReviewStars(result[`review${n}Stars`]);
+  if (fromStars) {
+    return { rating: fromStars.rating, evidence: tripCom && tenMatch ? `${tenMatch[1]}/10` : fromStars.evidence };
+  }
+  const fromRating = parseReviewStars(result[`review${n}Rating`]);
+  if (fromRating) return fromRating;
+  if (!tripCom) return null;
+  const raw = text(result[`review${n}Score10`]) || (tenMatch ? tenMatch[1] : '');
+  const fromTen = parseReviewStars(raw, 10);
+  if (!fromTen || !raw) return null;
+  return { rating: fromTen.rating, evidence: `${raw}/10` };
 }
 
 export function loadVkSearchCensusResult(place, { env = process.env, censusDir } = {}) {
@@ -279,12 +285,9 @@ export function vkSearchResultToDossier(result = {}, place = {}) {
       dossier.ratingEvidence = { ...rating, pages: [`p${index + 1}`] };
     }
   }
-  if (dossier.reviews && dossier.rating > 0 && dossier.reviews.every((row) => row.rating)) {
-    const mean = dossier.reviews.reduce((sum, row) => sum + row.rating, 0) / 4;
-    if (Math.abs(mean - dossier.rating) > 0.5) for (const row of dossier.reviews) { delete row.rating; delete row.starsEvidence; }
-  }
+
   for (const page of pages) page.sha256 = createHash('sha256').update(page.text).digest('hex');
-  return dossier;
+  return resolveDossierReviewRatings(dossier);
 }
 
 async function defaultVkSearchImpl(place, { env, fetchImpl }) {

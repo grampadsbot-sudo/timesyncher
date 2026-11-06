@@ -66,5 +66,6 @@ const near = vkSearchResultToDossier({ ...rated, review1Stars: 5, review2Stars: 
 assert.deepEqual(near.reviews.map((r) => r.rating), [5, 5, 4, 4], 'stars whose mean is within 0.5 of the venue rating are kept');
 const far = vkSearchResultToDossier({ ...rated, review1Stars: 2, review2Stars: 2, review3Stars: 3, review4Stars: 2 }, {});
 assert.equal(far.reviews.length, 4, 'lines stay when stars disagree with the venue rating');
-assert.ok(far.reviews.every((r) => r.rating === undefined), 'stars whose mean is off the venue rating by more than 0.5 are dropped');
+assert.deepEqual(far.reviews.map((r) => r.rating), [5, 5, 5, 5],
+  'mean drift falls back to the cited venue rating instead of leaving unstarred review text');
 console.log('ok vk search review lines');

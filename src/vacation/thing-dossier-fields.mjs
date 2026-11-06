@@ -8,6 +8,7 @@ import { applyDossierRatingsAndReviews } from './thing-dossier-ratings-copy.mjs'
 import { dossierThingTitle, placeSupportsDossierReviews } from './dossier-brave-queries.mjs';
 import { dossierScalarClaimRejected } from './dossier-evidence-hydrate.mjs';
 import { dossierPagesVerified, reviewSourceHost } from './thing-evidence-dossier.mjs';
+import { resolveDossierReviewRatings } from './dossier-review-ratings.mjs';
 
 export { applyDossierRatingsAndReviews } from './thing-dossier-ratings-copy.mjs';
 export { dossierPageIdForUrl, ensureBraveSnippetCitationPages } from './dossier-brave-snippet-pages.mjs';
@@ -264,6 +265,7 @@ export function dossierRepresentativeReviews(dossier = {}) {
   return /^Representative reviews written from \d+ reviews$/.test(String(dossier.reviewsLabel || ''))
     && dossierPagesVerified(dossier) && dossier.reviews?.length === 4
     && dossier.reviews.every((review) => review?.representative === true && String(review.text || '').trim()
+      && Number.isInteger(review.rating) && review.rating >= 1 && review.rating <= 5
       && review.claims?.length > 0 && claimsSupported(dossier, review));
 }
 
@@ -313,6 +315,7 @@ export function writeDossierReviews(record = {}, dossier = {}, { useShortcomingM
     clearPublicReviewFields(record);
     return record;
   }
+  dossier = resolveDossierReviewRatings(dossier);
   clearPublicReviewFields(record);
   const missing = useShortcomingMissing
     ? new Set()
@@ -324,7 +327,7 @@ export function writeDossierReviews(record = {}, dossier = {}, { useShortcomingM
     dossier.reviews.forEach((review, index) => {
       const key = `review${index + 1}`;
       record[key] = review.text;
-      if (Number.isInteger(review.rating) && review.rating >= 1 && review.rating <= 5) record[`${key}Rating`] = String(review.rating);
+      record[`${key}Rating`] = String(review.rating);
       if (review.source) record[`${key}Source`] = review.source;
       record[`${key}Cites`] = [...new Set(review.claims.flatMap((claim) => claim.pages))];
       record[`${key}Claims`] = review.claims.map((claim) => ({ text: claim.text, pages: [...claim.pages], supported: claim.supported === true }));
@@ -354,7 +357,8 @@ export function writeDossierReviews(record = {}, dossier = {}, { useShortcomingM
   }
   if (!record.review1 && placeSupportsDossierReviews({ category: record.category })) {
     clearPublicReviewFields(record, { persistNull: true });
-    if (!useShortcomingMissing) missing.add('reviews');
+    missing.add('reviews');
+    record.missingFields = [...new Set([...(record.missingFields || []), 'reviews'])];
     const shortcomings = Array.isArray(record.dataShortcomings) ? [...record.dataShortcomings] : [];
     if (!shortcomings.some((row) => row.field === 'reviews')) {
       shortcomings.push({
