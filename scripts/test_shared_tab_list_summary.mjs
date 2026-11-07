@@ -143,7 +143,7 @@ const flightSummaryCases = [
   {
     name: 'Documented option base f7be729',
     input: 'Documented flight option with Airline: Southwest; Route: LAS-LGA; Stops: 1 stop; Outbound travel departs in the morning and arrives later that afternoon.',
-    expected: 'Documented flight option with Airline: Southwest; Route: LAS-LGA; Stops: 1 stop; Outbound travel departs in the morning and arrives later that afternoon.',
+    expected: 'Airline: Southwest; Route: LAS-LGA; Stops: 1 stop; Outbound travel departs in the morning and arrives later that afternoon.',
   },
   {
     name: 'whitespace base f7be729',

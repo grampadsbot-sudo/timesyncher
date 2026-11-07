@@ -1,0 +1,100 @@
+#!/usr/bin/env node
+import assert from 'node:assert/strict';
+import { buildDayTimeline } from '../apps/vacation-client/src/lib/dayTimelineModel.mjs';
+import { applyLiveAppListRowFields } from '../src/vacation/shared-trip-live-app-fields.mjs';
+import { itineraryLineText } from '../src/vacation/itinerary-line.mjs';
+
+const stripTrip = applyLiveAppListRowFields({
+  places: [{ id: 651, name: 'Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13', category_name: 'Flight' }],
+  thingOverrides: { 'place:651': { category: 'flight', price: 257 } },
+});
+assert.equal(
+  stripTrip.places[0].name,
+  'Delta LAS-JFK 2026-06-23 07:05-15:13',
+  'strip Flight option: prefix from stored flight name for live payload',
+);
+assert.equal(
+  stripTrip.thingOverrides['place:651'].title,
+  'Delta LAS-JFK 2026-06-23 07:05-15:13',
+  'override title matches stripped name',
+);
+
+assert.equal(
+  itineraryLineText({
+    itineraryNote: 'Documented NYC option (flight)',
+  }),
+  '',
+  'pipeline Documented … option stub must not surface as itinerary line',
+);
+
+const day = { id: 1, day_number: 1, title: 'Day 1' };
+const unpickedOnAssignments = {
+  days: [day],
+  places: [
+    {
+      id: 201,
+      name: 'Southwest LAS → LGA 05:05–15:45',
+      category_name: 'Flight',
+      lat: 36.084,
+      lng: -115.1537,
+    },
+    {
+      id: 202,
+      name: 'Museum visit',
+      category_name: 'event',
+      lat: 40.75,
+      lng: -73.99,
+    },
+  ],
+  assignments: {
+    1: [
+      { place_id: 201, notes: '' },
+      { place_id: 202, notes: '' },
+    ],
+  },
+  thingOverrides: {
+    'place:201': { timeline: false, category: 'flight', price: 239 },
+    'place:202': {
+      timeline: true,
+      category: 'activity',
+      itineraryNote: 'Stored museum itinerary line',
+    },
+  },
+};
+const rowsUnpicked = buildDayTimeline(unpickedOnAssignments, day);
+assert.equal(
+  rowsUnpicked.some((row) => row.kind === 'flight' && row.place?.id === 201),
+  false,
+  'timeline:false flight must not appear on Day-by-Day',
+);
+assert.ok(
+  rowsUnpicked.some(
+    (row) => row.kind === 'thing' && row.place?.id === 202 && row.itineraryNote === 'Stored museum itinerary line',
+  ),
+  'timeline thing row shows stored itineraryNote',
+);
+
+const restaurantThenMuseum = {
+  days: [day],
+  places: [
+    { id: 301, name: 'Cafe A', category_name: 'Restaurant', lat: 40.7, lng: -74.0 },
+    { id: 302, name: 'Museum B', category_name: 'event', lat: 40.75, lng: -73.99 },
+  ],
+  assignments: {
+    1: [
+      { place_id: 301, notes: '' },
+      { place_id: 302, notes: '' },
+    ],
+  },
+  thingOverrides: {
+    'place:301': { timeline: true, category: 'restaurant', itineraryNote: 'First stop note.' },
+    'place:302': { timeline: true, category: 'activity', itineraryNote: 'Second stop note.' },
+  },
+};
+const rowsTravel = buildDayTimeline(restaurantThenMuseum, day);
+assert.ok(
+  rowsTravel.some((row) => row.kind === 'travel'),
+  'ground travel still inserts between two timeline non-flight places',
+);
+
+console.log('issue #832 day timeline binding checks passed');
