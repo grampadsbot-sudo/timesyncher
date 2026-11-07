@@ -269,17 +269,7 @@ export function applyLiveAppListRowFields(shared = {}) {
       }
     }
 
-    if (category === 'flight') {
-      applyFlightThingFields(place, override, source);
-      copyIfBlank(
-        override,
-        'itineraryNote',
-        source?.itineraryNote,
-        source?.itinerary_note,
-        place.itineraryNote,
-        place.itinerary_note,
-      );
-    } else if (category === 'car') {
+    if (category === 'car') {
       override.category = 'car';
       copyIfBlank(override, 'pickupLocation', source?.pickupLocation, source?.pickup_location, place.address);
       copyIfBlank(override, 'returnLocation', source?.returnLocation, source?.return_location, source?.dropoffLocation);
@@ -391,7 +381,17 @@ export function applyLiveAppListRowFields(shared = {}) {
     if (!Object.prototype.hasOwnProperty.call(mergedCcab, 'longDetails')) delete override.longDetails;
     if (!Object.prototype.hasOwnProperty.call(mergedCcab, 'details')) delete override.details;
 
-    if (category === 'flight') mergeFlightThingOverrideAfterCcab(place, override, source);
+    if (category === 'flight') {
+      mergeFlightThingOverrideAfterCcab(place, override, source);
+      const sourceAfterCcab = sourceObject(
+        override.sourceRecord,
+        place.sourceRecord,
+        placeMetadata(place).sourceRecord,
+        override.source,
+        place.source,
+      );
+      applyFlightThingFields(place, override, sourceAfterCcab);
+    }
 
     if (category === 'hotel') {
       const hotelNarrative = pickLongDetails(place, override, source);
