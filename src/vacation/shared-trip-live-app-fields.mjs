@@ -271,7 +271,14 @@ export function applyLiveAppListRowFields(shared = {}) {
 
     if (category === 'flight') {
       applyFlightThingFields(place, override, source);
-      copyIfBlank(override, 'itineraryNote', source?.itineraryNote, source?.itinerary_note, place.itineraryNote, place.itinerary_note);
+      copyIfBlank(
+        override,
+        'itineraryNote',
+        source?.itineraryNote,
+        source?.itinerary_note,
+        place.itineraryNote,
+        place.itinerary_note,
+      );
     } else if (category === 'car') {
       override.category = 'car';
       copyIfBlank(override, 'pickupLocation', source?.pickupLocation, source?.pickup_location, place.address);

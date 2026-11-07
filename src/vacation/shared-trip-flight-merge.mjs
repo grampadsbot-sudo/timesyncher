@@ -1,5 +1,6 @@
 import { flightFieldsFromBlob } from './place-detail-extract.mjs';
 import { isPipelineFlightStubSummary, stripPipelineFlightStubPrefix } from './flight-list-row-summary.mjs';
+import { stripFlightOptionTitlePrefix } from './thing-title-normalize.mjs';
 
 function text(value) {
   return String(value || '').trim();
@@ -20,7 +21,7 @@ function copyIfBlank(target, key, ...values) {
 }
 
 export function stripFlightOptionPrefix(value = '') {
-  return text(value).replace(/^\s*Flight option:\s*/i, '');
+  return stripFlightOptionTitlePrefix(value);
 }
 
 export function applyFlightThingFields(place, override, source) {
