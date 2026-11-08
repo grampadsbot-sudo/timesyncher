@@ -1,43 +1,48 @@
-# #832 product repair — cursor-ubuntu HOST PUBLICATION ONLY
+# PR #836 / #832 — cursor-ubuntu HOST PUBLICATION ONLY
 
-- **Starting HEAD:** `6f8313719af3fd75ba8304af067d6cbf384060b3` (PR #836 / `vkfill/832-20261106152812`)
-- **Status:** uncommitted source ready for host commit/publish (no git mutations this round)
+- **Starting HEAD:** `3e71cab36cf04cca362ca0851a8b885957161979`
+- **Status:** uncommitted source ready for host commit/publish
 
-## Root cause (Gate B day-by-day / flights chrome)
+## Root cause (Gate B `20261108-034919` daybyday / flights chrome)
 
-Served Day-by-Day used `tsItinLine(item, assignmentNotes)` with an `ITINERARY_LINE_BUNDLE` that fell back to assignment notes / `override.notes` when `itineraryNote` was absent. That violated the #832 field-binding contract (visible itinerary line = exact stored `itineraryNote` or absent) and could surface pipeline stub text on rows while server-side `itineraryLineText()` tests passed.
+Gate B capture uses `prepareFixtureReplaySharedTrip` → `applyLiveAppListRowFields` on `/home/ubishere9995/tsv-dispatch/fixture-nyc/nyc-shared.json`. `applyFlightThingFields` already stripped `Flight option:` from `places[]` and `thingOverrides` (e.g. place 13 → `Delta LAS-JFK …`), but **day assignment rows still embedded stale `place` snapshots** with the old `Flight option:` names. `resolvePlace` merged `{ ...catalog, ...row.place }`, so embedded names **overwrote** the cleaned catalog — visible Day-by-Day and list titles showed the stub prefix after the field-binding change removed display-time `mr()` stripping.
 
-## Changes
+Evidence (starting HEAD, before fix): `prepareFixtureReplaySharedTrip(host fixture)` left **10** assignment embeds matching `/^Flight option:/i` (e.g. day 1 embed id 17 `Flight option: Southwest LAS-LGA…`).
+
+## Fix
 
 | Path | Why |
 |------|-----|
-| `src/vacation/itinerary-line.mjs` | `ITINERARY_LINE_BUNDLE` no longer falls back to assignment/override notes; matches `itineraryLineText()`. |
-| `apps/vacation-client/src/lib/dayTimelineModel.mjs` | `itineraryNoteFor` binds only stored `itineraryNote` (via `itineraryLineText`). |
-| `public/assets/index-BKun7ofk.js` | Rebaked via `renderServedTrekBundle` so live UI picks up bundle patch. |
-| `scripts/test_itinerary_fresh_daybyday_bundle.mjs` | Expect no notes fallback in bundle reader. |
-| `scripts/test_issue_832_day_timeline_binding.mjs` | Assert missing `itineraryNote` stays absent. |
+| `src/vacation/shared-trip-live-app-fields.mjs` | After list-row normalization, `syncAssignmentPlaceSnapshots()` rewrites embedded assignment `place` rows from the canonical `places[]` catalog (name/title + `place_id`). |
+| `apps/vacation-client/src/lib/dayTimelineModel.mjs` | `resolvePlace` binds catalog `name`/`title` when both catalog and embed exist (defense in depth for served payload). |
+| `scripts/test_issue_832_day_timeline_binding.mjs` | Host-fixture replay assert: 0 stub embeds; optional `resolvePlace` binding check when host path present. |
 
-Prior head `6f831371` already had portable #832 tests and flight merge without description backfill from `summary`/`longDetails`.
+No display-time `Flight option:` strip in the bundle; no fixture hard-coding; existing `stripFlightOptionTitlePrefix` in `applyFlightThingFields` unchanged.
 
-## Tests (local, starting HEAD `6f831371`)
+## Render proof (local, head + uncommitted fix)
+
+| Path | Result |
+|------|--------|
+| `prepareFixtureReplaySharedTrip(/home/ubishere9995/tsv-dispatch/fixture-nyc/nyc-shared.json)` | **0** assignment embeds with `Flight option:` (was 10) |
+| `buildDayTimeline(served, day 1)` on replay payload | No row title contains `Flight option` |
+| Serve path: `scripts/fixtures/gate-b-nyc-shared-staging.json` → `applyLiveAppListRowFields` | Flight names stripped (650–653 → airline route titles) |
+
+## Tests
 
 | Command | Result |
 |---------|--------|
-| `node scripts/test_issue_832_daybyday_flight_placeholders.mjs` | PASS |
 | `node scripts/test_issue_832_day_timeline_binding.mjs` | PASS |
+| `node scripts/test_issue_832_daybyday_flight_placeholders.mjs` | PASS |
 | `node scripts/test_itinerary_fresh_daybyday_bundle.mjs` | PASS |
 | `node scripts/test_served_trek_bundle.mjs` | PASS |
-| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS |
 | `node scripts/test_offline_manifest.mjs` | PASS |
-| `node scripts/check-no-comments.mjs` | FAIL (env: missing `typescript` for `comment-tools.mjs`) — not weakened |
-
-NYC fixture replay (`buildNycCraigKimDaybydayTrip()` + `buildDayTimeline`): 0 Flight option / Documented binding issues.
+| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS |
+| `node scripts/check-no-comments.mjs` | FAIL (env: missing `apps/vacation-client/node_modules/typescript`) — unchanged harness gap |
 
 ## Uncommitted product paths
 
-`apps/vacation-client/src/lib/dayTimelineModel.mjs`, `public/assets/index-BKun7ofk.js`, `scripts/test_issue_832_day_timeline_binding.mjs`, `scripts/test_itinerary_fresh_daybyday_bundle.mjs`, `src/vacation/itinerary-line.mjs`
+`apps/vacation-client/src/lib/dayTimelineModel.mjs`, `src/vacation/shared-trip-live-app-fields.mjs`, `scripts/test_issue_832_day_timeline_binding.mjs`, `J/RECEIPT.md`
 
 ## Host next
 
-- Commit/push once; wait for CI on new head; Gate B on published head (not self-certified here).
-- Staging `/api/version` must match merge SHA before live claims (`bot-admin/messages/time-syncher/decisions-log` protocol).
+Commit/push on `vkfill/832-20261106152812`; wait for CI; re-run Gate B on published head (not self-certified here).

@@ -44,6 +44,29 @@ function copyIfBlank(target, key, ...values) {
   if (row) target[key] = row;
 }
 
+function syncAssignmentPlaceSnapshots(shared = {}) {
+  if (!shared.assignments || typeof shared.assignments !== 'object') return;
+  const byId = new Map((shared.places || []).map((place) => [String(place.id), place]));
+  for (const rows of Object.values(shared.assignments)) {
+    if (!Array.isArray(rows)) continue;
+    for (const row of rows) {
+      const embedded = row?.place;
+      if (!embedded || typeof embedded !== 'object') continue;
+      const id = String(row.place_id ?? embedded.id ?? '');
+      if (!id) continue;
+      const catalog = byId.get(id);
+      if (!catalog) continue;
+      if (row.place_id == null || row.place_id === '') row.place_id = catalog.id;
+      row.place = {
+        ...embedded,
+        ...catalog,
+        name: catalog.name,
+        title: text(catalog.title) || catalog.name,
+      };
+    }
+  }
+}
+
 function parsePrice(value) {
   if (value === null || value === undefined || value === '') return null;
   if (typeof value === 'number' && Number.isFinite(value)) return value;
@@ -416,6 +439,7 @@ export function applyLiveAppListRowFields(shared = {}) {
 
     next.thingOverrides[key] = override;
   }
+  syncAssignmentPlaceSnapshots(next);
   return next;
 }
 

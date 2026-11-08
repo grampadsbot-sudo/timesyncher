@@ -17,7 +17,8 @@ export function resolvePlace(row, trip) {
   const id = row?.place_id ?? row?.place?.id;
   const catalog = (trip.places || []).find((p) => String(p.id) === String(id));
   if (row?.place && typeof row.place === 'object') {
-    return catalog ? { ...catalog, ...row.place } : row.place;
+    if (!catalog) return row.place;
+    return { ...row.place, ...catalog, name: catalog.name, title: text(catalog.title) || catalog.name };
   }
   return catalog;
 }

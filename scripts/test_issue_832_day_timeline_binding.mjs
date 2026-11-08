@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { buildDayTimeline } from '../apps/vacation-client/src/lib/dayTimelineModel.mjs';
+import { buildDayTimeline, resolvePlace } from '../apps/vacation-client/src/lib/dayTimelineModel.mjs';
 import { applyLiveAppListRowFields } from '../src/vacation/shared-trip-live-app-fields.mjs';
+import { prepareFixtureReplaySharedTrip } from '../src/vacation/shared-trip-fixture-replay.mjs';
 import { itineraryLineText } from '../src/vacation/itinerary-line.mjs';
+import { existsSync, readFileSync } from 'node:fs';
 
 const stripTrip = applyLiveAppListRowFields({
   places: [{ id: 651, name: 'Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13', category_name: 'Flight' }],
@@ -101,5 +103,35 @@ assert.ok(
   rowsTravel.some((row) => row.kind === 'travel'),
   'ground travel still inserts between two timeline non-flight places',
 );
+
+assert.doesNotMatch(
+  stripTrip.places[0].name,
+  /^Flight option:/i,
+  'served catalog flight name must not keep Flight option: prefix',
+);
+
+const embedHostPath = '/home/ubishere9995/tsv-dispatch/fixture-nyc/nyc-shared.json';
+if (existsSync(embedHostPath)) {
+  const { served } = prepareFixtureReplaySharedTrip(readFileSync(embedHostPath));
+  let embedStub = 0;
+  for (const rows of Object.values(served.assignments || {})) {
+    for (const row of rows || []) {
+      if (/^Flight option:/i.test(row?.place?.name || '')) embedStub++;
+    }
+  }
+  assert.equal(embedStub, 0, 'assignment place snapshots must match stripped catalog names after replay');
+  const day1 = served.days.find((d) => Number(d.day_number) === 1);
+  const stubRow = (served.assignments?.[String(day1?.id)] || []).find((row) =>
+    /^Flight option:/i.test(row?.place?.name || ''),
+  );
+  if (stubRow) {
+    const resolved = resolvePlace(stubRow, served);
+    assert.doesNotMatch(
+      String(resolved?.name || ''),
+      /^Flight option:/i,
+      'resolvePlace must bind assignment rows to served catalog names',
+    );
+  }
+}
 
 console.log('issue #832 day timeline binding checks passed');
