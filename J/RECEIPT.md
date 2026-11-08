@@ -1,6 +1,6 @@
 # PR #836 / #832 r5 — cursor-ubuntu HOST PUBLICATION ONLY
 
-Start HEAD: `00244ce574b9755b298e385c393bb8316518cdf7` (verified at launch).
+Start HEAD: `7e4860457d4b7218717bad2f3dc2e5ad40f60560` (verified at launch; r5 product already on head).
 
 ## Root cause (r5)
 
@@ -46,10 +46,17 @@ Sample binding (stored name → served list name):
 | `node scripts/test_issue_832_daybyday_flight_placeholders.mjs` | PASS |
 | `node scripts/test_issue_832_events_flight_classification.mjs` | PASS |
 | `node scripts/test_gate_b_product_row_fields.mjs` | PASS |
+| `node scripts/test_served_trek_bundle.mjs` | PASS (rebaked `public/assets/index-BKun7ofk.js` sha256 `fc0619a1e732ad925491bfb90a14d67bf139d9e9563318516574b477934f8e0b` to match `renderServedTrekBundle`; fixes CI unit-tests) |
 | `node scripts/check-no-comments.mjs` | PASS |
 | `node scripts/test_offline_manifest.mjs` | PASS |
 | `BASE=vk node scripts/check-code-ratchet.mjs` | PASS (no new fails) |
 
+## This round (rebake only)
+
+| Path | Why |
+| --- | --- |
+| `public/assets/index-BKun7ofk.js` | `scripts/test_served_trek_bundle.mjs` asserted `rendered !== committed` on head `7e486045`; `node scripts/rebake_served_trek_bundle.mjs` synced artifact to patcher output. |
+
 ## Host publish
 
-Uncommitted product diff on worktree at `00244ce574b9755b298e385c393bb8316518cdf7`. Host: commit → push `vkfill/832-20261106152812` → Gate B `events-*` + `flights-390` + `daybyday-*` on published head (not self-certified here).
+Uncommitted diff: `public/assets/index-BKun7ofk.js` only (on top of `7e486045`). Host: commit → push `vkfill/832-20261106152812` → Gate B `events-*` + `flights-390` + `daybyday-*` on published head (not self-certified here).
