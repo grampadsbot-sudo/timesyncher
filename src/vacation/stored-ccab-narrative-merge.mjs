@@ -9,12 +9,6 @@ import {
   isListRowPipelineDiagnostic,
 } from './list-row-generic-description.mjs';
 import { storedCcabHotelListNarrative } from './hotel-list-row-unbound.mjs';
-import {
-  scrubOverridePresentationFields,
-  scrubPresentationNarrative,
-  scrubSourceRecordNarratives,
-} from './dossier-intake-presentation-strip.mjs';
-
 function mergeCcabEnrichmentLayers(base = {}, ...patches) {
   const merged = { ...base };
   for (const patch of patches) {
@@ -251,13 +245,12 @@ export function createStoredCcabNarrativeMerge(
     }
     if (hotelNarrative?.neighborhood) record.neighborhood = hotelNarrative.neighborhood;
     if (hotelNarrative?.websiteFlavour) record.websiteFlavour = hotelNarrative.websiteFlavour;
-    const description = scrubPresentationNarrative(
+    const description = text(
       record.longDetails ||
         record.description ||
         record.summary ||
         hit.ccabRecord.longDetails ||
         hit.ccabRecord.description,
-      cat || hit.ccabRecord.category,
     );
     if (!description) return null;
     return {
@@ -293,12 +286,11 @@ export function createStoredCcabNarrativeMerge(
       : {};
     const next = { ...override };
     const rowCat = text(override.category || place.category_name || record.category, 40).toLowerCase();
-    const details = scrubPresentationNarrative(
+    const details = text(
       enriched.description ||
         record.longDetails ||
         record.description ||
         record.summary,
-      rowCat,
     );
     if (details && !isListRowPipelineDiagnostic(details)) {
       next.longDetails = details;
@@ -391,14 +383,10 @@ export function createStoredCcabNarrativeMerge(
       next.price = enriched.price;
     }
     if (!next.logoUrl && enriched.logoUrl) next.logoUrl = enriched.logoUrl;
-  const scrubbedRecord = scrubSourceRecordNarratives(record, rowCat);
     if (!next.sourceRecord || typeof next.sourceRecord !== 'object') {
-      next.sourceRecord = { ...scrubbedRecord };
+      next.sourceRecord = { ...record };
     } else {
-      next.sourceRecord = scrubSourceRecordNarratives(
-        { ...scrubbedRecord, ...next.sourceRecord },
-        rowCat,
-      );
+      next.sourceRecord = { ...record, ...next.sourceRecord };
     }
     if (incompleteContractRowIds.has(place.id)) {
       delete next.longDetails;
@@ -433,7 +421,7 @@ export function createStoredCcabNarrativeMerge(
       }
       next.sourceRecord = scrubbed;
     }
-    return scrubOverridePresentationFields(next, rowCat);
+    return next;
   }
 
   function shouldMergeStoredCcabOnFixtureReplay(place = {}, override = {}) {

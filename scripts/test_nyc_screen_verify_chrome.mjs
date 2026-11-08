@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { createServer } from 'node:http';
+import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -96,8 +97,20 @@ async function startLocalPreview() {
       return send(res, 200, await readFile(path.join(root, 'src/onboarding/eula-markdown.mjs'), 'utf8'), 'text/javascript; charset=utf-8');
     }
     if (pathname.endsWith('/edit-access')) return send(res, 200, '{"canEdit":false}', 'application/json; charset=utf-8');
-    if (pathname.startsWith('/icons/') || pathname.endsWith('.png') || pathname.endsWith('.ico')) {
-      return send(res, 200, '', 'image/png');
+    if (pathname.startsWith('/icons/') || pathname.endsWith('.png') || pathname.endsWith('.ico') || pathname.endsWith('.svg') || pathname.endsWith('.gif')) {
+      const assetPath = path.join(root, 'public', pathname.replace(/^\//, ''));
+      if (existsSync(assetPath)) {
+        const buf = await readFile(assetPath);
+        const type = pathname.endsWith('.svg')
+          ? 'image/svg+xml'
+          : pathname.endsWith('.gif')
+            ? 'image/gif'
+            : pathname.endsWith('.ico')
+              ? 'image/x-icon'
+              : 'image/png';
+        return send(res, 200, buf, type);
+      }
+      return send(res, 404, 'missing asset', 'text/plain');
     }
     if (/^\/shared\/[^/]+\/?$/.test(pathname)) return send(res, 200, html, 'text/html; charset=utf-8');
     const sharedMatch = pathname.match(/^\/api\/shared\/([^/]+)\/?$/);
@@ -182,6 +195,16 @@ try {
     );
     assert.ok(cars.toggles.every((t) => !/suv|sedan|compact|midsize|full-size/i.test(t.label)), `car toggle labels are brands at ${tag}`);
     assert.ok(cars.toggles.every((t) => t.hasLogo && /^https?:\/\//.test(t.logoSrc)), `car brand logos at ${tag}`);
+    const logoWidths = await page.evaluate(() =>
+      [...document.querySelectorAll('[data-ts-brand-toggle] img[src]')].map((img) => ({
+        brand: img.closest('[data-ts-brand-toggle]')?.dataset?.tsBrandToggle || '',
+        src: img.getAttribute('src') || '',
+        nw: img.naturalWidth,
+        nh: img.naturalHeight,
+      })),
+    );
+    assert.equal(logoWidths.length, expectedCarBrandKeys.length, `brand toggle imgs at ${tag}`);
+    assert.ok(logoWidths.every((row) => row.nw > 0 && row.nh > 0), `brand toggle naturalWidth>0 at ${tag}: ${JSON.stringify(logoWidths)}`);
     evidence.checks.push({
       tag,
       carsToggles: cars.toggles.length,
@@ -308,6 +331,21 @@ try {
       btn?.click();
     });
     await new Promise((r) => setTimeout(r, 800));
+    const restaurants = await page.evaluate(() => {
+      const rows = [...document.querySelectorAll('[data-list-row]')].filter((el) => el.offsetParent !== null);
+      const body = document.body.innerText || '';
+      return {
+        rows: rows.length,
+        hasCandidateStub: /Status:\s*candidate only/i.test(body),
+        hasPriceFloorStub: /Price:\s*\$[\d,]+.*\bfloor\b/i.test(body) && /Status:\s*candidate/i.test(body),
+      };
+    });
+    assert.ok(restaurants.rows > 0, `restaurants tab rows at ${tag}`);
+    assert.equal(restaurants.hasCandidateStub, false, `restaurants tab without Status:candidate at ${tag}`);
+    assert.equal(restaurants.hasPriceFloorStub, false, `restaurants tab without intake price-floor stub at ${tag}`);
+    await page.screenshot({ path: path.join(outDir, `pt3019-restaurants-${tag}-${shotSuffix}.png`) });
+    evidence.screenshots.push(`pt3019-restaurants-${tag}-${shotSuffix}.png`);
+    evidence.checks.push({ tag, restaurantsRows: restaurants.rows, restaurantsClean: !restaurants.hasCandidateStub });
     await page.evaluate(() => {
       const row = [...document.querySelectorAll('strong')].find((el) => /amelie/i.test(el.textContent || ''));
       const btn = row?.closest('button') || row?.closest('[data-list-row]')?.querySelector('button');

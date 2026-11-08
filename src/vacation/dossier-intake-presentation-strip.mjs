@@ -23,38 +23,6 @@ const PRESENTATION_SOURCE_FIELDS = [
   'itineraryNote',
 ];
 
-export function scrubPresentationNarrative(value, category = '') {
-  const row = text(value);
-  if (!row) return row;
-  return stripIntakePresentationFragments(row, { category: text(category, 40).toLowerCase() });
-}
-
-export function scrubSourceRecordNarratives(record, category = '') {
-  if (!record || typeof record !== 'object') return record;
-  const next = { ...record };
-  const cat = text(category, 40).toLowerCase();
-  for (const key of PRESENTATION_SOURCE_FIELDS) {
-    if (typeof next[key] === 'string' && next[key].trim()) {
-      next[key] = scrubPresentationNarrative(next[key], cat);
-    }
-  }
-  return next;
-}
-
-export function scrubOverridePresentationFields(override = {}, category = '') {
-  const next = { ...override };
-  const cat = text(category, 40).toLowerCase();
-  for (const key of PRESENTATION_SOURCE_FIELDS) {
-    if (typeof next[key] === 'string' && next[key].trim()) {
-      next[key] = scrubPresentationNarrative(next[key], cat);
-    }
-  }
-  if (next.sourceRecord && typeof next.sourceRecord === 'object') {
-    next.sourceRecord = scrubSourceRecordNarratives(next.sourceRecord, cat);
-  }
-  return next;
-}
-
 export function isStructuredFlightNarrative(value = '') {
   const row = text(value);
   if (!row) return false;

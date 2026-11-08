@@ -5,7 +5,6 @@ import { enrichSearchPlace } from '../../src/vacation/trip-thing-enrichment.mjs'
 import { createStoredCcabNarrativeMerge } from '../../src/vacation/stored-ccab-narrative-merge.mjs';
 import { buildNycCraigKimDaybydayFixtureRows } from './nyc-craig-kim-daybyday-rows.mjs';
 import { resolveNycCcabKey } from './nyc-vk-list-tab-rows.mjs';
-
 const BASE_ENRICHMENT = JSON.parse(
   readFileSync(new URL('./nyc_ccab_place_enrichment.json', import.meta.url), 'utf8'),
 );

@@ -47,6 +47,74 @@
     return img ? String(img.getAttribute('src') || img.getAttribute('data-logo-src') || '').trim() : '';
   }
 
+  function resolvedBrandLogo(url = '') {
+    const raw = String(url || '').trim();
+    if (!raw) return '';
+    try {
+      const host = new URL(raw, 'https://x.test').hostname.replace(/^www\./i, '').toLowerCase();
+      if (!host) return raw;
+      if (/^(icons\.)?duckduckgo\.com$/i.test(host)) return raw;
+      return `https://icons.duckduckgo.com/ip3/${host}.ico`;
+    } catch {
+      return raw;
+    }
+  }
+
+  const CAR_CATEGORY_ICON_SVG =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#334155" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+    + '<path d="m21 8-2 2-1.5-3.7A2 2 0 0 0 15.646 5H8.4a2 2 0 0 0-1.903 1.257L5 10 3 8"/>'
+    + '<path d="M7 14h.01"/><path d="M17 14h.01"/>'
+    + '<rect width="18" height="8" x="3" y="10" rx="2"/>'
+    + '<path d="M5 18v2"/><path d="M19 18v2"/>'
+    + '</svg>';
+
+  function categoryIconSrc() {
+    return `data:image/svg+xml,${encodeURIComponent(CAR_CATEGORY_ICON_SVG)}`;
+  }
+
+  function mountBrandLogo(img, primary, rawLogo) {
+    const categorySrc = categoryIconSrc();
+    const resolved = resolvedBrandLogo(primary || rawLogo);
+  if (!resolved) {
+    img.src = categorySrc;
+    img.dataset.tsBrandLogoFallback = 'category';
+    return;
+  }
+  img.src = resolved;
+  img.dataset.tsBrandLogoFallback = '0';
+  const toCategory = () => {
+    if (img.dataset.tsBrandLogoFallback === 'category') return;
+    img.dataset.tsBrandLogoFallback = 'category';
+    img.src = categorySrc;
+  };
+  img.addEventListener('error', () => {
+    const stage = img.dataset.tsBrandLogoFallback || '0';
+    if (stage === '0') {
+      const raw = String(rawLogo || '').trim();
+      const alt = resolvedBrandLogo(raw);
+      if (raw && alt && alt !== img.src) {
+        img.dataset.tsBrandLogoFallback = '1';
+        img.src = alt;
+        return;
+      }
+    }
+    toCategory();
+  });
+  img.addEventListener('load', () => {
+    if (img.dataset.tsBrandLogoFallback === 'category') return;
+    if (img.naturalWidth < 16 || img.naturalHeight < 16) toCategory();
+  });
+  }
+
+  function preferBrandLogo(prev, next) {
+    const a = resolvedBrandLogo(prev);
+    const b = resolvedBrandLogo(next);
+    if (!b) return a;
+    if (!a) return b;
+    if (/duckduckgo\.com\/ip3\//i.test(b)) return b;
+    return a;
+  }
+
   function carRows() {
     return [
       ...document.querySelectorAll('li.tsv-row-car[data-ts-list-row="1"]'),
@@ -89,9 +157,11 @@
       const brand = rowCanonicalBrand(row);
       const key = rowBrandKey(row);
       if (!brand || !key) continue;
-      const logo = rowLogoSrc(row);
+      const logo = resolvedBrandLogo(rowLogoSrc(row));
       const prev = knownBrands.get(key);
-      if (!prev || (!prev.logo && logo)) knownBrands.set(key, { label: brand, logo });
+      const mergedLogo = preferBrandLogo(prev?.logo, logo);
+      if (!prev) knownBrands.set(key, { label: brand, logo: mergedLogo });
+      else if (mergedLogo && mergedLogo !== prev.logo) knownBrands.set(key, { label: brand, logo: mergedLogo });
     }
   }
 
@@ -145,14 +215,12 @@
       checkbox.setAttribute('aria-label', `Show ${brand} vehicles`);
       checkbox.style.cssText = 'margin:0;width:14px;height:14px;flex-shrink:0;';
       label.appendChild(checkbox);
-      if (meta.logo) {
-        const img = document.createElement('img');
-        img.src = meta.logo;
-        img.alt = '';
-        img.loading = 'lazy';
-        img.style.cssText = 'width:18px;height:18px;object-fit:contain;flex-shrink:0;display:block;';
-        label.appendChild(img);
-      }
+      const img = document.createElement('img');
+      img.alt = '';
+      img.loading = 'lazy';
+      img.style.cssText = 'width:18px;height:18px;object-fit:contain;flex-shrink:0;display:block;';
+      mountBrandLogo(img, meta.logo, meta.logo);
+      label.appendChild(img);
       const name = document.createElement('span');
       name.textContent = brand;
       name.style.cssText = 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;';

@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseReviewStars, resolveDossierReviewRatings } from './dossier-review-ratings.mjs';
 import { claimTextSupportedByPage, claimTextWasRejected, claimTextVerdictEligible } from './dossier-claim-support.mjs';
+import { stripIntakePresentationFragments } from './dossier-intake-presentation-strip.mjs';
 
 export const VK_SEARCH_BOT_ID = 'aa90bc69-c4eb-4237-a2f9-bcd76cd14dce';
 export const VK_SEARCH_PROVIDER = 'vk-search';
@@ -159,9 +160,11 @@ export function vkSearchResultToDossier(result = {}, place = {}) {
     && Number.isFinite(Date.parse(pages[index].fetchedAt))
     && claimTextVerdictEligible(value, pages[index].inputClaimVerdicts)
     && claimTextSupportedByPage(value, pages[index].text);
-  const mapWrittenField = (raw) => {
+  const mapWrittenField = (raw, fieldKey = '') => {
     if (!raw || typeof raw !== 'object') return null;
-    const value = text(raw.value);
+    const value = stripIntakePresentationFragments(text(raw.value), {
+      category: place.category || place.category_name,
+    });
     const rows = list(raw.claims);
     if (!value && !rows.length) return null;
     const claims = rows.flatMap((entry) => {
@@ -186,7 +189,7 @@ export function vkSearchResultToDossier(result = {}, place = {}) {
     : result.dossierFields && typeof result.dossierFields === 'object' ? result.dossierFields : null;
   if (written) {
     for (const key of ['summary', 'description', 'itineraryNote', 'hours', 'happyHourDetails', 'price']) {
-      const field = mapWrittenField(written[key]);
+      const field = mapWrittenField(written[key], key);
       if (field) dossier.fields[key] = field;
     }
     if (dossier.fields.itineraryNote) dossier.itineraryNote = dossier.fields.itineraryNote.value;
