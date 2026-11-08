@@ -96,6 +96,9 @@ export function repairLegacyFlightOptionStoredFields(shared = {}) {
     thingOverrides: shared.thingOverrides && typeof shared.thingOverrides === 'object'
       ? { ...shared.thingOverrides }
       : {},
+    budget: Array.isArray(shared.budget)
+      ? shared.budget.map((row) => (row && typeof row === 'object' ? { ...row } : row))
+      : shared.budget,
     reservations: Array.isArray(shared.reservations)
       ? shared.reservations.map((row) => ({ ...row }))
       : shared.reservations,
@@ -122,6 +125,18 @@ export function repairLegacyFlightOptionStoredFields(shared = {}) {
     scrubStringField(row, 'title');
     scrubStringField(row, 'name');
     scrubDescriptionField(row, 'description');
+  }
+
+  for (const row of next.budget || []) {
+    if (!row || typeof row !== 'object') continue;
+    const category = text(row.category).toLowerCase();
+    if (category === 'flights' || category === 'flight') {
+      scrubStringField(row, 'name');
+      scrubStringField(row, 'title');
+    } else if (/^Flight option:/i.test(text(row.name))) {
+      scrubStringField(row, 'name');
+      scrubStringField(row, 'title');
+    }
   }
 
   for (const rows of Object.values(next.assignments || {})) {

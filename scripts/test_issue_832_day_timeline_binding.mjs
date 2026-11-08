@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import { buildDayTimeline, resolvePlace } from '../apps/vacation-client/src/lib/dayTimelineModel.mjs';
 import { applyLiveAppListRowFields } from '../src/vacation/shared-trip-live-app-fields.mjs';
+import { repairLegacyFlightOptionStoredFields } from '../src/vacation/shared-trip-flight-stored-repair.mjs';
 import { prepareFixtureReplaySharedTrip } from '../src/vacation/shared-trip-fixture-replay.mjs';
 import { itineraryLineText } from '../src/vacation/itinerary-line.mjs';
 import { existsSync, readFileSync } from 'node:fs';
@@ -108,6 +109,22 @@ assert.doesNotMatch(
   stripTrip.places[0].name,
   /^Flight option:/i,
   'served catalog flight name must not keep Flight option: prefix',
+);
+
+const budgetTrip = repairLegacyFlightOptionStoredFields({
+  budget: [
+    {
+      id: 1,
+      category: 'Flights',
+      name: 'Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13',
+      place_id: 651,
+    },
+  ],
+});
+assert.equal(
+  budgetTrip.budget[0].name,
+  'Delta LAS-JFK 2026-06-23 07:05-15:13',
+  'budget flight rows must strip authorized Flight option: prefix at stored root',
 );
 
 const embedHostPath = '/home/ubishere9995/tsv-dispatch/fixture-nyc/nyc-shared.json';
