@@ -1,32 +1,39 @@
-# PR #836 / #832 r6 — cursor-ubuntu HOST PUBLICATION ONLY
+# PR #836 / #832 r7 — cursor-ubuntu HOST PUBLICATION ONLY
 
-Start HEAD: `ddfc8eabceb8d379feb07a34e9332648b34ab49b` (verified at launch).
+Start HEAD: `0036ff62df380b424be093114dcc4302698444b7` (verified at launch; host published budget repair from r6 on this tip).
 
-## Root cause on `ddfc8eab`
+## What was already on tip
 
-Gate B run `20261108-135511` still served `Flight option:` in budget (and host per-head fixture counts 87 prefix hits across trip JSON). `repairLegacyFlightOptionStoredFields` already cleaned `places[]`, `reservations[]`, and assignment embeds, but **`budget[]` names were never repaired**, so budget tab and row-field binding still exposed stub prefixes after fixture replay (`places/reservations: 0` stub names; `budget: 10` before fix).
+Commit `0036ff62` (parent `ddfc8eab`) landed the r6 budget stored-root fix:
+
+| Path | Change |
+| --- | --- |
+| `src/vacation/shared-trip-flight-stored-repair.mjs` | Scrub `budget[].name` / `title` for Flights rows |
+| `src/vacation/shared-trip-api-budget.mjs` | Rebind `line.name` to catalog place name when syncing by `place_id` |
+| `scripts/test_issue_832_day_timeline_binding.mjs` | Budget repair unit assertion |
 
 ## This round (uncommitted)
 
 | Path | Why |
 | --- | --- |
-| `src/vacation/shared-trip-flight-stored-repair.mjs` | Idempotent scrub of `budget[].name` / `title` for Flights rows (and any row whose name still starts with `Flight option: `). |
-| `src/vacation/shared-trip-api-budget.mjs` | When syncing a budget line by `place_id`, rebind `line.name` to the repaired catalog place name. |
-| `scripts/test_issue_832_day_timeline_binding.mjs` | Regression: budget stored root must strip authorized prefix. |
+| `scripts/test_issue_832_day_timeline_binding.mjs` | Regression: `prepareSharedTripForLiveApp` end-to-end budget rebind; optional host per-head fixture replay stub count |
 
-Prior head work (classification, `mr()` bind, day timeline `Ds(wn)`, snapshot 651/652/658) unchanged on `ddfc8eab`.
+## Fixture replay proof (per-head Gate B source, not self-cert)
 
-## Fixture replay proof (host head fixture, not Gate B self-cert)
+Source: `/home/ubishere9995/tsv-dispatch/fixture-nyc/heads/0036ff62df380b424be093114dcc4302698444b7.json` → `prepareFixtureReplaySharedTrip` / `prepareSharedTripForLiveApp` / `finalizeServedSharedTripPayload`.
 
-Source: `/home/ubishere9995/tsv-dispatch/fixture-nyc/heads/ddfc8eabceb8d379feb07a34e9332648b34ab49b.json` → `prepareFixtureReplaySharedTrip`.
-
-| Field set | `^Flight option:` on name/title (after repair) |
+| Check | Result |
 | --- | --- |
-| `places[]` | 0 |
-| `reservations[]` | 0 |
-| `budget[]` | 0 (was 10) |
+| `places[]` / `reservations[]` / `budget[]` `^Flight option:` on name/title after replay | 0 |
+| `placesForCategoryTab(..., 'events')` flight stubs | 0 |
+| `buildDayTimeline` day 1 flight-opt rows | 0 |
+| Raw head fixture JSON on disk (pre-replay) | 57 `Flight option:` hits (expected; repair runs on serve/replay, not host JSON file) |
 
-Sample budget: `Flight option: Delta LAS-JFK …` → `Delta LAS-JFK 2026-06-23 07:05-15:13` (place_id 651).
+Sample: budget `Flight option: Delta LAS-JFK …` → `Delta LAS-JFK 2026-06-23 07:05-15:13` (place_id 651).
+
+## Gate B note (host authority)
+
+Gate B run `20261108-143413` on head `0036ff62` still **FAIL** (pixel vs base `10c7807`). Cursor does not override. `capture-regions.json` under `/home/ubishere9995/tsv-dispatch/gateb-cand/pr836-0036ff6/` still lists 10 `Flight option:` flight rows on `flights-390.png` / `flights-1280.png` while replayed served payload has 0 stub names — mismatch between capture DOM and `prepareFixtureReplaySharedTrip` output; host should confirm capture inject uses replay payload bytes. Events tab body text in that run no longer lists `Flight option:` rows.
 
 ## Commands / results
 
@@ -44,4 +51,4 @@ Sample budget: `Flight option: Delta LAS-JFK …` → `Delta LAS-JFK 2026-06-23 
 
 ## Host publish
 
-Uncommitted diff: 3 files above on top of `ddfc8eab`. Host: commit → push `vkfill/832-20261106152812` → Gate B on published head (`20261108-135511` class: budget + flights + daybyday + events). Cursor does not self-certify Gate B.
+Uncommitted: `scripts/test_issue_832_day_timeline_binding.mjs`, `J/RECEIPT.md` on top of `0036ff62`. Host: review → commit → push `vkfill/832-20261106152812` → fresh Gate B on published head.

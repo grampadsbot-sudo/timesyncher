@@ -4,6 +4,7 @@ import { buildDayTimeline, resolvePlace } from '../apps/vacation-client/src/lib/
 import { applyLiveAppListRowFields } from '../src/vacation/shared-trip-live-app-fields.mjs';
 import { repairLegacyFlightOptionStoredFields } from '../src/vacation/shared-trip-flight-stored-repair.mjs';
 import { prepareFixtureReplaySharedTrip } from '../src/vacation/shared-trip-fixture-replay.mjs';
+import { prepareSharedTripForLiveApp } from '../src/vacation/shared-trip-live-tab-lists.mjs';
 import { itineraryLineText } from '../src/vacation/itinerary-line.mjs';
 import { existsSync, readFileSync } from 'node:fs';
 
@@ -127,6 +128,33 @@ assert.equal(
   'budget flight rows must strip authorized Flight option: prefix at stored root',
 );
 
+const liveBudgetTrip = prepareSharedTripForLiveApp({
+  places: [
+    {
+      id: 651,
+      name: 'Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13',
+      category_name: 'Flight',
+    },
+  ],
+  thingOverrides: {
+    'place:651': { category: 'flight', timeline: true, price: 257 },
+  },
+  budget: [
+    {
+      id: 1,
+      category: 'Flights',
+      name: 'Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13',
+      place_id: 651,
+      total_price: 257,
+    },
+  ],
+});
+assert.equal(
+  liveBudgetTrip.budget[0].name,
+  'Delta LAS-JFK 2026-06-23 07:05-15:13',
+  'prepareSharedTripForLiveApp must rebind budget line name to repaired place name',
+);
+
 const embedHostPath = '/home/ubishere9995/tsv-dispatch/fixture-nyc/nyc-shared.json';
 if (existsSync(embedHostPath)) {
   const { served } = prepareFixtureReplaySharedTrip(readFileSync(embedHostPath));
@@ -149,6 +177,20 @@ if (existsSync(embedHostPath)) {
       'resolvePlace must bind assignment rows to served catalog names',
     );
   }
+}
+
+const gateBHeadFixturePath =
+  '/home/ubishere9995/tsv-dispatch/fixture-nyc/heads/0036ff62df380b424be093114dcc4302698444b7.json';
+if (existsSync(gateBHeadFixturePath)) {
+  const { served: gateBServed } = prepareFixtureReplaySharedTrip(readFileSync(gateBHeadFixturePath));
+  let gateBStub = 0;
+  for (const row of gateBServed.budget || []) {
+    if (/^Flight option:/i.test(String(row?.name || ''))) gateBStub += 1;
+  }
+  for (const place of gateBServed.places || []) {
+    if (/^Flight option:/i.test(String(place?.name || ''))) gateBStub += 1;
+  }
+  assert.equal(gateBStub, 0, 'per-head Gate B fixture replay must carry no Flight option: stored row names');
 }
 
 console.log('issue #832 day timeline binding checks passed');
