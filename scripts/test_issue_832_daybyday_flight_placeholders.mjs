@@ -4,7 +4,6 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import { applyLiveAppListRowFields } from '../src/vacation/shared-trip-live-app-fields.mjs';
-import { stripFlightOptionPrefix } from '../src/vacation/shared-trip-flight-merge.mjs';
 import { itineraryLineText } from '../src/vacation/itinerary-line.mjs';
 import { rowSummary } from '../apps/vacation-client/src/lib/listTabModel.mjs';
 
@@ -36,7 +35,7 @@ const trip = applyLiveAppListRowFields({
   places: [
     {
       id: 651,
-      name: 'Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13',
+      name: 'Delta LAS-JFK 2026-06-23 07:05-15:13',
       category_name: 'Flight',
       itineraryNote: '  Predawn leg note.  ',
     },
@@ -51,7 +50,7 @@ const trip = applyLiveAppListRowFields({
   },
 });
 
-assert.equal(trip.places[0].name, stripFlightOptionPrefix('Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13'));
+assert.equal(trip.places[0].name, 'Delta LAS-JFK 2026-06-23 07:05-15:13');
 const ov = trip.thingOverrides['place:651'];
 assert.equal(
   itineraryLineText(ov),
@@ -65,7 +64,7 @@ const gateBStubTrip = applyLiveAppListRowFields({
   places: [
     {
       id: 15,
-      name: 'Flight option: JetBlue LAS-JFK 2026-06-23 07:22-15:31',
+      name: 'JetBlue LAS-JFK 2026-06-23 07:22-15:31',
       description: 'Documented NYC option (flight)',
       category_name: 'Flight',
     },
@@ -82,7 +81,7 @@ const gateBStubTrip = applyLiveAppListRowFields({
 });
 const jetblueRow = gateBStubTrip.places.find((place) => place.id === 15);
 assert.ok(jetblueRow, 'stub flight place must exist');
-assert.doesNotMatch(String(jetblueRow.name), /^Flight option:/i, 'must strip authorized Flight option: prefix from stored flight name');
+assert.doesNotMatch(String(jetblueRow.name), /^Flight option:/i, 'stored flight name must not carry Flight option: prefix');
 assert.equal(jetblueRow.description, '', 'pipeline Documented option stub must clear place.description');
 assert.equal(rowSummary(jetblueRow, gateBStubTrip), '', 'stub must not backfill list row description from summary/longDetails');
 

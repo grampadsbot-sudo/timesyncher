@@ -1,6 +1,6 @@
 {
   "thingId": 652,
-  "thingName": "Flight option: JetBlue LAS-JFK 2026-06-23 23:59-08:04+1",
+  "thingName": "JetBlue LAS-JFK 2026-06-23 23:59-08:04+1",
   "type": "flight",
   "provider": "grok-bot",
   "sources": [

@@ -22,8 +22,6 @@ import {
   mergeFlightThingOverrideAfterCcab,
   syncAssignmentPlaceSnapshots,
 } from './shared-trip-flight-merge.mjs';
-import { repairLegacyFlightOptionStoredFields } from './shared-trip-flight-stored-repair.mjs';
-
 function text(value) {
   return String(value || '').trim();
 }
@@ -216,13 +214,13 @@ export function applyServedListLogoOverridesOnly(shared = {}) {
 }
 
 export function applyLiveAppListRowFields(shared = {}) {
-  const next = repairLegacyFlightOptionStoredFields({
+  const next = {
     ...shared,
     places: Array.isArray(shared.places) ? shared.places.map((place) => ({ ...place })) : [],
     thingOverrides: shared.thingOverrides && typeof shared.thingOverrides === 'object'
       ? { ...shared.thingOverrides }
       : {},
-  });
+  };
   for (const place of next.places) {
     const key = `place:${place.id}`;
     const override = { ...(next.thingOverrides[key] || {}) };

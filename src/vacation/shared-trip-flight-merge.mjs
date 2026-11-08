@@ -24,7 +24,7 @@ function copyIfBlank(target, key, ...values) {
   if (row) target[key] = row;
 }
 
-export function stripFlightOptionPrefix(value = '') {
+function stripFlightOptionPrefix(value = '') {
   return stripFlightOptionTitlePrefix(value);
 }
 

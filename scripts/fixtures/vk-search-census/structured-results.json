@@ -1740,7 +1740,7 @@
     },
     {
       "thingId": 651,
-      "thingName": "Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13",
+      "thingName": "Delta LAS-JFK 2026-06-23 07:05-15:13",
       "type": "flight",
       "provider": "grok-bot",
       "sources": [
@@ -1805,7 +1805,7 @@
     },
     {
       "thingId": 652,
-      "thingName": "Flight option: JetBlue LAS-JFK 2026-06-23 23:59-08:04+1",
+      "thingName": "JetBlue LAS-JFK 2026-06-23 23:59-08:04+1",
       "type": "flight",
       "provider": "grok-bot",
       "sources": [
@@ -2195,7 +2195,7 @@
     },
     {
       "thingId": 658,
-      "thingName": "Flight option: United LAS-EWR 2026-06-23 07:00-15:00",
+      "thingName": "United LAS-EWR 2026-06-23 07:00-15:00",
       "type": "flight",
       "provider": "grok-bot",
       "sources": [

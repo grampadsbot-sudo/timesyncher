@@ -219,13 +219,13 @@ export const NYC_STAGING_CAPTURE_LIST_ROWS = [
   },
   {
     "id": 646,
-    "name": "Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13",
+    "name": "Delta LAS-JFK 2026-06-23 07:05-15:13",
     "cat": "flight",
     "ccabKey": "Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13"
   },
   {
     "id": 647,
-    "name": "Flight option: JetBlue LAS-JFK 2026-06-23 23:59-08:04+1",
+    "name": "JetBlue LAS-JFK 2026-06-23 23:59-08:04+1",
     "cat": "flight",
     "ccabKey": "Flight option: JetBlue LAS-JFK 2026-06-23 23:59-08:04+1"
   },
@@ -261,7 +261,7 @@ export const NYC_STAGING_CAPTURE_LIST_ROWS = [
   },
   {
     "id": 653,
-    "name": "Flight option: United LAS-EWR 2026-06-23 07:00-15:00",
+    "name": "United LAS-EWR 2026-06-23 07:00-15:00",
     "cat": "flight",
     "ccabKey": "Flight option: United LAS-EWR 2026-06-23 07:00-15:00"
   },
