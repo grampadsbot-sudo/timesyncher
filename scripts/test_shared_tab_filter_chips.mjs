@@ -59,7 +59,10 @@ assert.match(bundle, /\$n=\[\.\.\.new Set\(tsListThings\(Fs\)\.flatMap\(Re=>vn\(
 assert.match(bundle, /ci=\[\.\.\.new Set\(tsListThings\(Oc\)\.flatMap\(Re=>or\(Re\)/);
 assert.match(bundle, /Os\.map\(G=>n\.jsx\("button",\{onClick:\(\)=>Kn\(G\)/);
 assert.doesNotMatch(bundle, /\[\.\.\.new Set\(tsListThings\(Cc\)\.map\(Re=>Yd\(Re\)\)\.filter\(Boolean\)\)\]/);
-assert.match(bundle, /Oa=Array\.from\(new Set\(tn\.map\(G=>En\(G\)\)\.filter\(Boolean\)\)\)\.sort\(\)/);
+const crossPatch = readFileSync(new URL('../src/vacation/trek-shared-tab-cross-filter-patch.mjs', import.meta.url), 'utf8');
+assert.match(crossPatch, /Oa=Array\.from\(new Set\(\(q==="events"\?Cc\.filter\(G=>!G\.__tsLiveFill&&\(!vt\.length\|\|vt\.includes\(Yd\(G\)\)\)\)/);
+assert.match(crossPatch, /Os=\[\.\.\.new Set\(Cc\.filter\(G=>!G\.__tsLiveFill&&\(!ze\.length\|\|ze\.includes\(En\(G\)\)\)\)\.map\(G=>Yd\(G\)\)\.filter\(Boolean\)\)\]/);
+assert.match(bundle, /No events match those filters/);
 assert.doesNotMatch(bundle, /\$n=gt\.filter\(/);
 assert.doesNotMatch(bundle, /ci=ot\.filter\(/);
 

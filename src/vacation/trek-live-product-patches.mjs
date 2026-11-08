@@ -14,6 +14,7 @@ import { patchTabIconVerticalCenter } from './trek-tab-icon-center-patches.mjs';
 import { forceSharedDayByDayUi } from './shared-day-by-day-ui.mjs';
 import { buildListLogoPatch } from './thing-logo-fallback-url.mjs';
 import { LIST_LOGO_NEEDLE, patchListLogoQrGuard } from './trek-list-logo-qr-patch.mjs';
+import { patchEventsEmptyListMessage, patchSharedTabCrossFilters } from './trek-shared-tab-cross-filter-patch.mjs';
 
 export { LIST_LOGO_QR_GUARD_PATCH, patchListLogoQrGuard } from './trek-list-logo-qr-patch.mjs';
 export const LIST_LOGO_PATCH = buildListLogoPatch();
@@ -368,9 +369,11 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   const served = options.served === true;
   let js = String(patched || '');
   if (js.includes(LIVE_TAB_NEEDLE)) js = js.replace(LIVE_TAB_NEEDLE, LIVE_TAB_PATCH);
+  js = patchSharedTabCrossFilters(js);
   if (js.includes(QN_RENDER_NEEDLE)) js = js.replace(QN_RENDER_NEEDLE, QN_RENDER_PATCH);
   if (js.includes(GN_RENDER_NEEDLE)) js = js.replace(GN_RENDER_NEEDLE, GN_RENDER_PATCH);
   if (js.includes(KI_RENDER_NEEDLE)) js = js.replace(KI_RENDER_NEEDLE, KI_RENDER_PATCH);
+  js = patchEventsEmptyListMessage(js);
   if (served) {
     if (!js.includes(HOTELS_TAB_CATALOG_NEEDLE)) {
       throw new Error('served shared Hotels tab missing vi(kn,"hotels") Oe row anchor');
