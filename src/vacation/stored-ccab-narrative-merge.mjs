@@ -9,6 +9,11 @@ import {
   isListRowPipelineDiagnostic,
 } from './list-row-generic-description.mjs';
 import { storedCcabHotelListNarrative } from './hotel-list-row-unbound.mjs';
+import {
+  scrubOverridePresentationFields,
+  scrubPresentationNarrative,
+  scrubSourceRecordNarratives,
+} from './dossier-intake-presentation-strip.mjs';
 
 function mergeCcabEnrichmentLayers(base = {}, ...patches) {
   const merged = { ...base };
@@ -22,36 +27,6 @@ function mergeCcabEnrichmentLayers(base = {}, ...patches) {
 
 function text(value, max = 4000) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
-}
-
-function rawSearchPlaceFromCcab({
-  title,
-  category,
-  ccabKey,
-  ccabRecord = {},
-} = {}) {
-  const recordCategory = text(ccabRecord.category, 40).toLowerCase();
-  const resolvedCategory = category
-    || (recordCategory === 'flight' && /\bcar\b|rental|sedan|suv|corolla/i.test(`${title} ${ccabKey}`)
-      ? 'car'
-      : recordCategory)
-    || 'event';
-  return {
-    source: 'fixture',
-    title: text(title, 240),
-    category: resolvedCategory,
-    lat: ccabRecord.lat ?? null,
-    lng: ccabRecord.lng ?? null,
-    address: text(ccabRecord.address, 240),
-    url: text(ccabRecord.website, 500),
-    externalId: text(ccabKey, 240),
-    sourceRecord: {
-      ...ccabRecord,
-      source: 'fixture',
-      ccabInputKind: 'stored_fixture_literal',
-      url: text(ccabRecord.website, 500),
-    },
-  };
 }
 
 export function createStoredCcabNarrativeMerge(
@@ -276,12 +251,13 @@ export function createStoredCcabNarrativeMerge(
     }
     if (hotelNarrative?.neighborhood) record.neighborhood = hotelNarrative.neighborhood;
     if (hotelNarrative?.websiteFlavour) record.websiteFlavour = hotelNarrative.websiteFlavour;
-    const description = text(
+    const description = scrubPresentationNarrative(
       record.longDetails ||
         record.description ||
         record.summary ||
         hit.ccabRecord.longDetails ||
         hit.ccabRecord.description,
+      cat || hit.ccabRecord.category,
     );
     if (!description) return null;
     return {
@@ -316,11 +292,13 @@ export function createStoredCcabNarrativeMerge(
       ? enriched.sourceRecord
       : {};
     const next = { ...override };
-    const details = text(
+    const rowCat = text(override.category || place.category_name || record.category, 40).toLowerCase();
+    const details = scrubPresentationNarrative(
       enriched.description ||
         record.longDetails ||
         record.description ||
         record.summary,
+      rowCat,
     );
     if (details && !isListRowPipelineDiagnostic(details)) {
       next.longDetails = details;
@@ -413,10 +391,14 @@ export function createStoredCcabNarrativeMerge(
       next.price = enriched.price;
     }
     if (!next.logoUrl && enriched.logoUrl) next.logoUrl = enriched.logoUrl;
+  const scrubbedRecord = scrubSourceRecordNarratives(record, rowCat);
     if (!next.sourceRecord || typeof next.sourceRecord !== 'object') {
-      next.sourceRecord = { ...record };
+      next.sourceRecord = { ...scrubbedRecord };
     } else {
-      next.sourceRecord = { ...record, ...next.sourceRecord };
+      next.sourceRecord = scrubSourceRecordNarratives(
+        { ...scrubbedRecord, ...next.sourceRecord },
+        rowCat,
+      );
     }
     if (incompleteContractRowIds.has(place.id)) {
       delete next.longDetails;
@@ -451,7 +433,7 @@ export function createStoredCcabNarrativeMerge(
       }
       next.sourceRecord = scrubbed;
     }
-    return next;
+    return scrubOverridePresentationFields(next, rowCat);
   }
 
   function shouldMergeStoredCcabOnFixtureReplay(place = {}, override = {}) {
