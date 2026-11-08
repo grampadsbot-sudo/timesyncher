@@ -47,6 +47,11 @@ export function syncAssignmentPlaceSnapshots(shared = {}) {
         name: catalog.name,
         title: text(catalog.title) || catalog.name,
       };
+      for (const key of ['description', 'notes', 'summary']) {
+        if (!text(row.place[key]) && text(embedded[key])) {
+          row.place[key] = embedded[key];
+        }
+      }
     }
   }
 }
