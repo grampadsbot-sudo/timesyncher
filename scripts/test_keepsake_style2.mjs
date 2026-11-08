@@ -737,7 +737,7 @@ assert.doesNotMatch(patchedAe, /tsPf\.some\(row=>row\.happyHour===true/);
 assert.doesNotMatch(patchedAe, /typeof tsFillOv==="function"/);
 assert.match(patchedAe, /pe\(\(G!=null&&G\.thingOverrides&&typeof G\.thingOverrides=="object"\)\?G\.thingOverrides:\{\}\)/);
 assert.doesNotMatch(patchedAe, /pe\(tsMergeLe\(G\)\)/);
-assert.match(patchedAe, /on=\(Re=le\[Qt\(G\)\]\)==null\?void 0:Re\.timeline,on==null\?\(Mi\(G\)\?!1:hl\(G\)\):!!on/);
+assert.match(patchedAe, /Ds=G=>\{var Re,on,tsPid;on=\(Re=le\[Qt\(G\)\]\)==null\?void 0:Re\.timeline;if\(on==null&&G\)\{tsPid=G\.place_id/);
 assert.doesNotMatch(patchedAe, /on=\(Re=ha\(G\)\)==null\?void 0:Re\.timeline/);
 assert.match(patchedAe, /data-stories-grid="2"/);
 assert.match(patchedAe, /tsItinLine\(Zn\.item,Zn\.notes\)/);

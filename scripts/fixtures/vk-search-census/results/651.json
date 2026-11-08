@@ -1,6 +1,6 @@
 {
   "thingId": 651,
-  "thingName": "Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13",
+  "thingName": "Delta LAS-JFK 2026-06-23 07:05-15:13",
   "type": "flight",
   "provider": "grok-bot",
   "sources": [

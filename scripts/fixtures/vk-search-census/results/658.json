@@ -1,6 +1,6 @@
 {
   "thingId": 658,
-  "thingName": "Flight option: United LAS-EWR 2026-06-23 07:00-15:00",
+  "thingName": "United LAS-EWR 2026-06-23 07:00-15:00",
   "type": "flight",
   "provider": "grok-bot",
   "sources": [

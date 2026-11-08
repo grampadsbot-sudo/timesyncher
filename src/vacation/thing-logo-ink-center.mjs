@@ -101,8 +101,21 @@ export function listRowNameLeafCenterY(nameEl) {
     (el) => !el.children.length && String(el.textContent || '').trim(),
   );
   if (leaf) {
-    const lr = leaf.getBoundingClientRect();
-    if (lr.height > 0) return lr.top + lr.height / 2;
+    const doc = leaf.ownerDocument || nameEl.ownerDocument;
+    if (!doc) {
+      const lr = leaf.getBoundingClientRect();
+      if (lr.height > 0) return lr.top + lr.height / 2;
+    } else {
+      const range = doc.createRange();
+      range.selectNodeContents(leaf);
+      const rects = [...range.getClientRects()].filter((r) => r.width > 0 && r.height > 0);
+      if (rects.length) {
+        const line = rects.sort((a, b) => a.top - b.top || a.left - b.left)[0];
+        return line.top + line.height / 2;
+      }
+      const lr = leaf.getBoundingClientRect();
+      if (lr.height > 0) return lr.top + lr.height / 2;
+    }
   }
   const doc = nameEl.ownerDocument;
   const tw = doc.createTreeWalker(nameEl, NodeFilter.SHOW_TEXT);

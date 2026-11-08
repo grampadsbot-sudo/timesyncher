@@ -9,13 +9,18 @@ function flightLikeLabel(record = {}) {
 }
 
 export function transportKind(record = {}) {
+  const meta = record.metadata && typeof record.metadata === 'object' ? record.metadata : {};
+  const capture = record.websiteCapture && typeof record.websiteCapture === 'object'
+    ? record.websiteCapture
+    : (meta.websiteCapture && typeof meta.websiteCapture === 'object' ? meta.websiteCapture : {});
+  if (String(capture.category || '').toLowerCase() === 'flight') return 'flight';
+
   const tokens = new Set();
   for (const part of [record.category, record.category_name, record.category?.name, record.type]) {
     for (const token of String(part || '').toLowerCase().split(/[^a-z]+/)) {
       if (token) tokens.add(token);
     }
   }
-  const meta = record.metadata && typeof record.metadata === 'object' ? record.metadata : {};
   const sourceRecord = record.sourceRecord && typeof record.sourceRecord === 'object' ? record.sourceRecord : {};
   const providerCategories = Array.isArray(record.providerCategories)
     ? record.providerCategories

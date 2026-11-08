@@ -197,6 +197,10 @@ export function syncSharedTripApiBudget(shared = {}) {
       if (!samePlace && !sameName) continue;
       line.total_price = row.amount;
       line.place_id = row.place.id;
+      if (samePlace) {
+        const boundName = text(row.place.name || row.place.title);
+        if (boundName) line.name = boundName;
+      }
     }
   }
 

@@ -17,7 +17,8 @@ export function resolvePlace(row, trip) {
   const id = row?.place_id ?? row?.place?.id;
   const catalog = (trip.places || []).find((p) => String(p.id) === String(id));
   if (row?.place && typeof row.place === 'object') {
-    return catalog ? { ...catalog, ...row.place } : row.place;
+    if (!catalog) return row.place;
+    return { ...row.place, ...catalog, name: catalog.name, title: text(catalog.title) || catalog.name };
   }
   return catalog;
 }
@@ -215,8 +216,8 @@ export function estimateTravelMinutes(fromPlace, toPlace) {
 }
 
 export function itineraryNoteFor(place, trip, assignmentNotes) {
-  const override = overrideFor(trip, place);
-  return itineraryLineText(override) || String(assignmentNotes || override.notes || '');
+  void assignmentNotes;
+  return itineraryLineText(overrideFor(trip, place));
 }
 
 function endMinutes(entry) {
@@ -348,7 +349,7 @@ function pushFlightRows(entries, trip, day, dayId) {
   const pushFlight = (place) => {
     const override = overrideFor(trip, place);
     const id = String(place.id);
-    if (seen.has(id) || !override.timeline || tabCategoryKey(place, trip) !== 'flight') return;
+    if (seen.has(id) || override.timeline !== true || tabCategoryKey(place, trip) !== 'flight') return;
     seen.add(id);
     const { depart, arrive } = flightSchedule(place, trip);
     entries.push({
@@ -375,7 +376,7 @@ function pushFlightRows(entries, trip, day, dayId) {
   }
   for (const place of trip.places || []) {
     const override = overrideFor(trip, place);
-    if (!override.timeline || tabCategoryKey(place, trip) !== 'flight') continue;
+    if (override.timeline === false || tabCategoryKey(place, trip) !== 'flight') continue;
     const dayIds = Array.isArray(override.dayIds) ? override.dayIds.map(String) : [];
     if (!dayIds.length) continue;
     if (!dayIds.includes(String(day.id))) continue;
@@ -392,6 +393,12 @@ const TRAVEL_GAP_SKIP = new Set([
   'flight',
 ]);
 
+function isPickedTimelineFlight(place, trip) {
+  const override = overrideFor(trip, place);
+  if (override.timeline === false) return false;
+  return tabCategoryKey(place, trip) === 'flight';
+}
+
 function insertTravelRows(entries, trip) {
   const withTravel = [];
   let previous = null;
@@ -402,11 +409,9 @@ function insertTravelRows(entries, trip) {
       !TRAVEL_GAP_SKIP.has(entry.kind) &&
       !TRAVEL_GAP_SKIP.has(previous.kind)
     ) {
-      const prevCategory = tabCategoryKey(previous.place, trip);
-      const nextCategory = tabCategoryKey(entry.place, trip);
       if (
-        prevCategory !== 'flight' &&
-        nextCategory !== 'flight' &&
+        !isPickedTimelineFlight(previous.place, trip) &&
+        !isPickedTimelineFlight(entry.place, trip) &&
         typeof previous.place.lat === 'number' &&
         typeof entry.place.lat === 'number'
       ) {

@@ -32,10 +32,33 @@ async function brands(body) {
   await page.close();
   return out;
 }
+async function brandsOnFlightsTab(body) {
+  const page = await browser.newPage();
+  await page.setContent(`<!doctype html><body><div id="root"><ul>${body}</ul></div></body>`);
+  await page.addScriptTag({ content: script });
+  await page.evaluate(() => {
+    const flights = document.createElement('button');
+    flights.setAttribute('role', 'tab');
+    flights.setAttribute('aria-label', 'Flights');
+    flights.setAttribute('aria-selected', 'true');
+    document.body.prepend(flights);
+  });
+  await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+  const out = await page.evaluate(() => ({
+    brands: [...document.querySelectorAll('[data-ts-remove-brand]')].map((b) => b.dataset.tsRemoveBrand),
+    bar: !!document.querySelector('[data-ts-car-brands]'),
+  }));
+  await page.close();
+  return out;
+}
+
 try {
   assert.deepEqual(await brands(hotelRow), [], 'list rows without tsv-row-car are not car brands');
   assert.deepEqual(await brands(taggedHotelRow), [], 'tagged hotel rows are not car brands');
   assert.deepEqual(await brands(hotelRow + taggedHotelRow + carRow), ['Hertz JFK'], 'tsv-row-car rows still get remove controls');
+  const flightsLeak = await brandsOnFlightsTab(carRow);
+  assert.deepEqual(flightsLeak.brands, [], 'car remove controls must not mount when Flights tab is active');
+  assert.equal(flightsLeak.bar, false, 'car brand bar must not mount when Flights tab is active');
 } finally {
   await browser.close();
 }

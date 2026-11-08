@@ -13,6 +13,8 @@ scripts/test_budget_required_price_completeness.mjs
 scripts/test_budget_timeline_only_rows.mjs
 scripts/test_budget_itinerary_timeline_selected.mjs
 scripts/test_car_brand_filter_scope.mjs
+scripts/test_issue_836_budget_flights_chrome.mjs
+scripts/test_issue_836_nyc_tab_screenshots.mjs
 scripts/test_budget_row_capture.mjs
 scripts/test_build_used_vs_tip.mjs
 scripts/test_chat_place_search.mjs
@@ -68,6 +70,9 @@ scripts/test_served_logo_url_repair_758.mjs
 scripts/test_served_payload_logo_repair_758.mjs
 scripts/test_thing_logo_ink_center.mjs
 scripts/test_issue_441_row_logo_fix.mjs
+scripts/test_issue_832_daybyday_flight_placeholders.mjs
+scripts/test_issue_832_day_timeline_binding.mjs
+scripts/test_issue_832_events_flight_classification.mjs
 scripts/test_shared_category_tab_icon_center_bundle.mjs
 scripts/test_tab_emoji_contrast_centre_587.mjs
 scripts/test_served_customer_copy_no_internal_terms.mjs
