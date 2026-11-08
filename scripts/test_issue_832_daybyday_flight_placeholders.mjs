@@ -4,7 +4,6 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import { applyLiveAppListRowFields } from '../src/vacation/shared-trip-live-app-fields.mjs';
-import { prepareFixtureReplaySharedTrip } from '../src/vacation/shared-trip-fixture-replay.mjs';
 import { stripFlightOptionPrefix } from '../src/vacation/shared-trip-flight-merge.mjs';
 import { itineraryLineText } from '../src/vacation/itinerary-line.mjs';
 import { rowSummary } from '../apps/vacation-client/src/lib/listTabModel.mjs';
@@ -52,12 +51,29 @@ assert.equal(
 assert.ok(!String(ov.summary || '').includes('Documented'), 'list pipeline stub prefix must be stripped from summary');
 assert.ok(!String(ov.longDetails || '').includes('Documented'), 'list pipeline stub prefix must be stripped from longDetails');
 
-const gateBFixturePath = '/home/ubishere9995/tsv-dispatch/fixture-nyc/nyc-shared.json';
-const gateBBytes = readFileSync(gateBFixturePath);
-const { served: gateBTrip } = prepareFixtureReplaySharedTrip(gateBBytes);
-const jetblueRow = gateBTrip.places.find((place) => place.id === 15);
-assert.ok(jetblueRow, 'Gate B fixture place 15 must exist');
-assert.doesNotMatch(String(jetblueRow.name), /^Flight option:/i, 'replay must strip authorized Flight option: prefix from stored flight name');
-assert.equal(rowSummary(jetblueRow, gateBTrip), '', 'pipeline Documented option stub must not render as flight list description');
+const gateBStubTrip = applyLiveAppListRowFields({
+  places: [
+    {
+      id: 15,
+      name: 'Flight option: JetBlue LAS-JFK 2026-06-23 07:22-15:31',
+      description: 'Documented NYC option (flight)',
+      category_name: 'Flight',
+    },
+  ],
+  thingOverrides: {
+    'place:15': {
+      category: 'flight',
+      timeline: false,
+      summary: 'Documented NYC option (flight) Airline: JetBlue; Route: LAS-JFK; Stops: nonstop;',
+      longDetails:
+        'Documented NYC option (flight) Airline: JetBlue; Route: LAS-JFK; Stops: nonstop; Status: candidate only; not booked.',
+    },
+  },
+});
+const jetblueRow = gateBStubTrip.places.find((place) => place.id === 15);
+assert.ok(jetblueRow, 'stub flight place must exist');
+assert.doesNotMatch(String(jetblueRow.name), /^Flight option:/i, 'must strip authorized Flight option: prefix from stored flight name');
+assert.equal(jetblueRow.description, '', 'pipeline Documented option stub must clear place.description');
+assert.equal(rowSummary(jetblueRow, gateBStubTrip), '', 'stub must not backfill list row description from summary/longDetails');
 
 console.log('issue #832 day-by-day flight placeholder guards passed');
