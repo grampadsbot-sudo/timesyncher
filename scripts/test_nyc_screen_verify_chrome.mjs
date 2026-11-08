@@ -11,13 +11,14 @@ import { NYC_DAYBYDAY_SLUG } from './fixtures/nyc-craig-kim-daybyday-trip.mjs';
 
 const require = createRequire(import.meta.url);
 const root = fileURLToPath(new URL('..', import.meta.url));
+const defaultLiveApiPath = fileURLToPath(
+  new URL('./fixtures/nyc-screen-trip99-live-shared-api.json', import.meta.url),
+);
 const outDir =
   process.env.NYC_SCREEN_VERIFY_OUT ||
-  '/home/ubishere9995/tsv-dispatch/lanes/jobs/nyc-screen-t3018-3020/screenshots';
+  fileURLToPath(new URL('../.artifacts/nyc-screen-verify/screenshots', import.meta.url));
 const useStaging = process.env.NYC_SCREEN_USE_STAGING === '1';
-const liveApiPath =
-  process.env.NYC_SCREEN_LIVE_API ||
-  '/home/ubishere9995/tsv-dispatch/lanes/jobs/nyc-screen-t3018-3020/live-shared-api.json';
+const liveApiPath = process.env.NYC_SCREEN_LIVE_API || defaultLiveApiPath;
 
 const liveApiRaw = JSON.parse(await readFile(liveApiPath, 'utf8'));
 const tripPayload = finalizeServedSharedTripPayload(liveApiRaw);
