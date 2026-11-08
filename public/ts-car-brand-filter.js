@@ -31,13 +31,40 @@
   }
 
   function carRows() {
-    // Real car rows only. A price fallback treated every short priced li as a
-    // car. List rows do not set data-thing-category; they use tsv-row-car.
-    // That fallback built a tall "Remove a brand" bar over the 390px tabs.
     return [
       ...document.querySelectorAll('li.tsv-row-car[data-ts-list-row="1"]'),
       ...document.querySelectorAll('li[data-list-row][data-thing-category="car"]'),
     ];
+  }
+
+  function activeTabLabel() {
+    const selected = document.querySelector(
+      'button[role="tab"][aria-selected="true"], [role="tab"][aria-selected="true"]',
+    );
+    if (selected) {
+      return String(selected.getAttribute('aria-label') || selected.textContent || '').trim();
+    }
+    for (const btn of document.querySelectorAll('button[role="tab"], button')) {
+      if (btn.getAttribute('aria-pressed') === 'true') {
+        return String(btn.getAttribute('aria-label') || btn.textContent || '').trim();
+      }
+    }
+    return '';
+  }
+
+  function carsTabActive() {
+    const label = activeTabLabel();
+    if (/^cars$/i.test(label)) return true;
+    if (label) return false;
+    const tabSelected = document.querySelector(
+      'button[role="tab"][aria-selected="true"], [role="tab"][aria-selected="true"]',
+    );
+    if (tabSelected) return false;
+    return carRows().length > 0;
+  }
+
+  function hideCarBrandBar() {
+    document.querySelector('[data-ts-car-brands]')?.remove();
   }
 
   function rememberBrands(rows) {
@@ -62,22 +89,32 @@
 
   function mount() {
     if (!document.body) return;
+    if (!carsTabActive()) {
+      hideCarBrandBar();
+      return;
+    }
     const rows = carRows();
     if (rows.length) rememberBrands(rows);
     if (!knownBrands.size) {
-      document.querySelector('[data-ts-car-brands]')?.remove();
+      hideCarBrandBar();
       return;
     }
 
-    let bar = document.querySelector('[data-ts-car-brands]');
+    const host =
+      document.querySelector('[data-shared-live-tab="cars"]') ||
+      document.getElementById('root') ||
+      document.body;
+    let bar = host.querySelector('[data-ts-car-brands]');
     if (!bar) {
       bar = document.createElement('div');
       bar.dataset.tsCarBrands = '1';
-      bar.style.cssText = 'display:flex;flex-wrap:nowrap;gap:8px;padding:8px 12px;background:#fff;color:#111;position:relative;z-index:30;overflow-x:auto;max-width:100%;';
+      bar.style.cssText =
+        'display:flex;flex-wrap:wrap;gap:8px;padding:8px 12px;background:#fff;color:#111;position:relative;z-index:2;overflow-x:hidden;max-width:100%;box-sizing:border-box;';
       const title = document.createElement('div');
       title.textContent = 'Remove a brand';
+      title.style.cssText = 'flex:0 0 100%;font-size:12px;font-weight:700;';
       bar.appendChild(title);
-      document.body.prepend(bar);
+      host.prepend(bar);
     }
 
     for (const [key, brand] of knownBrands) {
@@ -107,8 +144,13 @@
 
   window.__tsMountCarBrands = mount;
   document.addEventListener('click', (event) => {
+    const tabBtn = event.target?.closest?.('button[role="tab"], [role="tab"]');
+    if (tabBtn) {
+      scheduleMount();
+      return;
+    }
     const text = (event.target?.innerText || event.target?.textContent || '').replace(/\s+/g, ' ').trim();
-    if (/^(cars|budget)\b/i.test(text) && text.length < 40) scheduleMount();
+    if (/^cars\b/i.test(text) && text.length < 40) scheduleMount();
   });
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', scheduleMount, { once: true });
