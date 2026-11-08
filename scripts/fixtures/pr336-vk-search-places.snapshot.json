@@ -1881,13 +1881,13 @@
   },
   "651": {
     "source": "brave",
-    "title": "Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13",
+    "title": "Delta LAS-JFK 2026-06-23 07:05-15:13",
     "category": "flight",
     "lat": null,
     "lng": null,
     "address": "Flight options / Bookings tab",
     "url": "https://www.delta.com/flight-search/book-a-flight?cacheKeySuffix=1932f&tripType=ROUND_TRIP&originCity=LAS&destinationCity=JFK&departureDate=06%2F23%2F2026&returnDate=06%2F30%2F2026&paxCount=1",
-    "externalId": "Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13",
+    "externalId": "Delta LAS-JFK 2026-06-23 07:05-15:13",
     "sourceRecord": {
       "category": "flight",
       "description": "Airline: Delta; Route: LAS-JFK; Stops: nonstop; Outbound: 2026-06-23 07:05-15:13; Return: 2026-06-30 11:30-14:02; Duration: 5h08m out / 5h32m return; Price: $257 Main Basic / $367 Main Classic; Status: candidate only; not booked.",
@@ -1909,13 +1909,13 @@
   },
   "652": {
     "source": "brave",
-    "title": "Flight option: JetBlue LAS-JFK 2026-06-23 23:59-08:04+1",
+    "title": "JetBlue LAS-JFK 2026-06-23 23:59-08:04+1",
     "category": "flight",
     "lat": null,
     "lng": null,
     "address": "Flight options / Bookings tab",
     "url": "https://www.jetblue.com/booking/flights?from=LAS&to=JFK&departure=2026-06-23&return=2026-06-30&adults=1",
-    "externalId": "Flight option: JetBlue LAS-JFK 2026-06-23 23:59-08:04+1",
+    "externalId": "JetBlue LAS-JFK 2026-06-23 23:59-08:04+1",
     "sourceRecord": {
       "category": "flight",
       "description": "Airline: JetBlue; Route: LAS-JFK; Stops: nonstop; Outbound: 2026-06-23 23:59-08:04+1; Return: 2026-06-30 06:40-09:10; Duration: 5h05m out / 5h30m return; Price: $252 Blue Basic / $254 Economy Cabin; Status: candidate only; not booked.",
@@ -1937,13 +1937,13 @@
   },
   "658": {
     "source": "brave",
-    "title": "Flight option: United LAS-EWR 2026-06-23 07:00-15:00",
+    "title": "United LAS-EWR 2026-06-23 07:00-15:00",
     "category": "flight",
     "lat": null,
     "lng": null,
     "address": "Flight options / Bookings tab",
     "url": "https://www.united.com/en/us/fsr/choose-flights?f=LAS&t=EWR&d=2026-06-23&r=2026-06-30&tt=1&at=1",
-    "externalId": "Flight option: United LAS-EWR 2026-06-23 07:00-15:00",
+    "externalId": "United LAS-EWR 2026-06-23 07:00-15:00",
     "sourceRecord": {
       "category": "flight",
       "description": "Airline: United; Route: LAS-EWR; Stops: nonstop; Outbound: 2026-06-23 07:00-15:00; Return: 2026-06-30 14:40-17:08; Duration: 5h00m out / 5h28m return; Price: $257 Basic Economy / $367 Economy; Status: candidate only; not booked.",

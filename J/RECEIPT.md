@@ -1,48 +1,55 @@
-# PR #836 / #832 — cursor-ubuntu HOST PUBLICATION ONLY
+# PR #836 / #832 r5 — cursor-ubuntu HOST PUBLICATION ONLY
 
-- **Starting HEAD:** `3e71cab36cf04cca362ca0851a8b885957161979`
-- **Status:** uncommitted source ready for host commit/publish
+Start HEAD: `00244ce574b9755b298e385c393bb8316518cdf7` (verified at launch).
 
-## Root cause (Gate B `20261108-034919` daybyday / flights chrome)
+## Root cause (r5)
 
-Gate B capture uses `prepareFixtureReplaySharedTrip` → `applyLiveAppListRowFields` on `/home/ubishere9995/tsv-dispatch/fixture-nyc/nyc-shared.json`. `applyFlightThingFields` already stripped `Flight option:` from `places[]` and `thingOverrides` (e.g. place 13 → `Delta LAS-JFK …`), but **day assignment rows still embedded stale `place` snapshots** with the old `Flight option:` names. `resolvePlace` merged `{ ...catalog, ...row.place }`, so embedded names **overwrote** the cleaned catalog — visible Day-by-Day and list titles showed the stub prefix after the field-binding change removed display-time `mr()` stripping.
+Gate B `events-*` failed because legacy flight duplicates lived in stored trip data as `Transport` / `websiteCapture.category: flight` with `Flight option: …` names. `It(G)/bn(G)` treated override `transport` as non-flight, so `Cc` (Events) listed them. r4 `mr()` binding and snapshot cleanup were correct but insufficient without classification + stored repair.
 
-Evidence (starting HEAD, before fix): `prepareFixtureReplaySharedTrip(host fixture)` left **10** assignment embeds matching `/^Flight option:/i` (e.g. day 1 embed id 17 `Flight option: Southwest LAS-LGA…`).
+## Changes
 
-## Fix
+| Area | File(s) | What |
+| --- | --- | --- |
+| Stored repair (idempotent) | `src/vacation/shared-trip-flight-stored-repair.mjs`, hook in `applyLiveAppListRowFields` | Strip authorized `Flight option: ` prefix on places, reservations, assignment embeds; clear `Documented NYC option (flight)` descriptions; set `override.category=flight`. Runs on every `prepareSharedTripForLiveApp` / fixture replay via `finalizeServedSharedTripPayload` → live GET path. |
+| List tab classification | `apps/vacation-client/src/lib/listTabModel.mjs`, `intake-transport-kind.mjs`, `keepsake-product-overrides.mjs` | `tabCategoryKey` uses `productThingCategory`; `websiteCapture.category=flight` counts as flight. |
+| Served bundle | `public/assets/index-BKun7ofk.js`, `trek-thing-detail-fields-patch.mjs` | `Fn()` checks `websiteCapture.category`; `bn=G=>It(G)==="flight"\|\|Fn(G)==="flight"`. r4 carry patch retained (`mr()` place-name bind, day timeline `Ds(wn)`, snapshot rows 651/652/658). |
+| Refactor (ratchet) | `shared-trip-flight-merge.mjs`, `shared-trip-live-app-fields.mjs` | Moved `syncAssignmentPlaceSnapshots` to flight-merge module (FILE-SIZE-500). |
+| Tests | `scripts/test_issue_832_events_flight_classification.mjs`, `scripts/offline-tests.txt` | Events must not list transport-flight duplicates; bundle `bn\|\|Fn` guard. |
 
-| Path | Why |
-|------|-----|
-| `src/vacation/shared-trip-live-app-fields.mjs` | After list-row normalization, `syncAssignmentPlaceSnapshots()` rewrites embedded assignment `place` rows from the canonical `places[]` catalog (name/title + `place_id`). |
-| `apps/vacation-client/src/lib/dayTimelineModel.mjs` | `resolvePlace` binds catalog `name`/`title` when both catalog and embed exist (defense in depth for served payload). |
-| `scripts/test_issue_832_day_timeline_binding.mjs` | Host-fixture replay assert: 0 stub embeds; optional `resolvePlace` binding check when host path present. |
+## Staging repair path
 
-No display-time `Flight option:` strip in the bundle; no fixture hard-coding; existing `stripFlightOptionTitlePrefix` in `applyFlightThingFields` unchanged.
+On each shared-trip serve: `finalizeServedSharedTripPayload` → `prepareSharedTripForLiveApp` → `applyLiveAppListRowFields` → `repairLegacyFlightOptionStoredFields` (in-memory on payload returned to client; idempotent). No host fixture edits.
 
-## Render proof (local, head + uncommitted fix)
+## Render proof (fixture replay, not Gate B self-cert)
 
-| Path | Result |
-|------|--------|
-| `prepareFixtureReplaySharedTrip(/home/ubishere9995/tsv-dispatch/fixture-nyc/nyc-shared.json)` | **0** assignment embeds with `Flight option:` (was 10) |
-| `buildDayTimeline(served, day 1)` on replay payload | No row title contains `Flight option` |
-| Serve path: `scripts/fixtures/gate-b-nyc-shared-staging.json` → `applyLiveAppListRowFields` | Flight names stripped (650–653 → airline route titles) |
+Fixture: `/home/ubishere9995/tsv-dispatch/fixture-nyc/heads/00244ce574b9755b298e385c393bb8316518cdf7.json` → `prepareFixtureReplaySharedTrip`.
 
-## Tests
+| Tab | ids 13–22 (legacy duplicates) | Stub chrome |
+| --- | --- | --- |
+| Events | **0 rows** (were 10) | none |
+| Flights | 13,15,17–21,651,652,658,… | stored name = visible name; no `Flight option` / `Documented` |
+
+Sample binding (stored name → served list name):
+
+| id | stored name after repair |
+| --- | --- |
+| 651 | Delta LAS-JFK 2026-06-23 07:05-15:13 |
+| 652 | JetBlue LAS-JFK 2026-06-23 23:59-08:04+1 |
+| 658 | United LAS-EWR 2026-06-23 07:00-15:00 |
+| 17 | Southwest LAS-LGA 2026-06-23 05:05-15:45 |
+
+## Commands / results
 
 | Command | Result |
-|---------|--------|
+| --- | --- |
 | `node scripts/test_issue_832_day_timeline_binding.mjs` | PASS |
 | `node scripts/test_issue_832_daybyday_flight_placeholders.mjs` | PASS |
-| `node scripts/test_itinerary_fresh_daybyday_bundle.mjs` | PASS |
-| `node scripts/test_served_trek_bundle.mjs` | PASS |
+| `node scripts/test_issue_832_events_flight_classification.mjs` | PASS |
+| `node scripts/test_gate_b_product_row_fields.mjs` | PASS |
+| `node scripts/check-no-comments.mjs` | PASS |
 | `node scripts/test_offline_manifest.mjs` | PASS |
-| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS |
-| `node scripts/check-no-comments.mjs` | FAIL (env: missing `apps/vacation-client/node_modules/typescript`) — unchanged harness gap |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS (no new fails) |
 
-## Uncommitted product paths
+## Host publish
 
-`apps/vacation-client/src/lib/dayTimelineModel.mjs`, `src/vacation/shared-trip-live-app-fields.mjs`, `scripts/test_issue_832_day_timeline_binding.mjs`, `J/RECEIPT.md`
-
-## Host next
-
-Commit/push on `vkfill/832-20261106152812`; wait for CI; re-run Gate B on published head (not self-certified here).
+Uncommitted product diff on worktree at `00244ce574b9755b298e385c393bb8316518cdf7`. Host: commit → push `vkfill/832-20261106152812` → Gate B `events-*` + `flights-390` + `daybyday-*` on published head (not self-certified here).

@@ -21,6 +21,16 @@ assert.doesNotMatch(
   /return bn\(G\)\?String\(Re\)\.replace\(\/\^\\s\*Flight option:/,
   'visible flight titles must not strip Flight option: in mr()',
 );
+assert.match(
+  bundle,
+  /mr=G=>\{var tsOv,tsPl,tsPid;tsPid=G&&\(G\.place_id/,
+  'mr() must bind visible title from catalog place name, not reservation title',
+);
+assert.doesNotMatch(
+  bundle,
+  /\?void 0:zt\.title\)\?\?\(G\.title\|\|G\.name/,
+  'mr() must not fall back to reservation title',
+);
 
 const trip = applyLiveAppListRowFields({
   places: [

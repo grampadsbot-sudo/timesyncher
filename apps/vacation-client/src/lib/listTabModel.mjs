@@ -84,14 +84,12 @@ function humanizeTypeKey(raw) {
 
 export function tabCategoryKey(place, trip) {
   const override = overrideFor(trip, place);
-  const raw = text(
-    override.category || place.category?.name || place.category_name || place.category,
-  ).toLowerCase();
-  if (raw.includes('flight')) return 'flight';
-  if (raw.includes('hotel') || raw.includes('lodging')) return 'hotel';
-  if (raw.includes('restaurant') || raw === 'bar') return 'restaurant';
-  if (raw.includes('car')) return 'car';
-  if (raw.includes('store') || raw.includes('shop')) return 'store';
+  const category = productThingCategory(place, override);
+  if (category === 'flight') return 'flight';
+  if (category === 'hotel') return 'hotel';
+  if (category === 'restaurant' || category === 'bar') return 'restaurant';
+  if (category === 'car') return 'car';
+  if (category === 'store') return 'store';
   return 'event';
 }
 

@@ -17,7 +17,12 @@ const EXPERIENCE_CATEGORIES = new Set([
 ]);
 import { isGenericDescription, isHotelPlanningNote } from './list-row-generic-description.mjs';
 import { isPlaceholderLogoUrl, resolveThingLogoUrl } from './thing-logo-capture.mjs';
-import { applyFlightThingFields, mergeFlightThingOverrideAfterCcab } from './shared-trip-flight-merge.mjs';
+import {
+  applyFlightThingFields,
+  mergeFlightThingOverrideAfterCcab,
+  syncAssignmentPlaceSnapshots,
+} from './shared-trip-flight-merge.mjs';
+import { repairLegacyFlightOptionStoredFields } from './shared-trip-flight-stored-repair.mjs';
 
 function text(value) {
   return String(value || '').trim();
@@ -42,29 +47,6 @@ function copyIfBlank(target, key, ...values) {
   if (text(target[key])) return;
   const row = firstPresent(...values);
   if (row) target[key] = row;
-}
-
-function syncAssignmentPlaceSnapshots(shared = {}) {
-  if (!shared.assignments || typeof shared.assignments !== 'object') return;
-  const byId = new Map((shared.places || []).map((place) => [String(place.id), place]));
-  for (const rows of Object.values(shared.assignments)) {
-    if (!Array.isArray(rows)) continue;
-    for (const row of rows) {
-      const embedded = row?.place;
-      if (!embedded || typeof embedded !== 'object') continue;
-      const id = String(row.place_id ?? embedded.id ?? '');
-      if (!id) continue;
-      const catalog = byId.get(id);
-      if (!catalog) continue;
-      if (row.place_id == null || row.place_id === '') row.place_id = catalog.id;
-      row.place = {
-        ...embedded,
-        ...catalog,
-        name: catalog.name,
-        title: text(catalog.title) || catalog.name,
-      };
-    }
-  }
 }
 
 function parsePrice(value) {
@@ -234,13 +216,13 @@ export function applyServedListLogoOverridesOnly(shared = {}) {
 }
 
 export function applyLiveAppListRowFields(shared = {}) {
-  const next = {
+  const next = repairLegacyFlightOptionStoredFields({
     ...shared,
     places: Array.isArray(shared.places) ? shared.places.map((place) => ({ ...place })) : [],
     thingOverrides: shared.thingOverrides && typeof shared.thingOverrides === 'object'
       ? { ...shared.thingOverrides }
       : {},
-  };
+  });
   for (const place of next.places) {
     const key = `place:${place.id}`;
     const override = { ...(next.thingOverrides[key] || {}) };

@@ -7,6 +7,11 @@ const FLIGHT_DAY_TIMELINE_PATCH = 'if(Qi&&bn(wn)&&Ds(wn)&&/flight/i.test(wn.name
 const MR_FLIGHT_TITLE_STRIP_NEEDLE = 'return bn(G)?String(Re).replace(/^\\s*Flight option:\\s*/i,""):Re';
 const MR_FLIGHT_TITLE_STRIP_PATCH = 'return Re';
 
+const MR_TITLE_BIND_NEEDLE =
+  'mr=G=>{var zt;const Re=((zt=le[Qt(G)])==null?void 0:zt.title)??(G.title||G.name||"");return Re}';
+const MR_TITLE_BIND_PATCH =
+  'mr=G=>{var tsOv,tsPl,tsPid;tsPid=G&&(G.place_id??(G.place&&G.place.id));tsPl=tsPid?((typeof Ft<"u"&&Ft.get(tsPid))||((Gt||[]).find(p=>p&&String(p.id)===String(tsPid)))||null):null;tsOv=le[Qt(G)]||{};const Re=String((tsPl&&(tsPl.name||tsPl.title))||tsOv.name||G.name||"").trim();return Re}';
+
 export function applyFlightDayTimelinePatches(js, { served }) {
   let out = js;
   if (out.includes(CAR_DAY_LOOP_NEEDLE)) out = out.replace(CAR_DAY_LOOP_NEEDLE, CAR_DAY_LOOP_PATCH);
@@ -22,6 +27,11 @@ export function applyFlightDayTimelinePatches(js, { served }) {
     out = out.replace(MR_FLIGHT_TITLE_STRIP_NEEDLE, MR_FLIGHT_TITLE_STRIP_PATCH);
   } else if (served && out.includes('Flight option:\\s*')) {
     throw new Error('flight title strip patch did not apply');
+  }
+  if (out.includes(MR_TITLE_BIND_NEEDLE)) {
+    out = out.replace(MR_TITLE_BIND_NEEDLE, MR_TITLE_BIND_PATCH);
+  } else if (served && !out.includes('tsPl.name||tsPl.title))||tsOv.name||G.name')) {
+    throw new Error('stored place name mr() binding patch did not apply');
   }
   return out;
 }

@@ -28,6 +28,29 @@ export function stripFlightOptionPrefix(value = '') {
   return stripFlightOptionTitlePrefix(value);
 }
 
+export function syncAssignmentPlaceSnapshots(shared = {}) {
+  if (!shared.assignments || typeof shared.assignments !== 'object') return;
+  const byId = new Map((shared.places || []).map((place) => [String(place.id), place]));
+  for (const rows of Object.values(shared.assignments)) {
+    if (!Array.isArray(rows)) continue;
+    for (const row of rows) {
+      const embedded = row?.place;
+      if (!embedded || typeof embedded !== 'object') continue;
+      const id = String(row.place_id ?? embedded.id ?? '');
+      if (!id) continue;
+      const catalog = byId.get(id);
+      if (!catalog) continue;
+      if (row.place_id == null || row.place_id === '') row.place_id = catalog.id;
+      row.place = {
+        ...embedded,
+        ...catalog,
+        name: catalog.name,
+        title: text(catalog.title) || catalog.name,
+      };
+    }
+  }
+}
+
 export function applyFlightThingFields(place, override, source) {
   place.category_name = place.category_name || 'Flight';
   place.category = place.category && typeof place.category === 'object'
@@ -36,7 +59,7 @@ export function applyFlightThingFields(place, override, source) {
   override.category = 'flight';
   const rawTitle = firstPresent(place.name, place.title, override.name, override.title);
   const cleanedTitle = stripFlightOptionPrefix(rawTitle);
-  if (cleanedTitle && cleanedTitle !== rawTitle) {
+  if (cleanedTitle) {
     place.name = cleanedTitle;
     place.title = cleanedTitle;
     override.name = cleanedTitle;

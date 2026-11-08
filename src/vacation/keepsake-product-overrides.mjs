@@ -45,6 +45,7 @@ function transportKindRecord(place = {}, override = {}) {
     name: place.name || place.title,
     source: source || text(override.source) || text(place.source),
     metadata: meta,
+    websiteCapture: place.websiteCapture || meta.websiteCapture || override.websiteCapture,
     providerCategories: place.providerCategories
       || meta.providerCategories
       || override.providerCategories,
