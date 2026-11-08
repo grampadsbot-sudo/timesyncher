@@ -61,7 +61,7 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "JetBlue's overnight Flight option: JetBlue LAS-JFK 2026-06-23 23:59-08:04+1 is a red-eye, and FlightMapper notes for late JetBlue departures that the flight arrives 1 day after departure. The direct flight time runs between 4:44 and 5:15.",
+      "value": "JetBlue's overnight JetBlue LAS-JFK 2026-06-23 23:59-08:04+1 is a red-eye, and FlightMapper notes for late JetBlue departures that the flight arrives 1 day after departure. The direct flight time runs between 4:44 and 5:15.",
       "claims": [
         {
           "text": "The flight arrives 1 day after departure",
@@ -74,7 +74,7 @@
       ]
     },
     "description": {
-      "value": "FlightMapper's JetBlue schedule for the red-eye Flight option: JetBlue LAS-JFK 2026-06-23 23:59-08:04+1 covers JetBlue flights from Las Vegas Harry Reid (LAS) to New York John F. Kennedy (JFK). A domestic route departing from the Las Vegas Harry Reid airport (LAS) and arriving at New York John F. Kennedy airport (JFK). The flight arrives 1 day after departure. The flight distance is 2241 miles, or 3607 km. For direct flights, the flight time varies between 4:44 and 5:15.",
+      "value": "FlightMapper's JetBlue schedule for the red-eye JetBlue LAS-JFK 2026-06-23 23:59-08:04+1 covers JetBlue flights from Las Vegas Harry Reid (LAS) to New York John F. Kennedy (JFK). A domestic route departing from the Las Vegas Harry Reid airport (LAS) and arriving at New York John F. Kennedy airport (JFK). The flight arrives 1 day after departure. The flight distance is 2241 miles, or 3607 km. For direct flights, the flight time varies between 4:44 and 5:15.",
       "claims": [
         {
           "text": "JetBlue flights from Las Vegas Harry Reid (LAS) to New York John F. Kennedy (JFK)",
@@ -99,7 +99,7 @@
       ]
     },
     "itineraryNote": {
-      "value": "Flight option: JetBlue LAS-JFK 2026-06-23 23:59-08:04+1: the red-eye; sleep aboard and arrive for breakfast, since The flight arrives 1 day after departure.",
+      "value": "JetBlue LAS-JFK 2026-06-23 23:59-08:04+1: the red-eye; sleep aboard and arrive for breakfast, since The flight arrives 1 day after departure.",
       "claims": [
         {
           "text": "The flight arrives 1 day after departure.",
@@ -114,5 +114,5 @@
     "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Flight option: JetBlue LAS-JFK 2026-06-23 23:59-08:04+1: the red-eye; sleep aboard and arrive for breakfast, since The flight arrives 1 day after departure."
+  "itineraryNote": "JetBlue LAS-JFK 2026-06-23 23:59-08:04+1: the red-eye; sleep aboard and arrive for breakfast, since The flight arrives 1 day after departure."
 }

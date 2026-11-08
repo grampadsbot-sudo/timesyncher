@@ -59,7 +59,7 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "FlightMapper lists Delta Air Lines DL 510 Non-stop at 07:05 from Las Vegas, the departure behind Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13 into New York JFK. The route is a nonstop on an Airbus A321neo, and the 15:13 Eastern arrival leaves time to check in before dinner.",
+      "value": "FlightMapper lists Delta Air Lines DL 510 Non-stop at 07:05 from Las Vegas, the departure behind Delta LAS-JFK 2026-06-23 07:05-15:13 into New York JFK. The route is a nonstop on an Airbus A321neo, and the 15:13 Eastern arrival leaves time to check in before dinner.",
       "claims": [
         {
           "text": "Daily 07:05 Las Vegas Harry Reid (LAS) 1 15:17 New York John F. Kennedy (JFK) 4 Delta Air Lines DL 510 Non-stop",
@@ -72,7 +72,7 @@
       ]
     },
     "description": {
-      "value": "Delta's early-morning nonstop, Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13, runs from Las Vegas Harry Reid to New York JFK. FlightMapper lists it as Delta Air Lines DL 510 Non-stop, flown on an Airbus A321neo (32Q), with about five hours and twelve minutes in the air. It is A domestic route departing from the Las Vegas Harry Reid airport (LAS) and arriving at New York John F. Kennedy airport (JFK). Taking Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13 puts you in New York by mid-afternoon, with time to reach the hotel before dinner.",
+      "value": "Delta's early-morning nonstop, Delta LAS-JFK 2026-06-23 07:05-15:13, runs from Las Vegas Harry Reid to New York JFK. FlightMapper lists it as Delta Air Lines DL 510 Non-stop, flown on an Airbus A321neo (32Q), with about five hours and twelve minutes in the air. It is A domestic route departing from the Las Vegas Harry Reid airport (LAS) and arriving at New York John F. Kennedy airport (JFK). Taking Delta LAS-JFK 2026-06-23 07:05-15:13 puts you in New York by mid-afternoon, with time to reach the hotel before dinner.",
       "claims": [
         {
           "text": "Delta Air Lines DL 510 Non-stop",
@@ -89,7 +89,7 @@
       ]
     },
     "itineraryNote": {
-      "value": "Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13: an early nonstop on Delta Air Lines DL 510 Non-stop; land by mid-afternoon.",
+      "value": "Delta LAS-JFK 2026-06-23 07:05-15:13: an early nonstop on Delta Air Lines DL 510 Non-stop; land by mid-afternoon.",
       "claims": [
         {
           "text": "Delta Air Lines DL 510 Non-stop",
@@ -104,5 +104,5 @@
     "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13: an early nonstop on Delta Air Lines DL 510 Non-stop; land by mid-afternoon."
+  "itineraryNote": "Delta LAS-JFK 2026-06-23 07:05-15:13: an early nonstop on Delta Air Lines DL 510 Non-stop; land by mid-afternoon."
 }

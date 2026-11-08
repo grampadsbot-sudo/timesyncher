@@ -59,7 +59,7 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "United's 07:00 Newark departure Flight option: United LAS-EWR 2026-06-23 07:00-15:00 matches FlightMapper's United Airlines UA 394 Non-stop from Las Vegas Harry Reid to Newark Liberty. The 737-900 nonstop covers 2220 miles in about five hours.",
+      "value": "United's 07:00 Newark departure United LAS-EWR 2026-06-23 07:00-15:00 matches FlightMapper's United Airlines UA 394 Non-stop from Las Vegas Harry Reid to Newark Liberty. The 737-900 nonstop covers 2220 miles in about five hours.",
       "claims": [
         {
           "text": "07:00 Las Vegas Harry Reid (LAS) 3 14:52 Newark Liberty, New York (EWR) A United Airlines UA 394 Non-stop",
@@ -72,7 +72,7 @@
       ]
     },
     "description": {
-      "value": "FlightMapper's United schedule behind Flight option: United LAS-EWR 2026-06-23 07:00-15:00 lists United Airlines UA 394 Non-stop Boeing 737-900 (739) from Las Vegas Harry Reid (LAS) to Newark Liberty, New York (EWR). A domestic route departing from the Las Vegas Harry Reid airport (LAS) and arriving at Newark Liberty, New York airport (EWR). The flight distance is 2220 miles, or 3573 km. For direct flights, the flight time varies between 4:38 and 5:08.",
+      "value": "FlightMapper's United schedule behind United LAS-EWR 2026-06-23 07:00-15:00 lists United Airlines UA 394 Non-stop Boeing 737-900 (739) from Las Vegas Harry Reid (LAS) to Newark Liberty, New York (EWR). A domestic route departing from the Las Vegas Harry Reid airport (LAS) and arriving at Newark Liberty, New York airport (EWR). The flight distance is 2220 miles, or 3573 km. For direct flights, the flight time varies between 4:38 and 5:08.",
       "claims": [
         {
           "text": "United Airlines UA 394 Non-stop Boeing 737-900 (739)",
@@ -101,7 +101,7 @@
       ]
     },
     "itineraryNote": {
-      "value": "Flight option: United LAS-EWR 2026-06-23 07:00-15:00: an early nonstop into Newark on United Airlines UA 394 Non-stop.",
+      "value": "United LAS-EWR 2026-06-23 07:00-15:00: an early nonstop into Newark on United Airlines UA 394 Non-stop.",
       "claims": [
         {
           "text": "United Airlines UA 394 Non-stop",
@@ -116,5 +116,5 @@
     "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Flight option: United LAS-EWR 2026-06-23 07:00-15:00: an early nonstop into Newark on United Airlines UA 394 Non-stop."
+  "itineraryNote": "United LAS-EWR 2026-06-23 07:00-15:00: an early nonstop into Newark on United Airlines UA 394 Non-stop."
 }
