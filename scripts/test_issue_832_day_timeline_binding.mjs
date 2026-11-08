@@ -180,7 +180,7 @@ if (existsSync(embedHostPath)) {
 }
 
 const gateBHeadFixturePath =
-  '/home/ubishere9995/tsv-dispatch/fixture-nyc/heads/0036ff62df380b424be093114dcc4302698444b7.json';
+  '/home/ubishere9995/tsv-dispatch/fixture-nyc/heads/0d7e88a77de0c5138fe3ee58d7f5aa799d418eb4.json';
 if (existsSync(gateBHeadFixturePath)) {
   const { served: gateBServed } = prepareFixtureReplaySharedTrip(readFileSync(gateBHeadFixturePath));
   let gateBStub = 0;

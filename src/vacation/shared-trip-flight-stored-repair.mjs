@@ -121,10 +121,8 @@ export function repairLegacyFlightOptionStoredFields(shared = {}) {
 
   for (const row of next.reservations || []) {
     if (!row || typeof row !== 'object') continue;
-    if (text(row.type).toLowerCase() !== 'flight') continue;
-    scrubStringField(row, 'title');
-    scrubStringField(row, 'name');
-    scrubDescriptionField(row, 'description');
+    const isFlight = text(row.type).toLowerCase() === 'flight';
+    if (isFlight) scrubDescriptionField(row, 'description');
   }
 
   for (const row of next.budget || []) {
@@ -156,6 +154,21 @@ export function repairLegacyFlightOptionStoredFields(shared = {}) {
         if (catalog) next.thingOverrides[`place:${catalog.id}`] = override;
       }
     }
+  }
+
+  for (const place of next.places) {
+    scrubStringField(place, 'name');
+    scrubStringField(place, 'title');
+  }
+  for (const row of next.reservations || []) {
+    if (!row || typeof row !== 'object') continue;
+    scrubStringField(row, 'title');
+    scrubStringField(row, 'name');
+  }
+  for (const override of Object.values(next.thingOverrides || {})) {
+    if (!override || typeof override !== 'object') continue;
+    scrubStringField(override, 'title');
+    scrubStringField(override, 'name');
   }
 
   return next;
