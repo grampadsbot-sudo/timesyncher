@@ -1,20 +1,27 @@
 # PR #836 / #832 r5 — cursor-ubuntu HOST PUBLICATION ONLY
 
-Start HEAD: `7e4860457d4b7218717bad2f3dc2e5ad40f60560` (verified at launch; r5 product already on head).
+Start HEAD: `d2200cfcc774f7ae9afd455519780ca669a79273` (verified at launch).
 
-## Root cause (r5)
+## Root cause (r5, on head)
 
 Gate B `events-*` failed because legacy flight duplicates lived in stored trip data as `Transport` / `websiteCapture.category: flight` with `Flight option: …` names. `It(G)/bn(G)` treated override `transport` as non-flight, so `Cc` (Events) listed them. r4 `mr()` binding and snapshot cleanup were correct but insufficient without classification + stored repair.
 
-## Changes
+## Changes on `d2200cfc` (already committed on head)
 
 | Area | File(s) | What |
 | --- | --- | --- |
 | Stored repair (idempotent) | `src/vacation/shared-trip-flight-stored-repair.mjs`, hook in `applyLiveAppListRowFields` | Strip authorized `Flight option: ` prefix on places, reservations, assignment embeds; clear `Documented NYC option (flight)` descriptions; set `override.category=flight`. Runs on every `prepareSharedTripForLiveApp` / fixture replay via `finalizeServedSharedTripPayload` → live GET path. |
 | List tab classification | `apps/vacation-client/src/lib/listTabModel.mjs`, `intake-transport-kind.mjs`, `keepsake-product-overrides.mjs` | `tabCategoryKey` uses `productThingCategory`; `websiteCapture.category=flight` counts as flight. |
-| Served bundle | `public/assets/index-BKun7ofk.js`, `trek-thing-detail-fields-patch.mjs` | `Fn()` checks `websiteCapture.category`; `bn=G=>It(G)==="flight"\|\|Fn(G)==="flight"`. r4 carry patch retained (`mr()` place-name bind, day timeline `Ds(wn)`, snapshot rows 651/652/658). |
-| Refactor (ratchet) | `shared-trip-flight-merge.mjs`, `shared-trip-live-app-fields.mjs` | Moved `syncAssignmentPlaceSnapshots` to flight-merge module (FILE-SIZE-500). |
+| Served bundle | `public/assets/index-BKun7ofk.js`, `trek-thing-detail-fields-patch.mjs`, `trek-live-product-flight-day-patches.mjs` | `Fn()` checks `websiteCapture.category`; `bn=G=>It(G)==="flight"\|\|Fn(G)==="flight"`. `mr()` place-name bind; day timeline `Ds(wn)`; snapshot rows 651/652/658 clean. |
 | Tests | `scripts/test_issue_832_events_flight_classification.mjs`, `scripts/offline-tests.txt` | Events must not list transport-flight duplicates; bundle `bn\|\|Fn` guard. |
+
+## This round (uncommitted)
+
+| Path | Why |
+| --- | --- |
+| `scripts/test_keepsake_style2.mjs` | CI `unit-tests` failed: assertion still expected legacy comma-operator `Ds()` after #832 `DS_PATCH` gained `place_id` timeline fallback (`d2200cfc` `trek-style2-bundle.mjs`). Asserts new `Ds=G=>{var Re,on,tsPid;…` prefix instead. |
+
+Carry patch `832-r5-carry.patch` did not apply on `d2200cfc` (superseded by head); no re-apply.
 
 ## Staging repair path
 
@@ -22,21 +29,20 @@ On each shared-trip serve: `finalizeServedSharedTripPayload` → `prepareSharedT
 
 ## Render proof (fixture replay, not Gate B self-cert)
 
-Fixture: `/home/ubishere9995/tsv-dispatch/fixture-nyc/heads/00244ce574b9755b298e385c393bb8316518cdf7.json` → `prepareFixtureReplaySharedTrip`.
+Fixture: `prepareFixtureReplaySharedTrip` on repo snapshot + pr336 fixture (host head fixture built by dispatcher when Gate B runs).
 
-| Tab | ids 13–22 (legacy duplicates) | Stub chrome |
+| Tab | legacy transport-flight duplicates (e.g. id 17) | Stub chrome |
 | --- | --- | --- |
-| Events | **0 rows** (were 10) | none |
-| Flights | 13,15,17–21,651,652,658,… | stored name = visible name; no `Flight option` / `Documented` |
+| Events | **0 rows** | none |
+| Flights | listed under Flights | stored name = visible name after repair |
 
-Sample binding (stored name → served list name):
+Sample stored names after repair (snapshot rows):
 
-| id | stored name after repair |
+| id | name |
 | --- | --- |
 | 651 | Delta LAS-JFK 2026-06-23 07:05-15:13 |
 | 652 | JetBlue LAS-JFK 2026-06-23 23:59-08:04+1 |
 | 658 | United LAS-EWR 2026-06-23 07:00-15:00 |
-| 17 | Southwest LAS-LGA 2026-06-23 05:05-15:45 |
 
 ## Commands / results
 
@@ -46,17 +52,12 @@ Sample binding (stored name → served list name):
 | `node scripts/test_issue_832_daybyday_flight_placeholders.mjs` | PASS |
 | `node scripts/test_issue_832_events_flight_classification.mjs` | PASS |
 | `node scripts/test_gate_b_product_row_fields.mjs` | PASS |
-| `node scripts/test_served_trek_bundle.mjs` | PASS (rebaked `public/assets/index-BKun7ofk.js` sha256 `fc0619a1e732ad925491bfb90a14d67bf139d9e9563318516574b477934f8e0b` to match `renderServedTrekBundle`; fixes CI unit-tests) |
+| `node scripts/test_served_trek_bundle.mjs` | PASS |
+| `node scripts/test_keepsake_style2.mjs` | PASS (after assertion fix) |
 | `node scripts/check-no-comments.mjs` | PASS |
 | `node scripts/test_offline_manifest.mjs` | PASS |
-| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS (no new fails) |
-
-## This round (rebake only)
-
-| Path | Why |
-| --- | --- |
-| `public/assets/index-BKun7ofk.js` | `scripts/test_served_trek_bundle.mjs` asserted `rendered !== committed` on head `7e486045`; `node scripts/rebake_served_trek_bundle.mjs` synced artifact to patcher output. |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS |
 
 ## Host publish
 
-Uncommitted diff: `public/assets/index-BKun7ofk.js` only (on top of `7e486045`). Host: commit → push `vkfill/832-20261106152812` → Gate B `events-*` + `flights-390` + `daybyday-*` on published head (not self-certified here).
+Uncommitted diff: `scripts/test_keepsake_style2.mjs` only (on top of `d2200cfc`). Host: commit → push `vkfill/832-20261106152812` → CI + Gate B `events-*` + `flights-390` + `daybyday-*` on published head (not self-certified here).
