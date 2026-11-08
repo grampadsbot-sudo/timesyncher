@@ -348,8 +348,7 @@ function pushFlightRows(entries, trip, day, dayId) {
   const pushFlight = (place) => {
     const override = overrideFor(trip, place);
     const id = String(place.id);
-    const onTimeline = override.timeline !== false;
-    if (seen.has(id) || !onTimeline || tabCategoryKey(place, trip) !== 'flight') return;
+    if (seen.has(id) || override.timeline !== true || tabCategoryKey(place, trip) !== 'flight') return;
     seen.add(id);
     const { depart, arrive } = flightSchedule(place, trip);
     entries.push({

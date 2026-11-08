@@ -1,5 +1,10 @@
 import { flightFieldsFromBlob } from './place-detail-extract.mjs';
-import { isPipelineFlightStubSummary, stripPipelineFlightStubPrefix } from './flight-list-row-summary.mjs';
+import {
+  isPipelineFlightStubSummary,
+  pickFlightListRowSummaryText,
+  stripPipelineFlightStubPrefix,
+} from './flight-list-row-summary.mjs';
+import { isGenericDescription } from './list-row-generic-description.mjs';
 import { stripFlightOptionTitlePrefix } from './thing-title-normalize.mjs';
 
 function text(value) {
@@ -55,6 +60,21 @@ export function applyFlightThingFields(place, override, source) {
   copyIfBlank(override, 'departureTime', source?.departureTime, source?.departTime, flightFields.departureTime);
   copyIfBlank(override, 'arrivalTime', source?.arrivalTime, source?.arriveTime, flightFields.arrivalTime);
   copyIfBlank(override, 'duration', source?.duration, flightFields.duration);
+  const placeDesc = firstPresent(place.description);
+  const overrideDesc = firstPresent(override.description, source?.description);
+  const storedDesc = firstPresent(overrideDesc, placeDesc);
+  if (isGenericDescription(storedDesc) || isPipelineFlightStubSummary(storedDesc)) {
+    if (placeDesc && (isGenericDescription(placeDesc) || isPipelineFlightStubSummary(placeDesc))) {
+      place.description = '';
+      const listLine = pickFlightListRowSummaryText(
+        firstPresent(override.summary, source?.summary, override.longDetails, source?.longDetails),
+      );
+      if (listLine) place.description = listLine;
+    }
+    if (overrideDesc && (isGenericDescription(overrideDesc) || isPipelineFlightStubSummary(overrideDesc))) {
+      delete override.description;
+    }
+  }
 }
 
 export function mergeFlightThingOverrideAfterCcab(place, override, source) {

@@ -4,8 +4,10 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import { applyLiveAppListRowFields } from '../src/vacation/shared-trip-live-app-fields.mjs';
+import { prepareFixtureReplaySharedTrip } from '../src/vacation/shared-trip-fixture-replay.mjs';
 import { stripFlightOptionPrefix } from '../src/vacation/shared-trip-flight-merge.mjs';
 import { itineraryLineText } from '../src/vacation/itinerary-line.mjs';
+import { rowSummary } from '../apps/vacation-client/src/lib/listTabModel.mjs';
 
 const bundlePath = fileURLToPath(new URL('../public/assets/index-BKun7ofk.js', import.meta.url));
 const bundle = readFileSync(bundlePath, 'utf8');
@@ -49,5 +51,13 @@ assert.equal(
 );
 assert.ok(!String(ov.summary || '').includes('Documented'), 'list pipeline stub prefix must be stripped from summary');
 assert.ok(!String(ov.longDetails || '').includes('Documented'), 'list pipeline stub prefix must be stripped from longDetails');
+
+const gateBFixturePath = '/home/ubishere9995/tsv-dispatch/fixture-nyc/nyc-shared.json';
+const gateBBytes = readFileSync(gateBFixturePath);
+const { served: gateBTrip } = prepareFixtureReplaySharedTrip(gateBBytes);
+const jetblueRow = gateBTrip.places.find((place) => place.id === 15);
+assert.ok(jetblueRow, 'Gate B fixture place 15 must exist');
+assert.doesNotMatch(String(jetblueRow.name), /^Flight option:/i, 'replay must strip authorized Flight option: prefix from stored flight name');
+assert.equal(rowSummary(jetblueRow, gateBTrip), '', 'pipeline Documented option stub must not render as flight list description');
 
 console.log('issue #832 day-by-day flight placeholder guards passed');
