@@ -26,6 +26,11 @@ assert.equal(
   '',
   'pipeline Documented … option stub must not surface as itinerary line',
 );
+assert.equal(
+  itineraryLineText({}),
+  '',
+  'missing itineraryNote must not fall back to assignment or override notes',
+);
 
 const day = { id: 1, day_number: 1, title: 'Day 1' };
 const unpickedOnAssignments = {

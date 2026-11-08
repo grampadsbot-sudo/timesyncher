@@ -80,7 +80,7 @@ for (const bag of [
 ]) {
   assert.equal(readLine(bag), itineraryLineText(bag));
 }
-assert.equal(readLine({ description: 'Never use this.' }, '  Assignment note.  '), '  Assignment note.  ');
-assert.equal(readLine({ notes: '  Override note.  ' }), '  Override note.  ');
+assert.equal(readLine({ description: 'Never use this.' }, '  Assignment note.  '), '');
+assert.equal(readLine({ notes: '  Override note.  ' }), '');
 assert.equal(readLine({ itineraryNote: 'Stored note.', notes: 'Override note.' }, 'Assignment note.'), 'Stored note.');
 assert.equal(readLine({ evidenceDossier: { fields: { itineraryNote: { value: 'Dossier note.' } } }, notes: 'Override note.' }, 'Assignment note.'), 'Dossier note.');

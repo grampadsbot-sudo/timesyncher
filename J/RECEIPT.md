@@ -1,35 +1,43 @@
 # #832 product repair — cursor-ubuntu HOST PUBLICATION ONLY
 
-- **Starting HEAD:** `26aeb1ef2f4c305ec0904e2912caee5a7e25df97` (PR base `vk` = `10c78071`)
-- **Branch:** `vkfill/832-20261106152812` / PR #836 (issue #832 in keep set)
+- **Starting HEAD:** `6f8313719af3fd75ba8304af067d6cbf384060b3` (PR #836 / `vkfill/832-20261106152812`)
 - **Status:** uncommitted source ready for host commit/publish (no git mutations this round)
 
-## Stub chrome / field binding (Gate B targets)
+## Root cause (Gate B day-by-day / flights chrome)
 
-- Restored flight live-app pipeline: `applyFlightThingFields` + `mergeFlightThingOverrideAfterCcab` so stored `itineraryNote` binds on overrides, `Flight option:` titles strip, and `Documented … option` stub text is stripped from list `summary`/`longDetails` without touching real notes (`src/vacation/shared-trip-live-app-fields.mjs`, `shared-trip-flight-merge.mjs`).
-- Added `src/vacation/thing-title-normalize.mjs`; `itinerary-line.mjs` + rebaked `ITINERARY_LINE_BUNDLE` reject pipeline-documented stubs as itinerary lines while preserving real `itineraryNote` text.
-- Day-by-day: `isPickedTimelineFlight` in `dayTimelineModel.mjs` keeps ground-travel gaps correct when `timeline:false` flights sit between places; timeline-only flights still require explicit `timeline` pick.
-- Rebaked `public/assets/index-BKun7ofk.js` from upstream via `renderServedTrekBundle` (matches `scripts/test_served_trek_bundle.mjs`).
+Served Day-by-Day used `tsItinLine(item, assignmentNotes)` with an `ITINERARY_LINE_BUNDLE` that fell back to assignment notes / `override.notes` when `itineraryNote` was absent. That violated the #832 field-binding contract (visible itinerary line = exact stored `itineraryNote` or absent) and could surface pipeline stub text on rows while server-side `itineraryLineText()` tests passed.
 
-## Tests (local, starting HEAD `26aeb1ef`)
+## Changes
 
-| Test | Result |
-|------|--------|
-| `scripts/test_issue_832_daybyday_flight_placeholders.mjs` | PASS |
-| `scripts/test_issue_832_day_timeline_binding.mjs` | PASS |
-| `scripts/test_served_trek_bundle.mjs` | PASS |
-| `scripts/test_check_code_ratchet.mjs` | PASS (after wiring `stripFlightOptionTitlePrefix`) |
-| `scripts/run-offline-tests.mjs` | **FAIL** at `scripts/test_live_transcript_dialog_pdf.mjs:651` (`gbrain-cli-get_page` vs `bundled-get_page`) — unrelated to #832 diff; not weakened |
+| Path | Why |
+|------|-----|
+| `src/vacation/itinerary-line.mjs` | `ITINERARY_LINE_BUNDLE` no longer falls back to assignment/override notes; matches `itineraryLineText()`. |
+| `apps/vacation-client/src/lib/dayTimelineModel.mjs` | `itineraryNoteFor` binds only stored `itineraryNote` (via `itineraryLineText`). |
+| `public/assets/index-BKun7ofk.js` | Rebaked via `renderServedTrekBundle` so live UI picks up bundle patch. |
+| `scripts/test_itinerary_fresh_daybyday_bundle.mjs` | Expect no notes fallback in bundle reader. |
+| `scripts/test_issue_832_day_timeline_binding.mjs` | Assert missing `itineraryNote` stays absent. |
 
-CI reference (original red): GitHub job `128222870248` / run `42314244586` Offline unit tests (log download 401; local repro prefix in `/tmp/832-original-unit.log` truncated before failure line).
+Prior head `6f831371` already had portable #832 tests and flight merge without description backfill from `summary`/`longDetails`.
+
+## Tests (local, starting HEAD `6f831371`)
+
+| Command | Result |
+|---------|--------|
+| `node scripts/test_issue_832_daybyday_flight_placeholders.mjs` | PASS |
+| `node scripts/test_issue_832_day_timeline_binding.mjs` | PASS |
+| `node scripts/test_itinerary_fresh_daybyday_bundle.mjs` | PASS |
+| `node scripts/test_served_trek_bundle.mjs` | PASS |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS |
+| `node scripts/test_offline_manifest.mjs` | PASS |
+| `node scripts/check-no-comments.mjs` | FAIL (env: missing `typescript` for `comment-tools.mjs`) — not weakened |
+
+NYC fixture replay (`buildNycCraigKimDaybydayTrip()` + `buildDayTimeline`): 0 Flight option / Documented binding issues.
 
 ## Uncommitted product paths
 
-`apps/vacation-client/src/lib/dayTimelineModel.mjs`, `public/assets/index-BKun7ofk.js`, `scripts/offline-tests.txt`, `scripts/test_issue_832_day_timeline_binding.mjs`, `src/vacation/itinerary-line.mjs`, `src/vacation/shared-trip-flight-merge.mjs`, `src/vacation/shared-trip-live-app-fields.mjs`, `src/vacation/thing-title-normalize.mjs`
+`apps/vacation-client/src/lib/dayTimelineModel.mjs`, `public/assets/index-BKun7ofk.js`, `scripts/test_issue_832_day_timeline_binding.mjs`, `scripts/test_itinerary_fresh_daybyday_bundle.mjs`, `src/vacation/itinerary-line.mjs`
 
-## Remaining blockers
+## Host next
 
-- Host publish + Preview; `/api/version` must equal merge SHA before any live claim.
-- Gate B NYC shared screens (not self-certified here).
-- Full offline suite: fix or exclude-env `test_live_transcript_dialog_pdf.mjs` on host CI.
-- Vacation-client `npm test` shell layout hit preview timeout (`data-trip-view-root`) this round — re-run with `serve-preview.sh` on host if needed.
+- Commit/push once; wait for CI on new head; Gate B on published head (not self-certified here).
+- Staging `/api/version` must match merge SHA before live claims (`bot-admin/messages/time-syncher/decisions-log` protocol).
