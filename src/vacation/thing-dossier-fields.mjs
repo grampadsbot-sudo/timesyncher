@@ -235,8 +235,13 @@ export function dossierRepresentativeReviews(dossier = {}) {
 
 function dossierSavedReviewsPublishable(dossier = {}) {
   return dossierPagesVerified(dossier) && dossier.reviews?.length === 4
-    && dossier.reviews.every((review) => String(review?.text || '').trim()
-      && Number.isInteger(review.rating) && review.rating >= 1 && review.rating <= 5);
+    && dossier.reviews.every((review) => {
+      if (!String(review?.text || '').trim()) return false;
+      if (!Number.isInteger(review.rating) || review.rating < 1 || review.rating > 5) return false;
+      const claims = Array.isArray(review.claims) ? review.claims : [];
+      if (claims.length === 0) return true;
+      return claimsSupported(dossier, review);
+    });
 }
 
 function dossierReviewsWritable(dossier = {}) {
