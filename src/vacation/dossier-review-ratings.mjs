@@ -36,6 +36,20 @@ function citedVenueRating(dossier) {
   return { ...stars, average: average * 5 / scale, url: page.url };
 }
 
+function savedVenueStars(dossier) {
+  const cited = citedVenueRating(dossier);
+  if (cited) return cited;
+  if (!dossierPagesVerified(dossier)) return null;
+  if (dossier.ratingEvidence && dossier.ratingEvidence.supported !== false) return null;
+  const scale = Number(dossier.ratingEvidence?.scaleMax ?? dossier.ratingEvidence?.scale ?? 5);
+  const rating = Number(dossier.rating);
+  if (rating > 0 && rating <= 5) {
+    const stars = parseReviewStars(rating, scale);
+    if (stars) return { ...stars, average: rating };
+  }
+  return null;
+}
+
 function excerptStars(dossier, review) {
   const claims = review.claims || [];
   const refs = new Set(claims.flatMap((claim) => claim.pages || []));
@@ -64,7 +78,8 @@ function parseReviewStarsOrNumeric(value) {
 export function resolveDossierReviewRatings(dossier = {}) {
   const inputReviews = dossier.reviews;
   if (!Array.isArray(inputReviews) || !inputReviews.length) return dossier;
-  const venue = citedVenueRating(dossier);
+  const venue = savedVenueStars(dossier);
+  const citedVenue = citedVenueRating(dossier);
   const reviews = inputReviews.map((review) => {
     const stars = excerptStars(dossier, review) || parseReviewStarsOrNumeric(review.rating) || venue;
     if (stars) {
@@ -77,11 +92,11 @@ export function resolveDossierReviewRatings(dossier = {}) {
     return parsedFailed ? null : { ...review };
   });
   const rated = reviews.filter(Boolean);
-  const average = venue?.average ?? dossier.rating;
+  const average = (citedVenue || venue)?.average ?? dossier.rating;
   if (rated.length && average > 0 && rated.every((row) => Number.isFinite(row.rating))) {
     const mean = rated.reduce((sum, row) => sum + row.rating, 0) / rated.length;
     if (Math.abs(mean - average) > 0.5) {
-      if (venue) for (const row of rated) Object.assign(row, { rating: venue.rating, starsEvidence: venue.evidence });
+      if (citedVenue) for (const row of rated) Object.assign(row, { rating: citedVenue.rating, starsEvidence: citedVenue.evidence });
       else rated.length = 0;
     }
   }
