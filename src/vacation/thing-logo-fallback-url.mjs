@@ -40,6 +40,7 @@ const BUNDLE_LIST_LOGO_REPAIRS = new Map([
   ['https://www.cilantrorestaurant.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/cilantrorestaurant.com.ico'],
   ['https://www.hertz.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/hertz.com.ico'],
   ['https://www.carminesnyc.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/carminesnyc.com.ico'],
+  ['https://www.marriott.com/favicon.ico', 'https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.marriott.com&size=64'],
 ]);
 
 const EXPLICIT_LOGO_REPAIRS = new Map([
@@ -110,7 +111,7 @@ export function logoImgOnErrorInline() {
     'chip.dataset.tsLogoFailed=\'1\';',
     'img.style.display=\'none\';',
     'var fb=chip.querySelector(\'.tsv-logo-fallback\');',
-    'if(fb&&typeof tsCenterThingLogoFallbackEl===\'function\'){tsCenterThingLogoFallbackEl(fb);return;}',
+    'if(fb){fb.style.display=\'grid\';if(typeof tsCenterThingLogoFallbackEl===\'function\'){tsCenterThingLogoFallbackEl(fb);return;}}',
     'var emoji=chip.getAttribute(\'data-ts-fallback-emoji\')||\'\\uD83D\\uDCCD\';',
     'if(emoji===\'?\')emoji=\'\\uD83D\\uDCCD\';',
     'chip.innerHTML=\'<span class="thing-emoji" style="width:22px;height:22px;font-size:13px;display:inline-grid;place-items:center">\'+emoji+\'</span>\';',
@@ -124,5 +125,7 @@ export function logoImgOnLoadInline() {
     'if(!chip||chip.dataset.tsLogoFailed===\'1\')return;',
     'var box=img.getBoundingClientRect();',
     'if(box.width<4||box.height<4||img.naturalWidth<16||img.naturalHeight<16){' + fail + 'return;}',
+    'var fb=chip.querySelector(\'.tsv-logo-fallback\');',
+    'if(fb)fb.style.display=\'none\';',
   ].join('');
 }
