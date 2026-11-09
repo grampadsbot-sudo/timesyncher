@@ -81,11 +81,11 @@ function descendants(node) {
 for (const expanded of [false, true]) {
   const name = 'A long hotel name with enough words to wrap on a phone';
   const summary = 'A stored description that should remain readable in full at phone width.';
-  for (const description of [undefined, '']) {
-    const emptyRow = renderedRow({ id: 44, category: 'hotel', name, summary, description, price: '$1,234' }, expanded);
+  for (const emptySummary of [undefined, '']) {
+    const emptyRow = renderedRow({ id: 44, category: 'hotel', name, summary: emptySummary, description: summary, price: '$1,234' }, expanded);
     assert.equal(descendants(emptyRow).find((v) => v.props['data-list-summary']), undefined);
   }
-  for (const description of [summary, '  Stored\t description\n at 09:30  ', 'x'.repeat(4101)]) {
+  for (const description of [undefined, '', summary, '  Stored\t description\n at 09:30  ', 'x'.repeat(4101)]) {
     const row = renderedRow({ id: 44, category: 'hotel', name, summary, description, price: '$1,234' }, expanded);
     const nodes = descendants(row);
     const nameNode = nodes.find((v) => v.props['data-ts-list-row-name']);
@@ -94,7 +94,7 @@ for (const expanded of [false, true]) {
     assert.equal(nameNode.props.style.textOverflow, undefined);
     assert.equal(summaryNode.props.style.WebkitLineClamp, undefined);
     assert.equal(nodes.some((v) => v.props['data-ts-thing-review-line']), false);
-    assert.equal(summaryNode.props.children, description);
+    assert.equal(summaryNode.props.children, summary);
     assert.equal(summaryNode.props.style.whiteSpace, 'normal');
     assert.equal(nodes.find((v) => v.type === 'strong').props.children, name);
     const priceNode = nodes.find((v) => v.props.children === '$1,234');
@@ -171,12 +171,13 @@ console.log(`shared tab list summary tests passed (${flightSummaryCases.length} 
 for (const category of ['restaurant', 'store', 'event', 'flight', 'car']) {
   for (const expanded of [false, true]) {
     const name = 'The full stored Thing name with many words that must remain visible';
-    const row = renderedRow({ id: 45, name, category, description: '  Full\n stored description.  ', price: '$42' }, expanded);
+    const summary = '  Full\n stored description.  ';
+    const row = renderedRow({ id: 45, name, category, summary, description: 'DETAILS_SHOULD_NOT_SHOW', price: '$42' }, expanded);
     const nodes = descendants(row);
     const nameNode = nodes.find((node) => node.props['data-ts-list-row-name']);
     assert.equal(nameNode.props.style.whiteSpace, 'normal');
     assert.equal(nameNode.props.style.textOverflow, undefined);
     assert.ok(nodes.some((node) => node.type === 'strong' && node.props.children === name), category);
-    assert.equal(nodes.find((node) => node.props['data-list-summary']).props.children, '  Full\n stored description.  ');
+    assert.equal(nodes.find((node) => node.props['data-list-summary']).props.children, summary);
   }
 }

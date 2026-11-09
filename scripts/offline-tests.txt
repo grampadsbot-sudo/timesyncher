@@ -417,3 +417,5 @@ scripts/test_dossier_representative_reviews_written.mjs
 scripts/test_bot_seed_review_claim_remap_747.mjs
 scripts/test_tsv470_declared_icon_logo_repairs.mjs
 scripts/test_fast_origin_transfer_808.mjs
+scripts/test_detail_title_no_clip_nyc.mjs
+scripts/test_nyc_list_row_summary_not_details.mjs
