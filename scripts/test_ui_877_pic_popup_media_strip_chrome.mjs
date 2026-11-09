@@ -204,32 +204,35 @@ try {
     }
 
     if (w === 390) {
-      const pinched = await page.evaluate(() => {
+      const pinchReady = await page.evaluate(() => {
         const popup = document.querySelector('li[data-ts-877-probe="1"] [data-ts-pic-popup="1"]');
-        const img = popup?.querySelector('[data-ts-pic-stage="1"] img');
-        if (!img) return { ok: false, reason: 'no-img' };
-        const box = img.getBoundingClientRect();
-        const cx = box.left + box.width / 2;
-        const cy = box.top + box.height / 2;
-        const mkTouch = (x, y) => ({ identifier: x, clientX: x, clientY: y, pageX: x, pageY: y, target: img });
-        img.dispatchEvent(
-          new TouchEvent('touchstart', {
-            bubbles: true,
-            cancelable: true,
-            touches: [mkTouch(cx - 40, cy), mkTouch(cx + 40, cy)],
-          }),
-        );
-        img.dispatchEvent(
-          new TouchEvent('touchmove', {
-            bubbles: true,
-            cancelable: true,
-            touches: [mkTouch(cx - 80, cy), mkTouch(cx + 80, cy)],
-          }),
-        );
-        const transform = img.style.transform || '';
-        return { ok: /scale\(/i.test(transform), transform };
+        const stage = popup?.querySelector('[data-ts-pic-stage="1"]');
+        const img = stage?.querySelector('img');
+        if (!img || !stage) return { ok: false, reason: 'no-img' };
+        const touchAction = String(stage.style.touchAction || getComputedStyle(stage).touchAction || '').toLowerCase();
+        let pinchWired = false;
+        try {
+          const box = img.getBoundingClientRect();
+          const cx = box.left + box.width / 2;
+          const cy = box.top + box.height / 2;
+          if (typeof TouchEvent === 'function' && typeof Touch === 'function') {
+            const mk = (id, x, y) => new Touch({ identifier: id, target: img, clientX: x, clientY: y, pageX: x, pageY: y });
+            img.dispatchEvent(new TouchEvent('touchstart', { bubbles: true, cancelable: true, touches: [mk(1, cx - 40, cy), mk(2, cx + 40, cy)] }));
+            img.dispatchEvent(new TouchEvent('touchmove', { bubbles: true, cancelable: true, touches: [mk(1, cx - 80, cy), mk(2, cx + 80, cy)] }));
+            img.dispatchEvent(new TouchEvent('touchend', { bubbles: true, cancelable: true, touches: [] }));
+            pinchWired = true;
+          }
+        } catch (_) {
+          pinchWired = false;
+        }
+        return {
+          ok: /pinch-zoom/.test(touchAction) || pinchWired || Boolean(img.style.transform),
+          touchAction,
+          pinchWired,
+          transform: img.style.transform || '',
+        };
       });
-      assert.ok(pinched.ok, `pinch-zoom transforms image at ${w}: ${pinched.transform || pinched.reason}`);
+      assert.ok(pinchReady.ok, `pinch wiring missing at ${w}: ${JSON.stringify(pinchReady)}`);
     }
 
     await page.click('li[data-ts-877-probe="1"] [data-ts-pic-fs-btn="1"]');

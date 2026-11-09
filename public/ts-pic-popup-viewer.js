@@ -165,12 +165,12 @@
 
   function enhance(popup) {
     if (popup.dataset.tsPicViewerReady === '1') return;
-    popup.dataset.tsPicViewerReady = '1';
     if (!popup.dataset.tsPicBaseWidth) {
       popup.dataset.tsPicBaseWidth = popup.style.width || '248px';
     }
     const stage = mediaStage(popup);
     if (!stage) return;
+    popup.dataset.tsPicViewerReady = '1';
     stage.dataset.tsPicStage = '1';
     stage.style.touchAction = 'pan-x pan-y pinch-zoom';
     const img = stage.querySelector('img');
@@ -254,5 +254,12 @@
 
   injectCss();
   scan();
-  new MutationObserver(scan).observe(document.body, { childList: true, subtree: true });
+  const root = document.body || document.documentElement;
+  new MutationObserver(scan).observe(root, { childList: true, subtree: true });
+  if (!document.body) {
+    document.addEventListener("DOMContentLoaded", () => {
+      scan();
+      new MutationObserver(scan).observe(document.body, { childList: true, subtree: true });
+    }, { once: true });
+  }
 })();

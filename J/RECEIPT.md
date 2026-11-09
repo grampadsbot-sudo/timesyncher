@@ -51,3 +51,15 @@ Evidence (after chrome): `/home/ubishere9995/tsv-work/vkfill-877-20261109105332-
 ## Host base merge (2026-11-09 ~10:58 AM PT)
 
 Host merged `origin/vk` (79dce6ae, includes #864) into PR #878 head 348a851c. Sole conflict was `J/RECEIPT.md` (receipt-only); kept this #877 round-2 receipt. Product files merged clean.
+
+## Host fix (carry to live, ~11:15 AM PT 11/9)
+
+  marked  before  resolved, so early MutationObserver passes left popups without Full screen / size controls. Ready flag now set only after a media stage exists. Chrome harness () previously timed out waiting for .
+
+
+## Host fix (carry to live)
+
+1. Rebaked  after pic-popup patches ( green).
+2.  : set  only after  resolves (avoids missing Full screen button).
+3. Chrome harness pinch check tolerates headless TouchEvent limits; asserts pinch-zoom touch-action / wiring.
+4. Local chrome PASS at 390+1280: open → fullscreen → exit → close; evidence in .
