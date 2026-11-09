@@ -6,7 +6,8 @@ Detail access copy (live):
 - “Saved to itinerary”
 - “Saving…”
 - “Could not save — check your connection and try again”
-- “View-only — editing requires an approved email invite”
+
+Thing detail modal for view-only viewers shows no edit-status line after access check (trip header already omits view-only copy).
 
 Web editor: named email invite (owner-approved). Telegram collaborator edit: paid entitlement. Possession of the shared URL is view-only. Owner/web-editor cookie (`ts_vacation_web_access`) enables edit on `https://vacation-staging.timesyncher.com/shared/las-vegas-vacation-3/` after the one-time launch/accept link.
 
