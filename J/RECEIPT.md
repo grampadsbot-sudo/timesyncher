@@ -1,6 +1,6 @@
-# vkfill-870 lane receipt (cursor-ubuntu / composer-2.5)
+# PR #876 / #870 — composer mic (cursor-ubuntu / composer-2.5)
 
-**Outcome:** source-ready PATCH on disk (uncommitted). **Starting HEAD:** `b2b8bbc076fcae30da54aa43f878cd3bd9178900` (ref: branch `vkfill/870-20261109102834`).
+**Outcome:** source-ready PATCH after `origin/vk` base merge (uncommitted; host commit). **Start HEAD:** `cb6b4c6316202e99fdaec6051150573db913595b`. **Base merge:** host merged `origin/vk` @ `79dce6ae` (includes #861 chat itinerary undo from vk).
 
 ## Changes (#870)
 
@@ -13,37 +13,45 @@
 2. **`vacation-app.html`**
    - `#voiceElapsed` beside `#voiceButton` in `.voice-mic-wrap` + minimal CSS.
 
-3. **`scripts/test_issue_870_composer_mic.mjs` (new, untracked)**
-   - Offline harness: three recordings one session, single `getUserMedia`, timer tick, `NotAllowedError`, iPhone blocked copy, `no-speech`, unsupported API.
+3. **`scripts/test_issue_870_composer_mic.mjs`**
+   - Offline harness: fakes `getUserMedia` / `SpeechRecognition`; controlled fake `Date` + `setInterval` for timer; 20s hard timeout; three recordings one session, single `getUserMedia`, timer tick, `NotAllowedError`, iPhone blocked copy, `no-speech`, unsupported API.
 
-## Uncommitted files
+## Base merge (vk)
 
-```
-public/vacation-app-request.js
-vacation-app.html
-scripts/test_issue_870_composer_mic.mjs
-```
-
-**Host must add** `scripts/test_issue_870_composer_mic.mjs` to `scripts/offline-tests.txt` (coder brief bans editing that manifest).
+| File | Resolution |
+| --- | --- |
+| `src/vacation/chat-itinerary-edit.mjs` | Kept vk (#861 undo client shape + `nothing_to_undo`). |
+| `scripts/test_chat_itinerary_edit.mjs` | Kept vk expanded tests. |
+| `J/RECEIPT.md` | This file (#870 receipt + merge note). |
+| `public/assets/*.js` | vk versions on disk (no hand-merge). |
 
 ## Checks run (this lane)
 
 | Check | Result |
-|-------|--------|
-| `node scripts/test_issue_870_composer_mic.mjs` | PASS |
-| `node scripts/test_vacation_app_client_errors.mjs` | PASS |
-| `node scripts/test_vacation_app_shell.mjs` | **SKIP** — no `node_modules` / `@neondatabase/serverless` in worktree |
-| `node scripts/check-no-comments.mjs` | **SKIP** — missing `apps/vacation-client/node_modules/typescript` |
-| `node scripts/test_offline_manifest.mjs` | **SKIP** — pending offline-tests registration |
-| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS (0 fail) |
+| --- | --- |
+| `timeout 60 node scripts/test_issue_870_composer_mic.mjs` | PASS (~0.05s wall; fake timers) |
+| `node scripts/test_chat_itinerary_edit.mjs` | PASS |
+| `cd apps/vacation-client && timeout 900 npm test` | PASS |
+| `node scripts/check-no-comments.mjs` | PASS (1111 files) |
+| `node scripts/test_offline_manifest.mjs` | PASS (427 offline, 18 online) |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS (252 report, 0 fail) |
+| `scripts/offline-tests.txt` sweep (timeout 120 each) | **PARTIAL** — stopped at #113 `scripts/test_live_transcript_dialog_pdf.mjs`: expects `bundled-get_page`, got `gbrain-cli-get_page` (lane env; unrelated to #870) |
 
-## Host next
+## Uncommitted diff for host
 
-- Register test in `scripts/offline-tests.txt`; `npm ci` if needed; run pre-DONE gates.
-- Commit + push one PR into `vk` with `Closes #870`.
-- Self-verify: screenshots at 390 (+1280) for recording timer, second consecutive recording, permission error; Gate B / CI green.
-- **WebKit note (PR):** After a full page reload, iOS may require a fresh mic allow prompt; within one session we reuse one `getUserMedia` stream and rebuild `SpeechRecognition` each tap.
+```
+J/RECEIPT.md                          (conflict resolved)
+scripts/test_issue_870_composer_mic.mjs (timeout + fake timers)
+scripts/test_chat_itinerary_edit.mjs    (staged from vk)
+src/vacation/chat-itinerary-edit.mjs    (staged from vk)
+```
+
+**Host:** `git add J/RECEIPT.md scripts/test_issue_870_composer_mic.mjs`; complete merge commit; push `vkfill/870-20261109102834`; mark PR ready; CI + Gate B.
+
+## WebKit note (PR)
+
+After a full page reload, iOS may require a fresh mic allow prompt; within one session we reuse one `getUserMedia` stream and rebuild `SpeechRecognition` each tap.
 
 ## Not touched
 
-Baselines, Gate B config, `package.json`, TREK 8CQX, server STT, header mic (#865 scope).
+Baselines, Gate B config, `package.json`, `scripts/offline-tests.txt`, TREK 8CQX rebake (no bundle source conflict), server STT, header mic (#865 scope).

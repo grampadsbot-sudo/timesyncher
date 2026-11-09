@@ -2,6 +2,11 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 
+setTimeout(() => {
+  console.error('test_issue_870 timeout');
+  process.exit(1);
+}, 20_000).unref();
+
 class MockNode {
   constructor(id) {
     this.id = id;
@@ -41,7 +46,32 @@ class MockNode {
   focus() {}
 }
 
-function buildHarness({ userAgent = 'Mozilla/5.0 (Macintosh)', getUserMediaImpl }) {
+function installFakeTimers(sandbox) {
+  let clock = 1;
+  const intervals = new Map();
+  let nextId = 1;
+  sandbox.setInterval = (fn, delay) => {
+    const id = nextId++;
+    intervals.set(id, { fn, delay });
+    return id;
+  };
+  sandbox.clearInterval = (id) => intervals.delete(id);
+  sandbox.Date = { now: () => clock };
+  return {
+    advance(ms) {
+      clock += ms;
+      for (const { fn, delay } of intervals.values()) {
+        const ticks = Math.floor(ms / delay);
+        for (let i = 0; i < ticks; i += 1) fn();
+      }
+    },
+    clear() {
+      intervals.clear();
+    },
+  };
+}
+
+function buildHarness({ userAgent = 'Mozilla/5.0 (Macintosh)', getUserMediaImpl, fakeTimers = false }) {
   const nodes = {
     composerStatus: new MockNode('composerStatus'),
     voiceButton: new MockNode('voiceButton'),
@@ -84,8 +114,6 @@ function buildHarness({ userAgent = 'Mozilla/5.0 (Macintosh)', getUserMediaImpl 
     console,
     setTimeout,
     clearTimeout,
-    setInterval,
-    clearInterval,
     queueMicrotask,
     fetch: async () => ({ ok: true, json: async () => ({}) }),
     navigator: {
@@ -108,7 +136,19 @@ function buildHarness({ userAgent = 'Mozilla/5.0 (Macintosh)', getUserMediaImpl 
   };
   sandbox.window = sandbox;
   sandbox.globalThis = sandbox;
-  return { sandbox, nodes, recognitionLog, getGetUserMediaCalls: () => getUserMediaCalls };
+  const timers = fakeTimers ? installFakeTimers(sandbox) : null;
+  if (!fakeTimers) {
+    sandbox.setInterval = setInterval;
+    sandbox.clearInterval = clearInterval;
+    sandbox.Date = Date;
+  }
+  return {
+    sandbox,
+    nodes,
+    recognitionLog,
+    timers,
+    getGetUserMediaCalls: () => getUserMediaCalls,
+  };
 }
 
 async function loadBindVoice(sandbox) {
@@ -149,17 +189,18 @@ const retryCopy = "Didn't catch that — tap the mic and try again.";
 }
 
 {
-  const { sandbox, nodes, recognitionLog } = buildHarness({});
+  const { sandbox, nodes, recognitionLog, timers } = buildHarness({ fakeTimers: true });
   await loadBindVoice(sandbox);
   await nodes.voiceButton.click();
   await microtaskDrain();
   assert.equal(nodes.voiceElapsed.hidden, false);
   assert.equal(nodes.voiceElapsed.textContent, '0:00');
-  await new Promise((resolve) => setTimeout(resolve, 1100));
-  assert.match(nodes.voiceElapsed.textContent, /^0:0[12]$/);
+  timers.advance(1000);
+  assert.equal(nodes.voiceElapsed.textContent, '0:01');
   recognitionLog[0].end();
   await microtaskDrain();
   assert.equal(nodes.voiceElapsed.hidden, true);
+  timers.clear();
 }
 
 {

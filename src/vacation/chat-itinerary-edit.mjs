@@ -252,7 +252,10 @@ function parseIntentJson(text) {
 }
 
 export function offlineParseItineraryEditIntent(customerTurn) {
-  const text = clean(customerTurn, 8000);
+  const raw = typeof customerTurn === 'object' && customerTurn != null && customerTurn.customerTurn != null
+    ? customerTurn.customerTurn
+    : customerTurn;
+  const text = clean(raw, 8000);
   if (/\bundo\b/i.test(text)) return { op: 'undo', placeQuery: '', dayNumber: null, time: '' };
   const addBar = /\badd\b[^.\n]{0,80}\bbar\b/i.test(text) && /\bbefore\b/i.test(text);
   if (addBar) {
@@ -390,7 +393,9 @@ export async function runChatItineraryEditTurn({
   const payload = await fetchPayload(slug, { env, cookie: `${webAccessCookieName()}=${encodeURIComponent(webAccessToken)}` });
   if (intent.op === 'undo') {
     const latest = await loadLatestEdit(db, trip.id);
-    if (!latest) return editSkip('nothing_to_undo', 'There is no recent chat itinerary edit to undo.');
+    if (!latest) {
+      return editSkip('nothing_to_undo', 'There is no recent chat itinerary edit to undo.', { applied: false, reason: 'nothing_to_undo' });
+    }
     const before = latest.before_json && typeof latest.before_json === 'object' ? latest.before_json : {};
     const merged = deepCloneJson(payload.thingOverrides || {});
     for (const [key, value] of Object.entries(before)) {
@@ -399,7 +404,7 @@ export async function runChatItineraryEditTurn({
     }
     await putOverrides({ slug, overrides: merged, webAccessToken, env });
     dropSharedUpstreamCacheForSlug(clean(slug, 240));
-    return { applied: true, op: 'undo', client: { applied: true }, replyContext: itineraryEditReplyContext({ applied: true, op: 'undo' }) };
+    return { applied: true, op: 'undo', client: { applied: true, op: 'undo' }, replyContext: itineraryEditReplyContext({ applied: true, op: 'undo' }) };
   }
   let place = null;
   if (intent.placeQuery) {
