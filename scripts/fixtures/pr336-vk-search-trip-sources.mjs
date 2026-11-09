@@ -183,8 +183,18 @@ function lookupCcabRecord(ccabKey) {
   return null;
 }
 
+export function resolveGateBRowCcabKey({ id, name, ccabKey: rowCcabKey } = {}) {
+  const timelineKey = NYC_GATE_B_ROW_CCAB_KEYS[id];
+  const resolvedRowKey = rowCcabKey ? resolveNycCcabKey(rowCcabKey) : '';
+  const resolvedName = resolveNycCcabKey(name);
+  if (resolvedRowKey && resolvedRowKey === resolvedName) {
+    return resolvedRowKey;
+  }
+  return resolveNycCcabKey(timelineKey || rowCcabKey || name);
+}
+
 export function buildGateBSearchPlaceForRow({ id, name, cat, ccabKey: rowCcabKey }) {
-  const ccabKey = resolveNycCcabKey(NYC_GATE_B_ROW_CCAB_KEYS[id] || rowCcabKey || name);
+  const ccabKey = resolveGateBRowCcabKey({ id, name, ccabKey: rowCcabKey });
   let ccabRecord = lookupCcabRecord(ccabKey);
   if (!ccabRecord) {
     throw new Error(`missing ccab search source for gate-b row ${id} (${name})`);
@@ -262,7 +272,7 @@ export function assertGateBRowProvenance(rows = [], placesById = {}) {
   const failures = [];
   for (const row of rows) {
     const place = placesById[row.id];
-    const ccabKey = resolveNycCcabKey(NYC_GATE_B_ROW_CCAB_KEYS[row.id] || row.ccabKey || row.name);
+    const ccabKey = resolveGateBRowCcabKey(row);
     const alias = GATE_B_DISPLAY_TITLE_ALIASES[row.id];
     if (!place || !ccabKey) {
       failures.push(`row ${row.id}: missing place or ccab key`);
