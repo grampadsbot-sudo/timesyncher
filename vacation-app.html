@@ -479,26 +479,27 @@
       return { y: match[1], m: Number(match[2]), d: Number(match[3]), mon: months[Number(match[2]) - 1] };
     }
 
+    function tripDates(trip) {
+      const start = dateParts(trip?.startDate);
+      const end = dateParts(trip?.endDate);
+      if (!start || !end) return '';
+      if (start.y !== end.y) return `${start.mon} ${start.d} ${start.y}–${end.mon} ${end.d} ${end.y}`;
+      if (start.m !== end.m) return `${start.mon} ${start.d}–${end.mon} ${end.d} ${start.y}`;
+      return `${start.mon} ${start.d}–${end.d} ${start.y}`;
+    }
+
     function tripBadge(trip) {
       if (!trip || isPlaceholderTrip(trip)) return '';
       const place = (customerPlaceName(trip.title) || customerPlaceName(trip.destination)).split(',')[0].trim();
-      const start = dateParts(trip.startDate);
-      const end = dateParts(trip.endDate);
-      if (start && end) {
-        const when = start.y === end.y && start.m === end.m
-          ? `${start.mon} ${start.d}–${end.d} ${start.y}`
-          : start.y === end.y
-            ? `${start.mon} ${start.d}–${end.mon} ${end.d} ${start.y}`
-            : `${start.mon} ${start.d} ${start.y}–${end.mon} ${end.d} ${end.y}`;
-        return place ? `${place} ${when}` : when;
-      }
+      const when = tripDates(trip);
+      if (when) return place ? `${place} ${when}` : when;
       return place || '';
     }
 
     function vacationSelector(trips, trip) {
       if (trips.length < 2) return '';
       const label = (item) => (customerPlaceName(item.title) || customerPlaceName(item.destination)).split(',')[0].trim();
-      return `<div class="vacation-dropdown" id="vacationDropdown"><button class="trip-button" id="tripButton" type="button" aria-haspopup="listbox" aria-expanded="false"><span>${safe(tripBadge(trip))}</span>${icon.chevron}</button><div class="trip-list" role="listbox">${trips.map((item) => `<button class="trip-option ${item.id === trip?.id ? 'active' : ''}" type="button" data-trip-id="${safe(item.id)}" role="option" aria-selected="${item.id === trip?.id ? 'true' : 'false'}"><span>${item.id === trip?.id ? icon.check : ''}</span><span><b>${safe(label(item))}</b><small>${safe(item.status || 'Vacation')}</small></span></button>`).join('')}</div></div>`;
+      return `<div class="vacation-dropdown" id="vacationDropdown"><button class="trip-button" id="tripButton" type="button" aria-haspopup="listbox" aria-expanded="false"><span>${safe(tripBadge(trip))}</span>${icon.chevron}</button><div class="trip-list" role="listbox">${trips.map((item) => `<button class="trip-option ${item.id === trip?.id ? 'active' : ''}" type="button" data-trip-id="${safe(item.id)}" role="option" aria-selected="${item.id === trip?.id ? 'true' : 'false'}"><span>${item.id === trip?.id ? icon.check : ''}</span><span><b>${safe(label(item))}</b>${tripDates(item) ? `<small>${safe(tripDates(item))}</small>` : ''}</span></button>`).join('')}</div></div>`;
     }
 
     function realVacations() {
