@@ -5,6 +5,10 @@ const vacationAppRequest = await readFile(new URL('../public/vacation-app-reques
 const vacationApp = await readFile(new URL('../vacation-app.html', import.meta.url), 'utf8');
 const sharedAudio = await readFile(new URL('../public/ts-shared-audio-recorder.js', import.meta.url), 'utf8');
 const layoutMeasure = await readFile(new URL('./layout-app-measure.mjs', import.meta.url), 'utf8');
+const tripHeaderActions = await readFile(
+  new URL('../apps/vacation-client/src/components/TripHeaderActions.tsx', import.meta.url),
+  'utf8',
+);
 
 assert.doesNotMatch(vacationAppRequest, /Math\.min\(76,\s*Math\.max\(26/);
 assert.match(vacationAppRequest, /--chat-height/);
@@ -16,6 +20,8 @@ assert.doesNotMatch(vacationApp, /minmax\(128px,\s*var\(--site-height/);
 assert.match(vacationApp, /\.bubble[\s\S]*max-width:\s*100%/);
 assert.doesNotMatch(vacationApp, /\.bubble[\s\S]*min\(720px/);
 assert.doesNotMatch(sharedAudio, /dataset\.tsSharedAudio\s*=\s*'1'/);
+assert.doesNotMatch(tripHeaderActions, /SharedAudioButton/);
+assert.doesNotMatch(tripHeaderActions, /data-ts-shared-audio/);
 assert.match(layoutMeasure, /dividerDragSource/);
 assert.match(layoutMeasure, /sharedHeaderMicSource/);
 assert.match(layoutMeasure, /appBubbleWidthSource/);
