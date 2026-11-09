@@ -425,9 +425,16 @@ export async function prepareChatItineraryEditForQueueTurn({ db, trip, seat, tri
     const replyCustomerTurn = itineraryEditResult?.replyContext ? `${requestText}\n\n${itineraryEditResult.replyContext}` : requestText;
     return { replyCustomerTurn, itineraryEditResult };
   } catch (error) {
+    const message = String(error?.message || error);
+    const statusCode = error?.statusCode;
+    if (statusCode != null && statusCode !== '') {
+      console.error('chat_itinerary_edit_failed', message, `status=${statusCode}`);
+    } else {
+      console.error('chat_itinerary_edit_failed', message);
+    }
     return {
       replyCustomerTurn: requestText,
-      itineraryEditResult: editSkip(String(error?.message || error), '', { applied: false, reason: 'edit_failed' }),
+      itineraryEditResult: editSkip(message, '', { applied: false, reason: 'edit_failed' }),
     };
   }
 }
