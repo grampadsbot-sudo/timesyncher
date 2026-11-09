@@ -1,8 +1,4 @@
 #!/usr/bin/env node
-/**
- * Acceptance: every NYC Thing list-row text binds stored Summary verbatim,
- * not Details/longDetails/description. No display-time composing.
- */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';

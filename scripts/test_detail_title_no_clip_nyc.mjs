@@ -1,9 +1,4 @@
 #!/usr/bin/env node
-/**
- * Acceptance (Craig 8:00 PM PT): detail title never clipped.
- * @390: logo+title full width (wrap); gold stars on their own centered line below.
- * All NYC Thing names must fit without ellipsis/clip in the wrap box.
- */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
