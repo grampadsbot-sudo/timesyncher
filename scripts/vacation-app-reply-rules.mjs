@@ -7,6 +7,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { xaiPlaceSearchModelId } from '../src/vacation/provider-env.mjs';
 import { openRouterChatVisibleText, openRouterProviderSpread, openRouterReturnedModelMatches, openRouterTemperatureSpread, openRouterTierReasoningSpread, openRouterTierRequestMaxTokens } from './openrouter-tier-provider.mjs';
+export { openRouterChatVisibleText, openRouterTemperatureSpread } from './openrouter-tier-provider.mjs';
 export const REPLY_RULES_SLUG = 'bot-admin/skills/time-syncher/vacation-app-reply-rules';
 export const DIALOG_TEST_FINGERPRINT = 'TS-DIALOG-FINGERPRINT-20260924-bar2';
 export const SHARED_REPLY_PIPELINE = 'jev_precall_then_tiered_model';
