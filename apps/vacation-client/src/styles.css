@@ -666,13 +666,17 @@ body {
     overflow-wrap: anywhere;
   }
   .tsv-row-flight-main {
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    grid-template-rows: auto auto auto auto;
+    grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+    grid-template-rows: auto;
     align-items: start;
   }
   .tsv-row-flight-main > .tsv-logo-chip {
-    align-self: flex-start;
-    margin-top: 3px;
+    align-self: start;
+    margin-top: calc(0.5lh - 11px);
+  }
+  .tsv-row-flight-main .tsv-row-title-stack {
+    align-self: start;
+    min-width: 0;
   }
   .tsv-row-flight-main .tsv-row-name {
     white-space: normal;
@@ -681,8 +685,7 @@ body {
     overflow-wrap: anywhere;
   }
   .tsv-row-flight-time {
-    grid-column: 2;
-    justify-self: end;
+    align-self: center;
     overflow: visible;
     flex-shrink: 0;
     min-width: max-content;
