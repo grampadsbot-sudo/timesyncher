@@ -392,9 +392,31 @@
     cleanupRecording();
   });
 
+  const recordVoiceNoteLabel = 'Record voice note';
+
+  function wireSharedAudioButton(button) {
+    if (button.dataset.tsSharedAudioWired === '1') return;
+    button.dataset.tsSharedAudioWired = '1';
+    button.setAttribute('aria-label', recordVoiceNoteLabel);
+    button.title = recordVoiceNoteLabel;
+    setIcon(button, 'mic');
+    if (!canRecord()) {
+      button.disabled = true;
+      button.title = 'Microphone recording is unavailable in this browser';
+    } else {
+      button.addEventListener('click', beginRecording);
+    }
+  }
+
   function installButton() {
+    const buttons = document.querySelectorAll('[data-ts-shared-audio]');
+    if (!buttons.length) return false;
+    buttons.forEach(wireSharedAudioButton);
     return true;
   }
 
-  installButton();
+  const observer = new MutationObserver(() => {
+    if (installButton()) observer.disconnect();
+  });
+  if (!installButton()) observer.observe(document.documentElement, { childList: true, subtree: true });
 })();
