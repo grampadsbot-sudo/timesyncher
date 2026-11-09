@@ -15,6 +15,10 @@ import {
   openRouterTierRequestMaxTokens,
 } from './openrouter-tier-provider.mjs';
 import { tripIntakeExtractionChatRequest } from '../src/vacation/trip-intake-classify.mjs';
+import { useVacationDatabase } from '../src/vacation/db.mjs';
+import { loadSavedTripRecord } from '../src/vacation/live-app-saved-trip-record.mjs';
+import { draftingFacts, savedThingPlaceResults } from '../src/vacation/live-app-turn.mjs';
+import { chatQaProofErrors } from './chat_qa_live_probe.mjs';
 
 const HAIKU = 'anthropic/claude-haiku-5.5';
 const CANONICAL = 'anthropic/claude-haiku-5.5-20261007';
@@ -61,6 +65,70 @@ assert.equal(tripIntakeExtractionChatRequest({ message: 'Maui in March', model: 
 const calls = [];
 let returnedModel = (body) => body.model;
 const originalFetch = globalThis.fetch;
+const sharedPayload = {
+  places: [
+    { id: 12, name: 'Carbone', category: { name: 'Restaurant' }, place_time: '19:00' },
+    { id: 34, name: 'Zinc Bar', category: { name: 'Bar' } },
+  ],
+  days: [{ id: 2, day_number: 2, date: '2026-06-24' }, { id: 3, day_number: 3, date: '2026-06-25' }],
+  assignments: { 3: [{ place_id: 12 }], 2: [{ place: { id: 34 } }] },
+  thingOverrides: { 'place:12': { dayIds: [2], perDaySchedule: { 2: { startTime: '20:30' } } } },
+};
+let metadata = { sharedToken: 'bound-shared-trip', dialogParty: { primary: { name: 'Alex' } } };
+const reads = [];
+useVacationDatabase(async (parts) => {
+  const query = parts.join('?');
+  reads.push(query);
+  assert.match(query, /^select /);
+  if (query.includes('from trips')) return [{ destination: 'New York City', metadata }];
+  assert.match(query, /from trip_things/);
+  return [{ title: 'CARBONE', category: 'restaurant', metadata: { whenLabel: 'stale date', customerWhen: 'stale date', who: 'Alex', notes: ['Dinner'] } }];
+});
+const sharedEnv = { DATABASE_URL: 'offline', TIMESYNCHER_TREK_PUBLIC_BASE_URL: 'https://shared.example' };
+let sharedHttp = 200;
+let sharedBody = sharedPayload;
+const sharedCalls = [];
+globalThis.fetch = async (url, init) => {
+  sharedCalls.push({ url, init });
+  assert.equal(url, 'https://shared.example/api/shared/bound-shared-trip/');
+  assert.equal(init.method, 'GET');
+  assert.equal(init.body, undefined);
+  return { ok: sharedHttp === 200, status: sharedHttp, json: async () => sharedBody };
+};
+let groundedContext;
+try {
+  const record = await loadSavedTripRecord({ trip_id: 'trip-copy' }, sharedEnv);
+  assert.deepEqual(record.things.map((thing) => thing.title), ['Carbone', 'Zinc Bar']);
+  assert.equal(record.things[0].whenLabel, '2026-06-24 20:30');
+  assert.equal(record.things[1].whenLabel, '2026-06-24');
+  assert.equal(record.things[0].category, 'restaurant');
+  assert.equal(record.things[0].customerWhen, '');
+  assert.equal(record.things[0].who, 'Alex');
+  assert.deepEqual(record.things[0].notes, ['Dinner']);
+  assert.deepEqual(savedThingPlaceResults(record).map((place) => place.name), ['Carbone', 'Zinc Bar']);
+  groundedContext = draftingFacts([], '', record);
+  assert.match(groundedContext.itinerary.join('; '), /Carbone: 2026-06-24 20:30/);
+  assert.match(groundedContext.itinerary.join('; '), /Zinc Bar/);
+  assert.ok(reads.length > 0);
+  sharedHttp = 503;
+  assert.equal(await loadSavedTripRecord({ trip_id: 'trip-copy' }, sharedEnv), null);
+  sharedHttp = 200;
+  sharedBody = {};
+  assert.equal(await loadSavedTripRecord({ trip_id: 'trip-copy' }, sharedEnv), null);
+  sharedBody = sharedPayload;
+  sharedPayload.thingOverrides['place:34'] = { timeline: false };
+  assert.equal((await loadSavedTripRecord({ trip_id: 'trip-copy' }, sharedEnv)).things[1].whenLabel, '');
+  const before = sharedCalls.length;
+  metadata = { publicSlug: 'intake-local-trip', intakeShare: true };
+  assert.equal((await loadSavedTripRecord({ trip_id: 'trip-local' }, sharedEnv)).things[0].title, 'CARBONE');
+  metadata = {};
+  await loadSavedTripRecord({ trip_id: 'trip-local' }, sharedEnv);
+  assert.equal(await loadSavedTripRecord({ trip_id: 'trip-local' }, {}), null);
+  assert.equal(sharedCalls.length, before);
+} finally {
+  useVacationDatabase(null);
+  globalThis.fetch = originalFetch;
+}
 globalThis.fetch = async (url, init = {}) => {
   const body = JSON.parse(init.body);
   calls.push(body);
@@ -94,7 +162,7 @@ try {
     4: { reasoning: { effort: 'high' }, maxTokens: 6144 },
   };
   for (const tier of [1, 2, 3, 4]) {
-    const reply = await ask({ jev: { jevRan: true, modelTier: tier } });
+    const reply = await ask({ jev: { jevRan: true, modelTier: tier }, tripContext: groundedContext });
     assert.equal(reply.called, true, reply.reason);
     assert.equal(reply.maxTokens, 900);
     assert.equal(reply.responseModel, HAIKU);
@@ -102,6 +170,9 @@ try {
     assert.equal(calls[0].max_tokens, expected[tier].maxTokens);
     assert.deepEqual(calls[0].reasoning, expected[tier].reasoning);
     assert.equal('temperature' in calls[0], false);
+    const prompt = JSON.parse(calls[0].messages.find((message) => message.role === 'user').content);
+    assert.ok(prompt.trip_context.itinerary.some((line) => line.includes('Carbone')));
+    assert.ok(prompt.trip_context.itinerary.some((line) => line.includes('Zinc Bar')));
   }
 
   const interim = await ask({ jev: { jevRan: true, modelTier: 3 }, forceModel: INTERIM_MODEL, tier1CompactReasoning: true });
@@ -154,5 +225,30 @@ try {
 } finally {
   globalThis.fetch = originalFetch;
 }
+
+const validProof = {
+  buildSha: 'head', finalBuildSha: 'head', expectedHead: 'head',
+  protectedBefore: 'hash', protectedAfter: 'hash', expectedProtectedHash: 'hash',
+  placeNames: ['Carbone', 'Zinc Bar'],
+  turns: [1, 2, 3, 4].map((tier) => ({
+    httpStatus: 200, ok: true, modelTier: tier, jevRan: true, jevBeforeModel: true,
+    responseModel: HAIKU, reply: 'Carbone is on your saved itinerary.', replyMs: 1200, generationMs: 1000,
+  })),
+};
+assert.deepEqual(chatQaProofErrors(validProof), []);
+for (const [field, value, expected] of [
+  ['reply', '', 'empty_reply'], ['reply', 'Here is a generic day plan.', 'not_trip_grounded'],
+  ['modelTier', 2, 'jev_tier_mismatch'], ['responseModel', 'vendor/other', 'model_mismatch'],
+  ['replyMs', 70, 'generation_timing_missing_or_short'], ['generationMs', null, 'generation_timing_missing_or_short'],
+  ['httpStatus', 500, 'http_or_app_failure'], ['ok', false, 'http_or_app_failure'],
+]) {
+  const proof = structuredClone(validProof);
+  proof.turns[2][field] = value;
+  assert.ok(chatQaProofErrors(proof).includes(`T3:${expected}`));
+}
+assert.ok(chatQaProofErrors({ ...validProof, turns: validProof.turns.slice(0, 3) }).includes('four_turns_required'));
+assert.ok(chatQaProofErrors({ ...validProof, protectedAfter: 'changed' }).includes('protected_trip_changed'));
+assert.ok(chatQaProofErrors({ ...validProof, expectedProtectedHash: 'other' }).includes('protected_hash_mismatch'));
+assert.ok(chatQaProofErrors({ ...validProof, finalBuildSha: 'other' }).includes('staging_head_mismatch'));
 
 console.log('chat tiers haiku 5.5: ok');
