@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { offlineParseItineraryEditIntent, resolvePlaceByQuery, runChatItineraryEditTurn } from '../src/vacation/chat-itinerary-edit.mjs';
 import { buildDayTimeline } from '../apps/vacation-client/src/lib/dayTimelineModel.mjs';
@@ -51,11 +52,15 @@ async function main() {
     if (!res.ok) throw new Error(`put_failed_${res.status}`);
   };
   process.env.CHAT_ITINERARY_EDIT_OFFLINE_PARSE = '1';
-  const cfgPath = path.resolve('config/chat-itinerary-edit-trips.json');
-  const cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+  const { default: cfg } = await import('../config/chat-itinerary-edit-trips.mjs');
   if (!cfg.allowlist.includes(slug)) {
-    cfg.allowlist = [...cfg.allowlist, slug];
-    fs.writeFileSync(cfgPath, `${JSON.stringify(cfg, null, 2)}\n`);
+    const merged = {
+      allowlist: [...cfg.allowlist, slug],
+      demo_locked: [...(cfg.demo_locked || [])],
+    };
+    const tmpPath = path.join(os.tmpdir(), `chat-itinerary-edit-trips-${process.pid}.json`);
+    fs.writeFileSync(tmpPath, `${JSON.stringify(merged, null, 2)}\n`);
+    process.env.CHAT_ITINERARY_EDIT_TRIPS_CONFIG = tmpPath;
   }
   const turn1 = await runChatItineraryEditTurn({
     db,

@@ -143,9 +143,10 @@ const noAccess = await runChatItineraryEditTurn({
 assert.equal(noAccess.applied, false);
 assert.equal(noAccess.reason, 'web_edit_access_required');
 
-const configText = fs.readFileSync(new URL('../config/chat-itinerary-edit-trips.json', import.meta.url), 'utf8');
-assert.match(configText, /demo_locked/);
-assert.doesNotMatch(configText, /8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y.*allowlist/);
+const { default: tripsConfig } = await import('../config/chat-itinerary-edit-trips.mjs');
+assert.ok(Array.isArray(tripsConfig.demo_locked));
+assert.ok(tripsConfig.demo_locked.includes('8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y'));
+assert.ok(!tripsConfig.allowlist.includes('8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y'));
 
 const queueSource = fs.readFileSync(new URL('../routes/vacation-app-chat-queue.mjs', import.meta.url), 'utf8');
 assert.match(queueSource, /prepareChatItineraryEditForQueueTurn/);
