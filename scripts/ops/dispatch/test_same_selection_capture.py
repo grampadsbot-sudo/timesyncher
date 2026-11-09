@@ -31,6 +31,30 @@ from same_selection_capture_lib import (
 ROOT = HERE.parents[2]
 CAPTURE = ROOT / 'scripts/ops/capture'
 MOCK_BASE_RENDER_HEAD = '2b6d8df000000000000000000000000000000000'
+_ISOLATED_GIT = tempfile.TemporaryDirectory(prefix='same-selection-capture-')
+_ISOLATED_ENV_KEYS = ('TSV_CAPTURE_ANCHOR_WORKTREE', 'TSV_CAPTURE_PRODUCER_ROOT_CACHE')
+_SAVED_ENV = {}
+
+
+def setUpModule():
+    anchor = Path(_ISOLATED_GIT.name) / 'anchor'
+    subprocess.run(
+        ['git', 'clone', '--quiet', '--shared', '--no-checkout', str(ROOT), str(anchor)],
+        check=True,
+    )
+    for key in _ISOLATED_ENV_KEYS:
+        _SAVED_ENV[key] = os.environ.get(key)
+    os.environ['TSV_CAPTURE_ANCHOR_WORKTREE'] = str(anchor)
+    os.environ['TSV_CAPTURE_PRODUCER_ROOT_CACHE'] = str(Path(_ISOLATED_GIT.name) / 'producer-roots')
+
+
+def tearDownModule():
+    for key, value in _SAVED_ENV.items():
+        if value is None:
+            os.environ.pop(key, None)
+        else:
+            os.environ[key] = value
+    _ISOLATED_GIT.cleanup()
 
 
 def load_staging_capture_module(tmp_dispatch):
@@ -51,7 +75,7 @@ def load_staging_capture_module(tmp_dispatch):
         'subprocess': subprocess,
         'CAPTURE_STAGING': os.path.join(tmp_dispatch, 'capture-staging.sh'),
         'HOME': os.environ.get('HOME', '/tmp'),
-        'PR_SRC': str(ROOT),
+        'PR_SRC': os.environ['TSV_CAPTURE_ANCHOR_WORKTREE'],
         'STAGING_ORIGIN': 'https://vacation-staging.timesyncher.com',
         'CaptureReplayError': CaptureReplayError,
         'capture_subprocess_env': capture_subprocess_env,

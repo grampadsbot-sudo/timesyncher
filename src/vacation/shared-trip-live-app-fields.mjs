@@ -383,6 +383,15 @@ export function applyLiveAppListRowFields(shared = {}) {
     Object.assign(override, mergedCcab);
     if (!Object.prototype.hasOwnProperty.call(mergedCcab, 'longDetails')) delete override.longDetails;
     if (!Object.prototype.hasOwnProperty.call(mergedCcab, 'details')) delete override.details;
+    const keepPriceOnPlaceOnlyAfterCcab = provenanceBlocksSourcedPrice(override, place);
+    if (
+      override.price != null
+      && override.price !== ''
+      && (place.price == null || place.price === '')
+      && !keepPriceOnPlaceOnlyAfterCcab
+    ) {
+      place.price = override.price;
+    }
 
     if (category === 'flight') {
       mergeFlightThingOverrideAfterCcab(place, override, source);

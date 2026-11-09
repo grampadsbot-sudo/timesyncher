@@ -16,6 +16,11 @@ const replayProducerHead = (process.env.TSV_SANCTIONED_REPLAY_PRODUCER_HEAD || '
   .toLowerCase();
 assert.match(replayProducerHead, /^[0-9a-f]{40}$/, 'TSV_SANCTIONED_REPLAY_PRODUCER_HEAD must be a full git sha');
 
+const isolatedGit = fs.mkdtempSync(path.join(os.tmpdir(), 'capture-replay-harness-'));
+const isolatedAnchor = path.join(isolatedGit, 'anchor');
+execFileSync('git', ['clone', '--quiet', '--shared', '--no-checkout', repo, isolatedAnchor]);
+process.on('exit', () => fs.rmSync(isolatedGit, { recursive: true, force: true }));
+
 function narrativeWordCount(value) {
   return String(value || '').trim().split(/\s+/).filter(Boolean).length;
 }
@@ -49,9 +54,12 @@ import json, os, sys
 sys.path.insert(0, os.path.join(${JSON.stringify(repo)}, 'scripts', 'ops', 'dispatch'))
 from capture_replay_binding import capture_replay_env_for_pair, pair_from_fixture
 pair = pair_from_fixture(${JSON.stringify(renderHead)}, ${JSON.stringify(sha)}, ${JSON.stringify(fixturePath)}, ${JSON.stringify(fixtureDigest)})
-print(json.dumps(capture_replay_env_for_pair(pair, ${JSON.stringify(repo)})))
+print(json.dumps(capture_replay_env_for_pair(pair, ${JSON.stringify(isolatedAnchor)})))
 `;
-  const out = execFileSync('python3', ['-c', py], { encoding: 'utf8' }).trim();
+  const out = execFileSync('python3', ['-c', py], {
+    encoding: 'utf8',
+    env: { ...process.env, TSV_CAPTURE_PRODUCER_ROOT_CACHE: path.join(isolatedGit, 'producer-roots') },
+  }).trim();
   return JSON.parse(out);
 }
 
