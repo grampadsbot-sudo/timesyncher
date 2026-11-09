@@ -62,3 +62,23 @@ export function auditListRowPicPopupMediaStrip(row) {
     photoSrc,
   };
 }
+
+export function auditPicViewerGlobalClean(root) {
+  const doc = root && root.querySelectorAll ? root : null;
+  const scope = doc || (typeof document !== 'undefined' ? document : null);
+  if (!scope) {
+    return { ok: false, reason: 'missing-document', fsOverlay: 0, fsActivePopup: 0 };
+  }
+  const overlays = [...scope.querySelectorAll('[data-ts-pic-fs-overlay="1"]')].filter(isVisibleElement);
+  const fsPopups = [...scope.querySelectorAll('[data-ts-pic-popup][data-ts-pic-fs-active="1"]')].filter(
+    isVisibleElement,
+  );
+  const fsFlag = scope.defaultView?.__tsPicFsActive;
+  const ok = overlays.length === 0 && fsPopups.length === 0 && !fsFlag;
+  return {
+    ok,
+    reason: ok ? null : 'pic-viewer-fs-leftover',
+    fsOverlay: overlays.length,
+    fsActivePopup: fsPopups.length,
+  };
+}

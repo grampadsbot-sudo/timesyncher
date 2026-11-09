@@ -1,45 +1,49 @@
-# Issue #877 — Thing image close leaves logo chips (cursor-ubuntu)
+# Issue #877 round 2 — pic viewer fullscreen / resize / pinch (cursor-ubuntu)
 
-Start HEAD: `b2b8bbc076fcae30da54aa43f878cd3bd9178900` (live tip at brief write).
+Start HEAD: `b7777808e2a57b4ab7409f3bb90c6600b3665625` (PR #878).
 
-## Root cause
+Authority: Craig 2026-11-09 ~10:49 AM PT — fullscreen, resize, pinch on Thing pic popup; keep round-1 logo-chip fix.
 
-`public/ts-timeline-icon-patch.js` MutationObserver `apply()`→`mark()` treated `[data-ts-pic-thumb-wrap]` media slots (42px) as `isTinyIconSlot` (≤48px) when the Nr pic popup mounted. `mark()` rewrote photo/QR thumbs into `data-ts-logo-chip` / favicon `tiny-logo`. Closing the popup removed `[data-ts-pic-popup]` but left logo chips.
+## Round 1 (on tip)
 
-## Fix
+`public/ts-timeline-icon-patch.js` `isPicMediaNode()` — logo chips no longer appear after pic popup close. Offline + audit harness in `list-row-pic-popup-audit.mjs`.
+
+## Round 2 change
 
 | Path | Change |
 | --- | --- |
-| `public/ts-timeline-icon-patch.js` | Added `isPicMediaNode()`; `isTinyIconSlot`, `mark`, and `apply` skip `[data-ts-pic-thumb-wrap]`, `[data-ts-pic-popup]`, and `.print-media-qr`. |
-| `src/vacation/list-row-pic-popup-audit.mjs` | `auditListRowPicPopupMediaStrip()` — popup clean + no logo chips + photo `/ts-thing-media/` + QR present. |
-| `scripts/test_ui_877_pic_popup_media_strip.mjs` | Offline patch + audit unit checks. |
-| `scripts/test_ui_877_pic_popup_media_strip_chrome.mjs` | NYC 8CQX Statue card open→Escape at 390+1280; screenshots to `vkfill-877-job/`. |
-| `scripts/offline-tests.txt` | Registered both #877 tests. |
+| `public/ts-pic-popup-viewer.js` | **New.** Enhances `[data-ts-pic-popup]`: fullscreen (API + fixed overlay fallback), size toggle, SE resize handle, pinch-zoom on image. |
+| `shared-app.html` | Load `ts-pic-popup-viewer.js` on shared journey. |
+| `src/vacation/trek-nr-pic-popup-patches.mjs` | Escape closes popup only when not fullscreen (`window.__tsPicFsActive` / overlay / `document.fullscreenElement`). |
+| `src/vacation/list-row-pic-popup-audit.mjs` | `auditPicViewerGlobalClean()` for leftover fullscreen overlay. |
+| `scripts/test_ui_877_pic_popup_media_strip.mjs` | Assert viewer script + escape patch + audits. |
+| `scripts/test_ui_877_pic_popup_media_strip_chrome.mjs` | Open → resize/pinch → fullscreen → exit → Escape → strip audit at 390+1280; serves patched bundle + viewer; evidence under `vkfill-877-20261109105332-job/`. |
 
-## Local proof (uncommitted, worktree `vkfill-877-20261109104314`)
+## Local proof (uncommitted, worktree `vkfill-878-20261109105332`)
 
 | Command | Result |
 | --- | --- |
 | `node scripts/test_ui_877_pic_popup_media_strip.mjs` | PASS |
-| `node scripts/test_ui_866_pic_popup_close.mjs` | PASS (regression) |
+| `node scripts/test_ui_866_pic_popup_close.mjs` | PASS |
 | `node scripts/test_offline_manifest.mjs` | PASS (428 offline) |
-| `node scripts/test_ui_877_pic_popup_media_strip_chrome.mjs` | **BLOCKED** — worktree has no `node_modules` (`@neondatabase/serverless` via `shared-trip-served-page.mjs`; same as #866 chrome harness) |
-| `node scripts/check-no-comments.mjs` | **BLOCKED** — missing `apps/vacation-client/node_modules/typescript` |
-| `BASE=vk node scripts/check-code-ratchet.mjs` | Not run (blocked on above) |
+| `node scripts/test_ui_877_pic_popup_media_strip_chrome.mjs` | **BLOCKED** — worktree has no `node_modules` (`@neondatabase/serverless` via `shared-trip-served-page.mjs`) |
+| `node scripts/check-no-comments.mjs` | Not run (missing client TS dep without `npm ci`) |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | Not run |
 
-Host: `npm ci` (or lane bootstrap), then chrome test + pre-DONE gates, then commit → push once → PR `Closes #877`.
+Host: `npm ci`, chrome test + pre-DONE gates, commit → push once → PR #878.
 
 ## Gate B / screen_probe
 
-Permanent audit lives in-repo (`auditListRowPicPopupMediaStrip` + `scripts/test_ui_877_pic_popup_media_strip_chrome.mjs`). Lane rules forbid editing `~/tsv-dispatch/screen_probe.mjs`; host may wire that script or CI to invoke the chrome test on NYC shared slug.
+Permanent harness: `scripts/test_ui_877_pic_popup_media_strip_chrome.mjs` (flow `open-fullscreen-exit-close`). Lane rules forbid editing `~/tsv-dispatch/screen_probe.mjs`; host wires CI/Gate B to invoke this script on NYC 8CQX shared slug.
 
 ## Uncommitted files (host publish)
 
-- `public/ts-timeline-icon-patch.js`
+- `public/ts-pic-popup-viewer.js`
+- `shared-app.html`
+- `src/vacation/trek-nr-pic-popup-patches.mjs`
 - `src/vacation/list-row-pic-popup-audit.mjs`
 - `scripts/test_ui_877_pic_popup_media_strip.mjs`
 - `scripts/test_ui_877_pic_popup_media_strip_chrome.mjs`
-- `scripts/offline-tests.txt`
 - `J/RECEIPT.md`
 
-Evidence dir (after chrome): `/home/ubishere9995/tsv-work/vkfill-877-job/877-statue-{before,open,after}-{390,1280}.png`
+Evidence (after chrome): `/home/ubishere9995/tsv-work/vkfill-877-20261109105332-job/877-statue-{before,open,fullscreen,after}-{390,1280}.png`
