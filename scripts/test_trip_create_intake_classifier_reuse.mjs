@@ -7,7 +7,7 @@ const intake = readFileSync(new URL('../src/vacation/vacation-app-queue-intake.m
 const turnTag = readFileSync(new URL('../src/vacation/vacation-app-turn-tag.mjs', import.meta.url), 'utf8');
 
 assert.match(itinerary, /created\?\.classification\?\.ok === true/, 'trip create should pass classifier output into the queue turn');
-assert.match(itinerary, /queueVacationAppTurn\(db, session, selected, body, intakePrefill\)/);
+assert.match(itinerary, /queueVacationAppTurn\(db, session, selected, body, intakePrefill(, req)?\)/);
 assert.match(itinerary, /resolveVacationAppQueueIntake/);
 assert.match(intake, /if \(intakePrefill\?\.classification\?\.ok === true\)/);
 assert.doesNotMatch(
