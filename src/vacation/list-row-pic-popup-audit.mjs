@@ -25,3 +25,40 @@ export function auditListRowPicPopup(row) {
   const ok = popupVisible === 0 && orphanImgs === 0;
   return { ok, reason: ok ? null : 'pic-popup-leftover', popups: popups.length, popupVisible, orphanImgs };
 }
+
+export function auditListRowPicPopupMediaStrip(row) {
+  const base = auditListRowPicPopup(row);
+  if (!row) {
+    return { ...base, ok: false, reason: 'missing-row', logoChips: 0, photoThingMedia: false, qrPresent: false };
+  }
+  const thumbWraps = [...row.querySelectorAll('[data-ts-pic-thumb-wrap]')];
+  const stripRoot = thumbWraps[0]?.parentElement || row;
+  const logoChips = [...stripRoot.querySelectorAll('[data-ts-logo-chip]')];
+  const photoImg = thumbWraps.flatMap((wrap) => [...wrap.querySelectorAll('img')]).find((img) => !img.classList.contains('print-media-qr'));
+  const photoSrc = photoImg?.getAttribute('src') || '';
+  const photoThingMedia = /\/ts-thing-media\//.test(photoSrc);
+  const qrPresent = Boolean(row.querySelector('img.print-media-qr, .print-media-qr'));
+  const faviconThumb = Boolean(photoImg?.classList.contains('tiny-logo') && !photoThingMedia);
+  const ok =
+    base.ok &&
+    logoChips.length === 0 &&
+    photoThingMedia &&
+    qrPresent &&
+    !faviconThumb;
+  let reason = base.reason;
+  if (base.ok) {
+    if (logoChips.length > 0) reason = 'pic-logo-chip-leftover';
+    else if (!photoThingMedia || faviconThumb) reason = 'pic-thumb-not-thing-media';
+    else if (!qrPresent) reason = 'pic-qr-missing';
+    else reason = null;
+  }
+  return {
+    ...base,
+    ok,
+    reason,
+    logoChips: logoChips.length,
+    photoThingMedia,
+    qrPresent,
+    photoSrc,
+  };
+}
