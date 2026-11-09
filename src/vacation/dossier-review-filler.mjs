@@ -1,4 +1,4 @@
-export const COMPOSED_REVIEW_FILLER_RE = /\s*Guests note this theme repeatedly across the saved review evidence for this place\.?/gi;
+const COMPOSED_REVIEW_FILLER_RE = /\s*Guests note this theme repeatedly across the saved review evidence for this place\.?/gi;
 export function stripComposedReviewFiller(text) {
   let body = String(text || '');
   if (!/saved review evidence|Guests note this theme repeatedly/i.test(body)) return body;
