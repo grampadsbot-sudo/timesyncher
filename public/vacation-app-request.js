@@ -1,3 +1,37 @@
+function reloadSiteIframeAfterItineraryEdit() {
+  const iframe = document.querySelector('.site-pane iframe');
+  if (!iframe?.src) return;
+  try {
+    const url = new URL(iframe.src, window.location.href);
+    url.searchParams.set('tsVacationEdit', String(Date.now()));
+    iframe.src = url.href;
+  } catch {
+    void 0;
+  }
+}
+
+function installVacationChatItineraryEditHook() {
+  if (window.__tsVacationItineraryEditHook) return;
+  window.__tsVacationItineraryEditHook = true;
+  const nativeFetch = window.fetch.bind(window);
+  window.fetch = async function vacationChatFetch(input, init) {
+    const response = await nativeFetch(input, init);
+    try {
+      const method = String(init?.method || (input instanceof Request ? input.method : 'GET')).toUpperCase();
+      const url = typeof input === 'string' ? input : input?.url || '';
+      if (method === 'POST' && url.includes('/api/vacation-itinerary')) {
+        const data = await response.clone().json();
+        if (data?.itineraryEdit?.applied === true) reloadSiteIframeAfterItineraryEdit();
+      }
+    } catch {
+      void 0;
+    }
+    return response;
+  };
+}
+
+installVacationChatItineraryEditHook();
+
 window.tsVacationAppRequest = {
   AppRequestError: class AppRequestError extends Error {
     constructor(message, { customerMessage = '', response = null } = {}) {

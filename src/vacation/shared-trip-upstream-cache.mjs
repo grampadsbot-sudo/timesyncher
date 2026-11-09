@@ -26,3 +26,10 @@ export function writeCachedUpstreamShared(key, value, ttlMs = DEFAULT_TTL_MS) {
 export function resetSharedUpstreamCacheForTests() {
   upstreamSharedCache.clear();
 }
+
+export function invalidateSharedUpstreamCacheForSlug(shareToken) {
+  const token = String(shareToken || '');
+  for (const key of [...upstreamSharedCache.keys()]) {
+    if (key === token || key.startsWith(`${token}?`)) upstreamSharedCache.delete(key);
+  }
+}

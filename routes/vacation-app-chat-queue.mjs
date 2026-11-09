@@ -18,6 +18,7 @@ import { loadOwnerReplyPlanForTurn } from '../src/vacation/reply-plan-entitlemen
 import { placeSearchClientError } from '../src/vacation/place-search-reply-facts.mjs';
 import { failedInTurnSearchTurn, replyStageMillis, turnStageTimings, withGateMs } from '../src/vacation/turn-stage-timings.mjs';
 import { persistVacationAppCustomerTurn } from '../src/vacation/vacation-app-queue-persist.mjs';
+import { prepareChatItineraryEditForQueueTurn } from '../src/vacation/chat-itinerary-edit.mjs';
 export async function queueVacationAppTurn(db, session, trip, body, hooks, intake = {}) {
   const env = process.env;
   const tripId = trip?.id ?? null;
@@ -274,6 +275,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     `;
   }
 
+  const { replyCustomerTurn, itineraryEditResult } = await prepareChatItineraryEditForQueueTurn({ db, trip, seat, tripId, requestText, turnId: turnRows[0]?.id || null, httpReq: intake?.httpReq || null, env });
   let produced;
   const replyStarted = Date.now();
   try {
@@ -295,7 +297,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
       });
     } else {
       produced = await produceLiveAppReply({
-        customerTurn: requestText,
+        customerTurn: replyCustomerTurn,
         session: { ...session, trip_id: tripId },
         priorTurns,
         tripTitle: trip?.title || '',
@@ -468,7 +470,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
   const citationBlocked = await blockReplyShipGate(produced.reply);
   if (citationBlocked) return citationBlocked;
 
-  return persistVacationAppOutboundReply({
+  const shipped = await persistVacationAppOutboundReply({
     db,
     transcriptOwnerId,
     tripId,
@@ -491,4 +493,8 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     publishIntakeShare: hooks.publishIntakeShare,
     vacationAppTripSummary: hooks.vacationAppTripSummary,
   });
+  if (itineraryEditResult?.client) {
+    return { ...shipped, itineraryEdit: itineraryEditResult.client };
+  }
+  return shipped;
 }
