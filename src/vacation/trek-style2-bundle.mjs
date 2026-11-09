@@ -23,7 +23,7 @@ import { patchDayByDayKeepsakeMap } from './trek-day-by-day-map-patches.mjs';
 import { patchTimelineItineraryNote } from './trek-timeline-itinerary-note-patch.mjs';
 import { patchListRowDescription } from './trek-list-row-description-patch.mjs';
 import { patchUi734Round1, patchUi734Round2, patchUi735SharedPdf } from './trek-ui-734-round1-patch.mjs';
-import { patchUi737 } from './trek-ui-737-patch.mjs'; import { patchUi754 } from './trek-ui-754-patch.mjs'; const SERVED_BUNDLE = new URL('../../public/assets/index-BKun7ofk.js', import.meta.url);
+import { patchUi737 } from './trek-ui-737-patch.mjs'; import { patchUi754 } from './trek-ui-754-patch.mjs'; import { patchVk890Rebrand } from './trek-vk-890-rebrand-patch.mjs'; const SERVED_BUNDLE = new URL('../../public/assets/index-BKun7ofk.js', import.meta.url);
 const ZU_STYLE2 = 'G==="keepsake-style-2"?zu()';
 const AE_STYLE2 = 'G==="keepsake-style-2"?Ae(!0)';
 
@@ -512,7 +512,7 @@ export function renderServedTrekBundle(raw) {
   const patched = patchThingLogoChipAlignment(dropServedTrekCallers(patchStyleTwoToConfigRenderer(stripped.source, { served: true })));
   const js = stripHotelBrandNameGuessing(stripServedQaCopy(rewriteAppConfigCallers(patched)));
   assertServedBundleClean(js);
-  const finalJs = patchUi754(patchUi737(patchUi735SharedPdf(patchTimelineItineraryNote(patchUi734Round2(patchUi734Round1(patchInlineListRowDescriptionOnThingHeader(patchSharedTripListWrapping(patchStarRatings(patchThingDetailCapture(js))))))))));
+  const finalJs = patchVk890Rebrand(patchUi754(patchUi737(patchUi735SharedPdf(patchTimelineItineraryNote(patchUi734Round2(patchUi734Round1(patchInlineListRowDescriptionOnThingHeader(patchSharedTripListWrapping(patchStarRatings(patchThingDetailCapture(js)))))))))));
   return patchListRowDescription(finalJs);
 }
 
@@ -584,7 +584,7 @@ export function assertStyleTwoPatchParses(source = AE_LAYOUT_PATCH) {
 
 export function assertPatchedStyleTwo(source = '') {
   assertStyleTwoPatchParses(AE_LAYOUT_PATCH);
-  const js = String(source || '');
+  const js = patchVk890Rebrand(String(source || ''));
   if (!js.includes(AE_STYLE2)) {
     throw new Error('Style two dispatch is not Ae().');
   }
@@ -862,8 +862,8 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes('data-last-content-page="1"') || !js.includes('data-last-page-logo="1"') || !js.includes('data-hourglass-between="1"')) {
     throw new Error('Logo must be bottom-centered on the last content page that has Things.');
   }
-  if (!js.includes('<span>TimeSyncher</span><img class="ts-logo"') || !js.includes('data-brand-lockup="timesyncher-hourglass-vacation"') || js.includes('<span>TimeSyncher Vacation</span>') || js.includes('[data-last-page-logo="1"]{display:flex!important;flex-direction:column')) {
-    throw new Error('Last-page brand must be TimeSyncher [hourglass] Vacation in a row, not hourglass stacked above text.');
+  if (!js.includes('data-brand-lockup="vacay-keepsake-book"') || !js.includes('vk-print-wordmark') || js.includes('<span>TimeSyncher</span><img class="ts-logo"') || js.includes('data-brand-lockup="timesyncher-hourglass-vacation"') || js.includes('[data-last-page-logo="1"]{display:flex!important;flex-direction:column')) {
+    throw new Error('Last-page brand must be Vacay Keepsake book lockup in a row.');
   }
   if (!js.includes('@top-center') || !js.includes('@bottom-center') || !js.includes('counter(page)') || !js.includes('counter(pages)')) {
     throw new Error('Print chrome must be vacation-name header + Page x of y footer.');
@@ -902,7 +902,7 @@ export function assertPatchedStyleTwo(source = '') {
     throw new Error('Chrome date header must be clipped via @page margin-top:0; content keeps 18mm padding.');
   }
   if (!js.includes('data-last-page-logo="1"') || !js.includes('data-logo-last-only="1"') || !js.includes('.print-brand,.pdf-final-logo') || js.includes('${tsPrintCss}${Wi}<h1>') || js.includes('data-print-ready="style2">${cr}<h1>')) {
-    throw new Error('TimeSyncher Vacation logo must be suppressed until last page, then bottom-centered.');
+    throw new Error('Vacay Keepsake logo must be suppressed until last page, then bottom-centered.');
   }
   if (!js.includes(MC_PATCH) && js.includes(MC_NEEDLE)) {
     throw new Error('Mc() still paginates 2+3 day cards; must be one 2-col packed flow.');

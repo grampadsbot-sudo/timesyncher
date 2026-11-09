@@ -46,25 +46,25 @@ export function purchaseLaunchUrl({ sessionToken = '', token = '', tripId = '', 
 export function purchaseEmail({ contact, sessionToken = '', token = '', tripId = '', sessionId = '', env = process.env }) {
   const name = cleanText(contact?.firstName || contact?.displayName || 'there', 80) || 'there';
   const launchUrl = purchaseLaunchUrl({ sessionToken, token, tripId, sessionId, env });
-  const subject = 'Your TimeSyncher Vacation purchase is confirmed';
+  const subject = 'Your Vacay Keepsake purchase is confirmed';
   const textBody = [
     `Hi ${name},`,
     '',
-    'Your TimeSyncher Vacation purchase is confirmed.',
+    'Your Vacay Keepsake purchase is confirmed.',
     '',
-    'Click the link in this email to open TimeSyncher Vacation.',
+    'Click the link in this email to open Vacay Keepsake.',
     '',
-    `Open TimeSyncher Vacation: ${launchUrl}`,
+    `Open Vacay Keepsake: ${launchUrl}`,
     '',
     `Questions: ${supportEmail(env)}`,
   ].join('\n');
   const htmlBody = `<!doctype html>
 <html><body style="margin:0;background:#050505;color:#fffaf0;font-family:Arial,sans-serif">
   <div style="max-width:640px;margin:0 auto;padding:28px">
-    <h1 style="color:#f5d37b">Your TimeSyncher Vacation purchase is confirmed</h1>
+    <h1 style="color:#f5d37b">Your Vacay Keepsake purchase is confirmed</h1>
     <p>Hi ${name},</p>
-    <p>Your TimeSyncher Vacation purchase is confirmed. Click the link in this email to open TimeSyncher Vacation.</p>
-    <p><a href="${launchUrl}" style="display:inline-block;background:#f5d37b;color:#080604;padding:13px 18px;border-radius:999px;font-weight:800;text-decoration:none">Open TimeSyncher Vacation</a></p>
+    <p>Your Vacay Keepsake purchase is confirmed. Click the link in this email to open Vacay Keepsake.</p>
+    <p><a href="${launchUrl}" style="display:inline-block;background:#f5d37b;color:#080604;padding:13px 18px;border-radius:999px;font-weight:800;text-decoration:none">Open Vacay Keepsake</a></p>
     <p><a href="${launchUrl}" style="color:#f5d37b;word-break:break-all">${launchUrl}</a></p>
     <p style="color:#cfc2a9">Questions: <a href="mailto:${supportEmail(env)}" style="color:#f5d37b;text-decoration:underline">${supportEmail(env)}</a></p>
   </div>
@@ -112,13 +112,13 @@ export function collaboratorInviteEmail({ contact, invite, token, acceptUrl = ''
   const hasTrip = Boolean(invite?.trip_id && tripTitle);
   const link = cleanText(acceptUrl, 600);
   const site = cleanText(publicUrl, 600);
-  const subject = hasTrip ? `${owner} invited you to edit ${tripTitle}` : `${owner} invited you to a TimeSyncher Vacation`;
+  const subject = hasTrip ? `${owner} invited you to edit ${tripTitle}` : `${owner} invited you to a Vacay Keepsake`;
   const inviteLead = hasTrip
-    ? `${owner} approved this email address to edit ${tripTitle} on the TimeSyncher Vacation website.`
-    : `${owner} approved this email address to join a TimeSyncher Vacation chat.`;
+    ? `${owner} approved this email address to edit ${tripTitle} on the Vacay Keepsake website.`
+    : `${owner} approved this email address to join a Vacay Keepsake chat.`;
   const htmlLead = hasTrip
-    ? `${owner} approved this email address to edit <strong>${tripTitle}</strong> on the TimeSyncher Vacation website.`
-    : `${owner} approved this email address to join a <strong>TimeSyncher Vacation</strong> chat.`;
+    ? `${owner} approved this email address to edit <strong>${tripTitle}</strong> on the Vacay Keepsake website.`
+    : `${owner} approved this email address to join a <strong>Vacay Keepsake</strong> chat.`;
   const htmlTitle = hasTrip ? `You can edit ${tripTitle}` : 'You can join this vacation chat';
   const termsStep = hasTrip
     ? 'Open the link below, review and accept the terms, then continue into the vacation chat and website.'
@@ -159,14 +159,14 @@ export function collaboratorInviteEmail({ contact, invite, token, acceptUrl = ''
 export function webEditorInviteEmail({ grant, token, env = process.env }) {
   const name = cleanText(grant?.display_name || grant?.email || 'there', 120) || 'there';
   const owner = cleanText(grant?.owner_display_name || grant?.owner_email || 'the vacation owner', 160);
-  const tripTitle = cleanText(grant?.trip_title || 'this TimeSyncher Vacation', 180);
+  const tripTitle = cleanText(grant?.trip_title || 'this Vacay Keepsake', 180);
   const acceptUrl = webAccessAcceptUrl(token, env);
   const publicUrl = cleanText(grant?.public_url || '', 500);
   const subject = `${owner} approved you to edit ${tripTitle}`;
   const textBody = [
     `Hi ${name},`,
     '',
-    `${owner} approved this email address to edit ${tripTitle} on the TimeSyncher Vacation website.`,
+    `${owner} approved this email address to edit ${tripTitle} on the Vacay Keepsake website.`,
     '',
     'Use this private magic link to verify this browser and enable website editing:',
     acceptUrl,
@@ -182,7 +182,7 @@ export function webEditorInviteEmail({ grant, token, env = process.env }) {
   <div style="max-width:640px;margin:0 auto;padding:28px">
     <h1 style="color:#f5d37b">You can edit ${tripTitle}</h1>
     <p>Hi ${name},</p>
-    <p>${owner} approved this email address to edit <strong>${tripTitle}</strong> on the TimeSyncher Vacation website.</p>
+    <p>${owner} approved this email address to edit <strong>${tripTitle}</strong> on the Vacay Keepsake website.</p>
     <p><a href="${acceptUrl}" style="display:inline-block;background:#f5d37b;color:#080604;padding:13px 18px;border-radius:999px;font-weight:800;text-decoration:none">Verify email and enable editing</a></p>
     ${publicUrl ? `<p>Vacation website: <a href="${publicUrl}" style="color:#f5d37b;text-decoration:underline">${publicUrl}</a></p>` : ''}
     <p style="color:#cfc2a9">Anyone with the shared vacation link can view it. Editing requires this owner-approved email verification.</p>

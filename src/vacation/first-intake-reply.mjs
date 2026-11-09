@@ -94,7 +94,7 @@ const FIRST_INTAKE_TONE = [
 ].join('\n');
 
 export const FIRST_INTAKE_VOICE_INSTRUCTION = [
-  'You are writing the first reply after the customer\'s intake in the TimeSyncher vacation app. Write it in your own words from the intake facts. Do not copy this instruction back.',
+  'You are writing the first reply after the customer\'s intake in the Vacay Keepsake vacation app. Write it in your own words from the intake facts. Do not copy this instruction back.',
   'Do all of the following in this one message, in order:',
   '1. Confirm the itinerary is being built. Reflect where, the dates, the end date, the number of nights, who is coming, and lodging, when those are in customer_said or the other intake facts. Leave out any of those that are absent. Do not invent a place, a date, a lodging, an activity, a weekday, or a name.',
   '2. When lodgingAsk is true in the intake facts, ask where they are staying in your own words when lodging is the first applicable gap in gaps.',
@@ -112,7 +112,7 @@ const COLLABORATOR_ON_FILE = 'When collaborators is present, those people alread
 const INVITE_CONTACT_ASK = 'When invite_contact is the first gap in gaps, ask for their name and email so you can invite them.';
 
 export const FIRST_INTAKE_GAP_INSTRUCTION = [
-  'You are writing the first reply after a short or vague intake in the TimeSyncher vacation app. Write it in your own words from the intake facts. Do not copy this instruction back.',
+  'You are writing the first reply after a short or vague intake in the Vacay Keepsake vacation app. Write it in your own words from the intake facts. Do not copy this instruction back.',
   'Start the trip draft anyway, as a short draft.',
   'Then nudge them to send a voice note.',
   'Do not offer to add collaborators. Do not pitch a plan.',
@@ -122,7 +122,7 @@ export const FIRST_INTAKE_GAP_INSTRUCTION = [
 ].join('\n');
 
 export const FIRST_INTAKE_QUESTION_INSTRUCTION = [
-  'You are writing the first reply in the TimeSyncher vacation app. The customer asked a direct question. Write it in your own words from the intake facts. Do not copy this instruction back.',
+  'You are writing the first reply in the Vacay Keepsake vacation app. The customer asked a direct question. Write it in your own words from the intake facts. Do not copy this instruction back.',
   'Answer the question first. When view_without_sign_in is present, use that fact for a question about viewing without signing in.',
   'Offer to add the person they mentioned. Do not add a collaborator who has no name or contact. Ask for their name and contact in that one question.',
   'Do not say they are already a collaborator or that they already have access. Do not invent party facts. Do not say it is just the two of you, or just you and him, unless customer_said says that.',
