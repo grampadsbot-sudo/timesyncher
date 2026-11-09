@@ -229,6 +229,127 @@ const configText = fs.readFileSync(new URL('../config/chat-itinerary-edit-trips.
 assert.match(configText, /demo_locked/);
 assert.doesNotMatch(configText, /8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y.*allowlist/);
 
+const demoSlug = '8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y';
+const copySlug = 'chat-edit-copy-a47f5a7f2150c5e887a81972';
+assert.ok(cfg.demoLocked.includes(demoSlug));
+assert.ok(!cfg.allowlist.includes(demoSlug));
+assert.ok(cfg.allowlist.includes(copySlug));
+assert.equal(shareSlugEditGuardDecision(demoSlug, { allowlist: [demoSlug], demoLocked: [] }).reason, 'demo_locked');
+
+const turns = [
+  ['set_time', 'move dinner at Carbone to 8:30 PM on Day 2'],
+  ['add_bar_before', 'add a bar before dinner at Carbone, on Day 2'],
+  ['undo', 'undo the last itinerary change'],
+];
+const authenticatedHeaders = { cookie: `${webAccessCookieName()}=mock-owner-session` };
+const slugFields = ['sharedToken', 'shareToken', 'publicSlug', 'source_token', 'slug'];
+const lockedTrips = slugFields.flatMap((field) => [
+  { id: 'trip-1', metadata: { [field]: demoSlug } },
+  { id: 'trip-1', [field]: demoSlug },
+]);
+lockedTrips.push({ id: 'trip-1', share_token: demoSlug });
+for (const [op, customerTurn] of turns) {
+  assert.equal(offlineParseItineraryEditIntent(customerTurn).op, op);
+  for (const trip of lockedTrips) {
+    for (const headers of [{}, authenticatedHeaders, { 'x-timesyncher-web-access-token': 'mock-owner-session' }]) {
+      const stored = miniPayload();
+      const before = structuredClone(stored);
+      const calls = [];
+      const result = await runChatItineraryEditTurn({
+        trip, customerTurn, httpReq: { headers }, env: {},
+        db: async () => { calls.push('db'); throw new Error('locked_trip_db_access'); },
+        fetchPayload: async () => { calls.push('fetch'); return stored; },
+        putOverrides: async () => { calls.push('put'); },
+        extractIntent: async () => { calls.push('intent'); return offlineParseItineraryEditIntent(customerTurn); },
+      });
+      assert.equal(result.applied, false, op);
+      assert.equal(result.reason, 'demo_locked', op);
+      assert.equal(result.client.reason, 'demo_locked', op);
+      assert.deepEqual(calls, [], op);
+      assert.deepEqual(stored, before, op);
+    }
+  }
+}
+
+for (const [op, customerTurn] of turns) {
+  let stored = miniPayload();
+  const original = structuredClone(stored);
+  const writes = [];
+  const audit = [];
+  const db = async (parts, ...values) => {
+    const sql = parts.join('?').replace(/\s+/g, ' ').trim();
+    if (/^create |^alter /.test(sql)) return [];
+    if (/^select \* from vacation_web_access_grants/.test(sql)) {
+      return [{ id: 'grant-1', role: 'owner', owner_customer_id: 'owner-1' }];
+    }
+    if (/^update vacation_web_access_grants/.test(sql)) return [];
+    if (/^select customer_id from trips/.test(sql)) return [{ customer_id: 'owner-1' }];
+    if (/^select \* from chat_itinerary_edits/.test(sql)) {
+      return [{ before_json: { 'place:610': { perDaySchedule: { 502: { startTime: '18:30' } } }, 'place:689': {} } }];
+    }
+    if (/^insert into chat_itinerary_edits/.test(sql)) { audit.push(values); return []; }
+    if (/^insert into chat_itinerary_anchor_state/.test(sql)) return [];
+    throw new Error(`unexpected_mock_sql: ${sql}`);
+  };
+  const result = await runChatItineraryEditTurn({
+    db, trip: { id: 'trip-1', metadata: { sharedToken: copySlug } }, customerTurn,
+    httpReq: { headers: authenticatedHeaders }, env: {},
+    extractIntent: async ({ customerTurn: text }) => offlineParseItineraryEditIntent(text),
+    fetchPayload: async (slug) => { assert.equal(slug, copySlug); return stored; },
+    putOverrides: async ({ slug, overrides, webAccessToken }) => {
+      assert.equal(slug, copySlug);
+      assert.equal(webAccessToken, 'mock-owner-session');
+      writes.push(structuredClone(overrides));
+      stored = { ...stored, thingOverrides: overrides };
+    },
+  });
+  assert.equal(result.applied, true, `${op}: ${result.reason}`);
+  assert.equal(result.op, op);
+  assert.equal(writes.length, 1, op);
+  assert.equal(audit.length, op === 'undo' ? 0 : 1, op);
+  if (op === 'set_time') assert.equal(stored.thingOverrides['place:610'].perDaySchedule['502'].startTime, '20:30');
+  if (op === 'add_bar_before') assert.equal(stored.thingOverrides['place:689'].perDaySchedule['502'].startTime, '18:00');
+  if (op === 'undo') {
+    assert.equal(stored.thingOverrides['place:610'].perDaySchedule['502'].startTime, '18:30');
+    assert.equal(stored.thingOverrides['place:689'], undefined);
+  }
+  assert.notDeepEqual(stored, original, op);
+  const readFileSync = fs.readFileSync;
+  const lockedConfig = JSON.stringify({ allowlist: cfg.allowlist, demo_locked: [...cfg.demoLocked, copySlug] });
+  for (const putOverrides of [async () => { writes.push('unexpected_write'); }, null]) {
+    try {
+      await assert.rejects(runChatItineraryEditTurn({
+        db, trip: { id: 'trip-1', shareToken: copySlug }, customerTurn,
+        httpReq: { headers: authenticatedHeaders }, env: {}, putOverrides,
+        extractIntent: async ({ customerTurn: text }) => offlineParseItineraryEditIntent(text),
+        fetchPayload: async () => {
+          fs.readFileSync = (file, ...args) => file === cfg.filePath ? lockedConfig : readFileSync(file, ...args);
+          return miniPayload();
+        },
+      }), { message: 'demo_locked', statusCode: 403 }, `${op} rechecks lock before writing`);
+      assert.equal(writes.length, 1, op);
+      assert.equal(audit.length, op === 'undo' ? 0 : 1, op);
+    } finally {
+      fs.readFileSync = readFileSync;
+    }
+  }
+}
+
+const editSource = fs.readFileSync(new URL('../src/vacation/chat-itinerary-edit.mjs', import.meta.url), 'utf8');
+const functions = [...editSource.matchAll(/^(?:export )?(?:async )?function (\w+)\(/gm)];
+let writeHelpers = 0;
+for (let i = 0; i < functions.length; i += 1) {
+  const body = editSource.slice(functions[i].index, functions[i + 1]?.index ?? editSource.length);
+  const sink = body.search(/await putOverrides\(|method: 'PUT'/);
+  if (sink < 0) continue;
+  writeHelpers += 1;
+  const guard = body.indexOf('shareSlugEditGuardDecision(slug)');
+  assert.ok(guard >= 0 && guard < sink, `${functions[i][1]} must guard before writing`);
+  assert.match(body.slice(guard, sink), /if \(!guard\.ok\).*throw/s);
+}
+assert.equal(writeHelpers, 1, 'all chat override writes use one guarded helper');
+assert.equal((editSource.match(/await putSharedTripOverrides\(/g) || []).length, 2, 'edit persistence and undo use the guarded helper');
+
 const queueSource = fs.readFileSync(new URL('../routes/vacation-app-chat-queue.mjs', import.meta.url), 'utf8');
 assert.match(queueSource, /prepareChatItineraryEditForQueueTurn/);
 
