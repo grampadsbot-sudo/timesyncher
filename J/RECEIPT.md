@@ -1,6 +1,6 @@
 # Issue #884 — hide logo-chip fallback once brand img paints (cursor-ubuntu / PR #885)
 
-Start HEAD: `c41ad8bd3aa208115bd3d1b55a9c6531952960f8` (PR head after host base merge).
+Start HEAD: `6c4006fb7af764fcd763c64449847f50401e7c7f` (PR head after host base merge `origin/vk` @ `a2159bcc`).
 
 Authority: Craig tech-call 2026-11-09 ~12:31 PM PT — hide `.tsv-logo-fallback` after brand `img` loads; show only on missing/broken logo.
 
@@ -26,15 +26,15 @@ GBrain handoff `bot-admin/lanes/vk-pr-handoff/pr-885`: **page_not_found** on fet
 
 Permanent regression: `fallback_stack` in `visibleLogoDomCheckSource` via `runVisibleSharedLogoCheck` (`scripts/lib/shared-trip-visible-logo-check.mjs` → `scripts/ops/gateb/restore-check-visible-logos.mjs`).
 
-## Host base merge (PR #885, 2026-11-09)
+## Host base merge (PR #885, 2026-11-09 ~1:34 PM PT)
 
-Host merged `origin/vk` at `db5f9ee883a513cdb479f706354d4eae25725159` into PR head `c41ad8bd3aa208115bd3d1b55a9c6531952960f8`.
+Host merged `origin/vk` at `a2159bcc01711325e810660f3ee424180391e48b` into PR head `6c4006fb7af764fcd763c64449847f50401e7c7f` (`basemerge.json` in job dir).
 
-- **Conflict:** `J/RECEIPT.md` only (resolved: this file — #884 receipt + merge note).
-- **vk carried without conflict (prior merge on branch):** `src/vacation/chat-itinerary-edit-intent.mjs`, `src/vacation/chat-itinerary-edit.mjs`, `scripts/test_chat_itinerary_edit.mjs` — keep #859/vk intent module + integration tests.
-- **Served bundle:** PR rebaked bundle retained (logo `#884` patches); vk upstream hash `6748012103be769972219c26b9406f943d410f6aae625b873ffb839fe96b8780` not substituted.
+- **Conflict:** `scripts/offline-tests.txt` — resolved: both `test_ui_884_logo_chip_fallback_hide.mjs` and `test_ui_882_viewonly_detail_status.mjs` registered (430 offline).
+- **vk carry (staged):** `#882` view-only detail status patch + test; `features/README.md`, `features/collaborators.md`.
+- **Served bundle:** `node scripts/rebake_served_trek_bundle.mjs` after vk merge; sha256 `af2122b3e39f5a2856a0ee790a5423af6bf44f60e4bbddbda82db25525386d84`.
 
-## Local proof (cursor round, start HEAD `c41ad8bd`)
+## Local proof (cursor round, start HEAD `6c4006fb`)
 
 | Command | Result |
 | --- | --- |
@@ -43,15 +43,17 @@ Host merged `origin/vk` at `db5f9ee883a513cdb479f706354d4eae25725159` into PR he
 | `node scripts/test_shared_logo_chip_center_bundle.mjs` | PASS |
 | `timeout 120 node scripts/test_chat_itinerary_edit.mjs` | PASS (after `npm ci`) |
 | `node scripts/check-no-comments.mjs` | PASS (1115 files; `apps/vacation-client` npm ci required) |
-| `node scripts/test_offline_manifest.mjs` | PASS (429 offline) |
+| `node scripts/test_offline_manifest.mjs` | PASS (430 offline) |
+| `node scripts/test_ui_882_viewonly_detail_status.mjs` | PASS |
 | `BASE=vk node scripts/check-code-ratchet.mjs` | PASS |
 
 ## Host publish
 
-Uncommitted in worktree for host `git add` + merge commit on `vkfill/884-20261109123208`:
+Uncommitted for host merge commit on `vkfill/884-20261109123208` (start `6c4006fb`):
 
-- `J/RECEIPT.md` — conflict resolved.
-- Staged merge residue: `src/vacation/chat-itinerary-edit-intent.mjs`, `src/vacation/chat-itinerary-edit.mjs`, `scripts/test_chat_itinerary_edit.mjs` (if not already on tip).
-- Evidence/png churn under `evidence/` and `.artifacts/` — host discretion; out of #884 product scope.
+- `scripts/offline-tests.txt` — conflict resolved (884 + 882 tests).
+- `public/assets/index-BKun7ofk.js` — rebaked post-vk.
+- `J/RECEIPT.md` — this update.
+- Staged vk: `scripts/test_ui_882_viewonly_detail_status.mjs`, `src/vacation/trek-thing-detail-patches.mjs`, `src/vacation/trek-thing-detail-viewonly-status-patch.mjs`, feature map rows.
 
-Host: one push → CI on `c41ad8bd` + merge commit → Gate B NYC logo evidence (`towneplace-logo-*.png`, `broken-fallback-*.png`) per chief brief.
+Host: one push → CI green → Gate B NYC logo evidence (`towneplace-logo-*.png`, `broken-fallback-*.png`) per chief brief.
