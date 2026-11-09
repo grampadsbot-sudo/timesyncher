@@ -21,13 +21,11 @@ assert.match(rendered, /tsListRowDescription=function\(G\)\{const ov=ha\(G\)\|\|
 assert.match(rendered, /Rn=tsListRowDescription\(G\)/);
 assert.doesNotMatch(rendered, /Rn=Bs\(rr\(G\)\|\|Co\(G\)\|\|Fl\(G\)\)/);
 
-// Live NYC fixture contract: for each override with a summary, row binder returns summary and not details.
 const nycPath = new URL('../scripts/fixtures/nyc-screen-trip99-live-shared-api.json', import.meta.url);
 let nyc;
 try {
   nyc = JSON.parse(readFileSync(nycPath, 'utf8'));
 } catch {
-  // Fallback: minimal inline check from known Amelie/Carbone shape
   nyc = {
     thingOverrides: {
       'place:610': {
@@ -51,7 +49,6 @@ for (const [id, ov] of Object.entries(overrides)) {
   const summary = String(ov.summary ?? '');
   const details = String(ov.longDetails ?? ov.description ?? '');
   if (!summary.trim()) continue;
-  // Simulate binder
   const row = String(ov.summary ?? '');
   assert.equal(row, summary, `${id}: row must equal stored summary`);
   if (details.trim() && details !== summary) {
