@@ -543,7 +543,7 @@ function queueVacationAppHooks() {
   };
 }
 
-async function queueVacationAppTurn(db, session, trip, body, intakePrefill = null) {
+async function queueVacationAppTurn(db, session, trip, body, intakePrefill = null, httpReq = null) {
   const welcomeStarted = Date.now();
   if (!seatFromSession(session)) await ensureOnboardingOpener(db, session, trip || null);
   const welcomeMs = Date.now() - welcomeStarted;
@@ -553,6 +553,7 @@ async function queueVacationAppTurn(db, session, trip, body, intakePrefill = nul
     requestText,
     ...intake,
     welcomeMs,
+    httpReq,
   });
 }
 
@@ -1061,7 +1062,7 @@ async function handleVacationApp(req, res, db, url) {
       return sendJson(res, 201, { ok: true, status: 'joined', reply: null, event: event.payload.event });
     }
     const queueStarted = Date.now();
-    const queued = await queueVacationAppTurn(db, session, selected, body, intakePrefill);
+    const queued = await queueVacationAppTurn(db, session, selected, body, intakePrefill, req);
     const queueTurnMs = Date.now() - queueStarted;
     const postStatus = queued.ok ? (selected ? 201 : 200) : 502;
     const serverTiming = mergeTripCreateServerTiming({
