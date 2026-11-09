@@ -1,0 +1,24 @@
+--- hard-start ---
+if [ "$LANE" = "claude-ubuntu" ]; then
+  HARD_MODEL=$(python3 -I -c "import json,sys; L=json.load(open(sys.argv[1]))['lanes'].get(sys.argv[2]) or {}; print(L.get('hard_model') or '')" "$CFG" "$LANE")
+  HARD_EFFORT=$(python3 -I -c "import json,sys; L=json.load(open(sys.argv[1]))['lanes'].get(sys.argv[2]) or {}; print(L.get('hard_effort') or 'high')" "$CFG" "$LANE")
+  if [ "${EFFORT}" = "hard" ] || [ "${VK_HARD_ROUND:-0}" = 1 ]; then
+    [ -n "$HARD_MODEL" ] || write_early_refuse "claude hard round needs hard_model in lanes.json"
+    MODEL="$HARD_MODEL"
+    EFFORT="$HARD_EFFORT"
+    export VK_HARD_ROUND=1
+  fi
+fi
+--- model-allow ---
+if [ "$LANE" = "claude-ubuntu" ]; then
+  case "$MODEL" in
+    claude-opus-5-5|claude-fable-5-2) ;;
+    *) write_early_refuse "claude model must be subscription opus/fable not $MODEL" ;;
+  esac
+fi
+--- gatefix ---
+  if [ "$LANE" = "claude-ubuntu" ] && [ -n "${HARD_MODEL:-}" ]; then MODEL="$HARD_MODEL"; EFFORT="${HARD_EFFORT:-high}"; export VK_HARD_ROUND=1; echo "$(ts) HARD-ESCALATE $LANE $TAG gatefix model=$MODEL effort=$EFFORT" | tee -a "$LOG"; fi
+  run_lane "$FIXB"; hold_done
+--- rowfix ---
+    if [ "$LANE" = "claude-ubuntu" ] && [ -n "${HARD_MODEL:-}" ]; then MODEL="$HARD_MODEL"; EFFORT="${HARD_EFFORT:-high}"; export VK_HARD_ROUND=1; echo "$(ts) HARD-ESCALATE $LANE $TAG rowfix model=$MODEL effort=$EFFORT" | tee -a "$LOG"; fi
+    run_lane "$FIXB"; hold_done
