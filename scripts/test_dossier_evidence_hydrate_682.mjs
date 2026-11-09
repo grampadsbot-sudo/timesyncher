@@ -88,7 +88,9 @@ assert.ok(text(seeded.fields.description?.value).includes('LAS-JFK'));
 
 const zabarsBody =
   "Google lists Zabar's around 4.5/5. Iconic UWS specialty market and prepared-food counter; fixture copy for offline Gate B only. "
-  + 'Plan a morning stop for bagels, smoked fish, and pantry staples before a Central Park walk. Price: $25 basket floor; Status: candidate only.';
+  + 'Plan a morning stop for bagels, smoked fish, and pantry staples before a Central Park walk. '
+  + 'Counters stay busy on weekend mornings, so go early if you want shorter lines. '
+  + 'Price: $25 basket floor; Status: candidate only.';
 const storePlace = {
   title: "Zabar's",
   category: 'store',
@@ -103,6 +105,8 @@ const storeDossier = normalizeDossierEvidence({
 assert.equal(computeDossierFieldCounts(storeDossier, storePlace).description.status, 'ok');
 const storeApplied = applyDossierFields({ category: 'store', ...storePlace.sourceRecord }, storeDossier);
 assert.ok(text(storeApplied.longDetails).includes('Zabar'));
+assert.doesNotMatch(text(storeApplied.longDetails), /Status:\s*candidate only/i);
+assert.doesNotMatch(text(storeApplied.longDetails), /\bbasket floor\b/i);
 assert.equal(storeApplied.missingFields.includes('description'), false);
 
 const bellePlace = {

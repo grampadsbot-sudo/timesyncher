@@ -188,7 +188,9 @@ assert.equal(withoutCarBrand(offers, 'Budget').some((row) => row.brand === 'Budg
 assert.equal(withoutCarBrand(offers, 'Budget').length <= 10, true);
 const carScript = await readFile(new URL('../public/ts-car-brand-filter.js', import.meta.url), 'utf8');
 assert.doesNotMatch(carScript, /Payless/);
-assert.match(carScript, /Remove a brand/);
+assert.match(carScript, /Show car brands/);
+assert.match(carScript, /data-ts-brand-toggle/);
+assert.match(carScript, /checkbox\.type\s*=\s*['"]checkbox['"]/);
 assert.match(sharedApp, /ts-car-brand-filter\.js/);
 {
   const child = spawnSync(process.execPath, [fileURLToPath(new URL('./search_progress_flow_check.mjs', import.meta.url))], { encoding: 'utf8' });

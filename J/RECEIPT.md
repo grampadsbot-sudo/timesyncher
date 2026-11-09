@@ -1,64 +1,41 @@
-# PR #836 / #832 — data-only flight name cleanup (cursor-ubuntu)
+# PR #844 — cursor-ubuntu hard round tier 1 (check 1)
 
-Start HEAD: `9e2a002ccb4caa5ff581a27ac29d4fe45c328e36` (verified at launch).
+Start HEAD: `30c5a7d9e2d46f9fad6444c3afee6c77e0ebd590` (verified at launch).
 
-## Data-only stored source edits
+GBrain handoff `bot-admin/lanes/vk-pr-handoff/pr-844`: **page_not_found** (noted per brief).
 
-| Path | Change |
-| --- | --- |
-| `scripts/fixtures/nyc-vk-list-tab-rows.mjs` | Leading `Flight option: ` removed from **public `name` only** on list rows that materialize as output ids **651 / 652 / 658** (Delta / JetBlue / United at rows **646 / 647 / 653**). **ccabKey unchanged.** |
-| `scripts/fixtures/vk-search-census/results/651.json` | `thingName` only → `Delta LAS-JFK 2026-06-23 07:05-15:13` |
-| `scripts/fixtures/vk-search-census/results/652.json` | `thingName` only → `JetBlue LAS-JFK 2026-06-23 23:59-08:04+1` |
-| `scripts/fixtures/vk-search-census/results/658.json` | `thingName` only → `United LAS-EWR 2026-06-23 07:00-15:00` |
-| `scripts/fixtures/vk-search-census/structured-results.json` | Same three `thingName` fields; evidence/narrative bodies untouched |
+## Root cause (CI `scripts/test_vk_hotel_detail_fill.mjs`)
 
-`scripts/fixtures/pr336-vk-search-places.snapshot.json` titles for **651 / 652 / 658** were already clean (no edit).
+`buildGateBSearchPlaceForRow` always preferred `NYC_GATE_B_ROW_CCAB_KEYS[id]` over the row’s own `ccabKey`. Timeline row **616** is Whole Foods Market Columbus Circle, but staging list-tab row **616** is Hotel Edison with `ccabKey: Hotel Edison`. That bound Whole Foods prose (25 words, fails detail judge) and triggered `searchPlaceNeedsWebDetailEnrichment === true`.
 
-## Runtime repair removal (9e2a002c family)
+Earlier Gate B rounds (eb295143, cc3ead70) fixed events/cars UI patches; offline `test_nyc_screen_verify_chrome.mjs` passes on this tree. The CI regression on head `30c5a7d9` was the ccab id-reuse collision, not missing budget prices in fixture finalization (local `test_nyc_budget_search_fill_prices.mjs` PASS).
+
+## Fix
 
 | Path | Change |
 | --- | --- |
-| `src/vacation/shared-trip-flight-stored-repair.mjs` | **Deleted** — banned stored-root `Flight option:` payload repair |
-| `src/vacation/shared-trip-live-app-fields.mjs` | Removed `repairLegacyFlightOptionStoredFields` import and call from `applyLiveAppListRowFields` |
-| `scripts/gateb_head_budget_lines.mjs` | Reverted 9e2a002c writeback / `applyLiveAppListRowFields` materialization (read + `syncSharedTripApiBudget` only) |
-| `src/vacation/shared-trip-flight-merge.mjs` | `stripFlightOptionPrefix` no longer exported (ratchet; still used internally by `applyFlightThingFields`) |
+| `scripts/fixtures/pr336-vk-search-trip-sources.mjs` | Add `resolveGateBRowCcabKey`: when row `ccabKey` matches display `name`, use that ccab (list-tab hotels/stores); else keep timeline map for alias rows (e.g. 611 Blue Note). Wire into `buildGateBSearchPlaceForRow` and `assertGateBRowProvenance`. |
 
-## Tests updated
-
-| Path | Why |
-| --- | --- |
-| `scripts/test_issue_832_day_timeline_binding.mjs` | Assert `buildNycCraigKimDaybydayTrip` + `finalizeServedSharedTripPayload` has zero `^Flight option:` on 651/652/658; warn if per-head Gate B JSON stale |
-| `scripts/test_issue_832_daybyday_flight_placeholders.mjs` | Use clean stored names; no repair dependency |
-
-## Local proof (`buildNycCraigKimDaybydayTrip` → `finalizeServedSharedTripPayload`)
-
-| Id | Place name | Reservation title | Category | timeline |
-| --- | --- | --- | --- | --- |
-| 651 | `Delta LAS-JFK 2026-06-23 07:05-15:13` | same | Flight | false |
-| 652 | `JetBlue LAS-JFK 2026-06-23 23:59-08:04+1` | same | Flight | false |
-| 658 | `United LAS-EWR 2026-06-23 07:00-15:00` | same | Flight | false |
-| 601 / 635 | no `^Flight option:` | — | assigned flights preserved |
-
-Visible place + reservation `^Flight option:` count after served build: **0**.
-
-## Gate B / live discrepancy (report only)
-
-- Per-head fixture `/home/ubishere9995/tsv-dispatch/fixture-nyc/heads/9e2a002ccb4caa5ff581a27ac29d4fe45c328e36.json` replay still shows **10** prefixed names (stale frozen JSON vs fresh fixture source); host must refresh head after publish.
-- Live staging remains `10c78071` per HANDOFF — **no live staging PASS claimed** until host deploys this patch.
-
-## Commands (all PASS unless noted)
+## Local proof (base `30c5a7d9` + uncommitted patch)
 
 | Command | Result |
 | --- | --- |
-| `node scripts/test_issue_832_day_timeline_binding.mjs` | PASS (warn: stale head fixture) |
-| `node scripts/test_issue_832_daybyday_flight_placeholders.mjs` | PASS |
-| `node scripts/test_issue_832_events_flight_classification.mjs` | PASS |
+| `node scripts/test_vk_hotel_detail_fill.mjs` | **PASS** (was: line 20 enrichment assertion) |
+| `node scripts/test_stored_ccab_canonical_identity.mjs` | PASS |
+| `node scripts/test_pr336_ccab_search_provenance.mjs` | PASS |
+| `node scripts/probe_pr336_stored_narrative_lineage.mjs` | PASS |
+| `node scripts/test_nyc_budget_search_fill_prices.mjs` | PASS |
+| `node scripts/test_nyc_screen_verify_chrome.mjs` | PASS |
+| `node scripts/test_car_brand_filter_scope.mjs` | PASS |
 | `node scripts/test_gate_b_product_row_fields.mjs` | PASS |
-| `node scripts/test_keepsake_style2.mjs` | PASS |
 | `node scripts/check-no-comments.mjs` | PASS |
 | `node scripts/test_offline_manifest.mjs` | PASS |
 | `BASE=vk node scripts/check-code-ratchet.mjs` | PASS |
 
+## Gate B (chief dr — host re-capture required)
+
+Prior failures: events/cars structure + budget DOM prices on published heads. This patch fixes the CI blocker; host must publish → CI on new head → Gate B `staging-structure-v6` on that head.
+
 ## Host publish
 
-Uncommitted on `9e2a002c`. Host: review → commit → push PR #836 branch → refresh Gate B head fixture → verify live API token `8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y` post-deploy.
+Uncommitted patch on `fix/nyc-screen-t3018-3020` at base `30c5a7d9`. Host: review → commit → push once → CI → Gate B on new head sha (record here after push).

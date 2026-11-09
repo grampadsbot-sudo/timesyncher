@@ -11,6 +11,7 @@ import {
   recordFieldShortcoming,
 } from './thing-evidence-dossier-field-counts.mjs';
 import { dossierThingTitle, isFlightOrCarOrDecision, placeSupportsDossierReviews } from './dossier-brave-queries.mjs';
+import { stripIntakePresentationFragments } from './dossier-intake-presentation-strip.mjs';
 
 function text(value) {
   return String(value ?? '').replace(/\s+/g, ' ').trim();
@@ -292,8 +293,10 @@ export function hydrateScalarFieldsFromEvidence(dossier = {}, place = {}) {
 function bookingNarrativeFromPlace(place = {}) {
   const record = place.sourceRecord || {};
   const category = norm(place.category || record.category);
-  const body = placeNarrativeBody(place);
-  const summary = text(record.summary || place.summary);
+  const rawBody = placeNarrativeBody(place);
+  const body = stripIntakePresentationFragments(rawBody, { category });
+  const rawSummary = text(record.summary || place.summary);
+  const summary = stripIntakePresentationFragments(rawSummary, { category });
   const itinerary = text(record.itineraryNote || record.itinerary_note);
   if (category === 'flight' || category === 'car') {
     const flightBody = body || summary;
@@ -307,9 +310,9 @@ function bookingNarrativeFromPlace(place = {}) {
       itineraryNote: note,
     };
   }
-  if (!body || words(body) < 40) return null;
+  if (!rawBody || words(rawBody) < 40 || !body || words(body) < 12) return null;
   const seed = { description: body };
-  if (words(summary) >= 30) seed.summary = summary;
+  if (words(rawSummary) >= 30 && words(summary) >= 12) seed.summary = summary;
   return seed;
 }
 
@@ -476,9 +479,13 @@ function seedDisplayNarrativeFromPlace(dossier = {}, place = {}) {
   let next = { ...dossier };
   const pid = dossier.pages?.length ? dossierPageId(0) : null;
   if (!pid) return next;
+  const category = norm(place.category || record.category);
   for (const key of ['summary', 'description']) {
     const existing = text(next.fields?.[key]?.value ?? next.fields?.[key]);
-    const seed = text(record[key] || (key === 'description' ? (record.longDetails || record.details) : ''));
+    const seed = stripIntakePresentationFragments(
+      text(record[key] || (key === 'description' ? (record.longDetails || record.details) : '')),
+      { category },
+    );
     if (seed.length < 40) continue;
     if (existing.length >= 40) continue;
     const fields = { ...(next.fields || {}) };

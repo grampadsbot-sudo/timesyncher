@@ -220,14 +220,22 @@ function applyVkSearchSnapshotContractFields(search, place, override) {
   applyProvenanceBlockedClears(record, place, override);
 }
 
-function applyVkSearchSnapshotCopyFields(search, place, override) {
+function presentationCategory(rowCat, search, override, place) {
+  return text(
+    rowCat || search?.category || override.category || place.category?.name || place.category,
+    40,
+  ).toLowerCase();
+}
+
+function applyVkSearchSnapshotCopyFields(search, place, override, rowCat = '') {
   const title = text(search.title);
   if (title) place.name = title;
   if (search.description) {
-    place.description = search.description;
-    override.longDetails = search.description;
+    const cleaned = text(search.description);
+    place.description = cleaned;
+    override.longDetails = cleaned;
   }
-  if (search.summary) override.summary = search.summary;
+  if (search.summary) override.summary = text(search.summary);
   applyVkSearchSnapshotContractFields(search, place, override);
 }
 
@@ -260,11 +268,13 @@ function applyCcabRowSearchFields(row, place, override) {
   const record = search.sourceRecord && typeof search.sourceRecord === 'object'
     ? search.sourceRecord
     : {};
+  const cat = presentationCategory(row.cat, search, override, place);
   if (search.description) {
-    place.description = search.description;
-    override.longDetails = search.description;
+    const cleaned = text(search.description);
+    place.description = cleaned;
+    override.longDetails = cleaned;
   }
-  if (search.summary) override.summary = search.summary;
+  if (search.summary) override.summary = text(search.summary);
   if (search.price != null) override.price = search.price;
   if (search.logoUrl) {
     override.logoUrl = search.logoUrl;
@@ -342,14 +352,14 @@ function applyPr336SearchFields(row, place, override) {
   if (applyCcabRowSearchFields(row, place, override)) {
     const search = PR336_SEARCH_SNAPSHOT[String(row.id)];
     if (search && VK_SEARCH_SNAPSHOT_COPY_ROW_ID_SET.has(row.id)) {
-      applyVkSearchSnapshotCopyFields(search, place, override);
+      applyVkSearchSnapshotCopyFields(search, place, override, row.cat);
     }
     applySearchFillEstimatedPrice(row, place, override, search || null);
     return;
   }
   const search = PR336_SEARCH_SNAPSHOT[String(row.id)];
   if (search && VK_SEARCH_SNAPSHOT_COPY_ROW_ID_SET.has(row.id)) {
-    applyVkSearchSnapshotCopyFields(search, place, override);
+    applyVkSearchSnapshotCopyFields(search, place, override, row.cat);
     applySearchFillEstimatedPrice(row, place, override, search);
     return;
   }
@@ -360,11 +370,13 @@ function applyPr336SearchFields(row, place, override) {
   const record = search.sourceRecord && typeof search.sourceRecord === 'object'
     ? search.sourceRecord
     : {};
+  const cat = presentationCategory(row.cat, search, override, place);
   if (search.description) {
-    place.description = search.description;
-    override.longDetails = search.description;
+    const cleaned = text(search.description);
+    place.description = cleaned;
+    override.longDetails = cleaned;
   }
-  if (search.summary) override.summary = search.summary;
+  if (search.summary) override.summary = text(search.summary);
   if (search.price != null) override.price = search.price;
   if (search.logoUrl) {
     override.logoUrl = search.logoUrl;

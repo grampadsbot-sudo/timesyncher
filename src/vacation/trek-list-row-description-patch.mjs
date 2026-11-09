@@ -9,7 +9,7 @@ const RR_HOTEL_SUMMARY_FALLBACK =
 const DETAIL_SUMMARY_READONLY_NEEDLE =
   'const sum=String(d.summary||"").replace(/\\s+/g," ").trim();return sum?n.jsxs("div",{"data-ts-detail-summary-readonly":"1"';
 const DETAIL_SUMMARY_READONLY_PATCH =
-  'const sum=String(d.description??(Dt&&Dt.description)??"");return sum?n.jsxs("div",{"data-ts-detail-summary-readonly":"1"';
+  'const sum=String(d.summary||"").replace(/\\s+/g," ").trim();return sum?n.jsxs("div",{"data-ts-detail-summary-readonly":"1"';
 
 function patchVkDescAsStored(source = '') {
   let js = String(source || '');
@@ -31,10 +31,20 @@ function patchVkDescAsStored(source = '') {
   if (js.includes(DETAIL_SUMMARY_READONLY_NEEDLE)) {
     js = js.replace(DETAIL_SUMMARY_READONLY_NEEDLE, DETAIL_SUMMARY_READONLY_PATCH);
   }
-  const reviewsEnd = ']}):null})(),hhShow?';
-  const extra = ']}):null})(),(()=>{const note=tsItinLine(Dt),details=String(d.longDetails??""),photos=tsThingPhotos(Dt);return n.jsxs(n.Fragment,{children:[note?n.jsxs("section",{"data-ts-detail-field":"itineraryNote",style:{marginBottom:10,whiteSpace:"pre-wrap",overflowWrap:"anywhere"},children:[n.jsx("strong",{children:"Itinerary note"}),n.jsx("p",{children:note})]}):null,details?n.jsxs("section",{"data-ts-detail-field":"longDetails",style:{marginBottom:10,whiteSpace:"pre-wrap",overflowWrap:"anywhere"},children:[n.jsx("strong",{children:"Details"}),n.jsx("p",{children:details})]}):null,n.jsxs("div",{"data-ts-detail-timeline":"1",style:{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",marginBottom:10},children:[kl(Dt),n.jsxs("label",{style:{display:"inline-flex",alignItems:"center",gap:5,fontSize:11,fontWeight:900},children:[n.jsx("input",{type:"checkbox",checked:Ds(Dt),readOnly:!Ce,disabled:!Ce,onChange:e=>lc(Dt,e.target.checked)})," Timeline"]})]}),photos.length?n.jsx("div",{"data-ts-detail-photos":"1",style:{display:"flex",gap:8,flexWrap:"wrap",marginBottom:10},children:photos.map((photo,i)=>n.jsx("img",{src:photo.thumbnailUrl||photo.url,alt:photo.caption||photo.originalName||"",loading:"lazy",style:{width:58,height:58,objectFit:"cover",borderRadius:10}},photo.id||i))}):null]})})(),hhShow?';
-  if (js.includes(reviewsEnd)) js = js.replace(reviewsEnd, extra);
-  else if (js.includes('data-ts-detail-reviews-readonly') && !js.includes('data-ts-detail-timeline')) throw new Error('detail content below reviews anchor missing');
+  const detailsFrag =
+    '(()=>{const note=tsItinLine(Dt),details=String(d.longDetails??""),photos=tsThingPhotos(Dt);return n.jsxs(n.Fragment,{children:[note?n.jsxs("section",{"data-ts-detail-field":"itineraryNote",style:{marginBottom:10,whiteSpace:"pre-wrap",overflowWrap:"anywhere"},children:[n.jsx("strong",{children:"Itinerary note"}),n.jsx("p",{children:note})]}):null,details?n.jsxs("section",{"data-ts-detail-field":"longDetails",style:{marginBottom:10,whiteSpace:"pre-wrap",overflowWrap:"anywhere"},children:[n.jsx("strong",{children:"Details"}),n.jsx("p",{children:details})]}):null,n.jsxs("div",{"data-ts-detail-timeline":"1",style:{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",marginBottom:10},children:[kl(Dt),n.jsxs("label",{style:{display:"inline-flex",alignItems:"center",gap:5,fontSize:11,fontWeight:900},children:[n.jsx("input",{type:"checkbox",checked:Ds(Dt),readOnly:!Ce,disabled:!Ce,onChange:e=>lc(Dt,e.target.checked)})," Timeline"]})]}),photos.length?n.jsx("div",{"data-ts-detail-photos":"1",style:{display:"flex",gap:8,flexWrap:"wrap",marginBottom:10},children:photos.map((photo,i)=>n.jsx("img",{src:photo.thumbnailUrl||photo.url,alt:photo.caption||photo.originalName||"",loading:"lazy",style:{width:58,height:58,objectFit:"cover",borderRadius:10}},photo.id||i))}):null]})})()';
+  const readonlyAfterReviews =
+    '})()]});})(),Ce&&n.jsxs("fieldset",{"data-shared-readonly":void 0,disabled:!1,style:{border:0,padding:0,margin:0,minInlineSize:0,opacity:1},children:[n.jsx(Nr,{items:fo(Dt),scopeKey:Qt(Dt)}),';
+  const readonlyAfterReviewsPatch =
+    `})(),${detailsFrag}]});
+})(),Ce&&n.jsxs("fieldset",{"data-shared-readonly":void 0,disabled:!1,style:{border:0,padding:0,margin:0,minInlineSize:0,opacity:1},children:[n.jsx(Nr,{items:fo(Dt),scopeKey:Qt(Dt)}),`;
+  if (!js.includes('data-ts-detail-field":"longDetails"')) {
+    if (js.includes(readonlyAfterReviews)) {
+      js = js.replace(readonlyAfterReviews, readonlyAfterReviewsPatch);
+    } else if (js.includes('data-ts-detail-reviews-readonly') && !js.includes('data-ts-detail-timeline')) {
+      throw new Error('detail content below reviews anchor missing');
+    }
+  }
   return js;
 }
 

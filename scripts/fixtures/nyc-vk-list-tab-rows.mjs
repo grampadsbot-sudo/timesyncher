@@ -213,7 +213,7 @@ export const NYC_STAGING_CAPTURE_LIST_ROWS = [
   },
   {
     "id": 645,
-    "name": "Flight option: American LAS-JFK 2026-06-23 12:37-20:59",
+    "name": "American LAS-JFK 2026-06-23 12:37-20:59",
     "cat": "flight",
     "ccabKey": "Flight option: American LAS-JFK 2026-06-23 12:37-20:59"
   },
@@ -231,31 +231,31 @@ export const NYC_STAGING_CAPTURE_LIST_ROWS = [
   },
   {
     "id": 648,
-    "name": "Flight option: Southwest LAS-LGA 2026-06-23 05:05-15:45",
+    "name": "Southwest LAS-LGA 2026-06-23 05:05-15:45",
     "cat": "flight",
     "ccabKey": "Flight option: Southwest LAS-LGA 2026-06-23 05:05-15:45"
   },
   {
     "id": 649,
-    "name": "Flight option: Southwest LAS-LGA 2026-06-23 06:30-16:55",
+    "name": "Southwest LAS-LGA 2026-06-23 06:30-16:55",
     "cat": "flight",
     "ccabKey": "Flight option: Southwest LAS-LGA 2026-06-23 06:30-16:55"
   },
   {
     "id": 650,
-    "name": "Flight option: Southwest LAS-LGA 2026-06-23 06:50-18:55",
+    "name": "Southwest LAS-LGA 2026-06-23 06:50-18:55",
     "cat": "flight",
     "ccabKey": "Flight option: Southwest LAS-LGA 2026-06-23 06:50-18:55"
   },
   {
     "id": 651,
-    "name": "Flight option: Southwest LAS-LGA 2026-06-23 07:25-16:35",
+    "name": "Southwest LAS-LGA 2026-06-23 07:25-16:35",
     "cat": "flight",
     "ccabKey": "Flight option: Southwest LAS-LGA 2026-06-23 07:25-16:35"
   },
   {
     "id": 652,
-    "name": "Flight option: Southwest LAS-LGA 2026-06-23 11:30-22:25",
+    "name": "Southwest LAS-LGA 2026-06-23 11:30-22:25",
     "cat": "flight",
     "ccabKey": "Flight option: Southwest LAS-LGA 2026-06-23 11:30-22:25"
   },

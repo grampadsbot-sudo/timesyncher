@@ -11,7 +11,6 @@ import { dossierPagesVerified } from './dossier-page-integrity.mjs';
 import { reviewSourceHost } from './dossier-review-url.mjs';
 import { pageTextSupportsRating, ratingQuoteSupportsAggregate } from './dossier-rating-evidence.mjs';
 import { resolveDossierReviewRatings } from './dossier-review-ratings.mjs';
-
 export { applyDossierRatingsAndReviews } from './thing-dossier-ratings-copy.mjs';
 export { pageTextSupportsRating, ratingQuoteSupportsAggregate } from './dossier-rating-evidence.mjs';
 export { dossierPageIdForUrl, ensureBraveSnippetCitationPages } from './dossier-brave-snippet-pages.mjs';
@@ -398,7 +397,7 @@ export function applyDossierFields(record = {}, dossier = {}) {
       }
       else if (['lat', 'lng'].includes(key)) next[key] = Number(claim.value);
       else {
-        const scalar = scalarFieldValue(claim.value ?? claim);
+        let scalar = scalarFieldValue(claim.value ?? claim);
         if (key === 'happyHourDetails' && /^false$/i.test(scalar)) continue;
         next[key] = scalar;
       }

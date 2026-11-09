@@ -12,7 +12,21 @@ const ALIASES = { lodging: 'hotel', accommodation: 'hotel', grocery: 'store', ma
 const BANNED = /\b(TBD|N\/A|Quote TBD|Add price|lorem|placeholder|sample)\b|^\$0$|^\s*candidate\b|^\s*option\b|Flight option:/i;
 const FILLER = ['hotel option worth comparing', 'flight option to compare', 'convenient grocery stop', 'worth comparing because of its JFK counter tradeoff'];
 const FLAGGABLE = new Set(['price', 'logoUrl', 'coordinates', 'ratings', 'reviews']);
+const INTAKE_PRICE_FLOOR = /\s*;?\s*Price:\s*\$[\d,]+(?:\s+(?:[\p{L}\p{N}_'’/-]+\s*){0,12})?floor(?:\s+from[^;.]*)?\s*\.?\s*;?/giu;
+const INTAKE_STATUS_SUFFIX = /\s*;?\s*Status:\s*candidate only\.?\s*$/iu;
+const INTAKE_SUMMARY_PRICE_TAIL = /\s*;\s*Price:\s*\$[\d,]+[^.]*\bfloor\.?\s*$/iu;
 const text = (value) => String(value || '').replace(/\s+/g, ' ').trim();
+const stripIntakePresentation = (value) => text(text(value)
+  .replace(INTAKE_PRICE_FLOOR, ' ')
+  .replace(INTAKE_STATUS_SUFFIX, '')
+  .replace(INTAKE_SUMMARY_PRICE_TAIL, '')
+  .replace(/\s+\.\s*$/, '')
+  .replace(/;\s*$/, ''));
+const narrativesNotMeaningfullyDistinct = (summary, desc) => {
+  if (summary === desc) return true;
+  const stripped = stripIntakePresentation(summary);
+  return Boolean(stripped) && stripped === stripIntakePresentation(desc);
+};
 const source = (place) => place.sourceRecord && typeof place.sourceRecord === 'object' && !Array.isArray(place.sourceRecord) ? place.sourceRecord : {};
 export const category = (place) => ALIASES[text(place.category).toLowerCase()] || text(place.category).toLowerCase();
 const num = (value) => value == null || String(value).trim() === '' || Number.isNaN(Number(String(value).replaceAll(',', ''))) ? null : Number(String(value).replaceAll(',', ''));
@@ -90,7 +104,7 @@ export function checkVkContract(rows) {
     const desc = text(place.description);
     const bad = [];
     const badText = (value) => !value || BANNED.test(value) || FILLER.some((part) => value.toLowerCase().includes(part));
-    if (badText(summary) || summary === desc) bad.push('summary');
+    if (badText(summary) || narrativesNotMeaningfullyDistinct(summary, desc)) bad.push('summary');
     if (badText(desc)) bad.push('description');
     if (![place.price, src.price, src.rate, src.amount, src.totalPrice].some((value) => num(String(value ?? '').replaceAll('$', '')) > 0)) bad.push('price');
     if (!text(place.logoUrl || src.logoUrl || src.logo || src.faviconUrl)) bad.push('logoUrl');
