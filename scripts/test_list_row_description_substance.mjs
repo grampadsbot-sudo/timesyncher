@@ -50,7 +50,7 @@ assert.match(bundle, /Rn=tsListRowDescription\(G\)/);
 assert.doesNotMatch(bundle, /Rn=Bs\(rr\(G\)\)/);
 assert.match(
   bundle,
-  /return String\(ov\.description\?\?sr\.description\?\?\(G&&G\.description\)/,
+  /return String\(ov\.summary\?\?""\)/,
 );
 
 function renderedDescription(js, shared, id) {
@@ -65,10 +65,9 @@ function renderedDescription(js, shared, id) {
   );
   const place = shared.places.find((row) => row.id === id);
   const ov = override(place);
-  const sr = ov.sourceRecord && typeof ov.sourceRecord === 'object' ? ov.sourceRecord : {};
-  const expected = String(ov.description ?? sr.description ?? place.description ?? '');
+  const expected = String(ov.summary ?? '');
   const description = describe(place);
-  assert.equal(description, expected, `place ${id} description not as stored`);
+  assert.equal(description, expected, `place ${id} summary not as stored`);
   assert.doesNotMatch(description, COMPOSED_LABEL);
   return description;
 }
