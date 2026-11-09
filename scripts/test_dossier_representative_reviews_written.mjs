@@ -7,7 +7,8 @@ import { spawnSync } from 'node:child_process';
 import { parseReviewStars, resolveDossierReviewRatings } from '../src/vacation/dossier-review-ratings.mjs';
 import { rederiveReviewRatings } from './rederive_review_ratings.mjs';
 import { loadVkSearchCensusResult, vkSearchResultToDossier } from '../src/vacation/dossier-vk-search.mjs';
-import { writeDossierReviews, stripComposedReviewFiller, reviewTextsHaveRepeatedTrailingSentence } from '../src/vacation/thing-dossier-fields.mjs';
+import { writeDossierReviews } from '../src/vacation/thing-dossier-fields.mjs';
+import { stripComposedReviewFiller, reviewTextsHaveRepeatedTrailingSentence } from '../src/vacation/dossier-review-filler.mjs';
 
 const census = loadVkSearchCensusResult({ id: 602 }, { env: {} });
 const dossier = vkSearchResultToDossier(census, { id: 602 });
