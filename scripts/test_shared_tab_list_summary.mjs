@@ -171,12 +171,13 @@ console.log(`shared tab list summary tests passed (${flightSummaryCases.length} 
 for (const category of ['restaurant', 'store', 'event', 'flight', 'car']) {
   for (const expanded of [false, true]) {
     const name = 'The full stored Thing name with many words that must remain visible';
-    const row = renderedRow({ id: 45, name, category, description: '  Full\n stored description.  ', price: '$42' }, expanded);
+    const summary = '  Full\n stored description.  ';
+    const row = renderedRow({ id: 45, name, category, summary, description: 'DETAILS_SHOULD_NOT_SHOW', price: '$42' }, expanded);
     const nodes = descendants(row);
     const nameNode = nodes.find((node) => node.props['data-ts-list-row-name']);
     assert.equal(nameNode.props.style.whiteSpace, 'normal');
     assert.equal(nameNode.props.style.textOverflow, undefined);
     assert.ok(nodes.some((node) => node.type === 'strong' && node.props.children === name), category);
-    assert.equal(nodes.find((node) => node.props['data-list-summary']).props.children, '  Full\n stored description.  ');
+    assert.equal(nodes.find((node) => node.props['data-list-summary']).props.children, summary);
   }
 }
