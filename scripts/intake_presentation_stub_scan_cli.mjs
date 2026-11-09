@@ -21,7 +21,26 @@ if (!file) {
   process.exit(2);
 }
 
-const shared = JSON.parse(readFileSync(file, 'utf8'));
+function writeAllSync(fd, value) {
+  const bytes = Buffer.from(value);
+  let offset = 0;
+  while (offset < bytes.length) {
+    try {
+      offset += writeSync(fd, bytes, offset);
+    } catch (err) {
+      if (err.code !== 'EAGAIN') throw err;
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 5);
+    }
+  }
+}
+
+let shared;
+try {
+  shared = JSON.parse(readFileSync(file, 'utf8'));
+} catch (err) {
+  console.error(`intake presentation stub scan: cannot read ${file}: ${err.message}`);
+  process.exit(2);
+}
 const report = scanIntakePresentationStubs(shared, { includeMatches: true });
 const stdoutPayload = {
   pass: report.pass,
@@ -40,5 +59,5 @@ const fullLine = `${JSON.stringify(report)}\n`;
 if (artifact) {
   writeFileSync(artifact, fullLine);
 }
-writeSync(1, stdoutLine);
+writeAllSync(1, stdoutLine);
 process.exit(report.pass ? 0 : 1);
