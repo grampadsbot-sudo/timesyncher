@@ -278,78 +278,8 @@ try {
   assert.equal(blankRoot, false, 'shared trip SPA root must render content');
   assert.equal(blockedApi.length, 0, `app-config requests: ${blockedApi.join(', ')}`);
 
-  await page.waitForSelector('[data-ts-shared-audio]:not([disabled])', { timeout: 45000 });
-  await page.click('[data-ts-shared-audio]');
-  await page.waitForSelector('.ts-shared-audio-recording-bar.is-active [data-ts-voice-elapsed]', { timeout: 10000 });
-  const elapsedBefore = await page.$eval('[data-ts-voice-elapsed]', (el) => el.textContent.trim());
-  assert.equal(elapsedBefore, '0:00');
-  await new Promise((resolve) => setTimeout(resolve, 1250));
-  const elapsedAfter = await page.$eval('[data-ts-voice-elapsed]', (el) => el.textContent.trim());
-  assert.equal(elapsedAfter, '0:01', 'voice note elapsed timer should advance once per second');
-
-  const meterSamples = [];
-  for (let i = 0; i < 12; i += 1) {
-    meterSamples.push(
-      await page.evaluate(() => {
-        const bar = document.querySelector('.ts-shared-audio-recording-bar.is-active');
-        const bars = [...document.querySelectorAll('[data-ts-voice-meter] span')].map(
-          (node) => parseInt(node.style.height, 10) || 0,
-        );
-        return {
-          level: Number(bar?.dataset.tsVoiceMeterLevel || 0),
-          bars,
-        };
-      }),
-    );
-    await new Promise((resolve) => setTimeout(resolve, 80));
-  }
-  const levels = meterSamples.map((sample) => sample.level);
-  const barHeights = meterSamples.flatMap((sample) => sample.bars);
-  const levelSpread = Math.max(...levels) - Math.min(...levels);
-  const barSpread = Math.max(...barHeights) - Math.min(...barHeights);
-  assert.ok(
-    levelSpread > 0 || barSpread > 0,
-    `voice note meter should move while recording: levels=${levels.join(',')} bars=${barHeights.join(',')}`,
-  );
-  assert.ok(
-    Math.max(...levels) > 0 || Math.max(...barHeights) > 2,
-    'voice note meter should respond to microphone input',
-  );
-
-  await page.click('[data-ts-voice-cancel]');
-  await page.waitForFunction(
-    () => !document.querySelector('.ts-shared-audio-recording-bar.is-active'),
-    { timeout: 5000 },
-  );
-  const silentAfterCancel = await page.evaluate(() => ({
-    level: document.querySelector('.ts-shared-audio-recording-bar')?.dataset.tsVoiceMeterLevel || '0',
-    active: document.querySelector('.ts-shared-audio-recording-bar.is-active') !== null,
-  }));
-  assert.equal(silentAfterCancel.active, false);
-  assert.equal(silentAfterCancel.level, '0', 'voice note meter should reset to silence after cancel');
-
-  await page.click('[data-ts-shared-audio]');
-  await page.waitForSelector('.ts-shared-audio-recording-bar.is-active', { timeout: 10000 });
-  await page.click('[data-ts-voice-stop]');
-  await page.waitForSelector('.ts-shared-audio-edit.is-active [data-ts-voice-edit-text]', { timeout: 10000 });
-  assert.equal(
-    await page.$eval('.ts-shared-audio-recording-bar', (el) => el.classList.contains('is-active')),
-    false,
-    'recording bar should hide after Stop-to-edit',
-  );
-  await page.click('[data-ts-voice-edit-cancel]');
-
-  await page.click('[data-ts-shared-audio]');
-  await page.waitForSelector('.ts-shared-audio-recording-bar.is-active', { timeout: 10000 });
-  await page.click('[data-ts-voice-send]');
-  await page.waitForFunction(
-    () => (document.body?.innerText || '').includes('Voice note queued for this itinerary.'),
-    { timeout: 15000 },
-  );
-
-  await page.click('[data-ts-shared-audio]');
-  await page.waitForSelector('.ts-shared-audio-recording-bar.is-active', { timeout: 10000 });
-  await page.goto('about:blank', { waitUntil: 'domcontentloaded', timeout: 10000 });
+  const headerMic = await page.$('[data-ts-shared-audio]');
+  assert.equal(headerMic, null, 'shared trip header must not mount a mic button (#865)');
 
   assert.equal(consoleErrors.length, 0, `console errors: ${consoleErrors.join(' | ')} (404 urls: ${notFoundUrls.join(', ')})`);
   assert.equal(pageErrors.length, 0, `page errors: ${pageErrors.join(' | ')}`);

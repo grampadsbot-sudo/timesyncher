@@ -393,30 +393,8 @@
   });
 
   function installButton() {
-    if (document.querySelector('[data-ts-shared-audio]')) return true;
-    const tripButton = document.querySelector('[data-trip-view-root]');
-    const printButton = document.querySelector('[data-print-menu-root]');
-    const row = tripButton?.parentElement || printButton?.parentElement;
-    if (!row) return false;
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'ts-shared-audio-button';
-    button.dataset.tsSharedAudio = '1';
-    button.setAttribute('aria-label', 'Record voice note');
-    button.title = 'Record voice note';
-    setIcon(button, 'mic');
-    if (!canRecord()) {
-      button.disabled = true;
-      button.title = 'Microphone recording is unavailable in this browser';
-    } else {
-      button.addEventListener('click', beginRecording);
-    }
-    row.insertBefore(button, printButton || null);
     return true;
   }
 
-  const observer = new MutationObserver(() => {
-    if (installButton()) observer.disconnect();
-  });
-  if (!installButton()) observer.observe(document.documentElement, { childList: true, subtree: true });
+  installButton();
 })();

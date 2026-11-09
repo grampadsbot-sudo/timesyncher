@@ -128,6 +128,7 @@ scripts/test_screenshot_journey_pdf.mjs
 scripts/test_timeline_icons.mjs
 scripts/test_travel_base_required.mjs
 scripts/test_vacation_app_shell.mjs
+scripts/test_vacation_app_865_chrome.mjs
 scripts/test_vacation_app_provider_env_route.mjs
 scripts/test_place_intent_brave_fallback_route.mjs
 scripts/test_place_search_any_provider_ok_route.mjs
