@@ -1,41 +1,47 @@
-# PR #844 — cursor-ubuntu hard round tier 1 (check 1)
+# Issue #856 — Haiku tiers 2–4 empty app reply (cursor-ubuntu)
 
-Start HEAD: `30c5a7d9e2d46f9fad6444c3afee6c77e0ebd590` (verified at launch).
+Start HEAD: `840c0eec2f6afae59d5295a8c6dfac3b60e3c897` (launch-identity.json).
 
-GBrain handoff `bot-admin/lanes/vk-pr-handoff/pr-844`: **page_not_found** (noted per brief).
+## Symptom (live staging ca06f886)
 
-## Root cause (CI `scripts/test_vk_hotel_detail_fill.mjs`)
+Evidence: `/tmp/haiku_live_copy2_out.json`, `/tmp/haiku_retry_hard_turns.json`. Tier 1 PASS; tiers 2–4 `app reply text is empty` with `replyMs` ~70–120 ms (no generation). Live failure matches OpenRouter HTTP 400 latency, not model timeout.
 
-`buildGateBSearchPlaceForRow` always preferred `NYC_GATE_B_ROW_CCAB_KEYS[id]` over the row’s own `ccabKey`. Timeline row **616** is Whole Foods Market Columbus Circle, but staging list-tab row **616** is Hotel Edison with `ccabKey: Hotel Edison`. That bound Whole Foods prose (25 words, fails detail judge) and triggered `searchPlaceNeedsWebDetailEnrichment === true`.
+## Root cause (proved before patch)
 
-Earlier Gate B rounds (eb295143, cc3ead70) fixed events/cars UI patches; offline `test_nyc_screen_verify_chrome.mjs` passes on this tree. The CI regression on head `30c5a7d9` was the ccab id-reuse collision, not missing budget prices in fixture finalization (local `test_nyc_budget_search_fill_prices.mjs` PASS).
+Direct OpenRouter chat/completions probes on this tree (model `anthropic/claude-haiku-5.5`, key via `~/.local/bin/openrouter-key`; logs `/tmp/haiku_openrouter_probe_before.jsonl`):
+
+| Tier | HTTP | Error / result |
+| --- | --- | --- |
+| 1 | 200 | Non-empty visible text |
+| 2–4 | **400** | `Only one of "reasoning.effort" and "reasoning.max_tokens" can be specified` |
+
+PR #851 (`59756613`) sent **both** `reasoning.effort` and `reasoning.max_tokens` on tiers 2–4. `callOpenRouterTieredChat` treated non-OK bodies as failure → empty reply on staging.
 
 ## Fix
 
 | Path | Change |
 | --- | --- |
-| `scripts/fixtures/pr336-vk-search-trip-sources.mjs` | Add `resolveGateBRowCcabKey`: when row `ccabKey` matches display `name`, use that ccab (list-tab hotels/stores); else keep timeline map for alias rows (e.g. 611 Blue Note). Wire into `buildGateBSearchPlaceForRow` and `assertGateBRowProvenance`. |
+| `scripts/openrouter-tier-provider.mjs` | T2–4 reasoning uses `effort` only (no nested `max_tokens`). Tier request `max_tokens` floors (3072 / 4608 / 6144) cover reasoning + visible 900. Export `openRouterChatVisibleText` for array content that splits reasoning vs text. |
+| `scripts/vacation-app-reply-rules.mjs` | `chatReplyText` uses `openRouterChatVisibleText` (ignore `type: reasoning` parts). |
+| `scripts/test_chat_tiers_haiku_5_5.mjs` | Assert new reasoning/token shapes; test array-content tier-2 reply path. |
+| `scripts/test_g2d_jev_score_rewrite.mjs` | Rewrite call reasoning expectation. |
+| `scripts/test_rewrite_ships_tier_draft.mjs` | Tier-3 `max_tokens` 4608 expectation. |
 
-## Local proof (base `30c5a7d9` + uncommitted patch)
+## OpenRouter proof after patch
+
+`/tmp/haiku_openrouter_probe_after.jsonl`: tiers 1–4 all **200**, non-empty visible text (ms 366–551).
+
+## Local proof (uncommitted on `840c0eec`)
 
 | Command | Result |
 | --- | --- |
-| `node scripts/test_vk_hotel_detail_fill.mjs` | **PASS** (was: line 20 enrichment assertion) |
-| `node scripts/test_stored_ccab_canonical_identity.mjs` | PASS |
-| `node scripts/test_pr336_ccab_search_provenance.mjs` | PASS |
-| `node scripts/probe_pr336_stored_narrative_lineage.mjs` | PASS |
-| `node scripts/test_nyc_budget_search_fill_prices.mjs` | PASS |
-| `node scripts/test_nyc_screen_verify_chrome.mjs` | PASS |
-| `node scripts/test_car_brand_filter_scope.mjs` | PASS |
-| `node scripts/test_gate_b_product_row_fields.mjs` | PASS |
+| `node scripts/test_chat_tiers_haiku_5_5.mjs` | PASS |
+| `node scripts/test_g2d_jev_score_rewrite.mjs` | PASS |
+| `node scripts/test_rewrite_ships_tier_draft.mjs` | PASS |
 | `node scripts/check-no-comments.mjs` | PASS |
 | `node scripts/test_offline_manifest.mjs` | PASS |
 | `BASE=vk node scripts/check-code-ratchet.mjs` | PASS |
 
-## Gate B (chief dr — host re-capture required)
-
-Prior failures: events/cars structure + budget DOM prices on published heads. This patch fixes the CI blocker; host must publish → CI on new head → Gate B `staging-structure-v6` on that head.
-
 ## Host publish
 
-Uncommitted patch on `fix/nyc-screen-t3018-3020` at base `30c5a7d9`. Host: review → commit → push once → CI → Gate B on new head sha (record here after push).
+Uncommitted patch in `/home/ubishere9995/tsv-work/vkfill-856-20261109081816` (5 files). Host: branch from `840c0eec`, commit → push once → PR into `vk` with `Closes #856`. After tip==live, re-run `/tmp/haiku_live_copy2.py` on copy trip `3a729dac-ad57-4924-8d37-2a18919dd059` (4 turns, all Haiku, non-empty). Gate B unchanged (chat/API only).

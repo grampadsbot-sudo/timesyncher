@@ -99,7 +99,7 @@ await withFetch(async (url, init = {}) => {
   assert.equal(produced.jev.responseModel, TIER_MODEL);
   const chats = tierCalls.filter((call) => call.href.includes('/chat/completions'));
   assert.equal(chats.some((call) => call.body.model === TIER_MODEL), true);
-  assert.equal(chats.some((call) => call.body.reasoning?.effort === 'medium' && call.body.max_tokens === 1924), true);
+  assert.equal(chats.some((call) => call.body.reasoning?.effort === 'medium' && call.body.max_tokens === 4608), true);
   assert.equal(chats.some((call) => call.body.reasoning?.enabled === false && call.body.max_tokens === 900), true);
   assert.equal(chats.some((call) => call.body.model !== TIER_MODEL && call.body.model !== HOLDING_MODEL), false);
 });

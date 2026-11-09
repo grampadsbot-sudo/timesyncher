@@ -148,7 +148,7 @@ try {
   assert.match(low.log.interimReply.text, /Thursday town walk/);
   const rewriteCall = calls.find((call) => String(call.body?.messages?.find((message) => message.role === 'user')?.content || '').includes('WHAT_I_CHANGED'));
   assert.equal(rewriteCall.body.model, 'anthropic/claude-haiku-5.5');
-  assert.deepEqual(rewriteCall.body.reasoning, { effort: 'low', max_tokens: 512 });
+  assert.deepEqual(rewriteCall.body.reasoning, { effort: 'low' });
 
   calls.length = 0;
   const held = await produceLiveAppReply({
