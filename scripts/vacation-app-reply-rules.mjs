@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { xaiPlaceSearchModelId } from '../src/vacation/provider-env.mjs';
-import { openRouterProviderSpread, openRouterReturnedModelMatches, openRouterTemperatureSpread, openRouterTierReasoningSpread, openRouterTierRequestMaxTokens } from './openrouter-tier-provider.mjs';
+import { openRouterChatVisibleText, openRouterProviderSpread, openRouterReturnedModelMatches, openRouterTemperatureSpread, openRouterTierReasoningSpread, openRouterTierRequestMaxTokens } from './openrouter-tier-provider.mjs';
 export const REPLY_RULES_SLUG = 'bot-admin/skills/time-syncher/vacation-app-reply-rules';
 export const DIALOG_TEST_FINGERPRINT = 'TS-DIALOG-FINGERPRINT-20260924-bar2';
 export const SHARED_REPLY_PIPELINE = 'jev_precall_then_tiered_model';
@@ -579,9 +579,7 @@ export function replyRequestBody({ rules, customerTurn, stage, screen, modelTier
 }
 
 function chatReplyText(content) {
-  if (typeof content === 'string') return text(content, 3500);
-  if (!Array.isArray(content)) return '';
-  return text(content.map((part) => (typeof part === 'string' ? part : part?.text || '')).join(''), 3500);
+  return text(openRouterChatVisibleText(content), 3500);
 }
 
 export function sourcedPlaceRule() {
