@@ -28,8 +28,19 @@ console.log('ok representative reviews written to card');
 const unrated = structuredClone(dossier);
 for (const review of unrated.reviews) review.rating = null;
 delete unrated.ratingEvidence;
+const ratingFallback = writeDossierReviews({ category: 'store' }, unrated);
+for (const n of [1, 2, 3, 4]) {
+  assert.equal(ratingFallback[`review${n}`], unrated.reviews[n - 1].text);
+  assert.equal(Number(ratingFallback[`review${n}Rating`]), 4);
+}
+assert.ok(!ratingFallback.missingFields.includes('reviews'));
+assert.ok(resolveDossierReviewRatings(unrated).reviews.every((row) => row.rating === 4));
+console.log('ok null review stars backfill from saved dossier.rating');
+
+const bare = structuredClone(unrated);
+delete bare.rating;
 for (const useShortcomingMissing of [false, true]) {
-  const missing = writeDossierReviews({ ...record, missingFields: ['price'] }, unrated, { useShortcomingMissing });
+  const missing = writeDossierReviews({ ...record, missingFields: ['price'] }, bare, { useShortcomingMissing });
   for (const n of [1, 2, 3, 4]) {
     assert.equal(missing[`review${n}`], null);
     assert.equal(missing[`review${n}Rating`], null);
@@ -110,7 +121,7 @@ for (const n of [1, 2, 3, 4]) {
 assert.equal(repairedThing.summary, stale.summary);
 assert.equal(repairedThing.price, stale.price);
 assert.equal(rederiveReviewRatings(repaired.output).summary.unchanged, 1);
-const omitted = rederiveReviewRatings([{ ...stale, evidenceDossier: unrated }]);
+const omitted = rederiveReviewRatings([{ ...stale, evidenceDossier: bare }]);
 assert.equal(omitted.summary.reviewsDropped, 4);
 assert.ok(omitted.output[0].missingFields.includes('reviews'));
 assert.ok(omitted.output[0].dataShortcomings.some((row) => row.field === 'reviews'));

@@ -1,47 +1,33 @@
-# Issue #856 — Haiku tiers 2–4 empty app reply (cursor-ubuntu)
+# Issue #869 — NYC reviews refill: harden writeDossierReviews + resolveDossierReviewRatings
 
-Start HEAD: `840c0eec2f6afae59d5295a8c6dfac3b60e3c897` (launch-identity.json).
+Start HEAD: `15041c9a3257c4e44b4d00074156ca8c515a6999`
 
-## Symptom (live staging ca06f886)
+## Problem
 
-Evidence: `/tmp/haiku_live_copy2_out.json`, `/tmp/haiku_retry_hard_turns.json`. Tier 1 PASS; tiers 2–4 `app reply text is empty` with `replyMs` ~70–120 ms (no generation). Live failure matches OpenRouter HTTP 400 latency, not model timeout.
-
-## Root cause (proved before patch)
-
-Direct OpenRouter chat/completions probes on this tree (model `anthropic/claude-haiku-5.5`, key via `~/.local/bin/openrouter-key`; logs `/tmp/haiku_openrouter_probe_before.jsonl`):
-
-| Tier | HTTP | Error / result |
-| --- | --- | --- |
-| 1 | 200 | Non-empty visible text |
-| 2–4 | **400** | `Only one of "reasoning.effort" and "reasoning.max_tokens" can be specified` |
-
-PR #851 (`59756613`) sent **both** `reasoning.effort` and `reasoning.max_tokens` on tiers 2–4. `callOpenRouterTieredChat` treated non-OK bodies as failure → empty reply on staging.
+Dossier re-apply cleared public `review1..4` when `evidenceDossier.reviews` still had four texts but per-review `rating` was null. `resolveDossierReviewRatings` only backfilled stars from excerpts, per-review ratings, or **page-cited** `ratingEvidence` (`citedVenueRating`). With null review stars and no cited aggregate, `writeDossierReviews` hit the wipe path even though `dossier.rating` remained on the saved dossier (NYC 19-thing regression per brief live facts sha256 `75dae0c5615ff2f322616bcda105b46178d3631fe71d8c027a498e88c8513835`).
 
 ## Fix
 
 | Path | Change |
 | --- | --- |
-| `scripts/openrouter-tier-provider.mjs` | T2–4 reasoning uses `effort` only (no nested `max_tokens`). Tier request `max_tokens` floors (3072 / 4608 / 6144) cover reasoning + visible 900. Export `openRouterChatVisibleText` for array content that splits reasoning vs text. |
-| `scripts/vacation-app-reply-rules.mjs` | `chatReplyText` uses `openRouterChatVisibleText` (ignore `type: reasoning` parts). |
-| `scripts/test_chat_tiers_haiku_5_5.mjs` | Assert new reasoning/token shapes; test array-content tier-2 reply path. |
-| `scripts/test_g2d_jev_score_rewrite.mjs` | Rewrite call reasoning expectation. |
-| `scripts/test_rewrite_ships_tier_draft.mjs` | Tier-3 `max_tokens` 4608 expectation. |
+| `src/vacation/dossier-review-ratings.mjs` | `savedVenueStars()` fills review stars from saved `dossier.rating` when pages verify and `ratingEvidence` is absent or unsupported-only; mean-drift correction still requires `citedVenueRating` (no drift normalize on dossier.rating-only fallback). |
+| `src/vacation/thing-dossier-fields.mjs` | `dossierSavedReviewsPublishable()` write path after resolve; skip null wipe when four resolved publishable reviews exist. |
+| `scripts/test_dossier_representative_reviews_written.mjs` | Lock null review stars + present `dossier.rating` → public reviews; wipe only when rating grounding absent (`bare`). |
 
-## OpenRouter proof after patch
-
-`/tmp/haiku_openrouter_probe_after.jsonl`: tiers 1–4 all **200**, non-empty visible text (ms 366–551).
-
-## Local proof (uncommitted on `840c0eec`)
+## Local proof (uncommitted on `15041c9a`)
 
 | Command | Result |
 | --- | --- |
-| `node scripts/test_chat_tiers_haiku_5_5.mjs` | PASS |
-| `node scripts/test_g2d_jev_score_rewrite.mjs` | PASS |
-| `node scripts/test_rewrite_ships_tier_draft.mjs` | PASS |
-| `node scripts/check-no-comments.mjs` | PASS |
+| `node scripts/test_dossier_representative_reviews_written.mjs` | PASS |
 | `node scripts/test_offline_manifest.mjs` | PASS |
 | `BASE=vk node scripts/check-code-ratchet.mjs` | PASS |
+| `node scripts/check-no-comments.mjs` | FAIL (lane env: missing `apps/vacation-client/node_modules/typescript` for comment-tools) |
+| `node scripts/test_dossier_reviews_identity_682.mjs` | SKIP (missing `@neondatabase/serverless` in lane checkout) |
 
 ## Host publish
 
-Uncommitted patch in `/home/ubishere9995/tsv-work/vkfill-856-20261109081816` (5 files). Host: branch from `840c0eec`, commit → push once → PR into `vk` with `Closes #856`. After tip==live, re-run `/tmp/haiku_live_copy2.py` on copy trip `3a729dac-ad57-4924-8d37-2a18919dd059` (4 turns, all Haiku, non-empty). Gate B unchanged (chat/API only).
+Uncommitted patch in `/home/ubishere9995/tsv-work/vkfill-869-20261109101625` (3 files). Host: branch from `15041c9a`, `npm install` if needed for pre-push gates, commit → push once → PR into `vk` with `Closes #869`. Host owns live_accept reviews_rule, Neon copy-trip restore, NYC 19-thing TREK refill, Gate B if UI-visible.
+
+## result
+
+source-ready 15041c9a
