@@ -287,7 +287,6 @@ function clearPublicReviewFields(record = {}, { persistNull = false } = {}) {
 }
 
 
-/** Craig: never publish composed pad suffixes. Strip known filler; do not invent replacement text. */
 export const COMPOSED_REVIEW_FILLER_RE = /\s*Guests note this theme repeatedly across the saved review evidence for this place\.?/gi;
 export function stripComposedReviewFiller(text) {
   let body = String(text || '');
