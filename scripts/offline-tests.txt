@@ -420,3 +420,4 @@ scripts/test_fast_origin_transfer_808.mjs
 scripts/test_detail_title_no_clip_nyc.mjs
 scripts/test_nyc_list_row_summary_not_details.mjs
 scripts/test_trip_dropdown_human_status_848.mjs
+scripts/test_chat_tiers_haiku_5_5.mjs

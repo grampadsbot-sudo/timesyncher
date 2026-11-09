@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { liveTurnRecord, produceLiveAppReply } from '../src/vacation/live-app-turn.mjs';
 
-const TIER_MODEL = 'deepseek/deepseek-v3.2';
-const HOLDING_MODEL = 'deepseek/deepseek-v4-flash';
+const TIER_MODEL = 'anthropic/claude-haiku-5.5';
+const HOLDING_MODEL = TIER_MODEL;
 const DRAFT = 'We have corrected Thursday into a town walk.';
 const REWRITE = 'The garden morning moved, and we have corrected the week around it.';
 const HOLDING = 'Thursday can stay a town walk.';
@@ -50,16 +50,16 @@ await withFetch(async (url, init = {}) => {
     const model = body.model;
     const system = body.messages?.find((message) => message.role === 'system')?.content || '';
     const user = body.messages?.find((message) => message.role === 'user')?.content || '';
-    if (model === HOLDING_MODEL && /"template"/.test(system) && /canShip/.test(system)) {
+    if (/"template"/.test(system) && /canShip/.test(system)) {
       return json({ model, choices: [{ message: { content: '{"template":false,"canShip":true}' } }] });
     }
-    if (model === HOLDING_MODEL && /Do not write a customer reply/.test(system)) {
+    if (/Do not write a customer reply/.test(system)) {
       return json({ model, choices: [{ message: { content: '{"asksPrice":false,"asksAccess":false,"pullsAccess":false,"seats":[],"ask":false}' } }] });
     }
-    if (model === HOLDING_MODEL) {
+    if (model === HOLDING_MODEL && body.reasoning?.enabled === false) {
       return json({ model, choices: [{ message: { content: HOLDING } }] });
     }
-    if (model === TIER_MODEL) {
+    if (model === TIER_MODEL && body.reasoning?.effort === 'medium') {
       const text = user.includes('WHAT_I_CHANGED') ? REWRITE : DRAFT;
       return json({ model, choices: [{ message: { content: text } }] });
     }
@@ -99,6 +99,8 @@ await withFetch(async (url, init = {}) => {
   assert.equal(produced.jev.responseModel, TIER_MODEL);
   const chats = tierCalls.filter((call) => call.href.includes('/chat/completions'));
   assert.equal(chats.some((call) => call.body.model === TIER_MODEL), true);
+  assert.equal(chats.some((call) => call.body.reasoning?.effort === 'medium' && call.body.max_tokens === 1924), true);
+  assert.equal(chats.some((call) => call.body.reasoning?.enabled === false && call.body.max_tokens === 900), true);
   assert.equal(chats.some((call) => call.body.model !== TIER_MODEL && call.body.model !== HOLDING_MODEL), false);
 });
 

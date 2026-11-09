@@ -22,10 +22,10 @@ const loadTestOwnerPlan = loadTestSingleOwnerPlan;
 const intakeLive = { intake: true, priorTurns: [], session: { token: 'sess', trip_id: 'test-trip' }, env: { OPENROUTER_API_KEY: 'test-key', ...planEnv }, loadOwnerPlan: loadTestOwnerPlan };
 const tiers = bakeoffTierModels();
 assert.deepEqual(Object.values(tiers), [
-  'deepseek/deepseek-v4-flash',
-  'qwen/qwen3-235b-a22b-2507',
-  'deepseek/deepseek-v3.2',
-  'qwen/qwen3-max',
+  'anthropic/claude-haiku-5.5',
+  'anthropic/claude-haiku-5.5',
+  'anthropic/claude-haiku-5.5',
+  'anthropic/claude-haiku-5.5',
 ]);
 for (const id of Object.values(tiers)) assert.doesNotMatch(id, /gpt-.*mini/i);
 assert.doesNotMatch(FIRST_INTAKE_VOICE_INSTRUCTION, phrase);

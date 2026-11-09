@@ -263,8 +263,8 @@ function appTurn(overrides = {}) {
     text: 'Start with the harbor walk.',
     replyProducer: PRODUCER,
     invented: false,
-    jev: { jevRan: true, modelTier: 2, routeType: 'itinerary_advice', responseModel: 'qwen/qwen3-235b-a22b-2507', jevLatencyMs: 120, jevBeforeModel: true },
-    modelId: 'qwen/qwen3-235b-a22b-2507',
+    jev: { jevRan: true, modelTier: 2, routeType: 'itinerary_advice', responseModel: 'anthropic/claude-haiku-5.5', jevLatencyMs: 120, jevBeforeModel: true },
+    modelId: 'anthropic/claude-haiku-5.5',
     jevLatencyMs: 120,
     genLatencyMs: 400,
     jevBeforeModel: true,
@@ -304,8 +304,10 @@ async function selfCheck() {
   assert.ok(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ text: `${CANNED} for this vacation.` })])).length);
   assert.ok(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ invented: true })])).length);
   assert.deepEqual(assertLiveTurns(liveDoc([sampleTurn(), appTurn()]), { requireRan: true }), []);
-  assert.equal(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ modelId: 'qwen/qwen3-235b-a22b-2507' })])).some((error) => /bake-off map/.test(error)), false);
-  assert.equal(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ modelId: 'deepseek/deepseek-v4-flash' })])).some((error) => /bake-off map/.test(error)), false);
+  assert.equal(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ modelId: 'anthropic/claude-haiku-5.5' })])).some((error) => /bake-off map/.test(error)), false);
+  for (const retired of ['deepseek/deepseek-v4-flash', 'qwen/qwen3-235b-a22b-2507', 'deepseek/deepseek-v3.2', 'qwen/qwen3-max']) {
+    assert.ok(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ modelId: retired })])).some((error) => /bake-off map/.test(error)));
+  }
   assert.ok(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ modelId: 'vendor/not-on-bakeoff-1' })])).some((error) => /bake-off map/.test(error)));
   const bannedMini = 'gpt-' + '4.1-mini';
   assert.match(bannedMini, /gpt-.*mini/i);
@@ -369,8 +371,8 @@ async function selfCheck() {
   ])).some((error) => /not judged/.test(error)));
   assert.equal(isTemplateInterim('Got it. Thursday stays.', 'Thursday town walk'), true);
   assert.ok(interimProblems([
-    { turnIndex: 2, role: 'app', interimReply: { text: 'Thursday town walk stays light.', model: 'deepseek/deepseek-v4-flash', ms: 10 } },
-    { turnIndex: 4, role: 'app', interimReply: { text: 'Thursday town walk stays light.', model: 'deepseek/deepseek-v4-flash', ms: 11 } },
+    { turnIndex: 2, role: 'app', interimReply: { text: 'Thursday town walk stays light.', model: 'anthropic/claude-haiku-5.5', ms: 10 } },
+    { turnIndex: 4, role: 'app', interimReply: { text: 'Thursday town walk stays light.', model: 'anthropic/claude-haiku-5.5', ms: 11 } },
   ]).some((error) => /repeats across turns/.test(error)));
   process.stdout.write('live app jev tier self-check passed\n');
 }

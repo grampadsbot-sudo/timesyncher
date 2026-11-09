@@ -98,7 +98,7 @@ const request = replyRequestBody({
   stage: 'vacation_conversation',
   screen: 'vacation-app',
   modelTier: 2,
-  responseModel: 'qwen/qwen3-235b-a22b-2507',
+  responseModel: 'anthropic/claude-haiku-5.5',
   destination: 'Maui',
   memory: priorTurns,
   upsell: 'forbidden',

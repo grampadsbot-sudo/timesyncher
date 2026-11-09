@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { xaiPlaceSearchModelId } from '../src/vacation/provider-env.mjs';
-import { openRouterProviderSpread, openRouterTier1CompactReasoningSpread } from './openrouter-tier-provider.mjs';
+import { openRouterProviderSpread, openRouterReturnedModelMatches, openRouterTemperatureSpread, openRouterTierReasoningSpread, openRouterTierRequestMaxTokens } from './openrouter-tier-provider.mjs';
 export const REPLY_RULES_SLUG = 'bot-admin/skills/time-syncher/vacation-app-reply-rules';
 export const DIALOG_TEST_FINGERPRINT = 'TS-DIALOG-FINGERPRINT-20260924-bar2';
 export const SHARED_REPLY_PIPELINE = 'jev_precall_then_tiered_model';
@@ -19,10 +19,10 @@ export const JEV_QUALITY_MODEL = 'typesafe/jev-1.13';
 const JEV_DECISIONS_MODEL = JEV_QUALITY_MODEL;
 
 const BAKEOFF_TIER_MODELS = {
-  1: 'deepseek/deepseek-v4-flash',
-  2: 'qwen/qwen3-235b-a22b-2507',
-  3: 'deepseek/deepseek-v3.2',
-  4: 'qwen/qwen3-max',
+  1: 'anthropic/claude-haiku-5.5',
+  2: 'anthropic/claude-haiku-5.5',
+  3: 'anthropic/claude-haiku-5.5',
+  4: 'anthropic/claude-haiku-5.5',
 };
 const BAKEOFF_MODEL_IDS = new Set(Object.values(BAKEOFF_TIER_MODELS));
 const BANNED_GPT_MINI = /gpt-.*mini/i;
@@ -881,7 +881,7 @@ export async function callTieredModel({ rules, jev, customerTurn, stage, screen,
     planOwned,
     intakeReplyTurn,
     replyFacts,
-    tier1CompactReasoning: tier1CompactReasoning || forceModel === INTERIM_MODEL,
+    tier1CompactReasoning,
   });
 }
 
@@ -912,10 +912,10 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
       },
       body: JSON.stringify({
         model: responseModel,
-        temperature: 0.55,
-        max_tokens: 900,
+        ...openRouterTemperatureSpread(responseModel, 0.55),
+        max_tokens: openRouterTierRequestMaxTokens(tier1CompactReasoning ? 1 : modelTier, 900),
         ...openRouterProviderSpread(modelTier),
-        ...openRouterTier1CompactReasoningSpread(tier1CompactReasoning ? 1 : 0),
+        ...openRouterTierReasoningSpread(tier1CompactReasoning ? 1 : modelTier),
         messages: [
           {
             role: 'system',
@@ -939,12 +939,12 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
     const answer = chatReplyText(body.choices?.[0]?.message?.content) || text(body.answer || body.reply || body.text, 3500);
     if (!answer) return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: 'tiered model returned an empty reply' };
     const returned = text(body.model || responseModel, 120);
-    if (returned !== responseModel || !isBakeoffModelId(returned)) {
+    if (!openRouterReturnedModelMatches(responseModel, returned) || !isBakeoffModelId(responseModel)) {
       return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: 'model_not_in_bakeoff_map' };
     }
     const visible = splitBeat(answer);
     if (!visible.text) return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: 'tiered model returned an empty reply' };
-    return { called: true, via: 'openrouter-chat', modelTier, responseModel: returned, text: visible.text, beats: visible.beats, maxTokens: 900, genLatencyMs: Math.max(0, Date.now() - genStarted) };
+    return { called: true, via: 'openrouter-chat', modelTier, responseModel, text: visible.text, beats: visible.beats, maxTokens: 900, genLatencyMs: Math.max(0, Date.now() - genStarted) };
   } catch (error) {
     return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: text(error?.message || error, 300) };
   }

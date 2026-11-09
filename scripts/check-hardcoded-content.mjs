@@ -190,6 +190,8 @@ function inventoryFindings(file, text, findings, seen, { bundles = false } = {})
 const THING_PUSH = /(?:places|things|next|candidates)\s*\.push\s*\(\s*$/;
 const CANNED_TOKEN = /\b([A-Z][A-Z0-9_]*(?:LIST_FILL|FILL_DETAILS)|PLACE_COORDS|CANNED_APP_REPLY|ONBOARDING_OPENER_[A-Z0-9_]+|LIVE_TAB_FILL)\b|Welcome aboard/;
 const ALLOWED_MODELS = new Set([
+  'anthropic/claude-haiku-5.5',
+  'anthropic/claude-haiku-5.5-20261007',
   'deepseek/deepseek-v4-flash',
   'qwen/qwen3-235b-a22b-2507',
   'qwen/qwen2.5-vl-72b-instruct',
