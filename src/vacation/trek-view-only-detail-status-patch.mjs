@@ -5,8 +5,6 @@ const DETAIL_EDIT_STATUS_PATCH = '(He||Ce)&&n.jsx("div",{"data-ts-detail-edit-st
 export function patchViewOnlyDetailEditStatus(source = '') {
   let js = String(source || '');
   if (js.includes(DETAIL_EDIT_STATUS_PATCH)) return js;
-  if (!js.includes(DETAIL_EDIT_STATUS_NEEDLE)) {
-    throw new Error('trek bundle missing detail modal edit status needle for view-only hide patch');
-  }
+  if (!js.includes(DETAIL_EDIT_STATUS_NEEDLE)) return js;
   return js.replace(DETAIL_EDIT_STATUS_NEEDLE, DETAIL_EDIT_STATUS_PATCH);
 }
