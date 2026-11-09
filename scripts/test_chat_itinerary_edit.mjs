@@ -4,7 +4,9 @@ import { fileURLToPath } from 'node:url';
 import {
   applyAddBarBeforeOp,
   applySetTimeOp,
+  coalesceChatItineraryEditIntent,
   loadChatItineraryEditConfig,
+  normalizeItineraryPlaceQuery,
   offlineParseItineraryEditIntent,
   resolvePlaceByQuery,
   selectNearestBarBeforeAnchor,
@@ -130,6 +132,40 @@ const parsed = offlineParseItineraryEditIntent('move dinner at Carbone to 8:30 P
 assert.equal(parsed.op, 'set_time');
 assert.match(parsed.placeQuery, /Carbone/i);
 
+const moveDay2 = offlineParseItineraryEditIntent('Move Carbone to 8:30 PM on Day 2');
+assert.equal(moveDay2.op, 'set_time');
+assert.equal(moveDay2.placeQuery, 'Carbone');
+assert.equal(moveDay2.dayNumber, 2);
+assert.equal(parseTime(moveDay2.time), '20:30');
+
+const barBefore = offlineParseItineraryEditIntent('Add a bar hop at Zinc Bar before Carbone on Day 2');
+assert.equal(barBefore.op, 'add_bar_before');
+assert.match(barBefore.placeQuery, /Carbone/i);
+
+assert.equal(normalizeItineraryPlaceQuery('Move Carbone'), 'carbone');
+const coalesced = coalesceChatItineraryEditIntent(
+  { op: 'none' },
+  moveDay2,
+);
+assert.deepEqual(coalesced, moveDay2);
+const coalescedMerge = coalesceChatItineraryEditIntent(
+  { op: 'set_time', placeQuery: '', dayNumber: null, time: '8:30 PM' },
+  moveDay2,
+);
+assert.equal(coalescedMerge.placeQuery, 'Carbone');
+assert.equal(coalescedMerge.dayNumber, 2);
+
+function parseTime(raw) {
+  const m = String(raw || '').trim().toLowerCase().match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/);
+  if (!m) return null;
+  let h = Number(m[1]);
+  const min = m[2] != null ? Number(m[2]) : 0;
+  const mer = m[3];
+  if (mer === 'pm' && h < 12) h += 12;
+  if (mer === 'am' && h === 12) h = 0;
+  return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+}
+
 const noAccess = await runChatItineraryEditTurn({
   db: null,
   trip: { id: 'trip-1', metadata: { sharedToken: 'lane-test-slug' } },
@@ -178,5 +214,12 @@ assert.match(queueSource, /prepareChatItineraryEditForQueueTurn/);
 
 const requestJs = fs.readFileSync(new URL('../public/vacation-app-request.js', import.meta.url), 'utf8');
 assert.match(requestJs, /itineraryEdit/);
+
+const slug = 'chat-edit-copy-a47f5a7f2150c5e887a81972';
+const trekBase = String(process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || 'https://travel.timesyncher.com').replace(/\/+$/, '');
+const stagingPayload = await fetch(`${trekBase}/api/shared/${encodeURIComponent(slug)}/?bust=1`).then((r) => r.json());
+const carboneResolve = resolvePlaceByQuery(stagingPayload, moveDay2.placeQuery);
+assert.equal(carboneResolve.status, 'ok');
+assert.match(carboneResolve.place?.name || '', /carbone/i);
 
 console.log('test_chat_itinerary_edit: ok');

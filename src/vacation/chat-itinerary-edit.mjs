@@ -1,9 +1,20 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { callTieredModel, loadVacationAppReplyRules } from '../../scripts/vacation-app-reply-rules.mjs';
 import { readCookie, requireWebEditAccess, webAccessCookieName } from './web-access.mjs';
 import { invalidateSharedUpstreamCacheForSlug as dropSharedUpstreamCacheForSlug } from './shared-trip-upstream-cache.mjs';
+import {
+  coalesceChatItineraryEditIntent,
+  extractItineraryEditIntent,
+  normalizeItineraryPlaceQuery,
+  offlineParseItineraryEditIntent,
+} from './chat-itinerary-edit-intent.mjs';
+
+export {
+  coalesceChatItineraryEditIntent,
+  normalizeItineraryPlaceQuery,
+  offlineParseItineraryEditIntent,
+} from './chat-itinerary-edit-intent.mjs';
 
 const CONFIG_PATH = path.join(path.dirname(fileURLToPath(import.meta.url)), '../../config/chat-itinerary-edit-trips.json');
 const DEMO_LOCKED_SLUG = '8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y';
@@ -98,7 +109,8 @@ function hhmmFromMinutes(total) {
 }
 
 export function resolvePlaceByQuery(payload, placeQuery) {
-  const query = normalizeName(placeQuery);
+  const primary = normalizeItineraryPlaceQuery(placeQuery);
+  const query = primary || normalizeName(placeQuery);
   if (!query) return { status: 'none', matches: [] };
   const places = Array.isArray(payload?.places) ? payload.places : [];
   const exact = places.filter((p) => normalizeName(p.name || p.title) === query);
@@ -226,66 +238,6 @@ export function applyAddBarBeforeOp(payload, { barPlaceId, anchorPlaceId, dayId,
   };
 }
 
-function parseIntentJson(text) {
-  const raw = clean(text, 4000);
-  let slice = raw;
-  const fence = raw.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/i);
-  if (fence?.[1]) slice = fence[1];
-  else {
-    const start = raw.indexOf('{');
-    const end = raw.lastIndexOf('}');
-    if (start >= 0 && end > start) slice = raw.slice(start, end + 1);
-  }
-  try {
-    const parsed = JSON.parse(slice);
-    const op = clean(parsed.op, 40).toLowerCase();
-    if (!['set_time', 'add_bar_before', 'undo', 'none'].includes(op)) return { op: 'none' };
-    return {
-      op,
-      placeQuery: clean(parsed.placeQuery || parsed.place || parsed.title, 240),
-      dayNumber: Number(parsed.dayNumber ?? parsed.day ?? 0) || null,
-      time: clean(parsed.time, 40),
-    };
-  } catch {
-    return { op: 'none' };
-  }
-}
-
-export function offlineParseItineraryEditIntent(customerTurn) {
-  const text = clean(customerTurn, 8000);
-  if (/\bundo\b/i.test(text)) return { op: 'undo', placeQuery: '', dayNumber: null, time: '' };
-  const addBar = /\badd\b[^.\n]{0,80}\bbar\b/i.test(text) && /\bbefore\b/i.test(text);
-  if (addBar) {
-    const place = (text.match(/\b(?:at|dinner at|lunch at)\s+([^,.\n]+)/i) || [])[1] || '';
-    const day = Number((text.match(/\bday\s*(\d{1,2})\b/i) || [])[1] || 0) || null;
-    return { op: 'add_bar_before', placeQuery: clean(place, 240), dayNumber: day, time: '' };
-  }
-  const timeMove = text.match(/\b(?:move|reschedule|change)\b[\s\S]{0,120}?\b(?:to|at)\s+(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)/i);
-  if (timeMove) {
-    const place = (text.match(/\b(?:at)\s+([^,.\n]+?)(?:\s+to\b|\s+on\b|$)/i) || text.match(/\b([^,.\n]+?)\s+to\s+\d/i) || [])[1] || '';
-    const day = Number((text.match(/\bday\s*(\d{1,2})\b/i) || [])[1] || 0) || null;
-    return {
-      op: 'set_time',
-      placeQuery: clean(place.replace(/\b(dinner|lunch|breakfast)\b/gi, '').trim(), 240),
-      dayNumber: day,
-      time: clean(timeMove[1], 40),
-    };
-  }
-  return { op: 'none', placeQuery: '', dayNumber: null, time: '' };
-}
-
-async function extractItineraryEditIntent({ customerTurn, env = process.env }) {
-  if (String(env.CHAT_ITINERARY_EDIT_OFFLINE_PARSE || '') === '1') return offlineParseItineraryEditIntent(customerTurn);
-  const rules = await loadVacationAppReplyRules(env);
-  if (!rules?.ok) return { op: 'none' };
-  const model = await callTieredModel({
-    rules, jev: { jevRan: true, modelTier: 1 }, customerTurn, stage: 'vacation_conversation', screen: 'vacation-app',
-    destination: '', memory: [], upsell: 'forbidden', postIntake: false, env, timeoutMs: 20000,
-    systemExtra: 'JSON only {op,placeQuery,dayNumber,time} with op set_time|add_bar_before|undo|none.',
-  });
-  return parseIntentJson(model?.text || '');
-}
-
 async function ensureChatItineraryEditsSchema(db) {
   await db`create table if not exists chat_itinerary_edits (
     id uuid primary key default gen_random_uuid(), trip_id uuid not null references trips(id) on delete cascade,
@@ -357,7 +309,7 @@ async function persistItineraryWrite(db, trip, slug, turnId, placeId, applied, w
   await putOverrides({ slug, overrides: applied.thingOverrides, webAccessToken, env });
   dropSharedUpstreamCacheForSlug(clean(slug, 240));
   await db`insert into chat_itinerary_edits (trip_id, share_slug, turn_id, touched_keys, before_json, after_json, anchor_place_id)
-    values (${trip.id}, ${slug}, ${turnId}, ${JSON.stringify(applied.keys)}, ${applied.before}, ${applied.after}, ${String(placeId)})`;
+    values (${trip.id}, ${slug}, ${turnId}, ${JSON.stringify(applied.keys)}, ${JSON.stringify(applied.before)}::jsonb, ${JSON.stringify(applied.after)}::jsonb, ${String(placeId)})`;
   await saveAnchorPlaceId(db, trip.id, placeId);
 }
 
@@ -385,7 +337,12 @@ export async function runChatItineraryEditTurn({
     return editSkip('web_edit_denied', 'Website edit access is required to change the itinerary from chat.', { applied: false, reason: 'web_edit_denied' });
   }
   await ensureChatItineraryEditsSchema(db);
-  const intent = await extractIntent({ customerTurn, env });
+  const offlineIntent = offlineParseItineraryEditIntent(customerTurn);
+  const intentRaw = await extractIntent({ customerTurn, env });
+  const intent = coalesceChatItineraryEditIntent(
+    intentRaw && typeof intentRaw === 'object' ? intentRaw : { op: 'none' },
+    offlineIntent,
+  );
   if (!intent || intent.op === 'none') return editSkip('no_intent');
   const payload = await fetchPayload(slug, { env, cookie: `${webAccessCookieName()}=${encodeURIComponent(webAccessToken)}` });
   if (intent.op === 'undo') {
@@ -409,6 +366,17 @@ export async function runChatItineraryEditTurn({
       return editSkip('ambiguous_place', `Ask which place they mean. Real options: ${names.join('; ')}.`, { applied: false, reason: 'ambiguous_place', candidates: names });
     }
     if (resolved.status === 'ok') place = resolved.place;
+  }
+  if (!place && intent.op !== 'undo') {
+    const retry = offlineParseItineraryEditIntent(customerTurn);
+    if (retry.placeQuery && retry.placeQuery !== intent.placeQuery) {
+      const resolved = resolvePlaceByQuery(payload, retry.placeQuery);
+      if (resolved.status === 'ok') {
+        place = resolved.place;
+        if (!intent.dayNumber && retry.dayNumber) intent.dayNumber = retry.dayNumber;
+        if (!intent.time && retry.time) intent.time = retry.time;
+      }
+    }
   }
   if (!place && intent.op === 'add_bar_before') {
     const anchorId = await loadAnchorPlaceId(db, trip.id);
