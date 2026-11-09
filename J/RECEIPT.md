@@ -1,60 +1,32 @@
-# PR #876 / #870 — composer mic (cursor-ubuntu / composer-2.5)
+# PR #896 / #888 — tripBadge test sync (cursor-ubuntu / composer-2.5)
 
-**Outcome:** source-ready PATCH after `origin/vk` base merge (uncommitted; host commit). **Start HEAD:** `73d22a93fcd49facea15261531e08528589baf15`. **Base merge:** host merged `origin/vk` at `db5f9ee883a513cdb479f706354d4eae25725159` into `73d22a93` (2026-11-09 ~12:58 PM PT).
+**Outcome:** source-ready PATCH (uncommitted; host commit+push). **Start HEAD:** `b39c6b3b18041b1d55ad3eb5cc2123b992a70643`.
 
-## Changes (#870)
+## Change
 
-1. **`public/vacation-app-request.js` — `bindVoice`**
-   - Inline composer errors via `showComposerStatus`: blocked mic (iPhone Settings › browser › Microphone vs desktop site settings), unsupported API, no-speech / aborted retry copy.
-   - `try/catch` on `getUserMedia` and `recognition.start()`; `onerror` handler (no silent mic tap).
-   - Fresh `SpeechRecognition` per recording; `getUserMedia` once per page session (stream reused).
-   - Recording timer `m:ss` on `#voiceElapsed` while the mic is active.
-
-2. **`vacation-app.html`**
-   - `#voiceElapsed` beside `#voiceButton` in `.voice-mic-wrap` + minimal CSS.
-
-3. **`scripts/test_issue_870_composer_mic.mjs`**
-   - Offline harness: fakes `getUserMedia` / `SpeechRecognition`; controlled fake `Date` + `setInterval` for timer; 20s hard timeout; three recordings one session, single `getUserMedia`, timer tick, `NotAllowedError`, iPhone blocked copy, `no-speech`, unsupported API.
-
-## Host base merge conflict resolution
-
-| File | Resolution |
-| --- | --- |
-| `J/RECEIPT.md` | Kept #870 receipt (this file) + merge note. |
-| `evidence/vacation-client-836-nyc-tabs/*.png`, `evidence/vacation-client-p2-6-keepsake/keepsake-1280.png` | vk (`origin/vk`) blobs — no new evidence from this round. |
-| `src/vacation/chat-itinerary-edit.mjs`, `chat-itinerary-edit-intent.mjs`, `scripts/test_chat_itinerary_edit.mjs` | vk merge (clean). |
-| `public/ts-pic-popup-viewer.js`, `list-row-pic-popup-audit.mjs`, `test_ui_877_*` | vk #877 (clean). |
-| `public/assets/*.js` | vk versions on disk; rebake via `node scripts/rebake_served_trek_bundle.mjs`. |
+- **`scripts/test_real_app_entry.mjs`** — Offline gate eval’d removed `tripBadge` from `vacation-app.html`; assert `tripDates` / `tripTitle` and comma date format (`Jun 1–3, 2026`) per `tripDates()` in product shell (same contract as `scripts/test_trip_dropdown_human_status_848.mjs`). No product restore of `tripBadge`.
 
 ## Checks run (this lane)
 
 | Check | Result |
 | --- | --- |
-| `timeout 60 node scripts/test_issue_870_composer_mic.mjs` | PASS (wall=0.03s) |
-| `node scripts/rebake_served_trek_bundle.mjs` | PASS sha256=6748012103be769972219c26b9406f943d410f6aae625b873ffb839fe96b8780 |
-| `timeout 120 node scripts/test_chat_itinerary_edit.mjs` | PASS |
-| `cd apps/vacation-client && timeout 900 npm test` | PASS |
-| `timeout 120 node scripts/test_ui_877_pic_popup_media_strip.mjs` | PASS |
-| `timeout 120 node scripts/test_ui_877_pic_popup_media_strip_chrome.mjs` | PASS |
-| `node scripts/check-no-comments.mjs` | PASS (1115 files) |
-| `node scripts/test_offline_manifest.mjs` | PASS (429 offline, 18 online) |
-| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS (252 report, 0 fail) |
+| `node scripts/test_real_app_entry.mjs` | PASS |
+| `node apps/vacation-client/test/list-layout.mjs` | PASS (flights-390 logo ink) |
+| `node scripts/check-no-comments.mjs` | PASS (1119 files) |
+| `node scripts/test_offline_manifest.mjs` | PASS (431 offline, 18 online) |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | host — run at publish |
 
 ## Uncommitted (host publish)
 
-- `J/RECEIPT.md` (conflict resolved; `git add` required)
-- Evidence PNGs (vk side; `git add` required for AA/UU rows)
-- Merge-staged vk paths: pic-popup, chat-itinerary-edit, `public/assets/index-BKun7ofk.js`, etc.
-- Side effect (vacation-client layout tests): `evidence/vacation-client-p2-3-day/*.png`, `evidence/vacation-client-p2-5-detail/*.png` — discard unless host wants updated evidence
+- `scripts/test_real_app_entry.mjs`
+- `J/RECEIPT.md`
 
-## Gate B / screen_probe
+Local `list-layout.mjs` run refreshed `evidence/vacation-client-p2-*` PNGs; reverted with `git checkout -- evidence/` so the host patch stays test-only.
 
-**Host:** `git add` conflict resolutions; `node scripts/rebake_served_trek_bundle.mjs` if needed; `git commit --no-edit`; push `vkfill/870-20261109102834`; CI + Gate B on new head lifts `hold:test-trip-fixture` when live data stable.
+## Scope left alone
 
-## WebKit note
+Vacation-client flight row CSS (already PASS list-layout on `b39c6b3b`), Gate B capture, baselines, `package.json`, NYC fixture data, unrelated PRs #884/#882/#889/#865.
 
-After a full page reload, iOS may require a fresh mic allow prompt; within one session we reuse one `getUserMedia` stream and rebuild `SpeechRecognition` each tap.
+## Gate B / rowcheck
 
-## Not touched
-
-Baselines, Gate B config, `package.json`, NYC trip fixture data, server STT, header mic (#865 scope).
+**Host:** `git commit` → push `vkfill/888-20261109142715`; confirm CI `unit-tests`; host rowcheck flights-390/1280 + Gate B structure on new head.
