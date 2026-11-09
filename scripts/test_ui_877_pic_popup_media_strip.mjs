@@ -7,6 +7,7 @@ import {
   auditListRowPicPopupMediaStrip,
   auditPicViewerGlobalClean,
   isVisibleElement,
+  measurePicFullscreenImageCoverage,
 } from '../src/vacation/list-row-pic-popup-audit.mjs';
 
 const patch = await readFile(new URL('../public/ts-timeline-icon-patch.js', import.meta.url), 'utf8');
@@ -18,6 +19,9 @@ assert.match(patch, /print-media-qr/);
 const viewer = await readFile(new URL('../public/ts-pic-popup-viewer.js', import.meta.url), 'utf8');
 assert.match(viewer, /tsPicFsBtn/);
 assert.match(viewer, /tsPicFsOverlay/);
+assert.match(viewer, /tsPicFsImg/);
+assert.match(viewer, /object-fit:contain/);
+assert.match(viewer, /tsPicPopupClose/);
 assert.match(viewer, /tsPicResizeHandle/);
 assert.match(viewer, /touchmove/);
 
@@ -86,5 +90,14 @@ assert.equal(auditListRowPicPopupMediaStrip(chipRow).reason, 'pic-logo-chip-left
 assert.equal(isVisibleElement(null), false);
 assert.equal(auditListRowPicPopup(null).ok, false);
 assert.equal(auditPicViewerGlobalClean(null).ok, false);
+
+const mockImg = {
+  getBoundingClientRect: () => ({ width: 340, height: 680 }),
+};
+assert.equal(measurePicFullscreenImageCoverage(mockImg, { w: 390, h: 900 }).ok, true);
+const smallImg = {
+  getBoundingClientRect: () => ({ width: 100, height: 80 }),
+};
+assert.equal(measurePicFullscreenImageCoverage(smallImg, { w: 390, h: 900 }).ok, false);
 
 console.log('ui #877 pic-popup media strip bundle checks passed');
