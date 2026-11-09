@@ -495,10 +495,24 @@
       return place || '';
     }
 
+    function tripOptionSub(item) {
+      if (!item) return '';
+      const start = dateParts(item.startDate);
+      const end = dateParts(item.endDate);
+      if (start && end) {
+        return start.y === end.y && start.m === end.m
+          ? `${start.mon} ${start.d}–${end.d} ${start.y}`
+          : start.y === end.y
+            ? `${start.mon} ${start.d}–${end.mon} ${end.d} ${start.y}`
+            : `${start.mon} ${start.d} ${start.y}–${end.mon} ${end.d} ${end.y}`;
+      }
+      return '';
+    }
+
     function vacationSelector(trips, trip) {
       if (trips.length < 2) return '';
       const label = (item) => (customerPlaceName(item.title) || customerPlaceName(item.destination)).split(',')[0].trim();
-      return `<div class="vacation-dropdown" id="vacationDropdown"><button class="trip-button" id="tripButton" type="button" aria-haspopup="listbox" aria-expanded="false"><span>${safe(tripBadge(trip))}</span>${icon.chevron}</button><div class="trip-list" role="listbox">${trips.map((item) => `<button class="trip-option ${item.id === trip?.id ? 'active' : ''}" type="button" data-trip-id="${safe(item.id)}" role="option" aria-selected="${item.id === trip?.id ? 'true' : 'false'}"><span>${item.id === trip?.id ? icon.check : ''}</span><span><b>${safe(label(item))}</b><small>${safe(item.status || 'Vacation')}</small></span></button>`).join('')}</div></div>`;
+      return `<div class="vacation-dropdown" id="vacationDropdown"><button class="trip-button" id="tripButton" type="button" aria-haspopup="listbox" aria-expanded="false"><span>${safe(tripBadge(trip))}</span>${icon.chevron}</button><div class="trip-list" role="listbox">${trips.map((item) => `<button class="trip-option ${item.id === trip?.id ? 'active' : ''}" type="button" data-trip-id="${safe(item.id)}" role="option" aria-selected="${item.id === trip?.id ? 'true' : 'false'}"><span>${item.id === trip?.id ? icon.check : ''}</span><span><b>${safe(label(item))}</b><small>${safe(tripOptionSub(item))}</small></span></button>`).join('')}</div></div>`;
     }
 
     function realVacations() {
