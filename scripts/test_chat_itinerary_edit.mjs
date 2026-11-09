@@ -23,8 +23,64 @@ function verifyBarBeforeAnchorOnDay(payload, { anchorName, dayNumber, anchorHHMM
   if (anchorEntry.startLabel !== anchorHHMM && anchorEntry.startLabel !== '20:30') return { ok: false };
   return { ok: entries.indexOf(barEntry) < entries.indexOf(anchorEntry) };
 }
-import { webAccessCookieName } from '../src/vacation/web-access.mjs';
+import { webAccessCookieName, webAccessTokenHash } from '../src/vacation/web-access.mjs';
 import { runChatItineraryEditTurn } from '../src/vacation/chat-itinerary-edit.mjs';
+
+const chatEditTripId = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeee8611';
+const chatEditOwnerId = '22222222-2222-2222-2222-222222222222';
+const chatEditEnv = { TIMESYNCHER_WEB_ACCESS_TOKEN_SALT: 'chat-itinerary-edit-861-salt' };
+const copySlug = 'chat-edit-copy-a47f5a7f2150c5e887a81972';
+
+function makeChatItineraryEditDbStub({ sessionToken, edits = [] } = {}) {
+  const sessionHash = webAccessTokenHash(sessionToken, chatEditEnv);
+  const storedEdits = edits;
+  return async (strings, ...values) => {
+    const query = String(strings.raw ? strings.raw.join('?') : strings);
+    if (/create table if not exists vacation_web_access_grants/i.test(query)) return [];
+    if (/alter table vacation_web_access_grants/i.test(query)) return [];
+    if (/create unique index if not exists vacation_web_access_active_email_idx/i.test(query)) return [];
+    if (/from vacation_web_access_grants/i.test(query) && /session_token_hash/i.test(query)) {
+      if (values.includes(sessionHash)) {
+        return [{
+          id: 'grant-861',
+          trip_id: chatEditTripId,
+          owner_customer_id: chatEditOwnerId,
+          role: 'owner',
+          status: 'accepted',
+        }];
+      }
+      return [];
+    }
+    if (/from trips/i.test(query) && /customer_id/i.test(query)) {
+      return [{ customer_id: chatEditOwnerId }];
+    }
+    if (/update vacation_web_access_grants/i.test(query)) return [];
+    if (/create table if not exists chat_itinerary_edits/i.test(query)) return [];
+    if (/create table if not exists chat_itinerary_anchor_state/i.test(query)) return [];
+    if (/from chat_itinerary_edits/i.test(query) && /order by created_at desc/i.test(query)) {
+      const tripId = values.find((v) => v === chatEditTripId);
+      if (!tripId) return [];
+      if (!storedEdits.length) return [];
+      return [storedEdits[storedEdits.length - 1]];
+    }
+    if (/insert into chat_itinerary_edits/i.test(query)) {
+      const tripId = values[0];
+      const shareSlug = values[1];
+      const beforeJson = values[4];
+      const afterJson = values[5];
+      storedEdits.push({
+        trip_id: tripId,
+        share_slug: shareSlug,
+        before_json: beforeJson,
+        after_json: afterJson,
+        created_at: new Date().toISOString(),
+      });
+      return [];
+    }
+    if (/insert into chat_itinerary_anchor_state/i.test(query)) return [];
+    throw new Error(`unexpected query in chat itinerary edit db stub: ${query}`);
+  };
+}
 
 function miniPayload() {
   return {
@@ -178,5 +234,86 @@ assert.match(queueSource, /prepareChatItineraryEditForQueueTurn/);
 
 const requestJs = fs.readFileSync(new URL('../public/vacation-app-request.js', import.meta.url), 'utf8');
 assert.match(requestJs, /itineraryEdit/);
+
+const undoParsed = offlineParseItineraryEditIntent('please undo that last change');
+assert.equal(undoParsed.op, 'undo');
+
+const ownerSession = 'chat-edit-owner-session-861';
+const ownerHttpReq = {
+  headers: { cookie: `${webAccessCookieName()}=${encodeURIComponent(ownerSession)}` },
+};
+const chatEditTrip = { id: chatEditTripId, metadata: { sharedToken: copySlug } };
+let liveOverrides = structuredClone(miniPayload().thingOverrides);
+const fetchLivePayload = async () => ({
+  ...miniPayload(),
+  thingOverrides: structuredClone(liveOverrides),
+});
+let lastPutOverrides = null;
+const capturePutOverrides = async ({ overrides }) => {
+  lastPutOverrides = structuredClone(overrides);
+  liveOverrides = structuredClone(overrides);
+};
+
+const nothingUndoDb = makeChatItineraryEditDbStub({ sessionToken: ownerSession });
+const nothingUndo = await runChatItineraryEditTurn({
+  db: nothingUndoDb,
+  trip: chatEditTrip,
+  customerTurn: 'undo',
+  httpReq: ownerHttpReq,
+  env: { ...chatEditEnv, CHAT_ITINERARY_EDIT_OFFLINE_PARSE: '1' },
+  fetchPayload: fetchLivePayload,
+  putOverrides: capturePutOverrides,
+  extractIntent: offlineParseItineraryEditIntent,
+});
+assert.equal(nothingUndo.applied, false);
+assert.equal(nothingUndo.reason, 'nothing_to_undo');
+assert.deepEqual(nothingUndo.client, { applied: false, reason: 'nothing_to_undo' });
+assert.equal(lastPutOverrides, null);
+
+liveOverrides = structuredClone(miniPayload().thingOverrides);
+lastPutOverrides = null;
+const setTimeDb = makeChatItineraryEditDbStub({ sessionToken: ownerSession });
+const setTimeTurn = await runChatItineraryEditTurn({
+  db: setTimeDb,
+  trip: chatEditTrip,
+  customerTurn: 'move dinner at Carbone to 8:30 PM on Day 2',
+  turnId: 'turn-set-time-861',
+  httpReq: ownerHttpReq,
+  env: { ...chatEditEnv, CHAT_ITINERARY_EDIT_OFFLINE_PARSE: '1' },
+  fetchPayload: fetchLivePayload,
+  putOverrides: capturePutOverrides,
+  extractIntent: offlineParseItineraryEditIntent,
+});
+assert.equal(setTimeTurn.applied, true);
+assert.equal(setTimeTurn.op, 'set_time');
+assert.equal(liveOverrides['place:610'].perDaySchedule['502'].startTime, '20:30');
+
+const undoTurn = await runChatItineraryEditTurn({
+  db: setTimeDb,
+  trip: chatEditTrip,
+  customerTurn: 'undo',
+  httpReq: ownerHttpReq,
+  env: { ...chatEditEnv, CHAT_ITINERARY_EDIT_OFFLINE_PARSE: '1' },
+  fetchPayload: fetchLivePayload,
+  putOverrides: capturePutOverrides,
+  extractIntent: offlineParseItineraryEditIntent,
+});
+assert.equal(undoTurn.applied, true);
+assert.equal(undoTurn.op, 'undo');
+assert.deepEqual(undoTurn.client, { applied: true, op: 'undo' });
+assert.equal(lastPutOverrides['place:610'].perDaySchedule['502'].startTime, '19:00');
+
+const undoDemoLocked = await runChatItineraryEditTurn({
+  db: null,
+  trip: { id: chatEditTripId, metadata: { sharedToken: '8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y' } },
+  customerTurn: 'undo',
+  httpReq: ownerHttpReq,
+  env: { CHAT_ITINERARY_EDIT_OFFLINE_PARSE: '1' },
+  fetchPayload: async () => miniPayload(),
+  putOverrides: async () => {},
+  extractIntent: offlineParseItineraryEditIntent,
+});
+assert.equal(undoDemoLocked.applied, false);
+assert.equal(undoDemoLocked.reason, 'demo_locked');
 
 console.log('test_chat_itinerary_edit: ok');

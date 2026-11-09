@@ -47,3 +47,7 @@ Permanent harness: `scripts/test_ui_877_pic_popup_media_strip_chrome.mjs` (flow 
 - `J/RECEIPT.md`
 
 Evidence (after chrome): `/home/ubishere9995/tsv-work/vkfill-877-20261109105332-job/877-statue-{before,open,fullscreen,after}-{390,1280}.png`
+
+## Host base merge (2026-11-09 ~10:58 AM PT)
+
+Host merged `origin/vk` (79dce6ae, includes #864) into PR #878 head 348a851c. Sole conflict was `J/RECEIPT.md` (receipt-only); kept this #877 round-2 receipt. Product files merged clean.
