@@ -97,7 +97,7 @@ Live TREK button labels for the same panel (not extra options): **TimeSyncher Va
 | Ratings | Google rating / Yelp rating / Other rating | `ratings-reviews.md` |
 | Reviews | 5-star review quote 1–3; print `★★★★★` | `ratings-reviews.md` |
 | Stories / media | Saved stories (Config); flag on Thing; print embeds `bound_media` / `/ts-thing-media`; Edit caption; Play video | `media-stories.md` |
-| Collab | Checking edit access… / Saved to itinerary / View-only — editing requires an approved email invite | `collaborators.md` |
+| Collab | Checking edit access… / Saved to itinerary (detail modal hides status when view-only) | `collaborators.md` |
 | Budget | Tab when `share_budget`; which things appear = live TREK rules only | `budget.md` |
 | Min things | Initial website fill **15 restaurants / 10 stores / 15 The Rest** (not total-8) | `min-things.md` |
 | Autonomy bar | Telegram → GBrain + code + website; eventually **without bots**; do not wait on OpenClaw | `autonomous-app-customer-flow.md` |

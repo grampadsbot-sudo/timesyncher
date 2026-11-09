@@ -75,6 +75,7 @@ scripts/test_issue_832_daybyday_flight_placeholders.mjs
 scripts/test_issue_832_day_timeline_binding.mjs
 scripts/test_issue_832_events_flight_classification.mjs
 scripts/test_issue_832_vk_search_census_flight_presentation.mjs
+scripts/test_issue_870_composer_mic.mjs
 scripts/test_shared_category_tab_icon_center_bundle.mjs
 scripts/test_tab_emoji_contrast_centre_587.mjs
 scripts/test_served_customer_copy_no_internal_terms.mjs
@@ -294,6 +295,7 @@ scripts/test_ui_866_pic_popup_close.mjs
 scripts/test_ui_866_pic_popup_close_chrome.mjs
 scripts/test_ui_877_pic_popup_media_strip.mjs
 scripts/test_ui_877_pic_popup_media_strip_chrome.mjs
+scripts/test_ui_882_viewonly_detail_status.mjs
 scripts/test_first_intake_no_consent_policy.mjs
 scripts/test_reply_live_path_qa.mjs
 scripts/test_first_intake_reply.mjs

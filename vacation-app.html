@@ -290,6 +290,17 @@
       border-color: var(--danger);
       background: var(--danger);
     }
+    .voice-mic-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    #voiceElapsed {
+      font-size: 13px;
+      font-weight: 750;
+      color: var(--danger);
+      min-width: 2.5em;
+    }
     textarea {
       width: 100%;
       min-height: 42px;
@@ -620,7 +631,7 @@
               <div class="compose-grid">
                 <button class="icon-button" id="attachButton" type="button" aria-label="Add file" title="Add file">${icon.clip}</button>
                 <textarea id="messageText" name="message" rows="1" aria-label="Message" enterkeyhint="send"></textarea>
-                <button class="icon-button" id="voiceButton" type="button" aria-label="Speak" title="Speak">${icon.mic}</button><button class="icon-button" id="sendButton" type="submit" aria-label="Send" title="Send">${icon.send}</button>
+                <span class="voice-mic-wrap"><button class="icon-button" id="voiceButton" type="button" aria-label="Speak" title="Speak">${icon.mic}</button><span id="voiceElapsed" hidden aria-live="off"></span></span><button class="icon-button" id="sendButton" type="submit" aria-label="Send" title="Send">${icon.send}</button>
               </div>
               <input id="fileInput" type="file" accept="image/*,video/*,.pdf,.txt,.ics,.csv,.json" multiple hidden>
             </form>`;

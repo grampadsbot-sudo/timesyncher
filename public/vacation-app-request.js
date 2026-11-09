@@ -198,33 +198,157 @@ window.tsVacationAppProgress = {
 
 window.tsVacationAppChrome = {
   bindVoice(getState) {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const showStatus = window.tsVacationAppRequest.showComposerStatus;
     const voiceButton = document.getElementById('voiceButton');
+    const messageText = document.getElementById('messageText');
+    const voiceElapsed = document.getElementById('voiceElapsed');
+    if (!voiceButton) return;
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const unsupportedMessage = 'Voice dictation is not available in this browser.';
+    const retryMessage = "Didn't catch that — tap the mic and try again.";
+    const uaString = String(navigator.userAgent || '');
+    const iosDevice = /iPhone|iPad|iPod/i.test(uaString);
+
+    const browserMicLabel = () => {
+      const ua = String(navigator.userAgent || '');
+      if (/Brave/i.test(ua)) return 'Brave';
+      if (/CriOS|Chrome/i.test(ua) && !/Edg/i.test(ua)) return 'Chrome';
+      if (/FxiOS|Firefox/i.test(ua)) return 'Firefox';
+      if (/EdgiOS|Edg/i.test(ua)) return 'Edge';
+      if (/Safari/i.test(ua)) return 'Safari';
+      return 'your browser';
+    };
+
+    const micBlockedMessage = () => (
+      iosDevice
+        ? `Microphone access is blocked. On iPhone, open Settings › ${browserMicLabel()} › Microphone and turn it on, then try again.`
+        : 'Microphone access is blocked. Allow microphone for this site in your browser settings, then try again.'
+    );
+
     if (!SpeechRecognition) {
       voiceButton.disabled = true;
-      voiceButton.title = 'Voice dictation is not available in this browser';
+      voiceButton.title = unsupportedMessage;
+      showStatus(unsupportedMessage);
       return;
     }
-    const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = true;
-    recognition.onstart = () => {
-      getState().voiceMode = true;
-      voiceButton.classList.add('recording');
+
+    let mediaStream = null;
+    let activeRecognition = null;
+    let recording = false;
+    let timerInterval = null;
+    let recordingStartedAt = 0;
+
+    const formatElapsed = (ms) => {
+      const totalSec = Math.floor(ms / 1000);
+      const minutes = Math.floor(totalSec / 60);
+      const seconds = totalSec % 60;
+      return `${minutes}:${String(seconds).padStart(2, '0')}`;
     };
-    recognition.onend = () => {
-      getState().voiceMode = false;
-      voiceButton.classList.remove('recording');
-      document.getElementById('messageText')?.focus();
-    };
-    recognition.onresult = (event) => {
-      const text = Array.from(event.results).map((result) => result[0]?.transcript || '').join(' ').trim();
-      if (text) {
-        document.getElementById('messageText').value = text;
-        getState().voiceArmed = true;
+
+    const stopTimer = () => {
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = null;
+      recordingStartedAt = 0;
+      if (voiceElapsed) {
+        voiceElapsed.hidden = true;
+        voiceElapsed.textContent = '';
       }
     };
-    voiceButton.addEventListener('click', () => recognition.start());
+
+    const startTimer = () => {
+      if (!voiceElapsed) return;
+      recordingStartedAt = Date.now();
+      voiceElapsed.hidden = false;
+      voiceElapsed.textContent = '0:00';
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        if (!recordingStartedAt) return;
+        voiceElapsed.textContent = formatElapsed(Date.now() - recordingStartedAt);
+      }, 250);
+    };
+
+    const finishRecording = () => {
+      recording = false;
+      getState().voiceMode = false;
+      voiceButton.classList.remove('recording');
+      stopTimer();
+      activeRecognition = null;
+      messageText?.focus();
+    };
+
+    const ensureMediaStream = async () => {
+      if (mediaStream) return mediaStream;
+      const getUserMedia = navigator.mediaDevices?.getUserMedia;
+      if (!getUserMedia) throw Object.assign(new Error('unsupported'), { name: 'NotSupportedError' });
+      mediaStream = await getUserMedia.call(navigator.mediaDevices, { audio: true });
+      return mediaStream;
+    };
+
+    const attachRecognition = () => {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.onstart = () => {
+        recording = true;
+        getState().voiceMode = true;
+        voiceButton.classList.add('recording');
+        startTimer();
+      };
+      recognition.onend = () => {
+        finishRecording();
+      };
+      recognition.onresult = (event) => {
+        const text = Array.from(event.results).map((result) => result[0]?.transcript || '').join(' ').trim();
+        if (text) {
+          messageText.value = text;
+          getState().voiceArmed = true;
+          showStatus('');
+        }
+      };
+      recognition.onerror = (event) => {
+        const code = String(event.error || '');
+        if (code === 'not-allowed' || code === 'service-not-allowed') {
+          showStatus(micBlockedMessage());
+        } else if (code === 'no-speech' || code === 'aborted' || code === 'audio-capture' || code === 'network') {
+          showStatus(retryMessage);
+        } else if (code) {
+          showStatus(retryMessage);
+        }
+        recording = false;
+        getState().voiceMode = false;
+        voiceButton.classList.remove('recording');
+        stopTimer();
+      };
+      return recognition;
+    };
+
+    voiceButton.addEventListener('click', async () => {
+      if (recording) return;
+      try {
+        await ensureMediaStream();
+      } catch (error) {
+        const name = String(error?.name || '');
+        if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+          showStatus(micBlockedMessage());
+          return;
+        }
+        showStatus(unsupportedMessage);
+        return;
+      }
+      activeRecognition = attachRecognition();
+      try {
+        activeRecognition.start();
+      } catch (error) {
+        const name = String(error?.name || '');
+        const message = String(error?.message || '');
+        if (name === 'NotAllowedError' || message.includes('not-allowed')) {
+          showStatus(micBlockedMessage());
+          return;
+        }
+        showStatus(retryMessage);
+      }
+    });
   },
   bindFullScreen() {
     const button = document.getElementById('fullScreenButton');

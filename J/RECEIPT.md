@@ -1,56 +1,79 @@
-# PR #872 — host vk merge + #865 / #877 / #859 (cursor-ubuntu)
+# PR #872 — host vk merge + #865 / #870 / #877 / #882 (cursor-ubuntu / composer-2.5)
 
-Start HEAD: `5d91a8be957866d469a2dcc9d7bfb524a0d02095` (lane `vkfill-872-20261109130308`).
+**Outcome:** source-ready PATCH after `origin/vk` base merge (uncommitted; host commit). **Start HEAD:** `439d8234f0f8ecc14cdfe41a7c474e327198ee7d`. **Base merge:** host merged `origin/vk` at `412e26e95ae02b0e31c185896833cbc9d83e6e31` into `439d8234` (2026-11-09 ~1:40 PM PT). **Conflict:** `J/RECEIPT.md` only (resolved here).
 
 GBrain handoff `bot-admin/lanes/vk-pr-handoff/pr-872`: **page_not_found** (brief HANDOFF FETCH FAILED).
 
-Host merged `origin/vk` at `db5f9ee883a513cdb479f706354d4eae25725159` into `5d91a8be`; conflict only in this receipt.
+## Issue #865 (PR intent; closes #865)
 
-## Issue #865 (PR intent; on branch)
+Divider full drag (`--site-height` / `--chat-height`, no `minmax(220px)` floor), full-width chat bubbles (`max-width: 100%`), header mic removed from shared-trip hero row (`TripHeaderActions` no `SharedAudioButton`); composer mic retained (`#voiceButton` in `vacation-app.html`). Offline: `test_vacation_app_865_chrome.mjs`. Gate B layout probes: `PUBLIC-NOMIC`, `SITE-BUBBLE-WIDTH`, divider + bubble shots in `test_served_page_layout.mjs`.
 
-Divider full drag, full-width chat bubbles, header mic removed from trip header hero row; composer mic retained. `test_vacation_app_865_chrome.mjs`, layout probes `PUBLIC-NOMIC`, `SITE-BUBBLE-WIDTH`, divider shots in `test_served_page_layout.mjs`.
+`public/ts-shared-audio-recorder.js`: wires existing `[data-ts-shared-audio]` only (no header auto-inject).
 
-`public/ts-shared-audio-recorder.js`: wires existing `[data-ts-shared-audio]` with aria/title `Record voice note` + `beginRecording` (no header auto-inject).
+## Issue #870 (from vk merge; composer mic UX)
 
-## Issue #877 (from vk merge; on branch)
+1. **`public/vacation-app-request.js` — `bindVoice`**
+   - Inline composer errors via `showComposerStatus` (blocked mic, unsupported API, no-speech / aborted retry).
+   - `try/catch` on `getUserMedia` and `recognition.start()`; `onerror` handler.
+   - Fresh `SpeechRecognition` per recording; one `getUserMedia` stream per page session.
+   - Recording timer `m:ss` on `#voiceElapsed` while active.
 
-Fullscreen pic popup: dark backdrop, `object-fit: contain`, ≥85% viewport image coverage; `public/ts-pic-popup-viewer.js`, `list-row-pic-popup-audit.mjs`, `test_ui_877_pic_popup_media_strip*.mjs`.
+2. **`vacation-app.html`** — `#voiceElapsed` beside `#voiceButton` in `.voice-mic-wrap`.
+
+3. **`scripts/test_issue_870_composer_mic.mjs`** — offline harness (timer, multi-tap, error paths).
+
+## Issue #877 (from vk merge)
+
+Fullscreen pic popup: `public/ts-pic-popup-viewer.js`, `list-row-pic-popup-audit.mjs`, `test_ui_877_pic_popup_media_strip*.mjs`.
+
+## Issue #882 / view-only detail status (from vk merge)
+
+`src/vacation/trek-thing-detail-viewonly-status-patch.mjs`, `trek-thing-detail-patches.mjs`, `scripts/test_ui_882_viewonly_detail_status.mjs`; Feature Map touch in `features/README.md`, `features/collaborators.md`.
 
 ## Issue #859 / #867 (from vk merge; chat itinerary edit)
 
-`src/vacation/chat-itinerary-edit-intent.mjs` + coalesce/retry path in `chat-itinerary-edit.mjs`; vk undo/set_time integration tests and copy-trip staging Carbone resolve probe retained in `scripts/test_chat_itinerary_edit.mjs`.
+`src/vacation/chat-itinerary-edit-intent.mjs` + coalesce/retry in `chat-itinerary-edit.mjs`; `scripts/test_chat_itinerary_edit.mjs`.
 
-## Inherited vk receipt (#856 Haiku tiers — not PR #872 scope)
+## Host base merge conflict resolution
 
-vk carried OpenRouter tier-2–4 reasoning fix (`scripts/openrouter-tier-provider.mjs`, `vacation-app-reply-rules.mjs`, tier tests). Already on branch from prior vk tips; unchanged this merge pass.
-
-## Conflict resolution (this round)
-
-| Path | Change |
+| Path | Resolution |
 | --- | --- |
-| `J/RECEIPT.md` | Merged both receipt bodies (this file). |
-| vk product files | Merged without conflict: `chat-itinerary-edit*`, #877 pic-popup assets/tests, staged evidence from vk index (host merge). |
-| `public/assets/index-BKun7ofk.js` | Present at rebake sha256 `6748012103be769972219c26b9406f943d410f6aae625b873ffb839fe96b8780` (no rebake rerun this pass). |
-| Harness | `scripts/test_shared_trip_spa_console.mjs` + `scripts/layout-shell-harness.mjs` already serve `/ts-pic-popup-viewer.js` (#877). |
+| `J/RECEIPT.md` | Merged #872 (#865) receipt + vk #870/#877/#882 notes (this file). |
+| `public/assets/index-BKun7ofk.js` | vk merge version + `node scripts/rebake_served_trek_bundle.mjs` → sha256 `ba0c78d60c2e3b597e9c16913f151a4404b73921e0bab718e80bfa876d246f8f`. |
+| vk product paths | Pic-popup, chat-itinerary-edit, composer mic, trek view-only patch, offline test registrations (staged index from host merge). |
+| `evidence/vacation-client-p2-3-day/*.png`, `evidence/vacation-client-p2-5-detail/*.png` | Minor pixel drift from local `npm ci` / client runs — host may `git checkout` unless keeping refreshed evidence. |
 
-## Local proof (uncommitted on `5d91a8be` + merge index)
+## Checks run (lane; HEAD `439d8234`)
 
-| Command | Result |
+| Check | Result |
 | --- | --- |
-| `timeout 120 node scripts/test_chat_itinerary_edit.mjs` | PASS |
 | `timeout 90 node scripts/test_vacation_app_865_chrome.mjs` | PASS |
-| `timeout 90 node scripts/test_shared_trip_spa_console.mjs` | PASS (header mic absent; pic-popup static 200) |
-| `timeout 90 node scripts/test_ui_877_pic_popup_media_strip.mjs` | PASS |
-| `node scripts/test_offline_manifest.mjs` | PASS (429 offline) |
-| `node scripts/check-no-comments.mjs` | PASS (after `apps/vacation-client` npm ci) |
-| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS |
-| `node scripts/test_served_page_layout.mjs` | Host Gate B structure (Chrome) |
-| `cd apps/vacation-client && npm test` | Host pre-push (full client suite) |
+| `timeout 60 node scripts/test_issue_870_composer_mic.mjs` | PASS |
+| `node scripts/rebake_served_trek_bundle.mjs` | PASS sha256=ba0c78d60c2e3b597e9c16913f151a4404b73921e0bab718e80bfa876d246f8f |
+| `timeout 120 node scripts/test_chat_itinerary_edit.mjs` | PASS |
+| `timeout 90 node scripts/test_shared_trip_spa_console.mjs` | PASS (header mic absent) |
+| `timeout 120 node scripts/test_ui_877_pic_popup_media_strip.mjs` | PASS |
+| `node scripts/test_offline_manifest.mjs` | PASS (431 offline, 18 online) |
+| `node scripts/check-no-comments.mjs` | PASS (1118 files; after root `npm ci` + `apps/vacation-client` `npm ci`) |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS (252 report, 0 fail) |
+| `node scripts/test_served_page_layout.mjs` | **Host** Gate B structure (Chrome) |
+| `cd apps/vacation-client && npm test` | **Host** pre-push (full client suite) |
+
+## Uncommitted (host publish)
+
+- Resolved `J/RECEIPT.md` (was `UU`; `git add` required)
+- Merge-staged: pic-popup, chat-itinerary-edit, `public/assets/index-BKun7ofk.js`, `public/vacation-app-request.js`, `vacation-app.html`, `scripts/test_issue_870_composer_mic.mjs`, `scripts/offline-tests.txt`, trek #882 patch + test, feature map rows
+- Rebaked bundle (post-rebake sha above) — ensure rebaked file included in merge commit
+- Evidence PNGs (optional discard per table above)
 
 ## Host publish (merge commit)
 
-Complete merge: `git add` resolved `J/RECEIPT.md` + staged vk/index from host merge; `git commit --no-edit`; push once to `vkfill/865-20261109101932`. Run `node scripts/test_served_page_layout.mjs` and vacation-client `npm test` on host if not rerun here.
+`git add` conflict resolutions + index; `git commit --no-edit`; push once to `vkfill/865-20261109101932`. Run `node scripts/test_served_page_layout.mjs` and vacation-client `npm test` on host if not rerun here.
 
-## Left alone (scope)
+## WebKit note (#870)
 
-Baselines, `screen_probe.mjs`, NYC 8CQX trip data, `package.json` / lockfile, Gate B thresholds/allowlists, deploy config.
+After a full page reload, iOS may require a fresh mic allow prompt; within one session we reuse one `getUserMedia` stream and rebuild `SpeechRecognition` each tap.
+
+## Not touched (scope)
+
+Baselines, Gate B thresholds/allowlists, `package.json` / lockfile, NYC 8CQX trip data, deploy config, server STT.
