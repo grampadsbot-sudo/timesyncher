@@ -138,6 +138,7 @@ async function startServer({ html, js, css, tripPayload }) {
     '/ts-thing-media-overlay.js': path.join(root, 'public/ts-thing-media-overlay.js'),
     '/ts-shared-audio-recorder.js': path.join(root, 'public/ts-shared-audio-recorder.js'),
     '/ts-shared-audio-recorder.css': path.join(root, 'public/ts-shared-audio-recorder.css'),
+    '/ts-pic-popup-viewer.js': path.join(root, 'public/ts-pic-popup-viewer.js'),
     '/post-purchase-gate.mjs': path.join(root, 'public/post-purchase-gate.mjs'),
     '/ts-thing-media/bindings.json': path.join(root, 'public/ts-thing-media/bindings.json'),
   };

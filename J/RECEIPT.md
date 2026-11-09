@@ -1,35 +1,50 @@
-# PR #872 / Issue #865 — divider, header mic, full-width bubbles (cursor-ubuntu)
+# PR #872 — host vk merge + #865 / #877 (cursor-ubuntu)
 
-Start HEAD: `6575eb0fc80068af811b6f9af912b48021af0f27` (lane `vkfill-865-20261109112837-job`).
+Start HEAD: `8678fab4583be40f190dc782122e9e0bb8a2d96c` (lane `vkfill-872-20261109122306`).
 
 GBrain handoff `bot-admin/lanes/vk-pr-handoff/pr-872`: **page_not_found** (brief HANDOFF FETCH FAILED).
 
-## On PR head (6575eb0f)
+Host merged `origin/vk` at `d25b86b355623efe24dc56a252db47a19eeb80b0` into `8678fab4`; conflict only in this receipt.
 
-Divider full drag, full-width chat bubbles, header mic removed from `TripHeaderActions.tsx`, `test_vacation_app_865_chrome.mjs`, `features/header-chrome.md` — committed at `6575eb0f`.
+## Issue #865 (PR intent; on branch)
 
-## CI gap (unit-tests)
+Divider full drag, full-width chat bubbles, header mic removed from trip header hero row; composer mic retained. `test_vacation_app_865_chrome.mjs`, layout probes `PUBLIC-NOMIC`, `SITE-BUBBLE-WIDTH`, divider shots in `test_served_page_layout.mjs`.
 
-`scripts/test_keepsake_style2.mjs` failed: `public/ts-shared-audio-recorder.js` lost `Record voice note` when #865 stubbed `installButton()` to `return true` only (no header auto-inject).
+`public/ts-shared-audio-recorder.js`: wires existing `[data-ts-shared-audio]` with aria/title `Record voice note` + `beginRecording` (no header auto-inject).
 
-## Patch (uncommitted; HOST PUBLICATION ONLY)
+## Issue #877 (from vk merge)
+
+Fullscreen pic popup: dark backdrop, `object-fit: contain`, ≥85% viewport image coverage; `public/ts-pic-popup-viewer.js`, `list-row-pic-popup-audit.mjs`, `test_ui_877_pic_popup_media_strip*.mjs`.
+
+## Conflict resolution (this round)
 
 | Path | Change |
 | --- | --- |
-| `public/ts-shared-audio-recorder.js` | Wire existing `[data-ts-shared-audio]` buttons with aria/title `Record voice note` + `beginRecording`; MutationObserver until present. No `dataset.tsSharedAudio = '1'` create/insert (header inject stays removed). |
+| `J/RECEIPT.md` | Merged both receipt bodies (this file). |
+| `public/assets/index-BKun7ofk.js` | vk merge version + `node scripts/rebake_served_trek_bundle.mjs` (sha256 `6748012103be769972219c26b9406f943d410f6aae625b873ffb839fe96b8780`). |
+| `scripts/test_shared_trip_spa_console.mjs` | Serve `/ts-pic-popup-viewer.js` in harness (fix 404 after `shared-app.html` script tag from #877). |
+| `scripts/layout-shell-harness.mjs` | Same static map entry for layout/Gate B harness. |
 
-## Local proof (uncommitted on `6575eb0f`)
+## Local proof (uncommitted on `8678fab4` + merge index)
 
 | Command | Result |
 | --- | --- |
-| `node scripts/test_keepsake_style2.mjs` | PASS |
 | `node scripts/test_vacation_app_865_chrome.mjs` | PASS |
-| `node scripts/check-no-comments.mjs` | PASS |
-| `node scripts/test_offline_manifest.mjs` | PASS (425 offline) |
-| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS (0 fail) |
+| `node scripts/test_ui_877_pic_popup_media_strip.mjs` | PASS |
+| `node scripts/test_offline_manifest.mjs` | PASS (429 offline) |
+| `node scripts/rebake_served_trek_bundle.mjs` | PASS (rebake sha above) |
+| `node scripts/test_shared_trip_spa_console.mjs` | PASS (header mic absent; no 404 on pic-popup viewer) |
+| `node scripts/check-no-comments.mjs` | **SKIP** — `apps/vacation-client/node_modules/typescript` missing in lane worktree |
+| `node scripts/test_keepsake_style2.mjs` | **SKIP** — root `qrcode` package missing in lane worktree; `Record voice note` present in `ts-shared-audio-recorder.js` |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | Host pre-push |
+| `node scripts/test_served_page_layout.mjs` | Host Gate B structure (Chrome) |
 
-`node scripts/test_served_page_layout.mjs` / Gate B structure probes **not run** here (Chrome not on PATH).
+## Host publish (merge commit)
 
-## Host publish
+Complete merge: `git add` resolved `J/RECEIPT.md` + rebaked bundle + harness rows; `git commit --no-edit`; push once to `vkfill/865-20261109101932`. Run full pre-DONE gates on host with `node_modules` installed.
 
-1 file: `public/ts-shared-audio-recorder.js` in worktree `vkfill-872-20261109112837`. Commit on `vkfill/865-20261109101932`, push once, re-run CI. Structure Gate B on host (divider, `PUBLIC-NOMIC`, `SITE-BUBBLE-WIDTH`).
+Evidence (#877): `/home/ubishere9995/tsv-work/vkfill-877-20261109114313-job/877-statue-{before,open,fullscreen,after}-{390,1280}.png`
+
+## Out of scope (left alone)
+
+Baselines, `screen_probe.mjs`, NYC 8CQX trip data, `package.json` / deps install in lane sandbox.
