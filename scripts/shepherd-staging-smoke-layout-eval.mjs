@@ -18,6 +18,7 @@ export const LAYOUT_RULE_APPLICABILITY = {
   hidden_attr_display_none: ['chat', 'shared'],
   guest_nav_disjoint: ['shared'],
   chat_pane_row_parity: ['chat'],
+  ellipsis_text_clipped: ['chat', 'shared'],
 };
 
 export function evaluateLayoutRules(pageKind) {
@@ -48,9 +49,36 @@ export function evaluateLayoutRules(pageKind) {
       guest_nav_disjoint: ['shared'],
       chat_pane_row_parity: ['chat'],
       site_fullscreen_control: ['chat'],
+      ellipsis_text_clipped: ['chat', 'shared'],
     }[rule] || [];
     return list.includes(pageKind);
   };
+
+  if (applies('ellipsis_text_clipped')) {
+    const clipped = [];
+    const scanRoot = pageKind === 'chat'
+      ? (document.querySelector('.vacation-dropdown') || document.body)
+      : (document.querySelector('[data-shared-live-tab]')?.closest('main, [role="main"], #root') || document.body);
+    for (const row of tsSampleEllipsisClippedOwnText(scanRoot, getComputedStyle, 16)) clipped.push(row);
+    if (pageKind === 'shared') {
+      for (const el of document.querySelectorAll('[data-ts-flight-time="1"], [data-ts-conflict-label="1"]')) {
+        const st = getComputedStyle(el);
+        const own = tsElementOwnText(el);
+        if (!own) continue;
+        if (el.scrollWidth > el.clientWidth + 1 && (tsStyleEllipsisClips(st) || st.textOverflow === 'ellipsis')) {
+          clipped.push({
+            tag: el.tagName,
+            text: own.slice(0, 96),
+            scrollWidth: el.scrollWidth,
+            clientWidth: el.clientWidth,
+          });
+        }
+      }
+    }
+    if (clipped.length) {
+      push(pageKind === 'chat' ? '.vacation-dropdown' : '[data-ts-flight-time="1"]', 'ellipsis_text_clipped', `ellipsis-clipped own text (${clipped.length} sampled)`, { samples: clipped.slice(0, 8) });
+    }
+  }
 
   if (applies('horizontal_overflow')) {
     if (document.documentElement.scrollWidth > vw + 1) {

@@ -92,17 +92,29 @@
       background: var(--panel);
       color: var(--ink);
       display: inline-flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 8px;
       padding: 7px 10px;
       font-weight: 750;
+      text-align: left;
     }
-    .trip-button span {
+    .trip-button .trip-trigger-text,
+    .trip-button .trip-trigger-title,
+    .trip-button .trip-trigger-dates,
+    .trip-option b,
+    .trip-option small {
       min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      display: block;
+      width: 100%;
+      overflow: visible;
+      text-overflow: clip;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      font-weight: 750;
     }
+    .trip-button .trip-trigger-text { flex: 1 1 auto; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+    .trip-button .trip-trigger-dates,
+    .trip-option small { color: var(--muted); font-size: 12px; margin-top: 2px; }
     .trip-list {
       position: absolute;
       right: 0;
@@ -139,13 +151,7 @@
       text-align: left;
     }
     .trip-option:hover, .trip-option.active { background: var(--soft); }
-    .trip-option b, .trip-option small {
-      display: block;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .trip-option small { color: var(--muted); margin-top: 2px; }
+    .trip-option .trip-option-text { min-width: 0; display: flex; flex-direction: column; gap: 2px; align-items: flex-start; }
     .workspace {
       grid-row: 2;
       min-height: 0;
@@ -494,23 +500,45 @@
       const start = dateParts(trip?.startDate);
       const end = dateParts(trip?.endDate);
       if (!start || !end) return '';
-      if (start.y !== end.y) return `${start.mon} ${start.d} ${start.y}–${end.mon} ${end.d} ${end.y}`;
-      if (start.m !== end.m) return `${start.mon} ${start.d}–${end.mon} ${end.d} ${start.y}`;
-      return `${start.mon} ${start.d}–${end.d} ${start.y}`;
+      if (start.y !== end.y) return `${start.mon} ${start.d}, ${start.y}–${end.mon} ${end.d}, ${end.y}`;
+      if (start.m !== end.m) return `${start.mon} ${start.d}–${end.mon} ${end.d}, ${start.y}`;
+      return `${start.mon} ${start.d}–${end.d}, ${start.y}`;
     }
 
-    function tripBadge(trip) {
+    function tripTitle(trip) {
       if (!trip || isPlaceholderTrip(trip)) return '';
-      const place = (customerPlaceName(trip.title) || customerPlaceName(trip.destination)).split(',')[0].trim();
+      return (customerPlaceName(trip.title) || customerPlaceName(trip.destination)).split(',')[0].trim();
+    }
+
+    function tripTriggerInner(trip) {
+      const place = tripTitle(trip);
       const when = tripDates(trip);
-      if (when) return place ? `${place} ${when}` : when;
-      return place || '';
+      if (!place && !when) return '';
+      return `<span class="trip-trigger-text"><span class="trip-trigger-title">${safe(place)}</span>${when ? `<small class="trip-trigger-dates">${safe(when)}</small>` : ''}</span>`;
+    }
+
+    function refreshTripTrigger(button, trip) {
+      if (!button || !trip) return;
+      const titleEl = button.querySelector('.trip-trigger-title');
+      const datesEl = button.querySelector('.trip-trigger-dates');
+      const place = tripTitle(trip);
+      const when = tripDates(trip);
+      if (titleEl) titleEl.textContent = place;
+      if (datesEl) {
+        if (when) {
+          datesEl.textContent = when;
+          datesEl.hidden = false;
+        } else {
+          datesEl.textContent = '';
+          datesEl.hidden = true;
+        }
+      }
     }
 
     function vacationSelector(trips, trip) {
       if (trips.length < 2) return '';
-      const label = (item) => (customerPlaceName(item.title) || customerPlaceName(item.destination)).split(',')[0].trim();
-      return `<div class="vacation-dropdown" id="vacationDropdown"><button class="trip-button" id="tripButton" type="button" aria-haspopup="listbox" aria-expanded="false"><span>${safe(tripBadge(trip))}</span>${icon.chevron}</button><div class="trip-list" role="listbox">${trips.map((item) => `<button class="trip-option ${item.id === trip?.id ? 'active' : ''}" type="button" data-trip-id="${safe(item.id)}" role="option" aria-selected="${item.id === trip?.id ? 'true' : 'false'}"><span>${item.id === trip?.id ? icon.check : ''}</span><span><b>${safe(label(item))}</b>${tripDates(item) ? `<small>${safe(tripDates(item))}</small>` : ''}</span></button>`).join('')}</div></div>`;
+      const label = (item) => tripTitle(item);
+      return `<div class="vacation-dropdown" id="vacationDropdown"><button class="trip-button" id="tripButton" type="button" aria-haspopup="listbox" aria-expanded="false">${tripTriggerInner(trip)}${icon.chevron}</button><div class="trip-list" role="listbox">${trips.map((item) => `<button class="trip-option ${item.id === trip?.id ? 'active' : ''}" type="button" data-trip-id="${safe(item.id)}" role="option" aria-selected="${item.id === trip?.id ? 'true' : 'false'}"><span>${item.id === trip?.id ? icon.check : ''}</span><span class="trip-option-text"><b>${safe(label(item))}</b>${tripDates(item) ? `<small>${safe(tripDates(item))}</small>` : ''}</span></button>`).join('')}</div></div>`;
     }
 
     function realVacations() {
@@ -768,8 +796,7 @@
             if (index >= 0) state.vacations[index] = data.vacation;
             else state.vacations.push(data.vacation);
             const tripButton = document.getElementById('tripButton');
-            const tripLabelSpan = tripButton?.querySelector('span');
-            if (tripLabelSpan) tripLabelSpan.textContent = tripBadge(data.vacation);
+            refreshTripTrigger(tripButton, data.vacation);
             if (!hadSite && realSiteUrl(data.vacation.publicUrl, data.vacation)) {
               stopProgressPoll();
               await loadApp(data.vacation.id);

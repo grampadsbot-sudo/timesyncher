@@ -13,6 +13,8 @@ const DAY_TIMELINE_TIME_SINGLE_LINE = '!ua.endTime&&!ua.isConflict?n.jsx("div",{
 const DAY_TIMELINE_TIME_SINGLE_LINE_LEGACY = 'ua.time&&!ua.endTime&&!ua.isConflict?n.jsx("div",{"data-ts-timeline-time":"1",style:{fontSize:11,fontWeight:700,color:"#111827",textAlign:"right",whiteSpace:"nowrap",alignSelf:"baseline"},children:Yo(ua.time)}):';
 const DAY_TIMELINE_TITLE_WRAP_NEEDLE = '}:{paddingTop:1},children:[ua.isConflict&&n.jsxs(';
 const DAY_TIMELINE_TITLE_WRAP_BASELINE = '}:{paddingTop:1,alignSelf:!ua.endTime&&!ua.isConflict?"baseline":"start"},children:[ua.isConflict&&n.jsxs(';
+const CONFLICT_LABEL_PATCH_ELLIPSIS = 'flexWrap:"nowrap",width:"100%",minWidth:0,color:"#b91c1c",fontSize:11,fontWeight:900,marginBottom:6,lineHeight:1.35,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"},children:[n.jsx("span",{style:{width:34,height:2,background:"#ef4444",display:"inline-block",flexShrink:0}}),"Conflict with ",Bs(ua.conflictWith||"another timeline item")]}),n.jsx("button",{"data-ts-timeline-title":"1"';
+const CONFLICT_LABEL_PATCH_WRAP = 'flexWrap:"wrap",width:"100%",minWidth:0,maxWidth:"100%",color:"#b91c1c",fontSize:11,fontWeight:900,marginBottom:6,lineHeight:1.35,overflow:"visible",whiteSpace:"normal",overflowWrap:"anywhere",boxSizing:"border-box"},children:[n.jsx("span",{style:{width:34,height:2,background:"#ef4444",display:"inline-block",flexShrink:0,marginTop:5}}),"Conflict with ",Bs(ua.conflictWith||"another timeline item")]}),n.jsx("button",{"data-ts-timeline-title":"1"';
 
 export function patchSharedTabRowOverflow(source = '', options = {}) {
   const served = options.served === true;
@@ -58,5 +60,6 @@ export function patchSharedLayoutOverflow(source = '', options = {}) {
   } else if (served && !js.includes(DAY_TIMELINE_TITLE_WRAP_BASELINE)) {
     throw new Error('day timeline title baseline patch did not apply');
   }
+  if (js.includes(CONFLICT_LABEL_PATCH_ELLIPSIS)) js = js.replace(CONFLICT_LABEL_PATCH_ELLIPSIS, CONFLICT_LABEL_PATCH_WRAP);
   return js;
 }
