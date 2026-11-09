@@ -15,7 +15,7 @@ const require = createRequire(import.meta.url);
 const root = fileURLToPath(new URL('..', import.meta.url));
 const outDir =
   process.env.VK_877_EVIDENCE_DIR ||
-  fileURLToPath(new URL('../../vkfill-877-20261109105332-job', import.meta.url));
+  fileURLToPath(new URL('../../vkfill-877-20261109114313-job', import.meta.url));
 const widths = [390, 1280];
 
 function loadPuppeteer() {
@@ -152,7 +152,7 @@ const browser = await puppeteer.launch({
   args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
 });
 
-const head = 'b7777808e2a57b4ab7409f3bb90c6600b3665625';
+const head = process.env.GIT_HEAD || '1f1d4c3f9459c1801397868c77cf66ffe26efa84';
 
 try {
   for (const w of widths) {
@@ -236,18 +236,39 @@ try {
     }
 
     await page.click('li[data-ts-877-probe="1"] [data-ts-pic-fs-btn="1"]');
-    await sleep(400);
+    await sleep(500);
     const fsOpen = await page.evaluate(() => {
       const overlay = document.querySelector('[data-ts-pic-fs-overlay="1"]');
-      const elFs = Boolean(document.fullscreenElement);
+      const img = overlay?.querySelector('[data-ts-pic-fs-img="1"]') || overlay?.querySelector('img');
       const active = Boolean(window.__tsPicFsActive);
-      const big =
-        overlay?.getBoundingClientRect().width >= window.innerWidth * 0.95 ||
-        (document.fullscreenElement?.getBoundingClientRect().width || 0) >= window.innerWidth * 0.9;
-      return { overlay: Boolean(overlay), elFs, active, big };
+      const exitBtn = overlay?.querySelector('[data-ts-pic-fs-exit="1"]');
+      const caption = overlay?.querySelector('[data-ts-pic-fs-caption="1"]');
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      let coverage = { ok: false, ratio: 0 };
+      if (img) {
+        const r = img.getBoundingClientRect();
+        const ratio = Math.max(r.width / vw, r.height / vh);
+        coverage = { ok: ratio >= 0.85, ratio, w: r.width, h: r.height, vw, vh };
+      }
+      const backdropDark =
+        overlay &&
+        String(getComputedStyle(overlay).backgroundColor || '').includes('15') &&
+        overlay.getBoundingClientRect().width >= vw * 0.98;
+      return {
+        overlay: Boolean(overlay),
+        active,
+        exitBtn: Boolean(exitBtn),
+        captionOverlay: Boolean(caption),
+        backdropDark,
+        coverage,
+      };
     });
     assert.ok(fsOpen.active, `fullscreen active at ${w}`);
-    assert.ok(fsOpen.big || fsOpen.overlay || fsOpen.elFs, `image fills viewport at ${w}`);
+    assert.ok(fsOpen.overlay, `fs overlay mounted at ${w}`);
+    assert.ok(fsOpen.exitBtn, `fs close control at ${w}`);
+    assert.ok(fsOpen.backdropDark, `dark fs backdrop at ${w}`);
+    assert.ok(fsOpen.coverage.ok, `image covers >=85% viewport at ${w}: ${JSON.stringify(fsOpen.coverage)}`);
     const fsPath = path.join(outDir, `877-statue-fullscreen-${w}.png`);
     await page.screenshot({ path: fsPath });
 
