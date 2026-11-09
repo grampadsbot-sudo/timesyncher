@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { parseReviewStars, resolveDossierReviewRatings } from '../src/vacation/dossier-review-ratings.mjs';
 import { rederiveReviewRatings } from './rederive_review_ratings.mjs';
 import { loadVkSearchCensusResult, vkSearchResultToDossier } from '../src/vacation/dossier-vk-search.mjs';
-import { writeDossierReviews } from '../src/vacation/thing-dossier-fields.mjs';
+import { writeDossierReviews, stripComposedReviewFiller, reviewTextsHaveRepeatedTrailingSentence } from '../src/vacation/thing-dossier-fields.mjs';
 
 const census = loadVkSearchCensusResult({ id: 602 }, { env: {} });
 const dossier = vkSearchResultToDossier(census, { id: 602 });
@@ -141,3 +141,24 @@ const applied = spawnSync(process.execPath, ['scripts/rederive_review_ratings.mj
 assert.equal(applied.status, 0, applied.stderr);
 assert.equal(Number(JSON.parse(readFileSync(outputFile, 'utf8'))[0].review1Rating), 4);
 console.log('ok grounded review ratings, mean drift, rating shapes and offline re-derive');
+
+
+
+const filler = 'Guests note this theme repeatedly across the saved review evidence for this place.';
+const padded = writeDossierReviews({ category: 'store' }, {
+  ...dossier,
+  reviews: dossier.reviews.map((r, i) => ({
+    ...r,
+    text: i === 0 ? `${r.text} ${filler}` : `${r.text} ${filler}`,
+  })),
+});
+for (const n of [1, 2, 3, 4]) {
+  assert.doesNotMatch(padded[`review${n}`] || '', /saved review evidence/i);
+  assert.equal(padded[`review${n}`], stripComposedReviewFiller(`${dossier.reviews[n - 1].text} ${filler}`));
+}
+assert.ok(reviewTextsHaveRepeatedTrailingSentence([
+  `Alpha. ${filler}`,
+  `Beta. ${filler}`,
+]));
+assert.equal(reviewTextsHaveRepeatedTrailingSentence(['One unique ending here.', 'Another different ending there.']), null);
+console.log('ok composed review filler stripped and repeated-trailing detected');
