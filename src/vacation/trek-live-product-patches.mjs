@@ -15,6 +15,7 @@ import { forceSharedDayByDayUi } from './shared-day-by-day-ui.mjs';
 import { buildListLogoPatch } from './thing-logo-fallback-url.mjs';
 import { LIST_LOGO_NEEDLE, patchListLogoQrGuard } from './trek-list-logo-qr-patch.mjs';
 import { patchEventsEmptyListMessage, patchSharedTabCrossFilters } from './trek-shared-tab-cross-filter-patch.mjs';
+import { applyNrPicPopupPatches } from './trek-nr-pic-popup-patches.mjs';
 
 export { LIST_LOGO_QR_GUARD_PATCH, patchListLogoQrGuard } from './trek-list-logo-qr-patch.mjs';
 export const LIST_LOGO_PATCH = buildListLogoPatch();
@@ -421,6 +422,7 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   else if (served && !js.includes('data-row-video-qr":"1"')) {
     throw new Error('live media video QR thumb patch did not apply');
   }
+  js = applyNrPicPopupPatches(js, { served });
   if (js.includes(OE_ROW_SUMMARY_NEEDLE)) js = js.replace(OE_ROW_SUMMARY_NEEDLE, OE_ROW_SUMMARY_PATCH);
   else if (served && js.includes('Rn=Bs(rr(G)||Co(G)||Fl(G))')) {
     throw new Error('live tab row summary must read stored rr() only');
