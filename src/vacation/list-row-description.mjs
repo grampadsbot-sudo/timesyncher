@@ -17,9 +17,25 @@ export function composeListRowDescription({ fields = {} } = {}) {
 }
 
 export function listRowDescriptionBundleSnippet() {
+  // List rows bind stored Summary only (verbatim). Details/longDetails/description stay on the detail page.
   return [
     'tsListRowDescription=function(G){',
-    'const ov=ha(G)||{},meta=(G&&G.metadata&&typeof G.metadata==="object")?G.metadata:{},sr=(ov.sourceRecord&&typeof ov.sourceRecord==="object")?ov.sourceRecord:(G&&G.sourceRecord&&typeof G.sourceRecord==="object")?G.sourceRecord:(meta.sourceRecord&&typeof meta.sourceRecord==="object")?meta.sourceRecord:{};',
-    'return String(ov.description??sr.description??(G&&G.description)??"");},',
+    'const ov=ha(G)||{};',
+    'return String(ov.summary??"");},',
   ].join('');
+}
+
+
+export function pickStoredThingSummary({
+  override = {},
+  source = {},
+  place = {},
+  fields = {},
+} = {}) {
+  const row = fields.summary ?? override.summary ?? source.summary ?? place.summary;
+  return text(row);
+}
+
+export function composeListRowSummary({ fields = {} } = {}) {
+  return pickStoredThingSummary({ fields, override: fields, source: fields });
 }

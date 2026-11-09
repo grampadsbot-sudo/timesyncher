@@ -20,11 +20,14 @@ assert.match(stars, /flex-direction:row/);
 assert.match(stars, /flex-wrap:nowrap/);
 assert.match(rendered, /style="display:inline-flex;flex-direction:row;flex-wrap:nowrap;align-items:center/);
 
-assert.match(rendered, /data-ts-thing-header":"1",style:\{display:"grid",gridTemplateColumns:"minmax\(0,1fr\) auto minmax\(0,1fr\)",alignItems:"center"/);
 assert.match(rendered, /data-ts-logo-name-pair":"1",style:\{display:"inline-flex",alignItems:"center",justifyContent:"center"/);
 assert.match(rendered, /data-ts-list-row-rating":"1",style:\{display:"flex",flexDirection:"row",flexWrap:"nowrap",alignItems:"center",justifyContent:"flex-end"/);
 assert.doesNotMatch(rendered, /data-ts-list-row-rating":"1"[\s\S]{0,80}flexDirection:"column"/);
 assert.match(rendered, /data-ts-detail-header-stars":"1"/);
+assert.match(rendered, /data-ts-detail-title-wrap":"1"/);
+assert.match(rendered, /data-ts-detail-header-stars":"1",style:\{display:"flex",flexDirection:"row",flexWrap:"nowrap",alignItems:"center",justifyContent:"center",width:"100%"/);
+assert.match(rendered, /data-ts-thing-header":"1"/);
+assert.doesNotMatch(rendered, /aria-label":"Detail name"[\s\S]{0,200}width:220/);
 assert.doesNotMatch(rendered, /data-ts-thing-review-line":"1"/);
 assert.match(rendered, /tsThingReviewLines=G=>/);
 assert.match(rendered, /data-ts-thing-review="1"/);
@@ -41,10 +44,16 @@ assert.doesNotMatch(rendered, /children:gt\.map\(G=>\{const Re=vn\(Dt\)\.include
 assert.match(rendered, /data-ts-cuisine-chips":"1"/);
 assert.match(rendered, /or\(Dt\)\.map\(G=>n\.jsx\("span"/);
 assert.match(rendered, /!\/\^no happy hour\\b\/i\.test\(raw\)/);
+assert.match(
+  rendered,
+  /\(zi\(Dt\)\|\|It\(Dt\)==="bar"\)&&\(Ce\|\|/,
+);
 assert.doesNotMatch(
   rendered,
   /\(zi\(Dt\)\|\|It\(Dt\)==="bar"\)&&n\.jsxs\("label",\{style:Hn,children:\["Happy hour details"/,
 );
+assert.match(rendered, /"data-ts-detail-name":"1"/);
+assert.doesNotMatch(rendered, /aria-label":"Detail name"[\s\S]{0,180}width:220/);
 
 const css = readFileSync(new URL('../public/assets/index-CbEHlMj6.css', import.meta.url), 'utf8');
 assert.doesNotMatch(css, /\[data-shared-live-tab="hotels"\] \[data-list-summary="1"\]\{white-space:nowrap!important/);

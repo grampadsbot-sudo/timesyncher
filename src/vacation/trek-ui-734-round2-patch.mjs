@@ -26,10 +26,10 @@ const SUMMARY_EDITOR_PATCH =
   'Ce?n.jsxs("label",{style:Hn,children:["Summary",n.jsx("textarea",{value:ha(Dt).summary??"",onChange:G=>Xa(Dt,"summary",G.target.value),placeholder:"Short paragraph on why this is a good option",style:ur})]}):null,n.jsxs("label",{style:Hn,children:["Story"';
 
 const DETAILS_EDITOR_NEEDLE =
-  'n.jsxs("label",{style:Hn,children:["Details",n.jsx("textarea",{value:Co(Dt),onChange:G=>Xa(Dt,"longDetails",G.target.value),placeholder:bn(Dt)?"Aircraft, amenities, route, connections, layover, fare notes":Mi(Dt)?"JFK pickup/counter logistics, NYC driving/parking tradeoffs, car class fit, concise review summary":"What makes it special, recommended dishes/experience, logistics, rating/review-source notes",style:{...ur,minHeight:120}})]}),((()=>{const raw=String(ha(Dt).happyHourDetails';
+  'n.jsxs("label",{style:Hn,children:["Details",n.jsx("textarea",{value:Co(Dt),onChange:G=>Xa(Dt,"longDetails",G.target.value),placeholder:bn(Dt)?"Aircraft, amenities, route, connections, layover, fare notes":Mi(Dt)?"JFK pickup/counter logistics, NYC driving/parking tradeoffs, car class fit, concise review summary":"What makes it special, recommended dishes/experience, logistics, rating/review-source notes",style:{...ur,minHeight:120}})]}),(zi(Dt)||It(Dt)==="bar")&&(Ce||((()=>{const raw=String(ha(Dt).happyHourDetails';
 
 const DETAILS_EDITOR_PATCH =
-  'Ce?n.jsxs("label",{style:Hn,children:["Details",n.jsx("textarea",{value:Co(Dt),onChange:G=>Xa(Dt,"longDetails",G.target.value),placeholder:bn(Dt)?"Aircraft, amenities, route, connections, layover, fare notes":Mi(Dt)?"JFK pickup/counter logistics, NYC driving/parking tradeoffs, car class fit, concise review summary":"What makes it special, recommended dishes/experience, logistics, rating/review-source notes",style:{...ur,minHeight:120}})]}):null,((()=>{const raw=String(ha(Dt).happyHourDetails';
+  'Ce?n.jsxs("label",{style:Hn,children:["Details",n.jsx("textarea",{value:Co(Dt),onChange:G=>Xa(Dt,"longDetails",G.target.value),placeholder:bn(Dt)?"Aircraft, amenities, route, connections, layover, fare notes":Mi(Dt)?"JFK pickup/counter logistics, NYC driving/parking tradeoffs, car class fit, concise review summary":"What makes it special, recommended dishes/experience, logistics, rating/review-source notes",style:{...ur,minHeight:120}})]}):null,(zi(Dt)||It(Dt)==="bar")&&(Ce||((()=>{const raw=String(ha(Dt).happyHourDetails';
 
 const REST_TAG_DROPDOWN_NEEDLE = REST_CHIP_PATCH;
 const REST_TAG_DROPDOWN_PATCH =
