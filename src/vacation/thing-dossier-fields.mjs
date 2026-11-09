@@ -233,16 +233,6 @@ export function dossierRepresentativeReviews(dossier = {}) {
       && review.claims?.length > 0 && claimsSupported(dossier, review));
 }
 
-function dossierSavedReviewsPublishable(dossier = {}) {
-  return dossierPagesVerified(dossier) && dossier.reviews?.length === 4
-    && dossier.reviews.every((review) => {
-      if (!String(review?.text || '').trim()) return false;
-      if (!Number.isInteger(review.rating) || review.rating < 1 || review.rating > 5) return false;
-      const claims = Array.isArray(review.claims) ? review.claims : [];
-      if (claims.length === 0) return true;
-      return claimsSupported(dossier, review);
-    });
-}
 
 function dossierReviewsWritable(dossier = {}) {
   if (!dossierPagesVerified(dossier) || dossier.reviews?.length !== 4) return false;
@@ -339,24 +329,8 @@ export function writeDossierReviews(record = {}, dossier = {}, { useShortcomingM
       const limited = (dossier.shortcomings || []).some((s) => s.field === 'reviews' && /limited number of reviews/i.test(String(s.reason)));
       if (limited) missing.delete('reviews');
     }
-  } else if (dossierSavedReviewsPublishable(dossier)) {
-    const readCount = Number(dossier.fieldCounts?.reviews?.count ?? dossier.reviewsRead ?? 0);
-    record.reviewsLabel = String(dossier.reviewsLabel || '').trim()
-      || `Representative reviews written from ${readCount} reviews`;
-    dossier.reviews.forEach((review, index) => {
-      const key = `review${index + 1}`;
-      const claims = Array.isArray(review.claims) ? review.claims : [];
-      record[key] = stripComposedReviewFiller(review.text);
-      record[`${key}Rating`] = String(review.rating);
-      if (review.source) record[`${key}Source`] = review.source;
-      record[`${key}Cites`] = [...new Set(claims.flatMap((claim) => claim.pages))];
-      record[`${key}Claims`] = claims.map((claim) => ({ text: claim.text, pages: [...claim.pages], supported: claim.supported === true }));
-      record[`${key}Label`] = record.reviewsLabel;
-      record[`${key}CompositeLabel`] = record.reviewsLabel;
-    });
-    missing.delete('reviews');
   }
-  if (!record.review1 && !dossierSavedReviewsPublishable(dossier) && placeSupportsDossierReviews({ category: record.category })) {
+  if (!record.review1 && placeSupportsDossierReviews({ category: record.category })) {
     clearPublicReviewFields(record, { persistNull: true });
     missing.add('reviews');
     record.missingFields = [...new Set([...(record.missingFields || []), 'reviews'])];
