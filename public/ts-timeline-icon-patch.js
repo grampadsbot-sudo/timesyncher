@@ -118,8 +118,16 @@
     document.head.appendChild(style);
   }
 
+  function isPicMediaNode(el) {
+    if (!el || !el.closest) return false;
+    if (el.closest('[data-ts-pic-thumb-wrap], [data-ts-pic-popup]')) return true;
+    if (el.closest('.print-media-qr') || el.classList?.contains('print-media-qr')) return true;
+    return false;
+  }
+
   function isTinyIconSlot(el) {
     if (!el || !el.getBoundingClientRect) return false;
+    if (isPicMediaNode(el)) return false;
     const rect = el.getBoundingClientRect();
     if (rect.width > 48 || rect.height > 48) return false;
     const label = text(el.textContent);
@@ -131,6 +139,7 @@
 
   function mark(el, resolved) {
     if (!el || el.dataset.tsIconFixed === '1') return;
+    if (isPicMediaNode(el)) return;
     const keptLogo = el.querySelector?.('img.tiny-logo');
     if (keptLogo) {
       const keptSrc = text(keptLogo.getAttribute('src') || '');
@@ -195,10 +204,11 @@
       const row = el.closest('[class]') || el.parentElement;
       if (!row) continue;
       const iconEl = [...row.querySelectorAll('span, div, i')].find((node) => {
+        if (isPicMediaNode(node)) return false;
         const value = text(node.textContent);
         return AIRPLANE.test(value) || (node.querySelector('svg') && node.childElementCount <= 2);
-      }) || (el.previousElementSibling && !/^H[1-6]$/.test(el.previousElementSibling.tagName) ? el.previousElementSibling : null);
-      if (iconEl) mark(iconEl, resolved);
+      }) || (el.previousElementSibling && !/^H[1-6]$/.test(el.previousElementSibling.tagName) && !isPicMediaNode(el.previousElementSibling) ? el.previousElementSibling : null);
+      if (iconEl && !isPicMediaNode(iconEl)) mark(iconEl, resolved);
       seen.add(el);
     }
   }

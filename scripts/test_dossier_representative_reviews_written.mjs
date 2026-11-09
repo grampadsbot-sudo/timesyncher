@@ -8,6 +8,7 @@ import { parseReviewStars, resolveDossierReviewRatings } from '../src/vacation/d
 import { rederiveReviewRatings } from './rederive_review_ratings.mjs';
 import { loadVkSearchCensusResult, vkSearchResultToDossier } from '../src/vacation/dossier-vk-search.mjs';
 import { writeDossierReviews } from '../src/vacation/thing-dossier-fields.mjs';
+import { stripComposedReviewFiller, reviewTextsHaveRepeatedTrailingSentence } from '../src/vacation/dossier-review-filler.mjs';
 
 const census = loadVkSearchCensusResult({ id: 602 }, { env: {} });
 const dossier = vkSearchResultToDossier(census, { id: 602 });
@@ -28,8 +29,19 @@ console.log('ok representative reviews written to card');
 const unrated = structuredClone(dossier);
 for (const review of unrated.reviews) review.rating = null;
 delete unrated.ratingEvidence;
+const ratingFallback = writeDossierReviews({ category: 'store' }, unrated);
+for (const n of [1, 2, 3, 4]) {
+  assert.equal(ratingFallback[`review${n}`], unrated.reviews[n - 1].text);
+  assert.equal(Number(ratingFallback[`review${n}Rating`]), 4);
+}
+assert.ok(!ratingFallback.missingFields.includes('reviews'));
+assert.ok(resolveDossierReviewRatings(unrated).reviews.every((row) => row.rating === 4));
+console.log('ok null review stars backfill from saved dossier.rating');
+
+const bare = structuredClone(unrated);
+delete bare.rating;
 for (const useShortcomingMissing of [false, true]) {
-  const missing = writeDossierReviews({ ...record, missingFields: ['price'] }, unrated, { useShortcomingMissing });
+  const missing = writeDossierReviews({ ...record, missingFields: ['price'] }, bare, { useShortcomingMissing });
   for (const n of [1, 2, 3, 4]) {
     assert.equal(missing[`review${n}`], null);
     assert.equal(missing[`review${n}Rating`], null);
@@ -110,7 +122,7 @@ for (const n of [1, 2, 3, 4]) {
 assert.equal(repairedThing.summary, stale.summary);
 assert.equal(repairedThing.price, stale.price);
 assert.equal(rederiveReviewRatings(repaired.output).summary.unchanged, 1);
-const omitted = rederiveReviewRatings([{ ...stale, evidenceDossier: unrated }]);
+const omitted = rederiveReviewRatings([{ ...stale, evidenceDossier: bare }]);
 assert.equal(omitted.summary.reviewsDropped, 4);
 assert.ok(omitted.output[0].missingFields.includes('reviews'));
 assert.ok(omitted.output[0].dataShortcomings.some((row) => row.field === 'reviews'));
@@ -130,3 +142,24 @@ const applied = spawnSync(process.execPath, ['scripts/rederive_review_ratings.mj
 assert.equal(applied.status, 0, applied.stderr);
 assert.equal(Number(JSON.parse(readFileSync(outputFile, 'utf8'))[0].review1Rating), 4);
 console.log('ok grounded review ratings, mean drift, rating shapes and offline re-derive');
+
+
+
+const filler = 'Guests note this theme repeatedly across the saved review evidence for this place.';
+const padded = writeDossierReviews({ category: 'store' }, {
+  ...dossier,
+  reviews: dossier.reviews.map((r, i) => ({
+    ...r,
+    text: i === 0 ? `${r.text} ${filler}` : `${r.text} ${filler}`,
+  })),
+});
+for (const n of [1, 2, 3, 4]) {
+  assert.doesNotMatch(padded[`review${n}`] || '', /saved review evidence/i);
+  assert.equal(padded[`review${n}`], stripComposedReviewFiller(`${dossier.reviews[n - 1].text} ${filler}`));
+}
+assert.ok(reviewTextsHaveRepeatedTrailingSentence([
+  `Alpha. ${filler}`,
+  `Beta. ${filler}`,
+]));
+assert.equal(reviewTextsHaveRepeatedTrailingSentence(['One unique ending here.', 'Another different ending there.']), null);
+console.log('ok composed review filler stripped and repeated-trailing detected');
