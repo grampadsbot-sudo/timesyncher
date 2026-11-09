@@ -183,8 +183,16 @@ function lookupCcabRecord(ccabKey) {
   return null;
 }
 
+function gateBRowCcabKey({ id, name, cat, ccabKey: rowCcabKey }) {
+  const own = resolveNycCcabKey(rowCcabKey || name);
+  const pinned = NYC_GATE_B_ROW_CCAB_KEYS[id] ? resolveNycCcabKey(NYC_GATE_B_ROW_CCAB_KEYS[id]) : '';
+  if (!pinned) return own;
+  const pinnedMatchesRow = lookupCcabRecord(pinned)?.category === cat;
+  return !pinnedMatchesRow && lookupCcabRecord(own)?.category === cat ? own : pinned;
+}
+
 export function buildGateBSearchPlaceForRow({ id, name, cat, ccabKey: rowCcabKey }) {
-  const ccabKey = resolveNycCcabKey(NYC_GATE_B_ROW_CCAB_KEYS[id] || rowCcabKey || name);
+  const ccabKey = gateBRowCcabKey({ id, name, cat, ccabKey: rowCcabKey });
   let ccabRecord = lookupCcabRecord(ccabKey);
   if (!ccabRecord) {
     throw new Error(`missing ccab search source for gate-b row ${id} (${name})`);

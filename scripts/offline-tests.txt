@@ -178,6 +178,7 @@ scripts/test_shared_tab_list_summary.mjs
 scripts/test_shared_trip_live_tab_logos.mjs
 scripts/test_gate_b_live_tab_logo_rows.mjs
 scripts/test_gate_b_product_row_fields.mjs
+scripts/test_finalize_served_payload_idempotent.mjs
 scripts/test_list_row_description_substance.mjs
 scripts/test_stored_ccab_canonical_identity.mjs
 scripts/test_gate_b_row_name_frame.mjs
@@ -363,6 +364,8 @@ scripts/test_thing_evidence_dossier_worker_route.mjs
 scripts/test_dossier_evidence_hydrate_682.mjs
 scripts/test_dossier_intake_presentation_strip.mjs
 scripts/test_intake_presentation_stub_scan.mjs
+scripts/test_intake_presentation_stub_scan_cli_large.mjs
+scripts/test_vk_contract_meaningful_summary.mjs
 scripts/test_gateb_canonical_intake_stub_scan.mjs
 scripts/test_no_runtime_intake_presentation_strip.mjs
 scripts/test_dossier_reviews_identity_682.mjs

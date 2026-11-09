@@ -229,6 +229,26 @@ export function createStoredCcabNarrativeMerge(
     return resolveStoredCcabKey(place, override);
   }
 
+  function sameVenueStoredFlavour({ ccabKey, ccabRecord }) {
+    const own = text(ccabRecord.websiteFlavour);
+    if (own) return own;
+    const address = text(ccabRecord.address);
+    if (!address || ccabRecord.lat == null || ccabRecord.lng == null) return '';
+    const sibling = Object.entries(enrichment).find(([key, record]) => key.startsWith(`${ccabKey} `)
+      && text(record?.websiteFlavour)
+      && text(record.address) === address
+      && record.lat === ccabRecord.lat
+      && record.lng === ccabRecord.lng);
+    return sibling ? text(sibling[1].websiteFlavour) : '';
+  }
+
+  function storedLongDetails(hit, stored, rowCat) {
+    if (rowCat === 'hotel' || rowCat.includes('lodging') || narrativeWordCount(stored) >= 30) return stored;
+    const flavour = sameVenueStoredFlavour(hit);
+    if (!flavour || stored.includes(flavour)) return stored;
+    return text(`${stored}${/[.!?]$/.test(stored) ? '' : '.'} ${flavour}`);
+  }
+
   function enrichListRowFromStoredCcab(place = {}, override = {}, categoryHint = '') {
     const hit = storedCcabRecordForPlace(place, override);
     if (!hit) return null;
@@ -274,7 +294,17 @@ export function createStoredCcabNarrativeMerge(
       && !isGenericDescription(existing)
       && !isHotelPlanningNote(existing)
       && !isListRowPipelineDiagnostic(existing)
-    ) return override;
+    ) {
+      const servedDescription = text(
+        override.description ||
+          override.longDetails ||
+          override.details,
+      );
+      const mergedByCcab = text(override.sourceRecord?.ccabKey) === hit.ccabKey
+        && servedDescription === enrichListRowFromStoredCcab(place, override, override.category || place.category_name)?.description;
+      if (!text(place.description) && servedDescription && mergedByCcab) place.description = servedDescription;
+      return override;
+    }
     const enriched = enrichListRowFromStoredCcab(
       place,
       override,
@@ -293,8 +323,9 @@ export function createStoredCcabNarrativeMerge(
         record.summary,
     );
     if (details && !isListRowPipelineDiagnostic(details)) {
-      next.longDetails = details;
-      if (!text(next.details)) next.details = details;
+      const longDetails = storedLongDetails(hit, details, rowCat);
+      next.longDetails = longDetails;
+      if (!text(next.details)) next.details = longDetails;
       if (!text(next.description)) next.description = details;
       const placeDesc = text(place.description);
       if ((!placeDesc || narrativeWordCount(placeDesc) < 30) && !isListRowPipelineDiagnostic(placeDesc)) {

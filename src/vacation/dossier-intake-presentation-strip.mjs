@@ -7,7 +7,7 @@ function words(value = '') {
 }
 
 const INTAKE_PRICE_FLOOR_RE =
-  /\s*;?\s*Price:\s*\$[\d,]+(?:\s+(?:[\w'’/-]+\s*){0,12})?floor(?:\s+from[^;.]*)?\s*\.?\s*;?/gi;
+  /\s*;?\s*Price:\s*\$[\d,]+(?:(?:\s+[\w'’/-]+){0,12}\s+)?floor(?:\s+from[^;.]*)?\s*\.?\s*;?/gi;
 const INTAKE_STATUS_SUFFIX_RE = /\s*;?\s*Status:\s*candidate only\.?\s*$/i;
 const INTAKE_SUMMARY_PRICE_TAIL_RE = /\s*;\s*Price:\s*\$[\d,]+[^.]*\bfloor\.?\s*$/i;
 const INTAKE_PRICE_FLOOR_ANYWHERE_RE = /\bPrice:\s*\$[\d,]+[^;]{0,96}\bfloor\b/i;

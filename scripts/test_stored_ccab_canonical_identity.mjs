@@ -77,6 +77,21 @@ assert.ok(
   'thin override should pick up stored ccab narrative via externalId',
 );
 assert.match(thinAlias.longDetails, /Blue Note|Greenwich Village jazz|jazz room/i);
+assert.doesNotMatch(
+  thinAlias.sourceRecord.description,
+  /Historic basement club/,
+  'stored evidence record must stay byte-for-byte when the served narrative is extended',
+);
+
+const festivalRow = mergeStoredCcabNarrativeIntoOverride(
+  { name: 'Blue Note Jazz Festival New York 2026', externalId: 'Blue Note Jazz Festival New York 2026' },
+  { startTime: '20:00' },
+);
+assert.doesNotMatch(
+  festivalRow.longDetails,
+  /Historic basement club/,
+  'a different venue sharing a name prefix must not borrow the club narrative',
+);
 
 const served = finalizeServedSharedTripPayload({
   places: [{

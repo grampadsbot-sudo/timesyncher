@@ -2,7 +2,6 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { stripIntakePresentationFragments } from '../../src/vacation/dossier-intake-presentation-strip.mjs';
-
 const NARRATIVE_KEYS = ['summary', 'description', 'longDetails', 'details', 'itineraryNote'];
 
 const TARGETS = [
