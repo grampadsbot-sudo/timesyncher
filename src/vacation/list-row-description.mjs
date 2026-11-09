@@ -25,17 +25,3 @@ export function listRowDescriptionBundleSnippet() {
   ].join('');
 }
 
-
-export function pickStoredThingSummary({
-  override = {},
-  source = {},
-  place = {},
-  fields = {},
-} = {}) {
-  const row = fields.summary ?? override.summary ?? source.summary ?? place.summary;
-  return text(row);
-}
-
-export function composeListRowSummary({ fields = {} } = {}) {
-  return pickStoredThingSummary({ fields, override: fields, source: fields });
-}
