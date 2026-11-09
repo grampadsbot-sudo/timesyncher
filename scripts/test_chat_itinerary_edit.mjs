@@ -230,7 +230,6 @@ assert.match(configText, /demo_locked/);
 assert.doesNotMatch(configText, /8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y.*allowlist/);
 
 const demoSlug = '8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y';
-const copySlug = 'chat-edit-copy-a47f5a7f2150c5e887a81972';
 assert.ok(cfg.demoLocked.includes(demoSlug));
 assert.ok(!cfg.allowlist.includes(demoSlug));
 assert.ok(cfg.allowlist.includes(copySlug));
