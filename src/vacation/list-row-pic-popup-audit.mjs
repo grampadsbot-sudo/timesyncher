@@ -63,6 +63,28 @@ export function auditListRowPicPopupMediaStrip(row) {
   };
 }
 
+export function measurePicFullscreenImageCoverage(img, viewport) {
+  if (!img || typeof img.getBoundingClientRect !== 'function') {
+    return { ok: false, reason: 'no-img', ratio: 0, width: 0, height: 0 };
+  }
+  const vw = Number(viewport?.w ?? viewport?.width ?? (typeof window !== 'undefined' ? window.innerWidth : 0));
+  const vh = Number(viewport?.h ?? viewport?.height ?? (typeof window !== 'undefined' ? window.innerHeight : 0));
+  if (vw < 1 || vh < 1) {
+    return { ok: false, reason: 'no-viewport', ratio: 0, width: 0, height: 0 };
+  }
+  const r = img.getBoundingClientRect();
+  const ratio = Math.max(r.width / vw, r.height / vh);
+  return {
+    ok: ratio >= 0.85,
+    reason: ratio >= 0.85 ? null : 'pic-fs-coverage-low',
+    ratio,
+    width: r.width,
+    height: r.height,
+    viewportW: vw,
+    viewportH: vh,
+  };
+}
+
 export function auditPicViewerGlobalClean(root) {
   const doc = root && root.querySelectorAll ? root : null;
   const scope = doc || (typeof document !== 'undefined' ? document : null);

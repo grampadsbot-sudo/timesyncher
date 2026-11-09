@@ -52,21 +52,25 @@ GBrain handoff `bot-admin/lanes/vk-pr-handoff/pr-867`: page_not_found on fetch (
 
 Host merged `origin/vk` at `1f1d4c3f9459c1801397868c77cf66ffe26efa84` into PR head `2a70b4e3b9ca187141c2dbd3d373451d3798e501`. Conflicts: `scripts/test_chat_itinerary_edit.mjs`, `src/vacation/chat-itinerary-edit.mjs`. Resolution: keep #859 intent module (`chat-itinerary-edit-intent.mjs` + coalesce/retry path in `chat-itinerary-edit.mjs`); keep vk undo/set_time integration tests and copy-trip staging Carbone resolve probe in the test file. `J/RECEIPT.md` kept PR receipt (this file) plus this merge note.
 
-## Base-merge local proof (cursor round, start HEAD `2a70b4e3`)
+## Host base merge (PR #867, second pass — 2026-11-09)
+
+Host merged `origin/vk` at `d25b86b355623efe24dc56a252db47a19eeb80b0` into PR head `d6ebb9a04afcf99065086598bf6d96dbdff542d7`. Conflicted files: `J/RECEIPT.md` only. vk #877 pic-popup changes merged without conflict (`public/ts-pic-popup-viewer.js`, `src/vacation/list-row-pic-popup-audit.mjs`, `scripts/test_ui_877_pic_popup_media_strip*.mjs`). Receipt kept PR text (not vk #877-only receipt).
+
+## Base-merge local proof (cursor round, start HEAD `d6ebb9a0`)
 
 | Command | Result |
 | --- | --- |
 | `timeout 120 node scripts/test_chat_itinerary_edit.mjs` | PASS |
 | `cd apps/vacation-client && timeout 900 npm test` | PASS |
-| `node scripts/check-no-comments.mjs` | PASS |
+| `node scripts/test_ui_877_pic_popup_media_strip.mjs` | PASS |
+| `node scripts/test_ui_877_pic_popup_media_strip_chrome.mjs` | PASS |
+| `node scripts/check-no-comments.mjs` | PASS (after `apps/vacation-client` npm ci) |
 | `node scripts/test_offline_manifest.mjs` | PASS (428 offline) |
 | `BASE=vk node scripts/check-code-ratchet.mjs` | PASS |
-| `node scripts/run-offline-tests.mjs` | **FAIL** at `scripts/test_live_transcript_dialog_pdf.mjs:651` (`gbrain-cli-get_page` vs `bundled-get_page`); 111 prior offline scripts PASS — unrelated to merge files |
+| `node scripts/run-offline-tests.mjs` | **FAIL** at `scripts/test_live_transcript_dialog_pdf.mjs:651` (`gbrain-cli-get_page` vs `bundled-get_page`); prior scripts PASS — unrelated to merge |
 
 ## Uncommitted (host `git add` + merge commit)
 
-- `src/vacation/chat-itinerary-edit.mjs` — drop vk duplicate intent helpers; keep `chat-itinerary-edit-intent.mjs` import path (#859).
-- `scripts/test_chat_itinerary_edit.mjs` — union vk undo integration tests + #859 copy-trip Carbone staging probe; db stub parses jsonb strings on insert.
-- `J/RECEIPT.md` — restored PR receipt (not vk #877); merge notes + proof above.
-- Plus staged host merge tree (vk pic-popup, dossier filler, `basemerge.json`, `public/assets/*`, etc.) — conflicts resolved only in the two paths above.
-- `apps/vacation-client && npm test` refreshed `evidence/vacation-client-p2-*/*.png` in worktree (incidental); host may omit from merge commit if undesired.
+- `J/RECEIPT.md` — conflict resolved (PR receipt + merge notes).
+- Staged from vk: `public/ts-pic-popup-viewer.js`, `src/vacation/list-row-pic-popup-audit.mjs`, `scripts/test_ui_877_pic_popup_media_strip.mjs`, `scripts/test_ui_877_pic_popup_media_strip_chrome.mjs`.
+- Prior round: `src/vacation/chat-itinerary-edit.mjs`, `scripts/test_chat_itinerary_edit.mjs` already on PR head — unchanged this pass.
