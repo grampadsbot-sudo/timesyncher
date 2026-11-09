@@ -1,68 +1,47 @@
-# Issue #877 round 2 — pic viewer fullscreen / resize / pinch (cursor-ubuntu)
+# Issue #877 round 3 — fullscreen image fit + real controls (cursor-ubuntu)
 
-Start HEAD: `b7777808e2a57b4ab7409f3bb90c6600b3665625` (PR #878).
+Start HEAD: `1f1d4c3f9459c1801397868c77cf66ffe26efa84` (vk when brief written).
 
-Authority: Craig 2026-11-09 ~10:49 AM PT — fullscreen, resize, pinch on Thing pic popup; keep round-1 logo-chip fix.
+Authority: Craig 2026-11-09 ~11:42 AM PT — fullscreen uses dark backdrop + object-fit contain; image must cover ≥85% viewport; real Full screen + X controls; keep r1 logo-chip + r2 lifecycle.
 
-## Round 1 (on tip)
+## Root cause (r3)
 
-`public/ts-timeline-icon-patch.js` `isPicMediaNode()` — logo chips no longer appear after pic popup close. Offline + audit harness in `list-row-pic-popup-audit.mjs`.
+Desktop fullscreen used `popup.requestFullscreen()`, so the white popup panel filled the viewport but the photo stayed a small strip at the top (~80% blank). Gate B only checked popup width, not rendered image box.
 
-## Round 2 change
+## Change
 
 | Path | Change |
 | --- | --- |
-| `public/ts-pic-popup-viewer.js` | **New.** Enhances `[data-ts-pic-popup]`: fullscreen (API + fixed overlay fallback), size toggle, SE resize handle, pinch-zoom on image. |
-| `shared-app.html` | Load `ts-pic-popup-viewer.js` on shared journey. |
-| `src/vacation/trek-nr-pic-popup-patches.mjs` | Escape closes popup only when not fullscreen (`window.__tsPicFsActive` / overlay / `document.fullscreenElement`). |
-| `src/vacation/list-row-pic-popup-audit.mjs` | `auditPicViewerGlobalClean()` for leftover fullscreen overlay. |
-| `scripts/test_ui_877_pic_popup_media_strip.mjs` | Assert viewer script + escape patch + audits. |
-| `scripts/test_ui_877_pic_popup_media_strip_chrome.mjs` | Open → resize/pinch → fullscreen → exit → Escape → strip audit at 390+1280; serves patched bundle + viewer; evidence under `vkfill-877-20261109105332-job/`. |
+| `public/ts-pic-popup-viewer.js` | Always mount `[data-ts-pic-fs-overlay]` (dark `#0f172a`, flex stage). Image box sized to ~96vw × ~88vh with `object-fit:contain`; caption gradient at bottom; 48px SVG close; backdrop tap + Escape; popup bar uses 44px SVG Full screen + Close (not stub glyphs). Removed element-fullscreen white panel path. Pinch unchanged. |
+| `src/vacation/list-row-pic-popup-audit.mjs` | `measurePicFullscreenImageCoverage()` for Gate B ratio ≥0.85. |
+| `scripts/test_ui_877_pic_popup_media_strip.mjs` | Assert overlay img, object-fit, close control, coverage helper unit check. |
+| `scripts/test_ui_877_pic_popup_media_strip_chrome.mjs` | Fail-closed `max(w/vw,h/vh)>=0.85` at 390+1280; dark backdrop + exit control; evidence dir `vkfill-877-20261109114313-job/`. |
 
-## Local proof (uncommitted, worktree `vkfill-878-20261109105332`)
+## Local proof (uncommitted)
 
 | Command | Result |
 | --- | --- |
-| `node scripts/test_ui_877_pic_popup_media_strip.mjs` | PASS |
+| `node scripts/test_ui_877_pic_popup_media_strip.mjs` | PASS (`1f1d4c3f9459c1801397868c77cf66ffe26efa84` worktree) |
+| `node scripts/test_ui_877_pic_popup_media_strip_chrome.mjs` | PASS 390+1280 open→fullscreen→exit→close |
 | `node scripts/test_ui_866_pic_popup_close.mjs` | PASS |
+| `node scripts/check-no-comments.mjs` | PASS |
 | `node scripts/test_offline_manifest.mjs` | PASS (428 offline) |
-| `node scripts/test_ui_877_pic_popup_media_strip_chrome.mjs` | **BLOCKED** — worktree has no `node_modules` (`@neondatabase/serverless` via `shared-trip-served-page.mjs`) |
-| `node scripts/check-no-comments.mjs` | Not run (missing client TS dep without `npm ci`) |
-| `BASE=vk node scripts/check-code-ratchet.mjs` | Not run |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS |
 
-Host: `npm ci`, chrome test + pre-DONE gates, commit → push once → PR #878.
+Evidence: `/home/ubishere9995/tsv-work/vkfill-877-20261109114313-job/877-statue-{before,open,fullscreen,after}-{390,1280}.png`
 
 ## Gate B / screen_probe
 
-Permanent harness: `scripts/test_ui_877_pic_popup_media_strip_chrome.mjs` (flow `open-fullscreen-exit-close`). Lane rules forbid editing `~/tsv-dispatch/screen_probe.mjs`; host wires CI/Gate B to invoke this script on NYC 8CQX shared slug.
+Permanent harness: `scripts/test_ui_877_pic_popup_media_strip_chrome.mjs` (≥85% image coverage assertion). Lane rules forbid editing `~/tsv-dispatch/screen_probe.mjs`; host wires CI/Gate B to invoke this script.
 
 ## Uncommitted files (host publish)
 
 - `public/ts-pic-popup-viewer.js`
-- `shared-app.html`
-- `src/vacation/trek-nr-pic-popup-patches.mjs`
 - `src/vacation/list-row-pic-popup-audit.mjs`
 - `scripts/test_ui_877_pic_popup_media_strip.mjs`
 - `scripts/test_ui_877_pic_popup_media_strip_chrome.mjs`
 - `J/RECEIPT.md`
 
-Evidence (after chrome): `/home/ubishere9995/tsv-work/vkfill-877-20261109105332-job/877-statue-{before,open,fullscreen,after}-{390,1280}.png`
+## Out of scope (left alone)
 
-## Host base merge (2026-11-09 ~10:58 AM PT)
-
-Host merged `origin/vk` (79dce6ae, includes #864) into PR #878 head 348a851c. Sole conflict was `J/RECEIPT.md` (receipt-only); kept this #877 round-2 receipt. Product files merged clean.
-
-## Host fix (carry to live, ~11:15 AM PT 11/9)
-
-  marked  before  resolved, so early MutationObserver passes left popups without Full screen / size controls. Ready flag now set only after a media stage exists. Chrome harness () previously timed out waiting for .
-
-
-## Host fix (carry to live)
-
-1. Rebaked  after pic-popup patches ( green).
-2.  : set  only after  resolves (avoids missing Full screen button).
-3. Chrome harness pinch check tolerates headless TouchEvent limits; asserts pinch-zoom touch-action / wiring.
-4. Local chrome PASS at 390+1280: open → fullscreen → exit → close; evidence in .
-
-## Host base merge 2 (carry)
-Merged origin/vk b6df36bb (#868/#873) into 38293fd7; receipt-only conflict kept #877 receipt.
+`~/tsv-dispatch/screen_probe.mjs`, baselines, live NYC 8CQX trip data, round-1 `ts-timeline-icon-patch.js` (already on tip).
