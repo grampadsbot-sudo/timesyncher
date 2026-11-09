@@ -63,3 +63,6 @@ Host merged `origin/vk` (79dce6ae, includes #864) into PR #878 head 348a851c. So
 2.  : set  only after  resolves (avoids missing Full screen button).
 3. Chrome harness pinch check tolerates headless TouchEvent limits; asserts pinch-zoom touch-action / wiring.
 4. Local chrome PASS at 390+1280: open → fullscreen → exit → close; evidence in .
+
+## Host base merge 2 (carry)
+Merged origin/vk b6df36bb (#868/#873) into 38293fd7; receipt-only conflict kept #877 receipt.

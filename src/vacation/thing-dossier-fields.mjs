@@ -11,6 +11,7 @@ import { dossierPagesVerified } from './dossier-page-integrity.mjs';
 import { reviewSourceHost } from './dossier-review-url.mjs';
 import { pageTextSupportsRating, ratingQuoteSupportsAggregate } from './dossier-rating-evidence.mjs';
 import { resolveDossierReviewRatings } from './dossier-review-ratings.mjs';
+import { stripComposedReviewFiller } from './dossier-review-filler.mjs';
 export { applyDossierRatingsAndReviews } from './thing-dossier-ratings-copy.mjs';
 export { pageTextSupportsRating, ratingQuoteSupportsAggregate } from './dossier-rating-evidence.mjs';
 export { dossierPageIdForUrl, ensureBraveSnippetCitationPages } from './dossier-brave-snippet-pages.mjs';
@@ -232,6 +233,7 @@ export function dossierRepresentativeReviews(dossier = {}) {
       && review.claims?.length > 0 && claimsSupported(dossier, review));
 }
 
+
 function dossierReviewsWritable(dossier = {}) {
   if (!dossierPagesVerified(dossier) || dossier.reviews?.length !== 4) return false;
   return dossier.reviews.every((review) => {
@@ -280,6 +282,7 @@ function clearPublicReviewFields(record = {}, { persistNull = false } = {}) {
   }
 }
 
+
 export function writeDossierReviews(record = {}, dossier = {}, { useShortcomingMissing = false } = {}) {
   if (!placeSupportsDossierReviews({ category: record.category })) {
     clearPublicReviewFields(record);
@@ -297,7 +300,7 @@ export function writeDossierReviews(record = {}, dossier = {}, { useShortcomingM
     dossier.reviews.forEach((review, index) => {
       const key = `review${index + 1}`;
       const claims = Array.isArray(review.claims) ? review.claims : [];
-      record[key] = review.text;
+      record[key] = stripComposedReviewFiller(review.text);
       record[`${key}Rating`] = String(review.rating);
       if (review.source) record[`${key}Source`] = review.source;
       record[`${key}Cites`] = [...new Set(claims.flatMap((claim) => claim.pages))];
@@ -314,7 +317,7 @@ export function writeDossierReviews(record = {}, dossier = {}, { useShortcomingM
     dossier.reviews.forEach((review, index) => {
       const key = `review${index + 1}`;
       const claims = Array.isArray(review.claims) ? review.claims : [];
-      record[key] = review.text;
+      record[key] = stripComposedReviewFiller(review.text);
       record[`${key}Rating`] = String(review.rating);
       record[`${key}Cites`] = [...new Set(claims.flatMap((claim) => claim.pages))];
       record[`${key}Claims`] = claims.map((claim) => ({ text: claim.text, pages: [...claim.pages], supported: claim.supported === true }));
