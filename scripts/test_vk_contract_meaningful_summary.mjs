@@ -3,10 +3,10 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { homedir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const checker = join(homedir(), 'tsv-dispatch', 'vk_contract_check.py');
+const checker = fileURLToPath(new URL('./vk_contract_check_local.mjs', import.meta.url));
 
 const row = {
   title: 'Ledger Store',
@@ -25,8 +25,7 @@ function runCheck(rows) {
   const path = join(dir, 'snap.json');
   writeFileSync(path, JSON.stringify(rows));
   try {
-    execFileSync('python3', ['-I', checker, path], { encoding: 'utf8' });
-    return { ok: true, out: '' };
+    return { ok: true, out: execFileSync(process.execPath, [checker, path], { encoding: 'utf8' }) };
   } catch (err) {
     return { ok: false, out: `${err.stdout || ''}${err.stderr || ''}` };
   }
@@ -46,6 +45,7 @@ const distinct = runCheck({
     reviews: [{ text: 'Great acai.' }],
   },
 });
+assert.equal(distinct.ok, true, distinct.out);
 assert.doesNotMatch(distinct.out, /summary\/store/, 'meaningful summary must not fail summary/store');
 
 const sameRaw = runCheck({
