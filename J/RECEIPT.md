@@ -45,3 +45,28 @@ PR #851 (`59756613`) sent **both** `reasoning.effort` and `reasoning.max_tokens`
 ## Host publish
 
 Uncommitted patch in `/home/ubishere9995/tsv-work/vkfill-856-20261109081816` (5 files). Host: branch from `840c0eec`, commit → push once → PR into `vk` with `Closes #856`. After tip==live, re-run `/tmp/haiku_live_copy2.py` on copy trip `3a729dac-ad57-4924-8d37-2a18919dd059` (4 turns, all Haiku, non-empty). Gate B unchanged (chat/API only).
+
+GBrain handoff `bot-admin/lanes/vk-pr-handoff/pr-867`: page_not_found on fetch (not in GBrain at lane launch).
+
+## Host base merge (PR #867 / #859, 2026-11-09 ~11:45 AM PT)
+
+Host merged `origin/vk` at `1f1d4c3f9459c1801397868c77cf66ffe26efa84` into PR head `2a70b4e3b9ca187141c2dbd3d373451d3798e501`. Conflicts: `scripts/test_chat_itinerary_edit.mjs`, `src/vacation/chat-itinerary-edit.mjs`. Resolution: keep #859 intent module (`chat-itinerary-edit-intent.mjs` + coalesce/retry path in `chat-itinerary-edit.mjs`); keep vk undo/set_time integration tests and copy-trip staging Carbone resolve probe in the test file. `J/RECEIPT.md` kept PR receipt (this file) plus this merge note.
+
+## Base-merge local proof (cursor round, start HEAD `2a70b4e3`)
+
+| Command | Result |
+| --- | --- |
+| `timeout 120 node scripts/test_chat_itinerary_edit.mjs` | PASS |
+| `cd apps/vacation-client && timeout 900 npm test` | PASS |
+| `node scripts/check-no-comments.mjs` | PASS |
+| `node scripts/test_offline_manifest.mjs` | PASS (428 offline) |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS |
+| `node scripts/run-offline-tests.mjs` | **FAIL** at `scripts/test_live_transcript_dialog_pdf.mjs:651` (`gbrain-cli-get_page` vs `bundled-get_page`); 111 prior offline scripts PASS — unrelated to merge files |
+
+## Uncommitted (host `git add` + merge commit)
+
+- `src/vacation/chat-itinerary-edit.mjs` — drop vk duplicate intent helpers; keep `chat-itinerary-edit-intent.mjs` import path (#859).
+- `scripts/test_chat_itinerary_edit.mjs` — union vk undo integration tests + #859 copy-trip Carbone staging probe; db stub parses jsonb strings on insert.
+- `J/RECEIPT.md` — restored PR receipt (not vk #877); merge notes + proof above.
+- Plus staged host merge tree (vk pic-popup, dossier filler, `basemerge.json`, `public/assets/*`, etc.) — conflicts resolved only in the two paths above.
+- `apps/vacation-client && npm test` refreshed `evidence/vacation-client-p2-*/*.png` in worktree (incidental); host may omit from merge commit if undesired.
