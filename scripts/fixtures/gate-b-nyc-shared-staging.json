@@ -2,7 +2,7 @@
  "trip": {
   "id": 99,
   "title": "Craig / Kim NYC June 2026",
-  "description": "Las Vegas to New York · Jun 23–30, 2026 · UWS / Lincoln Center priority · planning options only",
+  "description": "Las Vegas to New York \u00b7 Jun 23\u201330, 2026 \u00b7 UWS / Lincoln Center priority \u00b7 planning options only",
   "start_date": "2026-06-23",
   "end_date": "2026-06-30",
   "currency": "USD",
@@ -85,18 +85,18 @@
     "place": {
      "id": 601,
      "trip_id": 99,
-     "name": "American Airlines LAS → JFK",
+     "name": "American Airlines LAS \u2192 JFK",
      "description": "Airline: American; Route: LAS-JFK; Stops: nonstop; Outbound: 2026-06-23 12:37-20:59; Return: 2026-06-30 18:00-20:59; Duration: 5h22m out / 5h59m return; Price: $257 Basic Economy / $367 Main Cabin; Status: candidate only; not booked.",
      "lat": 36.084,
      "lng": -115.1537,
-     "address": "LAS → JFK",
+     "address": "LAS \u2192 JFK",
      "category_id": 5,
      "category_name": "Flight",
-     "category_icon": "✈️",
+     "category_icon": "\u2708\ufe0f",
      "category": {
       "id": 5,
       "name": "Flight",
-      "icon": "✈️"
+      "icon": "\u2708\ufe0f"
      },
      "reservation_status": "considering",
      "place_time": "12:37",
@@ -122,11 +122,11 @@
      "address": "2245 Broadway, New York, NY 10024",
      "category_id": 4,
      "category_name": "Store",
-     "category_icon": "🛍️",
+     "category_icon": "\ud83d\udecd\ufe0f",
      "category": {
       "id": 4,
       "name": "Store",
-      "icon": "🛍️"
+      "icon": "\ud83d\udecd\ufe0f"
      },
      "reservation_status": "considering",
      "place_time": "14:00",
@@ -152,11 +152,11 @@
      "address": "Upper West Side, New York, NY",
      "category_id": 1,
      "category_name": "Hotel",
-     "category_icon": "🧳",
+     "category_icon": "\ud83e\uddf3",
      "category": {
       "id": 1,
       "name": "Hotel",
-      "icon": "🧳"
+      "icon": "\ud83e\uddf3"
      },
      "reservation_status": "considering",
      "place_time": "16:00",
@@ -176,17 +176,17 @@
      "id": 610,
      "trip_id": 99,
      "name": "Carbone",
-     "description": "Google lists Carbone around 4.4/5 with thousands of reviews. Greenwich Village red-sauce dining room on Thompson Street; lunch Tue–Sun 11:30am–2pm and dinner nightly (carbonenewyork.com). Public lunch menu entrees list about $24–$54 on Yelp; Price: $48 per person dinner planning estimate before tax, tip, and drinks.",
+     "description": "Google lists Carbone around 4.4/5 with thousands of reviews. Greenwich Village red-sauce dining room on Thompson Street; lunch Tue\u2013Sun 11:30am\u20132pm and dinner nightly (carbonenewyork.com). Public lunch menu entrees list about $24\u2013$54 on Yelp; Price: $48 per person dinner planning estimate before tax, tip, and drinks.",
      "lat": 40.726,
      "lng": -73.9997,
      "address": "181 Thompson Street, New York, NY 10012",
      "category_id": 2,
      "category_name": "Restaurant",
-     "category_icon": "🍽️",
+     "category_icon": "\ud83c\udf7d\ufe0f",
      "category": {
       "id": 2,
       "name": "Restaurant",
-      "icon": "🍽️"
+      "icon": "\ud83c\udf7d\ufe0f"
      },
      "reservation_status": "considering",
      "place_time": "19:00",
@@ -206,17 +206,17 @@
      "id": 611,
      "trip_id": 99,
      "name": "Blue Note Jazz Club (late set)",
-     "description": "Google shows Jazz at Lincoln Center/Dizzy's Club around 4.6/5. Dizzy's Club hosts nightly sets with Central Park views (jazz.org/dizzys). Ticket covers run about $20–$65+ depending on the act; Price: $35 per person cover planning estimate plus a $25 per person food-and-beverage minimum billed at the end of the set per jazz.org ticketing terms.",
+     "description": "Google shows Jazz at Lincoln Center/Dizzy's Club around 4.6/5. Dizzy's Club hosts nightly sets with Central Park views (jazz.org/dizzys). Ticket covers run about $20\u2013$65+ depending on the act; Price: $35 per person cover planning estimate plus a $25 per person food-and-beverage minimum billed at the end of the set per jazz.org ticketing terms.",
      "lat": 40.7725,
      "lng": -73.9838,
      "address": "Broadway at 60th Street, New York, NY 10019",
      "category_id": 3,
      "category_name": "Attraction",
-     "category_icon": "🏛️",
+     "category_icon": "\ud83c\udfdb\ufe0f",
      "category": {
       "id": 3,
       "name": "Attraction",
-      "icon": "🏛️"
+      "icon": "\ud83c\udfdb\ufe0f"
      },
      "reservation_status": "considering",
      "place_time": "20:30",
@@ -243,11 +243,11 @@
      "address": "Upper West Side, New York, NY",
      "category_id": 1,
      "category_name": "Hotel",
-     "category_icon": "🧳",
+     "category_icon": "\ud83e\uddf3",
      "category": {
       "id": 1,
       "name": "Hotel",
-      "icon": "🧳"
+      "icon": "\ud83e\uddf3"
      },
      "reservation_status": "considering",
      "place_time": "16:00",
@@ -274,11 +274,11 @@
      "address": "Castle Clinton, Battery Park, New York, NY 10004",
      "category_id": 3,
      "category_name": "Attraction",
-     "category_icon": "🏛️",
+     "category_icon": "\ud83c\udfdb\ufe0f",
      "category": {
       "id": 3,
       "name": "Attraction",
-      "icon": "🏛️"
+      "icon": "\ud83c\udfdb\ufe0f"
      },
      "reservation_status": "considering",
      "place_time": "11:00",
@@ -304,11 +304,11 @@
      "address": "828 Broadway, New York, NY 10003",
      "category_id": 4,
      "category_name": "Store",
-     "category_icon": "🛍️",
+     "category_icon": "\ud83d\udecd\ufe0f",
      "category": {
       "id": 4,
       "name": "Store",
-      "icon": "🛍️"
+      "icon": "\ud83d\udecd\ufe0f"
      },
      "reservation_status": "considering",
      "place_time": "15:30",
@@ -335,11 +335,11 @@
      "address": "Upper West Side, New York, NY",
      "category_id": 1,
      "category_name": "Hotel",
-     "category_icon": "🧳",
+     "category_icon": "\ud83e\uddf3",
      "category": {
       "id": 1,
       "name": "Hotel",
-      "icon": "🧳"
+      "icon": "\ud83e\uddf3"
      },
      "reservation_status": "considering",
      "place_time": "16:00",
@@ -360,17 +360,17 @@
      "id": 606,
      "trip_id": 99,
      "name": "Afternoon matinee show",
-     "description": "TKTS Times Square sells same-day and next-day matinee Broadway tickets at 20–50% off list, with the final price including an $8 per-ticket service charge (tdf.org/tkts). Example board pricing shows midweek matinees around $78 after discount; Price: $78 per person matinee ticket planning estimate before fees at the booth.",
+     "description": "TKTS Times Square sells same-day and next-day matinee Broadway tickets at 20\u201350% off list, with the final price including an $8 per-ticket service charge (tdf.org/tkts). Example board pricing shows midweek matinees around $78 after discount; Price: $78 per person matinee ticket planning estimate before fees at the booth.",
      "lat": 40.758,
      "lng": -73.9855,
      "address": "TKTS Times Square, Broadway at W 47th St, New York, NY 10036",
      "category_id": 3,
      "category_name": "Attraction",
-     "category_icon": "🏛️",
+     "category_icon": "\ud83c\udfdb\ufe0f",
      "category": {
       "id": 3,
       "name": "Attraction",
-      "icon": "🏛️"
+      "icon": "\ud83c\udfdb\ufe0f"
      },
      "reservation_status": "considering",
      "place_time": "14:00",
@@ -396,11 +396,11 @@
      "address": "Bryant Park, New York, NY 10018",
      "category_id": 3,
      "category_name": "Attraction",
-     "category_icon": "🏛️",
+     "category_icon": "\ud83c\udfdb\ufe0f",
      "category": {
       "id": 3,
       "name": "Attraction",
-      "icon": "🏛️"
+      "icon": "\ud83c\udfdb\ufe0f"
      },
      "reservation_status": "considering",
      "place_time": "14:30",
@@ -427,11 +427,11 @@
      "address": "Upper West Side, New York, NY",
      "category_id": 1,
      "category_name": "Hotel",
-     "category_icon": "🧳",
+     "category_icon": "\ud83e\uddf3",
      "category": {
       "id": 1,
       "name": "Hotel",
-      "icon": "🧳"
+      "icon": "\ud83e\uddf3"
      },
      "reservation_status": "considering",
      "place_time": "16:00",
@@ -451,17 +451,17 @@
      "id": 606,
      "trip_id": 99,
      "name": "Afternoon matinee show",
-     "description": "TKTS Times Square sells same-day and next-day matinee Broadway tickets at 20–50% off list, with the final price including an $8 per-ticket service charge (tdf.org/tkts). Example board pricing shows midweek matinees around $78 after discount; Price: $78 per person matinee ticket planning estimate before fees at the booth.",
+     "description": "TKTS Times Square sells same-day and next-day matinee Broadway tickets at 20\u201350% off list, with the final price including an $8 per-ticket service charge (tdf.org/tkts). Example board pricing shows midweek matinees around $78 after discount; Price: $78 per person matinee ticket planning estimate before fees at the booth.",
      "lat": 40.758,
      "lng": -73.9855,
      "address": "TKTS Times Square, Broadway at W 47th St, New York, NY 10036",
      "category_id": 3,
      "category_name": "Attraction",
-     "category_icon": "🏛️",
+     "category_icon": "\ud83c\udfdb\ufe0f",
      "category": {
       "id": 3,
       "name": "Attraction",
-      "icon": "🏛️"
+      "icon": "\ud83c\udfdb\ufe0f"
      },
      "reservation_status": "considering",
      "place_time": "14:00",
@@ -487,11 +487,11 @@
      "address": "Bryant Park, New York, NY 10018",
      "category_id": 3,
      "category_name": "Attraction",
-     "category_icon": "🏛️",
+     "category_icon": "\ud83c\udfdb\ufe0f",
      "category": {
       "id": 3,
       "name": "Attraction",
-      "icon": "🏛️"
+      "icon": "\ud83c\udfdb\ufe0f"
      },
      "reservation_status": "considering",
      "place_time": "14:30",
@@ -518,11 +518,11 @@
      "address": "75 9th Ave, New York, NY 10011",
      "category_id": 4,
      "category_name": "Store",
-     "category_icon": "🛍️",
+     "category_icon": "\ud83d\udecd\ufe0f",
      "category": {
       "id": 4,
       "name": "Store",
-      "icon": "🛍️"
+      "icon": "\ud83d\udecd\ufe0f"
      },
      "reservation_status": "considering",
      "place_time": "12:30",
@@ -549,11 +549,11 @@
      "address": "Upper West Side, New York, NY",
      "category_id": 1,
      "category_name": "Hotel",
-     "category_icon": "🧳",
+     "category_icon": "\ud83e\uddf3",
      "category": {
       "id": 1,
       "name": "Hotel",
-      "icon": "🧳"
+      "icon": "\ud83e\uddf3"
      },
      "reservation_status": "considering",
      "place_time": "16:00",
@@ -580,11 +580,11 @@
      "address": "151 W 34th St, New York, NY 10001",
      "category_id": 4,
      "category_name": "Store",
-     "category_icon": "🛍️",
+     "category_icon": "\ud83d\udecd\ufe0f",
      "category": {
       "id": 4,
       "name": "Store",
-      "icon": "🛍️"
+      "icon": "\ud83d\udecd\ufe0f"
      },
      "reservation_status": "considering",
      "place_time": "11:00",
@@ -611,11 +611,11 @@
      "address": "Upper West Side, New York, NY",
      "category_id": 1,
      "category_name": "Hotel",
-     "category_icon": "🧳",
+     "category_icon": "\ud83e\uddf3",
      "category": {
       "id": 1,
       "name": "Hotel",
-      "icon": "🧳"
+      "icon": "\ud83e\uddf3"
      },
      "reservation_status": "considering",
      "place_time": "16:00",
@@ -642,11 +642,11 @@
      "address": "44 W 53rd St, New York, NY 10019",
      "category_id": 4,
      "category_name": "Store",
-     "category_icon": "🛍️",
+     "category_icon": "\ud83d\udecd\ufe0f",
      "category": {
       "id": 4,
       "name": "Store",
-      "icon": "🛍️"
+      "icon": "\ud83d\udecd\ufe0f"
      },
      "reservation_status": "considering",
      "place_time": "14:00",
@@ -673,11 +673,11 @@
      "address": "Upper West Side, New York, NY",
      "category_id": 1,
      "category_name": "Hotel",
-     "category_icon": "🧳",
+     "category_icon": "\ud83e\uddf3",
      "category": {
       "id": 1,
       "name": "Hotel",
-      "icon": "🧳"
+      "icon": "\ud83e\uddf3"
      },
      "reservation_status": "considering",
      "place_time": "16:00",
@@ -704,11 +704,11 @@
      "address": "754 5th Ave, New York, NY 10019",
      "category_id": 4,
      "category_name": "Store",
-     "category_icon": "🛍️",
+     "category_icon": "\ud83d\udecd\ufe0f",
      "category": {
       "id": 4,
       "name": "Store",
-      "icon": "🛍️"
+      "icon": "\ud83d\udecd\ufe0f"
      },
      "reservation_status": "considering",
      "place_time": "11:00",
@@ -735,11 +735,11 @@
      "address": "Upper West Side, New York, NY",
      "category_id": 1,
      "category_name": "Hotel",
-     "category_icon": "🧳",
+     "category_icon": "\ud83e\uddf3",
      "category": {
       "id": 1,
       "name": "Hotel",
-      "icon": "🧳"
+      "icon": "\ud83e\uddf3"
      },
      "reservation_status": "considering",
      "place_time": "16:00",
@@ -760,17 +760,17 @@
      "id": 616,
      "trip_id": 99,
      "name": "Whole Foods Market Columbus Circle",
-     "description": "address: 10 Columbus Cir, Shops at Columbus Circle; fit: high for Lincoln Center/Columbus Circle hotels; notes: Good fresh celery/grocery source; also café/pickup per source snippets. Price: $25 typical spend floor from ccab card (not a fixed menu price).",
+     "description": "address: 10 Columbus Cir, Shops at Columbus Circle; fit: high for Lincoln Center/Columbus Circle hotels; notes: Good fresh celery/grocery source; also caf\u00e9/pickup per source snippets. Price: $25 typical spend floor from ccab card (not a fixed menu price).",
      "lat": 40.7686,
      "lng": -73.9822,
      "address": "10 Columbus Cir, Shops at Columbus Circle",
      "category_id": 4,
      "category_name": "Store",
-     "category_icon": "🛍️",
+     "category_icon": "\ud83d\udecd\ufe0f",
      "category": {
       "id": 4,
       "name": "Store",
-      "icon": "🛍️"
+      "icon": "\ud83d\udecd\ufe0f"
      },
      "reservation_status": "considering",
      "place_time": "10:00",
@@ -789,18 +789,18 @@
     "place": {
      "id": 635,
      "trip_id": 99,
-     "name": "American Airlines JFK → LAS",
+     "name": "American Airlines JFK \u2192 LAS",
      "description": "Airline: American; Route: LAS-JFK; Stops: nonstop; Outbound: 2026-06-23 12:37-20:59; Return: 2026-06-30 18:00-20:59; Duration: 5h22m out / 5h59m return; Price: $257 Basic Economy / $367 Main Cabin; Status: candidate only; not booked.",
      "lat": 40.6413,
      "lng": -73.7781,
-     "address": "LAS → JFK",
+     "address": "LAS \u2192 JFK",
      "category_id": 5,
      "category_name": "Flight",
-     "category_icon": "✈️",
+     "category_icon": "\u2708\ufe0f",
      "category": {
       "id": 5,
       "name": "Flight",
-      "icon": "✈️"
+      "icon": "\u2708\ufe0f"
      },
      "reservation_status": "considering",
      "place_time": "18:00",
@@ -818,18 +818,18 @@
   {
    "id": 601,
    "trip_id": 99,
-   "name": "American Airlines LAS → JFK",
+   "name": "American Airlines LAS \u2192 JFK",
    "description": "",
    "lat": 36.084,
    "lng": -115.1537,
-   "address": "LAS → JFK",
+   "address": "LAS \u2192 JFK",
    "category_id": 5,
    "category_name": "Flight",
-   "category_icon": "✈️",
+   "category_icon": "\u2708\ufe0f",
    "category": {
     "id": 5,
     "name": "Flight",
-    "icon": "✈️"
+    "icon": "\u2708\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "12:37",
@@ -849,11 +849,11 @@
    "address": "2245 Broadway, New York, NY 10024",
    "category_id": 4,
    "category_name": "Store",
-   "category_icon": "🛍️",
+   "category_icon": "\ud83d\udecd\ufe0f",
    "category": {
     "id": 4,
     "name": "Store",
-    "icon": "🛍️"
+    "icon": "\ud83d\udecd\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "14:00",
@@ -971,14 +971,14 @@
    "description": "",
    "lat": 40.7828,
    "lng": -73.9813,
-   "address": "Upper West Side, New York, NY",
+   "address": "2175 Broadway, New York, NY 10024",
    "category_id": 1,
    "category_name": "Hotel",
-   "category_icon": "🧳",
+   "category_icon": "\ud83e\uddf3",
    "category": {
     "id": 1,
     "name": "Hotel",
-    "icon": "🧳"
+    "icon": "\ud83e\uddf3"
    },
    "reservation_status": "considering",
    "place_time": "16:00",
@@ -998,11 +998,11 @@
    "address": "181 Thompson Street, New York, NY 10012",
    "category_id": 2,
    "category_name": "Restaurant",
-   "category_icon": "🍽️",
+   "category_icon": "\ud83c\udf7d\ufe0f",
    "category": {
     "id": 2,
     "name": "Restaurant",
-    "icon": "🍽️"
+    "icon": "\ud83c\udf7d\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "19:00",
@@ -1022,11 +1022,11 @@
    "address": "Broadway at 60th Street, New York, NY 10019",
    "category_id": 3,
    "category_name": "Attraction",
-   "category_icon": "🏛️",
+   "category_icon": "\ud83c\udfdb\ufe0f",
    "category": {
     "id": 3,
     "name": "Attraction",
-    "icon": "🏛️"
+    "icon": "\ud83c\udfdb\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "20:30",
@@ -1046,11 +1046,11 @@
    "address": "Castle Clinton, Battery Park, New York, NY 10004",
    "category_id": 3,
    "category_name": "Attraction",
-   "category_icon": "🏛️",
+   "category_icon": "\ud83c\udfdb\ufe0f",
    "category": {
     "id": 3,
     "name": "Attraction",
-    "icon": "🏛️"
+    "icon": "\ud83c\udfdb\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -1253,11 +1253,11 @@
    "address": "828 Broadway, New York, NY 10003",
    "category_id": 4,
    "category_name": "Store",
-   "category_icon": "🛍️",
+   "category_icon": "\ud83d\udecd\ufe0f",
    "category": {
     "id": 4,
     "name": "Store",
-    "icon": "🛍️"
+    "icon": "\ud83d\udecd\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "15:30",
@@ -1277,11 +1277,11 @@
    "address": "TKTS Times Square, Broadway at W 47th St, New York, NY 10036",
    "category_id": 3,
    "category_name": "Attraction",
-   "category_icon": "🏛️",
+   "category_icon": "\ud83c\udfdb\ufe0f",
    "category": {
     "id": 3,
     "name": "Attraction",
-    "icon": "🏛️"
+    "icon": "\ud83c\udfdb\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "14:00",
@@ -1301,11 +1301,11 @@
    "address": "Bryant Park, New York, NY 10018",
    "category_id": 3,
    "category_name": "Attraction",
-   "category_icon": "🏛️",
+   "category_icon": "\ud83c\udfdb\ufe0f",
    "category": {
     "id": 3,
     "name": "Attraction",
-    "icon": "🏛️"
+    "icon": "\ud83c\udfdb\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "14:30",
@@ -1325,11 +1325,11 @@
    "address": "75 9th Ave, New York, NY 10011",
    "category_id": 4,
    "category_name": "Store",
-   "category_icon": "🛍️",
+   "category_icon": "\ud83d\udecd\ufe0f",
    "category": {
     "id": 4,
     "name": "Store",
-    "icon": "🛍️"
+    "icon": "\ud83d\udecd\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "12:30",
@@ -1349,11 +1349,11 @@
    "address": "151 W 34th St, New York, NY 10001",
    "category_id": 4,
    "category_name": "Store",
-   "category_icon": "🛍️",
+   "category_icon": "\ud83d\udecd\ufe0f",
    "category": {
     "id": 4,
     "name": "Store",
-    "icon": "🛍️"
+    "icon": "\ud83d\udecd\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -1373,11 +1373,11 @@
    "address": "44 W 53rd St, New York, NY 10019",
    "category_id": 4,
    "category_name": "Store",
-   "category_icon": "🛍️",
+   "category_icon": "\ud83d\udecd\ufe0f",
    "category": {
     "id": 4,
     "name": "Store",
-    "icon": "🛍️"
+    "icon": "\ud83d\udecd\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "14:00",
@@ -1397,11 +1397,11 @@
    "address": "754 5th Ave, New York, NY 10019",
    "category_id": 4,
    "category_name": "Store",
-   "category_icon": "🛍️",
+   "category_icon": "\ud83d\udecd\ufe0f",
    "category": {
     "id": 4,
     "name": "Store",
-    "icon": "🛍️"
+    "icon": "\ud83d\udecd\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -1421,11 +1421,11 @@
    "address": "10 Columbus Cir, Shops at Columbus Circle",
    "category_id": 4,
    "category_name": "Store",
-   "category_icon": "🛍️",
+   "category_icon": "\ud83d\udecd\ufe0f",
    "category": {
     "id": 4,
     "name": "Store",
-    "icon": "🛍️"
+    "icon": "\ud83d\udecd\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "10:00",
@@ -1438,18 +1438,18 @@
   {
    "id": 635,
    "trip_id": 99,
-   "name": "American Airlines JFK → LAS",
+   "name": "American Airlines JFK \u2192 LAS",
    "description": "",
    "lat": 40.6413,
    "lng": -73.7781,
-   "address": "JFK → LAS",
+   "address": "JFK \u2192 LAS",
    "category_id": 5,
    "category_name": "Flight",
-   "category_icon": "✈️",
+   "category_icon": "\u2708\ufe0f",
    "category": {
     "id": 5,
     "name": "Flight",
-    "icon": "✈️"
+    "icon": "\u2708\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "18:00",
@@ -1469,11 +1469,11 @@
    "address": "200 West 56th Street, New York, NY 10019",
    "category_id": 1,
    "category_name": "Hotel",
-   "category_icon": "🧳",
+   "category_icon": "\ud83e\uddf3",
    "category": {
     "id": 1,
     "name": "Hotel",
-    "icon": "🧳"
+    "icon": "\ud83e\uddf3"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -1493,11 +1493,11 @@
    "address": "JFK Airport rental car facility / Federal Circle, Jamaica, NY",
    "category_id": 6,
    "category_name": "Car",
-   "category_icon": "🚗",
+   "category_icon": "\ud83d\ude97",
    "category": {
     "id": 6,
     "name": "Car",
-    "icon": "🚗"
+    "icon": "\ud83d\ude97"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -1514,18 +1514,18 @@
   {
    "id": 630,
    "trip_id": 99,
-   "name": "Southwest LAS → LGA 07:25–16:35",
+   "name": "Southwest LAS \u2192 LGA 07:25\u201316:35",
    "description": "",
    "lat": 36.084,
    "lng": -115.1537,
-   "address": "LAS → LGA",
+   "address": "LAS \u2192 LGA",
    "category_id": 5,
    "category_name": "Flight",
-   "category_icon": "✈️",
+   "category_icon": "\u2708\ufe0f",
    "category": {
     "id": 5,
     "name": "Flight",
-    "icon": "✈️"
+    "icon": "\u2708\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "07:25",
@@ -1538,18 +1538,18 @@
   {
    "id": 631,
    "trip_id": 99,
-   "name": "Southwest LAS → LGA 11:30–22:25",
+   "name": "Southwest LAS \u2192 LGA 11:30\u201322:25",
    "description": "",
    "lat": 36.084,
    "lng": -115.1537,
-   "address": "LAS → LGA",
+   "address": "LAS \u2192 LGA",
    "category_id": 5,
    "category_name": "Flight",
-   "category_icon": "✈️",
+   "category_icon": "\u2708\ufe0f",
    "category": {
     "id": 5,
     "name": "Flight",
-    "icon": "✈️"
+    "icon": "\u2708\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:30",
@@ -1562,18 +1562,18 @@
   {
    "id": 632,
    "trip_id": 99,
-   "name": "Southwest LAS → LGA 05:05–15:45",
+   "name": "Southwest LAS \u2192 LGA 05:05\u201315:45",
    "description": "",
    "lat": 36.084,
    "lng": -115.1537,
-   "address": "LAS → LGA",
+   "address": "LAS \u2192 LGA",
    "category_id": 5,
    "category_name": "Flight",
-   "category_icon": "✈️",
+   "category_icon": "\u2708\ufe0f",
    "category": {
     "id": 5,
     "name": "Flight",
-    "icon": "✈️"
+    "icon": "\u2708\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "05:05",
@@ -1586,18 +1586,18 @@
   {
    "id": 633,
    "trip_id": 99,
-   "name": "Southwest LAS → LGA 06:30–16:55",
+   "name": "Southwest LAS \u2192 LGA 06:30\u201316:55",
    "description": "",
    "lat": 36.084,
    "lng": -115.1537,
-   "address": "LAS → LGA",
+   "address": "LAS \u2192 LGA",
    "category_id": 5,
    "category_name": "Flight",
-   "category_icon": "✈️",
+   "category_icon": "\u2708\ufe0f",
    "category": {
     "id": 5,
     "name": "Flight",
-    "icon": "✈️"
+    "icon": "\u2708\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "06:30",
@@ -1610,18 +1610,18 @@
   {
    "id": 634,
    "trip_id": 99,
-   "name": "Southwest LAS → LGA 06:50–18:55",
+   "name": "Southwest LAS \u2192 LGA 06:50\u201318:55",
    "description": "",
    "lat": 36.084,
    "lng": -115.1537,
-   "address": "LAS → LGA",
+   "address": "LAS \u2192 LGA",
    "category_id": 5,
    "category_name": "Flight",
-   "category_icon": "✈️",
+   "category_icon": "\u2708\ufe0f",
    "category": {
     "id": 5,
     "name": "Flight",
-    "icon": "✈️"
+    "icon": "\u2708\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "06:50",
@@ -1641,11 +1641,11 @@
    "address": "2178 Broadway, New York, NY 10024",
    "category_id": 1,
    "category_name": "Hotel",
-   "category_icon": "🧳",
+   "category_icon": "\ud83e\uddf3",
    "category": {
     "id": 1,
     "name": "Hotel",
-    "icon": "🧳"
+    "icon": "\ud83e\uddf3"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -1665,11 +1665,11 @@
    "address": "Manhattan / Midtown, New York, NY",
    "category_id": 1,
    "category_name": "Hotel",
-   "category_icon": "🧳",
+   "category_icon": "\ud83e\uddf3",
    "category": {
     "id": 1,
     "name": "Hotel",
-    "icon": "🧳"
+    "icon": "\ud83e\uddf3"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -1686,14 +1686,14 @@
    "description": "",
    "lat": 40.774,
    "lng": -73.982,
-   "address": "Upper West Side, New York, NY",
+   "address": "2130 Broadway, New York, NY 10023",
    "category_id": 1,
    "category_name": "Hotel",
-   "category_icon": "🧳",
+   "category_icon": "\ud83e\uddf3",
    "category": {
     "id": 1,
     "name": "Hotel",
-    "icon": "🧳"
+    "icon": "\ud83e\uddf3"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -1710,14 +1710,14 @@
    "description": "",
    "lat": 40.774,
    "lng": -73.982,
-   "address": "Times Square / Theater District, New York, NY",
+   "address": "228 W 47th St, New York, NY 10036",
    "category_id": 1,
    "category_name": "Hotel",
-   "category_icon": "🧳",
+   "category_icon": "\ud83e\uddf3",
    "category": {
     "id": 1,
     "name": "Hotel",
-    "icon": "🧳"
+    "icon": "\ud83e\uddf3"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -1737,11 +1737,11 @@
    "address": "Upper West Side, New York, NY",
    "category_id": 1,
    "category_name": "Hotel",
-   "category_icon": "🧳",
+   "category_icon": "\ud83e\uddf3",
    "category": {
     "id": 1,
     "name": "Hotel",
-    "icon": "🧳"
+    "icon": "\ud83e\uddf3"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -1761,11 +1761,11 @@
    "address": "Grand Central / Midtown East, New York, NY",
    "category_id": 1,
    "category_name": "Hotel",
-   "category_icon": "🧳",
+   "category_icon": "\ud83e\uddf3",
    "category": {
     "id": 1,
     "name": "Hotel",
-    "icon": "🧳"
+    "icon": "\ud83e\uddf3"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -1782,14 +1782,14 @@
    "description": "",
    "lat": 40.774,
    "lng": -73.982,
-   "address": "Chelsea, New York, NY",
+   "address": "815 6th Ave, New York, NY 10001",
    "category_id": 1,
    "category_name": "Hotel",
-   "category_icon": "🧳",
+   "category_icon": "\ud83e\uddf3",
    "category": {
     "id": 1,
     "name": "Hotel",
-    "icon": "🧳"
+    "icon": "\ud83e\uddf3"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -1809,11 +1809,11 @@
    "address": "150 A West 48th Street, New York, NY 10036",
    "category_id": 1,
    "category_name": "Hotel",
-   "category_icon": "🧳",
+   "category_icon": "\ud83e\uddf3",
    "category": {
     "id": 1,
     "name": "Hotel",
-    "icon": "🧳"
+    "icon": "\ud83e\uddf3"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -1833,11 +1833,11 @@
    "address": "Financial District, New York, NY",
    "category_id": 1,
    "category_name": "Hotel",
-   "category_icon": "🧳",
+   "category_icon": "\ud83e\uddf3",
    "category": {
     "id": 1,
     "name": "Hotel",
-    "icon": "🧳"
+    "icon": "\ud83e\uddf3"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -1857,11 +1857,11 @@
    "address": "Times Square, New York, NY",
    "category_id": 1,
    "category_name": "Hotel",
-   "category_icon": "🧳",
+   "category_icon": "\ud83e\uddf3",
    "category": {
     "id": 1,
     "name": "Hotel",
-    "icon": "🧳"
+    "icon": "\ud83e\uddf3"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -1881,11 +1881,11 @@
    "address": "Upper West Side, New York, NY",
    "category_id": 1,
    "category_name": "Hotel",
-   "category_icon": "🧳",
+   "category_icon": "\ud83e\uddf3",
    "category": {
     "id": 1,
     "name": "Hotel",
-    "icon": "🧳"
+    "icon": "\ud83e\uddf3"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -1902,14 +1902,14 @@
    "description": "",
    "lat": 40.774,
    "lng": -73.982,
-   "address": "Midtown / Central Park South, New York, NY",
+   "address": "870 7th Ave, New York, NY 10019",
    "category_id": 1,
    "category_name": "Hotel",
-   "category_icon": "🧳",
+   "category_icon": "\ud83e\uddf3",
    "category": {
     "id": 1,
     "name": "Hotel",
-    "icon": "🧳"
+    "icon": "\ud83e\uddf3"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -1926,14 +1926,14 @@
    "description": "",
    "lat": 40.774,
    "lng": -73.982,
-   "address": "Hell’s Kitchen / Times Square, New York, NY",
+   "address": "400 W 42nd St, New York, NY 10036",
    "category_id": 1,
    "category_name": "Hotel",
-   "category_icon": "🧳",
+   "category_icon": "\ud83e\uddf3",
    "category": {
     "id": 1,
     "name": "Hotel",
-    "icon": "🧳"
+    "icon": "\ud83e\uddf3"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -1950,14 +1950,14 @@
    "description": "",
    "lat": 40.774,
    "lng": -73.982,
-   "address": "Hell’s Kitchen, New York, NY",
+   "address": "Hell\u2019s Kitchen, New York, NY",
    "category_id": 1,
    "category_name": "Hotel",
-   "category_icon": "🧳",
+   "category_icon": "\ud83e\uddf3",
    "category": {
     "id": 1,
     "name": "Hotel",
-    "icon": "🧳"
+    "icon": "\ud83e\uddf3"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -1977,11 +1977,11 @@
    "address": "Times Square, New York, NY",
    "category_id": 1,
    "category_name": "Hotel",
-   "category_icon": "🧳",
+   "category_icon": "\ud83e\uddf3",
    "category": {
     "id": 1,
     "name": "Hotel",
-    "icon": "🧳"
+    "icon": "\ud83e\uddf3"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2001,11 +2001,11 @@
    "address": "44 West 63rd Street, New York, NY 10023",
    "category_id": 1,
    "category_name": "Hotel",
-   "category_icon": "🧳",
+   "category_icon": "\ud83e\uddf3",
    "category": {
     "id": 1,
     "name": "Hotel",
-    "icon": "🧳"
+    "icon": "\ud83e\uddf3"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2025,11 +2025,11 @@
    "address": "Times Square / Midtown, New York, NY",
    "category_id": 1,
    "category_name": "Hotel",
-   "category_icon": "🧳",
+   "category_icon": "\ud83e\uddf3",
    "category": {
     "id": 1,
     "name": "Hotel",
-    "icon": "🧳"
+    "icon": "\ud83e\uddf3"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2049,11 +2049,11 @@
    "address": "Central Park / Midtown, New York, NY",
    "category_id": 1,
    "category_name": "Hotel",
-   "category_icon": "🧳",
+   "category_icon": "\ud83e\uddf3",
    "category": {
     "id": 1,
     "name": "Hotel",
-    "icon": "🧳"
+    "icon": "\ud83e\uddf3"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2070,14 +2070,14 @@
    "description": "",
    "lat": 40.774,
    "lng": -73.982,
-   "address": "Upper West Side, New York, NY",
+   "address": "242 W 76th St, New York, NY 10023",
    "category_id": 1,
    "category_name": "Hotel",
-   "category_icon": "🧳",
+   "category_icon": "\ud83e\uddf3",
    "category": {
     "id": 1,
     "name": "Hotel",
-    "icon": "🧳"
+    "icon": "\ud83e\uddf3"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2097,11 +2097,11 @@
    "address": "Chelsea, New York, NY",
    "category_id": 1,
    "category_name": "Hotel",
-   "category_icon": "🧳",
+   "category_icon": "\ud83e\uddf3",
    "category": {
     "id": 1,
     "name": "Hotel",
-    "icon": "🧳"
+    "icon": "\ud83e\uddf3"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2121,11 +2121,11 @@
    "address": "767 5th Ave, New York, NY 10153",
    "category_id": 4,
    "category_name": "Store",
-   "category_icon": "🛍️",
+   "category_icon": "\ud83d\udecd\ufe0f",
    "category": {
     "id": 4,
     "name": "Store",
-    "icon": "🛍️"
+    "icon": "\ud83d\udecd\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2145,11 +2145,11 @@
    "address": "979 8th Ave",
    "category_id": 4,
    "category_name": "Store",
-   "category_icon": "🛍️",
+   "category_icon": "\ud83d\udecd\ufe0f",
    "category": {
     "id": 4,
     "name": "Store",
-    "icon": "🛍️"
+    "icon": "\ud83d\udecd\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2169,11 +2169,11 @@
    "address": "117 W 72nd St",
    "category_id": 4,
    "category_name": "Store",
-   "category_icon": "🛍️",
+   "category_icon": "\ud83d\udecd\ufe0f",
    "category": {
     "id": 4,
     "name": "Store",
-    "icon": "🛍️"
+    "icon": "\ud83d\udecd\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2193,11 +2193,11 @@
    "address": "225 W 57th St, New York, NY 10019",
    "category_id": 4,
    "category_name": "Store",
-   "category_icon": "🛍️",
+   "category_icon": "\ud83d\udecd\ufe0f",
    "category": {
     "id": 4,
     "name": "Store",
-    "icon": "🛍️"
+    "icon": "\ud83d\udecd\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2217,11 +2217,11 @@
    "address": "Upper West Side",
    "category_id": 4,
    "category_name": "Store",
-   "category_icon": "🛍️",
+   "category_icon": "\ud83d\udecd\ufe0f",
    "category": {
     "id": 4,
     "name": "Store",
-    "icon": "🛍️"
+    "icon": "\ud83d\udecd\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2241,11 +2241,11 @@
    "address": "611 5th Ave, New York, NY 10022",
    "category_id": 4,
    "category_name": "Store",
-   "category_icon": "🛍️",
+   "category_icon": "\ud83d\udecd\ufe0f",
    "category": {
     "id": 4,
     "name": "Store",
-    "icon": "🛍️"
+    "icon": "\ud83d\udecd\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2265,11 +2265,11 @@
    "address": "727 5th Ave, New York, NY 10022",
    "category_id": 4,
    "category_name": "Store",
-   "category_icon": "🛍️",
+   "category_icon": "\ud83d\udecd\ufe0f",
    "category": {
     "id": 4,
     "name": "Store",
-    "icon": "🛍️"
+    "icon": "\ud83d\udecd\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2289,11 +2289,11 @@
    "address": "808 Columbus Ave",
    "category_id": 4,
    "category_name": "Store",
-   "category_icon": "🛍️",
+   "category_icon": "\ud83d\udecd\ufe0f",
    "category": {
     "id": 4,
     "name": "Store",
-    "icon": "🛍️"
+    "icon": "\ud83d\udecd\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2306,18 +2306,18 @@
   {
    "id": 650,
    "trip_id": 99,
-   "name": "American LAS → JFK",
+   "name": "American LAS \u2192 JFK",
    "description": "",
    "lat": 40.774,
    "lng": -73.982,
-   "address": "LAS → JFK",
+   "address": "LAS \u2192 JFK",
    "category_id": 5,
    "category_name": "Flight",
-   "category_icon": "✈️",
+   "category_icon": "\u2708\ufe0f",
    "category": {
     "id": 5,
     "name": "Flight",
-    "icon": "✈️"
+    "icon": "\u2708\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2330,18 +2330,18 @@
   {
    "id": 651,
    "trip_id": 99,
-   "name": "Delta LAS → JFK",
+   "name": "Delta LAS \u2192 JFK",
    "description": "",
    "lat": 40.774,
    "lng": -73.982,
-   "address": "LAS → JFK",
+   "address": "LAS \u2192 JFK",
    "category_id": 5,
    "category_name": "Flight",
-   "category_icon": "✈️",
+   "category_icon": "\u2708\ufe0f",
    "category": {
     "id": 5,
     "name": "Flight",
-    "icon": "✈️"
+    "icon": "\u2708\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2354,18 +2354,18 @@
   {
    "id": 652,
    "trip_id": 99,
-   "name": "JetBlue LAS → JFK",
+   "name": "JetBlue LAS \u2192 JFK",
    "description": "",
    "lat": 40.774,
    "lng": -73.982,
-   "address": "LAS → JFK",
+   "address": "LAS \u2192 JFK",
    "category_id": 5,
    "category_name": "Flight",
-   "category_icon": "✈️",
+   "category_icon": "\u2708\ufe0f",
    "category": {
     "id": 5,
     "name": "Flight",
-    "icon": "✈️"
+    "icon": "\u2708\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2378,18 +2378,18 @@
   {
    "id": 653,
    "trip_id": 99,
-   "name": "Southwest LAS → LGA",
+   "name": "Southwest LAS \u2192 LGA",
    "description": "",
    "lat": 40.774,
    "lng": -73.982,
-   "address": "LAS → LGA",
+   "address": "LAS \u2192 LGA",
    "category_id": 5,
    "category_name": "Flight",
-   "category_icon": "✈️",
+   "category_icon": "\u2708\ufe0f",
    "category": {
     "id": 5,
     "name": "Flight",
-    "icon": "✈️"
+    "icon": "\u2708\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2402,18 +2402,18 @@
   {
    "id": 654,
    "trip_id": 99,
-   "name": "Southwest LAS → LGA",
+   "name": "Southwest LAS \u2192 LGA",
    "description": "",
    "lat": 40.774,
    "lng": -73.982,
-   "address": "LAS → LGA",
+   "address": "LAS \u2192 LGA",
    "category_id": 5,
    "category_name": "Flight",
-   "category_icon": "✈️",
+   "category_icon": "\u2708\ufe0f",
    "category": {
     "id": 5,
     "name": "Flight",
-    "icon": "✈️"
+    "icon": "\u2708\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2426,18 +2426,18 @@
   {
    "id": 655,
    "trip_id": 99,
-   "name": "Southwest LAS → LGA",
+   "name": "Southwest LAS \u2192 LGA",
    "description": "",
    "lat": 40.774,
    "lng": -73.982,
-   "address": "LAS → LGA",
+   "address": "LAS \u2192 LGA",
    "category_id": 5,
    "category_name": "Flight",
-   "category_icon": "✈️",
+   "category_icon": "\u2708\ufe0f",
    "category": {
     "id": 5,
     "name": "Flight",
-    "icon": "✈️"
+    "icon": "\u2708\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2450,18 +2450,18 @@
   {
    "id": 656,
    "trip_id": 99,
-   "name": "Southwest LAS → LGA",
+   "name": "Southwest LAS \u2192 LGA",
    "description": "",
    "lat": 40.774,
    "lng": -73.982,
-   "address": "LAS → LGA",
+   "address": "LAS \u2192 LGA",
    "category_id": 5,
    "category_name": "Flight",
-   "category_icon": "✈️",
+   "category_icon": "\u2708\ufe0f",
    "category": {
     "id": 5,
     "name": "Flight",
-    "icon": "✈️"
+    "icon": "\u2708\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2474,18 +2474,18 @@
   {
    "id": 657,
    "trip_id": 99,
-   "name": "Southwest LAS → LGA",
+   "name": "Southwest LAS \u2192 LGA",
    "description": "",
    "lat": 40.774,
    "lng": -73.982,
-   "address": "LAS → LGA",
+   "address": "LAS \u2192 LGA",
    "category_id": 5,
    "category_name": "Flight",
-   "category_icon": "✈️",
+   "category_icon": "\u2708\ufe0f",
    "category": {
     "id": 5,
     "name": "Flight",
-    "icon": "✈️"
+    "icon": "\u2708\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2498,18 +2498,18 @@
   {
    "id": 658,
    "trip_id": 99,
-   "name": "United LAS → EWR",
+   "name": "United LAS \u2192 EWR",
    "description": "",
    "lat": 40.774,
    "lng": -73.982,
-   "address": "LAS → EWR",
+   "address": "LAS \u2192 EWR",
    "category_id": 5,
    "category_name": "Flight",
-   "category_icon": "✈️",
+   "category_icon": "\u2708\ufe0f",
    "category": {
     "id": 5,
     "name": "Flight",
-    "icon": "✈️"
+    "icon": "\u2708\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2529,11 +2529,11 @@
    "address": "131 W 3rd St, New York, NY 10012",
    "category_id": 3,
    "category_name": "Attraction",
-   "category_icon": "🏛️",
+   "category_icon": "\ud83c\udfdb\ufe0f",
    "category": {
     "id": 3,
     "name": "Attraction",
-    "icon": "🏛️"
+    "icon": "\ud83c\udfdb\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2553,11 +2553,11 @@
    "address": "131 W 3rd St, New York, NY 10012",
    "category_id": 3,
    "category_name": "Attraction",
-   "category_icon": "🏛️",
+   "category_icon": "\ud83c\udfdb\ufe0f",
    "category": {
     "id": 3,
     "name": "Attraction",
-    "icon": "🏛️"
+    "icon": "\ud83c\udfdb\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2577,11 +2577,11 @@
    "address": "Multiple NYC venues",
    "category_id": 3,
    "category_name": "Attraction",
-   "category_icon": "🏛️",
+   "category_icon": "\ud83c\udfdb\ufe0f",
    "category": {
     "id": 3,
     "name": "Attraction",
-    "icon": "🏛️"
+    "icon": "\ud83c\udfdb\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2601,11 +2601,11 @@
    "address": "Pier 83, New York, NY",
    "category_id": 3,
    "category_name": "Attraction",
-   "category_icon": "🏛️",
+   "category_icon": "\ud83c\udfdb\ufe0f",
    "category": {
     "id": 3,
     "name": "Attraction",
-    "icon": "🏛️"
+    "icon": "\ud83c\udfdb\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2618,18 +2618,18 @@
   {
    "id": 663,
    "trip_id": 99,
-   "name": "Dizzy’s Club / Jazz at Lincoln Center",
+   "name": "Dizzy\u2019s Club / Jazz at Lincoln Center",
    "description": "",
    "lat": 40.7686,
    "lng": -73.983,
    "address": "10 Columbus Cir, New York, NY 10023",
    "category_id": 3,
    "category_name": "Attraction",
-   "category_icon": "🏛️",
+   "category_icon": "\ud83c\udfdb\ufe0f",
    "category": {
     "id": 3,
     "name": "Attraction",
-    "icon": "🏛️"
+    "icon": "\ud83c\udfdb\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2649,11 +2649,11 @@
    "address": "Midtown / UWS, New York, NY",
    "category_id": 3,
    "category_name": "Attraction",
-   "category_icon": "🏛️",
+   "category_icon": "\ud83c\udfdb\ufe0f",
    "category": {
     "id": 3,
     "name": "Attraction",
-    "icon": "🏛️"
+    "icon": "\ud83c\udfdb\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2673,11 +2673,11 @@
    "address": "Times Square area, New York, NY",
    "category_id": 3,
    "category_name": "Attraction",
-   "category_icon": "🏛️",
+   "category_icon": "\ud83c\udfdb\ufe0f",
    "category": {
     "id": 3,
     "name": "Attraction",
-    "icon": "🏛️"
+    "icon": "\ud83c\udfdb\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2697,11 +2697,11 @@
    "address": "2751 Broadway, New York, NY 10025",
    "category_id": 3,
    "category_name": "Attraction",
-   "category_icon": "🏛️",
+   "category_icon": "\ud83c\udfdb\ufe0f",
    "category": {
     "id": 3,
     "name": "Attraction",
-    "icon": "🏛️"
+    "icon": "\ud83c\udfdb\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2721,11 +2721,11 @@
    "address": "Battery Park / Liberty Island ferries",
    "category_id": 3,
    "category_name": "Attraction",
-   "category_icon": "🏛️",
+   "category_icon": "\ud83c\udfdb\ufe0f",
    "category": {
     "id": 3,
     "name": "Attraction",
-    "icon": "🏛️"
+    "icon": "\ud83c\udfdb\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2745,11 +2745,11 @@
    "address": "178 7th Ave S, New York, NY 10014",
    "category_id": 3,
    "category_name": "Attraction",
-   "category_icon": "🏛️",
+   "category_icon": "\ud83c\udfdb\ufe0f",
    "category": {
     "id": 3,
     "name": "Attraction",
-    "icon": "🏛️"
+    "icon": "\ud83c\udfdb\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2769,11 +2769,11 @@
    "address": "Midtown / Village jazz rooms",
    "category_id": 3,
    "category_name": "Attraction",
-   "category_icon": "🏛️",
+   "category_icon": "\ud83c\udfdb\ufe0f",
    "category": {
     "id": 3,
     "name": "Attraction",
-    "icon": "🏛️"
+    "icon": "\ud83c\udfdb\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2793,11 +2793,11 @@
    "address": "566 Amsterdam Ave, New York, NY 10024",
    "category_id": 2,
    "category_name": "Restaurant",
-   "category_icon": "🍽️",
+   "category_icon": "\ud83c\udf7d\ufe0f",
    "category": {
     "id": 2,
     "name": "Restaurant",
-    "icon": "🍽️"
+    "icon": "\ud83c\udf7d\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2817,11 +2817,11 @@
    "address": "646 9th Ave, New York, NY 10036",
    "category_id": 2,
    "category_name": "Restaurant",
-   "category_icon": "🍽️",
+   "category_icon": "\ud83c\udf7d\ufe0f",
    "category": {
     "id": 2,
     "name": "Restaurant",
-    "icon": "🍽️"
+    "icon": "\ud83c\udf7d\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2834,18 +2834,18 @@
   {
    "id": 672,
    "trip_id": 99,
-   "name": "e’s BAR / The Dead Poet / Lilly’s Cocktail & Wine",
+   "name": "e\u2019s BAR / The Dead Poet / Lilly\u2019s Cocktail & Wine",
    "description": "",
    "lat": 40.787,
    "lng": -73.975,
    "address": "Upper West Side, New York, NY",
    "category_id": 2,
    "category_name": "Restaurant",
-   "category_icon": "🍽️",
+   "category_icon": "\ud83c\udf7d\ufe0f",
    "category": {
     "id": 2,
     "name": "Restaurant",
-    "icon": "🍽️"
+    "icon": "\ud83c\udf7d\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2865,11 +2865,11 @@
    "address": "951 Amsterdam Ave, New York, NY 10025",
    "category_id": 2,
    "category_name": "Restaurant",
-   "category_icon": "🍽️",
+   "category_icon": "\ud83c\udf7d\ufe0f",
    "category": {
     "id": 2,
     "name": "Restaurant",
-    "icon": "🍽️"
+    "icon": "\ud83c\udf7d\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2889,11 +2889,11 @@
    "address": "44 W 63rd St, 2nd Fl, New York, NY 10023",
    "category_id": 2,
    "category_name": "Restaurant",
-   "category_icon": "🍽️",
+   "category_icon": "\ud83c\udf7d\ufe0f",
    "category": {
     "id": 2,
     "name": "Restaurant",
-    "icon": "🍽️"
+    "icon": "\ud83c\udf7d\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2914,11 +2914,11 @@
    "address": "1900 Broadway, New York, NY 10023",
    "category_id": 2,
    "category_name": "Restaurant",
-   "category_icon": "🍽️",
+   "category_icon": "\ud83c\udf7d\ufe0f",
    "category": {
     "id": 2,
     "name": "Restaurant",
-    "icon": "🍽️"
+    "icon": "\ud83c\udf7d\ufe0f"
    },
    "reservation_status": "considering",
    "place_time": "11:00",
@@ -2933,32 +2933,32 @@
   {
    "id": 1,
    "name": "Hotel",
-   "icon": "🧳"
+   "icon": "\ud83e\uddf3"
   },
   {
    "id": 2,
    "name": "Restaurant",
-   "icon": "🍽️"
+   "icon": "\ud83c\udf7d\ufe0f"
   },
   {
    "id": 3,
    "name": "Attraction",
-   "icon": "🏛️"
+   "icon": "\ud83c\udfdb\ufe0f"
   },
   {
    "id": 4,
    "name": "Store",
-   "icon": "🛍️"
+   "icon": "\ud83d\udecd\ufe0f"
   },
   {
    "id": 5,
    "name": "Flight",
-   "icon": "✈️"
+   "icon": "\u2708\ufe0f"
   },
   {
    "id": 6,
    "name": "Car",
-   "icon": "🚗"
+   "icon": "\ud83d\ude97"
   }
  ],
  "permissions": {
@@ -3035,7 +3035,7 @@
    "trip_id": 99,
    "day_id": 501,
    "place_id": 601,
-   "title": "American Airlines LAS → JFK",
+   "title": "American Airlines LAS \u2192 JFK",
    "status": "candidate",
    "type": "flight",
    "start_time": "12:37"
@@ -3175,7 +3175,7 @@
    "trip_id": 99,
    "day_id": 508,
    "place_id": 635,
-   "title": "American Airlines JFK → LAS",
+   "title": "American Airlines JFK \u2192 LAS",
    "status": "candidate",
    "type": "flight",
    "start_time": "18:00"
@@ -3205,7 +3205,7 @@
    "trip_id": 99,
    "day_id": 501,
    "place_id": 630,
-   "title": "Southwest LAS → LGA 07:25–16:35",
+   "title": "Southwest LAS \u2192 LGA 07:25\u201316:35",
    "status": "candidate",
    "type": "flight",
    "start_time": "07:25"
@@ -3215,7 +3215,7 @@
    "trip_id": 99,
    "day_id": 501,
    "place_id": 631,
-   "title": "Southwest LAS → LGA 11:30–22:25",
+   "title": "Southwest LAS \u2192 LGA 11:30\u201322:25",
    "status": "candidate",
    "type": "flight",
    "start_time": "11:30"
@@ -3225,7 +3225,7 @@
    "trip_id": 99,
    "day_id": 501,
    "place_id": 632,
-   "title": "Southwest LAS → LGA 05:05–15:45",
+   "title": "Southwest LAS \u2192 LGA 05:05\u201315:45",
    "status": "candidate",
    "type": "flight",
    "start_time": "05:05"
@@ -3235,7 +3235,7 @@
    "trip_id": 99,
    "day_id": 501,
    "place_id": 633,
-   "title": "Southwest LAS → LGA 06:30–16:55",
+   "title": "Southwest LAS \u2192 LGA 06:30\u201316:55",
    "status": "candidate",
    "type": "flight",
    "start_time": "06:30"
@@ -3245,7 +3245,7 @@
    "trip_id": 99,
    "day_id": 501,
    "place_id": 634,
-   "title": "Southwest LAS → LGA 06:50–18:55",
+   "title": "Southwest LAS \u2192 LGA 06:50\u201318:55",
    "status": "candidate",
    "type": "flight",
    "start_time": "06:50"
@@ -3535,7 +3535,7 @@
    "trip_id": 99,
    "day_id": 501,
    "place_id": 650,
-   "title": "American LAS → JFK",
+   "title": "American LAS \u2192 JFK",
    "status": "candidate",
    "type": "flight",
    "start_time": "11:00"
@@ -3545,7 +3545,7 @@
    "trip_id": 99,
    "day_id": 501,
    "place_id": 651,
-   "title": "Delta LAS → JFK",
+   "title": "Delta LAS \u2192 JFK",
    "status": "candidate",
    "type": "flight",
    "start_time": "11:00"
@@ -3555,7 +3555,7 @@
    "trip_id": 99,
    "day_id": 501,
    "place_id": 652,
-   "title": "JetBlue LAS → JFK",
+   "title": "JetBlue LAS \u2192 JFK",
    "status": "candidate",
    "type": "flight",
    "start_time": "11:00"
@@ -3565,7 +3565,7 @@
    "trip_id": 99,
    "day_id": 501,
    "place_id": 653,
-   "title": "Southwest LAS → LGA",
+   "title": "Southwest LAS \u2192 LGA",
    "status": "candidate",
    "type": "flight",
    "start_time": "11:00"
@@ -3575,7 +3575,7 @@
    "trip_id": 99,
    "day_id": 501,
    "place_id": 654,
-   "title": "Southwest LAS → LGA",
+   "title": "Southwest LAS \u2192 LGA",
    "status": "candidate",
    "type": "flight",
    "start_time": "11:00"
@@ -3585,7 +3585,7 @@
    "trip_id": 99,
    "day_id": 501,
    "place_id": 655,
-   "title": "Southwest LAS → LGA",
+   "title": "Southwest LAS \u2192 LGA",
    "status": "candidate",
    "type": "flight",
    "start_time": "11:00"
@@ -3595,7 +3595,7 @@
    "trip_id": 99,
    "day_id": 501,
    "place_id": 656,
-   "title": "Southwest LAS → LGA",
+   "title": "Southwest LAS \u2192 LGA",
    "status": "candidate",
    "type": "flight",
    "start_time": "11:00"
@@ -3605,7 +3605,7 @@
    "trip_id": 99,
    "day_id": 501,
    "place_id": 657,
-   "title": "Southwest LAS → LGA",
+   "title": "Southwest LAS \u2192 LGA",
    "status": "candidate",
    "type": "flight",
    "start_time": "11:00"
@@ -3615,7 +3615,7 @@
    "trip_id": 99,
    "day_id": 501,
    "place_id": 658,
-   "title": "United LAS → EWR",
+   "title": "United LAS \u2192 EWR",
    "status": "candidate",
    "type": "flight",
    "start_time": "11:00"
@@ -3665,7 +3665,7 @@
    "trip_id": 99,
    "day_id": 501,
    "place_id": 663,
-   "title": "Dizzy’s Club / Jazz at Lincoln Center",
+   "title": "Dizzy\u2019s Club / Jazz at Lincoln Center",
    "status": "candidate",
    "type": "activity",
    "start_time": "11:00"
@@ -3755,7 +3755,7 @@
    "trip_id": 99,
    "day_id": 501,
    "place_id": 672,
-   "title": "e’s BAR / The Dead Poet / Lilly’s Cocktail & Wine",
+   "title": "e\u2019s BAR / The Dead Poet / Lilly\u2019s Cocktail & Wine",
    "status": "candidate",
    "type": "activity",
    "start_time": "11:00"
@@ -3798,7 +3798,7 @@
    "id": 379354820,
    "trip_id": 99,
    "category": "Flights",
-   "name": "American Airlines LAS → JFK",
+   "name": "American Airlines LAS \u2192 JFK",
    "total_price": 514,
    "note": "",
    "sort_order": 0
@@ -3924,7 +3924,7 @@
    "id": 283042588,
    "trip_id": 99,
    "category": "Flights",
-   "name": "Southwest LAS → LGA 07:25–16:35",
+   "name": "Southwest LAS \u2192 LGA 07:25\u201316:35",
    "total_price": 328,
    "note": "",
    "sort_order": 14
@@ -3933,7 +3933,7 @@
    "id": 299820207,
    "trip_id": 99,
    "category": "Flights",
-   "name": "Southwest LAS → LGA 11:30–22:25",
+   "name": "Southwest LAS \u2192 LGA 11:30\u201322:25",
    "total_price": 388,
    "note": "",
    "sort_order": 15
@@ -3942,7 +3942,7 @@
    "id": 316597826,
    "trip_id": 99,
    "category": "Flights",
-   "name": "Southwest LAS → LGA 05:05–15:45",
+   "name": "Southwest LAS \u2192 LGA 05:05\u201315:45",
    "total_price": 478,
    "note": "",
    "sort_order": 16
@@ -3951,7 +3951,7 @@
    "id": 215932112,
    "trip_id": 99,
    "category": "Flights",
-   "name": "Southwest LAS → LGA 06:50–18:55",
+   "name": "Southwest LAS \u2192 LGA 06:50\u201318:55",
    "total_price": 498,
    "note": "",
    "sort_order": 17
@@ -4167,7 +4167,7 @@
    "id": 395293796,
    "trip_id": 99,
    "category": "Flights",
-   "name": "JetBlue LAS → JFK",
+   "name": "JetBlue LAS \u2192 JFK",
    "total_price": 504,
    "note": "",
    "sort_order": 41
@@ -4645,8 +4645,8 @@
  "thingOverrides": {
   "place:601": {
    "category": "flight",
-   "title": "American Airlines LAS → JFK",
-   "address": "LAS → JFK",
+   "title": "American Airlines LAS \u2192 JFK",
+   "address": "LAS \u2192 JFK",
    "website": "https://www.aa.com/booking/find-flights?fromAirport=LAS&toAirport=JFK&departDate=06%2F23%2F2026&returnDate=06%2F30%2F2026&tripType=roundTrip&adults=1",
    "summary": "Airline: American; Route: LAS-JFK; Stops: nonstop;",
    "longDetails": "Airline: American; Route: LAS-JFK; Stops: nonstop; Outbound: 2026-06-23 12:37-20:59; Return: 2026-06-30 18:00-20:59; Duration: 5h22m out / 5h59m return; Price: $257 Basic Economy / $367 Main Cabin; Status: candidate only; not booked.",
@@ -4724,7 +4724,7 @@
   "place:603": {
    "category": "hotel",
    "title": "Hotel Belleclaire Central Park",
-   "address": "Upper West Side, New York, NY",
+   "address": "2175 Broadway, New York, NY 10024",
    "website": "https://www.hotelbelleclaire.com/",
    "summary": "Hotel Belleclaire Central Park sits on the Upper West Side near Lincoln Center, with Booking.",
    "summarySourceUrls": [
@@ -4791,7 +4791,7 @@
    "address": "181 Thompson Street, New York, NY 10012",
    "website": "https://carbonenewyork.com/",
    "summary": "Google lists Carbone around 4. 4/5 with thousands of reviews.",
-   "longDetails": "Google lists Carbone around 4.4/5 with thousands of reviews. Greenwich Village red-sauce dining room on Thompson Street; lunch Tue–Sun 11:30am–2pm and dinner nightly (carbonenewyork.com). Public lunch menu entrees list about $24–$54 on Yelp; Price: $48 per person dinner planning estimate before tax, tip, and drinks.",
+   "longDetails": "Google lists Carbone around 4.4/5 with thousands of reviews. Greenwich Village red-sauce dining room on Thompson Street; lunch Tue\u2013Sun 11:30am\u20132pm and dinner nightly (carbonenewyork.com). Public lunch menu entrees list about $24\u2013$54 on Yelp; Price: $48 per person dinner planning estimate before tax, tip, and drinks.",
    "lat": 40.726,
    "lng": -73.9997,
    "googleRating": "4.3",
@@ -4838,7 +4838,7 @@
    "review4Rating": "5",
    "source": "fixture-nyc",
    "url": "https://carbonenewyork.com/",
-   "details": "Google lists Carbone around 4.4/5 with thousands of reviews. Greenwich Village red-sauce dining room on Thompson Street; lunch Tue–Sun 11:30am–2pm and dinner nightly (carbonenewyork.com). Public lunch menu entrees list about $24–$54 on Yelp; Price: $48 per person dinner planning estimate before tax, tip, and drinks.",
+   "details": "Google lists Carbone around 4.4/5 with thousands of reviews. Greenwich Village red-sauce dining room on Thompson Street; lunch Tue\u2013Sun 11:30am\u20132pm and dinner nightly (carbonenewyork.com). Public lunch menu entrees list about $24\u2013$54 on Yelp; Price: $48 per person dinner planning estimate before tax, tip, and drinks.",
    "review1Source": null,
    "review1Url": null,
    "review2Source": null,
@@ -4857,7 +4857,7 @@
    "summarySourceUrls": [
     "https://jazz.org/dizzys/"
    ],
-   "longDetails": "Google shows Jazz at Lincoln Center/Dizzy's Club around 4.6/5. Dizzy's Club hosts nightly sets with Central Park views (jazz.org/dizzys). Ticket covers run about $20–$65+ depending on the act; Price: $35 per person cover planning estimate plus a $25 per person food-and-beverage minimum billed at the end of the set per jazz.org ticketing terms.",
+   "longDetails": "Google shows Jazz at Lincoln Center/Dizzy's Club around 4.6/5. Dizzy's Club hosts nightly sets with Central Park views (jazz.org/dizzys). Ticket covers run about $20\u2013$65+ depending on the act; Price: $35 per person cover planning estimate plus a $25 per person food-and-beverage minimum billed at the end of the set per jazz.org ticketing terms.",
    "lat": 40.7725,
    "lng": -73.9838,
    "googleRating": "4.6",
@@ -4901,7 +4901,7 @@
    "review4Rating": "5",
    "source": "fixture-nyc",
    "url": "https://jazz.org/dizzys/",
-   "details": "Google shows Jazz at Lincoln Center/Dizzy's Club around 4.6/5. Dizzy's Club hosts nightly sets with Central Park views (jazz.org/dizzys). Ticket covers run about $20–$65+ depending on the act; Price: $35 per person cover planning estimate plus a $25 per person food-and-beverage minimum billed at the end of the set per jazz.org ticketing terms.",
+   "details": "Google shows Jazz at Lincoln Center/Dizzy's Club around 4.6/5. Dizzy's Club hosts nightly sets with Central Park views (jazz.org/dizzys). Ticket covers run about $20\u2013$65+ depending on the act; Price: $35 per person cover planning estimate plus a $25 per person food-and-beverage minimum billed at the end of the set per jazz.org ticketing terms.",
    "review1Source": null,
    "review1Url": null,
    "review2Source": null,
@@ -5051,11 +5051,11 @@
    "title": "Afternoon matinee show",
    "address": "TKTS Times Square, Broadway at W 47th St, New York, NY 10036",
    "website": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/",
-   "summary": "TKTS Times Square sells same-day and next-day matinee Broadway tickets at 20–50% off list, with the final price includin",
+   "summary": "TKTS Times Square sells same-day and next-day matinee Broadway tickets at 20\u201350% off list, with the final price includin",
    "summarySourceUrls": [
     "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/"
    ],
-   "longDetails": "TKTS Times Square sells same-day and next-day matinee Broadway tickets at 20–50% off list, with the final price including an $8 per-ticket service charge (tdf.org/tkts). Example board pricing shows midweek matinees around $78 after discount; Price: $78 per person matinee ticket planning estimate before fees at the booth.",
+   "longDetails": "TKTS Times Square sells same-day and next-day matinee Broadway tickets at 20\u201350% off list, with the final price including an $8 per-ticket service charge (tdf.org/tkts). Example board pricing shows midweek matinees around $78 after discount; Price: $78 per person matinee ticket planning estimate before fees at the booth.",
    "lat": 40.758,
    "lng": -73.9855,
    "googleRating": "4.5",
@@ -5107,7 +5107,7 @@
    },
    "source": "fixture-nyc",
    "url": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/",
-   "details": "TKTS Times Square sells same-day and next-day matinee Broadway tickets at 20–50% off list, with the final price including an $8 per-ticket service charge (tdf.org/tkts). Example board pricing shows midweek matinees around $78 after discount; Price: $78 per person matinee ticket planning estimate before fees at the booth.",
+   "details": "TKTS Times Square sells same-day and next-day matinee Broadway tickets at 20\u201350% off list, with the final price including an $8 per-ticket service charge (tdf.org/tkts). Example board pricing shows midweek matinees around $78 after discount; Price: $78 per person matinee ticket planning estimate before fees at the booth.",
    "review1Source": null,
    "review1Url": null,
    "review2Source": null,
@@ -5264,7 +5264,7 @@
    "address": "10 Columbus Cir, Shops at Columbus Circle",
    "website": "https://www.wholefoodsmarket.com/stores/columbuscircle",
    "summary": "address: 10 Columbus Cir, Shops at Columbus Circle;",
-   "longDetails": "address: 10 Columbus Cir, Shops at Columbus Circle; fit: high for Lincoln Center/Columbus Circle hotels; notes: Good fresh celery/grocery source; also café/pickup per source snippets. Price: $25 typical spend floor from ccab card (not a fixed menu price).",
+   "longDetails": "address: 10 Columbus Cir, Shops at Columbus Circle; fit: high for Lincoln Center/Columbus Circle hotels; notes: Good fresh celery/grocery source; also caf\u00e9/pickup per source snippets. Price: $25 typical spend floor from ccab card (not a fixed menu price).",
    "lat": 40.7686,
    "lng": -73.9822,
    "price": 25,
@@ -5272,12 +5272,12 @@
    "logoUrl": "https://icons.duckduckgo.com/ip3/wholefoodsmarket.com.ico",
    "source": "fixture-nyc",
    "url": "https://www.wholefoodsmarket.com/stores/columbuscircle",
-   "details": "address: 10 Columbus Cir, Shops at Columbus Circle; fit: high for Lincoln Center/Columbus Circle hotels; notes: Good fresh celery/grocery source; also café/pickup per source snippets. Price: $25 typical spend floor from ccab card (not a fixed menu price)."
+   "details": "address: 10 Columbus Cir, Shops at Columbus Circle; fit: high for Lincoln Center/Columbus Circle hotels; notes: Good fresh celery/grocery source; also caf\u00e9/pickup per source snippets. Price: $25 typical spend floor from ccab card (not a fixed menu price)."
   },
   "place:635": {
    "category": "flight",
-   "title": "American Airlines JFK → LAS",
-   "address": "LAS → JFK",
+   "title": "American Airlines JFK \u2192 LAS",
+   "address": "JFK \u2192 LAS",
    "website": "https://www.aa.com/booking/find-flights?fromAirport=LAS&toAirport=JFK&departDate=06%2F23%2F2026&returnDate=06%2F30%2F2026&tripType=roundTrip&adults=1",
    "summary": "Airline: American; Route: LAS-JFK; Stops: nonstop;",
    "longDetails": "Airline: American; Route: LAS-JFK; Stops: nonstop; Outbound: 2026-06-23 12:37-20:59; Return: 2026-06-30 18:00-20:59; Duration: 5h22m out / 5h59m return; Price: $257 Basic Economy / $367 Main Cabin; Status: candidate only; not booked.",
@@ -5326,7 +5326,7 @@
    "address": "JFK Airport rental car facility / Federal Circle, Jamaica, NY",
    "website": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp",
    "summary": "Cheapest JFK option, but the supplier is hidden.",
-   "longDetails": "Cheapest JFK option, but the supplier is hidden. Standard sedan is a good NYC compromise: more trunk than Corolla, easier to park than an SUV. Use it only if price matters more than knowing the counter experience before booking. Price/source: Live source $44/day, $306 total incl. taxes/fees. Source: Priceline JFK pricing page; exact dated checkout search hit anti-bot, so this is a source-priced JFK card/floor, not a booked reservation. JFK pickup/counter: Priceline hides the supplier until booking, so you lose the ability to judge the JFK counter before paying. Expect to leave the JetBlue terminal/baggage-claim flow and use AirTrain/signage to Federal Circle/rental-car facilities; build in extra time after landing. Car + NYC tradeoff: Standard sedan is a good NYC compromise: more trunk than Corolla, easier to park than an SUV. NYC reality: driving into Manhattan can be slow, toll-heavy, and stressful; parking/garages can be expensive and tight. A rental only makes sense if they need out-of-Manhattan flexibility, luggage control, or day trips—otherwise taxi/subway/rideshare may be easier. Review summary: no company-specific JFK confidence because the counter is unknown; choose only if the savings justify that uncertainty. Booking boundary: do not book/pay/accept insurance or toll terms without explicit approval. Before booking, verify exact Jun 23 pickup time, Jun 30 return time, taxes/fees, additional-driver policy, toll policy, fuel/EV policy, cancellation terms, and whether counter-skip/online check-in applies.",
+   "longDetails": "Cheapest JFK option, but the supplier is hidden. Standard sedan is a good NYC compromise: more trunk than Corolla, easier to park than an SUV. Use it only if price matters more than knowing the counter experience before booking. Price/source: Live source $44/day, $306 total incl. taxes/fees. Source: Priceline JFK pricing page; exact dated checkout search hit anti-bot, so this is a source-priced JFK card/floor, not a booked reservation. JFK pickup/counter: Priceline hides the supplier until booking, so you lose the ability to judge the JFK counter before paying. Expect to leave the JetBlue terminal/baggage-claim flow and use AirTrain/signage to Federal Circle/rental-car facilities; build in extra time after landing. Car + NYC tradeoff: Standard sedan is a good NYC compromise: more trunk than Corolla, easier to park than an SUV. NYC reality: driving into Manhattan can be slow, toll-heavy, and stressful; parking/garages can be expensive and tight. A rental only makes sense if they need out-of-Manhattan flexibility, luggage control, or day trips\u2014otherwise taxi/subway/rideshare may be easier. Review summary: no company-specific JFK confidence because the counter is unknown; choose only if the savings justify that uncertainty. Booking boundary: do not book/pay/accept insurance or toll terms without explicit approval. Before booking, verify exact Jun 23 pickup time, Jun 30 return time, taxes/fees, additional-driver policy, toll policy, fuel/EV policy, cancellation terms, and whether counter-skip/online check-in applies.",
    "lat": 40.6413,
    "lng": -73.7781,
    "price": 306,
@@ -5354,12 +5354,12 @@
    "reputationNote": "Review summary: no company-specific JFK confidence because the counter is unknown; choose only if the savings justify that uncertainty.",
    "source": "fixture-nyc",
    "url": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp",
-   "details": "Cheapest JFK option, but the supplier is hidden. Standard sedan is a good NYC compromise: more trunk than Corolla, easier to park than an SUV. Use it only if price matters more than knowing the counter experience before booking. Price/source: Live source $44/day, $306 total incl. taxes/fees. Source: Priceline JFK pricing page; exact dated checkout search hit anti-bot, so this is a source-priced JFK card/floor, not a booked reservation. JFK pickup/counter: Priceline hides the supplier until booking, so you lose the ability to judge the JFK counter before paying. Expect to leave the JetBlue terminal/baggage-claim flow and use AirTrain/signage to Federal Circle/rental-car facilities; build in extra time after landing. Car + NYC tradeoff: Standard sedan is a good NYC compromise: more trunk than Corolla, easier to park than an SUV. NYC reality: driving into Manhattan can be slow, toll-heavy, and stressful; parking/garages can be expensive and tight. A rental only makes sense if they need out-of-Manhattan flexibility, luggage control, or day trips—otherwise taxi/subway/rideshare may be easier. Review summary: no company-specific JFK confidence because the counter is unknown; choose only if the savings justify that uncertainty. Booking boundary: do not book/pay/accept insurance or toll terms without explicit approval. Before booking, verify exact Jun 23 pickup time, Jun 30 return time, taxes/fees, additional-driver policy, toll policy, fuel/EV policy, cancellation terms, and whether counter-skip/online check-in applies."
+   "details": "Cheapest JFK option, but the supplier is hidden. Standard sedan is a good NYC compromise: more trunk than Corolla, easier to park than an SUV. Use it only if price matters more than knowing the counter experience before booking. Price/source: Live source $44/day, $306 total incl. taxes/fees. Source: Priceline JFK pricing page; exact dated checkout search hit anti-bot, so this is a source-priced JFK card/floor, not a booked reservation. JFK pickup/counter: Priceline hides the supplier until booking, so you lose the ability to judge the JFK counter before paying. Expect to leave the JetBlue terminal/baggage-claim flow and use AirTrain/signage to Federal Circle/rental-car facilities; build in extra time after landing. Car + NYC tradeoff: Standard sedan is a good NYC compromise: more trunk than Corolla, easier to park than an SUV. NYC reality: driving into Manhattan can be slow, toll-heavy, and stressful; parking/garages can be expensive and tight. A rental only makes sense if they need out-of-Manhattan flexibility, luggage control, or day trips\u2014otherwise taxi/subway/rideshare may be easier. Review summary: no company-specific JFK confidence because the counter is unknown; choose only if the savings justify that uncertainty. Booking boundary: do not book/pay/accept insurance or toll terms without explicit approval. Before booking, verify exact Jun 23 pickup time, Jun 30 return time, taxes/fees, additional-driver policy, toll policy, fuel/EV policy, cancellation terms, and whether counter-skip/online check-in applies."
   },
   "place:630": {
    "category": "flight",
-   "title": "Southwest LAS → LGA 07:25–16:35",
-   "address": "LAS → LGA",
+   "title": "Southwest LAS \u2192 LGA 07:25\u201316:35",
+   "address": "LAS \u2192 LGA",
    "website": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
    "summary": "Airline: Southwest; Route: LAS-LGA; Stops: 1 stop;",
    "longDetails": "Airline: Southwest; Route: LAS-LGA; Stops: 1 stop; Outbound: 2026-06-23 07:25-16:35; Return: None; Duration: 6h10m outbound; Price: Outbound from $164 Basic / $209 Choice / $289 Choice Preferred / $349 Choice Extra; Flight #2294; lowest/fastest outbound visible; return fare not captured yet; Status: candidate only; not booked.",
@@ -5377,8 +5377,8 @@
   },
   "place:631": {
    "category": "flight",
-   "title": "Southwest LAS → LGA 11:30–22:25",
-   "address": "LAS → LGA",
+   "title": "Southwest LAS \u2192 LGA 11:30\u201322:25",
+   "address": "LAS \u2192 LGA",
    "website": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
    "summary": "Airline: Southwest; Route: LAS-LGA; Stops: 1 stop via DAL;",
    "longDetails": "Airline: Southwest; Route: LAS-LGA; Stops: 1 stop via DAL; Outbound: 2026-06-23 11:30-22:25; Return: None; Duration: 7h55m outbound; Price: Outbound from $194 Basic / $239 Choice / $319 Choice Preferred / $379 Choice Extra; Flights #2219/#107; cheaper later option; return fare not captured yet; Status: candidate only; not booked.",
@@ -5396,8 +5396,8 @@
   },
   "place:632": {
    "category": "flight",
-   "title": "Southwest LAS → LGA 05:05–15:45",
-   "address": "LAS → LGA",
+   "title": "Southwest LAS \u2192 LGA 05:05\u201315:45",
+   "address": "LAS \u2192 LGA",
    "website": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
    "summary": "Airline: Southwest; Route: LAS-LGA; Stops: 1 stop via HOU;",
    "longDetails": "Airline: Southwest; Route: LAS-LGA; Stops: 1 stop via HOU; Outbound: 2026-06-23 05:05-15:45; Return: None; Duration: 7h40m outbound; Price: Outbound from $239 Basic / $284 Choice / $364 Choice Preferred / $424 Choice Extra; Flights #2051/#2014; return fare not captured yet; Status: candidate only; not booked.",
@@ -5415,8 +5415,8 @@
   },
   "place:633": {
    "category": "flight",
-   "title": "Southwest LAS → LGA 06:30–16:55",
-   "address": "LAS → LGA",
+   "title": "Southwest LAS \u2192 LGA 06:30\u201316:55",
+   "address": "LAS \u2192 LGA",
    "website": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
    "summary": "Airline: Southwest; Route: LAS-LGA; Stops: 1 stop via DEN;",
    "longDetails": "Airline: Southwest; Route: LAS-LGA; Stops: 1 stop via DEN; Outbound: 2026-06-23 06:30-16:55; Return: None; Duration: 7h25m outbound; Price: Outbound from $239 Basic / $284 Choice / $364 Choice Preferred / $424 Choice Extra; Flights #2223/#4441; return fare not captured yet; Status: candidate only; not booked.",
@@ -5434,8 +5434,8 @@
   },
   "place:634": {
    "category": "flight",
-   "title": "Southwest LAS → LGA 06:50–18:55",
-   "address": "LAS → LGA",
+   "title": "Southwest LAS \u2192 LGA 06:50\u201318:55",
+   "address": "LAS \u2192 LGA",
    "website": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
    "summary": "Airline: Southwest; Route: LAS-LGA; Stops: 1 stop via STL;",
    "longDetails": "Airline: Southwest; Route: LAS-LGA; Stops: 1 stop via STL; Outbound: 2026-06-23 06:50-18:55; Return: None; Duration: 9h05m outbound; Price: Outbound from $249 Basic / $294 Choice / $374 Choice Preferred / $434 Choice Extra; Flights #2368/#4962; return fare not captured yet; Status: candidate only; not booked.",
@@ -5495,7 +5495,7 @@
   "place:619": {
    "category": "hotel",
    "title": "Hotel Beacon",
-   "address": "Upper West Side, New York, NY",
+   "address": "2130 Broadway, New York, NY 10023",
    "website": "https://www.beaconhotel.com/",
    "summary": "Hotel Beacon offers Upper West Side suites with kitchenettes, making it practical for longer stays near Central Park and",
    "summarySourceUrls": [
@@ -5514,7 +5514,7 @@
   "place:620": {
    "category": "hotel",
    "title": "Hotel Edison",
-   "address": "Times Square / Theater District, New York, NY",
+   "address": "228 W 47th St, New York, NY 10036",
    "website": "https://www.edisonhotelnyc.com/",
    "summary": "Hotel Edison has anchored 47th Street since the 1930s, offering art-deco details and a classic Times Square address step",
    "summarySourceUrls": [
@@ -5571,7 +5571,7 @@
   "place:623": {
    "category": "hotel",
    "title": "Hyatt House New York/Chelsea",
-   "address": "Chelsea, New York, NY",
+   "address": "815 6th Ave, New York, NY 10001",
    "website": "https://www.hyatt.com/hyatt-house/en-US/nycxc-hyatt-house-new-york-chelsea",
    "summary": "Hyatt House New York/Chelsea offers residential-style suites with kitchenettes and complimentary breakfast, popular with",
    "summarySourceUrls": [
@@ -5596,7 +5596,7 @@
    "summarySourceUrls": [
     "https://www.hilton.com/en/hotels/nycmodl-motto-new-york-city-times-square/"
    ],
-   "longDetails": "Motto by Hilton New York City Times Square packs efficient micro-rooms with clever storage and a social lobby bar aimed at younger travelers. Hilton’s Motto brand reviews mention affordable nightly rates for the neighborhood, walkable Hell’s Kitchen dining, and easy transfers to Lincoln Center on the 1 train.",
+   "longDetails": "Motto by Hilton New York City Times Square packs efficient micro-rooms with clever storage and a social lobby bar aimed at younger travelers. Hilton\u2019s Motto brand reviews mention affordable nightly rates for the neighborhood, walkable Hell\u2019s Kitchen dining, and easy transfers to Lincoln Center on the 1 train.",
    "lat": 40.759399,
    "lng": -73.983457,
    "googleRating": "3.9",
@@ -5649,7 +5649,7 @@
    "review4Rating": "4",
    "source": "fixture-nyc",
    "url": "https://www.hilton.com/en/hotels/nycmodl-motto-new-york-city-times-square/",
-   "details": "Motto by Hilton New York City Times Square packs efficient micro-rooms with clever storage and a social lobby bar aimed at younger travelers. Hilton’s Motto brand reviews mention affordable nightly rates for the neighborhood, walkable Hell’s Kitchen dining, and easy transfers to Lincoln Center on the 1 train.",
+   "details": "Motto by Hilton New York City Times Square packs efficient micro-rooms with clever storage and a social lobby bar aimed at younger travelers. Hilton\u2019s Motto brand reviews mention affordable nightly rates for the neighborhood, walkable Hell\u2019s Kitchen dining, and easy transfers to Lincoln Center on the 1 train.",
    "review1Source": null,
    "review1Url": null,
    "review2Source": null,
@@ -5719,7 +5719,7 @@
   "place:627": {
    "category": "hotel",
    "title": "Park Central Hotel New York",
-   "address": "Midtown / Central Park South, New York, NY",
+   "address": "870 7th Ave, New York, NY 10019",
    "website": "https://www.parkcentralny.com/",
    "summary": "Park Central Hotel New York anchors Seventh Avenue near Central Park South, offering a large Midtown footprint with mult",
    "summarySourceUrls": [
@@ -5741,7 +5741,7 @@
   "place:628": {
    "category": "hotel",
    "title": "Pod Times Square",
-   "address": "Hell’s Kitchen / Times Square, New York, NY",
+   "address": "400 W 42nd St, New York, NY 10036",
    "website": "https://www.thepodhotel.com/pod-times-square/",
    "summary": "Pod Times Square offers compact pod rooms and bunk layouts designed for value-focused travelers who still want a Times S",
    "summarySourceUrls": [
@@ -5760,7 +5760,7 @@
   "place:629": {
    "category": "hotel",
    "title": "Romer Hell's Kitchen",
-   "address": "Hell’s Kitchen, New York, NY",
+   "address": "Hell\u2019s Kitchen, New York, NY",
    "website": "https://www.romerhotels.com/hells-kitchen/",
    "summary": "Romer Hell's Kitchen is a boutique hotel on West 46th Street with a lobby bar and modern rooms aimed at theater-goers.",
    "summarySourceUrls": [
@@ -5800,11 +5800,11 @@
    "title": "The Empire Hotel New York",
    "address": "44 West 63rd Street, New York, NY 10023",
    "website": "https://www.empirehotelnyc.com/",
-   "summary": "The Empire Hotel New York sits at 44 West 63rd Street beside Lincoln Center’s plaza, with the Empire Rooftop bar overloo",
+   "summary": "The Empire Hotel New York sits at 44 West 63rd Street beside Lincoln Center\u2019s plaza, with the Empire Rooftop bar overloo",
    "summarySourceUrls": [
     "https://www.empirehotelnyc.com/"
    ],
-   "longDetails": "The Empire Hotel New York sits at 44 West 63rd Street beside Lincoln Center’s plaza, with the Empire Rooftop bar overlooking Broadway and the 1 train at 66th Street for Midtown hops. Booking.com guests frequently celebrate the walk to David Geffen Hall and Juilliard after evening shows, while criticizing compact room layouts and occasional slow housekeeping on sold-out weekends.",
+   "longDetails": "The Empire Hotel New York sits at 44 West 63rd Street beside Lincoln Center\u2019s plaza, with the Empire Rooftop bar overlooking Broadway and the 1 train at 66th Street for Midtown hops. Booking.com guests frequently celebrate the walk to David Geffen Hall and Juilliard after evening shows, while criticizing compact room layouts and occasional slow housekeeping on sold-out weekends.",
    "lat": 40.774,
    "lng": -73.982,
    "thirdPartyRating": "6.8",
@@ -5815,7 +5815,7 @@
    "thirdPartySource": "Booking.com",
    "source": "fixture-nyc",
    "url": "https://www.empirehotelnyc.com/",
-   "details": "The Empire Hotel New York sits at 44 West 63rd Street beside Lincoln Center’s plaza, with the Empire Rooftop bar overlooking Broadway and the 1 train at 66th Street for Midtown hops. Booking.com guests frequently celebrate the walk to David Geffen Hall and Juilliard after evening shows, while criticizing compact room layouts and occasional slow housekeeping on sold-out weekends."
+   "details": "The Empire Hotel New York sits at 44 West 63rd Street beside Lincoln Center\u2019s plaza, with the Empire Rooftop bar overlooking Broadway and the 1 train at 66th Street for Midtown hops. Booking.com guests frequently celebrate the walk to David Geffen Hall and Juilliard after evening shows, while criticizing compact room layouts and occasional slow housekeeping on sold-out weekends."
   },
   "place:638": {
    "category": "hotel",
@@ -5858,7 +5858,7 @@
   "place:640": {
    "category": "hotel",
    "title": "The Wallace Hotel",
-   "address": "Upper West Side, New York, NY",
+   "address": "242 W 76th St, New York, NY 10023",
    "website": "https://www.thewallace.com/",
    "summary": "The Wallace Hotel brings a boutique luxury feel to the Upper West Side, with Booking.",
    "summarySourceUrls": [
@@ -6023,8 +6023,8 @@
   },
   "place:650": {
    "category": "flight",
-   "title": "American LAS → JFK",
-   "address": "LAS → JFK",
+   "title": "American LAS \u2192 JFK",
+   "address": "LAS \u2192 JFK",
    "website": "https://www.aa.com/booking/find-flights?fromAirport=LAS&toAirport=JFK&departDate=06%2F23%2F2026&returnDate=06%2F30%2F2026&tripType=roundTrip&adults=1",
    "summary": "Airline: American; Route: LAS-JFK; Stops: nonstop;",
    "longDetails": "Airline: American; Route: LAS-JFK; Stops: nonstop; Outbound: 2026-06-23 12:37-20:59; Return: 2026-06-30 18:00-20:59; Duration: 5h22m out / 5h59m return; Price: $257 Basic Economy / $367 Main Cabin; Status: candidate only; not booked.",
@@ -6041,8 +6041,8 @@
   },
   "place:651": {
    "category": "flight",
-   "title": "Delta LAS → JFK",
-   "address": "LAS → JFK",
+   "title": "Delta LAS \u2192 JFK",
+   "address": "LAS \u2192 JFK",
    "website": "https://www.delta.com/flight-search/book-a-flight?cacheKeySuffix=1932f&tripType=ROUND_TRIP&originCity=LAS&destinationCity=JFK&departureDate=06%2F23%2F2026&returnDate=06%2F30%2F2026&paxCount=1",
    "summary": "Airline: Delta; Route: LAS-JFK; Stops: nonstop;",
    "longDetails": "Airline: Delta; Route: LAS-JFK; Stops: nonstop; Outbound: 2026-06-23 07:05-15:13; Return: 2026-06-30 11:30-14:02; Duration: 5h08m out / 5h32m return; Price: $257 Main Basic / $367 Main Classic; Status: candidate only; not booked.",
@@ -6059,8 +6059,8 @@
   },
   "place:652": {
    "category": "flight",
-   "title": "JetBlue LAS → JFK",
-   "address": "LAS → JFK",
+   "title": "JetBlue LAS \u2192 JFK",
+   "address": "LAS \u2192 JFK",
    "website": "https://www.jetblue.com/booking/flights?from=LAS&to=JFK&departure=2026-06-23&return=2026-06-30&adults=1",
    "summary": "Airline: JetBlue; Route: LAS-JFK; Stops: nonstop;",
    "longDetails": "Airline: JetBlue; Route: LAS-JFK; Stops: nonstop; Outbound: 2026-06-23 23:59-08:04+1; Return: 2026-06-30 06:40-09:10; Duration: 5h05m out / 5h30m return; Price: $252 Blue Basic / $254 Economy Cabin; Status: candidate only; not booked.",
@@ -6077,8 +6077,8 @@
   },
   "place:653": {
    "category": "flight",
-   "title": "Southwest LAS → LGA",
-   "address": "LAS → LGA",
+   "title": "Southwest LAS \u2192 LGA",
+   "address": "LAS \u2192 LGA",
    "website": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
    "summary": "Airline: Southwest; Route: LAS-LGA; Stops: 1 stop via HOU;",
    "longDetails": "Airline: Southwest; Route: LAS-LGA; Stops: 1 stop via HOU; Outbound: 2026-06-23 05:05-15:45; Return: None; Duration: 7h40m outbound; Price: Outbound from $239 Basic / $284 Choice / $364 Choice Preferred / $424 Choice Extra; Flights #2051/#2014; return fare not captured yet; Status: candidate only; not booked.",
@@ -6095,8 +6095,8 @@
   },
   "place:654": {
    "category": "flight",
-   "title": "Southwest LAS → LGA",
-   "address": "LAS → LGA",
+   "title": "Southwest LAS \u2192 LGA",
+   "address": "LAS \u2192 LGA",
    "website": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
    "summary": "Airline: Southwest; Route: LAS-LGA; Stops: 1 stop via DEN;",
    "longDetails": "Airline: Southwest; Route: LAS-LGA; Stops: 1 stop via DEN; Outbound: 2026-06-23 06:30-16:55; Return: None; Duration: 7h25m outbound; Price: Outbound from $239 Basic / $284 Choice / $364 Choice Preferred / $424 Choice Extra; Flights #2223/#4441; return fare not captured yet; Status: candidate only; not booked.",
@@ -6113,8 +6113,8 @@
   },
   "place:655": {
    "category": "flight",
-   "title": "Southwest LAS → LGA",
-   "address": "LAS → LGA",
+   "title": "Southwest LAS \u2192 LGA",
+   "address": "LAS \u2192 LGA",
    "website": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
    "summary": "Airline: Southwest; Route: LAS-LGA; Stops: 1 stop via STL;",
    "longDetails": "Airline: Southwest; Route: LAS-LGA; Stops: 1 stop via STL; Outbound: 2026-06-23 06:50-18:55; Return: None; Duration: 9h05m outbound; Price: Outbound from $249 Basic / $294 Choice / $374 Choice Preferred / $434 Choice Extra; Flights #2368/#4962; return fare not captured yet; Status: candidate only; not booked.",
@@ -6131,8 +6131,8 @@
   },
   "place:656": {
    "category": "flight",
-   "title": "Southwest LAS → LGA",
-   "address": "LAS → LGA",
+   "title": "Southwest LAS \u2192 LGA",
+   "address": "LAS \u2192 LGA",
    "website": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
    "summary": "Airline: Southwest; Route: LAS-LGA; Stops: 1 stop;",
    "longDetails": "Airline: Southwest; Route: LAS-LGA; Stops: 1 stop; Outbound: 2026-06-23 07:25-16:35; Return: None; Duration: 6h10m outbound; Price: Outbound from $164 Basic / $209 Choice / $289 Choice Preferred / $349 Choice Extra; Flight #2294; lowest/fastest outbound visible; return fare not captured yet; Status: candidate only; not booked.",
@@ -6149,8 +6149,8 @@
   },
   "place:657": {
    "category": "flight",
-   "title": "Southwest LAS → LGA",
-   "address": "LAS → LGA",
+   "title": "Southwest LAS \u2192 LGA",
+   "address": "LAS \u2192 LGA",
    "website": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
    "summary": "Airline: Southwest; Route: LAS-LGA; Stops: 1 stop via DAL;",
    "longDetails": "Airline: Southwest; Route: LAS-LGA; Stops: 1 stop via DAL; Outbound: 2026-06-23 11:30-22:25; Return: None; Duration: 7h55m outbound; Price: Outbound from $194 Basic / $239 Choice / $319 Choice Preferred / $379 Choice Extra; Flights #2219/#107; cheaper later option; return fare not captured yet; Status: candidate only; not booked.",
@@ -6167,8 +6167,8 @@
   },
   "place:658": {
    "category": "flight",
-   "title": "United LAS → EWR",
-   "address": "LAS → EWR",
+   "title": "United LAS \u2192 EWR",
+   "address": "LAS \u2192 EWR",
    "website": "https://www.united.com/en/us/fsr/choose-flights?f=LAS&t=EWR&d=2026-06-23&r=2026-06-30&tt=1&at=1",
    "summary": "Airline: United; Route: LAS-EWR; Stops: nonstop;",
    "longDetails": "Airline: United; Route: LAS-EWR; Stops: nonstop; Outbound: 2026-06-23 07:00-15:00; Return: 2026-06-30 14:40-17:08; Duration: 5h00m out / 5h28m return; Price: $257 Basic Economy / $367 Economy; Status: candidate only; not booked.",
@@ -6249,7 +6249,7 @@
   },
   "place:663": {
    "category": "activity",
-   "title": "Dizzy’s Club / Jazz at Lincoln Center",
+   "title": "Dizzy\u2019s Club / Jazz at Lincoln Center",
    "address": "10 Columbus Cir, New York, NY 10023",
    "website": "https://www.jazz.org/dizzys",
    "summary": "Lincoln Center jazz room; Price: $50 cover floor.",
@@ -6393,7 +6393,7 @@
   },
   "place:672": {
    "category": "restaurant",
-   "title": "e’s BAR / The Dead Poet / Lilly’s Cocktail & Wine",
+   "title": "e\u2019s BAR / The Dead Poet / Lilly\u2019s Cocktail & Wine",
    "address": "Upper West Side, New York, NY",
    "website": "https://e-barnyc.com/",
    "summary": "UWS bar crawl shortlist; Price: $22 cocktail floor.",

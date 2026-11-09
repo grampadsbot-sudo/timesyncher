@@ -5,6 +5,7 @@ import { placeSourceFieldsFromThing, logoFieldsForSharedPlace } from './intake-s
 import { transportKind } from './intake-transport-kind.mjs';
 import { destinationCenterFromTripMetadata } from './trip-destination-center.mjs';
 import { writeRatings } from './write-ratings.mjs';
+import { addressIsSpecific } from './dossier-evidence-hydrate.mjs';
 import { thingDetailOverrideFields } from './thing-detail-fields.mjs';
 import { categoryFor } from './intake-shared-trip-category.mjs';
 
@@ -421,7 +422,13 @@ export function applyThingPresentation(shared = {}, options = {}) {
     if (lat != null && lng != null) {
       extra.lat = lat;
       extra.lng = lng;
-      if (place.address) extra.address = place.address;
+      const priorAddress = String(priorOverride.address || '').trim();
+      const placeAddress = String(place.address || '').trim();
+      if (placeAddress) {
+        if (addressIsSpecific(placeAddress) || !addressIsSpecific(priorAddress)) {
+          extra.address = placeAddress;
+        }
+      }
     }
     const sourcedMenu = sourcedRestaurantFields(place);
     if (sourcedMenu.restaurantTags.length) extra.restaurantTags = sourcedMenu.restaurantTags;

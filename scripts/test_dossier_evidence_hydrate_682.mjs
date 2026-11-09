@@ -11,6 +11,7 @@ import {
   stripMisattributedDossierFields,
 } from '../src/vacation/dossier-evidence-hydrate.mjs';
 import { applyDossierFields } from '../src/vacation/thing-dossier-fields.mjs';
+import { applyStoredDossiersToSharedTripSync } from '../src/vacation/shared-trip-dossier-overlay.mjs';
 import { computeDossierFieldCounts } from '../src/vacation/thing-evidence-dossier-field-counts.mjs';
 
 function text(v) {
@@ -124,5 +125,29 @@ const belleDossier = normalizeDossierEvidence({
 }, bellePlace);
 const belleApplied = applyDossierFields({ address: bellePlace.address, category: 'hotel' }, belleDossier);
 assert.match(belleApplied.address || '', /2175\s+Broadway/i);
+
+const parkCentralShared = {
+  places: [{ id: 627, name: 'Park Central Hotel New York', category: { name: 'Hotel' } }],
+  thingOverrides: {
+    'place:627': { address: 'Midtown / Central Park South, New York, NY', category: 'hotel' },
+  },
+};
+const parkDossier = {
+  thing: 'Park Central Hotel New York',
+  pages: [page('https://www.parkcentralny.com/', 'Park Central Hotel New York at 870 7th Ave, New York, NY 10019.')],
+  fields: {
+    address: {
+      value: '870 7th Ave, New York, NY 10019',
+      claims: [{ text: '870 7th Ave', pages: ['p1'], supported: true }],
+    },
+  },
+  shortcomings: [],
+};
+const parkServed = applyStoredDossiersToSharedTripSync(parkCentralShared, { 627: parkDossier });
+assert.match(
+  parkServed.thingOverrides['place:627'].address || '',
+  /870\s+7th\s+Ave/i,
+  'stored dossier specific address must override neighborhood fixture',
+);
 
 console.log('test_dossier_evidence_hydrate_682: ok');
