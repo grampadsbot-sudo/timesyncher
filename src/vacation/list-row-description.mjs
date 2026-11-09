@@ -17,7 +17,6 @@ export function composeListRowDescription({ fields = {} } = {}) {
 }
 
 export function listRowDescriptionBundleSnippet() {
-  // List rows bind stored Summary only (verbatim). Details/longDetails/description stay on the detail page.
   return [
     'tsListRowDescription=function(G){',
     'const ov=ha(G)||{};',
