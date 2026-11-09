@@ -143,6 +143,32 @@ const noAccess = await runChatItineraryEditTurn({
 assert.equal(noAccess.applied, false);
 assert.equal(noAccess.reason, 'web_edit_access_required');
 
+const topLevelAllowlisted = await runChatItineraryEditTurn({
+  db: null,
+  trip: { id: 'trip-1', metadata: null, shareToken: 'lane-test-slug' },
+  customerTurn: 'move dinner at Carbone to 8:30 PM on Day 2',
+  httpReq: { headers: {} },
+  env: { CHAT_ITINERARY_EDIT_OFFLINE_PARSE: '1' },
+  fetchPayload: async () => miniPayload(),
+  putOverrides: async () => {},
+  extractIntent: offlineParseItineraryEditIntent,
+});
+assert.equal(topLevelAllowlisted.applied, false);
+assert.equal(topLevelAllowlisted.reason, 'web_edit_access_required');
+
+const topLevelDemoLocked = await runChatItineraryEditTurn({
+  db: null,
+  trip: { id: 'trip-1', metadata: null, shareToken: '8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y' },
+  customerTurn: 'move dinner at Carbone to 8:30 PM on Day 2',
+  httpReq: { headers: {} },
+  env: { CHAT_ITINERARY_EDIT_OFFLINE_PARSE: '1' },
+  fetchPayload: async () => miniPayload(),
+  putOverrides: async () => {},
+  extractIntent: offlineParseItineraryEditIntent,
+});
+assert.equal(topLevelDemoLocked.applied, false);
+assert.equal(topLevelDemoLocked.reason, 'demo_locked');
+
 const configText = fs.readFileSync(new URL('../config/chat-itinerary-edit-trips.json', import.meta.url), 'utf8');
 assert.match(configText, /demo_locked/);
 assert.doesNotMatch(configText, /8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y.*allowlist/);

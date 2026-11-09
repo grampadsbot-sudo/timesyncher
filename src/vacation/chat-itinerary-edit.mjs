@@ -340,7 +340,9 @@ function editSkip(reason, replyContext = '', client = null) {
 
 function tripShareSlug(trip) {
   const meta = trip?.metadata && typeof trip.metadata === 'object' ? trip.metadata : {};
-  return clean(meta.sharedToken || meta.shareToken || meta.publicSlug || meta.source_token || meta.slug, 240);
+  const fromMeta = clean(meta.sharedToken || meta.shareToken || meta.publicSlug || meta.source_token || meta.slug, 240);
+  if (fromMeta) return fromMeta;
+  return clean(trip?.sharedToken || trip?.shareToken || trip?.share_token || trip?.publicSlug || trip?.source_token || trip?.slug, 240);
 }
 
 function itineraryEditReplyContext(result) {
