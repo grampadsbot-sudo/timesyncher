@@ -1,10 +1,10 @@
 {
   "no_gpt5mini": true,
-  "source": "Craig bake-off 2026-09-22; T1 moved to deepseek/deepseek-v4-flash on 2026-10-07 because google/gemini-2.5-flash-lite retires 2026-10-20. Live app producer must match these ids exactly.",
+  "source": "Craig 2026-11-08: app chat tiers 1-4 on anthropic/claude-haiku-5.5 (Oct 9 Haiku bake-off); prior map deepseek-v4-flash/qwen3-235b/deepseek-v3.2/qwen3-max. Live app producer must match these ids exactly.",
   "models": {
-    "1": "deepseek/deepseek-v4-flash",
-    "2": "qwen/qwen3-235b-a22b-2507",
-    "3": "deepseek/deepseek-v3.2",
-    "4": "qwen/qwen3-max"
+    "1": "anthropic/claude-haiku-5.5",
+    "2": "anthropic/claude-haiku-5.5",
+    "3": "anthropic/claude-haiku-5.5",
+    "4": "anthropic/claude-haiku-5.5"
   }
 }

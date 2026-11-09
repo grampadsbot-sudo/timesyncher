@@ -9,7 +9,7 @@ const request = destinationExtractionChatRequest(corpus);
 assert.equal(request.model, openRouterTier1BakeoffModelId());
 assert.equal(request.max_tokens, 40);
 assert.equal(request.temperature, 0);
-assert.deepEqual(request.provider?.max_price, { prompt: 0.15, completion: 0.40 });
+assert.deepEqual(request.provider?.max_price, { prompt: 0.15, completion: 0.60 });
 assert.equal(request.reasoning?.enabled, false);
 assert.equal(request.reasoning?.effort, 'low');
 assert.equal(request.messages.at(-1)?.content, corpus);

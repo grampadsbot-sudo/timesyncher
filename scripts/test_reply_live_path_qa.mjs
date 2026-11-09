@@ -12,10 +12,10 @@ import {
 
 const tiers = bakeoffTierModels();
 assert.deepEqual(Object.values(tiers), [
-  'deepseek/deepseek-v4-flash',
-  'qwen/qwen3-235b-a22b-2507',
-  'deepseek/deepseek-v3.2',
-  'qwen/qwen3-max',
+  'anthropic/claude-haiku-5.5',
+  'anthropic/claude-haiku-5.5',
+  'anthropic/claude-haiku-5.5',
+  'anthropic/claude-haiku-5.5',
 ]);
 for (const id of Object.values(tiers)) assert.doesNotMatch(id, /gpt-.*mini/i);
 

@@ -444,7 +444,7 @@ assert.match(repoRun.stdout, /REPORT\tNO-EMPTY-CATCH\tsrc\/vacation\/web-access\
 assert.match(repoRun.stdout, /REPORT\tNO-FLOATING-PROMISE\tscripts\/void-stale-build\.mjs:\d+\tmain/);
 assert.match(repoRun.stdout, new RegExp(`REPORT\\tFILE-SIZE-500\\tsrc/vacation/live-app-turn\\.mjs:1\\tlines:${liveLines}\\tflagged-to-split-by-feature`));
 assert.match(repoRun.stdout, /REPORT\tTEST-TRIP-LITERALS\tscripts\/live-transcript-dialog-pdf\.mjs:\d+\tKimberly/);
-assert.match(repoRun.stdout, /REPORT\tDEAD-CODE\tscripts\/vacation-app-reply-rules\.mjs:\d+\texport:assertBakeoffMap/);
+assert.match(repoRun.stdout, /REPORT\tDEAD-CODE\tscripts\/vacation-app-reply-rules\.mjs:\d+\texport:jevChooseRewrite/);
 assert.match(repoRun.stdout, /model client scripts\/vacation-app-reply-rules\.mjs/);
 assert.match(repoRun.stdout, /search modules src\/vacation\/poi-search\.mjs/);
 assert.match(repoRun.stdout, /code ratchet check passed \(\d+ report, 0 fail\)/);

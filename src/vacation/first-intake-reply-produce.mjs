@@ -105,6 +105,7 @@ export async function produceFirstIntakeReply({
       replyFacts: modelFacts,
       env,
       forceModel: INTERIM_MODEL,
+      tier1CompactReasoning: true,
       timeoutMs: FIRST_INTAKE_REPLY_TIMEOUT_MS,
       systemExtra: prompt,
     });

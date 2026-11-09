@@ -2,7 +2,15 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const OPENROUTER_T1_MAX_PRICE = { prompt: 0.15, completion: 0.40 };
+const OPENROUTER_T1_MAX_PRICE = { prompt: 0.15, completion: 0.60 };
+const OPENROUTER_TIER_REASONING = {
+  1: { enabled: false, effort: 'low' },
+  2: { effort: 'low', max_tokens: 512 },
+  3: { effort: 'medium', max_tokens: 1024 },
+  4: { effort: 'high', max_tokens: 2048 },
+};
+const OPENROUTER_NO_TEMPERATURE_MODELS = new Set(['anthropic/claude-haiku-5.5']);
+const OPENROUTER_CANONICAL_SLUGS = { 'anthropic/claude-haiku-5.5': 'anthropic/claude-haiku-5.5-20261007' };
 
 let cachedTierOneModelId = '';
 
@@ -24,9 +32,26 @@ export function openRouterProviderSpread(modelTier) {
   return provider ? { provider } : {};
 }
 
+export function openRouterTierReasoningSpread(modelTier) {
+  const reasoning = OPENROUTER_TIER_REASONING[Number(modelTier)];
+  return reasoning ? { reasoning: { ...reasoning } } : {};
+}
+
+export function openRouterTierRequestMaxTokens(modelTier, visibleMaxTokens) {
+  return visibleMaxTokens + (OPENROUTER_TIER_REASONING[Number(modelTier)]?.max_tokens || 0);
+}
+
+export function openRouterTemperatureSpread(modelId, temperature) {
+  return OPENROUTER_NO_TEMPERATURE_MODELS.has(modelId) ? {} : { temperature };
+}
+
+export function openRouterReturnedModelMatches(requestedModel, returnedModel) {
+  return returnedModel === requestedModel || returnedModel === OPENROUTER_CANONICAL_SLUGS[requestedModel];
+}
+
 export function openRouterTier1CompactReasoningSpread(modelTier) {
   if (Number(modelTier) !== 1) return {};
-  return { reasoning: { enabled: false, effort: 'low' } };
+  return openRouterTierReasoningSpread(1);
 }
 
 export function openRouterTier1CompactCallSpread(modelTier) {

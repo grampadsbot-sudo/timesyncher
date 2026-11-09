@@ -163,8 +163,8 @@ assert.equal(isTemplateInterim('The town walk on Thursday can stay light.', 'Thu
 assert.equal(isTemplateInterim('I am building the itinerary.', 'Build the itinerary and send an email invite.', judgedBlock), true);
 assert.equal(isTemplateInterim('I am building the itinerary from that now. View access lets them see the days. Edit access lets them add notes after you approve an email invite.', 'Please build the itinerary and send an email invite.', judgedShip), false);
 assert.deepEqual(interimProblems([
-  { turnIndex: 2, role: 'app', quality: { rewritten: true }, interimReply: { text: 'The town walk on Thursday can stay light.', model: 'deepseek/deepseek-v4-flash', ms: 400, judge: judgedShip } },
-  { turnIndex: 4, role: 'app', quality: { rewritten: true }, interimReply: { text: 'The town walk on Thursday can stay light.', model: 'deepseek/deepseek-v4-flash', ms: 500, judge: judgedShip } },
+  { turnIndex: 2, role: 'app', quality: { rewritten: true }, interimReply: { text: 'The town walk on Thursday can stay light.', model: 'anthropic/claude-haiku-5.5', ms: 400, judge: judgedShip } },
+  { turnIndex: 4, role: 'app', quality: { rewritten: true }, interimReply: { text: 'The town walk on Thursday can stay light.', model: 'anthropic/claude-haiku-5.5', ms: 500, judge: judgedShip } },
 ]), ['interim reply repeats across turns 2 and 4']);
 assert.deepEqual(interimProblems([
   { turnIndex: 2, role: 'app', quality: { rewritten: false }, interimReply: { text: null, model: null, ms: null } },
@@ -173,7 +173,7 @@ assert.match(interimProblems([
   { turnIndex: 2, role: 'app', quality: { rewritten: true }, interimReply: { text: null, model: null, ms: null } },
 ])[0], /missing an interim/);
 assert.match(interimProblems([
-  { turnIndex: 2, role: 'app', quality: { rewritten: false }, interimReply: { text: 'Thursday stays a town walk.', model: 'deepseek/deepseek-v4-flash', ms: 200 } },
+  { turnIndex: 2, role: 'app', quality: { rewritten: false }, interimReply: { text: 'Thursday stays a town walk.', model: 'anthropic/claude-haiku-5.5', ms: 200 } },
 ])[0], /non-rewrite turn has an interim/);
 assert.equal(dialogPackTitle('Big Island Family'), 'Dialog Pack \u2014 Big Island Family v7 Tier 1\u20134');
 assert.equal(dialogPackTitle('Dialog Pack \u2014 Big Island Family v7 Tier 1\u20134'), 'Dialog Pack \u2014 Big Island Family v7 Tier 1\u20134');
@@ -335,7 +335,7 @@ const loadedAttempts = liveTranscriptFromRows({
         turnIndex: 1,
         role: 'app',
         text: 'Hello',
-        rewriteAttempts: [{ text: 'Hello there', model: 'qwen/qwen3-max', score: 4, ms: 10, error: null }],
+        rewriteAttempts: [{ text: 'Hello there', model: 'anthropic/claude-haiku-5.5', score: 4, ms: 10, error: null }],
         jevNote: null,
         jevNoteReason: 'jev_no_free_text',
       },
@@ -344,7 +344,7 @@ const loadedAttempts = liveTranscriptFromRows({
 });
 assert.equal(loadedAttempts.turns[0].jevNote, null);
 assert.equal(loadedAttempts.turns[0].jevNoteReason, 'jev_no_free_text');
-assert.equal(loadedAttempts.turns[0].rewriteAttempts[0].model, 'qwen/qwen3-max');
+assert.equal(loadedAttempts.turns[0].rewriteAttempts[0].model, 'anthropic/claude-haiku-5.5');
 const unsourcedDock = dockQuality({ judged: true, score: 5, comment: 'kept', wantsRewrite: false }, hardQualityFlags('Glass Lagoon (id:missing) on Tuesday.', 'Offer two options.', 'gardens, swim, town walk', sourcedMarket));
 assert.equal(unsourcedDock.score <= 3, true);
 assert.equal(unsourcedDock.wantsRewrite, true);
@@ -481,7 +481,7 @@ assert.equal(verifiedRewriteChange('Removed the implication that both options we
 const savedRemoval = 'Removed the claim that a swim was already saved on April 10th, as it was not yet on the saved itinerary.';
 assert.equal(verifiedRewriteChange(savedRemoval, 'For Tyler\'s swim later in the week, I have that saved for the second Friday of the trip, April 10th.', 'Groceries are saved for your arrival on Friday, April 3rd. For Tyler\'s swim later in the week, I can slot that in.'), savedRemoval);
 assert.equal(verifiedRewriteChange('Removed false claim that a swim was saved on April 10 and corrected it to April 6 as per the itinerary.', 'Since the swim is set for Monday, April 6th at the beach.', 'The swim is saved for Monday, April 6th at the beach, not April 10th, so we have corrected that.'), 'Removed false claim that a swim was saved on April 10 and corrected it to April 6 as per the itinerary.');
-assert.equal(shippedRewriteLabel({ held: false, quality: { rewritten: true, rewriterChange: null }, rewriteText: 'Hello\nWHAT_I_CHANGED: Removed a swim on April 10.', rewriterChange: null, rewriteModel: 'deepseek/deepseek-v3.2' }), '');
+assert.equal(shippedRewriteLabel({ held: false, quality: { rewritten: true, rewriterChange: null }, rewriteText: 'Hello\nWHAT_I_CHANGED: Removed a swim on April 10.', rewriterChange: null, rewriteModel: 'anthropic/claude-haiku-5.5' }), '');
 const beatHolding = shipChoice({
   draft: 'Tuesday is a swim.',
   draftScore: 2.94,
@@ -584,13 +584,13 @@ const audited = liveTurnRecord({
   sessionE2eMs: 10,
   jev: { jevRan: true, modelTier: 2 },
   model: {
-    responseModel: 'qwen/qwen3-235b-a22b-2507',
+    responseModel: 'anthropic/claude-haiku-5.5',
     quality: { judged: true, score: 4, rewritten: false },
     log: {
       held: true,
       rewriteText: 'Tuesday stays a swim.',
       rewriteFailReason: 'rewrite_near_draft',
-      rewriteModel: 'qwen/qwen3-235b-a22b-2507',
+      rewriteModel: 'anthropic/claude-haiku-5.5',
       rewriterChange: 'Kept the walk.',
     },
   },
@@ -598,9 +598,9 @@ const audited = liveTurnRecord({
 assert.equal(audited.text, modelReply);
 assert.equal(audited.qualityLine, 'quality: 4');
 assert.equal(audited.heldRewriteLine, 'rewrite drafted, held: rewrite_near_draft');
-assert.equal(audited.rewriteCredit, 'Rewriter (qwen/qwen3-235b-a22b-2507): Kept the walk.');
+assert.equal(audited.rewriteCredit, 'Rewriter (anthropic/claude-haiku-5.5): Kept the walk.');
 assert.equal(formatQualityLine({ judged: true, score: 4, rewritten: false }), 'quality: 4');
-assert.equal(rewriteCreditLabel('qwen/qwen3-235b-a22b-2507', 'Kept the walk.'), 'Rewriter (qwen/qwen3-235b-a22b-2507): Kept the walk.');
+assert.equal(rewriteCreditLabel('anthropic/claude-haiku-5.5', 'Kept the walk.'), 'Rewriter (anthropic/claude-haiku-5.5): Kept the walk.');
 assert.doesNotMatch(fs.readFileSync(new URL('../src/vacation/live-app-turn.mjs', import.meta.url), 'utf8'), /INTERIM_STOCK|INTAKE_OPENER_ONLY/);
 const mockedJudge = await judgeInterimReply({
   text: 'Thursday stays a town walk.',
@@ -683,17 +683,17 @@ function liveDoc(overrides = {}) {
         at: '2026-09-25T21:00:03.000Z',
         latencyMs: 2800,
         sessionE2eMs: 3000,
-        jev: { jevRan: true, modelTier: 2, routeType: 'general', extraContext: { routeType: 'general' }, via: 'openrouter-decisions', responseModel: 'qwen/qwen3-235b-a22b-2507', jevLatencyMs: 400, jevBeforeModel: true },
+        jev: { jevRan: true, modelTier: 2, routeType: 'general', extraContext: { routeType: 'general' }, via: 'openrouter-decisions', responseModel: 'anthropic/claude-haiku-5.5', jevLatencyMs: 400, jevBeforeModel: true },
         replyProducer: 'vacation-app-reply-rules',
         invented: false,
-        modelId: 'qwen/qwen3-235b-a22b-2507',
+        modelId: 'anthropic/claude-haiku-5.5',
         beats: ['harbor morning plan'],
         jevLatencyMs: 400,
         genLatencyMs: 2400,
         jevBeforeModel: true,
         quality: { judged: true, score: 4, comment: 'Harbor morning is answered cleanly, a 4 carried by afternoon open.', rewritten: false, model: 'typesafe/jev-1.13', judgeMs: 400 },
-        shippedModel: 'qwen/qwen3-235b-a22b-2507',
-        draftModel: 'qwen/qwen3-235b-a22b-2507',
+        shippedModel: 'anthropic/claude-haiku-5.5',
+        draftModel: 'anthropic/claude-haiku-5.5',
         jevScoreDraft: 4,
         jevNote: 'Harbor morning is answered cleanly, a 4 carried by afternoon open.',
         flagged: false,
@@ -741,17 +741,17 @@ const jevRewrite = liveDoc({
   turns: liveDoc().turns.map((turn) => (turn.role === 'app' ? {
     ...turn,
     text: 'The harbor walk still opens the morning, and the afternoon stays open for Craig.',
-    quality: { judged: true, score: 4, comment: 'Harbor morning is answered cleanly, a 4 carried by afternoon open.', rewritten: true, model: 'typesafe/jev-1.13', judgeMs: 400, rewriteModel: 'qwen/qwen3-235b-a22b-2507', draft: 'Start with the harbor walk, then keep the afternoon open.' },
-    shippedModel: 'qwen/qwen3-235b-a22b-2507',
-    draftModel: 'qwen/qwen3-235b-a22b-2507',
-    rewriteModel: 'qwen/qwen3-235b-a22b-2507',
+    quality: { judged: true, score: 4, comment: 'Harbor morning is answered cleanly, a 4 carried by afternoon open.', rewritten: true, model: 'typesafe/jev-1.13', judgeMs: 400, rewriteModel: 'anthropic/claude-haiku-5.5', draft: 'Start with the harbor walk, then keep the afternoon open.' },
+    shippedModel: 'anthropic/claude-haiku-5.5',
+    draftModel: 'anthropic/claude-haiku-5.5',
+    rewriteModel: 'anthropic/claude-haiku-5.5',
     rewriteText: 'The harbor walk still opens the morning, and the afternoon stays open for Craig.',
-    rewriteAttempts: [{ text: 'The harbor walk still opens the morning, and the afternoon stays open for Craig.', model: 'qwen/qwen3-235b-a22b-2507', score: 5, ms: 1200, error: null }],
+    rewriteAttempts: [{ text: 'The harbor walk still opens the morning, and the afternoon stays open for Craig.', model: 'anthropic/claude-haiku-5.5', score: 5, ms: 1200, error: null }],
     jevScoreRewrite: 5,
     jevNote: null,
     jevNoteReason: 'jev_no_free_text',
     rewriterChange: 'Kept the harbor morning and named only the walk.',
-    interimReply: { text: 'The harbor morning can stay loose while I shape the walk.', model: 'deepseek/deepseek-v4-flash', ms: 900, judge: { judged: true, template: false, canShip: true } },
+    interimReply: { text: 'The harbor morning can stay loose while I shape the walk.', model: 'anthropic/claude-haiku-5.5', ms: 900, judge: { judged: true, template: false, canShip: true } },
     flagged: false,
   } : turn)),
 });
@@ -759,18 +759,18 @@ assertLiveTranscript(jevRewrite);
 const jevRewritePdf = extractPdfText(renderLiveTranscriptPdf(jevRewrite));
 assert.equal(jevRewriteLabelCounts(jevRewrite, jevRewritePdf).rewrittenTurns, 1);
 assert.equal(jevRewriteLabelCounts(jevRewrite, jevRewritePdf).rewriteLabels, 1);
-assert.match(jevRewritePdf, /Rewriter \(qwen\/qwen3-235b-a22b-2507\): Kept the harbor morning and named only the walk/);
+assert.match(jevRewritePdf, /Rewriter \(anthropic\/claude-haiku-5\.5\): Kept the harbor morning and named only the walk/);
 const storedAudit = liveDoc({
   turns: jevRewrite.turns.map((turn) => (turn.role === 'app' ? {
     ...turn,
     qualityLine: 'quality: 3.5',
     heldRewriteLine: '',
-    rewriteCredit: 'Rewriter (qwen/qwen3-235b-a22b-2507): Stored audit credit.',
+    rewriteCredit: 'Rewriter (anthropic/claude-haiku-5.5): Stored audit credit.',
   } : turn)),
 });
 const storedAuditPdf = extractPdfText(renderLiveTranscriptPdf(storedAudit));
 assert.match(storedAuditPdf, /quality: 3\.5/);
-assert.match(storedAuditPdf, /Rewriter \(qwen\/qwen3-235b-a22b-2507\): Stored audit credit/);
+assert.match(storedAuditPdf, /Rewriter \(anthropic\/claude-haiku-5\.5\): Stored audit credit/);
 assert.doesNotMatch(storedAuditPdf, /Kept the harbor morning and named only the walk/);
 assert.match(storedAuditPdf, /The harbor walk still opens the morning, and the afternoon stays open for Craig/);
 const heldDraft = liveDoc({
@@ -779,9 +779,9 @@ const heldDraft = liveDoc({
     text: 'The harbor walk still opens the morning, and the afternoon stays open for Craig.',
     held: true,
     quality: { judged: true, score: 4.03, rewritten: false, model: 'typesafe/jev-1.13', judgeMs: 400, draft: 'Start with the harbor walk, then keep the afternoon open.' },
-    shippedModel: 'deepseek/deepseek-v4-flash',
-    draftModel: 'qwen/qwen3-235b-a22b-2507',
-    rewriteModel: 'qwen/qwen3-235b-a22b-2507',
+    shippedModel: 'anthropic/claude-haiku-5.5',
+    draftModel: 'anthropic/claude-haiku-5.5',
+    rewriteModel: 'anthropic/claude-haiku-5.5',
     rewriteText: 'Tuesday stays a swim on the beach.',
     rewriteFailReason: 'rewrite_near_draft',
     rewriterChange: 'Removed the beach swim.',
@@ -789,18 +789,18 @@ const heldDraft = liveDoc({
     jevScoreRewrite: 3,
     jevNote: null,
     jevNoteReason: 'jev_no_free_text',
-    interimReply: { text: 'The harbor morning can stay loose while I shape the walk.', model: 'deepseek/deepseek-v4-flash', ms: 900, judge: { judged: true, template: false, canShip: true } },
-    rewriteAttempts: [{ text: 'Tuesday stays a swim on the beach.', model: 'qwen/qwen3-235b-a22b-2507', score: 3, ms: 1200, error: 'rewrite_near_draft' }],
+    interimReply: { text: 'The harbor morning can stay loose while I shape the walk.', model: 'anthropic/claude-haiku-5.5', ms: 900, judge: { judged: true, template: false, canShip: true } },
+    rewriteAttempts: [{ text: 'Tuesday stays a swim on the beach.', model: 'anthropic/claude-haiku-5.5', score: 3, ms: 1200, error: 'rewrite_near_draft' }],
   } : turn)),
 });
 const heldPdf = extractPdfText(renderLiveTranscriptPdf(heldDraft));
 assert.match(heldPdf, /quality: 4\.03 · rewrite drafted, held: rewrite_near_draft/);
-assert.doesNotMatch(heldPdf, /Rewriter \(qwen\/qwen3-235b-a22b-2507\): Removed the beach swim/);
+assert.doesNotMatch(heldPdf, /Rewriter \(anthropic\/claude-haiku-5\.5\): Removed the beach swim/);
 assert.equal(jevRewriteLabelCounts(heldDraft, heldPdf).rewrittenTurns, 0);
 assert.doesNotMatch(jevRewritePdf, /\(Jev note\)/);
 assert.doesNotMatch(jevRewritePdf, /rewritten by Jev \(typesafe\/jev-1\.13\)/);
 assert.doesNotMatch(jevRewritePdf, /scored and commented on every generated reply/);
-assert.throws(() => assertJevRewriteLabels(jevRewrite, jevRewritePdf.replaceAll('Rewriter (qwen/qwen3-235b-a22b-2507): Kept the harbor morning and named only the walk.', '')), /bar 15 rewritten turns 1 but PDF labels 0/);
+assert.throws(() => assertJevRewriteLabels(jevRewrite, jevRewritePdf.replaceAll('Rewriter (anthropic/claude-haiku-5.5): Kept the harbor morning and named only the walk.', '')), /bar 15 rewritten turns 1 but PDF labels 0/);
 rejects(liveDoc({
   turns: liveDoc().turns.map((turn) => (turn.role === 'app' ? {
     ...turn,
@@ -825,10 +825,10 @@ assert.match(text, /TIMINGS vs v6 gpt-5-mini/);
 assert.match(text, /Hard recipe/);
 assert.match(text, /Roster/);
 assert.match(text, /no_gpt5mini/);
-assert.match(text, /qwen\/qwen3-235b-a22b-2507/);
-assert.match(text, /deepseek\/deepseek-v3.2/);
-assert.match(text, /qwen\/qwen3-max/);
-assert.match(text, /deepseek\/deepseek-v4-flash/);
+assert.match(text, /anthropic\/claude-haiku-5\.5/);
+assert.match(text, /anthropic\/claude-haiku-5\.5/);
+assert.match(text, /anthropic\/claude-haiku-5\.5/);
+assert.match(text, /anthropic\/claude-haiku-5\.5/);
 assert.doesNotMatch(text, /gpt-4\.1-mini/);
 assert.match(text, /Full interleaved transcript/);
 assert.match(text, /T2 APP/);
@@ -837,17 +837,17 @@ assert.match(text, /T1 CRAIG/);
 assert.match(text, /Harbor morning plan for Craig/);
 assert.match(text, /T2 APP/);
 assert.match(text, /Start with the harbor walk/);
-assert.match(text, /timing: jev=400ms gen=2400ms model=qwen\/qwen3-235b-a22b-2507 tier=2 max_tokens=900/);
+assert.match(text, /timing: jev=400ms gen=2400ms model=anthropic\/claude-haiku-5\.5 tier=2 max_tokens=900/);
 assert.match(text, /quality: 4/);
 assert.doesNotMatch(text, /quality: 4 —/);
 assert.match(text, /jevRan: true · model typesafe\/jev-1\.13 · score 4 · judge 400ms/);
 assert.equal(text.split('jevRan:').length - 1, 1);
 assert.doesNotMatch(text, /× the v6 gen-only p50/);
 assert.match(text, /Session wall time is 3000ms/);
-assert.match(text, /draftModel: qwen\/qwen3-235b-a22b-2507/);
+assert.match(text, /draftModel: anthropic\/claude-haiku-5\.5/);
 assert.match(text, /flagged: false/);
 assert.match(jevRewritePdf, /interimReply\.text: The\s+harbor\s+morning/);
-assert.match(jevRewritePdf, /interimReply\.model: deepseek\/deepseek-v4-flash/);
+assert.match(jevRewritePdf, /interimReply\.model: anthropic\/claude-haiku-5\.5/);
 assert.match(jevRewritePdf, /interimReply\.ms:\s*900/);
 assert.doesNotMatch(text, /not judged/);
 assert.match(text, /v7 Tier 1–4|v7 Tier 1.4/);
@@ -983,12 +983,12 @@ assert.match(extractPdfText(fs.readFileSync(outPath)), /T2 APP/);
 
 const timingLine = formatLiveTimingLine({
   gen: 750,
-  model: 'deepseek/deepseek-v4-flash',
+  model: 'anthropic/claude-haiku-5.5',
   tier: 1,
   jevMs: 222,
   maxTokens: 900,
 });
-assert.equal(timingLine, 'timing: jev=222ms gen=750ms model=deepseek/deepseek-v4-flash tier=1 max_tokens=900');
+assert.equal(timingLine, 'timing: jev=222ms gen=750ms model=anthropic/claude-haiku-5.5 tier=1 max_tokens=900');
 assert.equal(timingLine.includes('zev'), false);
 const poison = {
   deploy_banner: 'live 0123456789abcdef0123456789abcdef01234567 https://vacation-staging.timesyncher.com',
@@ -1008,7 +1008,7 @@ const poison = {
     app: true,
     text: 'Monday swim stays on the Big Island.',
     quality: 'quality: 4 — Clear day shape.',
-    timing: 'timing: gen=750ms model=deepseek/deepseek-v4-flash tier=1 zev=222ms max_tokens=900',
+    timing: 'timing: gen=750ms model=anthropic/claude-haiku-5.5 tier=1 zev=222ms max_tokens=900',
   }],
 };
 const poisoned = spawnSync('python3', [fileURLToPath(new URL('./live_v7_dialog_pdf.py', import.meta.url))], {
@@ -1017,7 +1017,7 @@ const poisoned = spawnSync('python3', [fileURLToPath(new URL('./live_v7_dialog_p
 });
 assert.notEqual(poisoned.status, 0, 'zev= timing evidence must be refused, not rewritten');
 assert.match(String(poisoned.stderr || ''), /refused: timing line contains zev/i);
-const validTiming = { ...poison, turns: [{ ...poison.turns[0], timing: 'timing: gen=750ms model=deepseek/deepseek-v4-flash tier=1 jev=222ms max_tokens=900' }] };
+const validTiming = { ...poison, turns: [{ ...poison.turns[0], timing: 'timing: gen=750ms model=anthropic/claude-haiku-5.5 tier=1 jev=222ms max_tokens=900' }] };
 const valid = spawnSync('python3', [fileURLToPath(new URL('./live_v7_dialog_pdf.py', import.meta.url))], { input: JSON.stringify(validTiming), maxBuffer: 8 * 1024 * 1024 });
 assert.equal(valid.status, 0, valid.stderr?.toString());
 const validText = extractPdfText(Buffer.from(valid.stdout));
@@ -1028,7 +1028,7 @@ const item34 = {
   turns: [{
     ...poison.turns[0],
     text: 'Since you are splitting payments, Kimberly is covered by you.',
-    timing: 'timing: gen=5154ms model=qwen/qwen3-max tier=4 jev=147ms max_tokens=900',
+    timing: 'timing: gen=5154ms model=anthropic/claude-haiku-5.5 tier=4 jev=147ms max_tokens=900',
   }],
 };
 const bannedPack = spawnSync('python3', [fileURLToPath(new URL('./live_v7_dialog_pdf.py', import.meta.url))], {
@@ -1039,7 +1039,7 @@ assert.notEqual(bannedPack.status, 0);
 assert.match(bannedPack.stderr?.toString() || '', /split-payment jargon/);
 const unjudged = {
   ...poison,
-  turns: [{ ...poison.turns[0], quality: 'quality: not judged', timing: 'timing: gen=750ms model=deepseek/deepseek-v4-flash tier=1 jev=222ms max_tokens=900' }],
+  turns: [{ ...poison.turns[0], quality: 'quality: not judged', timing: 'timing: gen=750ms model=anthropic/claude-haiku-5.5 tier=1 jev=222ms max_tokens=900' }],
 };
 const unjudgedPack = spawnSync('python3', [fileURLToPath(new URL('./live_v7_dialog_pdf.py', import.meta.url))], {
   input: JSON.stringify(unjudged),
@@ -1064,7 +1064,7 @@ assert.match(stampedText, /build used vs tip:/);
 assert.match(stampedText, /equals the tip/);
 assert.match(stampedText, /Dialog Pack — Big Island Family v7 Tier 1–4/);
 assert.doesNotMatch(stampedText, /session-token/);
-assert.match(stampedText, /T1 deepseek\/deepseek-v4-flash/);
+assert.match(stampedText, /T1 anthropic\/claude-haiku-5\.5/);
 const publisherSource = fs.readFileSync(script, 'utf8');
 assert.equal(publisherSource.includes('transcript.buildSha ='), false);
 

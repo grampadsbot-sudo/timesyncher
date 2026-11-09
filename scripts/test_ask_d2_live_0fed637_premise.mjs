@@ -106,7 +106,7 @@ const jev = {
     modelTierConfidence: 0.28,
   },
   via: 'openrouter-decisions',
-  responseModel: 'qwen/qwen3-235b-a22b-2507',
+  responseModel: 'anthropic/claude-haiku-5.5',
 };
 const systemExtra = [
   tripContext.roster || '',
