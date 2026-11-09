@@ -12,6 +12,7 @@ import { applyTripMetadataBudgetTargets } from './shared-trip-api-budget.mjs';
 import { applyStoredDossiersToSharedTrip } from './shared-trip-dossier-overlay.mjs';
 import { scheduleMissingEvidenceCapturesForTrip } from './thing-evidence-capture-trigger.mjs';
 import { finalizeServedSharedTripPayload } from './shared-trip-served-page.mjs';
+import { sharedTripEditAccessFromRequest } from './web-access.mjs';
 
 let sharedTripDatabase = null;
 
@@ -49,9 +50,8 @@ function isSharedTripGet(method, trekPath) {
   return trekRest(trekPath) === '';
 }
 
-function isIntakeEditAccess(method, trekPath, shareToken) {
+function isShareEditAccess(method, trekPath) {
   if (method !== 'GET' && method !== 'HEAD') return false;
-  if (!String(shareToken || '').startsWith('intake-')) return false;
   return trekRest(trekPath) === 'edit-access';
 }
 
@@ -274,6 +274,19 @@ function trekUpstreamBase() {
   return base;
 }
 
+async function respondShareEditAccess(req, res, shareToken) {
+  try {
+    const access = await sharedTripEditAccessFromRequest(openSharedDb(), req, {
+      shareToken,
+      env: process.env,
+    });
+    return sendJson(res, 200, access);
+  } catch (error) {
+    logSharedTripFailure('shared_trip_edit_access_failed', shareToken, error);
+    return sendJson(res, 200, { canEdit: false });
+  }
+}
+
 async function proxyConfiguredUpstream(req, res, trekPath) {
   const url = new URL(req.url || '/', 'https://timesyncher.com');
   const incomingQuery = new URLSearchParams(url.search);
@@ -304,8 +317,9 @@ async function proxyConfiguredUpstream(req, res, trekPath) {
 export default async function handler(req, res) {
   const trekPath = trekPathFromReq(req);
   const shareToken = shareTokenFromTrekPath(trekPath);
-  if (isIntakeEditAccess(req.method, trekPath, shareToken)) {
-    return sendJson(res, 200, { canEdit: false });
+  if (isShareEditAccess(req.method, trekPath)) {
+    if (String(shareToken || '').startsWith('intake-')) return sendJson(res, 200, { canEdit: false });
+    return respondShareEditAccess(req, res, shareToken);
   }
   if (isSharedTripGet(req.method, trekPath)) {
     return respondSharedTripGet(req, res, shareToken);

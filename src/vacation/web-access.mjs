@@ -476,3 +476,15 @@ export async function requireWebEditAccess(db, req, { tripId, ownerCustomerId = 
 
   throw Object.assign(new Error('Website editing requires the owner or an accepted owner-approved email invite.'), { statusCode: 403 });
 }
+
+export async function sharedTripEditAccessFromRequest(db, req, { shareToken, env = process.env }) {
+  const sessionToken = readCookie(req, WEB_ACCESS_COOKIE) || req?.headers?.['x-timesyncher-web-access-token'] || '';
+  if (!sessionToken || !clean(shareToken, 240)) return { canEdit: false };
+  const webGrant = await webAccessForSession(db, { sessionToken, shareToken, env });
+  if (!webGrant) return { canEdit: false };
+  const verified = webGrant.role === 'owner'
+    ? await verifiedOwnerWebGrant(db, webGrant, webGrant.trip_id)
+    : webGrant;
+  if (!verified) return { canEdit: false };
+  return { canEdit: true, role: verified.role };
+}
