@@ -1,3 +1,19 @@
+# Issue #860 — interim judge + copy-trip Haiku tiers (cursor-ubuntu, 2026-11-09)
+
+Start HEAD: `29523ea700967fe42b151b31da1d1f93f3fa02da`.
+
+## Patch (uncommitted; host publish)
+
+`judgeInterimReply` now uses `openRouterChatVisibleText` and `openRouterTemperatureSpread` so Haiku array content (reasoning + JSON) does not throw `INTERIM_JUDGE_UNUSABLE` during T2–4 rewrite interim lines. Test in `scripts/test_chat_tiers_haiku_5_5.mjs`.
+
+## Local proof
+
+`node scripts/test_chat_tiers_haiku_5_5.mjs`, `test_chat_itinerary_edit.mjs`, `test_g2d_jev_score_rewrite.mjs`, `check-no-comments.mjs`, `test_offline_manifest.mjs`, `BASE=vk check-code-ratchet.mjs` — all PASS on uncommitted tree.
+
+Live copy-trip probe not run in lane (staging session). Host: push then `scripts/chat_qa_live_probe.mjs`.
+
+---
+
 # Issue #856 — Haiku tiers 2–4 empty app reply (cursor-ubuntu)
 
 Start HEAD: `840c0eec2f6afae59d5295a8c6dfac3b60e3c897` (launch-identity.json).

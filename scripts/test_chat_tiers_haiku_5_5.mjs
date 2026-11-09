@@ -17,7 +17,7 @@ import {
 import { tripIntakeExtractionChatRequest } from '../src/vacation/trip-intake-classify.mjs';
 import { useVacationDatabase } from '../src/vacation/db.mjs';
 import { loadSavedTripRecord } from '../src/vacation/live-app-saved-trip-record.mjs';
-import { draftingFacts, savedThingPlaceResults } from '../src/vacation/live-app-turn.mjs';
+import { draftingFacts, judgeInterimReply, savedThingPlaceResults } from '../src/vacation/live-app-turn.mjs';
 import { chatQaProofErrors } from './chat_qa_live_probe.mjs';
 
 const HAIKU = 'anthropic/claude-haiku-5.5';
@@ -250,5 +250,27 @@ assert.ok(chatQaProofErrors({ ...validProof, turns: validProof.turns.slice(0, 3)
 assert.ok(chatQaProofErrors({ ...validProof, protectedAfter: 'changed' }).includes('protected_trip_changed'));
 assert.ok(chatQaProofErrors({ ...validProof, expectedProtectedHash: 'other' }).includes('protected_hash_mismatch'));
 assert.ok(chatQaProofErrors({ ...validProof, finalBuildSha: 'other' }).includes('staging_head_mismatch'));
+
+const arrayJudge = await judgeInterimReply({
+  text: 'Thursday stays a town walk.',
+  customerTurn: 'Thursday is a town walk.',
+  env: { OPENROUTER_API_KEY: 'test-key' },
+  fetchImpl: async () => ({
+    ok: true,
+    status: 200,
+    json: async () => ({
+      choices: [{
+        message: {
+          content: [
+            { type: 'reasoning', text: 'classify hold line' },
+            { type: 'text', text: '{"template":false,"canShip":true}' },
+          ],
+        },
+      }],
+    }),
+  }),
+});
+assert.equal(arrayJudge.template, false);
+assert.equal(arrayJudge.canShip, true);
 
 console.log('chat tiers haiku 5.5: ok');
