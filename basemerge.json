@@ -1,0 +1,11 @@
+{
+ "pr": 878,
+ "start": "348a851c31de6986294bdc2ff4e6d49511f33d7f",
+ "base": "vk",
+ "base_tip": "79dce6aecdd83d7bfb9a670543c1bd8448c4569b",
+ "conflicts": [
+  "J/RECEIPT.md"
+ ],
+ "why": "dirty vs vk after #864; receipt-only conflict",
+ "source": "Grok Bot executor pt3118u #877 carry"
+}

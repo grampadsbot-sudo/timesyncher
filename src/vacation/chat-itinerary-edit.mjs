@@ -317,7 +317,10 @@ async function loadLatestEdit(db, tripId) {
   return rows[0] || null;
 }
 
-async function putSharedTripOverrides({ slug, overrides, webAccessToken, env = process.env }) {
+async function putSharedTripOverrides({ slug, overrides, webAccessToken, env = process.env, putOverrides = null }) {
+  const guard = shareSlugEditGuardDecision(slug);
+  if (!guard.ok) throw Object.assign(new Error(guard.reason), { statusCode: 403 });
+  if (putOverrides) return await putOverrides({ slug, overrides, webAccessToken, env });
   const token = clean(slug, 240);
   const base = trekPublicBase(env);
   const sessionToken = clean(webAccessToken, 400);
@@ -357,7 +360,7 @@ function itineraryEditReplyContext(result) {
 }
 
 async function persistItineraryWrite(db, trip, slug, turnId, placeId, applied, webAccessToken, env, putOverrides) {
-  await putOverrides({ slug, overrides: applied.thingOverrides, webAccessToken, env });
+  await putSharedTripOverrides({ slug, overrides: applied.thingOverrides, webAccessToken, env, putOverrides });
   dropSharedUpstreamCacheForSlug(clean(slug, 240));
   await db`insert into chat_itinerary_edits (trip_id, share_slug, turn_id, touched_keys, before_json, after_json, anchor_place_id)
     values (${trip.id}, ${slug}, ${turnId}, ${JSON.stringify(applied.keys)}, ${applied.before}, ${applied.after}, ${String(placeId)})`;
@@ -366,7 +369,7 @@ async function persistItineraryWrite(db, trip, slug, turnId, placeId, applied, w
 
 export async function runChatItineraryEditTurn({
   db, trip, customerTurn, turnId = null, httpReq = null, env = process.env,
-  fetchPayload = fetchFreshSharedTripPayload, putOverrides = putSharedTripOverrides, extractIntent = extractItineraryEditIntent,
+  fetchPayload = fetchFreshSharedTripPayload, putOverrides = null, extractIntent = extractItineraryEditIntent,
 } = {}) {
   const slug = tripShareSlug(trip);
   if (!slug) return editSkip('no_share_slug');
@@ -402,7 +405,7 @@ export async function runChatItineraryEditTurn({
       if (value && typeof value === 'object' && Object.keys(value).length) merged[key] = deepCloneJson(value);
       else delete merged[key];
     }
-    await putOverrides({ slug, overrides: merged, webAccessToken, env });
+    await putSharedTripOverrides({ slug, overrides: merged, webAccessToken, env, putOverrides });
     dropSharedUpstreamCacheForSlug(clean(slug, 240));
     return { applied: true, op: 'undo', client: { applied: true, op: 'undo' }, replyContext: itineraryEditReplyContext({ applied: true, op: 'undo' }) };
   }
