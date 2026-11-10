@@ -1,6 +1,6 @@
 # TSV #945 — Deterministic locked-trip chat reply (HOST PUBLICATION ONLY)
 
-**Outcome:** source-ready PATCH. **Lane start HEAD:** `5a0d72e5a607fa4234bf687a956bb34e96cd10e2`. **Merged onto:** `origin/vk` `6017b330` (PR #896) for publication. **Lane:** cursor-ubuntu. **Authority:** eggbot 5:59 AM PT 11/10 (`eggbot:lock-template-20261110-0600`).
+**Outcome:** source-ready PATCH. **Lane start HEAD:** `5a0d72e5a607fa4234bf687a956bb34e96cd10e2`. **Merged onto:** `origin/vk` `8646e9e2` (PR #946 / #944 max-content time column, after #896). **Lane:** cursor-ubuntu. **Authority:** eggbot 5:59 AM PT 11/10 (`eggbot:lock-template-20261110-0600`).
 
 ## Product fix
 
@@ -16,8 +16,8 @@ Locked-trip chat edits use a fixed customer template and do not call the model:
 
 ## Merge note
 
-Receipt-only conflict vs `origin/vk` `6017b330` resolved by keeping this #945 receipt. No product overlap with #896.
+Receipt-only conflict vs `origin/vk` `8646e9e2` (PR #946) resolved by keeping this #945 receipt. No product overlap with #944/#946.
 
 ## Checks
 
-Previously PASS on the lane tree: `test_chat_itinerary_edit.mjs`, `test_chat_itinerary_edit_905.mjs` (exact canned text, empty authoritative, `model: null`, `jevRan: false`, queue short-circuit), `check-no-comments.mjs`. Re-run after this merge.
+`test_chat_itinerary_edit.mjs` and `test_chat_itinerary_edit_905.mjs` PASS on the prior merge onto `6017b330`.
