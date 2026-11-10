@@ -1,0 +1,24 @@
+--- lane-frozen ---
+if [ -z "${VK_LANE_FROZEN:-}" ]; then
+  _F=$(mktemp "${TMPDIR:-/tmp}/vk-lane-run.XXXXXX.sh") && cp "$0" "$_F" && chmod +x "$_F" && VK_LANE_FROZEN="$_F" exec bash "$_F" "$@"
+fi
+--- lane-endtrap ---
+_end_trap() { local _rc=$?; rm -f "$SLOT"; [ -n "${VK_LANE_FROZEN:-}" ] && [ "$VK_LANE_FROZEN" != 1 ] && rm -f "$VK_LANE_FROZEN"; [ -n "$END_LOGGED" ] || echo "$(ts) END $LANE $TAG rc=$_rc done=$(cat "$D/$TAG-DONE" 2>/dev/null || cat "$D/$TAG-DONE.hold" 2>/dev/null || echo none) (trap) | after: $(meter "$METER" 2>/dev/null)" >> "$LOG"; }
+trap _end_trap EXIT
+trap 'exit 143' TERM; trap 'exit 129' HUP; trap 'exit 130' INT
+--- pregate-ci-wait ---
+gateb_status(sha, "pending", "Gate B waits: unit-tests red on %s; screenshots run once CI is green" % sha[:7])
+--- pregate-restore-fail ---
+gateb_status(sha, "failure", "Gate B %s on %s (%d screens differ vs %s; run %s); back to the coder" % (
+--- automerge-unstable ---
+ok_states = ("clean", "has_hooks") + (("unstable",) if runs and not red and not pending else ())
+--- stall-covered ---
+if own and i["number"] not in covered:   # #898 fix 11/9: a linked open PR must still clear status:ready below
+--- gateb-zone ---
+PT = ZoneInfo("America/Los_Angeles")
+--- gateb-score ---
+def v6_per_screen(cap_dir, workdir):
+--- gateb-headline ---
+def current_counts(rows):
+    """Latest canonical deploy/live score for the meter headline (screens>0 only)."""
+    scored = [r for r in rows if r.get("kind") in ("deploy", "live-unrecorded") and r.get("pass") is not None and r.get("screens")]
