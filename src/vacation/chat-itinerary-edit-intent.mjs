@@ -78,9 +78,24 @@ export function offlineParseItineraryEditIntent(customerTurn) {
       time: clean(moveBare[2], 40),
     };
   }
+  const possessiveChange = text.match(
+    /\b(?:please\s+)?change\s+([^'’\s][^,.\n']{0,80}?)['’]s\b[^.\n]{0,100}?\b(?:to|at)\s+(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)/i,
+  );
+  if (possessiveChange) {
+    const day = Number((text.match(/\bday\s*(\d{1,2})\b/i) || [])[1] || 0) || null;
+    return {
+      op: 'set_time',
+      placeQuery: clean(possessiveChange[1], 240),
+      dayNumber: day,
+      time: clean(possessiveChange[2], 40),
+    };
+  }
   const timeMove = text.match(/\b(?:move|reschedule|change)\b[\s\S]{0,120}?\b(?:to|at)\s+(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)/i);
   if (timeMove) {
-    const place = (text.match(/\b(?:at)\s+([^,.\n]+?)(?:\s+to\b|\s+on\b|$)/i) || text.match(/\b([^,.\n]+?)\s+to\s+\d/i) || [])[1] || '';
+    const possessive = (text.match(/\bchange\s+([^'’\s][^'’\n,]+?)['’]s\b/i) || [])[1] || '';
+    const placeAt = (text.match(/\b(?:at)\s+([^,.\n]+?)(?:\s+to\b|\s+on\b|$)/i) || [])[1] || '';
+    const placeLoose = (text.match(/\b([^,.\n]+?)['’]s\b/i) || text.match(/\b(?:dinner|lunch)\s+(?:at|for)\s+([^,.\n]+)/i) || [])[1] || '';
+    const place = possessive || placeAt || placeLoose;
     const day = Number((text.match(/\bday\s*(\d{1,2})\b/i) || [])[1] || 0) || null;
     return {
       op: 'set_time',
@@ -95,6 +110,7 @@ export function offlineParseItineraryEditIntent(customerTurn) {
 export async function extractItineraryEditIntent({ customerTurn, env = process.env }) {
   const offline = offlineParseItineraryEditIntent(customerTurn);
   if (String(env.CHAT_ITINERARY_EDIT_OFFLINE_PARSE || '') === '1') return offline;
+  if (offline.op !== 'none') return offline;
   try {
     const rules = await loadVacationAppReplyRules(env);
     if (!rules?.ok) return offline.op !== 'none' ? offline : { op: 'none' };
