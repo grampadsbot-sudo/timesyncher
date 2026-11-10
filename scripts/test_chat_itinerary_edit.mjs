@@ -17,8 +17,15 @@ import {
 
 function mergeSharedOverrides(thingOverrides, patch) {
   for (const [key, value] of Object.entries(patch)) {
-    if (value && typeof value === 'object' && Object.keys(value).length) thingOverrides[key] = { ...(thingOverrides[key] || {}), ...value };
-    else delete thingOverrides[key];
+    if (!value || typeof value !== 'object' || !Object.keys(value).length) {
+      delete thingOverrides[key];
+      continue;
+    }
+    const prior = { ...(thingOverrides[key] || {}) };
+    thingOverrides[key] = { ...prior, ...value };
+    if (value.perDaySchedule && typeof value.perDaySchedule === 'object') {
+      thingOverrides[key].perDaySchedule = { ...(prior.perDaySchedule || {}), ...value.perDaySchedule };
+    }
   }
 }
 import { buildDayTimeline } from '../apps/vacation-client/src/lib/dayTimelineModel.mjs';

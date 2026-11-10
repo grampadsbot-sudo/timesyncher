@@ -11,6 +11,7 @@ assert.match(heroScript, /data-ts-trip-hero-actions/);
 assert.match(heroScript, /vk-trip-hero-collapsed:/);
 assert.match(heroScript, /localStorage\.setItem/);
 assert.match(heroScript, /linear-gradient\(135deg, #000/);
+assert.match(heroScript, /max-width: 844px/);
 assert.match(sharedApp, /ts-trip-hero-collapse\.js/);
 
 console.log('vacation app #927 hero collapse regression passed');

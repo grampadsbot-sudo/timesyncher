@@ -4,6 +4,14 @@
   const slug = decodeURIComponent(sharedMatch[1]);
   const storageKey = `vk-trip-hero-collapsed:${slug}`;
   const styleId = 'ts-trip-hero-collapse-css';
+  const mobileQuery = '(max-width: 844px)';
+  const isMobile = () => {
+    try {
+      return window.matchMedia(mobileQuery).matches;
+    } catch {
+      return window.innerWidth <= 844;
+    }
+  };
 
   const injectCss = () => {
     if (document.getElementById(styleId)) return;
@@ -67,7 +75,23 @@
     hero.appendChild(btn);
   };
 
+  const unmount = () => {
+    const hero = document.querySelector('[data-ts-trip-site-hero="1"]');
+    if (!hero) return;
+    hero.querySelector('[data-ts-trip-hero-collapse]')?.remove();
+    hero.removeAttribute('data-ts-trip-site-hero');
+    hero.removeAttribute('data-collapsed');
+    for (const node of hero.querySelectorAll('[data-ts-trip-hero-detail], [data-ts-trip-hero-actions]')) {
+      node.removeAttribute('data-ts-trip-hero-detail');
+      node.removeAttribute('data-ts-trip-hero-actions');
+    }
+  };
+
   const mount = () => {
+    if (!isMobile()) {
+      unmount();
+      return false;
+    }
     injectCss();
     const hero = findHero();
     if (!hero) return false;
@@ -90,6 +114,11 @@
 
   const observer = new MutationObserver(() => mount());
   observer.observe(document.documentElement, { childList: true, subtree: true });
+  try {
+    window.matchMedia(mobileQuery).addEventListener('change', () => mount());
+  } catch {
+    window.addEventListener('resize', () => mount());
+  }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => mount(), { once: true });
   } else {
