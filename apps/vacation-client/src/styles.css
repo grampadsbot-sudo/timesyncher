@@ -689,8 +689,10 @@ html[data-ts-debug-build] footer.tsv-build-footer[data-build-stamp="1"] {
     overflow-wrap: anywhere;
   }
   .tsv-row-flight-main {
-    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-columns: auto minmax(0, 1fr) auto;
     grid-template-rows: auto auto auto;
+    overflow-x: clip;
+    overflow-y: visible;
   }
   .tsv-row-flight-main > .tsv-logo-chip {
     grid-column: 1;
@@ -698,19 +700,19 @@ html[data-ts-debug-build] footer.tsv-build-footer[data-build-stamp="1"] {
     align-self: center;
   }
   .tsv-row-flight-main > .tsv-row-title-stack {
-    grid-column: 2 / 4;
+    grid-column: 2;
     grid-row: 1;
     min-width: 0;
     align-self: center;
   }
   .tsv-row-flight-main > .tsv-row-price {
-    grid-column: 4;
+    grid-column: 3;
     grid-row: 1;
     justify-self: end;
     align-self: center;
   }
   .tsv-row-flight-main [data-ts-flight-depart="1"] {
-    grid-column: 3;
+    grid-column: 2;
     grid-row: 2;
     justify-self: end;
     overflow: visible;
@@ -718,7 +720,7 @@ html[data-ts-debug-build] footer.tsv-build-footer[data-build-stamp="1"] {
     min-width: max-content;
   }
   .tsv-row-flight-main [data-ts-flight-arrive="1"] {
-    grid-column: 4;
+    grid-column: 3;
     grid-row: 2;
     justify-self: end;
     overflow: visible;

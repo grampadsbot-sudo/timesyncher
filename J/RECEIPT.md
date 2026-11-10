@@ -1,52 +1,47 @@
-Host base-merge: `origin/vk` `b1211bf9eea151ba7aec5eca2bdf39cabbc0cd6a` into PR head `49e1fab3d710d3b86d2f06779b5ace0ce2eaab2e`. **Lane start HEAD:** `49e1fab3d710d3b86d2f06779b5ace0ce2eaab2e` (verified). **Model:** composer-2.5. **Outcome:** SOURCE-READY (uncommitted; HOST PUBLICATION ONLY).
+Host base-merge: `origin/vk` `5a0d72e5a607fa4234bf687a956bb34e96cd10e2` into PR head `9bbe396156779192097e76f12b9e46eaa0453d1c`. **Lane start HEAD:** `9bbe396156779192097e76f12b9e46eaa0453d1c` (verified). **Model:** composer-2.5. **Outcome:** SOURCE-READY (uncommitted; HOST PUBLICATION ONLY).
 
 # PR #896 / issue #888 — flight time chips @390
 
 ## Problem restatement
 
-At 390px, shared-trip and vacation-client flight list cards kept depart and arrive time chips on one horizontal row. Non-shrinking `min-width: max-content` on `.tsv-row-flight-time` and `[data-ts-flight-time="1"]` (`apps/vacation-client/src/styles.css` @media max-width 480px; `ISSUE_888_SERVED_LAYOUT_CSS` in `src/vacation/shared-trip-oe-list-row-patch.mjs`) let full arrival strings extend past the card’s right padding, clipping text and the card border. Day-by-day conflict wrap and airline logos were already correct on this head.
+At 390px, flight list cards keep departure and arrival on one horizontal track with `min-width: max-content` on `.tsv-row-flight-time` and `[data-ts-flight-time="1"]` (`apps/vacation-client/src/styles.css` @media max-width 480px; `ISSUE_888_SERVED_LAYOUT_CSS` in `src/vacation/shared-trip-oe-list-row-patch.mjs`). Non-shrinking time chips plus a four-column mobile grid let arrival text extend past the card padding and clip the right border. Day-by-day conflict wrap and airline logos on this head are intended and must stay.
 
-## Product fix (on branch head; preserved through vk merge)
+## Product fix
 
-- **Served rows:** `ISSUE_888_SERVED_LAYOUT_CSS` — two-row CSS grid for `[data-ts-flight-row-grid="1"]` at ≤480px; times on row 2; logo/name column spans rows; `SHARED_LIVE_FLIGHT_LOGO_NAME_CSS` for chip alignment.
-- **Vacation client:** `.tsv-row-flight-main` @390 — logo row 1 col 1; title stack cols 2–4; price col 4; depart/arrive row 2 cols 3–4.
-- **Rebake:** `node scripts/rebake_served_trek_bundle.mjs` after merge (host index).
+- **Served rows:** `ISSUE_888_SERVED_LAYOUT_CSS` two-row CSS grid for `[data-ts-flight-row-grid="1"]` at ≤480px (times on row 2; logo/name spans rows).
+- **Vacation client:** `.tsv-row-flight-main` @390 — three-column grid (`auto minmax(0,1fr) auto`); logo spans rows 1–2; title and price row 1; depart col 2 and arrive col 3 on row 2, right-aligned inside the card.
+- **Merge:** keep PR #888 conflict-label wrap (`trek-live-product-patches.mjs`, `trek-live-product-flight-day-patches.mjs`) plus vk #887 timeline patches; both offline tests in manifest.
+- **Rebake:** `node scripts/rebake_served_trek_bundle.mjs` after patch files resolve (host index).
 
-# Host merge conflict resolution @ `49e1fab3`
+## Conflict resolution @ `9bbe3961`
 
 | Path | Resolution |
 | --- | --- |
-| `J/PR_DESCRIPTION.md` | #896/#888 description + vk carry notes (#927 hero, #884, #903). |
-| `J/RECEIPT.md` | This file. |
-| `evidence/.../flights-390.png` | PR side (HEAD): #888 flight layout evidence. |
-| `evidence/.../detail-enriched-{activity,bar,transport}-1280.png` | vk side: current base detail screenshots. |
-| `evidence/.../keepsake-390.png` | vk side: current base keepsake screenshot. |
-| `public/ts-trip-hero-collapse.js` | vk carry: expanded hero title wrap (#939 / #927). |
-| `scripts/test_vacation_app_927_hero_collapse.mjs` | vk carry: hero collapse test aligned with wrap behaviour. |
+| `J/RECEIPT.md` | This file (PR #896 receipt; vk #941 mic receipt dropped). |
+| `public/assets/index-BKun7ofk.js` | `origin/vk` then rebake. |
+| `scripts/offline-tests.txt` | Both `test_issue_888_clipped_text.mjs` and `test_issue_887_daybyday_time_column.mjs`. |
+| `trek-live-product-patches.mjs` | PR wrap conflict label + served guard; vk car/budget/timeline patches retained. |
+| `trek-live-product-flight-day-patches.mjs` | vk #887 imports + PR conflict-label wrap needles/patches. |
 
 ## Checks @ PATCH (lane END)
 
 | Command | Result |
 | --- | --- |
-| `node scripts/rebake_served_trek_bundle.mjs` | PASS sha256 `b55a05c5d06af5b8de03235791d4a320457d7a264c1d2bafc4900f7893b78005` |
+| `node scripts/rebake_served_trek_bundle.mjs` | PASS sha256 `31e18ae6bc65be8d1380f39abaa5f51af7ef58ef9d771cbedd54d42c4d29c128` |
 | `node scripts/test_served_trek_bundle.mjs` | PASS |
 | `node scripts/test_issue_888_clipped_text.mjs` | PASS (390 DOM chip bounds) |
-| `node scripts/test_vacation_app_927_hero_collapse.mjs` | PASS |
-| `node scripts/test_issue_928_daybyday_arrival_conflicts.mjs` | PASS |
-| `node scripts/test_ui_558_daybyday_time_name_baseline.mjs` | PASS |
+| `node scripts/test_issue_887_daybyday_time_column.mjs` | PASS |
+| `node scripts/test_issue_870_composer_mic.mjs` | PASS |
+| `node scripts/test_chat_itinerary_edit.mjs` | PASS |
 | `cd apps/vacation-client && npm test` | PASS |
-| `node scripts/check-no-comments.mjs` | PASS (1142 files) |
-| `node scripts/test_offline_manifest.mjs` | PASS (445 offline, 19 online) |
+| `node scripts/check-no-comments.mjs` | PASS (1145 files) |
+| `node scripts/test_offline_manifest.mjs` | PASS (446 offline, 19 online) |
 | `BASE=vk node scripts/check-code-ratchet.mjs` | PASS (251 report, 0 fail) |
 
 ## Uncommitted for host
 
-- **Conflict markers cleared (index still UU until `git add`):** `J/PR_DESCRIPTION.md`, `J/RECEIPT.md`, `evidence/vacation-client-p2-2-lists/flights-390.png` (ours), `evidence/vacation-client-p2-5-detail/detail-enriched-activity-1280.png`, `detail-enriched-bar-1280.png`, `detail-enriched-transport-1280.png`, `evidence/vacation-client-p2-6-keepsake/keepsake-390.png` (theirs).
-- **In-progress merge tree:** ~67 paths staged/modified from host `origin/vk` merge (see `git status`); no new product edits this lane round beyond conflict resolution.
-- Rebake run confirmed bundle sha256 unchanged vs head.
+Conflict markers cleared (still UU until `git add`): `J/RECEIPT.md`, `public/assets/index-BKun7ofk.js`, `scripts/offline-tests.txt`, `src/vacation/trek-live-product-flight-day-patches.mjs`, `src/vacation/trek-live-product-patches.mjs`. Product edits: `apps/vacation-client/src/styles.css` (@390 three-column flight grid). Rebaked bundle + vacation-client dist from checks. Host merge tree + vk carry files staged from merge (see `git status`).
 
-**Host:** `git add` resolved paths; `git commit --no-edit` (merge); push `vkfill/888-20261109142715`; CI; Gate B allow `888`.
+## Host publish
 
-## Left alone (scope)
-
-Baselines, Gate B capture scripts, workflows, `package.json` / lock, deploy config. No NYC data writes. Lane did not stage, commit, push, or merge (HOST PUBLICATION ONLY).
+`git add` resolved paths; `git commit --no-edit` (merge); push `vkfill/888-20261109142715`; CI; Gate B allow `888`. Lane did not stage, commit, push, or merge.

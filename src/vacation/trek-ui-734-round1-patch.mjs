@@ -18,8 +18,6 @@ const EDIT_CAPTION_NEEDLE =
 const EDIT_CAPTION_PATCH =
   '}),Ce&&n.jsx("button",{type:"button","aria-label":"Edit caption",onClick:()=>{Zn(gr.id),Xr(gr.caption||"")},style:{width:28,height:28,borderRadius:999,border:"1px solid #e5e7eb",background:"#f9fafb",color:"#374151",display:"inline-flex",alignItems:"center",justifyContent:"center",cursor:"pointer"},children:n.jsx(Gs,{size:13})})]})]})';
 
-const TIMELINE_TIME_EMPTY_NEEDLE = 'ua.time?Yo(ua.time):""';
-const TIMELINE_TIME_EMPTY_PATCH = 'ua.time?Yo(ua.time):"TBD"';
 
 export function patchUi734Round1(source = '') {
   let js = String(source || '');
@@ -36,9 +34,6 @@ export function patchUi734Round1(source = '') {
   if (js.includes(PC_NEEDLE)) js = js.replace(PC_NEEDLE, PC_PATCH);
   if (js.includes(PLAY_VIDEO_NEEDLE)) js = js.replace(PLAY_VIDEO_NEEDLE, PLAY_VIDEO_PATCH);
   if (js.includes(EDIT_CAPTION_NEEDLE)) js = js.replace(EDIT_CAPTION_NEEDLE, EDIT_CAPTION_PATCH);
-  if (js.includes(TIMELINE_TIME_EMPTY_NEEDLE)) {
-    js = js.replaceAll(TIMELINE_TIME_EMPTY_NEEDLE, TIMELINE_TIME_EMPTY_PATCH);
-  }
   if (!js.includes('tsBoundMediaPlayUrl=gr=>')) {
     throw new Error('ui #734 tsBoundMediaPlayUrl inject did not apply');
   }
@@ -50,9 +45,6 @@ export function patchUi734Round1(source = '') {
   }
   if (!js.includes('ic&&ic!=="?"?ic:wl(G)')) {
     throw new Error('ui #734 logo fallback Pc patch did not apply');
-  }
-  if (!js.includes('ua.time?Yo(ua.time):"TBD"')) {
-    throw new Error('ui #734 timeline TBD patch did not apply');
   }
   return js;
 }

@@ -8,7 +8,7 @@ import { tripMapHookBundleSnippet } from './trip-map-hook.mjs';
 import { patchLiveProductDetailBundle } from './trek-thing-detail-patches.mjs';
 import { patchBudgetUpstreamMiscBucket } from './trek-budget-upstream-misc-patch.mjs';
 import { patchListRowDescription } from './trek-list-row-description-patch.mjs';
-import { applyFlightDayTimelinePatches } from './trek-live-product-flight-day-patches.mjs';
+import { applyFlightDayTimelinePatches, patchFlightTimelineDisplay887 } from './trek-live-product-flight-day-patches.mjs';
 import { patchThingLogoInkCenterInBundle } from './thing-logo-ink-center.mjs';
 import { patchTabIconVerticalCenter } from './trek-tab-icon-center-patches.mjs';
 import { forceSharedDayByDayUi } from './shared-day-by-day-ui.mjs';
@@ -16,7 +16,6 @@ import { buildListLogoPatch } from './thing-logo-fallback-url.mjs';
 import { LIST_LOGO_NEEDLE, patchListLogoQrGuard } from './trek-list-logo-qr-patch.mjs';
 import { patchEventsEmptyListMessage, patchSharedTabCrossFilters } from './trek-shared-tab-cross-filter-patch.mjs';
 import { applyNrPicPopupPatches } from './trek-nr-pic-popup-patches.mjs';
-
 export { LIST_LOGO_QR_GUARD_PATCH, patchListLogoQrGuard } from './trek-list-logo-qr-patch.mjs';
 export const LIST_LOGO_PATCH = buildListLogoPatch();
 const LIST_LOGO_PATCH_NEEDLE = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"");if(raw&&!/^data:image\\/svg\\+xml/i.test(raw))return raw;return ""}';
@@ -462,6 +461,7 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   }
   js = applyFlightDayTimelinePatches(js, { served });
   js = patchSharedLayoutOverflow(js, { served });
+  js = patchFlightTimelineDisplay887(js, { served });
   const FLIGHT_EU_NEEDLE_BAD = 'return[(v=>{const fareLbl=(w=>w.includes("round")?"round trip":w.includes("one")?"one-way":"")';
   if (js.includes(FLIGHT_EU_AIRLINE_NEEDLE)) {
     js = js.replace(FLIGHT_EU_AIRLINE_NEEDLE, FLIGHT_EU_AIRLINE_PATCH);
