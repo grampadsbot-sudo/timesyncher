@@ -1,3 +1,34 @@
+# PR #896 / issue #888 — flights @390 defects A+B (chief dr round @ `46172253`)
+
+**Outcome:** SOURCE-READY (uncommitted; HOST PUBLICATION ONLY). **Starting HEAD:** `46172253924650513d27b73a52109cdbea7ba294`. **Model:** composer-2.5.
+
+## Problem restatement (before fix)
+
+**Defect A — arrival time clipped @390:** In `@media (max-width: 480px)`, `.tsv-row-flight-main` forced a single row with five columns (`grid-template-columns: auto minmax(0,1fr) auto auto auto; grid-template-rows: auto`), packing logo, title, price, depart, and arrive on one line. With `.tsv-row-main { overflow: hidden }` on the card, the second `.tsv-row-flight-time` (arrive) extends past the card and is cut off (e.g. `4:35 pr`).
+
+**Defect B — fallback glyph over logos @390:** The same block added `.tsv-row-flight-main > .tsv-logo-chip { align-self: start; margin-top: calc(0.5lh - 11px) }` to optically align the chip with wrapped airline names. That offset breaks logo-chip pixels vs base `1ffd23c`: the grey ✈️ fallback layer reads on top of loaded brand logos in Gate B captures.
+
+## Fix
+
+`apps/vacation-client/src/styles.css` (@390 only): restore vk multi-row flight grid (`grid-template-columns: auto minmax(0,1fr) auto; grid-template-rows: auto auto auto auto`), remove logo-chip `margin-top` / single-row five-column grid, place times with `grid-column: 2; justify-self: end` (`min-width: max-content`, no ellipsis). Dropped @390 flight-name wrap override so logo chips match base `1ffd23c` frame (`list-layout` ink ≤0.5px); served trek #888 name wrap unchanged in bundle CSS. Global flight rules (1280 pin) untouched.
+
+## Checks @ `46172253` + uncommitted patch
+
+| Command | Result |
+| --- | --- |
+| `cd apps/vacation-client && npm test` | PASS |
+| `node scripts/test_issue_888_clipped_text.mjs` | PASS |
+| `node scripts/check-no-comments.mjs` | PASS (1132 files) |
+| `node scripts/test_offline_manifest.mjs` | PASS (439 offline, 18 online) |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS (252 report, 0 fail) |
+| `node scripts/check-hardcoded-content.mjs` | PASS |
+| `node scripts/offline-tests.txt` full sweep | **FAIL** `scripts/test_live_transcript_dialog_pdf.mjs:651` `gbrain-cli-get_page` !== `bundled-get_page` (env harness; out of #888 scope) |
+| Flights tab DOM (vacation-client preview, NYC PR225) | `list-layout.mjs`: no horizontal overflow @390/1280; logo ink pass @390 Flights. Screenshot: `vkfill-896-20261109234319-job/flights-390.png`. Times in col 2 rows (not clipped on card edge); no @390 logo-chip margin. |
+
+**Host:** `git add J/RECEIPT.md apps/vacation-client/src/styles.css` (+ staged merge index for vk chat-itinerary if completing merge); do **not** stage `evidence/*` from local test runs. Finish merge commit; push `vkfill/888-20261109142715`; official Gate B with `gateb-allow.json["888"]`.
+
+---
+
 # PR #896 / issue #888 — CI unit-tests fix + vk base-merge `J/RECEIPT.md` conflict
 
 **Outcome:** SOURCE-READY for host commit (merge completion). **Starting HEAD:** `63e5d083c758d1d16e0e335f867683f405dd966c`. **Merged base:** `origin/vk` @ `1ffd23ca895d39db3ea28eff62c7e02279881557` (host basemerge). **Model:** composer-2.5; HOST PUBLICATION ONLY.
@@ -179,6 +210,16 @@ Dossier overlay, fixture address/flight rows, offline `test_vkprloop_*` rows —
 ---
 
 # PR #922 — host base-merge conflict resolve @ `578510a2` (inherited from `origin/vk`)
+
+# vkfill-925 — chat edit sequential PUT merge @ `1ffd23ca`
+
+**Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Start HEAD:** `1ffd23ca895d39db3ea28eff62c7e02279881557`.
+
+Merge-on-put: `mergeStoredChatItineraryScheduleOverride` (`src/vacation/chat-itinerary-edit-day.mjs`). Tests: `scripts/test_chat_itinerary_edit_905.mjs`. Host receipt: `~/tsv-work/vkfill-925-job/J-RECEIPT.md`.
+
+---
+
+# PR #922 — host base-merge conflict resolve @ `578510a2`
 
 **Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Start HEAD:** `578510a284ac0081e7ad40a99820ee0a5e6013f1` (verified). **Lane:** cursor-ubuntu, composer-2.5. Host merged `origin/vk` at `ce649c0cde4e7ecac6dc0138e2dddd5cc523ecde` (chief `basemerge.json` dirty-head requeue).
 
