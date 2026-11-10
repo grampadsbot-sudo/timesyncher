@@ -19,7 +19,7 @@
     style.id = styleId;
     style.textContent = [
       '[data-ts-trip-site-hero]{display:grid;grid-template-columns:44px minmax(0,1fr);grid-template-areas:"toggle title";column-gap:8px;align-items:start;transition:padding 200ms ease,padding-left 200ms ease,padding-right 200ms ease}',
-      '[data-ts-trip-site-hero] h1{grid-area:title;margin:0;min-width:0;font-size:21px!important;font-weight:700;letter-spacing:-.5px;line-height:1.15;white-space:nowrap}',
+      '[data-ts-trip-site-hero] h1{grid-area:title;margin:0;min-width:0;font-size:21px!important;font-weight:700;letter-spacing:-.5px;line-height:1.15;overflow-wrap:anywhere}',
       '[data-ts-trip-hero-detail]{grid-column:1/-1;justify-self:center}',
       '[data-ts-trip-hero-actions]{grid-column:1/-1;margin-top:8px;display:flex;justify-content:center;gap:6px;flex-wrap:wrap}',
       '[data-ts-trip-hero-collapse]{grid-area:toggle;position:relative;left:auto;top:auto;z-index:30;flex-shrink:0;width:44px;height:44px;min-width:44px;min-height:44px;border:1px solid rgba(255,255,255,.28);border-radius:999px;background:rgba(255,255,255,.1);color:#fff;font:inherit;font-size:20px;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0}',

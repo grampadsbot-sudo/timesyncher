@@ -1,15 +1,17 @@
-# Issue #937 — iPhone hero collapse grid + expanded one-line title (HOST PUBLICATION ONLY)
+# PR #939 / #937 — expanded hero title unclip (HOST PUBLICATION ONLY)
 
-**Outcome:** source-ready PATCH (uncommitted). **Lane start HEAD:** `ed8687b929c9473e6f9f2915ac5bc82d6dd802d1` (verified). **Lane:** cursor-ubuntu, composer-2.5. **Follow-up:** Gate B `20261110-101435` on PR #938 head `482b246` — keep grid/overlap/collapsed bar; fix expanded title wrap at 390.
+**Outcome:** source-ready PATCH (uncommitted). **Lane start HEAD:** `8da3206c309b82ebed7947ae25240c69d033e6b4` (verified). **Lane:** cursor-ubuntu, composer-2.5. **Authority:** eggbot 3:04 AM PT 11/10 (title clip ship-blocker; wrapping OK; ~32px shorter expanded OK; no expanded one-line or within-8px-height tests).
+
+**GBrain:** `bot-admin/lanes/vk-pr-handoff/pr-939` — page not found on this pass (handoff in job brief only).
 
 ## Changes
 
 | Path | Change |
 | --- | --- |
-| `public/ts-trip-hero-collapse.js` | CSS grid layout: chevron in `toggle` column (no `position:absolute; left:10px`). Collapsed ≤57px bar, details/actions hidden, ellipsis on title only when collapsed. Expanded `h1` at **21px** + `white-space:nowrap` (no ellipsis) so "Craig / Kim NYC June 2026" fits one line beside 44px control at 390. |
-| `scripts/test_vacation_app_927_hero_collapse.mjs` | Puppeteer @390: zero overlap expanded/collapsed; collapsed height ≤57; one-line collapsed title; **expanded** one-line + `scrollWidth` fit; expanded taller than collapsed. Keeps rgb/#000 findHero regression assertions. |
+| `public/ts-trip-hero-collapse.js` | Expanded `h1`: removed `white-space:nowrap`; use `overflow-wrap:anywhere` so full title is unclipped at 390. Kept CSS grid chevron column, slim collapsed bar, collapsed-only ellipsis. |
+| `scripts/test_vacation_app_927_hero_collapse.mjs` | Dropped expanded one-line `clientHeight` and expanded height within 8px of ed8687b assertions. Kept zero overlap, collapsed ≤57px, collapsed one-line, `scrollWidth <= clientWidth` expanded, no expanded ellipsis. |
 
-**Out of scope (unchanged):** splitter, chat-edit, conflicts, trip data, `gateb-allow.json`, bundles (script served standalone via `shared-app.html`).
+**Out of scope (unchanged):** splitter, chat-edit, conflicts, trip data, `gateb-allow.json`, bundles (standalone `shared-app.html` script).
 
 ## Checks
 
@@ -17,9 +19,9 @@
 | --- | --- |
 | `node scripts/test_vacation_app_927_hero_collapse.mjs` | PASS |
 | `node scripts/test_offline_manifest.mjs` | PASS |
-| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS |
-| `node scripts/check-no-comments.mjs` | **SKIP/FAIL** — `apps/vacation-client/node_modules/typescript` missing in worktree (`MODULE_NOT_FOUND`); host should run after deps install (no comments added in touched files). |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS (252 report, 0 fail) |
+| `node scripts/check-no-comments.mjs` | FAIL — `apps/vacation-client/node_modules/typescript` missing in worktree; host re-run after deps install |
 
 ## Host publish
 
-Uncommitted diff: `public/ts-trip-hero-collapse.js`, `scripts/test_vacation_app_927_hero_collapse.mjs`. If publishing atop PR #938 (`482b246`), apply as delta on that branch (grid/collapse tests already present there; this round is primarily expanded `font-size:21px` + expanded one-line assertions). `Closes #937` on single PR into `vk`.
+Uncommitted diff (2 files): `public/ts-trip-hero-collapse.js`, `scripts/test_vacation_app_927_hero_collapse.mjs`. Commit on `vkfill/937-20261110021736`, push once, Gate B hero allowance via eggbot (do not edit `gateb-allow.json` here). Ref: start HEAD `8da3206c`.

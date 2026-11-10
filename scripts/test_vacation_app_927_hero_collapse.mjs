@@ -123,15 +123,10 @@ try {
   assert.ok(expanded.titleBox && expanded.btnBox, 'hero title and collapse control required');
   assert.equal(rectsOverlap(expanded.titleBox, expanded.btnBox), false, '#937 expanded: chevron must not overlap title @390');
   assert.ok(
-    expanded.titleClientHeight <= expanded.titleLineHeight + 2,
-    '#937 expanded title must stay one line',
-  );
-  assert.ok(
     expanded.titleScrollWidth <= expanded.titleClientWidth,
     `#937 expanded title must not clip (scroll ${expanded.titleScrollWidth} vs client ${expanded.titleClientWidth})`,
   );
   assert.notEqual(expanded.titleOverflow, 'ellipsis', '#937 expanded title must not use ellipsis');
-  assert.ok(Math.abs(expanded.heroHeight - base.heroHeight) <= 8, `#937 expanded height must stay within 8px of ed8687b (${base.heroHeight}); got ${expanded.heroHeight}`);
   for (let i = 1; i < expanded.detailBoxes.length; i += 1) {
     assert.ok(expanded.detailBoxes[i].top >= expanded.detailBoxes[i - 1].bottom, '#937 subtitle, date chip and actions must occupy separate rows');
   }
