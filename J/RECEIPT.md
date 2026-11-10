@@ -1,3 +1,33 @@
+# PR #922 — host base-merge conflict resolve @ `578510a2`
+
+**Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Start HEAD:** `578510a284ac0081e7ad40a99820ee0a5e6013f1` (verified). **Lane:** cursor-ubuntu, composer-2.5. Host merged `origin/vk` at `ce649c0cde4e7ecac6dc0138e2dddd5cc523ecde` (chief `basemerge.json` dirty-head requeue).
+
+## Conflict resolution
+
+| file | resolution |
+| --- | --- |
+| `scripts/offline-tests.txt` | Kept **both** `scripts/test_vkprloop_drift_921.mjs` (PR #922 / #921) and `scripts/test_vkprloop_drift_915.mjs` (`origin/vk`). Removed conflict markers only. |
+
+Staged from merge (unchanged this round): `scripts/fixtures/vkprloop-drift-915.txt`, `scripts/test_vkprloop_drift_915.mjs`. No `public/assets/*.js` conflict; rebake not run.
+
+## Checks (lane)
+
+| check | result |
+| --- | --- |
+| `node scripts/test_vkprloop_drift_921.mjs` | PASS |
+| `node scripts/test_vkprloop_drift_915.mjs` | PASS |
+| `node scripts/test_offline_manifest.mjs` | PASS (438 offline, 18 online) |
+| `node scripts/check-no-comments.mjs` | BLOCKED locally: missing `apps/vacation-client/node_modules/typescript` (run root + `apps/vacation-client` `npm ci` before host pre-DONE) |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | not run (blocked on same deps) |
+| `cd apps/vacation-client && npm test` | PARTIAL: budget + dayTimeline PASS; `detail.unit.mjs` ERR_MODULE_NOT_FOUND `@neondatabase/serverless` (no `npm ci` in worktree) |
+
+## Host publish
+
+1. `git add scripts/offline-tests.txt` (resolve UU), then `git commit --no-edit` to finish the in-progress merge; push once to `grok/tsv-921-formal-model-drift-vkprloop-tla-behind-d`.
+2. After `npm ci` (repo root + vacation-client): `node scripts/check-no-comments.mjs`, `node scripts/test_offline_manifest.mjs`, `BASE=vk node scripts/check-code-ratchet.mjs`, full `scripts/offline-tests.txt` suite per lane brief, then CI on new head.
+
+---
+
 # PR #908 / #901 — host base-merge follow-up (9420e788)
 
 **Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Start HEAD:** `9420e788aaf9d712bbcc2ce6c96f9eb7c77c7381` (verified). **Lane:** cursor-ubuntu, composer-2.5.
