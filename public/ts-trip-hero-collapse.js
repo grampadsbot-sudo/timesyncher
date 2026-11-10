@@ -30,13 +30,25 @@
     document.head.appendChild(style);
   };
 
+  const heroGradientRe = /linear-gradient\(\s*135deg/i;
+  const heroBlackStopRe = /(?:#000(?:000)?\b|rgb\(\s*0\s*,\s*0\s*,\s*0\s*\))/i;
+
+  const nodeHasBlackTripHeroBg = (node) => {
+    const styleText = String(node.getAttribute('style') || '');
+    if (heroGradientRe.test(styleText) && heroBlackStopRe.test(styleText)) return true;
+    try {
+      const bg = getComputedStyle(node).backgroundImage || '';
+      if (heroGradientRe.test(bg) && heroBlackStopRe.test(bg)) return true;
+    } catch {}
+    return false;
+  };
+
   const findHero = () => {
     const tripView = document.querySelector('[data-trip-view-root]');
     if (!tripView) return null;
     let node = tripView.parentElement;
     while (node && node !== document.body) {
-      const styleText = String(node.getAttribute('style') || '');
-      if (styleText.includes('linear-gradient(135deg, #000') && node.querySelector('h1')) return node;
+      if (nodeHasBlackTripHeroBg(node) && node.querySelector('h1')) return node;
       node = node.parentElement;
     }
     return null;

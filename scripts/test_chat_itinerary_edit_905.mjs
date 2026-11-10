@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {
+  applyAddBarBeforeOp,
   applySetTimeOp,
   buildItineraryEditAuthoritativeSystemExtra,
   dayNumbersForPlace,
@@ -123,6 +124,32 @@ const dayOnePut = buildChatItineraryOverridesPutBody({
 });
 assert.equal(dayOnePut['place:610'].perDaySchedule['501'].startTime, '19:30');
 assert.equal(dayOnePut['place:610'].perDaySchedule['502'].startTime, '19:00');
+const carboneStored = {
+  'place:8977': {
+    timeline: true,
+    dayIds: [1250],
+    perDaySchedule: { 1250: { startTime: '21:15' } },
+  },
+};
+const barAdd = applyAddBarBeforeOp(
+  {
+    thingOverrides: structuredClone(carboneStored),
+    places: [
+      { id: 8977, name: 'Carbone' },
+      { id: 9061, name: 'Zinc Bar', category: 'bar', lat: 40.7295, lng: -73.9992 },
+    ],
+    assignments: { 1250: [{ place_id: 8977 }] },
+  },
+  { barPlaceId: 9061, anchorPlaceId: 8977, dayId: 1250, anchorStartHHMM: '21:15', barDurationMin: 60 },
+);
+const barPut = buildChatItineraryOverridesPutBody({
+  before: barAdd.before,
+  after: barAdd.after,
+  keys: barAdd.keys,
+  stored: carboneStored,
+});
+assert.equal(barPut['place:8977'].perDaySchedule['1250'].startTime, '21:15');
+assert.equal(barPut['place:9061'].perDaySchedule['1250'].startTime, '20:15');
 const mergedPartial = mergeStoredChatItineraryScheduleOverride(
   multiDayStored['place:610'],
   { timeline: true, perDaySchedule: { 501: { startTime: '19:30' } } },
@@ -168,6 +195,7 @@ assert.equal((await runSeqTurn('Move Carbone to 9:15 PM on Day 1')).op, 'set_tim
 assert.equal(seqStored.thingOverrides['place:8977'].perDaySchedule['1250'].startTime, '21:15');
 assert.equal((await runSeqTurn('Add a bar hop before Carbone on Day 1')).op, 'add_bar_before');
 assert.equal(seqStored.thingOverrides['place:8977'].perDaySchedule['1250'].startTime, '21:15');
-assert.deepEqual(Object.keys(seqPuts[1]), ['place:9061']);
+assert.equal(seqPuts[1]['place:8977'].perDaySchedule['1250'].startTime, '21:15');
+assert.equal(seqPuts[1]['place:9061'].perDaySchedule['1250'].startTime, '20:15');
 
 console.log('test_chat_itinerary_edit_905: ok');

@@ -29,7 +29,10 @@ assert.match(bundle, /AI-assisted vacation itinerary planning/);
 
 const payload = finalizeServedSharedTripPayload(buildNycPr225SharedTrip());
 const car = payload.places.find((place) => String(place.name || '').includes('Priceline'));
-assert.equal(payload.thingOverrides[`place:${car.id}`]?.rentalCompany, 'Priceline opaque');
+assert.equal(
+  payload.thingOverrides[`place:${car.id}`]?.rentalCompany,
+  'Priceline Express Deal (car company shown after booking)',
+);
 
 const nestedLogoPayload = finalizeServedSharedTripPayload({
   places: [{ id: 801, name: 'North venue', category_name: 'Store', metadata: { sourceRecord: { favicon: 'https://north.example/icon.png' } } },
