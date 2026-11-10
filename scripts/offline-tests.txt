@@ -38,11 +38,15 @@ scripts/test_turn_classifier_target_kind_persist.mjs
 scripts/test_turn_classifier_category_live_path.mjs
 scripts/test_vacation_app_interim_place_search.mjs
 scripts/test_vacation_app_client_errors.mjs
+scripts/test_vacation_app_927_hero_collapse.mjs
 scripts/test_search_progress_flow.mjs
 scripts/test_check_code_ratchet.mjs
 scripts/test_check_dialog_pack.mjs
+scripts/test_detail_title_no_clip_nyc.mjs
 scripts/test_trek_bundle_strip.mjs
+scripts/test_thing_detail_pencil_price_951.mjs
 scripts/test_served_trek_bundle.mjs
+scripts/test_star_rating_model.mjs
 scripts/test_trip_map_initial_view.mjs
 scripts/test_trip_map_initial_view_bundle.mjs
 scripts/test_trip_map_harness_hook_bundle.mjs
