@@ -1,34 +1,45 @@
-# PR #892 / #889 round 3 — street addresses + dossier overlay
+# PR #913 / vkfill-905 port — CI `unit-tests` fix (HOST PUBLICATION ONLY)
 
-**HEAD start:** `b8a06ba802e7d05a257c8ff6ea21011f99e1317a` (verified before edit)
+**Starting HEAD:** `e18a08efa3df43c116adb0ca58917c46a4759a18` (verified before edit)
 
-**GBrain handoff:** `bot-admin/lanes/vk-pr-handoff/pr-892` — page_not_found on this pass (noted per lane brief).
+**GBrain handoff:** `bot-admin/lanes/vk-pr-handoff/pr-913` — page_not_found on this pass (per lane brief).
 
-## Changes (uncommitted; host publication only)
+## This round change
 
-1. **`src/vacation/shared-trip-dossier-overlay.mjs`** — When a stored dossier has a supported, `addressIsSpecific` street address, it wins over neighborhood-only `thingOverrides` / fixture placeholders.
-2. **`src/vacation/intake-shared-trip.mjs`** — `applyThingPresentation` no longer overwrites a specific override address with a non-specific trip-row address.
-3. **Fixtures** — Street addresses for #889 addendum table in `gate-b-nyc-shared-staging.json`, `pr336-vk-search-places.snapshot.json`, and `nyc_ccab_place_enrichment.json`; flight rows in snapshot/staging use `AAA → BBB` routes instead of `Flight options / Bookings tab`.
-4. **`scripts/test_dossier_evidence_hydrate_682.mjs`** — Overlay regression: Park Central dossier `870 7th Ave` beats `Midtown / Central Park South`.
+| File | Why |
+|------|-----|
+| `vacation-app.html` | Host replay of #909 routed chat send failures through `handleChatSendFailure` in `public/vacation-app-request.js` only. `scripts/test_reply_action_claim_d2_paia_save_route.mjs` still requires the literal `showComposerStatus(customerSafeErrorMessage` call in `vacation-app.html`. Inlined the same catch logic (90s `AbortError` bubble + composer status) so static contract and runtime behavior match. |
 
-## Checks run @ `b8a06ba8` + local patch
+## Turn-2 hang (inherited from #909 port on this branch; documented for host demo)
+
+**Root cause (staging run A, copy trip 199):** Turn 1 without an explicit day returned `day_not_found` / “Day ?” because Carbone spans inference failed; turn 2 then waited on the queued reply path without a customer-visible terminal state within 420s.
+
+**Fix already on branch (not re-authored this round):** `resolveItineraryEditDayNumber` / `dayNumbersForPlace` infer day when the place sits on exactly one day; `prepareChatItineraryEditForQueueTurn` logs and returns explicit `edit_failed` on overrides PUT failures (e.g. 413 — covered in `scripts/test_chat_itinerary_edit.mjs`); client `CHAT_SEND_TIMEOUT_MS` 90s with “That took too long — please try again.”
+
+## Fix-6 Zinc logo (inherited from #909 port)
+
+**Finding:** `apps/vacation-client/src/lib/logoChipHandlers.mjs` `onLogoImgLoad` accepts a loaded `.ico` when `naturalWidth/Height >= 1` instead of treating small favicons as broken and falling through to emoji. Gray chevron on the live copy was a failed-logo fallback path, not the standard category default; host should confirm Zinc Bar (place 8967) on a fresh copy after deploy.
+
+## Decision trail
+
+1. CI failure is the static HTML regex in `test_reply_action_claim_d2_paia_save_route.mjs`, not queue/reply logic — queue half of that test already passed locally.
+2. Re-inline catch in `vacation-app.html` rather than loosening the test (banned).
+3. Keep `handleChatSendFailure` on `tsVacationAppRequest` for API symmetry; only `vacation-app.html` uses the inlined path.
+
+## Checks run @ `e18a08ef` + local patch
 
 | Command | Result |
-|---|---|
-| `node scripts/test_dossier_evidence_hydrate_682.mjs` | pass |
-| `node scripts/test_live_shared_gate_b_fill_regression_682.mjs` | pass (603 Belleclaire `2175 Broadway`) |
-| `node scripts/test_thing_logo_fallback_758.mjs` | pass |
-| `node scripts/test_gate_b_nyc_place_count_pin.mjs` | pass |
-| Trip builder spot-check (`buildNycCraigKimDaybydayTrip`) | 627 `870 7th Ave…`, 680 `106 E 60th St…`, 693 `401 Bleecker St…` |
+|---------|--------|
+| `node scripts/test_reply_action_claim_d2_paia_save_route.mjs` | pass |
+| `node scripts/test_vacation_app_client_errors.mjs` | pass |
+| `node scripts/test_chat_itinerary_edit_905.mjs` | pass |
+| `node scripts/test_chat_itinerary_edit.mjs` | pass |
+| `node scripts/test_offline_manifest.mjs` | pass |
+| `node scripts/check-no-comments.mjs` | pass (after `apps/vacation-client/npm ci`) |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | pass |
 
-`node scripts/check-no-comments.mjs` — not run in `vkfill-892` worktree (missing `apps/vacation-client/node_modules/typescript`); host should run pre-DONE on full checkout.
+## Host next steps
 
-## Host receipt path
+Commit/push `vacation-app.html` only on `vkfill/905-port-20261110012849`. Re-run full CI + Gate B on host build.
 
-Detailed diff list: `/home/ubishere9995/tsv-work/vkfill-889-20261109150135-job/vkfill-889-RECEIPT.md`
-
-**DONE file:** `source-ready b8a06ba802e7d05a257c8ff6ea21011f99e1317a`
-
-## Left alone (scope)
-
-- Gate B pixel/screenshot capture, new offline test manifest rows, budget `people: 2` lines beyond existing fixture, Piccola hours garbage (needs live dossier `hours` field), duplicate Blue Note titles / pipeline title scrub, Zinc 404 logo hunt (snapshot logo URL already non-favicon).
+**Uncommitted diff:** `vacation-app.html` (+9 −1)
