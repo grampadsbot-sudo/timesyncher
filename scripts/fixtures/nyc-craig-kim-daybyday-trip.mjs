@@ -502,6 +502,22 @@ function buildPayload() {
     if (row.id === 611) {
       override.category = 'music';
     }
+    if (row.rentalCompany) {
+      override.rentalCompany = row.rentalCompany;
+    }
+    if (row.arrivalTime && row.cat === 'flight') {
+      override.departureTime = row.time;
+      override.arrivalTime = row.arrivalTime;
+    }
+    if (row.thingCategory) {
+      override.category = row.thingCategory;
+    }
+    if (row.categoryLabel) {
+      place.category_name = row.categoryLabel;
+      if (place.category && typeof place.category === 'object') {
+        place.category = { ...place.category, name: row.categoryLabel };
+      }
+    }
     if (row.id === 630) {
       override.price = 164;
       override.logoUrl = 'https://www.southwest.com/favicon.ico';

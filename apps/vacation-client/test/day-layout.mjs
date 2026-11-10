@@ -134,7 +134,7 @@ export async function runVacationClientDayLayoutTests() {
       });
       assert.equal(clickedDay5, true, `Day 5 chip missing at ${width}px`);
       await page.waitForFunction(
-        () => /Drop-off:\s*Priceline opaque/i.test(document.body?.innerText || ''),
+        () => /Drop-off:\s*Priceline Express Deal/i.test(document.body?.innerText || ''),
         { timeout: 60000 },
       );
       await new Promise((r) => setTimeout(r, 400));
