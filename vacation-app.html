@@ -442,18 +442,18 @@
 
     const tripMonthsFull = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     function tripDestinationToken(value) {
-      const first = (customerPlaceName(value) || '').split(',')[0].trim();
-      if (!first) return '';
-      const norm = first.toLowerCase();
-      if (norm === 'new york city' || norm === 'new york' || norm === 'ny') return 'NYC';
-      if (norm === 'las vegas strip' || norm === 'las vegas') return 'Las Vegas';
-      return first;
+      return (customerPlaceName(value) || '').split(',')[0].trim();
+    }
+    function tripDestinationCompact(value) {
+      const first = tripDestinationToken(value);
+      const words = first.split(/\s+/).filter((word) => /^[\p{L}\p{N}]/u.test(word));
+      return words.length >= 3 ? words.map((word) => Array.from(word)[0].toUpperCase()).join('') : first;
     }
     function tripSwitcherShortName(trip) {
       if (!trip || isPlaceholderTrip(trip)) return 'Trip';
       const stored = String(trip?.shortName ?? trip?.short_name ?? '').trim();
       if (stored) return stored;
-      let compact = tripDestinationToken(trip.destination) || tripDestinationToken(trip.title);
+      let compact = tripDestinationCompact(trip.destination) || tripDestinationToken(trip.title);
       if (!compact) compact = (customerPlaceName(trip.title) || '').split(/[\s,]+/).find(Boolean) || '';
       const start = dateParts(trip?.startDate ?? trip?.start_date);
       const parts = compact ? [compact] : [];

@@ -47,6 +47,13 @@ const nycNoShort = {
 assert.equal(tripSwitcherShortName(nycNoShort), 'NYC June 2026');
 assert.match(tripTriggerInner(nycNoShort), /NYC June 2026/);
 assert.equal(tripSwitcherShortName(dated), 'Paris');
+const derived = (destination, title = 'Sample week') => tripSwitcherShortName({ id: 'd', title, destination, startDate: '2026-08-01', status: 'active' });
+assert.equal(derived('Coastal Sample Region, Somewhere'), 'CSR August 2026');
+assert.equal(derived('Inland region, Somewhere'), 'Inland region August 2026');
+assert.equal(derived('Alpha & Beta'), 'Alpha & Beta August 2026');
+assert.equal(derived('', 'Long sample week title'), 'Long sample week title August 2026');
+assert.equal(tripSwitcherShortName({ id: 'e', title: 'Rome' }), 'Rome');
+assert.doesNotMatch(html.slice(from, to), /===\s*'[a-z ]+'\)\s*return\s*'/, 'no destination alias table in switcher helpers');
 assert.ok(tripSwitcherShortName({ id: 'x', title: 'Mystery', destination: '', startDate: '2026-08-01', status: 'active' }).length > 0);
 assert.equal(tripTitle(undated), 'Rome');
 assert.equal(tripDates({ startDate: '2026-11-11', endDate: '2026-11-14' }), 'Nov 11–14, 2026');
