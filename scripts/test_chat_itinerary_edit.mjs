@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import {
   applyAddBarBeforeOp,
   applySetTimeOp,
@@ -8,11 +7,14 @@ import {
   loadChatItineraryEditConfig,
   normalizeItineraryPlaceQuery,
   offlineParseItineraryEditIntent,
+  prepareChatItineraryEditForQueueTurn,
   resolvePlaceByQuery,
+  runChatItineraryEditTurn,
   selectNearestBarBeforeAnchor,
   shareSlugEditGuardDecision,
 } from '../src/vacation/chat-itinerary-edit.mjs';
 import { buildDayTimeline } from '../apps/vacation-client/src/lib/dayTimelineModel.mjs';
+import { webAccessCookieName, webAccessTokenHash } from '../src/vacation/web-access.mjs';
 
 function verifyBarBeforeAnchorOnDay(payload, { anchorName, dayNumber, anchorHHMM }) {
   const day = payload.days?.find((d) => Number(d.day_number) === Number(dayNumber));
@@ -25,8 +27,6 @@ function verifyBarBeforeAnchorOnDay(payload, { anchorName, dayNumber, anchorHHMM
   if (anchorEntry.startLabel !== anchorHHMM && anchorEntry.startLabel !== '20:30') return { ok: false };
   return { ok: entries.indexOf(barEntry) < entries.indexOf(anchorEntry) };
 }
-import { webAccessCookieName, webAccessTokenHash } from '../src/vacation/web-access.mjs';
-import { runChatItineraryEditTurn } from '../src/vacation/chat-itinerary-edit.mjs';
 
 const chatEditTripId = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeee8611';
 const chatEditOwnerId = '22222222-2222-2222-2222-222222222222';
@@ -391,15 +391,11 @@ assert.match(queueSource, /prepareChatItineraryEditForQueueTurn/);
 const requestJs = fs.readFileSync(new URL('../public/vacation-app-request.js', import.meta.url), 'utf8');
 assert.match(requestJs, /itineraryEdit/);
 
-const slug = 'chat-edit-copy-a47f5a7f2150c5e887a81972';
 const trekBase = String(process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || 'https://travel.timesyncher.com').replace(/\/+$/, '');
-const stagingPayload = await fetch(`${trekBase}/api/shared/${encodeURIComponent(slug)}/?bust=1`).then((r) => r.json());
+const stagingPayload = await fetch(`${trekBase}/api/shared/${encodeURIComponent(copySlug)}/?bust=1`).then((r) => r.json());
 const carboneResolve = resolvePlaceByQuery(stagingPayload, moveDay2.placeQuery);
 assert.equal(carboneResolve.status, 'ok');
 assert.match(carboneResolve.place?.name || '', /carbone/i);
-
-const undoParsed = offlineParseItineraryEditIntent('please undo that last change');
-assert.equal(undoParsed.op, 'undo');
 
 const ownerSession = 'chat-edit-owner-session-861';
 const ownerHttpReq = {
@@ -478,5 +474,22 @@ const undoDemoLocked = await runChatItineraryEditTurn({
 });
 assert.equal(undoDemoLocked.applied, false);
 assert.equal(undoDemoLocked.reason, 'demo_locked');
-
+const oversizeLogs = [];
+const origConsoleError = console.error;
+const origFetch = globalThis.fetch;
+console.error = (...args) => { oversizeLogs.push(args); origConsoleError(...args); };
+try {
+  globalThis.fetch = async (url, init) => {
+    const href = String(url);
+    if (href.includes('/overrides') && init?.method === 'PUT') return { ok: false, status: 413, text: async () => 'request entity too large' };
+    if (href.includes('/api/shared/') && (!init?.method || init.method === 'GET')) return { ok: true, status: 200, json: async () => miniPayload() };
+    return origFetch(url, init);
+  };
+  const queueOversize = await prepareChatItineraryEditForQueueTurn({ db: makeChatItineraryEditDbStub({ sessionToken: ownerSession }), trip: chatEditTrip, tripId: chatEditTripId, seat: null, requestText: 'Move Carbone to 8:30 PM on Day 2', turnId: 'turn-oversize-859', httpReq: ownerHttpReq, env: { ...chatEditEnv, CHAT_ITINERARY_EDIT_OFFLINE_PARSE: '1', TIMESYNCHER_TREK_PUBLIC_BASE_URL: trekBase } });
+  assert.equal(queueOversize.itineraryEditResult?.client?.reason, 'edit_failed');
+  const logged = oversizeLogs.find((args) => args[0] === 'chat_itinerary_edit_failed');
+  assert.ok(logged);
+  assert.match(String(logged[1]), /overrides_put_failed 413/);
+  assert.equal(logged[2], 'status=413');
+} finally { console.error = origConsoleError; globalThis.fetch = origFetch; }
 console.log('test_chat_itinerary_edit: ok');

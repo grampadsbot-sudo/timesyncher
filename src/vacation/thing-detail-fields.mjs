@@ -156,7 +156,7 @@ export function detailFieldsFromPlace(place = {}, thing = {}) {
   const record = sourceRecordFrom(thing) || sourceRecordFrom(place) || {};
   const category = resolvedPresentationCategory({ ...thing, ...place, category: place.category || thing.category });
   const title = text(place.title || thing.title || place.name, 240);
-  const address = text(place.address || thing.address || record.address, 240);
+  let address = text(place.address || thing.address || record.address, 240);
   const phone = text(record.phone || record.telephone || place.phone, 80);
   const website = text(place.url || record.url || record.website, 500);
   const hours = text(record.hours || record.openingHours || record.opening_hours, 800);
@@ -193,6 +193,11 @@ export function detailFieldsFromPlace(place = {}, thing = {}) {
   );
   const lat = record.lat ?? place.lat ?? thing.lat;
   const lng = record.lng ?? place.lng ?? thing.lng;
+  if (category === 'flight' && /Bookings tab/i.test(address)) {
+    const route = String(record.summary || longDetails || title || '')
+      .match(/\b([A-Z]{3})-([A-Z]{3})\b|\b([A-Z]{3})\s*→\s*([A-Z]{3})\b/);
+    address = route ? `${route[1] || route[3]} → ${route[2] || route[4]}` : '';
+  }
   const fields = {
     category,
     title,
