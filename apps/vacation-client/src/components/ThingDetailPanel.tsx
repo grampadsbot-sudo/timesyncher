@@ -29,7 +29,7 @@ function DetailLogo({ logoUrl }: { logoUrl: string }) {
   );
 }
 
-export function ThingDetailPanel({ place, trip, onClose, canEdit = false, onPatchField }: Props) {
+function ThingDetailPanelInner({ place, trip, onClose, canEdit = false, onPatchField }: Props) {
   const model = buildDetailViewModel(place, trip);
   const override = overrideFor(trip, place);
   const [editMode, setEditMode] = useState(false);
@@ -41,10 +41,6 @@ export function ThingDetailPanel({ place, trip, onClose, canEdit = false, onPatc
   const titleId = useId();
   const sheetRef = useRef<HTMLElement>(null);
   const backdropDownRef = useRef(false);
-
-  useEffect(() => {
-    setEditMode(false);
-  }, [place.id]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -266,4 +262,8 @@ export function ThingDetailPanel({ place, trip, onClose, canEdit = false, onPatc
       </aside>
     </div>
   );
+}
+
+export function ThingDetailPanel(props: Props) {
+  return <ThingDetailPanelInner key={String(props.place.id)} {...props} />;
 }

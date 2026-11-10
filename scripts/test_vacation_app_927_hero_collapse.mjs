@@ -39,8 +39,10 @@ assert.equal(
   '#930 regression: old substring guard rejects live rgb hero',
 );
 
-assert.match(heroScript, /grid-template-areas:"toggle title"/);
-assert.doesNotMatch(heroScript, /\[data-ts-trip-hero-collapse\]\{[^}]*position:absolute;left:10px;top:8px/);
+assert.match(heroScript, /\[data-ts-trip-hero-collapse\]\{[^}]*position:absolute;left:10px;top:10px/);
+assert.match(heroScript, /\[data-collapsed="1"\][^'"]*\[data-ts-trip-hero-collapse\]\{[^}]*left:10px;top:8px/);
+assert.doesNotMatch(heroScript, /\[data-collapsed="1"\][^'"]*h1\{[^}]*text-overflow:ellipsis/);
+assert.doesNotMatch(heroScript, /\[data-collapsed="1"\][^'"]*h1\{[^}]*white-space:nowrap/);
 assert.match(heroScript, /\[data-ts-trip-site-hero\]\[data-collapsed="1"\][^'"]*\[data-ts-trip-hero-actions\]\{display:none!important\}/);
 
 const cssRules = [...heroScript.matchAll(/'([^']+)'/g)]
@@ -137,8 +139,9 @@ try {
   const collapsed = await measureHero();
   assert.ok(collapsed.titleBox && collapsed.btnBox, 'collapsed hero chrome required');
   assert.equal(rectsOverlap(collapsed.titleBox, collapsed.btnBox), false, '#937 collapsed: chevron must not overlap title @390');
-  assert.ok(collapsed.heroHeight <= 57, `#937 collapsed hero height must be ≤56px (+2px slop); got ${collapsed.heroHeight}`);
-  assert.ok(collapsed.titleClientHeight <= collapsed.titleLineHeight + 2, '#937 collapsed title must stay one line');
+  assert.ok(collapsed.heroHeight <= 80, `#951 collapsed hero must stay slim; got ${collapsed.heroHeight}`);
+  assert.notEqual(collapsed.titleOverflow, 'ellipsis', '#951 collapsed title must not use ellipsis');
+  assert.ok(collapsed.titleScrollWidth <= collapsed.titleClientWidth + 1, '#951 collapsed title must not clip horizontally');
   assert.ok(expanded.heroHeight > collapsed.heroHeight + 24, '#937 expanded hero must stay clearly taller than collapsed');
   assert.ok(collapsed.detailBoxes.every((box) => box.display === 'none'), '#937 collapsed details and actions must be hidden');
   assert.ok(collapsed.itineraryTop < expanded.itineraryTop, '#937 collapsing must move the itinerary up');

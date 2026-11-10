@@ -11,5 +11,6 @@
 .topbar .fullscreen-button{position:static;flex:0 0 auto;z-index:auto;display:inline-flex;align-items:center;gap:4px}
 .splitter-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;min-height:44px;touch-action:none;background:linear-gradient(180deg,#edf1f5,#dfe6ee);border-top:1px solid #cdd5df;border-bottom:1px solid #cdd5df}
 .splitter-row .splitter{border:0;border-radius:0;background:transparent;min-height:44px;touch-action:none;width:100%}
+@media (max-width:480px){.splitter-row .splitter{min-height:22px;height:22px}}
 .splitter-row .fullscreen-button{margin:4px 8px 4px 0;align-self:center}
 .topbar .vk-app-brand{max-width:min(60%,280px)}

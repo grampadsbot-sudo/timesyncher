@@ -257,7 +257,7 @@ function vacationAppTripSummary(row) {
     || (metadata.intakeShare === true && row.id ? intakeShareSlug(row.id) : null);
   return {
     id: row.id,
-    title: row.title || '',
+    title: row.title || '', shortName: cleanText(row.short_name, 120) || '',
     destination: row.destination || '',
     startDate: row.start_date || null,
     endDate: row.end_date || null,
@@ -298,8 +298,7 @@ async function loadVacationAppTrips(db, session) {
   const rows = await db`
     select
       trips.id,
-      trips.title,
-      trips.destination,
+      trips.title, trips.short_name, trips.destination,
       trips.start_date,
       trips.end_date,
       trips.status,

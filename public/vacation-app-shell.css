@@ -13,6 +13,23 @@
   min-height: 44px;
   touch-action: none;
 }
+.splitter-row {
+  align-items: center;
+}
+@media (max-width: 480px) {
+  .splitter-row .splitter,
+  #splitter.splitter {
+    min-height: 22px;
+    height: 22px;
+  }
+  .workspace > #splitter.splitter {
+    box-sizing: border-box;
+    padding: 11px 0;
+    min-height: 44px;
+    height: auto;
+    background-clip: content-box;
+  }
+}
 .app.splitter-dragging .site-pane iframe {
   pointer-events: none;
 }
