@@ -384,7 +384,9 @@ window.tsVacationAppChrome = {
       const label = on ? 'Exit full screen' : 'Full screen';
       button.setAttribute('aria-pressed', String(on));
       button.setAttribute('aria-label', label);
-      button.textContent = label;
+      const text = button.querySelector('.fs-label');
+      if (text) text.textContent = on ? 'Exit' : 'Full screen';
+      else button.textContent = label;
     });
   },
   bindSplitter() {
