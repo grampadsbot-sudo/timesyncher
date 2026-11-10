@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import { appendFile, copyFile, mkdir, readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
-import { buildSha, visibleBuildFooter } from './routes/version.mjs';
+import { buildSha, visibleBuildFooter, BUILD_STAMP_INLINE_STYLE } from './routes/version.mjs';
 import { writeSharedAssets } from './scripts/write-shared-assets.mjs';
 
 function serveSharedApp(req, _res, next) {
@@ -25,7 +25,7 @@ function stampHtml(html) {
   const sha = buildSha();
   const footer = visibleBuildFooter(sha);
   const meta = `<meta name="timesyncher-build" content="${sha}">`;
-  const stampStyle = '<style id="timesyncher-build-stamp-style">footer[data-build-stamp="1"]{position:fixed;bottom:0;left:0;right:0;z-index:10000;margin:0;padding:3px 8px;font:11px/1.3 ui-monospace,SFMono-Regular,Menlo,monospace;text-align:center;background:rgba(12,12,12,.78);color:rgba(255,255,255,.9);pointer-events:none;}body{padding-bottom:24px!important;box-sizing:border-box;}</style>';
+  const stampStyle = BUILD_STAMP_INLINE_STYLE;
   let next = html;
   if (!next.includes('timesyncher-build-stamp-style')) {
     next = next.replace(/<head[^>]*>/i, (open) => `${open}${stampStyle}`);

@@ -1,7 +1,22 @@
 import { useEffect, useState } from 'react';
 
+function isDebugBuildQuery() {
+  try {
+    return new URLSearchParams(window.location.search).get('debug') === '1';
+  } catch {
+    return false;
+  }
+}
+
 export function BuildStampFooter() {
   const [stamp, setStamp] = useState('…');
+  const [debugBuild] = useState(() => isDebugBuildQuery());
+
+  useEffect(() => {
+    if (debugBuild) {
+      document.documentElement.setAttribute('data-ts-debug-build', '1');
+    }
+  }, [debugBuild]);
 
   useEffect(() => {
     let cancelled = false;
@@ -27,7 +42,7 @@ export function BuildStampFooter() {
   }, []);
 
   return (
-    <footer className="tsv-build-footer no-print" data-build-stamp="1">
+    <footer className="tsv-build-footer no-print" data-build-stamp="1" aria-hidden={!debugBuild}>
       {stamp}
     </footer>
   );
