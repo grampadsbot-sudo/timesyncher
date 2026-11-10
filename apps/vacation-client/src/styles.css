@@ -1189,8 +1189,16 @@ button.tsv-timeline-link {
   overflow-wrap: anywhere;
 }
 
-.tsv-detail-close {
+.tsv-detail-title-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   margin-left: auto;
+  flex-shrink: 0;
+}
+
+.tsv-detail-edit,
+.tsv-detail-close {
   flex-shrink: 0;
   border: 0;
   background: #1e293b;
@@ -1201,6 +1209,10 @@ button.tsv-timeline-link {
   font-size: 22px;
   line-height: 1;
   cursor: pointer;
+}
+
+.tsv-detail-edit {
+  font-size: 16px;
 }
 
 .tsv-detail-logo-chip {

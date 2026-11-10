@@ -143,7 +143,20 @@ export default function App() {
         {body}
       </TripShell>
       {detail ? (
-        <ThingDetailPanel place={detail} trip={trip} onClose={() => setDetail(null)} />
+        <ThingDetailPanel
+          place={detail}
+          trip={trip}
+          canEdit={tripState.canEdit}
+          onClose={() => setDetail(null)}
+          onPatchField={(field, value) => {
+            if (tripState.status !== 'ready' || !tripState.patchThingOverrides) return;
+            const key = `place:${detail.id}`;
+            tripState.patchThingOverrides((prev) => ({
+              ...prev,
+              [key]: { ...(prev[key] || {}), [field]: value },
+            }));
+          }}
+        />
       ) : null}
     </>
   );

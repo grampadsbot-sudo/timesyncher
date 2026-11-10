@@ -8,10 +8,10 @@ import {
   formatUsd,
   hotelPriceDisplay,
   logoUrlForPlace,
-  numericPrice,
   placeName,
   tabCategoryKey,
 } from './listTabModel.mjs';
+import { budgetLineAmount } from './budgetModel.mjs';
 import { parseStarRating } from './starRatingModel.mjs';
 
 const REVIEW_SOURCES = new Set(['Google', 'Yelp', 'TripAdvisor']);
@@ -210,8 +210,8 @@ export function detailPriceLabel(place, trip, category) {
   if (cat === 'flight') return flightPriceDisplay(place, trip);
   if (cat === 'hotel') return hotelPriceDisplay(place, trip);
   if (cat === 'car') return carPriceDisplay(place, trip);
-  const price = numericPrice(place, trip);
-  if (price != null) return formatUsd(price, tripCurrency(trip));
+  const pricing = budgetLineAmount(place, trip);
+  if (pricing.hasPrice) return formatUsd(pricing.amount, tripCurrency(trip));
   const level = text(override.priceLevel || override.price_level);
   return level;
 }
