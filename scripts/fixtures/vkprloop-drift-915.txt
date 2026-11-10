@@ -1,0 +1,15 @@
+--- allow-nj ---
+if g.get("verdict") in ("FAIL", "NEEDS_JUDGMENT") and g.get("effective") == "PASS" and str(g.get("reference", "")).startswith("base-"):
+--- pregate-slot ---
+if ui and done >= PREGATE_PER_RUN and "--pregate-all" not in args:   # backend-only heads never wait for the slot (executor 11/9)
+--- pregate-skip ---
+record_backend_skip(pr)
+            # executor for dr eggbot 11/9 7:04 PM PT (#914 95adf28 sat "queued" 36 min): a backend-only skip takes no screenshots,
+            # so it must not use the single Gate B slot; it no longer counts toward PREGATE_PER_RUN.
+            continue
+--- stall-open ---
+stuck += vkfill_held_stall_checks(now, dry, open_prs=(open_nums if items is not None else None))
+--- stall-void ---
+if open_prs is not None and marker["number"] not in open_prs:
+--- stall-clear ---
+"vkfill-held #%d remote matches %s; marker cleared"
