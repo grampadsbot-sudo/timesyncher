@@ -1,38 +1,51 @@
-# PR #907 / #903 — host base-merge + DATA-CONTRACT title binding (head `10fd68ff`)
+# PR #907 / #903 — stored-data title binding (head `e6a44caf`)
 
-**Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Start HEAD:** `10fd68ff799fb3c8ad5fa23f04c4cf7ca85d718d` (verified). **Lane:** cursor-ubuntu, composer-2.5.
+**Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Start HEAD:** `e6a44caf72a92a83009709ac1d07ea9d5e6ab11d` (verified).
 
-Host merged `origin/vk` at `1ffd23ca895d39db3ea28eff62c7e02279881557` into `10fd68ff`. Conflicted: `J/RECEIPT.md`, `vacation-app.html` (resolved this round).
+## Root cause
 
-## Root cause (Gate B pregate DATA-CONTRACT)
-
-`finalizeServedSharedTripPayload` applied `#903` title rewrites via `applyLiveQa903Presentation` while `scripts/regenerate_pr336_search_trip_fixture.mjs` snapshot rows still carried raw stored titles (609 Priceline opaque; 630/631 Southwest clock ranges).
+Serve-time `#903` rewrites in `live-qa-903-presentation.mjs` (`retitleFlightUpsell`, jargon sanitizer, id-keyed trip overrides) made canonical builder output disagree with Gate B snapshot / live replay. CI red: `scripts/test_shared_tab_list_summary.mjs` expected Express Deal title after serve rewrite while PR225 stored `Priceline opaque Toyota Corolla`.
 
 ## Fix
 
 | area | change |
 | --- | --- |
-| `live-qa-903-presentation.mjs` | Stop rewriting stored `name`/`title` at serve time; keep jargon on narrative fields and flight time backfill only |
-| Gate B NYC row sources | Stored customer-facing titles for 609 + Southwest 630–634 in `nyc-craig-kim-daybyday-rows.mjs` / trip builder / `GATE_B_DISPLAY_TITLE_ALIASES` |
-| `vacation-app.html` | Merge: keep #903 fullscreen FAB (`bottom: 8px`) plus vk header/shell from staged index |
+| `live-qa-903-presentation.mjs` | Remove serve-time title/narrative rewrites; keep ratings/hours/time backfill only |
+| `nyc-craig-kim-daybyday-rows.mjs` | Stored `rentalCompany`, flight `arrivalTime`, row 634 upgrade title/category |
+| `nyc-craig-kim-daybyday-trip.mjs` | Drop `SOUTHWEST_LGA_ARRIVAL_BY_ROW` + id 609 override; read row fields |
+| `pr336-vk-search-trip-sources.mjs` | Row 609 `rentalCompany` on ccab record; **kept** `GATE_B_DISPLAY_TITLE_ALIASES[609]` (provenance requires ccab/display split) |
+| Fixtures/tests | Regenerated `pr336-vk-search-places.snapshot.json`; PR225 + trip99 replay + positive v1 stored wording; binding tests without jargon helper |
+
+## TARGET E (all snapshot rows)
+
+Command: `node -e` binding loop (`buildNycCraigKimDaybydayTrip` vs `pr336-vk-search-places.snapshot.json` titles). **Result: all 94 rows match** (start HEAD `e6a44caf`).
 
 ## Checks (this round)
 
 | check | result |
 | --- | --- |
-| Title parity rows 609/630/631 (canonical `buildGateBApprovedSharedTrip` vs snapshot) | PASS (all match) |
-| `node scripts/regenerate_pr336_search_trip_fixture.mjs` | PASS (94 places) |
+| `cd apps/vacation-client && npm test` | PASS |
+| `node scripts/test_shared_tab_list_summary.mjs` | PASS |
 | `node scripts/test_issue_903_live_qa_polish.mjs` | PASS |
-| `node scripts/test_issue_832_day_timeline_binding.mjs` | PASS |
-| `node scripts/test_gate_b_live_replay_display_facts.mjs` | PASS |
-| `node scripts/rebake_served_trek_bundle.mjs` | PASS sha256=7afd665f… |
-| `node scripts/test_offline_manifest.mjs` | PASS (439 offline, 18 online) |
-| `node scripts/check-no-comments.mjs` | PASS (after `apps/vacation-client/npm ci`) |
-| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS (252 report, 0 fail) |
+| `node scripts/test_gate_b_product_row_fields.mjs` | PASS |
+| `node scripts/regenerate_pr336_search_trip_fixture.mjs` | PASS (94 places) |
+| `node scripts/check-no-comments.mjs` | PASS |
+| `node scripts/test_offline_manifest.mjs` | PASS |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS |
+| `scripts/offline-tests.txt` full run | **FAIL** `scripts/test_live_transcript_dialog_pdf.mjs:651` (`gbrain-cli-get_page` vs `bundled-get_page`; env, not PR diff) |
 
 ## Host publish
 
-1. Finish merge: `git add J/RECEIPT.md vacation-app.html` + product/fixture paths touched; `git commit --no-edit`.
-2. `node scripts/regenerate_pr336_search_trip_fixture.mjs`; commit snapshot if it moves.
-3. `node scripts/rebake_served_trek_bundle.mjs` if vk `public/assets` base changed.
-4. Pre-DONE: vacation-client tests, offline manifest, check-no-comments, code ratchet; CI + Gate B on new head.
+Uncommitted product paths (no `evidence/` — reverted after vacation-client test):
+
+- `src/vacation/live-qa-903-presentation.mjs`
+- `scripts/fixtures/nyc-craig-kim-daybyday-rows.mjs`
+- `scripts/fixtures/nyc-craig-kim-daybyday-trip.mjs`
+- `scripts/fixtures/nyc-craig-kim-daybyday-positive-v1.mjs`
+- `scripts/fixtures/nyc-pr225-shared-trip.mjs`
+- `scripts/fixtures/nyc-screen-trip99-live-shared-api.json`
+- `scripts/fixtures/pr336-vk-search-trip-sources.mjs`
+- `scripts/fixtures/pr336-vk-search-places.snapshot.json`
+- `scripts/test_gate_b_product_row_fields.mjs`
+- `scripts/test_issue_903_live_qa_polish.mjs`
+- `J/RECEIPT.md`, `J/PR_DESCRIPTION.md`

@@ -126,6 +126,7 @@ export function buildNycCraigKimDaybydayTimelineRows() {
       cat: 'car',
       id: 609,
       listOnly: true,
+      rentalCompany: 'Priceline Express Deal (car company shown after booking)',
       ccabKey: 'Priceline opaque JFK — Standard sedan',
     },
     {
@@ -135,6 +136,7 @@ export function buildNycCraigKimDaybydayTimelineRows() {
       cat: 'flight',
       id: 630,
       listOnly: true,
+      arrivalTime: '16:35',
       ccabKey: 'Flight option: Southwest LAS-LGA 2026-06-23 07:25-16:35',
     },
     {
@@ -144,6 +146,7 @@ export function buildNycCraigKimDaybydayTimelineRows() {
       cat: 'flight',
       id: 631,
       listOnly: true,
+      arrivalTime: '22:25',
       ccabKey: 'Flight option: Southwest LAS-LGA 2026-06-23 11:30-22:25',
     },
     {
@@ -153,6 +156,7 @@ export function buildNycCraigKimDaybydayTimelineRows() {
       cat: 'flight',
       id: 632,
       listOnly: true,
+      arrivalTime: '15:45',
       ccabKey: 'Flight option: Southwest LAS-LGA 2026-06-23 05:05-15:45',
     },
     {
@@ -162,15 +166,19 @@ export function buildNycCraigKimDaybydayTimelineRows() {
       cat: 'flight',
       id: 633,
       listOnly: true,
+      arrivalTime: '16:55',
       ccabKey: 'Flight option: Southwest LAS-LGA 2026-06-23 06:30-16:55',
     },
     {
       day: 1,
       time: '06:50',
-      name: 'Southwest LAS → LGA',
+      name: 'Business Select® upgrade (Southwest LAS → LGA)',
       cat: 'flight',
       id: 634,
       listOnly: true,
+      arrivalTime: '18:55',
+      thingCategory: 'other',
+      categoryLabel: 'Upgrade',
       ccabKey: 'Flight option: Southwest LAS-LGA 2026-06-23 06:50-18:55',
     },
   ];

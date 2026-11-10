@@ -14,7 +14,6 @@ import { gateBBudgetPriceCompleteness } from '../src/vacation/gate-b-budget-pric
 import { categoryFor } from '../src/vacation/intake-shared-trip-category.mjs';
 import { sharedTripFromIntake, thingRecordFromTripRow } from '../src/vacation/intake-shared-trip.mjs';
 import { placeToTripThing } from '../src/vacation/place-search.mjs';
-import { sanitizeCustomerJargon } from '../src/vacation/live-qa-903-presentation.mjs';
 import { finalizeServedSharedTripPayload } from '../src/vacation/shared-trip-served-page.mjs';
 import {
   descriptionPassesDetailJudge,
@@ -333,17 +332,17 @@ for (const rowId of VK_SEARCH_SNAPSHOT_COPY_ROW_IDS) {
   assert.ok(place, `built trip missing place ${rowId}`);
   assert.equal(
     vkBindingText(place.name),
-    vkBindingText(sanitizeCustomerJargon(snapshot.title)),
+    vkBindingText(snapshot.title),
     `${rowId} identity (place.name)`,
   );
   assert.equal(
     vkBindingSummary(vkSnapshotBindingTrip, place),
-    vkBindingText(sanitizeCustomerJargon(snapshot.summary)),
+    vkBindingText(snapshot.summary),
     `${rowId} summary`,
   );
   assert.equal(
     vkBindingDescription(vkSnapshotBindingTrip, place),
-    vkBindingText(sanitizeCustomerJargon(snapshot.description)),
+    vkBindingText(snapshot.description),
     `${rowId} description`,
   );
 }

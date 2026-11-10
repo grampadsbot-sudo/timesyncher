@@ -556,7 +556,7 @@
       "lng": null,
       "address": "JFK Airport rental car facility / Federal Circle, Jamaica, NY",
       "totalPrice": 306,
-      "rentalCompany": "Priceline opaque",
+      "rentalCompany": "Priceline Express Deal (car company shown after booking)",
       "vehicleClass": "Standard sedan",
       "carType": "Standard sedan",
       "pickupLocation": "JFK Airport rental car facility / Federal Circle, Jamaica, NY",
@@ -1426,7 +1426,7 @@
   },
   "634": {
     "source": "brave",
-    "title": "Southwest LAS → LGA",
+    "title": "Business Select® upgrade (Southwest LAS → LGA)",
     "category": "flight",
     "lat": null,
     "lng": null,

@@ -4,21 +4,9 @@ import { readFile } from 'node:fs/promises';
 
 import { prepareSharedTripForLiveApp } from '../src/vacation/shared-trip-live-tab-lists.mjs';
 import { primaryPlaceStarRating } from '../src/vacation/star-rating-model.mjs';
-import {
-  applyLiveQa903Presentation,
-  citedShowsRatingFromNarrative,
-  sanitizeCustomerJargon,
-  stripClockRangeFromTitle,
-} from '../src/vacation/live-qa-903-presentation.mjs';
+import { applyLiveQa903Presentation, citedShowsRatingFromNarrative } from '../src/vacation/live-qa-903-presentation.mjs';
 import { patchUi903DetailChrome } from '../src/vacation/trek-qa-903-ui-patch.mjs';
 import fixture from './fixtures/nyc-screen-trip99-live-shared-api.json' with { type: 'json' };
-
-assert.equal(stripClockRangeFromTitle('Southwest LAS → LGA 07:25–16:35'), 'Southwest LAS → LGA');
-assert.equal(/:\d{2}/.test(stripClockRangeFromTitle('Southwest LAS → LGA 07:25–16:35')), false);
-
-const jargon = sanitizeCustomerJargon('The earliest kept option, Priceline opaque sedan');
-assert.doesNotMatch(jargon, /\bkept option\b/i);
-assert.doesNotMatch(jargon, /\bPriceline opaque\b/i);
 
 const carboneCite = citedShowsRatingFromNarrative(fixture.thingOverrides['place:610'].longDetails);
 assert.equal(carboneCite?.value, 4.2);

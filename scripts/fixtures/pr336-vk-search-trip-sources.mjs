@@ -200,6 +200,7 @@ export function buildGateBSearchPlaceForRow({ id, name, cat, ccabKey: rowCcabKey
   if (id === 609) {
     ccabRecord = {
       ...ccabRecord,
+      rentalCompany: 'Priceline Express Deal (car company shown after booking)',
       identityProvenance: {
         approvedDisplayTitle: 'Priceline Express Deal (car company shown after booking) Standard sedan',
         ccabKey: 'Priceline opaque JFK — Standard sedan',

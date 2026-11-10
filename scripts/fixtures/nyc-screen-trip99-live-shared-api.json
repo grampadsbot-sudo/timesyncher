@@ -2341,17 +2341,17 @@
   {
    "id": 634,
    "trip_id": 99,
-   "name": "Southwest LAS → LGA",
+   "name": "Business Select® upgrade (Southwest LAS → LGA)",
    "description": "",
    "lat": 36.084,
    "lng": -115.1537,
    "address": "LAS → LGA",
    "category_id": 5,
-   "category_name": "Flight",
+   "category_name": "Upgrade",
    "category_icon": "✈️",
    "category": {
     "id": 5,
-    "name": "Flight",
+    "name": "Upgrade",
     "icon": "✈️"
    },
    "reservation_status": "considering",
@@ -2361,7 +2361,7 @@
    "source": "fixture-nyc",
    "logoUrl": "https://icons.duckduckgo.com/ip3/southwest.com.ico",
    "price": 249,
-   "title": "Southwest LAS → LGA"
+   "title": "Business Select® upgrade (Southwest LAS → LGA)"
   },
   {
    "id": 617,
@@ -8246,7 +8246,7 @@
    "title": "Southwest LAS → LGA",
    "address": "LAS → LGA",
    "website": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
-   "summary": "The earliest kept option, Southwest LAS → LGA 05:05–15:45, departs Las Vegas before dawn on a route where There are 152 weekly flights from Las Vegas to New York (LaGuardia) on Southwest Airlines. It covers 2242 miles and lands mid-afternoon.",
+   "summary": "The earliest saved choice, Southwest LAS → LGA 05:05–15:45, departs Las Vegas before dawn on a route where There are 152 weekly flights from Las Vegas to New York (LaGuardia) on Southwest Airlines. It covers 2242 miles and lands mid-afternoon.",
    "summarySourceUrls": [
     "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
     "https://www.southwest.com/air/booking/select-depart.html#thing-record-3797ae9f34b6790dfb06579fb39cf1f43cb211d1b7f82006f1067ba0da1c0c24",
@@ -8339,11 +8339,11 @@
    "xaiRatingsFetched": false
   },
   "place:634": {
-   "category": "flight",
-   "title": "Southwest LAS → LGA",
+   "category": "other",
+   "title": "Business Select® upgrade (Southwest LAS → LGA)",
    "address": "LAS → LGA",
    "website": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
-   "summary": "Travelers wanting more comfort can look at Upgrade to Business Select® on Southwest LAS → LGA 06:50–18:55, which lands at 18:55 Eastern. It flies Las Vegas (LAS) to New York LaGuardia (LGA) on the longest day of the kept Southwest options, departing 06:50.",
+   "summary": "Travelers wanting more comfort can look at Upgrade to Business Select® on Southwest LAS → LGA 06:50–18:55, which lands at 18:55 Eastern. It flies Las Vegas (LAS) to New York LaGuardia (LGA) on the longest day of the saved Southwest choices, departing 06:50.",
    "summarySourceUrls": [
     "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
     "https://www.southwest.com/air/booking/select-depart.html#thing-record-8829bfc3c42e9cc634b1c02d9a2368e4e4e3c5d90c361b33bf865655da950fad",
@@ -8353,7 +8353,7 @@
     "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york",
     "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
    ],
-   "longDetails": "Upgrade to Business Select® is the premium add-on to consider on a long travel day. Southwest LAS → LGA 06:50–18:55 departs at 06:50 and reaches LaGuardia only at 18:55 Eastern, the longest of the kept Southwest options on Las Vegas (LAS) to New York LaGuardia (LGA). Before heading to the airport, Southwest's page says to Check the status of your upcoming Southwest flight.",
+   "longDetails": "Upgrade to Business Select® is the premium add-on to consider on a long travel day. Southwest LAS → LGA 06:50–18:55 departs at 06:50 and reaches LaGuardia only at 18:55 Eastern, the longest of the saved Southwest choices on Las Vegas (LAS) to New York LaGuardia (LGA). Before heading to the airport, Southwest's page says to Check the status of your upcoming Southwest flight.",
    "itineraryNote": "Southwest LAS → LGA 06:50–18:55: the longest travel day; consider Upgrade to Business Select® for comfort.",
    "lat": 36.084,
    "lng": -115.1537,
@@ -8364,7 +8364,7 @@
    "source": "fixture-nyc",
    "url": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
    "details": "Airline: Southwest; Route: LAS-LGA; Stops: 1 stop via STL; Outbound: 2026-06-23 06:50-18:55; Return: None; Duration: 9h05m outbound; Price: Outbound from $249 Basic / $294 Choice / $374 Choice Preferred / $434 Choice Extra; Flights #2368/#4962; return fare not captured yet; Status: candidate only; not booked.",
-   "name": "Southwest LAS → LGA",
+   "name": "Business Select® upgrade (Southwest LAS → LGA)",
    "departureTime": "06:50",
    "arrivalTime": "18:55",
    "dataShortcomings": [
@@ -8379,7 +8379,7 @@
      "attempts": []
     }
    ],
-   "description": "Upgrade to Business Select® is the premium add-on to consider on a long travel day. Southwest LAS → LGA 06:50–18:55 departs at 06:50 and reaches LaGuardia only at 18:55 Eastern, the longest of the kept Southwest options on Las Vegas (LAS) to New York LaGuardia (LGA). Before heading to the airport, Southwest's page says to Check the status of your upcoming Southwest flight.",
+   "description": "Upgrade to Business Select® is the premium add-on to consider on a long travel day. Southwest LAS → LGA 06:50–18:55 departs at 06:50 and reaches LaGuardia only at 18:55 Eastern, the longest of the saved Southwest choices on Las Vegas (LAS) to New York LaGuardia (LGA). Before heading to the airport, Southwest's page says to Check the status of your upcoming Southwest flight.",
    "missingFields": [
     "knownFor",
     "ratings",

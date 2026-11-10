@@ -58,7 +58,7 @@ function nycThings() {
     {
       id: 'car-priceline-opaque',
       category: 'car',
-      title: 'Priceline opaque Toyota Corolla',
+      title: 'Priceline Express Deal (car company shown after booking) Toyota Corolla',
       description: 'Compact automatic; pick up near JFK AirTrain.',
       source: 'brave',
       location: { lat: 40.6413, lng: -73.7781, address: 'JFK Airport, Queens, NY' },
@@ -68,7 +68,7 @@ function nycThings() {
         sourceRecord: {
           url: 'https://www.priceline.com/favicon.ico',
           source: 'brave',
-          rentalCompany: 'Priceline opaque',
+          rentalCompany: 'Priceline Express Deal (car company shown after booking)',
           carType: 'Toyota Corolla or similar',
           vehicleClass: 'Toyota Corolla or similar',
           summary: 'Compact automatic; pick up near JFK AirTrain.',
@@ -140,7 +140,7 @@ function wirePr225Timeline(shared) {
   const bySlug = (needle) => shared.places.find((place) => String(place.name || '').includes(needle));
   const flight = bySlug('JetBlue');
   const hotel = bySlug('The Manhattan Club');
-  const car = bySlug('Priceline opaque');
+  const car = bySlug('Priceline Express Deal');
   if (!flight || !hotel || !car) {
     throw new Error('NYC PR225 fixture missing flight, hotel, or car place row');
   }
