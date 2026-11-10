@@ -733,10 +733,12 @@
       renderAttachments();
       messages.insertAdjacentHTML('beforeend', `<article class="bubble" id="tsTyping" aria-live="polite" aria-busy="true"><small>Vacay Keepsake</small>…</article>`);
       if (!hadSite && currentTrip()?.id) startProgressPoll(currentTrip().id);
+      const sendAbort = window.tsVacationAppRequest.beginChatSendAbort();
       try {
         const res = await fetch(`/api/vacation-itinerary?app=1&session=${encodeURIComponent(sessionToken)}`, {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
+          signal: sendAbort.signal,
           body: JSON.stringify({
             tripId: currentTrip()?.id,
             text,
@@ -785,9 +787,15 @@
       } catch (error) {
         document.getElementById('tsTyping')?.remove();
         console.error(error);
-        showComposerStatus(customerSafeErrorMessage(error, error?.response));
+        if (error?.name === 'AbortError') {
+          messages.insertAdjacentHTML('beforeend', '<article class="bubble" role="alert"><small>TimeSyncher</small>That took too long — please try again.</article>');
+          showComposerStatus('');
+        } else {
+          showComposerStatus(customerSafeErrorMessage(error, error?.response));
+        }
         stopProgressPoll();
       } finally {
+        sendAbort.clear();
         state.sending = false;
       }
       messages.scrollTop = messages.scrollHeight;
@@ -819,7 +827,13 @@
         state.turns = data.turns || [];
         state.things = Array.isArray(data.itinerary) ? data.itinerary : [];
         state.searchProgress = data.searchProgress || null;
-        state.currentTripId = tripId || data.session?.currentTripId || state.vacations[0]?.id || '';
+        state.currentTripId = window.tsVacationAppRequest.resolveCurrentTripId({
+          vacations: data.vacations,
+          tripId,
+          urlTripId: params.get('tripId') || '',
+          sessionTripId: data.session?.currentTripId,
+          fallbackTripId: state.vacations[0]?.id || '',
+        });
         if (state.eula?.accepted !== true) {
           renderEula();
           return;
@@ -841,6 +855,6 @@
       applyServerProgress,
       paintSearchProgress,
     } = window.tsVacationAppProgress.attach({ getState, setState, getSessionToken, loadApp, currentTrip, realSiteUrl });
-    loadApp();
+    loadApp(window.tsVacationAppRequest.initialTripIdFromSearch(params));
   </script></body>
 </html>

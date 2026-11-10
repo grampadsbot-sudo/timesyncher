@@ -1,5 +1,6 @@
 import { parseStarRating } from './star-rating-model.mjs';
 import { productThingCategory } from './keepsake-product-overrides.mjs';
+import { flightFieldsFromBlob } from './place-detail-extract.mjs';
 
 const TRIP_MONTH_TOKEN_RE = /\b([A-Za-z]{3,9})\b/g;
 
@@ -174,24 +175,34 @@ function retitleFlightUpsell(place, override) {
   }
 }
 
-function flightHasStructuredTimes(place = {}, override = {}) {
-  const timeKeys = [
-    override.departureTime,
-    override.arrivalTime,
-    override.start_time,
-    override.end_time,
-    place.place_time,
-    place.start_time,
-    place.end_time,
-  ];
-  return timeKeys.some((value) => text(value, 40));
+function copyOverrideTimeIfBlank(override, key, ...values) {
+  if (text(override[key], 40)) return;
+  for (const value of values) {
+    const row = text(value, 40);
+    if (row) {
+      override[key] = row;
+      return;
+    }
+  }
+}
+
+function titleHasClockRange(rawTitle = '') {
+  const row = text(rawTitle, 240);
+  if (!row) return false;
+  CLOCK_TITLE_RE.lastIndex = 0;
+  return CLOCK_TITLE_RE.test(row);
 }
 
 function applyFlightTitleTimes(place, override) {
   const category = productThingCategory(place, override);
   if (category !== 'flight') return;
-  if (!flightHasStructuredTimes(place, override)) return;
-  const cleaned = stripClockRangeFromTitle(place.name || place.title || override.title);
+  const rawTitle = text(place.name || place.title || override.title, 240);
+  if (!rawTitle) return;
+  if (!titleHasClockRange(rawTitle)) return;
+  const fromTitle = flightFieldsFromBlob(rawTitle, '');
+  copyOverrideTimeIfBlank(override, 'departureTime', fromTitle.departureTime, place.place_time, place.start_time);
+  copyOverrideTimeIfBlank(override, 'arrivalTime', fromTitle.arrivalTime, place.end_time);
+  const cleaned = stripClockRangeFromTitle(rawTitle);
   if (!cleaned) return;
   place.name = cleaned;
   place.title = cleaned;

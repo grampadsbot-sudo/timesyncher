@@ -10,6 +10,7 @@ import {
   loadPendingCollaboratorInvites,
   pendingInviteReplyFacts,
 } from './roster-pending-invite-reply-facts.mjs';
+import { applyItineraryEditAuthoritativeReplyFacts } from './chat-itinerary-edit-day.mjs';
 
 function isoDay(value) {
   return tripIsoDay(value);
@@ -181,6 +182,7 @@ export async function enrichDraftingTripContext(tripContext, {
 } = {}) {
   let ctx = applySavedJobDatesToReplyFacts(tripContext, { savedStart, savedEnd });
   ctx = applyTurnInviteReplyFacts(ctx, turnActionResults);
+  ctx = applyItineraryEditAuthoritativeReplyFacts(ctx, turnActionResults);
   ctx = applyPlaceSearchReplyFacts(ctx, placeSearchReplyFacts);
   if (!ctx.chatPlaceSearch) {
     ctx = applyPlaceSearchReplyFacts(ctx, chatExtractionReplyFacts(wantedThings, savedStart, savedEnd));
