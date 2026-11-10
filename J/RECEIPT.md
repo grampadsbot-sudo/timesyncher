@@ -1,3 +1,11 @@
+# vkfill-925 — chat edit sequential PUT merge @ `1ffd23ca`
+
+**Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Start HEAD:** `1ffd23ca895d39db3ea28eff62c7e02279881557`.
+
+Merge-on-put: `mergeStoredChatItineraryScheduleOverride` (`src/vacation/chat-itinerary-edit-day.mjs`). Tests: `scripts/test_chat_itinerary_edit_905.mjs`. Host receipt: `~/tsv-work/vkfill-925-job/J-RECEIPT.md`.
+
+---
+
 # PR #922 — host base-merge conflict resolve @ `578510a2`
 
 **Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Start HEAD:** `578510a284ac0081e7ad40a99820ee0a5e6013f1` (verified). **Lane:** cursor-ubuntu, composer-2.5. Host merged `origin/vk` at `ce649c0cde4e7ecac6dc0138e2dddd5cc523ecde` (chief `basemerge.json` dirty-head requeue).
