@@ -23,6 +23,16 @@ export function visibleBuildFooter(sha) {
   return `<footer data-build-stamp="1">${value.slice(0, 7)}</footer>`;
 }
 
+export const BUILD_STAMP_CUSTOMER_HIDE_CSS = '/ts-build-stamp-customer-hide.css';
+export const BUILD_STAMP_CUSTOMER_HIDE_JS = '/ts-build-stamp-customer-hide.js';
+
+export const BUILD_STAMP_INLINE_STYLE =
+  '<style id="timesyncher-build-stamp-style">footer[data-build-stamp="1"]{visibility:hidden!important;position:absolute!important;width:0!important;height:0!important;margin:0!important;padding:0!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;pointer-events:none!important;}body{padding-bottom:0!important;}html[data-ts-debug-build] footer[data-build-stamp="1"]{visibility:visible!important;position:fixed!important;bottom:0;left:0;right:0;width:auto!important;height:auto!important;overflow:visible!important;clip:auto!important;z-index:10000;margin:0;padding:3px 8px;font:11px/1.3 ui-monospace,SFMono-Regular,Menlo,monospace;text-align:center;background:rgba(12,12,12,.78);color:rgba(255,255,255,.9);pointer-events:none;}html[data-ts-debug-build] body{padding-bottom:24px!important;box-sizing:border-box;}</style>';
+
+export function buildStampCustomerHideHeadMarkup() {
+  return `<link rel="stylesheet" href="${BUILD_STAMP_CUSTOMER_HIDE_CSS}" />\n<script src="${BUILD_STAMP_CUSTOMER_HIDE_JS}"></script>`;
+}
+
 export default function handler(req, res) {
   if (req.method !== 'GET') return send(res, 405, { ok: false, error: 'method not allowed' });
   const url = new URL(req.url || '/', 'https://timesyncher.com');

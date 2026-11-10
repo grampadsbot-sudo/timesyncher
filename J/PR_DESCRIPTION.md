@@ -1,14 +1,16 @@
 Closes #888
 
-#896 / #888 — flight row layout @390, conflict-badge wrap, trip switcher dates (`Jun 23–30, 2026`). Host vk base-merge @ `ed8687b929c9473e6f9f2915ac5bc82d6dd802d1` into `eea0e50cac463e3cf744ead29409e2f2ee740d18` also carries #903 live QA polish, #884 logo-chip fallback hide, #927 touch splitter + collapsible trip hero, and #925 chat-itinerary sequential PUT merge.
+#896 / #888 — flight row layout @390, conflict-badge wrap, trip switcher dates (`Jun 23–30, 2026`). Host vk base-merge @ `b1211bf9eea151ba7aec5eca2bdf39cabbc0cd6a` into `49e1fab3d710d3b86d2f06779b5ace0ce2eaab2e` also carries #884 logo-chip fallback hide, #927 touch splitter + collapsible trip hero, #905 chat-itinerary merge, #903 live QA polish, and related vk shell paths.
 
 **#888 layout:** conflict badges and trip switcher wrap (no ellipsis); flight time chips show full arrival/depart text inside the card @390; one font weight on chips. Vacation client: `@media (max-width: 480px)` multi-row `.tsv-row-flight-main`. Served trek: `ISSUE_888_SERVED_LAYOUT_CSS` two-line grid + `SHARED_LIVE_FLIGHT_LOGO_NAME_CSS` centers logo with airline name.
 
+**#884:** logo chips hide `.tsv-logo-fallback` after brand `img` loads; rebaked served bundle.
+
+**#927 (vk carry):** `public/ts-trip-hero-collapse.js` expanded `h1` uses `overflow-wrap:anywhere`; collapse metrics test updated.
+
 **#903:** No serve-time title/narrative rewrites; stored fixture rows 609/630–634 carry customer wording. See `live-qa-903-presentation.mjs`.
 
-**#884:** logo chips hide `.tsv-logo-fallback` after brand `img` loads; rebaked `public/assets/index-BKun7ofk.js`.
-
-## Verification (lane @ merge head `eea0e50c`, uncommitted)
+## Verification (lane @ `49e1fab3` + conflict resolution, uncommitted)
 
 - `node scripts/rebake_served_trek_bundle.mjs`
 - `node scripts/test_issue_888_clipped_text.mjs`
@@ -17,6 +19,7 @@ Closes #888
 - `node scripts/test_shared_logo_chip_center_bundle.mjs`
 - `node scripts/test_shared_trip_live_tab_logos.mjs`
 - `node scripts/test_served_trek_bundle.mjs`
+- `node scripts/test_vacation_app_927_hero_collapse.mjs`
 - `cd apps/vacation-client && npm test`
 - `node scripts/check-no-comments.mjs`, `node scripts/test_offline_manifest.mjs`, `BASE=vk node scripts/check-code-ratchet.mjs`
 

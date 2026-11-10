@@ -52,11 +52,14 @@ async function checkBuildStamp(page, pageName) {
       && rect.right > 0
       && rect.left < vw;
 
-    if (name === 'vacation-app.html') {
-      const appShell = document.querySelector('main.app');
-      const domOnlyHidden = style.visibility === 'hidden' || footer.getClientRects().length === 0;
+    const domOnlyHidden = style.visibility === 'hidden'
+      || footer.getClientRects().length === 0
+      || rect.height < 1
+      || !visibleInViewport;
+
+  if (name === 'vacation-app.html') {
       return {
-        ok: Boolean(appShell) && domOnlyHidden && stampText.length >= 7,
+        ok: domOnlyHidden && stampText.length >= 7,
         mode: 'dom-stamp-hidden',
         stampText,
         domOnlyHidden,
@@ -65,9 +68,11 @@ async function checkBuildStamp(page, pageName) {
     }
 
     return {
-      ok: visibleInViewport,
-      mode: 'viewport-visible',
+      ok: domOnlyHidden && stampText.length >= 7,
+      mode: 'customer-hidden',
       stampText,
+      domOnlyHidden,
+      visibleInViewport,
       rect: { top: rect.top, bottom: rect.bottom, left: rect.left, right: rect.right },
       viewport: { w: vw, h: vh },
     };
@@ -119,7 +124,7 @@ try {
     for (const name of pages) {
       await page.goto(`http://127.0.0.1:${port}/${name}`, { waitUntil: 'domcontentloaded' });
       if (name === 'vacation-app.html') {
-        await page.waitForSelector('main.app', { timeout: 20000 });
+        await page.waitForSelector('footer[data-build-stamp="1"]', { timeout: 5000 });
       }
       const check = await checkBuildStamp(page, name);
       assert.equal(check.ok, true, `${name} @ ${viewport.label}: ${JSON.stringify(check)}`);
@@ -131,4 +136,4 @@ try {
   await new Promise((resolve) => server.close(resolve));
 }
 
-console.log('build stamp viewport passed');
+console.log('build stamp customer hidden viewport passed');

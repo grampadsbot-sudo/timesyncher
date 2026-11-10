@@ -145,6 +145,8 @@ async function startServer({ html, js, css, tripPayload }) {
     '/brand/vk-wordmark.css': path.join(root, 'public/brand/vk-wordmark.css'),
     '/brand/vk-book-logo.svg': path.join(root, 'public/brand/vk-book-logo.svg'),
     '/favicon.ico': path.join(root, 'public/favicon.ico'),
+    '/ts-build-stamp-customer-hide.css': path.join(root, 'public/ts-build-stamp-customer-hide.css'),
+    '/ts-build-stamp-customer-hide.js': path.join(root, 'public/ts-build-stamp-customer-hide.js'),
   };
   const server = createServer(async (req, res) => {
     const url = new URL(req.url || '/', 'http://127.0.0.1');
