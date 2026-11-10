@@ -1,9 +1,23 @@
 import { useEffect, useState } from 'react';
 
+function isDebugBuildQuery() {
+  try {
+    return new URLSearchParams(window.location.search).get('debug') === '1';
+  } catch {
+    return false;
+  }
+}
+
 export function BuildStampFooter() {
   const [stamp, setStamp] = useState('…');
+  const [debugBuild, setDebugBuild] = useState(false);
 
   useEffect(() => {
+    setDebugBuild(isDebugBuildQuery());
+  }, []);
+
+  useEffect(() => {
+    if (!debugBuild) return undefined;
     let cancelled = false;
     fetch('/api/version', { credentials: 'include' })
       .then((res) => (res.ok ? res.json() : null))
@@ -24,7 +38,11 @@ export function BuildStampFooter() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [debugBuild]);
+
+  if (!debugBuild) {
+    return null;
+  }
 
   return (
     <footer className="tsv-build-footer no-print" data-build-stamp="1">

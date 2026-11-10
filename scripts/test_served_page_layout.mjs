@@ -246,7 +246,7 @@ async function main() {
       });
       results.push({
         id: `APP-${viewport.tag}-PUBLIC`,
-        ok: shared.embed === '' && shared.trip === '1' && shared.top && shared.root && !shared.guest && !shared.openNav && !shared.settings && shared.footerVisible && shared.footerPosition === 'static',
+        ok: shared.embed === '' && shared.trip === '1' && shared.top && shared.root && !shared.guest && !shared.openNav && !shared.settings && !shared.footerVisible,
         detail: shared,
       });
       await shot(pub, shotDir, `shared-${viewport.tag}.png`);

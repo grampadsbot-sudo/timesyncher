@@ -157,9 +157,15 @@
         -webkit-overflow-scrolling: touch;
       }
       html[data-ts-trip] footer[data-build-stamp="1"] {
-        position: static !important;
+        visibility: hidden !important;
+        position: absolute !important;
+        width: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
+        margin: 0 !important;
+        padding: 0 !important;
         flex: 0 0 auto;
-        margin: 0;
       }
       /* SITE: day timeline photo speech-bubble pointer must not clip */
       [data-ts-day-timeline="1"],
@@ -236,7 +242,9 @@
     </style>
     <link rel="stylesheet" href="/ts-shared-audio-recorder.css" />
     <script src="/ts-shared-audio-recorder.js"></script>
-  </head>
+    <link rel="stylesheet" href="/ts-build-stamp-customer-hide.css" />
+  <script src="/ts-build-stamp-customer-hide.js"></script>
+</head>
   <body>
     <div id="root"></div>
     <script type="module" src="/post-purchase-gate.mjs"></script>

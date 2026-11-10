@@ -23,6 +23,13 @@ export function visibleBuildFooter(sha) {
   return `<footer data-build-stamp="1">${value.slice(0, 7)}</footer>`;
 }
 
+export const BUILD_STAMP_CUSTOMER_HIDE_CSS = '/ts-build-stamp-customer-hide.css';
+export const BUILD_STAMP_CUSTOMER_HIDE_JS = '/ts-build-stamp-customer-hide.js';
+
+export function buildStampCustomerHideHeadMarkup() {
+  return `<link rel="stylesheet" href="${BUILD_STAMP_CUSTOMER_HIDE_CSS}" />\n<script src="${BUILD_STAMP_CUSTOMER_HIDE_JS}"></script>`;
+}
+
 export default function handler(req, res) {
   if (req.method !== 'GET') return send(res, 405, { ok: false, error: 'method not allowed' });
   const url = new URL(req.url || '/', 'https://timesyncher.com');

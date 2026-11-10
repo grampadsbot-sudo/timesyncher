@@ -221,6 +221,7 @@ try {
     assert.match(page.body, /timesyncher-build-stamp-style/);
     assert.match(page.body, new RegExp(`<footer data-build-stamp="1">${shortSha}</footer>`));
     assert.doesNotMatch(page.body, /data-build-stamp="1"[^>]*display\s*:\s*none/i);
+    assert.match(page.body, /ts-build-stamp-customer-hide\.css/);
   }
 
   const builtAssets = await filesUnder(dist);

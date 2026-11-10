@@ -52,9 +52,13 @@ async function checkBuildStamp(page, pageName) {
       && rect.right > 0
       && rect.left < vw;
 
-    if (name === 'vacation-app.html') {
+    const domOnlyHidden = style.visibility === 'hidden'
+      || footer.getClientRects().length === 0
+      || rect.height < 1
+      || !visibleInViewport;
+
+  if (name === 'vacation-app.html') {
       const appShell = document.querySelector('main.app');
-      const domOnlyHidden = style.visibility === 'hidden' || footer.getClientRects().length === 0;
       return {
         ok: Boolean(appShell) && domOnlyHidden && stampText.length >= 7,
         mode: 'dom-stamp-hidden',
@@ -65,9 +69,11 @@ async function checkBuildStamp(page, pageName) {
     }
 
     return {
-      ok: visibleInViewport,
-      mode: 'viewport-visible',
+      ok: domOnlyHidden && stampText.length >= 7,
+      mode: 'customer-hidden',
       stampText,
+      domOnlyHidden,
+      visibleInViewport,
       rect: { top: rect.top, bottom: rect.bottom, left: rect.left, right: rect.right },
       viewport: { w: vw, h: vh },
     };
@@ -131,4 +137,4 @@ try {
   await new Promise((resolve) => server.close(resolve));
 }
 
-console.log('build stamp viewport passed');
+console.log('build stamp customer hidden viewport passed');
