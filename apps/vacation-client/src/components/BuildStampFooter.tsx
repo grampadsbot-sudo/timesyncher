@@ -10,11 +10,7 @@ function isDebugBuildQuery() {
 
 export function BuildStampFooter() {
   const [stamp, setStamp] = useState('…');
-  const [debugBuild, setDebugBuild] = useState(false);
-
-  useEffect(() => {
-    setDebugBuild(isDebugBuildQuery());
-  }, []);
+  const [debugBuild] = useState(() => isDebugBuildQuery());
 
   useEffect(() => {
     if (!debugBuild) return undefined;

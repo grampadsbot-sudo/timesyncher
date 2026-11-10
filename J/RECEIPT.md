@@ -1,9 +1,13 @@
 # Issue #902 — hide build-stamp bar from customers
 
-**Outcome:** source-ready PATCH (host publication). **Start HEAD:** `968c7ac8b01fda265bd4d2e265ab7115883191ea`.
+**Outcome:** source-ready PATCH (host publication). **Start HEAD:** `0b03a5784354c1fcc52b3ad8234519901beed9e0`.
 
-See `/home/ubishere9995/tsv-work/vkfill-902-job/RECEIPT.md` for full change list, checks, and uncommitted paths.
+**This round:** fix CI eslint `react-hooks/set-state-in-effect` in `apps/vacation-client/src/components/BuildStampFooter.tsx` — lazy `useState` for `?debug=1` instead of `setState` in `useEffect`.
 
-**Checks:** `test_build_stamp_customer_hidden.mjs` PASS; `test_purchase_launch_routes.mjs` PASS; pre-DONE manifest + ratchet PASS (`968c7ac8` base).
+Full receipt: `/home/ubishere9995/tsv-work/vkfill-902-20261109165311-job/J/RECEIPT.md`.
 
-**Host:** commit, push `vkfill/902-20261109163213`, open PR with `Closes #902`, run CI + Gate B.
+**Uncommitted:** `apps/vacation-client/src/components/BuildStampFooter.tsx`.
+
+**Checks (local):** vacation-client lint + tsc PASS; `test_build_stamp_customer_hidden.mjs` PASS; `test_purchase_launch_routes.mjs` PASS; pre-DONE manifest + ratchet PASS.
+
+**Host:** commit, push `vkfill/902-20261109163213` (PR #906), run CI + Gate B.
