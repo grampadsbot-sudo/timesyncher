@@ -5,7 +5,13 @@ import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
-import { fullScreenSource, measureSource } from './layout-app-measure.mjs';
+import {
+  appBubbleWidthSource,
+  dividerDragSource,
+  fullScreenSource,
+  measureSource,
+  sharedHeaderMicSource,
+} from './layout-app-measure.mjs';
 import { loadPuppeteer, sessions, slug, startServer, states, viewports } from './layout-shell-harness.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
@@ -31,8 +37,17 @@ function expectedIds() {
       for (const check of checks) ids.push(`APP-${tag}-${state}-${check}`);
       if (state === 'NONE') ids.push(`APP-${tag}-NONE-FOOTER`, `APP-${tag}-NONE-PIN`);
       if (state === 'SITE') {
-        ids.push(`APP-${tag}-SITE-STACK`, `APP-${tag}-SITE-EMBED`, `APP-${tag}-SITE-FULLSCREEN`, `APP-${tag}-SITE-EXIT`);
+        ids.push(
+          `APP-${tag}-SITE-STACK`,
+          `APP-${tag}-SITE-EMBED`,
+          `APP-${tag}-SITE-FULLSCREEN`,
+          `APP-${tag}-SITE-EXIT`,
+          `APP-${tag}-SITE-DIVIDER-BOTTOM`,
+          `APP-${tag}-SITE-DIVIDER-TOP`,
+          `APP-${tag}-SITE-BUBBLE-WIDTH`,
+        );
       }
+      ids.push(`APP-${tag}-PUBLIC-NOMIC`, `APP-${tag}-COMPOSER-MIC`);
     }
     ids.push(`APP-${tag}-PUBLIC`, `APP-${tag}-SEND`);
     if (tag === '390') ids.push('APP-390-SEND-TAP', 'APP-390-SEND-BLANK');
@@ -109,6 +124,29 @@ async function checkComposerEnter(browser, server, viewport, results) {
   }
 }
 
+async function dragSplitter(page, mobile, toBottom) {
+  const handle = await page.$('#splitter');
+  const workspace = await page.$('#workspace');
+  if (!handle || !workspace) return false;
+  const handleBox = await handle.boundingBox();
+  const wsBox = await workspace.boundingBox();
+  if (!handleBox || !wsBox) return false;
+  const x = handleBox.x + handleBox.width / 2;
+  const startY = handleBox.y + handleBox.height / 2;
+  const endY = toBottom ? wsBox.y + wsBox.height - 4 : wsBox.y + 4;
+  if (mobile && page.touchscreen) {
+    await page.touchscreen.touchStart(x, startY);
+    await page.touchscreen.touchMove(x, endY);
+    await page.touchscreen.touchEnd();
+    return true;
+  }
+  await page.mouse.move(x, startY);
+  await page.mouse.down();
+  await page.mouse.move(x, endY, { steps: 12 });
+  await page.mouse.up();
+  return true;
+}
+
 async function shot(page, dir, name) {
   if (!dir) return;
   await mkdir(dir, { recursive: true });
@@ -178,6 +216,24 @@ async function main() {
         }
         await shot(page, shotDir, `app-${viewport.tag}-${state.toLowerCase()}.png`);
         if (state === 'SITE') {
+          const bottomId = `APP-${viewport.tag}-SITE-DIVIDER-BOTTOM`;
+          const topId = `APP-${viewport.tag}-SITE-DIVIDER-TOP`;
+          const bubbleId = `APP-${viewport.tag}-SITE-BUBBLE-WIDTH`;
+          const draggedBottom = await dragSplitter(page, mobile, true);
+          const bottom = draggedBottom
+            ? await page.evaluate(dividerDragSource(), 'bottom')
+            : { ok: false, missing: 'splitter drag bottom' };
+          results.push({ id: bottomId, ok: Boolean(bottom.ok), detail: bottom });
+          await shot(page, shotDir, `app-${viewport.tag}-divider-bottom.png`);
+          const draggedTop = await dragSplitter(page, mobile, false);
+          const top = draggedTop
+            ? await page.evaluate(dividerDragSource(), 'top')
+            : { ok: false, missing: 'splitter drag top' };
+          results.push({ id: topId, ok: Boolean(top.ok), detail: top });
+          await shot(page, shotDir, `app-${viewport.tag}-divider-top.png`);
+          const bubble = await page.evaluate(appBubbleWidthSource());
+          results.push({ id: bubbleId, ok: Boolean(bubble.ok), detail: bubble });
+          await shot(page, shotDir, `app-${viewport.tag}-bubbles-fullwidth.png`);
           const fullId = `APP-${viewport.tag}-SITE-FULLSCREEN`;
           const exitId = `APP-${viewport.tag}-SITE-EXIT`;
           const control = await page.$('#fullScreenButton');
@@ -244,13 +300,33 @@ async function main() {
           vh,
         };
       });
+      const sharedMic = await pub.evaluate(sharedHeaderMicSource());
       results.push({
         id: `APP-${viewport.tag}-PUBLIC`,
         ok: shared.embed === '' && shared.trip === '1' && shared.top && shared.root && !shared.guest && !shared.openNav && !shared.settings && !shared.footerVisible,
         detail: shared,
       });
+      results.push({
+        id: `APP-${viewport.tag}-PUBLIC-NOMIC`,
+        ok: Boolean(sharedMic.ok),
+        detail: sharedMic,
+      });
       await shot(pub, shotDir, `shared-${viewport.tag}.png`);
+      await shot(pub, shotDir, `header-${viewport.tag}-no-mic.png`);
       await pub.close();
+      const composerMicPage = await openComposer(browser, server, viewport, mobile);
+      try {
+        const composerMic = await composerMicPage.evaluate(() => ({
+          ok: Boolean(document.querySelector('#voiceButton')),
+        }));
+        results.push({
+          id: `APP-${viewport.tag}-COMPOSER-MIC`,
+          ok: composerMic.ok,
+          detail: composerMic,
+        });
+      } finally {
+        await composerMicPage.close();
+      }
       await checkComposerEnter(browser, server, viewport, results);
     }
   } finally {

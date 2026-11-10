@@ -13,7 +13,12 @@ export function BuildStampFooter() {
   const [debugBuild] = useState(() => isDebugBuildQuery());
 
   useEffect(() => {
-    if (!debugBuild) return undefined;
+    if (debugBuild) {
+      document.documentElement.setAttribute('data-ts-debug-build', '1');
+    }
+  }, [debugBuild]);
+
+  useEffect(() => {
     let cancelled = false;
     fetch('/api/version', { credentials: 'include' })
       .then((res) => (res.ok ? res.json() : null))
@@ -34,14 +39,10 @@ export function BuildStampFooter() {
     return () => {
       cancelled = true;
     };
-  }, [debugBuild]);
-
-  if (!debugBuild) {
-    return null;
-  }
+  }, []);
 
   return (
-    <footer className="tsv-build-footer no-print" data-build-stamp="1">
+    <footer className="tsv-build-footer no-print" data-build-stamp="1" aria-hidden={!debugBuild}>
       {stamp}
     </footer>
   );
