@@ -32,7 +32,7 @@ assert.equal(itineraryLineText({ summary: downgraded.summary }), '');
 assert.match(committed, /data-ts-list-row-name":"1"/);
 assert.match(committed, /data-ts-detail-title-wrap":"1"/);
 assert.match(committed, /data-ts-thing-header":"1"/);
-assert.match(committed, /data-ts-detail-header-stars":"1",style:\{display:"flex",flexDirection:"row",flexWrap:"nowrap",alignItems:"center",justifyContent:"center",flex:"0 0 auto"/);
+assert.match(committed, /data-ts-detail-header-stars":"1",style:\{display:"flex",flexDirection:"row",flexWrap:"nowrap",alignItems:"center",justifyContent:"flex-start",flex:"0 0 auto"/);
 assert.match(committed, /data-ts-logo-name-pair":"1"/);
 assert.match(committed, /data-ts-list-row-rating":"1",style:\{display:"flex",flexDirection:"row",flexWrap:"nowrap"/);
 assert.doesNotMatch(committed, /minHeight:28},children:Zn}\)\]\}\),Xr=fo/);

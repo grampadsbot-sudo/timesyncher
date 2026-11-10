@@ -23,7 +23,11 @@ assert.match(rendered, /Ce&&Sa&&n\.jsxs\("fieldset",\{"data-shared-readonly":voi
 assert.match(rendered, /"data-ts-detail-field":"price"/);
 assert.match(rendered, /String\(d\.price/);
 assert.match(rendered, /data-ts-detail-field":"price".*Price:/);
-assert.match(rendered, /n\.jsxs\("div",\{"data-ts-detail-rating-row":"1",style:\{display:"flex",flexDirection:"row",flexWrap:"wrap",alignItems:"center"[^}]*\},children:\[tsHeadStars\?n\.jsx\("span",\{"data-ts-detail-header-stars":"1"[\s\S]{0,400}?tsPriceHas\?n\.jsxs\("span",\{"data-ts-detail-field":"price"/, 'price shares the rating row with the header stars');
+assert.match(
+  rendered,
+  /n\.jsxs\("div",\{"data-ts-detail-rating-row":"1",style:\{display:"flex",flexDirection:"row",flexWrap:"nowrap",alignItems:"center",justifyContent:"space-between"[^}]*\},children:\[[\s\S]{0,800}?tsPriceHas\?n\.jsxs\("span",\{"data-ts-detail-field":"price"/,
+  'price shares the rating row with the header stars',
+);
 assert.match(rendered, /children:\[n\.jsx\("strong",\{children:"Price:"\}\)," ","\$"\+Math\.round\(unit\)\.toLocaleString\("en-US"\)\]/, 'price renders with a dollar sign like Budget');
 assert.equal((rendered.match(/"data-ts-detail-field":"price"/g) || []).length, 1, 'one detail price field');
 assert.doesNotMatch(rendered, /children:\[n\.jsx\("strong",\{children:"Price:"\}\)," ",`\$\{unit\}`\]/, 'String.replace must not eat the dollar sign');

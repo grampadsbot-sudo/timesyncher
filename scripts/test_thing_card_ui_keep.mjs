@@ -25,7 +25,7 @@ assert.match(rendered, /data-ts-list-row-rating":"1",style:\{display:"flex",flex
 assert.doesNotMatch(rendered, /data-ts-list-row-rating":"1"[\s\S]{0,80}flexDirection:"column"/);
 assert.match(rendered, /data-ts-detail-header-stars":"1"/);
 assert.match(rendered, /data-ts-detail-title-wrap":"1"/);
-assert.match(rendered, /data-ts-detail-header-stars":"1",style:\{display:"flex",flexDirection:"row",flexWrap:"nowrap",alignItems:"center",justifyContent:"center",flex:"0 0 auto"/);
+assert.match(rendered, /data-ts-detail-header-stars":"1",style:\{display:"flex",flexDirection:"row",flexWrap:"nowrap",alignItems:"center",justifyContent:"flex-start",flex:"0 0 auto"/);
 assert.match(rendered, /data-ts-thing-header":"1"/);
 assert.doesNotMatch(rendered, /aria-label":"Detail name"[\s\S]{0,200}width:220/);
 assert.doesNotMatch(rendered, /data-ts-thing-review-line":"1"/);
