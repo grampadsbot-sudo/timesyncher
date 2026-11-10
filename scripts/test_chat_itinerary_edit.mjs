@@ -150,11 +150,13 @@ function miniPayload() {
   };
 }
 
-assert.equal(shareSlugEditGuardDecision('8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y').ok, false);
-assert.equal(shareSlugEditGuardDecision('8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y').reason, 'demo_locked');
 const cfg = loadChatItineraryEditConfig();
-const fakeAllow = { allowlist: ['8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y', 'copy-slug-test'], demoLocked: cfg.demoLocked };
-assert.equal(shareSlugEditGuardDecision('8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y', fakeAllow).ok, false);
+const demoSlug = '8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y';
+const lockedFixtureSlug = 'chat-edit-demo-locked-fixture';
+assert.deepEqual(shareSlugEditGuardDecision(demoSlug), { ok: true, reason: null });
+assert.deepEqual(shareSlugEditGuardDecision(lockedFixtureSlug), { ok: false, reason: 'demo_locked' });
+const fakeAllow = { allowlist: [demoSlug, 'copy-slug-test'], demoLocked: [] };
+assert.equal(shareSlugEditGuardDecision(demoSlug, fakeAllow).ok, true);
 assert.equal(shareSlugEditGuardDecision('copy-slug-test', fakeAllow).ok, true);
 assert.equal(shareSlugEditGuardDecision('not-listed', fakeAllow).ok, false);
 
@@ -252,40 +254,23 @@ const noAccess = await runChatItineraryEditTurn({
 assert.equal(noAccess.applied, false);
 assert.equal(noAccess.reason, 'web_edit_access_required');
 
-const topLevelAllowlisted = await runChatItineraryEditTurn({
-  db: null,
-  trip: { id: 'trip-1', metadata: null, shareToken: 'lane-test-slug' },
-  customerTurn: 'move dinner at Carbone to 8:30 PM on Day 2',
-  httpReq: { headers: {} },
-  env: { CHAT_ITINERARY_EDIT_OFFLINE_PARSE: '1' },
-  fetchPayload: async () => miniPayload(),
-  putOverrides: async () => {},
-  extractIntent: offlineParseItineraryEditIntent,
-});
-assert.equal(topLevelAllowlisted.applied, false);
-assert.equal(topLevelAllowlisted.reason, 'web_edit_access_required');
-
-const topLevelDemoLocked = await runChatItineraryEditTurn({
-  db: null,
-  trip: { id: 'trip-1', metadata: null, shareToken: '8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y' },
-  customerTurn: 'move dinner at Carbone to 8:30 PM on Day 2',
-  httpReq: { headers: {} },
-  env: { CHAT_ITINERARY_EDIT_OFFLINE_PARSE: '1' },
-  fetchPayload: async () => miniPayload(),
-  putOverrides: async () => {},
-  extractIntent: offlineParseItineraryEditIntent,
-});
-assert.equal(topLevelDemoLocked.reason, 'demo_locked');
-assert.equal(topLevelDemoLocked.applied, false);
-const configText = fs.readFileSync(new URL('../config/chat-itinerary-edit-trips.json', import.meta.url), 'utf8');
-assert.match(configText, /demo_locked/);
-assert.doesNotMatch(configText, /8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y.*allowlist/);
-
-const demoSlug = '8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y';
-assert.ok(cfg.demoLocked.includes(demoSlug));
-assert.ok(!cfg.allowlist.includes(demoSlug));
-assert.ok(cfg.allowlist.includes(copySlug));
-assert.equal(shareSlugEditGuardDecision(demoSlug, { allowlist: [demoSlug], demoLocked: [] }).reason, 'demo_locked');
+for (const allowlistedSlug of ['lane-test-slug', demoSlug]) {
+  const topLevel = await runChatItineraryEditTurn({
+    db: null,
+    trip: { id: 'trip-1', metadata: null, shareToken: allowlistedSlug },
+    customerTurn: 'move dinner at Carbone to 8:30 PM on Day 2',
+    httpReq: { headers: {} },
+    env: { CHAT_ITINERARY_EDIT_OFFLINE_PARSE: '1' },
+    fetchPayload: async () => miniPayload(),
+    putOverrides: async () => {},
+    extractIntent: offlineParseItineraryEditIntent,
+  });
+  assert.equal(topLevel.applied, false, allowlistedSlug);
+  assert.equal(topLevel.reason, 'web_edit_access_required', allowlistedSlug);
+}
+assert.match(fs.readFileSync(new URL('../config/chat-itinerary-edit-trips.json', import.meta.url), 'utf8'), /demo_locked/);
+assert.ok(!cfg.demoLocked.includes(demoSlug) && cfg.allowlist.includes(demoSlug) && cfg.allowlist.includes(copySlug));
+assert.equal(shareSlugEditGuardDecision(demoSlug, { allowlist: [demoSlug], demoLocked: [] }).ok, true);
 
 const turns = [
   ['set_time', 'move dinner at Carbone to 8:30 PM on Day 2'],
@@ -295,10 +280,10 @@ const turns = [
 const authenticatedHeaders = { cookie: `${webAccessCookieName()}=mock-owner-session` };
 const slugFields = ['sharedToken', 'shareToken', 'publicSlug', 'source_token', 'slug'];
 const lockedTrips = slugFields.flatMap((field) => [
-  { id: 'trip-1', metadata: { [field]: demoSlug } },
-  { id: 'trip-1', [field]: demoSlug },
+  { id: 'trip-1', metadata: { [field]: lockedFixtureSlug } },
+  { id: 'trip-1', [field]: lockedFixtureSlug },
 ]);
-lockedTrips.push({ id: 'trip-1', share_token: demoSlug });
+lockedTrips.push({ id: 'trip-1', share_token: lockedFixtureSlug });
 for (const [op, customerTurn] of turns) {
   assert.equal(offlineParseItineraryEditIntent(customerTurn).op, op);
   for (const trip of lockedTrips) {
@@ -461,7 +446,7 @@ assert.equal(lastPutOverrides['place:610'].perDaySchedule['502'].startTime, '19:
 
 const undoDemoLocked = await runChatItineraryEditTurn({
   db: null,
-  trip: { id: chatEditTripId, metadata: { sharedToken: '8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y' } },
+  trip: { id: chatEditTripId, metadata: { sharedToken: lockedFixtureSlug } },
   customerTurn: 'undo',
   httpReq: ownerHttpReq,
   env: { CHAT_ITINERARY_EDIT_OFFLINE_PARSE: '1' },
@@ -471,7 +456,7 @@ const undoDemoLocked = await runChatItineraryEditTurn({
 });
 assert.equal(undoDemoLocked.applied, false);
 assert.equal(undoDemoLocked.reason, 'demo_locked');
-const barHopLocked = await prepareChatItineraryEditForQueueTurn({ db: async () => [], trip: { id: chatEditTripId, metadata: { sharedToken: demoSlug } }, tripId: chatEditTripId, seat: null, requestText: 'Add a bar hop before Carbone that night.', httpReq: ownerHttpReq, env: {} });
+const barHopLocked = await prepareChatItineraryEditForQueueTurn({ db: async () => [], trip: { id: chatEditTripId, metadata: { sharedToken: lockedFixtureSlug } }, tripId: chatEditTripId, seat: null, requestText: 'Add a bar hop before Carbone that night.', httpReq: ownerHttpReq, env: {} });
 assert.equal(barHopLocked.itineraryEditCannedReply, DEMO_LOCKED_CHAT_EDIT_CUSTOMER_REPLY);
 const oversizeLogs = [];
 const origConsoleError = console.error;
