@@ -18,7 +18,8 @@ const raw = execFileSync('git', ['show', `${UPSTREAM_COMMIT}:${UPSTREAM_PATH}`],
 const rendered = renderServedTrekBundle(raw.toString('utf8'));
 assert.match(rendered, /onError:Rn=>\{.*dataset\.tsLogoFallback/);
 assert.match(rendered, /tsCenterThingLogoFallbackEl/);
-assert.match(rendered, /className:"tsv-logo-fallback",ref:Rn=>\{Rn&&tsCenterThingLogoFallbackEl\(Rn\)/);
+assert.match(rendered, /className:"tsv-logo-fallback",ref:Rn=>\{Rn&&Rn\.style\.display!=="none"&&tsCenterThingLogoFallbackEl\(Rn\)/);
+assert.match(rendered, /display:zt\?"none":"grid"/);
 assert.match(rendered, /className:"tiny-logo",src:zt,alt:""/);
 assert.match(rendered, /function tsCenterThingLogoInk\(/);
 assert.match(rendered, /tsCenterThingLogoInk\(Rn\.currentTarget\)/);

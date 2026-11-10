@@ -1,3 +1,44 @@
+# PR #896 / issue #888 — host vk base-merge @ `fcdd2d24` (merge f8d4748)
+
+**Outcome:** SOURCE-READY (uncommitted; HOST PUBLICATION ONLY). **Starting HEAD:** `fcdd2d242cfc1b7ab9374b50af8de6f3e564174e`. **Merged base:** `origin/vk` @ `f8d4748f8ea8104e8722fecaa383588d5d7b010c`. **Model:** composer-2.5.
+
+## This round (conflict resolution)
+
+| file | resolution |
+| --- | --- |
+| `public/assets/index-BKun7ofk.js` | vk index version, then `node scripts/rebake_served_trek_bundle.mjs` → sha256 `0618a3819da9dc864ef7cadae5d17be68fb6095cc7a67bae85c5756e823ff032` |
+| `J/PR_DESCRIPTION.md`, `J/RECEIPT.md` | Both sides: #888 flights @390 fix receipt + vk #884 logo-fallback + #927/#925 carry |
+| Product | `apps/vacation-client/src/styles.css` @390 multi-row `.tsv-row-flight-main` (no logo-chip `margin-top`) unchanged on branch |
+
+## Checks @ `fcdd2d24` + conflict resolution (uncommitted)
+
+| Command | Result |
+| --- | --- |
+| `node scripts/rebake_served_trek_bundle.mjs` | PASS sha256 `0618a3819da9dc864ef7cadae5d17be68fb6095cc7a67bae85c5756e823ff032` |
+| `node scripts/test_served_trek_bundle.mjs` | PASS |
+| `node scripts/test_issue_888_clipped_text.mjs` | PASS |
+| `node scripts/test_ui_884_logo_chip_fallback_hide.mjs` | PASS |
+| `node scripts/test_shared_logo_chip_center_bundle.mjs` | PASS |
+| `node scripts/test_shared_trip_live_tab_logos.mjs` | PASS |
+| `node scripts/test_reply_action_claim_d2_paia_save_route.mjs` | PASS |
+| `cd apps/vacation-client && npm test` | PASS (after root + client `npm ci`) |
+| `VACATION_CLIENT_LIST_ARTIFACT_ROOT=…05314-job/client-list node apps/vacation-client/test/list-layout.mjs` | PASS @390/1280 Flights; screenshot `vkfill-896-20261110005314-job/client-list/flights-390.png` |
+| `npm run test:keepsake-style2` | PASS |
+| `node scripts/test_vacation_app_927_touch_splitter.mjs` | PASS |
+| `node scripts/test_vacation_app_927_hero_collapse.mjs` | PASS |
+| `node scripts/test_chat_itinerary_edit.mjs` | PASS |
+| `node scripts/check-no-comments.mjs` | PASS (1136 files) |
+| `node scripts/test_offline_manifest.mjs` | PASS (442 offline, 19 online) |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS (252 report, 0 fail) |
+| `node scripts/check-hardcoded-content.mjs` | PASS |
+| `git diff --check` | PASS |
+
+**Uncommitted:** `J/PR_DESCRIPTION.md`, `J/RECEIPT.md`, `public/assets/index-BKun7ofk.js` (+ staged merge index from host).
+
+**Host:** `git add` resolved paths + staged merge index; `git commit --no-edit`; push `vkfill/888-20261109142715`; Gate B with `gateb-allow.json["888"]`.
+
+---
+
 # PR #896 / issue #888 — host vk base-merge `J/RECEIPT.md` @ `f82bc721`
 
 **Outcome:** SOURCE-READY (uncommitted; HOST PUBLICATION ONLY). **Starting HEAD:** `f82bc721ffa520f9e02ee5c669c89bc41c957cc1`. **Merged base:** `origin/vk` @ `86d90ed131c3ad519ec98a42afcdc692edcfa40e` (`basemerge.json` in job dir). **Model:** composer-2.5.
@@ -241,53 +282,82 @@ Dossier overlay, fixture address/flight rows, offline `test_vkprloop_*` rows —
 
 # PR #929 / Issue #927 — host base-merge + Gate B round 1 @ `6b92b55d`
 
-**Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Start HEAD:** `6b92b55da6bc566bba556106be2d52f98e211b73` (verified). **Lane:** cursor-ubuntu, composer-2.5.
+# PR #885 / issue #884 — logo-chip fallback hide + vk base merge (HOST PUBLICATION ONLY)
 
-**GBrain handoff:** `bot-admin/lanes/vk-pr-handoff/pr-929` page not found (noted per brief).
+**Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Lane start HEAD:** `7441bc9688c4ef6292f8bc696b78b8f490c04be8` (verified at round launch).
 
-## Host merge `origin/vk` @ `bb440e0f`
+**Host base merge:** `origin/vk` at `86d90ed131c3ad519ec98a42afcdc692edcfa40e` into `7441bc96` (per brief). **Conflicts resolved this round:** `J/PR_DESCRIPTION.md`, `J/RECEIPT.md` (both sides kept). Staged vk tree: #927 splitter/hero, budget price parity, #925 chat itinerary edit. No `public/assets/*.js` merge conflict; served bundle unchanged (`test_served_trek_bundle.mjs` PASS).
 
-| file | resolution |
+---
+
+## Root cause (#884)
+
+`dc()` logo chips stacked `.tsv-logo-fallback` (category emoji, e.g. hotel suitcase) in the same grid cell as the brand `img` with both at `display:grid`, so TownePlace detail showed suitcase-over-Marriott after favicon load.
+
+## Fix (#884 — product sources on branch)
+
+| Path | Change |
 | --- | --- |
-| `J/RECEIPT.md` | Both sides kept: #927 touch splitter + hero receipt (HEAD) and #925 chat-edit sequential PUT merge (`origin/vk`) |
-| Staged from merge (no re-author) | `src/vacation/chat-itinerary-edit*.mjs`, `scripts/test_chat_itinerary_edit*.mjs` |
+| `src/vacation/thing-logo-ink-center.mjs` | `dc()` patch: fallback `display:zt?"none":"grid"`; img ref/onLoad hide fallback when `naturalWidth>1`; ink centering hides fallback on successful paint. |
+| `src/vacation/thing-logo-fallback-url.mjs` | `logoImgOnLoadInline` sets fallback `display:none` on successful load; `logoImgOnErrorInline` sets `display:grid` on final failure; Marriott 16px favicon → gstatic 64px repair. |
+| `src/vacation/shared-trip-logo-audit.mjs` | Gate B DOM check `fallback_stack` when loaded img and visible `.tsv-logo-fallback` coexist. |
+| `public/assets/index-BKun7ofk.js` | Rebaked via `node scripts/rebake_served_trek_bundle.mjs` (prior round). |
+| `apps/vacation-client/src/lib/logoChipHandlers.mjs` | Hide `.tsv-logo-fallback` on successful load; show `display:grid` on final failure. |
+| `scripts/test_ui_884_logo_chip_fallback_hide.mjs` | Offline test for inline handlers, DOM check, bundle needles. |
 
-No `public/assets/*.js` conflict; rebake not required this round.
-
-## Gate B round 1 fixes (chief dr on `6b92b55d`)
-
-| failure | root cause | fix |
-| --- | --- | --- |
-| `price budget-390/1280` (flights/hotels/cars) | List tabs resolve price via `numericPrice` (`sourceRecord.price`, etc.); budget used `thingBudgetAmount` on bare `place.price` only → "Add price" in `BudgetScreen` | `budgetLineAmount` copies `numericPrice` onto the merged row before `thingBudgetAmount` (`apps/vacation-client/src/lib/budgetModel.mjs`) |
-| `daybyday-1280.png` (~13.68% vs `base-1ffd23c`, `tsv-gateb/runs/20261110-070333`) | #927 hero collapse injected header chrome at 1280 capture width | `public/ts-trip-hero-collapse.js` mounts only for `max-width: 844px`; unmounts on desktop |
-
-## Changes (this round, uncommitted)
+## vk carry from merge (`origin/vk`)
 
 | area | files |
 | --- | --- |
-| Budget price parity with list tabs | `apps/vacation-client/src/lib/budgetModel.mjs`, `apps/vacation-client/test/budget.unit.mjs` |
-| Hero collapse mobile-only (#927) | `public/ts-trip-hero-collapse.js` |
-| Inherited #927 (prior host commit) | `public/vacation-app-request.js`, splitter CSS, `scripts/test_vacation_app_927_*.mjs`, etc. |
-| Inherited #925 (staged merge) | `src/vacation/chat-itinerary-edit-day.mjs` (`mergeStoredChatItineraryScheduleOverride`) |
+| #927 — finger drag + hero | `public/vacation-app-request.js`, `public/ts-trip-hero-collapse.js` (mobile-only mount ≤844px), `vacation-app.html`, `shared-app.html`, splitter CSS, `scripts/test_vacation_app_927_*.mjs` |
+| Budget price parity (#929 round) | `apps/vacation-client/src/lib/budgetModel.mjs`, `apps/vacation-client/test/budget.unit.mjs` |
+| #925 chat edit | `src/vacation/chat-itinerary-edit-day.mjs` (`mergeStoredChatItineraryScheduleOverride`), `scripts/test_chat_itinerary_edit*.mjs` |
 
-## Checks @ PATCH (uncommitted)
+### vk carry — chat edit sequential PUT merge
 
-| check | result |
+| Path | Behaviour kept |
 | --- | --- |
-| `node apps/vacation-client/test/budget.unit.mjs` | PASS (incl. `sourceRecord`-only flight budget row) |
+| `src/vacation/chat-itinerary-edit-day.mjs` | `mergeStoredChatItineraryScheduleOverride` deep-merges schedule onto stored override before PUT. |
+| `src/vacation/chat-itinerary-edit.mjs` | `persistItineraryWrite` passes `payload.thingOverrides` into put-body builder. |
+
+Authority: Craig tech-call 2026-11-09 ~12:31 PM PT — hide `.tsv-logo-fallback` after brand `img` loads; show only on missing/broken logo.
+
+## Gate B / screen_probe (#884)
+
+Permanent regression: `fallback_stack` in `visibleLogoDomCheckSource` via `runVisibleSharedLogoCheck` (`scripts/lib/shared-trip-visible-logo-check.mjs` → `scripts/ops/gateb/restore-check-visible-logos.mjs`).
+
+Host: NYC evidence `towneplace-logo-390.png`, `towneplace-logo-1280.png`, `broken-fallback-390.png`, `broken-fallback-1280.png` after push + live deploy.
+
+## Handoff hold (unchanged)
+
+`hold:test-trip-fixture` — places[23] Marriott `logoUrl` replay vs live is a **data/harness fault**, not a #884 UI stacking fix.
+
+## Local proof (@ `7441bc96` + conflict resolve)
+
+| Command | Result |
+| --- | --- |
+| `node scripts/test_ui_884_logo_chip_fallback_hide.mjs` | PASS |
+| `node scripts/test_shared_logo_chip_center_bundle.mjs` | PASS |
+| `node scripts/test_shared_trip_live_tab_logos.mjs` | PASS |
+| `node scripts/test_served_trek_bundle.mjs` | PASS |
 | `node scripts/test_vacation_app_927_hero_collapse.mjs` | PASS |
 | `node scripts/test_vacation_app_927_touch_splitter.mjs` | PASS |
-| `node scripts/test_chat_itinerary_edit_905.mjs` | not run (staged merge; host after commit) |
-| `node scripts/check-no-comments.mjs` | BLOCKED: missing `apps/vacation-client/node_modules/typescript` (host `npm ci` before pre-DONE) |
-| `BASE=vk node scripts/check-code-ratchet.mjs` | not run (same deps block) |
+| `node apps/vacation-client/test/budget.unit.mjs` | PASS |
+| `node scripts/test_chat_itinerary_edit.mjs` | PASS |
+| `node scripts/test_chat_itinerary_edit_905.mjs` | PASS |
+| `node scripts/test_offline_manifest.mjs` | PASS (441 offline, 19 online) |
+| `env BASE=vk node scripts/check-code-ratchet.mjs` | PASS (252 report, 0 fail) |
+| `node scripts/check-no-comments.mjs` | PASS (1135 files) |
+
+No CI run id on this uncommitted tree; pending host merge commit + one push to `vkfill/884-20261109123208`.
 
 ## Host publish
 
-1. Resolve `J/RECEIPT.md` (done in tree), `git add` merge index + modified files above; `git commit --no-edit` or single publish commit on `vkfill/927-20261109224243`; push once.
-2. After `npm ci`: pre-DONE gates, CI on new head, Gate B structure + `gateb_coverage` price rows on budget 390/1280.
+1. `git add` resolved `J/PR_DESCRIPTION.md`, `J/RECEIPT.md`, and staged vk merge index; `git commit --no-edit` or single publish commit on `vkfill/884-20261109123208`.
+2. Push once; exact-head CI + Gate B per handoff `pr-885`.
 3. Post-deploy: `node scripts/test_vacation_app_927_webkit_touch_live.mjs` when WebKit URL available.
 
----
+## Not touched
 
 # Issue #927 — iOS touch splitter + collapsible trip hero @ `1ffd23ca` (prior round summary)
 
@@ -369,6 +439,8 @@ No CI run id on this uncommitted tree; pending host commit of staged merge + thi
 
 **Uncommitted / staged (host):** merge index ~80 files from `origin/vk` (rebrand, #905 chat-itinerary pieces, `vacation-app.html` composer catch, etc.) plus this `J/RECEIPT.md`.
 
+Baselines, Gate B config thresholds, `package.json`, deploy config, workflows. Lane did not stage, commit, push, or merge (HOST PUBLICATION ONLY).
+
 ---
 
 # #901 / PR #908: unit-tests fix (prior round summary, still authoritative)
@@ -377,13 +449,11 @@ No CI run id on this uncommitted tree; pending host commit of staged merge + thi
 
 ## Failure reproduced (9913e460 / 3e710445)
 
-`node scripts/test_gate_b_live_replay_display_facts.mjs` gave `served: place 664 price must match hosted` (`65 !== 25`), and `externalId` wrong for 664 and 669 (served undefined; hosted had old bundle titles).
+`node scripts/test_gate_b_live_replay_display_facts.mjs` gave `served: place 664 price must match hosted` (`65 !== 25`), and `externalId` wrong for 664 and 669.
 
 ## Root cause
 
-- The PR rewrote 664/669/672 in the Gate B served fixture, but the hosted live replay `scripts/fixtures/nyc-screen-trip99-live-shared-api.json` still held the old bundle rows. Live staging had not applied `J/trip99-change.sql` yet.
-- The ccab fix set `Big Apple Greeter.price` 0 → null. With null price, `buildGateBSearchPlaceForRow` → `enrichSearchPlace` uses the activity default (`src/vacation/search-place-price-estimate.mjs:62` → 65). Staging fixture, VK search snapshot, and SQL still said `0` (banned `$0`).
-- Served `externalId` undefined for 664/669 when new narratives exceed 30 words (`mergeStoredCcabNarrativeIntoOverride` returns early in `src/vacation/stored-ccab-narrative-merge.mjs`).
+PR rewrote 664/669/672 in Gate B served fixture while hosted live replay still held old bundle rows; ccab `Big Apple Greeter.price` 0 → null triggered estimator 65.
 
 ## Data changes (on branch; in staged merge)
 
@@ -391,28 +461,11 @@ No CI run id on this uncommitted tree; pending host commit of staged merge + thi
 | --- | --- |
 | `scripts/fixtures/nyc-screen-trip99-live-shared-api.json` | Trip 99 post-image for 664/669/672 |
 | `scripts/fixtures/gate-b-nyc-shared-staging.json` | 664 place + override `price` 0 → 65 |
-| `scripts/fixtures/pr336-vk-search-places.snapshot.json` | 664 `price` / `sourceRecord.price` 0 → 65 |
-| `scripts/fixtures/nyc_ccab_place_enrichment.json` | `Big Apple Greeter.price` → null (skips `test_gate_b_product_row_fields.mjs:270`; served build still estimates 65) |
-| `J/trip99-change.sql`, `J/trip99-change.json`, `J/trip99-backup.sql`, `J/REVERT.md` | Host Neon apply path |
-
-**Price for 664:** dossier says free; `$0` banned; positive Gate B contract requires a price on every Thing — staging/live-replay/snapshot use estimator **65**; ccab enrichment keeps **null**.
+| `scripts/fixtures/pr336-vk-search-places.snapshot.json` | 664 `price` 0 → 65 |
+| `J/trip99-change.sql`, etc. | Host Neon apply path |
 
 ---
 
 # PR #913 / vkfill-905 port — inherited from `origin/vk` merge
 
-**Starting HEAD (vk side doc):** `e18a08efa3df43c116adb0ca58917c46a4759a18`
-
-## Vk merge change (staged; not re-authored this round)
-
-| File | Why |
-|------|-----|
-| `vacation-app.html` | `scripts/test_reply_action_claim_d2_paia_save_route.mjs` requires `showComposerStatus(customerSafeErrorMessage` in static HTML; inlined catch matches `public/vacation-app-request.js` (90s `AbortError` + composer status). |
-
-Turn-2 hang / Fix-6 Zinc logo / chat-itinerary edits from #905 port remain on the staged index (`src/vacation/chat-itinerary-edit*.mjs`, `DayTimeline.tsx`, etc.); see vk PR #913 receipt in GBrain when needed.
-
-## Left alone (scope)
-
-- Live override narratives for 664/669/672 bundle copy until host re-fill.
-- Baselines, check config, workflows, `offline-tests.txt` ratchet files (per brief).
-- Deploy config / force-push / Neon writes from lane.
+`vacation-app.html` composer status needle for `scripts/test_reply_action_claim_d2_paia_save_route.mjs`; chat-itinerary edits on staged index.
