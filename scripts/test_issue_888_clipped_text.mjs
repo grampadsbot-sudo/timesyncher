@@ -3,7 +3,11 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { SHARED_LIVE_FLIGHT_LOGO_NAME_CSS } from '../src/vacation/shared-trip-oe-list-row-patch.mjs';
+import {
+  ISSUE_888_SERVED_LAYOUT_CSS,
+  SHARED_LIVE_CONFLICT_LAYOUT_CSS,
+  SHARED_LIVE_FLIGHT_LOGO_NAME_CSS,
+} from '../src/vacation/shared-trip-oe-list-row-patch.mjs';
 import { ellipsisClippedTextHelperSource } from './shepherd-staging-smoke-layout-overflow.mjs';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
@@ -38,6 +42,8 @@ assert.match(appHtml, /\.trip-option b,\s*\n\s*\.trip-option small \{[\s\S]*whit
 assert.match(css, /\[data-ts-flight-time="1"\]/);
 assert.match(css, /\[data-ts-conflict-label="1"\]/);
 assert.ok(css.includes(SHARED_LIVE_FLIGHT_LOGO_NAME_CSS), 'served flight logo+name CSS must match patch SoT');
+assert.ok(css.includes(SHARED_LIVE_CONFLICT_LAYOUT_CSS), 'served conflict label CSS must match patch SoT');
+assert.ok(css.includes(ISSUE_888_SERVED_LAYOUT_CSS), 'served #888 layout CSS block must match patch SoT');
 assert.match(
   rowPatchSource,
   /Zn=bn\(G\)\?n\.jsx\("strong",\{style:\{lineHeight:1,display:"block",fontWeight:800/,

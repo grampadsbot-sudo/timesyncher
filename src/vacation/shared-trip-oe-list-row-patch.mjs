@@ -419,8 +419,14 @@ export function patchSharedTripListWrapping(source = '') {
   return ensureListDescCaptureLeaf(next);
 }
 
+export const SHARED_LIVE_CONFLICT_LAYOUT_CSS =
+  '[data-ts-conflict-label="1"]{display:flex!important;align-items:flex-start!important;flex-wrap:wrap!important;white-space:normal!important;overflow:visible!important;overflow-wrap:anywhere!important;max-width:100%!important;box-sizing:border-box!important}';
+
 export const SHARED_LIVE_FLIGHT_LOGO_NAME_CSS =
   'li[data-list-row="1"][data-thing-category="flight"] [data-ts-logo-name-pair="1"]{align-items:flex-start!important}li[data-list-row="1"][data-thing-category="flight"] [data-ts-logo-chip="1"]{align-self:flex-start!important}[data-ts-flight-row-grid="1"]{align-items:flex-start!important}';
+
+export const ISSUE_888_SERVED_LAYOUT_CSS =
+  `${SHARED_LIVE_CONFLICT_LAYOUT_CSS}@media (max-width:480px){[data-ts-flight-time="1"]{white-space:nowrap!important;overflow:visible!important;text-overflow:clip!important;flex-shrink:0!important;min-width:max-content!important}[data-ts-conflict-label="1"]{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere!important;flex-wrap:wrap!important;max-width:100%!important}[data-ts-flight-row-grid="1"]{flex-wrap:nowrap!important;max-width:100%!important;min-width:0!important}[data-ts-flight-row-grid="1"] [data-ts-list-row-name="1"] strong,[data-ts-flight-row-grid="1"]>span:first-child strong{white-space:normal!important;overflow-wrap:anywhere!important}${SHARED_LIVE_FLIGHT_LOGO_NAME_CSS}}`;
 
 function ensureListDescCaptureLeaf(js = '') {
   let out = String(js || '');

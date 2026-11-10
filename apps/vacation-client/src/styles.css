@@ -874,6 +874,8 @@ body {
 
 .tsv-timeline-main {
   min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 .tsv-timeline-head {
