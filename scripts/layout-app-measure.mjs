@@ -208,6 +208,87 @@ export function measureSource() {
   };
 }
 
+export function dividerDragSource() {
+  return (edge) => {
+    const vh = window.innerHeight;
+    const workspace = document.getElementById('workspace');
+    const site = document.querySelector('.site-pane');
+    const chat = document.querySelector('.chat-pane');
+    const messages = document.querySelector('.messages');
+    const composer = document.querySelector('#composer');
+    const siteBox = site?.getBoundingClientRect();
+    const chatBox = chat?.getBoundingClientRect();
+    const msgBox = messages?.getBoundingClientRect();
+    const compBox = composer?.getBoundingClientRect();
+    const wsBox = workspace?.getBoundingClientRect();
+  const visible = (el) => {
+    if (!el) return false;
+    const style = getComputedStyle(el);
+    return style.display !== 'none' && style.visibility !== 'hidden' && el.getClientRects().length > 0;
+  };
+    const siteShare = siteBox && wsBox && wsBox.height > 0 ? siteBox.height / wsBox.height : 0;
+    const chatShare = chatBox && wsBox && wsBox.height > 0 ? chatBox.height / wsBox.height : 0;
+    const msgVisible = visible(messages);
+    const msgCollapsed = !msgVisible || (msgBox && msgBox.height < 24);
+    const composerOnly = Boolean(compBox && chatBox && chatBox.height <= compBox.height + 24);
+    const siteMaxed = siteShare >= 0.88;
+    const chatMaxed = chatShare >= 0.55 && !msgCollapsed;
+    const siteMin = siteShare <= 0.2;
+    return {
+      edge,
+      siteShare: Math.round(siteShare * 1000) / 1000,
+      chatShare: Math.round(chatShare * 1000) / 1000,
+      msgCollapsed,
+      composerOnly,
+      siteMaxed,
+      chatMaxed,
+      siteMin,
+      vh,
+      ok:
+        edge === 'bottom'
+          ? siteMaxed && (msgCollapsed || composerOnly)
+          : edge === 'top'
+            ? siteMin && chatMaxed
+            : false,
+    };
+  };
+}
+
+export function appBubbleWidthSource() {
+  return () => {
+    const messages = document.querySelector('.messages');
+    const bubble = document.querySelector('#messages .bubble');
+    if (!messages || !bubble) {
+      return { ok: false, missing: !messages ? 'messages' : 'bubble' };
+    }
+    const padL = parseFloat(getComputedStyle(messages).paddingLeft) || 0;
+    const padR = parseFloat(getComputedStyle(messages).paddingRight) || 0;
+    const contentWidth = Math.max(0, messages.clientWidth - padL - padR);
+    const bubbleWidth = bubble.getBoundingClientRect().width;
+    const ratio = contentWidth > 0 ? bubbleWidth / contentWidth : 0;
+    return {
+      ok: ratio >= 0.9,
+      ratio: Math.round(ratio * 1000) / 1000,
+      bubbleWidth: Math.round(bubbleWidth),
+      contentWidth: Math.round(contentWidth),
+    };
+  };
+}
+
+export function sharedHeaderMicSource() {
+  return () => {
+    const mic = document.querySelector('[data-ts-shared-audio]');
+    const config = document.querySelector('[data-trip-view-root]');
+    const print = document.querySelector('[data-print-menu-root]');
+    return {
+      ok: !mic,
+      headerMic: Boolean(mic),
+      hasConfig: Boolean(config),
+      hasPrint: Boolean(print),
+    };
+  };
+}
+
 export function fullScreenSource() {
   return () => {
     const vw = window.innerWidth;
