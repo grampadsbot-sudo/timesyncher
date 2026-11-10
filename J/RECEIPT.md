@@ -1,12 +1,19 @@
 # PR #885 / issue #884 — logo-chip fallback hide + vk base merge (HOST PUBLICATION ONLY)
 
-**Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Lane start HEAD:** `e1307ba6b61d142597267201b7be39eeb8465201` (verified at round launch).
+**Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Lane start HEAD:** `3d66a7e05a74095aa26926f29ce051aaaa001f6c` (verified at round launch).
 
-**Host base merge:** `origin/vk` at `85fae5b37a899e737b570b71d052def772d42b16` into `e1307ba6`. **Conflicts:** `J/RECEIPT.md` only. Served bundle rebaked after merge (see below).
+**Host base merge:** `origin/vk` at `1ffd23ca895d39db3ea28eff62c7e02279881557` into `3d66a7e0` (per lane handoff). **Conflicts:** `J/RECEIPT.md` only (resolved this round). Staged vk tree: trip99/vkprloop drift #915+#921, vacation-app shell, chat itinerary edit port, `scripts/offline-tests.txt` (both drift tests registered). No `public/assets/*.js` merge conflict; rebaked bundle unchanged on disk.
 
 Authority: Craig tech-call 2026-11-09 ~12:31 PM PT — hide `.tsv-logo-fallback` after brand `img` loads; show only on missing/broken logo.
 
-GBrain handoff `bot-admin/lanes/vk-pr-handoff/pr-885`: not re-fetched this round (prior rounds: page_not_found at some launches).
+GBrain handoff `bot-admin/lanes/vk-pr-handoff/pr-885`: queued Gate B on `3d66a7e0`; this round completes in-progress vk merge + receipt only (no new `#884` product edits).
+
+## Conflict resolution (@ `3d66a7e0`)
+
+| file | resolution |
+| --- | --- |
+| `J/RECEIPT.md` | Merged HEAD #885 receipt with vk merge notes; removed conflict markers only. |
+| `scripts/offline-tests.txt` | **Both** `scripts/test_vkprloop_drift_921.mjs` (vk) and `scripts/test_vkprloop_drift_915.mjs` (vk) — already staged from merge. |
 
 ## Root cause (#884)
 
@@ -26,17 +33,14 @@ GBrain handoff `bot-admin/lanes/vk-pr-handoff/pr-885`: not re-fetched this round
 
 ## vk carry merged with #884 (keep both behaviours)
 
-From vk merge (staged index; not re-authored in this round):
+From vk merge (staged index; not re-authored in this round): vacation-app shell/CSS, `scripts/probe_header_live.mjs`, chat itinerary edit (#905 port), vkprloop drift fixtures/tests #915+#921, layout/shell tests — see staged paths in `git status`.
 
-1. **Trip 99 stand-ins (#901 / PR #908)** — fixture + hosted replay + Neon apply path: `J/trip99-change.sql`, `J/trip99-change.json`, `J/trip99-backup.sql`, `J/REVERT.md`, `scripts/fixtures/nyc-screen-trip99-live-shared-api.json`, `gate-b-nyc-shared-staging.json`, `pr336-vk-search-places.snapshot.json`, `nyc_ccab_place_enrichment.json`, `scripts/test_issue_901_trip99_single_venue_standins.mjs`, `src/vacation/trip99-thing-standin-check.mjs`, `scripts/ops/capture/capture-pre-data-check.mjs`, `scripts/offline-tests.txt` (vk registration).
-2. **Chat / itinerary edit (#905 port)** and other vk paths on the staged merge index (see prior vk receipts if needed).
-
-### #901 unit-tests fix (inherited, authoritative on staged data)
+### #901 unit-tests fix (inherited on branch)
 
 | check | detail |
 | --- | --- |
-| Failure | `test_gate_b_live_replay_display_facts.mjs`: served place 664 price `65 !== 25`; `externalId` drift 664/669. |
-| Root cause | Gate B served fixture updated but hosted live replay lagged; ccab `price` 0 → null lets estimator price 664 at 65. |
+| Failure | `test_gate_b_live_replay_display_facts.mjs`: served place 664 price drift vs ccab. |
+| Root cause | Gate B served fixture updated but hosted live replay can lag; ccab `price` 0 → null lets estimator price 664 at 65. |
 | Price 664 | Dossier free; `$0` banned; positive Gate B contract needs a price — fixtures use estimator **65**; ccab enrichment **null**. |
 
 Host: apply `J/trip99-change.sql` + `J/trip99-change.json` before expecting live `/api/shared` to match fixtures (#901 scope; not #884).
@@ -49,9 +53,9 @@ Host: NYC evidence `towneplace-logo-390.png`, `towneplace-logo-1280.png`, `broke
 
 ## Handoff hold (unchanged)
 
-GBrain handoff `hold:test-trip fixture` — places[23] Marriott `logoUrl` replay vs live is a **data/harness fault**, not a #884 UI stacking fix. No fixture rewrite this round (brief bans hard-coding NYC test trip).
+`hold:test-trip-fixture` — places[23] Marriott `logoUrl` replay vs live is a **data/harness fault**, not a #884 UI stacking fix. No fixture rewrite this round (brief bans hard-coding NYC test trip).
 
-## Local proof (@ `e1307ba6` + conflict resolve + rebake)
+## Local proof (@ `3d66a7e0` + conflict resolve)
 
 | Command | Result |
 | --- | --- |
@@ -60,22 +64,23 @@ GBrain handoff `hold:test-trip fixture` — places[23] Marriott `logoUrl` replay
 | `node scripts/test_shared_logo_chip_center_bundle.mjs` | PASS |
 | `node scripts/test_shared_trip_live_tab_logos.mjs` | PASS (after root `npm ci`) |
 | `node scripts/test_served_trek_bundle.mjs` | PASS |
+| `node scripts/test_vkprloop_drift_915.mjs` | PASS |
+| `node scripts/test_vkprloop_drift_921.mjs` | PASS |
 | `node scripts/test_issue_901_trip99_single_venue_standins.mjs` | PASS |
 | `node scripts/test_gate_b_live_replay_display_facts.mjs` | PASS |
-| `node scripts/test_gate_b_product_row_fields.mjs` | PASS (skipped=1) |
-| `node scripts/test_offline_manifest.mjs` | PASS (437 offline, 18 online) |
+| `node scripts/test_offline_manifest.mjs` | PASS (439 offline, 18 online) |
 | `BASE=vk node scripts/check-code-ratchet.mjs` | PASS (252 report, 0 fail) |
-| `node scripts/check-no-comments.mjs` | PASS (1129 files; `apps/vacation-client/npm ci` first) |
+| `node scripts/check-no-comments.mjs` | PASS (1132 files; root + `apps/vacation-client` `npm ci` first) |
 
-No CI run id on this uncommitted tree; pending host merge commit + one push to `vkfill/884-20261109123208`.
+No CI run id on this uncommitted tree; pending host `git add J/RECEIPT.md` + merge commit + one push to `vkfill/884-20261109123208`.
 
 ## Host publish (uncommitted)
 
-1. **`J/RECEIPT.md`** — merge conflict resolved (this file).
-2. **`public/assets/index-BKun7ofk.js`** — rebaked (host must `git add` if not already on index).
-3. **Staged vk merge tree** — trip99 fixtures, capture pre-data, offline manifest line, `J/PR_DESCRIPTION.md` (#901 text on branch; host may rewrite PR body for #885 vs #901 per pipeline).
-4. **No new trek `#884` patcher edits this round** — logo fallback hide already in sources; conflict round = vk base sync + receipt + rebake verify.
+1. **`J/RECEIPT.md`** — conflict resolved (this file); `git add` to mark resolved.
+2. **`git commit --no-edit`** — conclude vk merge into `3d66a7e0`.
+3. Push once to `vkfill/884-20261109123208`; then queued Gate B on new head per handoff `pr-885`.
+4. Staged vk paths only — no extra trek `#884` edits this round.
 
 ## Not touched
 
-Baselines, Gate B config thresholds, `package.json`, deploy config. Did not edit workflows or capture scripts beyond vk-staged paths. Did not stage, commit, push, or merge (lane HOST PUBLICATION ONLY).
+Baselines, Gate B config thresholds, `package.json`, deploy config, workflows. Did not stage, commit, push, or merge (lane HOST PUBLICATION ONLY).
