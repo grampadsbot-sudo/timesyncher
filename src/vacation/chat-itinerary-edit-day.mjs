@@ -122,6 +122,19 @@ export function dayNumbersForPlace(payload, placeId) {
   return [...numbers].filter((n) => Number.isFinite(n)).sort((a, b) => a - b);
 }
 
+export function assignedDayNumbersForPlace(payload, placeId) {
+  const days = Array.isArray(payload?.days) ? payload.days : [];
+  const numbers = new Set();
+  const placeKey = String(placeId);
+  for (const day of days) {
+    const rows = payload?.assignments?.[String(day.id)] || [];
+    if (rows.some((row) => String(row.place_id ?? row.place?.id) === placeKey) && day.day_number != null) {
+      numbers.add(Number(day.day_number));
+    }
+  }
+  return [...numbers].filter((n) => Number.isFinite(n)).sort((a, b) => a - b);
+}
+
 function formatDayChoiceLabels(payload, dayNumbers) {
   const days = Array.isArray(payload?.days) ? payload.days : [];
   return dayNumbers.map((num) => {
@@ -142,7 +155,10 @@ export function resolveItineraryEditDayNumber({
   }
   const targetId = anchorPlace?.id ?? place?.id;
   if (!targetId) return { dayNumber: null, reason: 'no_place' };
-  const candidates = dayNumbersForPlace(payload, targetId);
+  const assignmentCandidates = assignedDayNumbersForPlace(payload, targetId);
+  const candidates = intent?.op === 'add_bar_before' || intent?.op === 'set_time'
+    ? assignmentCandidates
+    : dayNumbersForPlace(payload, targetId);
   const night = /\b(that night|tonight|this night)\b/i.test(String(customerTurn || ''));
   if (night && candidates.length >= 1) return { dayNumber: candidates[0], reason: 'that_night', candidates };
   if (intent?.op === 'add_bar_before' && candidates.length >= 1) {

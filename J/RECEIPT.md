@@ -1,81 +1,67 @@
-# PR #907 — host vk merge conflict resolve @ `308ed5e4`
+# Issue #859 — chat itinerary edit (assignment move + post-gen timeout)
 
-**Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Start HEAD:** `308ed5e44d95f7be292644a7d620ad107eb29e8c` (verified). **Lane:** cursor-ubuntu, composer-2.5.
+**Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Start HEAD:** `ed8687b929c9473e6f9f2915ac5bc82d6dd802d1`. **Lane:** cursor-ubuntu, composer-2.5.
 
-## Host merge `origin/vk` @ `f8d4748f` into `308ed5e4`
+## Root cause
 
-Conflicts resolved: `J/PR_DESCRIPTION.md`, `J/RECEIPT.md`, `public/assets/index-BKun7ofk.js` (took vk bundle, then `node scripts/rebake_served_trek_bundle.mjs` → sha256 `acddd4e7783da2996c8eb61bfee84907fc5fb303edd88d7b664743a74792f713`).
+1. **set_time / “Move Carbone to Day 2”:** `applySetTimeOp` wrote `thingOverrides` + `perDaySchedule` only; no TREK assignment move. `buildDayTimeline` lists Thing rows from `assignments[dayId]` only, so UI stayed on Day 1 while chat returned success.
+2. **add_bar_before / turn 2 hang:** Post-generation `rewriteBlockedActionClaim` and `blockVacationAppReplyIdCitation` had no wall-clock bound; slow paths could hit the 60s Vercel limit after Haiku returned.
+3. **Day resolution:** `placeOnDay` treated override-only `dayIds` as “on day,” masking missing assignments.
 
-Staged vk carry from merge index (no re-author unless noted): #884 logo sources, #927 splitter/hero/budget, #925 chat itinerary, offline tests for logo regression.
-
----
-
-## Root cause (#884 — vk carry)
-
-`dc()` logo chips stacked `.tsv-logo-fallback` with brand `img` in the same grid cell; TownePlace showed suitcase-over-Marriott after favicon load.
+## Fix (product)
 
 | Path | Change |
 | --- | --- |
-| `src/vacation/thing-logo-ink-center.mjs` | Fallback hidden on successful img load / ink center |
-| `src/vacation/thing-logo-fallback-url.mjs` | `logoImgOnLoadInline` / onError inline handlers |
-| `apps/vacation-client/src/lib/logoChipHandlers.mjs` | Same hide-on-load contract for client chips |
-| `src/vacation/shared-trip-logo-audit.mjs` | `fallback_stack` DOM check |
-| `scripts/test_ui_884_logo_chip_fallback_hide.mjs` | Offline regression (new; host must ensure `offline-tests.txt` already staged from merge) |
+| `src/vacation/chat-itinerary-edit.mjs` | Ensure assignment on target day via TREK before schedule overrides; `placeOnDay` = assignment-only; honest `applied:false` when move fails |
+| `src/vacation/chat-itinerary-edit-assignment.mjs` | Assignment find/move/create on in-memory payload + plan helpers |
+| `src/vacation/chat-itinerary-edit-trek-write.mjs` | Guarded TREK writes: shared overrides PUT, assignment move PUT, day assignment POST |
+| `src/vacation/chat-itinerary-edit-slug-guard.mjs` | Allowlist / demo-lock guard (split for ratchet) |
+| `src/vacation/chat-itinerary-edit-day.mjs` | `assignedDayNumbersForPlace`; day resolve uses assignments for set_time / add_bar_before |
+| `src/vacation/bounded-await.mjs` | `boundedAwait` + `chatReplyPostgenTimeoutMs` (default 12s) |
+| `src/vacation/vacation-app-chat-postgen.mjs` | Bounded rewrite + reply ship gate factories |
+| `routes/vacation-app-chat-queue.mjs` | Wire bounded post-gen steps |
+| `scripts/test_chat_itinerary_edit.mjs` | Assignment mocks, guard scan targets trek-write module |
+| `scripts/test_chat_itinerary_edit_905.mjs` | Copy-shape two-turn Carbone Day1→Day2 @20:30 + Zinc before Carbone; 413 + huge-overrides + queue postgen wiring checks |
 
----
+## New cases vs vk@ed8687b
 
-## #903 stored data (PR branch — unchanged this round)
+On start HEAD `ed8687b929c9473e6f9f2915ac5bc82d6dd802d1`, `scripts/test_chat_itinerary_edit_905.mjs` copy-shape turn 1/2 and timeline assertions **fail** (Carbone stays on Day 1 assignment-only timeline).
 
-- No serve-time title/narrative rewrites in `live-qa-903-presentation.mjs`.
-- `GATE_B_DISPLAY_TITLE_ALIASES[609]` retained for ccab provenance.
-- All 94 snapshot rows bind vs canonical builder (prior rounds).
+## Checks (this workspace, uncommitted tree)
 
-## #927 / budget (vk carry)
+```text
+timeout 120 node scripts/test_chat_itinerary_edit.mjs
+# test_chat_itinerary_edit: ok
 
-| failure | fix |
-| --- | --- |
-| `price budget-390/1280` | `budgetLineAmount` copies `numericPrice` (`budgetModel.mjs`) |
-| `daybyday-1280.png` chrome | `ts-trip-hero-collapse.js` mounts only for `max-width: 844px` |
+node scripts/test_chat_itinerary_edit_905.mjs
+# chat_itinerary_edit_failed trek_edit_write_failed 413 ... (expected oversize probe)
+# test_chat_itinerary_edit_905: ok
 
-## vk carry — chat edit sequential PUT merge
+cd apps/vacation-client && timeout 900 npm test
+# vacation-client tests finished
 
-| Path | Behaviour kept |
-| --- | --- |
-| `src/vacation/chat-itinerary-edit-day.mjs` | `mergeStoredChatItineraryScheduleOverride` |
-| `src/vacation/chat-itinerary-edit.mjs` | `persistItineraryWrite` passes `thingOverrides` |
+node scripts/check-no-comments.mjs
+# no-comment check passed (1143 files scanned)
 
----
+node scripts/test_offline_manifest.mjs
+# offline manifest ok (442 offline, 19 online)
 
-## Checks @ PATCH (this lane)
+BASE=vk node scripts/check-code-ratchet.mjs
+# code ratchet check passed (252 report, 0 fail)
+```
 
-| Command | Result |
-| --- | --- |
-| `node scripts/test_pr336_ccab_search_provenance.mjs` | PASS |
-| `node scripts/test_shared_tab_list_summary.mjs` | PASS |
-| `node scripts/test_ui_884_logo_chip_fallback_hide.mjs` | PASS |
-| `node scripts/test_shared_logo_chip_center_bundle.mjs` | PASS |
-| `node scripts/test_shared_trip_live_tab_logos.mjs` | PASS |
-| `node scripts/test_served_trek_bundle.mjs` | PASS |
-| `cd apps/vacation-client && npm test` | PASS |
-| `node apps/vacation-client/test/budget.unit.mjs` | PASS |
-| `node scripts/test_vacation_app_927_hero_collapse.mjs` | PASS |
-| `node scripts/test_vacation_app_927_touch_splitter.mjs` | PASS |
-| `node scripts/test_chat_itinerary_edit.mjs` | PASS |
-| `node scripts/test_chat_itinerary_edit_905.mjs` | PASS |
-| `node scripts/regenerate_pr336_search_trip_fixture.mjs` | ok, 94 places |
-| `node scripts/check-no-comments.mjs` | PASS (1138 files) |
-| `node scripts/test_offline_manifest.mjs` | PASS (442 offline, 19 online) |
-| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS (252 report, 0 fail) |
-
-CI run id and Gate B verdict: pending host push.
+Not run here: live two-turn proof (`~/tsv-dispatch/lanes/jobs/chat-edit-live-proof-859-next/`), Gate B, CI, deploy.
 
 ## Host publish
 
-1. Mark conflicts resolved: `git add J/PR_DESCRIPTION.md J/RECEIPT.md public/assets/index-BKun7ofk.js` plus staged merge paths; discard `evidence/vacation-client-p2-*/*.png` diffs from local `npm test` (not product); `git commit --no-edit` on `vkfill/903-20261109163214`; push once.
-2. Exact-head CI, pregate Gate B (overall look, never height), look batch.
-3. Post-deploy: `node scripts/test_vacation_app_927_webkit_touch_live.mjs` when WebKit URL available.
+Stage all under:
 
-## Scope left alone
+- `routes/vacation-app-chat-queue.mjs`
+- `scripts/test_chat_itinerary_edit.mjs`, `scripts/test_chat_itinerary_edit_905.mjs`
+- `src/vacation/bounded-await.mjs`
+- `src/vacation/chat-itinerary-edit*.mjs` (edit, assignment, day, slug-guard, trek-write)
+- `src/vacation/vacation-app-chat-postgen.mjs`
 
-- Lane did not stage, commit, push, or merge (HOST PUBLICATION ONLY).
-- Baselines, Gate B thresholds, workflows, force-push from lane.
+Do **not** include accidental evidence PNGs (reverted).
+
+Single commit + push + PR into `vk` with `Closes #859`; use `J/PR_DESCRIPTION.md`.
