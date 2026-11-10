@@ -289,7 +289,6 @@ function pushHotelRows(entries, trip, day) {
         title: `Check-in: ${name}`,
         startMin: parseClockToMinutes(checkIn),
         startLabel: checkIn,
-        durationMin: 30,
         category: 'hotel',
         itineraryNote: note,
       });
@@ -313,7 +312,6 @@ function pushHotelRows(entries, trip, day) {
         title: `Check-out: ${name}`,
         startMin: parseClockToMinutes(checkOut),
         startLabel: checkOut,
-        durationMin: 60,
         category: 'hotel',
       });
     }
@@ -443,7 +441,8 @@ export function buildDayTimeline(trip, day) {
   pushFlightRows(entries, trip, day, dayId);
   pushCarRows(entries, trip, day);
   entries.sort((a, b) => {
-    const rank = (e) => (e.kind === 'hotel-sleep' ? 3 : (e.startMin == null && e.kind !== 'travel' ? 2 : 1));
+    const rank = (e) =>
+      e.kind === 'hotel-wake' ? 0 : e.kind === 'hotel-sleep' ? 3 : e.startMin == null && e.kind !== 'travel' ? 2 : 1;
     const r = rank(a) - rank(b);
     if (r) return r;
     if (rank(a) !== 1) return String(a.id).localeCompare(String(b.id));

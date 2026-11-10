@@ -56,8 +56,74 @@ const timelineEnd = committed.indexOf(timelineEndMarker, timelineStart);
 assert.ok(timelineStart > 0 && timelineEnd > timelineStart);
 const rowExpression = committed.slice(timelineStart, timelineEnd + timelineEndMarker.length);
 const jsx = (type, props) => ({ type, props });
-const rowFor = new Function('n', 'ua', 'Rn', 'Zn', 'Xr', 'sr', 'zr', 'Pn', 'Yo', 'Bs', 'rr', 'Nr', 'tsItinLine', 'Zi', rowExpression);
-const row = (extra = {}) => rowFor({ jsx, jsxs: jsx, Fragment: 'fragment' }, { time: '12:00', title: 'Lunch', type: 'restaurant', item: {}, ...extra }, 0, false, '', '', [], 'Lunch', String, String, () => '', null, () => 'Grab the nova.', () => false);
+const Io = (clock) => {
+  const s = String(clock || '').trim().toLowerCase();
+  const m = s.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/);
+  if (!m) return 99999;
+  let h = Number(m[1]);
+  const min = Number(m[2] || 0);
+  if (m[3] === 'pm' && h < 12) h += 12;
+  if (m[3] === 'am' && h === 12) h = 0;
+  return h * 60 + min;
+};
+const tsTimelineRowTime = (ua) => (ua.time ? String(ua.time) : 'TBD');
+const tsTimelineRowEnd = (ua) => {
+  if (!ua.endTime) return '';
+  if (Io(ua.endTime) === Io(ua.time)) return '';
+  return String(ua.endTime);
+};
+const tsTimelineLogoFallback = () => {};
+const tsPaintTabEmoji = () => {};
+const Ne = () => {};
+const Qt = () => '';
+const rowFor = new Function(
+  'n',
+  'ua',
+  'Rn',
+  'Zn',
+  'Xr',
+  'sr',
+  'zr',
+  'Pn',
+  'Yo',
+  'Bs',
+  'rr',
+  'Nr',
+  'tsItinLine',
+  'Zi',
+  'Io',
+  'tsTimelineRowTime',
+  'tsTimelineRowEnd',
+  'tsTimelineLogoFallback',
+  'tsPaintTabEmoji',
+  'Ne',
+  'Qt',
+  rowExpression,
+);
+const row = (extra = {}) =>
+  rowFor(
+    { jsx, jsxs: jsx, Fragment: 'fragment' },
+    { time: '12:00', title: 'Lunch', type: 'restaurant', item: {}, ...extra },
+    0,
+    false,
+    '',
+    '',
+    [],
+    'Lunch',
+    String,
+    String,
+    () => '',
+    null,
+    () => 'Grab the nova.',
+    () => false,
+    Io,
+    tsTimelineRowTime,
+    tsTimelineRowEnd,
+    tsTimelineLogoFallback,
+    tsPaintTabEmoji,
+    Ne,
+    Qt,
+  );
 const single = row();
 assert.equal(single.props.children[0].props.style.alignSelf, 'baseline');
 assert.equal(single.props.children[2].props.style.alignSelf, 'baseline');
@@ -71,6 +137,10 @@ assert.equal(conflict.props.children[2].props.style.borderLeft, '3px solid #60a5
 assert.equal(row({ time: '' }).props.children[0].props.style.alignSelf, 'baseline');
 assert.equal(row({ time: '' }).props.children[0].props.children, 'TBD');
 assert.equal(row({ time: '' }).props.children[2].props.style.alignSelf, 'baseline');
+assert.equal(
+  row({ time: '8:30 pm', endTime: '8:30 pm' }).props.children[0].props.children.filter(Boolean).length,
+  1,
+);
 
 console.log('itinerary fresh day-by-day bundle checks passed');
 
