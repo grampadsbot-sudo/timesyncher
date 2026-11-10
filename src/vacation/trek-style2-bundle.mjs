@@ -17,7 +17,7 @@ import {
 } from './trek-live-product-patches.mjs';
 import { LIST_LOGO_NEEDLE, LIST_LOGO_QR_GUARD_PATCH, patchListLogoQrGuard } from './trek-list-logo-qr-patch.mjs';
 import { patchThingDetailCapture, patchThingDetailPanel } from './trek-thing-detail-patches.mjs';
-import { patchStarRatings } from './trek-star-rating-patch.mjs';
+import { patchStarRatings } from './trek-star-rating-patch.mjs'; import { patchUi903DetailChrome } from './trek-qa-903-ui-patch.mjs';
 import { patchInlineListRowDescriptionOnThingHeader, patchSharedTripListWrapping } from './shared-trip-oe-list-row-patch.mjs';
 import { patchDayByDayKeepsakeMap } from './trek-day-by-day-map-patches.mjs';
 import { patchTimelineItineraryNote } from './trek-timeline-itinerary-note-patch.mjs';
@@ -512,7 +512,7 @@ export function renderServedTrekBundle(raw) {
   const patched = patchThingLogoChipAlignment(dropServedTrekCallers(patchStyleTwoToConfigRenderer(stripped.source, { served: true })));
   const js = stripHotelBrandNameGuessing(stripServedQaCopy(rewriteAppConfigCallers(patched)));
   assertServedBundleClean(js);
-  const finalJs = patchUi754(patchUi737(patchUi735SharedPdf(patchTimelineItineraryNote(patchUi734Round2(patchUi734Round1(patchInlineListRowDescriptionOnThingHeader(patchSharedTripListWrapping(patchStarRatings(patchThingDetailCapture(js))))))))));
+  const finalJs = patchUi903DetailChrome(patchUi754(patchUi737(patchUi735SharedPdf(patchTimelineItineraryNote(patchUi734Round2(patchUi734Round1(patchInlineListRowDescriptionOnThingHeader(patchSharedTripListWrapping(patchStarRatings(patchThingDetailCapture(js)))))))))));
   return patchListRowDescription(finalJs);
 }
 
