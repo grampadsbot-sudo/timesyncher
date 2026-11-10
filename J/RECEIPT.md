@@ -18,3 +18,15 @@ Live `6017b330` already unwraps Day-by-Day conflict banners at 390 ("Conflict wi
 ## Checks
 
 Recorded after rebake on the merged tree.
+
+## Checks (merged tree on `6017b330` + max-content)
+
+| Command | Result |
+| --- | --- |
+| `node scripts/rebake_served_trek_bundle.mjs` | PASS sha256 `7794499c32f24a71a4843357adc5c85a752435b9ef8508fad6dfaa3a16d4f87c` |
+| `node scripts/test_ui_558_daybyday_time_name_baseline.mjs` | PASS |
+| `node scripts/test_issue_944_daybyday_banner_tz_390.mjs` | PASS |
+| `node scripts/test_itinerary_fresh_daybyday_bundle.mjs` | PASS |
+| `node scripts/test_issue_887_daybyday_time_column.mjs` | PASS |
+| `node scripts/test_issue_888_clipped_text.mjs` | PASS |
+| `node scripts/test_issue_928_daybyday_arrival_conflicts.mjs` | PASS |
