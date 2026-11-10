@@ -18,14 +18,14 @@
     const style = document.createElement('style');
     style.id = styleId;
     style.textContent = [
-      '[data-ts-trip-site-hero]{transition:padding 200ms ease,padding-left 200ms ease,padding-right 200ms ease}',
-      '[data-ts-trip-site-hero] h1{display:block!important;width:fit-content!important;max-width:calc(100% - 104px)!important;margin:26px auto 0!important;min-width:0;box-sizing:border-box;text-align:center;font-size:21px!important;font-weight:700;letter-spacing:-.5px;line-height:1.15;overflow-wrap:anywhere;white-space:normal}',
+      '[data-ts-trip-site-hero]{transition:padding 200ms ease,padding-left 200ms ease,padding-right 200ms ease;box-sizing:border-box;padding-left:54px!important;padding-right:16px!important}',
+      '[data-ts-trip-site-hero] h1{display:block!important;width:fit-content!important;max-width:100%!important;margin:26px auto 0!important;min-width:0;box-sizing:border-box;text-align:center;font-size:21px!important;font-weight:700;letter-spacing:-.5px;line-height:1.15;overflow-wrap:anywhere;white-space:normal}',
       '[data-ts-trip-hero-detail]{margin-left:auto;margin-right:auto}',
       '[data-ts-trip-hero-actions]{margin-top:8px;display:flex;justify-content:center;gap:6px;flex-wrap:wrap}',
       '[data-ts-trip-hero-collapse]{position:absolute;left:10px;top:10px;z-index:30;width:44px;height:44px;min-width:44px;min-height:44px;border:1px solid rgba(255,255,255,.28);border-radius:999px;background:rgba(255,255,255,.1);color:#fff;font:inherit;font-size:20px;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0}',
-      '[data-ts-trip-site-hero][data-collapsed="1"]{padding-top:8px!important;padding-bottom:8px!important;padding-left:10px!important;padding-right:10px!important}',
+      '[data-ts-trip-site-hero][data-collapsed="1"]{padding-top:8px!important;padding-bottom:8px!important;padding-left:54px!important;padding-right:10px!important}',
       '[data-ts-trip-site-hero][data-collapsed="1"] [data-ts-trip-hero-detail],[data-ts-trip-site-hero][data-collapsed="1"] [data-ts-trip-hero-actions]{display:none!important}',
-      '[data-ts-trip-site-hero][data-collapsed="1"] h1{font-size:15px!important;line-height:1.15;max-width:calc(100% - 88px)!important;margin:30px auto 0!important}',
+      '[data-ts-trip-site-hero][data-collapsed="1"] h1{font-size:15px!important;line-height:1.15;max-width:100%!important;margin:30px auto 0!important}',
       '[data-ts-trip-site-hero][data-collapsed="1"] [data-ts-trip-hero-collapse]{left:10px;top:8px;width:36px;height:36px;min-width:36px;min-height:36px;font-size:17px;transform:rotate(180deg)}',
     ].join('');
     document.head.appendChild(style);
