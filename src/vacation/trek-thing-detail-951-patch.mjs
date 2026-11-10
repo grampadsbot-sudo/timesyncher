@@ -1,8 +1,8 @@
-const READONLY_PRICE_NEEDLE =
-  'return n.jsxs(n.Fragment,{children:[(addr||hours)?n.jsxs("div",{"data-ts-detail-info-box":"address-hours"';
+const HEADER_STARS_NEEDLE =
+  '(()=>{const tsHeadStars=tsRenderStarRatingHtml(tsPrimaryPlaceStarRating(ha(Dt)));return tsHeadStars?n.jsx("span",{"data-ts-detail-header-stars":"1",style:{display:"flex",flexDirection:"row",flexWrap:"nowrap",alignItems:"center",justifyContent:"center",width:"100%"},dangerouslySetInnerHTML:{__html:tsHeadStars}}):null})()';
 
-const READONLY_PRICE_PATCH =
-  'return n.jsxs(n.Fragment,{children:[(()=>{const raw=String(d.price??"").trim();const unit=typeof d.price==="number"?d.price:Number(raw.replace(/[^0-9.]/g,""));const tsPriceHas=Number.isFinite(unit)&&unit>0;return tsPriceHas?n.jsxs("p",{"data-ts-detail-field":"price",style:{fontSize:13,lineHeight:1.45,margin:"0 0 10px"},children:[n.jsx("strong",{children:"Price:"})," ",`$${unit}`]}):null})(),(addr||hours)?n.jsxs("div",{"data-ts-detail-info-box":"address-hours"';
+const RATING_PRICE_ROW_PATCH =
+  '(()=>{const tsHeadStars=tsRenderStarRatingHtml(tsPrimaryPlaceStarRating(ha(Dt)));const d=ha(Dt)||{};const raw=String(d.price??"").trim();const unit=typeof d.price==="number"?d.price:Number(raw.replace(/[^0-9.]/g,""));const tsPriceHas=Number.isFinite(unit)&&unit>0;return tsHeadStars||tsPriceHas?n.jsxs("div",{"data-ts-detail-rating-row":"1",style:{display:"flex",flexDirection:"row",flexWrap:"wrap",alignItems:"center",justifyContent:"center",columnGap:12,rowGap:4,width:"100%",minWidth:0},children:[tsHeadStars?n.jsx("span",{"data-ts-detail-header-stars":"1",style:{display:"flex",flexDirection:"row",flexWrap:"nowrap",alignItems:"center",justifyContent:"center",flex:"0 0 auto"},dangerouslySetInnerHTML:{__html:tsHeadStars}}):null,tsPriceHas?n.jsxs("span",{"data-ts-detail-field":"price",style:{fontSize:13,lineHeight:1.45,whiteSpace:"nowrap",color:"#111827",flex:"0 0 auto"},children:[n.jsx("strong",{children:"Price:"})," ","$"+Math.round(unit).toLocaleString("en-US")]}):null]}):null})()';
 
 const CLOSE_BTN_NEEDLE =
   'n.jsx("button",{onClick:()=>Ne(null),style:{border:"1px solid #e5e7eb",background:"#f9fafb",borderRadius:999,width:34,height:34,cursor:"pointer",fontWeight:900},children:"×"})';
@@ -23,10 +23,10 @@ const DETAIL_NAME_EDIT_PATCH =
 
 export function patchThingDetail951(source = '') {
   let js = String(source || '');
-  if (js.includes(READONLY_PRICE_NEEDLE)) {
-    js = js.replace(READONLY_PRICE_NEEDLE, READONLY_PRICE_PATCH);
-  } else if (!js.includes('"data-ts-detail-field":"price"')) {
-    throw new Error('thing detail #951 view price row patch did not apply');
+  if (js.includes(HEADER_STARS_NEEDLE)) {
+    js = js.replace(HEADER_STARS_NEEDLE, () => RATING_PRICE_ROW_PATCH);
+  } else if (!js.includes('"data-ts-detail-rating-row":"1"')) {
+    throw new Error('thing detail #959 rating + price row patch did not apply');
   }
   if (js.includes(CLOSE_BTN_NEEDLE)) {
     js = js.replace(CLOSE_BTN_NEEDLE, CLOSE_BTN_PATCH);

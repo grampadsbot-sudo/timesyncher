@@ -236,7 +236,6 @@
         height: auto;
         background-clip: content-box;
       }
-      .splitter::after { width: 27px; height: 1.5px; }
     }
     .app.splitter-dragging .site-pane iframe {
       pointer-events: none;
@@ -251,9 +250,6 @@
       border-radius: 999px;
       background: #9ca8b5;
       transform: translate(-50%, -50%);
-    }
-    @media (pointer: coarse) and (hover: none) and (min-width: 481px) and (max-width: 932px) {
-      .splitter::after { width: 27px; height: 1.5px; }
     }
     .chat-pane {
       display: grid;
@@ -613,7 +609,7 @@
         ${header}
         <section class="workspace${hasTopPane ? '' : ' chat-only'}" id="workspace">
           ${hasSite ? `<div class="site-pane"><iframe title="${safe(customerPlaceName(trip.title) || 'Vacation')} website" src="${safe(embedSiteUrl(siteUrl))}"></iframe></div>
-          <div class="splitter-row" id="splitterRow"><button class="splitter" id="splitter" type="button" aria-label="Resize website and chat panels"></button>${siteFullscreen}</div>` : ''}
+          <div class="splitter-row" id="splitterRow"><span class="splitter-track" id="splitterTrack" aria-hidden="true"></span><button class="splitter" id="splitter" type="button" aria-label="Resize website and chat panels"></button>${siteFullscreen}</div>` : ''}
           ${!hasSite && progressActive ? `<div class="site-pane" id="searchProgressPane"><div class="search-progress" id="searchProgress" aria-live="polite"><div class="search-progress-rows" id="searchProgressRows"></div><p class="search-progress-status" id="searchProgressStatus" hidden>Building itinerary…</p></div></div>
           <button class="splitter" id="splitter" type="button" aria-label="Resize search progress and chat panels"></button>` : ''}
           <section class="chat-pane" aria-label="Vacation chat">

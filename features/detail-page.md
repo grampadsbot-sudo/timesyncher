@@ -22,4 +22,6 @@ Shared fields (live TREK `index-BKun7ofk.js`, 2026-09-10 — do not invent extra
 
 Timeline rows use **Open thing details**. Edit-state copy: see `collaborators.md`.
 
+View mode (#959): the header shows the stars and **Price: $N** on one rating row (`data-ts-detail-rating-row`, `data-ts-detail-field="price"`). The price is `overrides.price ?? thing.price`, rounded and formatted like Budget. The label is always **Price:**, never per person. The pencil (`data-ts-detail-edit`, **Edit thing**) shows only when edit access is granted. See `collaborators.md`.
+
 Type-specific fields: `happy-hour.md`, `hotel-stay-fields.md`, `flight-fields.md`, `car-fields.md`, `ratings-reviews.md`, `tags-chips.md`.

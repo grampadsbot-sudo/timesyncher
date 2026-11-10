@@ -78,11 +78,15 @@ async function assertSplitterPill(page, tag) {
       width: Math.round(parseFloat(after.width) || 0),
       height: Math.round(parseFloat(after.height) || 0),
       handleHeight: Math.round(touch.height),
+      trackHeight: document.getElementById('splitterTrack')?.getBoundingClientRect().height || 0,
+      rowPaint: row ? getComputedStyle(row).backgroundImage : '',
     };
   });
   assert.ok(pill, `${tag}: splitter required for SITE fixture`);
-  assert.ok(pill.width <= 30 && pill.width >= 24, `${tag}: pill width ~27px got ${pill.width}`);
-  assert.ok(pill.height <= 3 && pill.height >= 1, `${tag}: pill height ~2px got ${pill.height}`);
+  assert.ok(pill.width >= 52 && pill.width <= 56, `${tag}: pill width 54px got ${pill.width}`);
+  assert.ok(pill.height >= 2.5 && pill.height <= 3.5, `${tag}: pill height 3px got ${pill.height}`);
+  assert.ok(pill.trackHeight >= 20 && pill.trackHeight <= 24, `${tag}: painted divider track ~22px got ${pill.trackHeight}`);
+  assert.equal(pill.rowPaint, 'none', `${tag}: 44px hit row must not paint the gray band`);
   assert.ok(pill.handleHeight >= 44, `${tag}: splitter touch target >= 44px`);
 }
 

@@ -14,6 +14,7 @@ import {
   webAccessCookieName,
   webAccessForSession,
 } from '../src/vacation/web-access.mjs';
+import { setVacationAppOwnerWebAccessCookie } from '../src/vacation/vacation-app-owner-web-access.mjs';
 import { collaboratorWelcomeTurnExists } from '../src/vacation/collaborator-welcome.mjs';
 import { collaboratorEulaAcceptUrl, loadCollaboratorInviteForWebAccessGrant } from '../src/vacation/collaborators.mjs';
 import bindThingMediaHandler from '../src/vacation/bind-thing-media-handler.mjs';
@@ -889,10 +890,10 @@ async function handleVacationApp(req, res, db, url) {
 
   const session = await loadVacationAppSession(db, token);
   if (!session?.customer_id) return sendJson(res, 404, { ok: false, error: 'Vacation app session not found.' });
-  const seatForEula = seatFromSession(session);
-  if (seatForEula?.inviteId) {
+  const seat = seatFromSession(session);
+  if (seat?.inviteId) {
     const store = createPersistentStoreFromEnv(process.env);
-    await collaboratorSessionForAccept(store, db, collaboratorEulaSessionId({ id: seatForEula.inviteId }), process.env);
+    await collaboratorSessionForAccept(store, db, collaboratorEulaSessionId({ id: seat.inviteId }), process.env);
   }
 
   if (req.method === 'GET') {
@@ -907,8 +908,7 @@ async function handleVacationApp(req, res, db, url) {
       });
     }
     const requestedTripId = cleanText(url.searchParams.get('tripId') || url.searchParams.get('trip_id'), 80);
-    const seatPrefetch = seatFromSession(session);
-    if (seatPrefetch?.ownerTripId) await publishIntakeShare(db, seatPrefetch.ownerTripId);
+    if (seat?.ownerTripId) await publishIntakeShare(db, seat.ownerTripId);
     let vacations = await loadVacationAppTrips(db, session);
     let selected = pickVacationAppTrip(vacations, session, requestedTripId);
     if (selected?.id) await publishIntakeShare(db, selected.id);
@@ -917,7 +917,7 @@ async function handleVacationApp(req, res, db, url) {
     const eula = await vacationAppEula(session, process.env);
     if (eula.accepted) {
       await ensureOnboardingOpener(db, session, selected || null);
-      if (seatFromSession(session)) {
+      if (seat) {
         const welcomed = await collaboratorWelcomeTurnExists(db, session, selected || null);
         if (!welcomed) {
           throw onboardingWelcomeFailure('collaborator onboarding welcome missing after app load', selected?.id || null);
@@ -932,8 +932,8 @@ async function handleVacationApp(req, res, db, url) {
       const synced = await syncSearchProgressStage(db, selected.id, { publicUrl: selected?.publicUrl || '' });
       searchProgress = searchProgressForClient(synced);
     }
-    const seat = seatFromSession(session);
     const tripSiteUrl = selected ? tripWelcomeSiteUrl(selected) : '';
+    if (!seat && selected?.id) await setVacationAppOwnerWebAccessCookie(db, req, res, { session, tripId: selected.id });
     return sendJson(res, 200, {
       ok: true,
       session: {

@@ -1,3 +1,5 @@
+import { naturalFlightSummary } from './flight-summary-prose.mjs';
+
 function text(value) {
   return String(value ?? '');
 }
@@ -19,8 +21,8 @@ export function composeListRowDescription({ fields = {} } = {}) {
 export function listRowDescriptionBundleSnippet() {
   return [
     'tsListRowDescription=function(G){',
-    'const ov=ha(G)||{};',
-    'return String(ov.summary??"");},',
+    'const ov=ha(G)||{},summary=String(ov.summary??"");',
+    `return It(G)==="flight"?(${naturalFlightSummary.toString()})(summary):summary;},`,
   ].join('');
 }
 

@@ -19,3 +19,4 @@ scripts/test_shared_trip_no_horizontal_overflow.mjs browser: shared trip scrollW
 scripts/test_pr225_cars_tab_overflow.mjs browser: PR225 NYC Cars tab overflow harness needs puppeteer-core and Chrome, which the offline job does not install
 scripts/test_pr225_served_tabs_overflow.mjs browser: PR225 NYC all-tab scrollWidth harness needs puppeteer-core and Chrome, which the offline job does not install
 scripts/test_vacation_app_switcher_dropdown_webkit.mjs browser: WebKit iPhone 390/430 touch switcher, dropdown and divider pill; needs playwright WebKit, which the offline job does not install (merge gate: tsv-dispatch acceptance/956.json accept status)
+scripts/test_issue_959_owner_pencil_webkit.mjs browser: WebKit iPhone 390/430 owner session-link pencil, detail Price row and flight price alignment; needs playwright WebKit, which the offline job does not install (merge gate: tsv-dispatch acceptance/959.json accept status)
