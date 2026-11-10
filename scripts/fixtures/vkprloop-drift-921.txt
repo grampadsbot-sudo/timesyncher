@@ -1,0 +1,24 @@
+--- ci-red-note ---
+        # executor 11/9 8:42 PM PT (PR #916/#907): the token is a no-op when lane_autofill skips the PR (outside keep set,
+        # held batch result, hold label, round cap). Report lane_autofill's own latest skip reason instead of a bare
+        # "requeued to a free lane", so the alarm does not claim a launch that can never happen.
+        _why = _autofill_skip_reason(n)
+        if _why:
+            done.append("BUT lane_autofill will not launch it: %s" % _why[:160])
+--- skip-reason ---
+def _autofill_skip_reason(n):
+    """Latest 'skip #n: ...' line from today's lane-autofill log, if no later 'launch' for #n follows it."""
+    import glob
+    logs = sorted(glob.glob(D + "/logs/lane-autofill-2*.log"))
+    if not logs:
+        return ""
+    try:
+        lines = open(logs[-1]).read().splitlines()[-4000:]
+    except OSError:
+        return ""
+    for ln in reversed(lines):
+        if ("launch " in ln and ("-%d " % n in ln or "vkfill-%d-" % n in ln)):
+            return ""
+        if ("skip #%d:" % n) in ln:
+            return ln.split("skip #%d:" % n, 1)[1].strip()
+    return ""

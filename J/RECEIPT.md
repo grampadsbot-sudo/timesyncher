@@ -1,4 +1,29 @@
-# PR #896 / issue #888 — host vk base-merge conflict resolution (ce649c0 → c5ac2c57)
+# PR #896 / issue #888 — CI unit-tests fix + vk base-merge `J/RECEIPT.md` conflict
+
+**Outcome:** SOURCE-READY for host commit (merge completion). **Starting HEAD:** `63e5d083c758d1d16e0e335f867683f405dd966c`. **Merged base:** `origin/vk` @ `1ffd23ca895d39db3ea28eff62c7e02279881557` (host basemerge). **Model:** composer-2.5; HOST PUBLICATION ONLY.
+
+## This round (chief dr eggbot CI fix @ `63e5d083`)
+
+| change | why |
+| --- | --- |
+| `vacation-app.html` | Restored base `vk` chat-send `catch` block (`showComposerStatus(customerSafeErrorMessage`, `tsTyping` remove, AbortError bubble, `stopProgressPoll`) verbatim from `git show origin/vk:vacation-app.html`; dropped `handleChatSendFailure(...)` delegate that made `scripts/test_reply_action_claim_d2_paia_save_route.mjs` RED on CI head `63e5d083`. **#888** switcher/flight/conflict CSS unchanged. |
+| `J/RECEIPT.md` | Removed merge conflict markers; kept both sides' historical receipts below. |
+
+| check | result @ uncommitted tree |
+| --- | --- |
+| `node scripts/test_reply_action_claim_d2_paia_save_route.mjs` | PASS (after root `npm ci`) |
+| `node scripts/test_issue_888_clipped_text.mjs` | PASS |
+| `cd apps/vacation-client && npm test` | PASS (after root + client `npm ci`) |
+| `node scripts/check-no-comments.mjs` | PASS (1132 files) |
+| `node scripts/test_offline_manifest.mjs` | PASS (439 offline, 18 online) |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS (252 report, 0 fail) |
+| `git diff --check` | PASS (no conflict markers in product files) |
+
+**Host:** resolve `J/RECEIPT.md` UU, `git add vacation-app.html`, complete merge commit (`git commit --no-edit`), push `vkfill/888-20261109142715` once; CI must green including `unit-tests` on published SHA. Official Gate B queue remains on prior published head until host publishes this merge.
+
+---
+
+## Inherited — PR #896 / issue #888 — host vk base-merge conflict resolution (ce649c0 → c5ac2c57)
 
 **Outcome:** SOURCE-READY for host commit (merge completion). **Starting HEAD:** `c5ac2c57b28980eb2535697829e16a22dcd72659`. **Merged base:** `origin/vk` @ `ce649c0cde4e7ecac6dc0138e2dddd5cc523ecde` (`basemerge.json` in job `vkfill-896-20261109210939-job`). **Model:** composer-2.5; HOST PUBLICATION ONLY — no commit, stage, push, or Git metadata write by this round.
 
@@ -148,6 +173,40 @@ Earlier partial noted Southwest logo 3px vs 2px tolerance on full Gate B flights
 **vk HEAD at merge:** `5a67b4fc90c1e579381b02dbf94396a0d72ce9b8`
 
 ## Changes (in staged merge index)
+
+Dossier overlay, fixture address/flight rows, offline `test_vkprloop_*` rows — per `git diff --cached --stat` on earlier merge rounds.
+
+---
+
+# PR #922 — host base-merge conflict resolve @ `578510a2` (inherited from `origin/vk`)
+
+**Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Start HEAD:** `578510a284ac0081e7ad40a99820ee0a5e6013f1` (verified). **Lane:** cursor-ubuntu, composer-2.5. Host merged `origin/vk` at `ce649c0cde4e7ecac6dc0138e2dddd5cc523ecde` (chief `basemerge.json` dirty-head requeue).
+
+## Conflict resolution
+
+| file | resolution |
+| --- | --- |
+| `scripts/offline-tests.txt` | Kept **both** `scripts/test_vkprloop_drift_921.mjs` (PR #922 / #921) and `scripts/test_vkprloop_drift_915.mjs` (`origin/vk`). Removed conflict markers only. |
+
+Staged from merge (unchanged this round): `scripts/fixtures/vkprloop-drift-915.txt`, `scripts/test_vkprloop_drift_915.mjs`. No `public/assets/*.js` conflict; rebake not run.
+
+## Checks (lane)
+
+| check | result |
+| --- | --- |
+| `node scripts/test_vkprloop_drift_921.mjs` | PASS |
+| `node scripts/test_vkprloop_drift_915.mjs` | PASS |
+| `node scripts/test_offline_manifest.mjs` | PASS (438 offline, 18 online) |
+| `node scripts/check-no-comments.mjs` | BLOCKED locally: missing `apps/vacation-client/node_modules/typescript` (run root + `apps/vacation-client` `npm ci` before host pre-DONE) |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | not run (blocked on same deps) |
+| `cd apps/vacation-client && npm test` | PARTIAL: budget + dayTimeline PASS; `detail.unit.mjs` ERR_MODULE_NOT_FOUND `@neondatabase/serverless` (no `npm ci` in worktree) |
+
+## Host publish
+
+1. `git add scripts/offline-tests.txt` (resolve UU), then `git commit --no-edit` to finish the in-progress merge; push once to `grok/tsv-921-formal-model-drift-vkprloop-tla-behind-d`.
+2. After `npm ci` (repo root + vacation-client): `node scripts/check-no-comments.mjs`, `node scripts/test_offline_manifest.mjs`, `BASE=vk node scripts/check-code-ratchet.mjs`, full `scripts/offline-tests.txt` suite per lane brief, then CI on new head.
+
+---
 
 # PR #908 / #901 — host base-merge follow-up (9420e788)
 

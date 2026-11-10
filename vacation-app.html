@@ -692,7 +692,15 @@
           messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>Vacay Keepsake</small>${chatText(data.reply)}</article>`);
         }
       } catch (error) {
-        window.tsVacationAppRequest.handleChatSendFailure(error, { messages, showComposerStatus, customerSafeErrorMessage, stopProgressPoll });
+        document.getElementById('tsTyping')?.remove();
+        console.error(error);
+        if (error?.name === 'AbortError') {
+          messages.insertAdjacentHTML('beforeend', '<article class="bubble" role="alert"><small>TimeSyncher</small>That took too long — please try again.</article>');
+          showComposerStatus('');
+        } else {
+          showComposerStatus(customerSafeErrorMessage(error, error?.response));
+        }
+        stopProgressPoll();
       } finally {
         sendAbort.clear();
         state.sending = false;
