@@ -182,6 +182,10 @@
       display: block;
       background: white;
     }
+    .splitter-row {
+      min-height: 44px;
+      touch-action: none;
+    }
     .splitter {
       border: 0;
       border-top: 1px solid #cdd5df;
@@ -190,6 +194,11 @@
       cursor: row-resize;
       touch-action: none;
       position: relative;
+      width: 100%;
+      min-height: 44px;
+    }
+    .app.splitter-dragging .site-pane iframe {
+      pointer-events: none;
     }
     .splitter::after {
       content: "";

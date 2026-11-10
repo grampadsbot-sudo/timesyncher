@@ -2,6 +2,7 @@
 
 import {
   formatUsd,
+  numericPrice,
   placeName,
   tabCategoryKey,
 } from './listTabModel.mjs';
@@ -63,7 +64,14 @@ export function budgetBucketForPlace(place, trip) {
 }
 
 export function budgetLineAmount(place, trip) {
-  return thingBudgetAmount(place, overrideFor(trip, place), tabCategoryKey(place, trip), trip);
+  const override = overrideFor(trip, place);
+  const category = tabCategoryKey(place, trip);
+  const merged = { ...place, ...override };
+  if (merged.price == null || merged.price === '') {
+    const fromList = numericPrice(place, trip);
+    if (fromList != null) merged.price = fromList;
+  }
+  return thingBudgetAmount(merged, {}, category, trip);
 }
 
 function readBudgetTargetsMap(trip = {}) {

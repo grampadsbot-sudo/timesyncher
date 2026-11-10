@@ -13,6 +13,7 @@ scripts/test_shared_trip_cars_tab_logo_served_chrome.mjs browser: shared Cars ta
 scripts/test_shared_trip_live_tab_logo_chip_chrome.mjs browser: shared live-tab Hertz sizeless SVG logo chip paint and garbage fallback need puppeteer-core and Chrome, which the offline job does not install
 scripts/test_ui_735_shared_pdf_menu.mjs browser: shared PDF menu Style one opens printable journey target; needs puppeteer-core and Chrome, which the offline job does not install
 scripts/test_served_page_layout.mjs browser: served app-shell layout needs puppeteer-core and Chrome, which the offline job does not install
+scripts/test_vacation_app_927_webkit_touch_live.mjs browser: WebKit iPhone touch divider and hero collapse on live staging; needs playwright WebKit and vacation-app demo URL
 scripts/test_pr225_area_chips_layout_gate.mjs browser: PR225 Hotels/Restaurants chip header pixel gate needs puppeteer-core and Chrome, which the offline job does not install
 scripts/test_shared_trip_no_horizontal_overflow.mjs browser: shared trip scrollWidth at 390 and 1280 needs puppeteer-core and Chrome, which the offline job does not install
 scripts/test_pr225_cars_tab_overflow.mjs browser: PR225 NYC Cars tab overflow harness needs puppeteer-core and Chrome, which the offline job does not install
