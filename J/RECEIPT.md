@@ -1,81 +1,25 @@
-# PR #907 — host vk merge conflict resolve @ `308ed5e4`
+# Issue #937 — iPhone hero collapse grid + expanded one-line title (HOST PUBLICATION ONLY)
 
-**Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Start HEAD:** `308ed5e44d95f7be292644a7d620ad107eb29e8c` (verified). **Lane:** cursor-ubuntu, composer-2.5.
+**Outcome:** source-ready PATCH (uncommitted). **Lane start HEAD:** `ed8687b929c9473e6f9f2915ac5bc82d6dd802d1` (verified). **Lane:** cursor-ubuntu, composer-2.5. **Follow-up:** Gate B `20261110-101435` on PR #938 head `482b246` — keep grid/overlap/collapsed bar; fix expanded title wrap at 390.
 
-## Host merge `origin/vk` @ `f8d4748f` into `308ed5e4`
-
-Conflicts resolved: `J/PR_DESCRIPTION.md`, `J/RECEIPT.md`, `public/assets/index-BKun7ofk.js` (took vk bundle, then `node scripts/rebake_served_trek_bundle.mjs` → sha256 `acddd4e7783da2996c8eb61bfee84907fc5fb303edd88d7b664743a74792f713`).
-
-Staged vk carry from merge index (no re-author unless noted): #884 logo sources, #927 splitter/hero/budget, #925 chat itinerary, offline tests for logo regression.
-
----
-
-## Root cause (#884 — vk carry)
-
-`dc()` logo chips stacked `.tsv-logo-fallback` with brand `img` in the same grid cell; TownePlace showed suitcase-over-Marriott after favicon load.
+## Changes
 
 | Path | Change |
 | --- | --- |
-| `src/vacation/thing-logo-ink-center.mjs` | Fallback hidden on successful img load / ink center |
-| `src/vacation/thing-logo-fallback-url.mjs` | `logoImgOnLoadInline` / onError inline handlers |
-| `apps/vacation-client/src/lib/logoChipHandlers.mjs` | Same hide-on-load contract for client chips |
-| `src/vacation/shared-trip-logo-audit.mjs` | `fallback_stack` DOM check |
-| `scripts/test_ui_884_logo_chip_fallback_hide.mjs` | Offline regression (new; host must ensure `offline-tests.txt` already staged from merge) |
+| `public/ts-trip-hero-collapse.js` | CSS grid layout: chevron in `toggle` column (no `position:absolute; left:10px`). Collapsed ≤57px bar, details/actions hidden, ellipsis on title only when collapsed. Expanded `h1` at **21px** + `white-space:nowrap` (no ellipsis) so "Craig / Kim NYC June 2026" fits one line beside 44px control at 390. |
+| `scripts/test_vacation_app_927_hero_collapse.mjs` | Puppeteer @390: zero overlap expanded/collapsed; collapsed height ≤57; one-line collapsed title; **expanded** one-line + `scrollWidth` fit; expanded taller than collapsed. Keeps rgb/#000 findHero regression assertions. |
 
----
+**Out of scope (unchanged):** splitter, chat-edit, conflicts, trip data, `gateb-allow.json`, bundles (script served standalone via `shared-app.html`).
 
-## #903 stored data (PR branch — unchanged this round)
-
-- No serve-time title/narrative rewrites in `live-qa-903-presentation.mjs`.
-- `GATE_B_DISPLAY_TITLE_ALIASES[609]` retained for ccab provenance.
-- All 94 snapshot rows bind vs canonical builder (prior rounds).
-
-## #927 / budget (vk carry)
-
-| failure | fix |
-| --- | --- |
-| `price budget-390/1280` | `budgetLineAmount` copies `numericPrice` (`budgetModel.mjs`) |
-| `daybyday-1280.png` chrome | `ts-trip-hero-collapse.js` mounts only for `max-width: 844px` |
-
-## vk carry — chat edit sequential PUT merge
-
-| Path | Behaviour kept |
-| --- | --- |
-| `src/vacation/chat-itinerary-edit-day.mjs` | `mergeStoredChatItineraryScheduleOverride` |
-| `src/vacation/chat-itinerary-edit.mjs` | `persistItineraryWrite` passes `thingOverrides` |
-
----
-
-## Checks @ PATCH (this lane)
+## Checks
 
 | Command | Result |
 | --- | --- |
-| `node scripts/test_pr336_ccab_search_provenance.mjs` | PASS |
-| `node scripts/test_shared_tab_list_summary.mjs` | PASS |
-| `node scripts/test_ui_884_logo_chip_fallback_hide.mjs` | PASS |
-| `node scripts/test_shared_logo_chip_center_bundle.mjs` | PASS |
-| `node scripts/test_shared_trip_live_tab_logos.mjs` | PASS |
-| `node scripts/test_served_trek_bundle.mjs` | PASS |
-| `cd apps/vacation-client && npm test` | PASS |
-| `node apps/vacation-client/test/budget.unit.mjs` | PASS |
 | `node scripts/test_vacation_app_927_hero_collapse.mjs` | PASS |
-| `node scripts/test_vacation_app_927_touch_splitter.mjs` | PASS |
-| `node scripts/test_chat_itinerary_edit.mjs` | PASS |
-| `node scripts/test_chat_itinerary_edit_905.mjs` | PASS |
-| `node scripts/regenerate_pr336_search_trip_fixture.mjs` | ok, 94 places |
-| `node scripts/check-no-comments.mjs` | PASS (1138 files) |
-| `node scripts/test_offline_manifest.mjs` | PASS (442 offline, 19 online) |
-| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS (252 report, 0 fail) |
-
-CI run id and Gate B verdict: pending host push.
+| `node scripts/test_offline_manifest.mjs` | PASS |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS |
+| `node scripts/check-no-comments.mjs` | **SKIP/FAIL** — `apps/vacation-client/node_modules/typescript` missing in worktree (`MODULE_NOT_FOUND`); host should run after deps install (no comments added in touched files). |
 
 ## Host publish
 
-1. Mark conflicts resolved: `git add J/PR_DESCRIPTION.md J/RECEIPT.md public/assets/index-BKun7ofk.js` plus staged merge paths; discard `evidence/vacation-client-p2-*/*.png` diffs from local `npm test` (not product); `git commit --no-edit` on `vkfill/903-20261109163214`; push once.
-2. Exact-head CI, pregate Gate B (overall look, never height), look batch.
-3. Post-deploy: `node scripts/test_vacation_app_927_webkit_touch_live.mjs` when WebKit URL available.
-
-## Scope left alone
-
-- Lane did not stage, commit, push, or merge (HOST PUBLICATION ONLY).
-- Baselines, Gate B thresholds, workflows, force-push from lane.
+Uncommitted diff: `public/ts-trip-hero-collapse.js`, `scripts/test_vacation_app_927_hero_collapse.mjs`. If publishing atop PR #938 (`482b246`), apply as delta on that branch (grid/collapse tests already present there; this round is primarily expanded `font-size:21px` + expanded one-line assertions). `Closes #937` on single PR into `vk`.
