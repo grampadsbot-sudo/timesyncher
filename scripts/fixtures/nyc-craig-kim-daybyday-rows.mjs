@@ -122,7 +122,7 @@ export function buildNycCraigKimDaybydayTimelineRows() {
     {
       day: 1,
       time: '11:00',
-      name: 'Priceline opaque Standard sedan',
+      name: 'Priceline Express Deal (car company shown after booking) Standard sedan',
       cat: 'car',
       id: 609,
       listOnly: true,
@@ -131,7 +131,7 @@ export function buildNycCraigKimDaybydayTimelineRows() {
     {
       day: 1,
       time: '07:25',
-      name: 'Southwest LAS → LGA 07:25–16:35',
+      name: 'Southwest LAS → LGA',
       cat: 'flight',
       id: 630,
       listOnly: true,
@@ -140,7 +140,7 @@ export function buildNycCraigKimDaybydayTimelineRows() {
     {
       day: 1,
       time: '11:30',
-      name: 'Southwest LAS → LGA 11:30–22:25',
+      name: 'Southwest LAS → LGA',
       cat: 'flight',
       id: 631,
       listOnly: true,
@@ -149,7 +149,7 @@ export function buildNycCraigKimDaybydayTimelineRows() {
     {
       day: 1,
       time: '05:05',
-      name: 'Southwest LAS → LGA 05:05–15:45',
+      name: 'Southwest LAS → LGA',
       cat: 'flight',
       id: 632,
       listOnly: true,
@@ -158,7 +158,7 @@ export function buildNycCraigKimDaybydayTimelineRows() {
     {
       day: 1,
       time: '06:30',
-      name: 'Southwest LAS → LGA 06:30–16:55',
+      name: 'Southwest LAS → LGA',
       cat: 'flight',
       id: 633,
       listOnly: true,
@@ -167,7 +167,7 @@ export function buildNycCraigKimDaybydayTimelineRows() {
     {
       day: 1,
       time: '06:50',
-      name: 'Southwest LAS → LGA 06:50–18:55',
+      name: 'Southwest LAS → LGA',
       cat: 'flight',
       id: 634,
       listOnly: true,

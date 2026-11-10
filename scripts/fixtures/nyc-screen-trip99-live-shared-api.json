@@ -2203,7 +2203,7 @@
   {
    "id": 609,
    "trip_id": 99,
-   "name": "Priceline opaque Standard sedan",
+   "name": "Priceline Express Deal (car company shown after booking) Standard sedan",
    "description": "",
    "lat": 40.6413,
    "lng": -73.7781,
@@ -2241,7 +2241,7 @@
   {
    "id": 630,
    "trip_id": 99,
-   "name": "Southwest LAS → LGA 07:25–16:35",
+   "name": "Southwest LAS → LGA",
    "description": "",
    "lat": 36.084,
    "lng": -115.1537,
@@ -2261,12 +2261,12 @@
    "source": "fixture-nyc",
    "logoUrl": "https://icons.duckduckgo.com/ip3/southwest.com.ico",
    "price": 164,
-   "title": "Southwest LAS → LGA 07:25–16:35"
+   "title": "Southwest LAS → LGA"
   },
   {
    "id": 631,
    "trip_id": 99,
-   "name": "Southwest LAS → LGA 11:30–22:25",
+   "name": "Southwest LAS → LGA",
    "description": "",
    "lat": 36.084,
    "lng": -115.1537,
@@ -2286,12 +2286,12 @@
    "source": "fixture-nyc",
    "logoUrl": "https://icons.duckduckgo.com/ip3/southwest.com.ico",
    "price": 194,
-   "title": "Southwest LAS → LGA 11:30–22:25"
+   "title": "Southwest LAS → LGA"
   },
   {
    "id": 632,
    "trip_id": 99,
-   "name": "Southwest LAS → LGA 05:05–15:45",
+   "name": "Southwest LAS → LGA",
    "description": "",
    "lat": 36.084,
    "lng": -115.1537,
@@ -2311,12 +2311,12 @@
    "source": "fixture-nyc",
    "logoUrl": "https://icons.duckduckgo.com/ip3/southwest.com.ico",
    "price": 239,
-   "title": "Southwest LAS → LGA 05:05–15:45"
+   "title": "Southwest LAS → LGA"
   },
   {
    "id": 633,
    "trip_id": 99,
-   "name": "Southwest LAS → LGA 06:30–16:55",
+   "name": "Southwest LAS → LGA",
    "description": "",
    "lat": 36.084,
    "lng": -115.1537,
@@ -2336,12 +2336,12 @@
    "source": "fixture-nyc",
    "logoUrl": "https://icons.duckduckgo.com/ip3/southwest.com.ico",
    "price": 239,
-   "title": "Southwest LAS → LGA 06:30–16:55"
+   "title": "Southwest LAS → LGA"
   },
   {
    "id": 634,
    "trip_id": 99,
-   "name": "Southwest LAS → LGA 06:50–18:55",
+   "name": "Southwest LAS → LGA",
    "description": "",
    "lat": 36.084,
    "lng": -115.1537,
@@ -2361,7 +2361,7 @@
    "source": "fixture-nyc",
    "logoUrl": "https://icons.duckduckgo.com/ip3/southwest.com.ico",
    "price": 249,
-   "title": "Southwest LAS → LGA 06:50–18:55"
+   "title": "Southwest LAS → LGA"
   },
   {
    "id": 617,
@@ -8056,7 +8056,7 @@
   },
   "place:609": {
    "category": "car",
-   "title": "Priceline opaque Standard sedan",
+   "title": "Priceline Express Deal (car company shown after booking) Standard sedan",
    "address": "JFK Airport rental car facility / Federal Circle, Jamaica, NY",
    "website": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp",
    "summary": "Priceline opaque Standard sedan rental at New York JFK booked as an Express Deal with the brand hidden. You do not find out the rental car company until you pay for the rental. Express Deal rental reservations are non-refundable, non-transferable, and non-changeable even if the reservation is not use.",
@@ -8077,7 +8077,7 @@
     "ratings",
     "hours"
    ],
-   "rentalCompany": "Priceline opaque",
+   "rentalCompany": "Priceline Express Deal (car company shown after booking)",
    "vehicleClass": "Standard sedan",
    "carType": "Standard sedan",
    "pickupLocation": "JFK Airport rental car facility / Federal Circle, Jamaica, NY",
@@ -8125,11 +8125,12 @@
     }
    ],
    "description": "Priceline opaque Standard sedan is a hidden-brand Express Deal rental at JFK. AutoSlash notes that Express Deal rental reservations are non-refundable, non-transferable, and non-changeable, and that you must pay for your Express Deal car rental in full at the time of booking. Priceline lists a Standard Car from $73/day at JFK and says deals are updated frequently, so compare it with a named-brand booking first.",
-   "xaiRatingsFetched": false
+   "xaiRatingsFetched": false,
+   "name": "Priceline Express Deal (car company shown after booking) Standard sedan"
   },
   "place:630": {
    "category": "flight",
-   "title": "Southwest LAS → LGA 07:25–16:35",
+   "title": "Southwest LAS → LGA",
    "address": "LAS → LGA",
    "website": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
    "summary": "Southwest LAS → LGA 07:25–16:35 covers Las Vegas (LAS) to New York LaGuardia (LGA), leaving mid-morning and arriving at 16:35 Eastern. The flight covers 2242 miles, a long morning in the air that still leaves the evening free in Manhattan.",
@@ -8169,7 +8170,7 @@
    "source": "fixture-nyc",
    "url": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
    "details": "Airline: Southwest; Route: LAS-LGA; Stops: 1 stop; Outbound: 2026-06-23 07:25-16:35; Return: None; Duration: 6h10m outbound; Price: Outbound from $164 Basic / $209 Choice / $289 Choice Preferred / $349 Choice Extra; Flight #2294; lowest/fastest outbound visible; return fare not captured yet; Status: candidate only; not booked.",
-   "name": "Southwest LAS → LGA 07:25–16:35",
+   "name": "Southwest LAS → LGA",
    "departureTime": "07:25",
    "arrivalTime": "16:35",
    "dataShortcomings": [
@@ -8194,7 +8195,7 @@
   },
   "place:631": {
    "category": "flight",
-   "title": "Southwest LAS → LGA 11:30–22:25",
+   "title": "Southwest LAS → LGA",
    "address": "LAS → LGA",
    "website": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
    "summary": "A late-morning departure makes Southwest LAS → LGA 11:30–22:25 the easy-going pick, and You can rent a car at La Guardia Airport after the 22:25 arrival. The 22:25 Eastern arrival means a late night at LaGuardia, so a pre-booked car or taxi plan matters more than on the earlier departures.",
@@ -8217,7 +8218,7 @@
    "source": "fixture-nyc",
    "url": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
    "details": "Airline: Southwest; Route: LAS-LGA; Stops: 1 stop via DAL; Outbound: 2026-06-23 11:30-22:25; Return: None; Duration: 7h55m outbound; Price: Outbound from $194 Basic / $239 Choice / $319 Choice Preferred / $379 Choice Extra; Flights #2219/#107; cheaper later option; return fare not captured yet; Status: candidate only; not booked.",
-   "name": "Southwest LAS → LGA 11:30–22:25",
+   "name": "Southwest LAS → LGA",
    "departureTime": "11:30",
    "arrivalTime": "22:25",
    "dataShortcomings": [
@@ -8242,7 +8243,7 @@
   },
   "place:632": {
    "category": "flight",
-   "title": "Southwest LAS → LGA 05:05–15:45",
+   "title": "Southwest LAS → LGA",
    "address": "LAS → LGA",
    "website": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
    "summary": "The earliest kept option, Southwest LAS → LGA 05:05–15:45, departs Las Vegas before dawn on a route where There are 152 weekly flights from Las Vegas to New York (LaGuardia) on Southwest Airlines. It covers 2242 miles and lands mid-afternoon.",
@@ -8266,7 +8267,7 @@
    "source": "fixture-nyc",
    "url": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
    "details": "Airline: Southwest; Route: LAS-LGA; Stops: 1 stop via HOU; Outbound: 2026-06-23 05:05-15:45; Return: None; Duration: 7h40m outbound; Price: Outbound from $239 Basic / $284 Choice / $364 Choice Preferred / $424 Choice Extra; Flights #2051/#2014; return fare not captured yet; Status: candidate only; not booked.",
-   "name": "Southwest LAS → LGA 05:05–15:45",
+   "name": "Southwest LAS → LGA",
    "departureTime": "05:05",
    "arrivalTime": "15:45",
    "dataShortcomings": [
@@ -8291,7 +8292,7 @@
   },
   "place:633": {
    "category": "flight",
-   "title": "Southwest LAS → LGA 06:30–16:55",
+   "title": "Southwest LAS → LGA",
    "address": "LAS → LGA",
    "website": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
    "summary": "Boarding position matters on an early start, and EarlyBird Check-in® is sold for Southwest LAS → LGA 06:30–16:55 into LaGuardia. It lands at LaGuardia at 16:55 Eastern after a flight of 2242 miles, ahead of the evening rush into Manhattan.",
@@ -8314,7 +8315,7 @@
    "source": "fixture-nyc",
    "url": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
    "details": "Airline: Southwest; Route: LAS-LGA; Stops: 1 stop via DEN; Outbound: 2026-06-23 06:30-16:55; Return: None; Duration: 7h25m outbound; Price: Outbound from $239 Basic / $284 Choice / $364 Choice Preferred / $424 Choice Extra; Flights #2223/#4441; return fare not captured yet; Status: candidate only; not booked.",
-   "name": "Southwest LAS → LGA 06:30–16:55",
+   "name": "Southwest LAS → LGA",
    "departureTime": "06:30",
    "arrivalTime": "16:55",
    "dataShortcomings": [
@@ -8339,7 +8340,7 @@
   },
   "place:634": {
    "category": "flight",
-   "title": "Southwest LAS → LGA 06:50–18:55",
+   "title": "Southwest LAS → LGA",
    "address": "LAS → LGA",
    "website": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
    "summary": "Travelers wanting more comfort can look at Upgrade to Business Select® on Southwest LAS → LGA 06:50–18:55, which lands at 18:55 Eastern. It flies Las Vegas (LAS) to New York LaGuardia (LGA) on the longest day of the kept Southwest options, departing 06:50.",
@@ -8363,7 +8364,7 @@
    "source": "fixture-nyc",
    "url": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
    "details": "Airline: Southwest; Route: LAS-LGA; Stops: 1 stop via STL; Outbound: 2026-06-23 06:50-18:55; Return: None; Duration: 9h05m outbound; Price: Outbound from $249 Basic / $294 Choice / $374 Choice Preferred / $434 Choice Extra; Flights #2368/#4962; return fare not captured yet; Status: candidate only; not booked.",
-   "name": "Southwest LAS → LGA 06:50–18:55",
+   "name": "Southwest LAS → LGA",
    "departureTime": "06:50",
    "arrivalTime": "18:55",
    "dataShortcomings": [

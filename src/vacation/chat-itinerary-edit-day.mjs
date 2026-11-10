@@ -2,6 +2,37 @@ function clean(value, max = 500) {
   return String(value ?? '').trim().slice(0, max);
 }
 
+const CHAT_ITINERARY_SCHEDULE_OVERRIDE_KEYS = [
+  'timeline', 'dayIds', 'perDaySchedule', 'duration', 'startTime',
+];
+
+function chatItineraryScheduleOverridePatch(overrideRow = {}) {
+  if (!overrideRow || typeof overrideRow !== 'object') return {};
+  const patch = {};
+  for (const key of CHAT_ITINERARY_SCHEDULE_OVERRIDE_KEYS) {
+    if (overrideRow[key] === undefined) continue;
+    patch[key] = structuredClone(overrideRow[key]);
+  }
+  return patch;
+}
+
+export function buildChatItineraryOverridesPutBody({ before = {}, after = {}, keys = [] } = {}) {
+  const patch = {};
+  for (const key of keys) {
+    const afterRow = after[key];
+    const beforeRow = before[key];
+    const source = afterRow && typeof afterRow === 'object' && Object.keys(afterRow).length
+      ? afterRow
+      : beforeRow;
+    if (source && typeof source === 'object' && Object.keys(source).length) {
+      patch[key] = chatItineraryScheduleOverridePatch(source);
+    } else {
+      patch[key] = {};
+    }
+  }
+  return patch;
+}
+
 function dayForNumber(payload, dayNumber) {
   const days = Array.isArray(payload?.days) ? payload.days : [];
   return days.find((d) => Number(d.day_number) === Number(dayNumber)) || null;
@@ -88,6 +119,15 @@ export function applyItineraryEditAuthoritativeReplyFacts(ctx, turnActionResults
   return prior.includes(extra) ? ctx : { ...ctx, roster: [prior, extra].filter(Boolean).join(' ') };
 }
 
+export function buildItineraryEditFailureAuthoritativeSystemExtra(reason = 'edit_failed') {
+  if (reason === 'web_edit_access_required' || reason === 'web_edit_denied') return '';
+  return [
+    'AUTHORITATIVE_SYSTEM: The itinerary change did not save for this turn.',
+    'Tell the customer plainly that the change did not save and they should try again.',
+    'Never say chat cannot edit, that demo trips cannot be edited, that website edit access is needed, or argue about schedule conflicts.',
+  ].join(' ');
+}
+
 export function buildItineraryEditAuthoritativeSystemExtra(result, payload = null) {
   if (!result?.applied) return '';
   const day = payload ? dayForNumber(payload, result.dayNumber) : null;
@@ -97,11 +137,27 @@ export function buildItineraryEditAuthoritativeSystemExtra(result, payload = nul
     'Confirm the change in plain words. Never say chat cannot edit, that demo trips cannot be edited, or that website edit access is needed.',
   ].join(' ');
   if (result.op === 'set_time') {
-    return `${header} ${result.placeName} on ${dayLabel} is now ${result.newTime} (was ${result.oldTime || 'unscheduled'}).`;
+    return `${header} Done: ${result.placeName} on ${dayLabel} is now ${result.newTime} (was ${result.oldTime || 'unscheduled'}).`;
   }
   if (result.op === 'add_bar_before') {
     return `${header} Added ${result.barName} on ${dayLabel} at ${result.barStart}, ending before ${result.anchorName} at ${result.anchorTime}.`;
   }
   if (result.op === 'undo') return `${header} The last chat itinerary schedule change was undone.`;
   return header;
+}
+
+export async function assertChatEditPutStaysSmallUnderHugeOverrides(runTurn, { payload, putCapture }) {
+  let tinyPut = null;
+  const turn = await runTurn({
+    fetchPayload: async () => structuredClone(payload),
+    putOverrides: async ({ overrides }) => { tinyPut = overrides; },
+  });
+  if (!turn?.applied) throw new Error(`oversize_turn_failed ${turn?.reason || 'unknown'}`);
+  const keys = Object.keys(tinyPut || {});
+  if (keys.length !== 1) throw new Error(`oversize_put_keys ${keys.join(',')}`);
+  const bytes = Buffer.byteLength(JSON.stringify({ overrides: tinyPut }), 'utf8');
+  if (bytes > 256 * 1024) throw new Error(`oversize_put_bytes ${bytes}`);
+  if (tinyPut[keys[0]].evidenceDossier != null) throw new Error('oversize_put_carried_dossier');
+  putCapture?.(tinyPut);
+  return turn;
 }

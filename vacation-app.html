@@ -4,6 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Vacay Keepsake App</title>
+  <link rel="stylesheet" href="/brand/vk-wordmark.css" />
+  <link rel="stylesheet" href="/vacation-app-shell.css" />
   <style>
     :root {
       color-scheme: light;
@@ -41,27 +43,18 @@
     .topbar {
       grid-row: 1;
       min-height: 0;
-      display: grid;
-      grid-template-columns: minmax(0, 1fr);
-      gap: 14px;
+      display: flex;
+      flex-wrap: nowrap;
       align-items: center;
+      justify-content: space-between;
+      gap: 8px;
       padding: 10px clamp(12px, 3vw, 22px);
       border-bottom: 1px solid var(--line);
       background: rgba(255, 255, 255, .94);
       backdrop-filter: blur(14px);
       z-index: 4;
+      min-width: 0;
     }
-    .app.site-fullscreen {
-      padding-bottom: 0;
-      grid-template-rows: minmax(0, 1fr);
-    }
-    .app.site-fullscreen .topbar { display: none; }
-    .app.site-fullscreen .workspace {
-      grid-row: 1;
-      grid-template-rows: minmax(0, 1fr);
-    }
-    .app.site-fullscreen .splitter,
-    .app.site-fullscreen .chat-pane { display: none; }
     .brand {
       min-width: 0;
       display: flex;
@@ -83,8 +76,9 @@
       font-size: 12px;
       margin-top: 1px;
     }
-    .vacation-dropdown { position: relative; min-width: 0; max-width: 100%; justify-self: end; }
+    .vacation-dropdown { position: relative; flex: 1 1 auto; min-width: 0; max-width: min(52vw, 280px); margin-left: auto; }
     .trip-button {
+      width: 100%;
       max-width: 100%;
       min-height: 38px;
       border: 1px solid var(--line);
@@ -150,7 +144,7 @@
       grid-row: 2;
       min-height: 0;
       display: grid;
-      grid-template-rows: minmax(0, var(--site-height, 52fr)) 10px minmax(0, var(--chat-height, 48fr));
+      grid-template-rows: minmax(0, var(--site-height, 52fr)) auto minmax(0, var(--chat-height, 48fr));
     }
     .workspace.chat-only {
       grid-template-rows: minmax(0, 1fr);
@@ -177,7 +171,9 @@
       background: var(--panel);
       color: var(--ink);
       font-weight: 750;
-      padding: 0 10px;
+      padding: 0 clamp(6px, 1.5vw, 10px);
+      font-size: clamp(11px, 2.8vw, 14px);
+      white-space: nowrap;
     }
     iframe {
       width: 100%;
@@ -318,115 +314,6 @@
       border-color: var(--blue);
       box-shadow: 0 0 0 3px rgba(47, 111, 159, .12);
     }
-    .session-gate {
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      padding: 22px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.9), rgba(246,247,249,.96)),
-        url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2200&q=80") center/cover;
-    }
-    .gate-card {
-      width: min(520px, 100%);
-      border: 1px solid rgba(255,255,255,.7);
-      border-radius: 8px;
-      background: rgba(255,255,255,.92);
-      padding: 20px;
-      box-shadow: 0 30px 90px rgba(24, 32, 42, .22);
-    }
-    .gate-card h1 {
-      margin: 0 0 8px;
-      font-size: 28px;
-      line-height: 1.05;
-      letter-spacing: 0;
-    }
-    .gate-card p { color: var(--muted); margin: 0 0 16px; line-height: 1.45; }
-    .session-form {
-      display: grid;
-      gap: 10px;
-    }
-    .session-form input {
-      min-height: 42px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 0 11px;
-    }
-    .session-form button {
-      min-height: 42px;
-      border: 0;
-      border-radius: 8px;
-      color: #120d02;
-      background: linear-gradient(135deg, #f2d989, var(--gold));
-      font-weight: 850;
-    }
-    .error { color: var(--danger); font-weight: 750; }
-    .eula-screen {
-      min-height: 0;
-      overflow: auto;
-      padding: 22px clamp(14px, 3vw, 28px) 32px;
-      background: var(--paper);
-    }
-    .eula-screen h1 {
-      margin: 0 0 8px;
-      font-size: 28px;
-      line-height: 1.1;
-    }
-    .eula-screen p { color: var(--muted); margin: 0 0 14px; line-height: 1.45; }
-    .eula-text {
-      white-space: normal;
-      max-height: min(46vh, 420px);
-      overflow: auto;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: var(--panel);
-      padding: 14px;
-      line-height: 1.45;
-    }
-    .eula-text h1,
-    .eula-text h2,
-    .eula-text h3 {
-      color: var(--ink);
-      line-height: 1.25;
-    }
-    .eula-text h1 { font-size: 20px; margin: 0 0 10px; }
-    .eula-text h2 { font-size: 16px; margin: 16px 0 6px; }
-    .eula-text h3 { font-size: 15px; margin: 14px 0 6px; }
-    .eula-text p { margin: 0 0 10px; }
-    .eula-text ul,
-    .eula-text ol { margin: 0 0 10px; padding-left: 1.25em; }
-    .eula-text li { margin: 0 0 4px; }
-    .eula-text :last-child { margin-bottom: 0; }
-    .eula-form {
-      display: grid;
-      gap: 12px;
-      margin-top: 16px;
-      max-width: 560px;
-    }
-    .eula-form input[type="text"] {
-      width: 100%;
-      min-height: 42px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 0 11px;
-    }
-    .eula-form label { font-weight: 650; }
-    .agree-button {
-      min-height: 44px;
-      border: 0;
-      border-radius: 8px;
-      color: #120d02;
-      background: linear-gradient(135deg, #f2d989, var(--gold));
-      font-weight: 850;
-      padding: 0 16px;
-      justify-self: start;
-    }
-    @media (max-width: 700px) {
-      .topbar { grid-template-columns: minmax(0, 1fr); align-items: start; } .trip-button { max-width: 100%; } .trip-list { left: 0; right: auto; width: 100%; } .workspace:not(.chat-only) { grid-template-rows: minmax(0, var(--site-height, 48fr)) 10px minmax(0, var(--chat-height, 52fr)); }
-    }
-    html:has(main.app) body { padding-bottom: 0 !important; }
-    html:has(main.app) footer[data-build-stamp="1"] { visibility: hidden; position: absolute; width: 0; height: 0; margin: 0; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); }
-    .search-progress{height:100%;display:flex;flex-direction:column;justify-content:center;gap:10px;padding:24px clamp(16px,4vw,32px);background:var(--panel);color:var(--ink)}.search-progress-rows{display:flex;flex-direction:column;gap:6px;font-size:15px;font-weight:650;line-height:1.35}.search-progress-row{display:flex;justify-content:space-between;gap:12px;max-width:320px}.search-progress-row .count{font-variant-numeric:tabular-nums;font-weight:800}.search-progress-status{margin:8px 0 0;color:var(--muted);font-weight:750}
   </style>
 </head>
 <body>
@@ -513,7 +400,7 @@
     function vacationSelector(trips, trip) {
       if (trips.length < 2) return '';
       const label = (item) => (customerPlaceName(item.title) || customerPlaceName(item.destination)).split(',')[0].trim();
-      return `<div class="vacation-dropdown" id="vacationDropdown"><button class="trip-button" id="tripButton" type="button" aria-haspopup="listbox" aria-expanded="false"><span>${safe(tripBadge(trip))}</span>${icon.chevron}</button><div class="trip-list" role="listbox">${trips.map((item) => `<button class="trip-option ${item.id === trip?.id ? 'active' : ''}" type="button" data-trip-id="${safe(item.id)}" role="option" aria-selected="${item.id === trip?.id ? 'true' : 'false'}"><span>${item.id === trip?.id ? icon.check : ''}</span><span><b>${safe(label(item))}</b>${tripDates(item) ? `<small>${safe(tripDates(item))}</small>` : ''}</span></button>`).join('')}</div></div>`;
+      return `<div class="vacation-dropdown" id="vacationDropdown" data-trip-switcher-root="1"><button class="trip-button" id="tripButton" data-trip-switcher="1" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Switch trip"><span>${safe(tripBadge(trip))}</span>${icon.chevron}</button><div class="trip-list" role="listbox">${trips.map((item) => `<button class="trip-option ${item.id === trip?.id ? 'active' : ''}" type="button" data-trip-id="${safe(item.id)}" role="option" aria-selected="${item.id === trip?.id ? 'true' : 'false'}"><span>${item.id === trip?.id ? icon.check : ''}</span><span><b>${safe(label(item))}</b>${tripDates(item) ? `<small>${safe(tripDates(item))}</small>` : ''}</span></button>`).join('')}</div></div>`;
     }
 
     function realVacations() {
@@ -637,12 +524,18 @@
               <input id="fileInput" type="file" accept="image/*,video/*,.pdf,.txt,.ics,.csv,.json" multiple hidden>
             </form>`;
       const body = onboardingPane;
-      const header = trips.length >= 2 ? `<header class="topbar" id="appHeader">${vacationSelector(trips, trip)}</header>` : '';
+      const brandLockup = '<div class="brand vk-app-brand" data-vk-wordmark="1"><img class="mark" src="/brand/vk-book-logo.svg" alt="Vacay Keepsake" width="28" height="30" /><span class="vk-print-wordmark">vacay <i>keepsake</i></span></div>';
+      const fullscreenBtn = '<button class="fullscreen-button" id="fullScreenButton" type="button" aria-pressed="false" aria-label="Full screen"><span class="fs-glyph" aria-hidden="true">⛶</span><span class="fs-label">Full screen</span></button>';
+      const fullscreenControl = hasSite && trips.length >= 2 ? fullscreenBtn : '';
+      const siteFullscreen = hasSite && trips.length < 2 ? fullscreenBtn : '';
+      const header = trips.length >= 2
+        ? `<header class="topbar" id="appHeader">${brandLockup}${vacationSelector(trips, trip)}${fullscreenControl}</header>`
+        : '';
       root.innerHTML = `<main class="app">
         ${header}
         <section class="workspace${hasTopPane ? '' : ' chat-only'}" id="workspace">
-          ${hasSite ? `<div class="site-pane"><button class="fullscreen-button" id="fullScreenButton" type="button" aria-pressed="false" aria-label="Full screen">Full screen</button><iframe title="${safe(customerPlaceName(trip.title) || 'Vacation')} website" src="${safe(embedSiteUrl(siteUrl))}"></iframe></div>
-          <button class="splitter" id="splitter" type="button" aria-label="Resize website and chat panels"></button>` : ''}
+          ${hasSite ? `<div class="site-pane"><iframe title="${safe(customerPlaceName(trip.title) || 'Vacation')} website" src="${safe(embedSiteUrl(siteUrl))}"></iframe></div>
+          <div class="splitter-row" id="splitterRow"><button class="splitter" id="splitter" type="button" aria-label="Resize website and chat panels"></button>${siteFullscreen}</div>` : ''}
           ${!hasSite && progressActive ? `<div class="site-pane" id="searchProgressPane"><div class="search-progress" id="searchProgress" aria-live="polite"><div class="search-progress-rows" id="searchProgressRows"></div><p class="search-progress-status" id="searchProgressStatus" hidden>Building itinerary…</p></div></div>
           <button class="splitter" id="splitter" type="button" aria-label="Resize search progress and chat panels"></button>` : ''}
           <section class="chat-pane" aria-label="Vacation chat">

@@ -77,6 +77,14 @@ const NYC_COORDS = {
   635: { lat: 40.6413, lng: -73.7781 },
 };
 
+const SOUTHWEST_LGA_ARRIVAL_BY_ROW = {
+  630: '16:35',
+  631: '22:25',
+  632: '15:45',
+  633: '16:55',
+  634: '18:55',
+};
+
 export function listStoredSummaries() {
   const out = { ...SUMMARIES };
   for (const [id, search] of Object.entries(PR336_SEARCH_SNAPSHOT)) {
@@ -501,6 +509,14 @@ function buildPayload() {
     }
     if (row.id === 611) {
       override.category = 'music';
+    }
+    if (row.id === 609) {
+      override.rentalCompany = 'Priceline Express Deal (car company shown after booking)';
+    }
+    const southwestArrival = SOUTHWEST_LGA_ARRIVAL_BY_ROW[row.id];
+    if (southwestArrival) {
+      override.departureTime = row.time;
+      override.arrivalTime = southwestArrival;
     }
     if (row.id === 630) {
       override.price = 164;

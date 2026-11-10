@@ -1,46 +1,38 @@
-# PR #907 / #903 — host base-merge follow-up (cb4638cf)
+# PR #907 / #903 — host base-merge + DATA-CONTRACT title binding (head `10fd68ff`)
 
-**Outcome:** source-ready PATCH (uncommitted conflict resolution; HOST PUBLICATION ONLY). **Start HEAD:** `cb4638cf83d22a66899bdee02333545759b574c8` (verified).
+**Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Start HEAD:** `10fd68ff799fb3c8ad5fa23f04c4cf7ca85d718d` (verified). **Lane:** cursor-ubuntu, composer-2.5.
 
-Host merged `origin/vk` at `85fae5b37a899e737b570b71d052def772d42b16` into `cb4638cf`. Conflicted: `J/RECEIPT.md`, `scripts/offline-tests.txt`. This round resolved both (both sides kept).
+Host merged `origin/vk` at `1ffd23ca895d39db3ea28eff62c7e02279881557` into `10fd68ff`. Conflicted: `J/RECEIPT.md`, `vacation-app.html` (resolved this round).
 
-## #903 / #907 product (HEAD side, on branch)
+## Root cause (Gate B pregate DATA-CONTRACT)
 
-Seven live-QA polish checkers in `scripts/test_issue_903_live_qa_polish.mjs` + `src/vacation/live-qa-903-presentation.mjs`, `src/vacation/trek-qa-903-ui-patch.mjs` (wired in `trek-style2-bundle.mjs`).
+`finalizeServedSharedTripPayload` applied `#903` title rewrites via `applyLiveQa903Presentation` while `scripts/regenerate_pr336_search_trip_fixture.mjs` snapshot rows still carried raw stored titles (609 Priceline opaque; 630/631 Southwest clock ranges).
 
-**#832 interaction (item 7):** `applyFlightTitleTimes` backfills override times from titled clock ranges for all flights; strips title clock ranges only when the title is Southwest-branded (`southwestBrandedFlightTitle`).
+## Fix
 
-## Vk merge (staged index; inherited #901 / #905 / vk)
-
-| area | note |
+| area | change |
 | --- | --- |
-| `scripts/test_issue_901_trip99_single_venue_standins.mjs` | registered in `offline-tests.txt` alongside #903 test |
-| Trip 99 fixtures / `J/trip99-change.*` | Host Neon apply path per prior #908 receipt |
-| #905 port pieces | chat-itinerary, `vacation-app.html` composer catch, etc. on staged index |
+| `live-qa-903-presentation.mjs` | Stop rewriting stored `name`/`title` at serve time; keep jargon on narrative fields and flight time backfill only |
+| Gate B NYC row sources | Stored customer-facing titles for 609 + Southwest 630–634 in `nyc-craig-kim-daybyday-rows.mjs` / trip builder / `GATE_B_DISPLAY_TITLE_ALIASES` |
+| `vacation-app.html` | Merge: keep #903 fullscreen FAB (`bottom: 8px`) plus vk header/shell from staged index |
 
-**Served bundle:** `node scripts/rebake_served_trek_bundle.mjs` after vk `public/assets` (see checks).
-
-## Checks @ `cb4638cf` + conflict resolution
+## Checks (this round)
 
 | check | result |
 | --- | --- |
-| `node scripts/test_issue_832_day_timeline_binding.mjs` | PASS |
+| Title parity rows 609/630/631 (canonical `buildGateBApprovedSharedTrip` vs snapshot) | PASS (all match) |
+| `node scripts/regenerate_pr336_search_trip_fixture.mjs` | PASS (94 places) |
 | `node scripts/test_issue_903_live_qa_polish.mjs` | PASS |
-| `node scripts/test_issue_901_trip99_single_venue_standins.mjs` | PASS |
+| `node scripts/test_issue_832_day_timeline_binding.mjs` | PASS |
 | `node scripts/test_gate_b_live_replay_display_facts.mjs` | PASS |
-| `node scripts/rebake_served_trek_bundle.mjs` | PASS (sha256=7afd665f…; no extra `public/assets` diff vs staged index) |
-| `node scripts/check-no-comments.mjs` | PASS (1131 files; `apps/vacation-client/npm ci` first) |
-| `node scripts/test_offline_manifest.mjs` | PASS (437 offline, 18 online) |
+| `node scripts/rebake_served_trek_bundle.mjs` | PASS sha256=7afd665f… |
+| `node scripts/test_offline_manifest.mjs` | PASS (439 offline, 18 online) |
+| `node scripts/check-no-comments.mjs` | PASS (after `apps/vacation-client/npm ci`) |
 | `BASE=vk node scripts/check-code-ratchet.mjs` | PASS (252 report, 0 fail) |
 
 ## Host publish
 
-1. Stage resolved `J/RECEIPT.md`, `scripts/offline-tests.txt`; complete merge commit if index still MERGING; push once to `vkfill/903-20261109163214`.
-2. CI `unit-tests`, then Gate B structure on new head (watch DATA FAULT stale replay on places[57] per handoff `bot-admin/lanes/vk-pr-handoff/pr-907`).
-
-**Uncommitted / staged (host):**
-
-- Merge in progress (`git commit` to conclude): staged index from vk (~15 paths shown at round end) plus conflict fixes below.
-- **Unmerged → resolved (host `git add`):** `J/RECEIPT.md`, `scripts/offline-tests.txt`.
-- **Unstaged editor fix:** `J/PR_DESCRIPTION.md` (#907 conflict round blurb).
-- **No new product code** this round; #903 presentation already on `cb4638cf`.
+1. Finish merge: `git add J/RECEIPT.md vacation-app.html` + product/fixture paths touched; `git commit --no-edit`.
+2. `node scripts/regenerate_pr336_search_trip_fixture.mjs`; commit snapshot if it moves.
+3. `node scripts/rebake_served_trek_bundle.mjs` if vk `public/assets` base changed.
+4. Pre-DONE: vacation-client tests, offline manifest, check-no-comments, code ratchet; CI + Gate B on new head.

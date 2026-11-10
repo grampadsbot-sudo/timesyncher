@@ -116,27 +116,23 @@ export function evaluateLayoutRules(pageKind) {
     } else if (header) {
       const hr = header.getBoundingClientRect();
       if (hr.height > 1 && hr.width > 1) {
-        const logos = header.querySelectorAll('img, svg, .mark, .brand');
-        for (const logo of logos) {
-          const r = logo.getBoundingClientRect();
-          if (r.width > 0 && r.height > 0 && getComputedStyle(logo).display !== 'none') {
-            push('header.topbar', 'header_grok_spec', 'header must not show logo/brand chrome', { header: rectObj(header), logo: rectObj(logo) });
-            break;
-          }
+        const dropdown = header.querySelector('#vacationDropdown, #tripButton');
+        const dropdownVisible = dropdown && getComputedStyle(dropdown).display !== 'none' && dropdown.getBoundingClientRect().height > 0;
+        if (!dropdownVisible) {
+          push('#vacationDropdown', 'header_grok_spec', '2+ vacations require vacation dropdown in header', { vacationCount });
         }
-        const menu = header.querySelector('#tripMenu');
-        const menuVisible = menu && getComputedStyle(menu).display !== 'none' && menu.getBoundingClientRect().height > 0;
-        if (!menuVisible) {
-          push('#tripMenu', 'header_grok_spec', '2+ vacations require vacation dropdown in header', { vacationCount });
+        const brand = header.querySelector('.vk-app-brand, [data-vk-wordmark]');
+        if (!brand || getComputedStyle(brand).display === 'none' || brand.getBoundingClientRect().height < 1) {
+          push('header.topbar', 'header_grok_spec', '2+ vacations require Vacay Keepsake lockup left of switcher', { vacationCount });
         }
         for (const el of header.querySelectorAll('button, a, input, select')) {
           const st = getComputedStyle(el);
           if (st.display === 'none' || st.visibility === 'hidden') continue;
           const r = el.getBoundingClientRect();
           if (r.width < 1 || r.height < 1) continue;
-          if (menu && menu.contains(el)) continue;
-          if (el.id === 'tripButton' || el.closest('#tripMenu')) continue;
-          push('header.topbar', 'header_grok_spec', 'header may only contain vacation dropdown when 2+ vacations', { tag: el.tagName, id: el.id });
+          if (el.closest('#vacationDropdown, .vk-app-brand, [data-vk-wordmark]')) continue;
+          if (el.id === 'fullScreenButton') continue;
+          push('header.topbar', 'header_grok_spec', 'header may only contain brand lockup, vacation dropdown, and full screen', { tag: el.tagName, id: el.id });
           break;
         }
       }
@@ -186,9 +182,9 @@ export function evaluateLayoutRules(pageKind) {
     const hasSiteContent = siteVisible && iframe && String(iframe.getAttribute('src') || '').trim().length > 0;
     if (hasSiteContent) {
       const btn = sitePane.querySelector('[data-ts-site-fullscreen], [data-site-fullscreen], button[aria-label*="full" i], button[title*="full" i]')
-        || document.querySelector('[data-ts-site-fullscreen], button[aria-label*="full screen" i]');
+        || document.querySelector('header.topbar #fullScreenButton, [data-ts-site-fullscreen], button[aria-label*="full screen" i]');
       if (!btn || getComputedStyle(btn).display === 'none' || btn.getBoundingClientRect().height < 1) {
-        push('.site-pane', 'site_fullscreen_control', 'site content requires a full-screen control in the site area', { sitePane: rectObj(sitePane) });
+        push('.site-pane', 'site_fullscreen_control', 'site content requires a full-screen control in the app chrome', { sitePane: rectObj(sitePane) });
       }
     }
   }

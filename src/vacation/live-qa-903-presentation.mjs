@@ -98,8 +98,6 @@ const PRESENTATION_FIELDS = [
   'details',
   'itineraryNote',
   'itinerary_note',
-  'name',
-  'title',
   'rentalCompany',
 ];
 
@@ -206,13 +204,6 @@ function applyFlightTitleTimes(place, override) {
   const fromTitle = flightFieldsFromBlob(rawTitle, '');
   copyOverrideTimeIfBlank(override, 'departureTime', fromTitle.departureTime, place.place_time, place.start_time);
   copyOverrideTimeIfBlank(override, 'arrivalTime', fromTitle.arrivalTime, place.end_time);
-  if (!southwestBrandedFlightTitle(rawTitle)) return;
-  const cleaned = stripClockRangeFromTitle(rawTitle);
-  if (!cleaned) return;
-  place.name = cleaned;
-  place.title = cleaned;
-  override.name = cleaned;
-  override.title = cleaned;
 }
 
 export function applyLiveQa903Presentation(shared = {}) {
