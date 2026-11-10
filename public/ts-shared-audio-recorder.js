@@ -392,15 +392,37 @@
     cleanupRecording();
   });
 
+  function siteHeaderBar() {
+    return document.querySelector('[data-ts-shared-header],[data-shared-trip-header]');
+  }
+
+  function voiceLabelMatches(el) {
+    const hay = `${el.getAttribute('aria-label') || ''} ${el.getAttribute('title') || ''}`;
+    return /mic|microphone|voice|record/i.test(hay);
+  }
+
+  function scrubVoiceFromSiteHeader() {
+    const header = siteHeaderBar();
+    if (!header) return;
+    for (const el of header.querySelectorAll('[data-ts-shared-audio],button,[role="button"]')) {
+      if (el.matches('[data-ts-shared-audio]') || voiceLabelMatches(el)) el.remove();
+    }
+  }
+
   function installButton() {
-    if (document.querySelector('[data-ts-shared-audio]')) return true;
-    const tripButton = document.querySelector('[data-trip-view-root]');
-    const printButton = document.querySelector('[data-print-menu-root]');
-    const row = tripButton?.parentElement || printButton?.parentElement;
-    if (!row) return false;
+    scrubVoiceFromSiteHeader();
+    const existing = document.querySelector('[data-ts-shared-audio]');
+    if (existing) {
+      if (existing.closest('[data-ts-shared-header],[data-shared-trip-header]')) {
+        existing.remove();
+      } else {
+        return true;
+      }
+    }
+    if (!siteHeaderBar()) return false;
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'ts-shared-audio-button';
+    button.className = 'ts-shared-audio-button ts-shared-audio-button--fab';
     button.dataset.tsSharedAudio = '1';
     button.setAttribute('aria-label', 'Record voice note');
     button.title = 'Record voice note';
@@ -411,7 +433,7 @@
     } else {
       button.addEventListener('click', beginRecording);
     }
-    row.insertBefore(button, printButton || null);
+    document.body.appendChild(button);
     return true;
   }
 

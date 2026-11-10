@@ -6,6 +6,9 @@ const HERO_BRAND_NEEDLE =
 const FOOTER_BRAND_NEEDLE =
   'n.jsxs("div",{style:{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:8,padding:"8px 16px",borderRadius:20,background:"var(--bg-card, white)",border:"1px solid var(--border-faint, #e5e7eb)",boxShadow:"0 1px 3px rgba(0,0,0,0.04)"},children:[n.jsx("span",{style:{fontSize:11,color:"#9ca3af",fontWeight:700,letterSpacing:1.8,textTransform:"uppercase"},children:"TimeSyncher"}),n.jsx("span",{style:{display:"inline-flex",alignItems:"center",justifyContent:"center",width:24,height:24},children:n.jsx("img",{src:"/icons/timesyncher-icon-black-transparent.png",alt:"TimeSyncher",width:"20",height:"20"})}),n.jsx("span",{style:{fontSize:11,color:"#9ca3af",fontWeight:700,letterSpacing:1.8,textTransform:"uppercase"},children:"Vacation"}),n.jsx("span",{style:{fontSize:11,color:"#c4c9d1"},children:"· AI-assisted vacation itinerary planning"})]})';
 
+const FOOTER_TAGLINE_ONLY =
+  'n.jsx("span",{"data-vk-footer-tagline":"1",style:{display:"none"},children:"AI-assisted vacation itinerary planning"})';
+
 const HEADER_BAR_NEEDLE =
   'return n.jsxs("div",{style:{minHeight:"100vh",width:"100%",maxWidth:"100vw",overflowX:"hidden",background:"var(--bg-secondary, #f3f4f6)",fontFamily:"-apple-system, BlinkMacSystemFont, \'SF Pro Text\', system-ui, sans-serif"},children:[';
 
@@ -35,7 +38,7 @@ export function patchVk890Rebrand(source = '') {
     throw new Error('vk #890 hero brand lockup needle mismatch');
   }
   if (js.includes(FOOTER_BRAND_NEEDLE)) {
-    js = js.replace(FOOTER_BRAND_NEEDLE, 'null');
+    js = js.replace(FOOTER_BRAND_NEEDLE, FOOTER_TAGLINE_ONLY);
   }
   if (js.includes(HEADER_BAR_NEEDLE)) {
     js = js.replace(HEADER_BAR_NEEDLE, HEADER_BAR_PATCH);

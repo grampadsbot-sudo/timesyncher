@@ -22,6 +22,16 @@
   background: #b42318;
   border-color: rgba(255,255,255,0.22);
 }
+.ts-shared-audio-button--fab {
+  position: fixed;
+  left: 16px;
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  z-index: 9998;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  color: #111827;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+}
 .ts-shared-audio-recording-bar {
   position: fixed;
   left: 12px;
