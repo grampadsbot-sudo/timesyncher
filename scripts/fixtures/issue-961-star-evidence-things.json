@@ -1,0 +1,578 @@
+{
+ "source": "read-only GET /api/shared/<demo token> snapshot 2026-11-10T19:17:32Z (tsv-dispatch/acceptance/fixtures/demo-nyc-99-snapshot-20261110), rating fields only",
+ "thingOverrides": {
+  "place:606": {
+   "title": "Afternoon matinee show",
+   "category": "activity",
+   "summary": "Use a TKTS booth for discounted same-day and next-day matinee Broadway seats at up to 50% off. Queue on the day and pick the show from whatever is posted on the board or in the TKTS app.",
+   "longDetails": "Afternoon matinee show plan: pick up discounted seats at a TKTS booth. TDF says same-day performances and next-day matinees can run up to 50% off at a TKTS Discount Booth. For gifts, TDF suggests TKTS eGift Cards, and the TKTS app has a real-time display of what is currently on sale at every booth.",
+   "description": "Afternoon matinee show plan: pick up discounted seats at a TKTS booth. TDF says same-day performances and next-day matinees can run up to 50% off at a TKTS Discount Booth. For gifts, TDF suggests TKTS eGift Cards, and the TKTS app has a real-time display of what is currently on sale at every booth.",
+   "missingFields": [
+    "knownFor",
+    "ratings",
+    "hours"
+   ],
+   "thirdPartySource": "Tripadvisor",
+   "review1Rating": "5",
+   "review2Rating": "5",
+   "review3Rating": "5",
+   "review4Rating": "5",
+   "evidenceDossier": {
+    "pages": [
+     {
+      "url": "https://www.opentable.com/features/best-restaurants-for-people-watching-times-square-ny",
+      "text": "30 Best Restaurants for People Watching in Theater District | OpenTable\nAs always, <strong>great food and service</strong>. Definitely a go-to in NY and handy for all the main areas. ... Excellent always. Times Square is the best location in nyc!\nAs always, great food and service. Definitely a go-to in NY and handy for all the main areas. ... Excellent always. Times Square is the best location in nyc!\nNizza has become our go-to NYC restaurant when we see a show on Broadway or at Lincoln Center. Consistently great food, reasonably priced, energetic atmosphere but not loud, so you can still easily have conversation. Will definitely be back. ... Food and service were both excellent. The atmosphere was fun and lively!More info · The Smith- Lincoln Square$$$$• American• Lincoln Square"
+     },
+     {
+      "url": "https://www.opentable.com/features/best-brunch-restaurants-times-square-ny",
+      "text": "78 Best Brunch Restaurants in Theater District | OpenTable\nThe Terrace and Outdoor Gardens at The Times Square EDITION$$$$• American• Theater District ... Discover the vibrant brunch scene in the Theater District, Manhattan, a prime location that caters to both early birds and late risers. Brunch in this iconic part of New York City is as diverse as its theatrical offerings, featuring a range of options from luxurious French-inspired menus to hearty American classics.\nThe Terrace and Outdoor Gardens at The Times Square EDITION$$$$• American• Theater District ... Discover the vibrant brunch scene in the Theater District, Manhattan, a prime location that caters to both early birds and late risers. Brunch in this iconic part of New York City is as diverse as its theatrical offerings, featuring a range of options from luxurious French-inspired menus to hearty American classics.\nIt was a perfect spot for us to go next door to see SIX after dinner. Food was great, drinks were good, service was great. Close to Times Square but tucked away enough."
+     },
+     {
+      "url": "https://www.opentable.com/features/best-late-night-dining-restaurants-times-square-ny",
+      "text": "5 Best Restaurants for Late Night Dining in Theater District | OpenTable\nBook now at restaurants for Late Night Dining near me in Theater District on OpenTable. Explore reviews, menus &amp; photos and find the perfect spot for any occasion."
+     },
+     {
+      "url": "https://www.opentable.com/cuisine/best-bar-and-lounge-restaurants-times-square-ny",
+      "text": "56 Best Bars And Lounges In Theater District | OpenTable\n<strong>Always love this restaurant, great view of Times Square and good food in a casual place</strong> !!\nAlways love this restaurant, great view of Times Square and good food in a casual place !!\nHavana Central Times Square$$$$• Cuban• Theater District\nDos Caminos - Times Square$$$$• Mexican• Theater District"
+     },
+     {
+      "url": "https://www.opentable.com/features/restaurants-with-live-music-times-square-ny",
+      "text": "87 Best Live Music Restaurants in Theater District, New York City | OpenTable\nHavana Central Times Square is conveniently located near the Theater District, Broadway, Rockefeller Center, Bryant Park, Midtown and Central Park. ... Pulpería is a vibrant Latin-Mediterranean restaurant located in the heart of Restaurant Row in Hell’s Kitchen, NYC.\nHavana Central Times Square is conveniently located near the Theater District, Broadway, Rockefeller Center, Bryant Park, Midtown and Central Park. ... Pulpería is a vibrant Latin-Mediterranean restaurant located in the heart of Restaurant Row in Hell’s Kitchen, NYC.\nThank you for choosing The Whitby Bar & Restaurant, We look forward to welcoming you.Live Jazz at the Whitby Bar is returning every Friday night from 6pm to 9pm. Enjoy classic and signature cocktails as you listen to live jazz music from The Sam Taylor Trio.For our Afternoon Tea service, please book via Open Table through the EXPERIENCE option.\nTo confirm your afternoon tea reservation, we require a credit card for our cancellation policy. Should you cancel within 24 hours of the booking, a $50/pp cancellation fee will incur. The Whitby Bar and Restaurant, inside The Whitby Hotel"
+     }
+    ]
+   }
+  },
+  "place:607": {
+   "title": "Friend meetup at Bryant Park",
+   "category": "activity",
+   "summary": "Friend meetup at Bryant Park: a Midtown green behind the library with a French-style merry-go-round, open year-round, plus a well-maintained lawn with chairs and tables.",
+   "longDetails": "Friend meetup at Bryant Park is an easy, free Midtown plan. The park sits between 40th and 42nd Streets and Fifth and Sixth Avenues behind the New York Public Library's Stephen A. Schwarzman building, and its October hours are Daily, 7am-10pm. Tripadvisor's listing (search snapshot) notes that the outdoor Reading Room has picture books and summertime story times, and in winter visitors can take a spin on the free ice-skating rink. The park also has a landmarked comfort station with staffed public restrooms. Tripadvisor shows 4.6 of 5 bubbles (24,056 reviews) in the same snapshot. Guests write “Fantastic place to visit around the Holidays.” Guests also flag “Maybe the crowds, which are really heavy on the weekends.” and “the food here can be a bit overpriced”.",
+   "description": "Friend meetup at Bryant Park is an easy, free Midtown plan. The park sits between 40th and 42nd Streets and Fifth and Sixth Avenues behind the New York Public Library's Stephen A. Schwarzman building, and its October hours are Daily, 7am-10pm. Tripadvisor's listing (search snapshot) notes that the outdoor Reading Room has picture books and summertime story times, and in winter visitors can take a spin on the free ice-skating rink. The park also has a landmarked comfort station with staffed public restrooms. Tripadvisor shows 4.6 of 5 bubbles (24,056 reviews) in the same snapshot. Guests write “Fantastic place to visit around the Holidays.” Guests also flag “Maybe the crowds, which are really heavy on the weekends.” and “the food here can be a bit overpriced”.",
+   "missingFields": [
+    "knownFor",
+    "ratings"
+   ],
+   "googleRating": "",
+   "yelpRating": "",
+   "thirdPartyRating": "4.6",
+   "thirdPartySource": "Tripadvisor",
+   "rating": "4.6",
+   "review1Rating": "5",
+   "review2Rating": "5",
+   "review3Rating": "5",
+   "review4Rating": "5",
+   "evidenceDossier": {
+    "pages": [
+     {
+      "url": "https://www.opentable.com/calle-dao?page=5",
+      "text": "Calle Dao - Bryant Park Restaurant - New York, NY | OpenTable\nSignature dishes include Cuban Fried Rice, handcrafted dumplings, seafood paella, noodle dishes, and refreshing mojitos and margaritas. Whether you&#x27;re exploring Bryant Park or meeting friends near Grand Central, <strong>Calle Dao</strong> offers a lively fusion ...\nCalle Dao - Bryant Park, Casual Elegant Chinese cuisine. Read reviews and book now.\nGuests join us for lunch, weekend brunch, dinner, happy hour, and cocktails in the heart of Midtown Manhattan. Signature dishes include Cuban Fried Rice, handcrafted dumplings, seafood paella, noodle dishes, and refreshing mojitos and margaritas. Whether you're exploring Bryant Park or meeting friends near Grand Central, Calle Dao offers a lively fusion dining experience in New York City.\nPair your drinks with our signature Chinese Cuban fusion dishes, including favorites like shrimp wontons in chili oil, Cuban fried rice, steak and eggs, and other shareable plates designed to bring people together. Located in Midtown Manhattan near Bryant Park, Calle Dao offers a warm, energetic atmosphere that is perfect for brunch with friends, group gatherings, or a relaxed afternoon i"
+     },
+     {
+      "url": "https://www.opentable.com/landmark/restaurants-near-bryant-park",
+      "text": "Restaurants Near Bryant Park | OpenTable\nBryant Park is a vibrant urban oasis in the heart of Midtown Manhattan, serving as a hub for relaxation and leisure amidst the city’s hustle and bustle. Where to Eat Near Bryant Park? The dining scene near Bryant Park offers a delightful mix of culinary experiences, perfect for any palate. Explore the warmth of Italian eateries featuring handmade pasta and authentic dishes, or dive into the rich flavors of Mediterranean cuisine with a variety of mezes and grilled specialties.\nBryant Park is a vibrant urban oasis in the heart of Midtown Manhattan, serving as a hub for relaxation and leisure amidst the city’s hustle and bustle. Where to Eat Near Bryant Park? The dining scene near Bryant Park offers a delightful mix of culinary experiences, perfect for any palate. Explore the warmth of Italian eateries featuring handmade pasta and authentic dishes, or dive into the rich flavors of Mediterranean cuisine with a variety of mezes and grilled specialties.\nLocated just steps from Bryant Park, the second OLIO E PIÙ outpost in New York offers a warm and welcoming escape in the heart of Manhattan. Surrounded by the energy of Fifth Avenue and Midtown’s t"
+     },
+     {
+      "url": "https://www.opentable.com/calle-dao",
+      "text": "Calle Dao - Bryant Park Restaurant - New York, NY | OpenTable\nGuests join us for lunch, weekend brunch, dinner, happy hour, and cocktails in the heart of Midtown Manhattan. Signature dishes include <strong>Cuban Fried Rice, handcrafted dumplings, seafood paella, noodle dishes, and refreshing mojitos and margaritas</strong>.\nCalle Dao - Bryant Park, Casual Elegant Chinese cuisine. Read reviews and book now.\nGuests join us for lunch, weekend brunch, dinner, happy hour, and cocktails in the heart of Midtown Manhattan. Signature dishes include Cuban Fried Rice, handcrafted dumplings, seafood paella, noodle dishes, and refreshing mojitos and margaritas. Whether you're exploring Bryant Park or meeting friends near Grand Central, Calle Dao offers a lively fusion dining experience in New York City.\nPair your drinks with our signature Chinese Cuban fusion dishes, including favorites like shrimp wontons in chili oil, Cuban fried rice, steak and eggs, and other shareable plates designed to bring people together. Located in Midtown Manhattan near Bryant Park, Calle Dao offers a warm, energetic atmosphere that is perfect for brunch with friends, group gatherings, or a relaxed afternoon in the c"
+     },
+     {
+      "url": "https://www.opentable.com/features/best-restaurants-for-groups-midtown-east-ny",
+      "text": "66 Best Restaurants for Groups in Midtown East | OpenTable\n... <strong>An energetic, Barcelona-style tapas bar serving Spanish favorites, seasonal specials, and curated cocktails in a contemporary space near Manhattan&#x27;s Flatiron Building and Union Square</strong>.Perfect for a shared meal of small plates, happy hour with the team, a memorable date night, or weekend ...\nSteps from Penn Station, Bryant Park, and Macy’s Herald Square, miss KOREA BBQ is your passport to Seoul—no flight required. ... An energetic, Barcelona-style tapas bar serving Spanish favorites, seasonal specials, and curated cocktails in a contemporary space near Manhattan's Flatiron Building and Union Square.Perfect for a shared meal of small plates, happy hour with the team, a memorable date night, or weekend brunch!We strongly recommend that parties of 6 or more share our Classic Chef's Tasting Menu ($52 per person, plus tax and gratuity).Please let us know if you have any seating requirements when making your booking, and we'll be happy to accommodate!\nInside, Dos Caminos serves up fan favorites like fresh made‑to‑order guacamole, sizzling fajitas, and a lineup of tacos and modern Mexican specialties, all "
+     },
+     {
+      "url": "https://www.opentable.com/restaurant/profile/2385?rid=2385",
+      "text": "Croton Reservoir Tavern - Bryant Park Restaurant - New York, NY | OpenTable\nBook now at Croton Reservoir Tavern - Bryant Park in New York, NY. Explore menu, see photos and read 921 reviews: &quot;<strong>Loved the food and the service!</strong> It is VERY loud there but of course it is a tavern&quot;.\nCroton Reservoir Tavern - Bryant Park, Casual Elegant American cuisine. Read reviews and book now.\nCroton Reservoir Tavern is located just off the edge of Bryant Park. Midtowns premier restaurant and dining destination. ... Located in Midtown Manhattan, next to Broadway, steps from Times Square and near all mass transit, Croton NYC is the perfect setting for a full range of events; including celebration dinners, wedding receptions, corporate affairs, holiday parties and more for groups of up to 300 (both levels).\nLocated in Midtown Manhattan, next to Broadway, steps from Times Square and near all mass transit, Croton NYC is the perfect setting for a full range of events; including celebration dinners, wedding receptions, corporate affairs, holiday parties and more for groups of up to 300 (both levels). ... Various private lots available for $8.00 to $13.00 dollars. ... B, D, F or M to"
+     },
+     {
+      "url": "https://www.opentable.com/landmark/restaurants-near-midtown-studio-next-to-times-square-and-bryant-park",
+      "text": "Restaurants Near Midtown Studio Next to Times Square and Bryant Park | OpenTable\n<strong>Gabriela was an amazing server so friendly, attentive, and welcoming</strong>. Julio Cesar, the manager, was also wonderful and made sure everything was perfect throughout our visit. And the bussers were fantastic as well; they were attentive, quick, and kept everything running smoothly.❤️ Overall, ...\nGuests join us for lunch, weekend brunch, dinner, happy hour, and cocktails in the heart of Midtown Manhattan. Signature dishes include Cuban Fried Rice, handcrafted dumplings, seafood paella, noodle dishes, and refreshing mojitos and margaritas. Whether you're exploring Bryant Park or meeting friends near Grand Central, Calle Dao offers a lively fusion dining experience in New York City.\nLocated in the heart of Manhattan, near Bryant Park, the Theater District, and just a short stroll from Grand Central Station, Parker & Quinn offers a vibrant and lively atmosphere perfect for any occasion. Our menu features simple yet delicious dishes, grounded in classic techniques and focused on healthy, natural, and sustainable products.\nLocated just steps from Bryant Park, the second OLIO E PIÙ outpost in N"
+     }
+    ]
+   }
+  },
+  "place:611": {
+   "title": "Blue Note Jazz Club",
+   "category": "music",
+   "summary": "Blue Note Jazz Club rewards early arrivals, since seating is first come, first served and the room is tight. The sound and door staff win praise, the minimum spend on top of tickets draws grumbles, and the World Famous Harlem Gospel Choir brunch is a lighter daytime alternative to a late set.",
+   "longDetails": "Blue Note Jazz Club is located at 131 West 3rd Street, between MacDougal Street and 6th Avenue, right in the heart of Manhattan’s Greenwich Village in New York City. Everyone needs a ticket to enter the club. Tickets will be e-mailed to customers 48 hours prior to the event. Doors open at 6pm for 8pm shows and 10pm for 10:30pm shows (12:00pm for 1:30pm shown on Sunday Brunches). Upcoming brunch shows include The World Famous Harlem Gospel Choir. Guests write “Door staff were very friendly and welcoming”. Guests also flag “on top of the expensive ticket price, there is a mandatory minimum spend at the table”.",
+   "description": "Blue Note Jazz Club is located at 131 West 3rd Street, between MacDougal Street and 6th Avenue, right in the heart of Manhattan’s Greenwich Village in New York City. Everyone needs a ticket to enter the club. Tickets will be e-mailed to customers 48 hours prior to the event. Doors open at 6pm for 8pm shows and 10pm for 10:30pm shows (12:00pm for 1:30pm shown on Sunday Brunches). Upcoming brunch shows include The World Famous Harlem Gospel Choir. Guests write “Door staff were very friendly and welcoming”. Guests also flag “on top of the expensive ticket price, there is a mandatory minimum spend at the table”.",
+   "missingFields": [
+    "knownFor",
+    "ratings"
+   ],
+   "thirdPartyRating": "4.4",
+   "thirdPartyReviewCount": "950",
+   "review1Rating": "3",
+   "review2Rating": "4",
+   "review3Rating": "4",
+   "review4Rating": "5",
+   "evidenceDossier": {
+    "pages": [
+     {
+      "url": "https://www.opentable.com/r/blue-note-jazz-brunch-new-york",
+      "text": "Blue Note Jazz Brunch Restaurant - New York, NY | OpenTable\nBlue Note Jazz Brunch does not offer private dining, the club&#x27;s listing notes private parties are not part of the offering, so expect its atmospheric, lively open dining room.\nBlue Note Jazz Brunch, Casual Dining American cuisine. Read reviews and book now.\nThe legendary Blue Note Jazz Club is now serving contemporary American brunch cuisine alongside live jazz music in its atmospheric and lively establishment. Whether you prefer the Blue Note omelette or the Blue Note burger, you're sure to satisfying your weekend cravings.\nBlue Note Jazz Brunch does not offer private dining, the club's listing notes private parties are not part of the offering, so expect its atmospheric, lively open dining room.\nReviews from people who have dined at Blue Note Jazz Brunch."
+     },
+     {
+      "url": "https://www.opentable.com/landmark/restaurants-near-blue-note-jazz-club-new-york",
+      "text": "Restaurants Near Blue Note Jazz Club New York | OpenTable\nDiscover the vibrant energy of Blue Note Jazz Club New York, a quintessential destination for live music lovers. Where to Eat Near Blue Note Jazz Club New York? The dining scene near Blue Note Jazz Club is filled with an array of enticing options. Enjoy a taste of Thai fare with dishes that range from pad Thai to sushi, offering a perfect pre-show meal.\nDiscover the vibrant energy of Blue Note Jazz Club New York, a quintessential destination for live music lovers. Where to Eat Near Blue Note Jazz Club New York? The dining scene near Blue Note Jazz Club is filled with an array of enticing options. Enjoy a taste of Thai fare with dishes that range from pad Thai to sushi, offering a perfect pre-show meal.\nFor those craving American classics, you’ll find casual eateries serving up bold flavors from steaks to seafood, perfect for families and groups alike. Whether you're looking for a cozy dinner or a lively spot to dine before a night of jazz, the choices nearby ensure an enjoyable experience for every diner."
+     },
+     {
+      "url": "https://www.opentable.com/cuisine/best-cocktail-bar-restaurants-new-york-tri-state-area-manhattan-greenwich-village",
+      "text": "50 Best Cocktail Bars In Greenwich Village | OpenTable\nBook now at cocktail bars near me in Greenwich Village on OpenTable. Explore reviews, menus &amp; photos and find the perfect spot for any occasion."
+     },
+     {
+      "url": "https://www.opentable.com/features/restaurants-with-live-music-west-village-ny",
+      "text": "34 Best Live Music Restaurants in West Village | OpenTable\nWhite Oak Tavern is a welcoming neighborhood tavern in the heart of Greenwich Village, offering comfort-driven American fare alongside a well-curated selection of beer, wine, and craft cocktails. Set in a relaxed, inviting space, the menu focuses on familiar favorites done well, making it an easy go-to for casual dinners, happy hour, brunch, and late-night drinks.\nOur stage hosts a variety of performances—from live jazz to blues, soul, and more—making every night unique. Guests enjoy world-class New American cuisine by Michelin-starred Chef Jiho Kim, with signature dishes like our NY Prime Strip Steak, 30-Hour Pastrami Short Rib, and Seared Scallops with Ravioli.\nWe are Open for the Holidays, see site for special menu and hours, but at this time please call for reservation availability.\"The place where New Yorkers eat\"Knickerbocker is known for its great Jazz and its 28 oz. T- Bone Steaks and is a favorite among many celebrities including F. Murray Abraham, Chris Noth and Alec Baldwin. Racheal Ray listed us in her \"NYC Favorites\" and has praised our Shrimp Cocktail, Creamed Spinach, and of course our T- Bone Steaks.The word"
+     },
+     {
+      "url": "https://www.opentable.com/manhattan/greenwich-village-restaurants",
+      "text": "The Best Restaurants in Greenwich Village Right Now | OpenTable\n&quot;The place where New Yorkers eat&quot; Knickerbocker is known for its great Jazz and its 28 oz. T- Bone Steaks and is a favorite among many celebrities including F. Murray Abraham, Chris Noth and Alec Baldwin. Racheal Ray listed us in her &quot;NYC Favorites&quot; and has praised our Shrimp Cocktail, Creamed Spinach, and of course our T- Bone Steaks.\nWhether you're searching for a celiac-friendly restaurant, gluten-free Italian food, or a safe place to enjoy pasta and pizza in NYC, Senza Gluten delivers a dining experience that is both comforting and exceptional. Please note: We accept cash and American Express only. ... Birds, Burgers and Booze. \"We've Got it All\" Fairfax is an all-day neighborhood restaurant. Come through and hang! Find next available ... Gusi is a two-storey Eastern European restaurant and bar in the heart of Greenwich Village, where refined comfort cuisine meets Mediterranean warmth.\nThe best restaurants in New York City: MICHELIN-starred tasting menus, iconic chophouses, and the NYC dining spots worth knowing right now — discover where to eat and drink in NYC.May 7, 2026 · A curated guide to "
+     },
+     {
+      "url": "https://www.opentable.com/r/jazz-genius-new-york",
+      "text": "Jazz Genius Restaurant - New York, NY | OpenTable\nOur kitchen is 100% gluten free so there is no chance of cross contamination. After dining in our restaurant, head downstairs to our jazz room where you can listen to the same fine musicians that play at the Blue Note, Birdland, Smalls, Mezzrow, Smoke and other top name jazz clubs.\nJazz Genius, Casual Dining American cuisine. Read reviews and book now.\nOur kitchen is 100% gluten free so there is no chance of cross contamination. After dining in our restaurant, head downstairs to our jazz room where you can listen to the same fine musicians that play at the Blue Note, Birdland, Smalls, Mezzrow, Smoke and other top name jazz clubs."
+     },
+     {
+      "url": "https://www.restaurantji.com/ny/new-york/blue-note-/",
+      "text": "Blue Note Jazz Club reviews | Restaurantji\nThe performance was wonderful, but I did not appreciate how long it took for the club to let us in. It said doors open at 9:30 but people were not let in until almost 10. I also do not appreciate that we were forced to order a $20 minimum per person after paying over 150 for a ticket."
+     }
+    ]
+   }
+  },
+  "place:612": {
+   "title": "Chelsea Market",
+   "category": "store",
+   "summary": "Chelsea Market is the indoor food hall at 75 Ninth Avenue between 15th and 16th Streets, beside the High Line, and it is best treated as a grazing stop across several food stalls and indie shops rather than one sit-down meal.",
+   "longDetails": "Chelsea Market fills a former factory building on the Meatpacking District edge of Chelsea, with food stalls and shops under one roof. Its Yelp page shows 2,638 reviews and 7,240 photos, and the High Line next door makes it an easy start or finish for a walk.",
+   "description": "Chelsea Market fills a former factory building on the Meatpacking District edge of Chelsea, with food stalls and shops under one roof. Its Yelp page shows 2,638 reviews and 7,240 photos, and the High Line next door makes it an easy start or finish for a walk.",
+   "missingFields": [
+    "knownFor",
+    "ratings",
+    "hours"
+   ],
+   "googleRating": "",
+   "yelpRating": "",
+   "thirdPartyRating": "2",
+   "thirdPartySource": "Its Yelp page",
+   "rating": "2",
+   "review1Rating": "5",
+   "review2Rating": "4",
+   "review3Rating": "5",
+   "review4Rating": "5",
+   "evidenceDossier": {
+    "pages": [
+     {
+      "url": "https://www.opentable.com/r/cull-and-pistol",
+      "text": "Cull and Pistol Restaurant - New York, NY | OpenTable\n75 9th Ave, New York, NY 10011 · 4.7 · $31 to $50 · Seafood · Chelsea · 1 person · 2 people · 3 people · 4 people · 5 people · 6 people · 7 people · 8 people · 9 people · 10 people · 11 people · 12 people · 13 people · 14 people · 15 people · 16 people ·\nCull and Pistol, Casual Elegant Seafood cuisine. Read reviews and book now.\n75 9th Ave, New York, NY 10011 · 4.7 · $31 to $50 · Seafood · Chelsea · 1 person · 2 people · 3 people · 4 people · 5 people · 6 people · 7 people · 8 people · 9 people · 10 people · 11 people · 12 people · 13 people · 14 people · 15 people · 16 people ·\n75 9th Ave, New York, NY 10011 · Neighborhood · Chelsea · Cross street · 15th Street · Parking details · Street Parking · Additional · Beer, Cocktails, Corkage Fee, Full Bar, Gluten-free Options, Happy Hour, Non-Smoking, Wine · 1 - 6 people · Multiple dates available ·\nI found this spot a few months ago while walking through @chelseamarketny & have craved their unique & tasty dishes ever since😋 so I FINALLY went back this weekend because after walking down the @highlinenyc ya girl worked up an appetite👏🏻 I’m also on my healthy girl shit, so finding re"
+     },
+     {
+      "url": "https://www.opentable.com/landmark/restaurants-near-chelsea-market",
+      "text": "Restaurants Near Chelsea Market Baskets | OpenTable\nDiscover the best restaurants near Chelsea Market Baskets, New York City. Find available tables for your party size and preferred time and reserve your perfect spot."
+     },
+     {
+      "url": "https://www.opentable.com/r/markette-new-york",
+      "text": "Markette Restaurant - New York, NY | OpenTable\nMarkette is a modern European restaurant with Caribbean influence in Chelsea, walking distance from Madison Square Garden, Penn Station, Hudson Yards and The High Line. Chef and co owner India Doris, winner of the MICHELIN Guide Northeast Cities 2025 Young Chef Award, cooks her Caribbean heritage through European technique.\nMarkette, Casual Elegant European cuisine. Read reviews and book now.\nPennywise pound foolish I ordered two appetizers. Three cocktails, two main entrees and a diet Coke. Diet Coke was in a small glass full of ice so I decided to order another diet Coke no ice and kept my original glass. The soda came back 75% full. I asked the server to fill up the glass please.\nMarkette is a modern European restaurant with Caribbean influence in Chelsea, walking distance from Madison Square Garden, Penn Station, Hudson Yards and The High Line. Chef and co owner India Doris, winner of the MICHELIN Guide Northeast Cities 2025 Young Chef Award, cooks her Caribbean heritage through European technique.\nMarkette hosts private dinners, birthdays, rehearsal dinners and corporate gatherings in Chelsea, a short walk from Madison Square Gard"
+     },
+     {
+      "url": "https://www.opentable.com/r/cafe-chelsea-new-york",
+      "text": "Cafe Chelsea Restaurant - New York, NY | OpenTable\nBook now at Cafe Chelsea in New York, NY. Explore menu, see photos and read 19 reviews: &quot;<strong>Cafe Chelsea is an absolute delight!</strong> My daughter and I sat outside on an evening with beautiful weather. We felt like we were at a Parisienne cafe. The s...&quot;.\nCafe Chelsea, Casual Dining French American cuisine. Read reviews and book now."
+     },
+     {
+      "url": "https://www.opentable.com/r/the-meatball-shop-chelsea-new-york",
+      "text": "The Meatball Shop - Chelsea - Permanently Closed - Updated 2026, American Restaurant in New York, NY\nThe Meatball Shop - Chelsea - Permanently Closed, Casual Dining American cuisine. Read reviews and book now.\nThe Meatball Shop - Chelsea - Permanently Closed, Casual Dining American cuisine. Read reviews and book now.\n200 9th Avenue, New York, NY 10011 · Neighborhood gem · Romantic · Innovative ·\n200 9th Avenue, New York, NY 10011 · Neighborhood · Chelsea · Cross street · 23rd St and 9th Ave · Parking details · None · Additional ·"
+     },
+     {
+      "url": "https://www.opentable.com/r/chelsea-ristorante-italiano-new-york",
+      "text": "Chelsea Ristorante Italiano Restaurant - New York, NY | OpenTable\nExplore menu, see photos and read 1066 reviews: &quot;<strong>Incredibly wonderful and attentive staff along with delicious fare as always</strong>. The atmosphere of neighborhood locals seems to add that additional warmth.&quot;.\nChelsea Ristorante Italiano, Casual Dining Italian cuisine. Read reviews and book now."
+     },
+     {
+      "url": "https://www.opentable.com/nearby/restaurants-near-me-chelsea-ny",
+      "text": "The 10 Best Restaurants Near Me in Chelsea, New York City | OpenTable\nDiscover top restaurants near me in Chelsea, New York City on OpenTable. Browse real-time table availability, view updated menus, and read reviews from fellow diners. Reserve your spot now."
+     },
+     {
+      "url": "https://www.opentable.com/cuisine/best-seafood-restaurants-chelsea-ny",
+      "text": "43 Best Seafood Restaurants In Chelsea, New York City | OpenTable\nBook now at Seafood restaurants near me in Chelsea, New York City on OpenTable. Explore reviews, menus &amp; photos and find the perfect spot for any occasion."
+     }
+    ]
+   }
+  },
+  "place:617": {
+   "title": "Arthouse Hotel",
+   "category": "hotel",
+   "summary": "Arthouse Hotel is a character-filled Boutique Hotel on the Upper West Side whose guests praise a safe, pleasant neighborhood, big comfortable rooms and good food steps away. The trade-offs come up just as often: lobby music can run loud, room sizes and upkeep vary, and dining nearby adds to the bill.",
+   "longDetails": "Arthouse Hotel fills a 291-room, century-old building with historic accents at Broadway and West 77th Street on the Upper West Side, two blocks from the American Museum of Natural History and close to Central Park and the subway. Rooms start at about 240 square feet, roomy by city standards, with comfortable beds and good cleanliness, and the lively Arthouse Bar doubles as a lobby living room, with RedFarm's modern Chinese food and Serafina's Northern Italian fare downstairs. Tripadvisor rates it 4.2 Good across 8,181 reviews, and guests praise the safe, pleasant residential area and good value. Watch-outs are loud lobby music, street and elevator noise in some rooms, dated rooms behind the renovated public areas, and uneven housekeeping. It suits travellers who want a characterful, walkable base near the park and museums.",
+   "description": "Arthouse Hotel fills a 291-room, century-old building with historic accents at Broadway and West 77th Street on the Upper West Side, two blocks from the American Museum of Natural History and close to Central Park and the subway. Rooms start at about 240 square feet, roomy by city standards, with comfortable beds and good cleanliness, and the lively Arthouse Bar doubles as a lobby living room, with RedFarm's modern Chinese food and Serafina's Northern Italian fare downstairs. Tripadvisor rates it 4.2 Good across 8,181 reviews, and guests praise the safe, pleasant residential area and good value. Watch-outs are loud lobby music, street and elevator noise in some rooms, dated rooms behind the renovated public areas, and uneven housekeeping. It suits travellers who want a characterful, walkable base near the park and museums.",
+   "missingFields": [
+    "knownFor",
+    "hours"
+   ],
+   "thirdPartyRating": "7.9",
+   "thirdPartySource": "Booking.com",
+   "thirdPartyReviewCount": "2366",
+   "review1Rating": "5",
+   "review2Rating": "4",
+   "review3Rating": "5",
+   "review4Rating": "4",
+   "evidenceDossier": {
+    "rating": 4.2,
+    "ratingEvidence": {
+     "url": "https://www.tripadvisor.com/Hotel_Review-g60763-d99288-Reviews-Arthouse_Hotel_New_York_City-New_York_City_New_York.html",
+     "count": 8181,
+     "pages": [
+      "p3"
+     ],
+     "quote": "4.2 Good (8,181)",
+     "source": "tripadvisor",
+     "average": 4.2,
+     "scaleMax": 5
+    },
+    "pages": [
+     {
+      "url": "https://www.opentable.com/landmark/restaurants-near-nylo-new-york-city",
+      "text": "The Best 795 Restaurants Near NYLO New York City | OpenTable\nDiscover the best restaurants near NYLO New York City, New York City. Find available tables for your party size and preferred time and reserve your perfect spot."
+     },
+     {
+      "url": "https://www.opentable.com/landmark/restaurants-near-hotel-belleclaire",
+      "text": "Restaurants Near Hotel Belleclaire | OpenTable\nDiscover the best restaurants near Hotel Belleclaire, New York City. Find available tables for your party size and preferred time and reserve your perfect spot."
+     },
+     {
+      "url": "https://www.opentable.com/r/art-midtown-new-york",
+      "text": "ART Midtown - New York, NY on OpenTable\nBook now at ART Midtown in New York, NY. Explore menu, see photos and read 97 reviews: &quot;As for a fable near the ledge! Happy hour is the best way to get full value plus it’s not as noisy. <strong>Beautiful place and service was great</strong>!&quot;.\nBook now at ART Midtown in New York, NY. Explore menu, see photos and read 97 reviews: \"As for a fable near the ledge! Happy hour is the best way to get full value plus it’s not as noisy. Beautiful place and service was great!\"."
+     }
+    ]
+   }
+  },
+  "place:620": {
+   "title": "Hotel Edison",
+   "category": "hotel",
+   "summary": "Hotel Edison, at 228 West 47th Street, is a big, classic Theater District hotel that guests like for surprisingly large, clean rooms at a fair price so close to Broadway. Service is friendly if sometimes routine, and street and building noise is the main warning for light sleepers.",
+   "longDetails": "Hotel Edison is a historic, art deco hotel in the Theatre District, steps from Times Square, at 228 West 47th Street. Tripadvisor scores it 3.9 Good (18,818), typical of a busy, high-volume landmark. Reviews praise room size and cleanliness for the location and suggest eating along Eighth Avenue for more choice. The recurring complaint is noise: some guests lost sleep over several nights, so earplugs or a quieter room request are sensible.",
+   "description": "Hotel Edison is a historic, art deco hotel in the Theatre District, steps from Times Square, at 228 West 47th Street. Tripadvisor scores it 3.9 Good (18,818), typical of a busy, high-volume landmark. Reviews praise room size and cleanliness for the location and suggest eating along Eighth Avenue for more choice. The recurring complaint is noise: some guests lost sleep over several nights, so earplugs or a quieter room request are sensible.",
+   "missingFields": [
+    "knownFor",
+    "hours"
+   ],
+   "review1Rating": "4",
+   "review2Rating": "4",
+   "review3Rating": "4",
+   "review4Rating": "4",
+   "evidenceDossier": {
+    "rating": 3.9,
+    "ratingEvidence": {
+     "url": "https://www.tripadvisor.com/Hotel_Review-g60763-d93437-Reviews-Hotel_Edison_Times_Square-New_York_City_New_York.html",
+     "count": 18818,
+     "pages": [
+      "p3"
+     ],
+     "quote": "3.9 Good (18,818)",
+     "source": "tripadvisor",
+     "average": 3.9,
+     "scaleMax": 5
+    },
+    "pages": [
+     {
+      "url": "https://www.opentable.com/r/friedmans-new-york",
+      "text": "Friedman's - Theater District Restaurant - New York, NY | OpenTable\nYes, guests report Friedman&#x27;s - Hotel Edison was open on holidays, including being seated there on Christmas Day and dining on Thanksgiving.\nFriedman's - Theater District, Casual Dining American cuisine. Read reviews and book now.\nGluten Free Pioneers! Casual American cuisine that turns into an evening dinner theater setting inside Edison Hotel in Times Square. Come try our famous gluten free breakfast, lunch or dinner options before a matinee or Broadway show!\nYes, guests report Friedman's - Hotel Edison was open on holidays, including being seated there on Christmas Day and dining on Thanksgiving."
+     },
+     {
+      "url": "https://www.opentable.com/landmark/restaurants-near-hotel-edison",
+      "text": "Restaurants Near Hotel Edison | OpenTable\nExperience the vibrant energy of the Theater District at Hotel Edison, a prominent landmark that serves as a gateway to some of the city&#x27;s most exciting attractions. Where to Eat Near Hotel Edison? Your dining options are as diverse as they are delightful. Indulge in the warmth of casual Italian eateries offering homemade pastas and sharing platters perfect for friends and family.\nLocated in the heart of Midtown Manhattan near Times Square and the Theater District, Tony’s Di Napoli serves classic, family-style Southern Italian cuisine in generous portions perfect for sharing. A staple in the New York City dining scene for over 20 years, we’re open daily for lunch and dinner—ideal for pre-theater meals, group dining, and special occasions.\nExperience the vibrant energy of the Theater District at Hotel Edison, a prominent landmark that serves as a gateway to some of the city's most exciting attractions. Where to Eat Near Hotel Edison? Your dining options are as diverse as they are delightful. Indulge in the warmth of casual Italian eateries offering homemade pastas and sharing platters perfect for friends and family.\nCarmine's - 44th Str"
+     },
+     {
+      "url": "https://www.opentable.com/",
+      "text": "Restaurants and Restaurant Bookings | OpenTable\nBest restaurants near me in Theater District / Times Square, NY · Best restaurants near me in TriBeCa - Downtown, NY · Best restaurants near me in Hudson Yards, NY · Best restaurants near me in Upper West Side, NY · Best restaurants near me in Upper East Side, NY ·\nBest restaurants near me in Theater District / Times Square, NY · Best restaurants near me in TriBeCa - Downtown, NY · Best restaurants near me in Hudson Yards, NY · Best restaurants near me in Upper West Side, NY · Best restaurants near me in Upper East Side, NY ·"
+     },
+     {
+      "url": "https://www.opentable.com/features/best-late-night-dining-restaurants-times-square-ny",
+      "text": "5 Best Restaurants for Late Night Dining in Theater District | OpenTable\nBook now at restaurants for Late Night Dining near me in Theater District on OpenTable. Explore reviews, menus &amp; photos and find the perfect spot for any occasion."
+     },
+     {
+      "url": "https://www.opentable.com/r/the-terrace-and-outdoor-gardens-at-the-edition-new-york",
+      "text": "The Terrace and Outdoor Gardens at The Times Square EDITION Restaurant - New York, NY | OpenTable\nBook now at The Terrace and Outdoor Gardens at The Times Square EDITION in New York, NY. Explore menu, see photos and read 1385 reviews: &quot;A beautiful setting for a pre-theater dinner. Attentive service. Wonderful food. We&#x27;ll be back.&quot;.\nThe Terrace and Outdoor Gardens at The Times Square EDITION, Casual Elegant American cuisine. Read reviews and book now.\nAFAR highlights Michelin-starred dining across major cities and the hotels that put guests near top restaurants. The Terrace and Outdoor Gardens at The Times Square EDITION in New York is featured as a standout dining destination. ... A Pursuitist guide highlights NYC luxury rooftops, featuring The Terrace and Outdoor Gardens at The Times Square EDITION as a premier al fresco dining spot. Guests can enjoy a Sunset Menu for pre-theater visits with light bites and cocktails.\nNew York City is one of the world’s great dining cities — a place where ambitious cooking, diverse culinary traditions, and genuinely exciting restaurants exist at every price point. But here’s the thing: some of the most exciting, chef-driven dining e"
+     },
+     {
+      "url": "https://www.opentable.com/cuisine/best-lounge-restaurants-times-square-ny",
+      "text": "12 Best Lounges In Theater District, New York City | OpenTable\n<strong>Amazing vibes</strong>. It has two different sections which was amazing. One was loud and one was chill. Great views, fair NY prices.\nEmpire Rooftop @ Empire Hotel in Lincoln Square, New York, is a shining star in the Lounge cuisine scene. Perched atop the iconic Empire Hotel, it offers a breathtaking backdrop of the Lincoln Center complex, making every visit memorable. Guests rave about the \"fantastic views\" and \"perfect vibes\" that create a relaxed yet sophisticated atmosphere.\nBar Cima, perched atop the Grayson Hotel in Midtown's Garment District, offers an exquisite Lounge experience infused with Latin flair. This rooftop gem, recognized by Esquire as one of the \"40 Best Rooftop Bars in NYC,\" boasts stunning views from the Empire State Building to the serene Hudson and East Rivers.\nThe Empire Rooftop's impeccable service and stylish setting make it a premier destination for both locals and visitors seeking a quintessential NYC experience.Read more ... Located on the lobby level of Park Hyatt New York, The Living Room offers an intimate and elegant setting for Contemporary American cuisine; chef-driven dishes"
+     },
+     {
+      "url": "https://www.opentable.com/features/hot-spots-times-square-ny",
+      "text": "43 Best Hot Spot Restaurants in Theater District | OpenTable\n<strong>The Theater District&#x27;s dining scene is a dynamic blend of tradition and modernity, perfect for pre-show dinners, casual meetups, or special occasions</strong>. Whether you&#x27;re a local, a tourist, or a theater enthusiast, the culinary delights of this iconic New York City neighborhood are sure to impress.\nHavana Central Times Square$$$$• Cuban• Theater District ... Nobu 57 is a must!! We had the absolute best experience. The service was phenomenal, the food was fantastic, and the vibe was energetic and upbeat. We enjoyed 7 dishes between 3 people, and they were all so delicious. We dined at a lot of NY restaurants on our trip, and Nobo 57 was by far our favorite.\nDel Frisco's Grille - NYC$$$$• Steakhouse• Rockefeller Center ... The food was amazing! We also liked the service, Terry and the rest of the team made the dining experience pleasant and enjoyable. Will definitely add Park Ave Kitchen as one of our go to restaurants.More info · Park Ave Kitchen by David Burke$$$$• American• Midtown East ... Discover the hottest dining spots in the Theater District of Manhattan, New York City, where culinary experie"
+     },
+     {
+      "url": "https://www.opentable.com/cuisine/best-bar-and-lounge-restaurants-times-square-ny",
+      "text": "56 Best Bars And Lounges In Theater District | OpenTable\n<strong>This was a great spot to view Times Square</strong>. Prices were good and the service was fantastic!\nFrankly, finding a nice spot for client drinks and small bites south of Times Square and north of Penn can be challenging, especially one that is upscale and not dated. Skylark is by far my go-to. Always reliable, excellent service, and beautiful views. We've had our annual team outing here, and it's a perfect business spot for quiet conversation. ... Luxe NYC vibe with beautiful seating around a fireplace and wall of changing B&W city scape photos.\nOur server Hyman was very attentive and the food was amazing - I am generally leery of restaurants in the midtown areas as they are generally touristy and service/food is generally not great but they are very expensive BUT Havana Central Times Square is the EXCEPTION!More info\nThis was a great spot to view Times Square. Prices were good and the service was fantastic!\nHavana Central Times Square$$$$• Cuban• Theater District"
+     }
+    ]
+   }
+  },
+  "place:629": {
+   "title": "Romer Hell's Kitchen",
+   "category": "hotel",
+   "summary": "Romer Hell's Kitchen, at 851 Eighth Ave., New York, NY 10019, is a design-led Midtown West hotel that guests praise for an easy walk to the theaters, very comfortable beds, quiet rooms and a fun piano bar. The one consistent complaint is tight bathrooms and showers.",
+   "longDetails": "Romer Hell's Kitchen is a 295-room, design-led four-star hotel at 851 Eighth Avenue that took over a former Hampton Inn just west of Broadway, so Times Square, the Theater District, MoMA and Fifth Avenue are an easy walk while the side streets feel calmer. Rooms run up to 600 square feet with a fridge and city views; the all-day Neighborhood Café, a lobby study, the Corner Store and So & So's piano bar with nightly live entertainment fill the ground floor, and instead of a gym guests get free Crunch Fitness passes and bikes. Booking.com guests score it 8.6 and its location 9.6, praising friendly, helpful staff, super-comfortable beds and quiet, well-soundproofed rooms. It suits theatregoers, families and groups; the watch-out is cramped bathrooms and showers.",
+   "description": "Romer Hell's Kitchen is a 295-room, design-led four-star hotel at 851 Eighth Avenue that took over a former Hampton Inn just west of Broadway, so Times Square, the Theater District, MoMA and Fifth Avenue are an easy walk while the side streets feel calmer. Rooms run up to 600 square feet with a fridge and city views; the all-day Neighborhood Café, a lobby study, the Corner Store and So & So's piano bar with nightly live entertainment fill the ground floor, and instead of a gym guests get free Crunch Fitness passes and bikes. Booking.com guests score it 8.6 and its location 9.6, praising friendly, helpful staff, super-comfortable beds and quiet, well-soundproofed rooms. It suits theatregoers, families and groups; the watch-out is cramped bathrooms and showers.",
+   "missingFields": [
+    "knownFor",
+    "hours"
+   ],
+   "review1Rating": "5",
+   "review2Rating": "5",
+   "review3Rating": "5",
+   "review4Rating": "5",
+   "evidenceDossier": {
+    "rating": 4.5,
+    "ratingEvidence": {
+     "url": "https://www.romerhotels.com/hells-kitchen",
+     "count": 615,
+     "pages": [
+      "p1"
+     ],
+     "quote": "Romer Hell's Kitchen: tripadvisor rating 4.5/5 from 615 reviews",
+     "source": "tripadvisor",
+     "average": 4.5,
+     "scaleMax": 5
+    },
+    "pages": [
+     {
+      "url": "https://www.opentable.com/neighborhood/us/new-york-city/hells-kitchen-restaurants",
+      "text": "The Best Restaurants in Hell's Kitchen Right Now | OpenTable\nExplore the top 10 restaurants in Hell&#x27;s Kitchen. Book your table now on OpenTable."
+     },
+     {
+      "url": "https://www.opentable.com/food-near-me/hells-kitchen-ny",
+      "text": "The Best Food Near Me in Midtown West - Reservations, Experiences, Takeout & Delivery | OpenTable\nDiscover the best food near me in Midtown West. Get the hottest tables, unique dining experiences or food for takeout or delivery."
+     },
+     {
+      "url": "https://www.opentable.com/features/hot-spots-hells-kitchen-ny",
+      "text": "44 Best Hot Spot Restaurants in Hell's Kitchen | OpenTable\nBook now at Hot Spot restaurants near me in Hell&#x27;s Kitchen on OpenTable. Explore reviews, menus &amp; photos and find the perfect spot for any occasion."
+     },
+     {
+      "url": "https://www.opentable.com/cuisine/best-american-restaurants-hells-kitchen-ny",
+      "text": "255 Best American Restaurants In Hell's Kitchen | OpenTable\nBook now at American restaurants near me in Hell&#x27;s Kitchen on OpenTable. Explore reviews, menus &amp; photos and find the perfect spot for any occasion."
+     },
+     {
+      "url": "https://www.opentable.com/features/best-fine-dining-restaurants-new-york-city-manhattan-hells-kitchen",
+      "text": "78 Best Fine Dining Restaurants in Hell's Kitchen | OpenTable\nBook now at Fine Dining restaurants near me in Hell&#x27;s Kitchen on OpenTable. Explore reviews, menus &amp; photos and find the perfect spot for any occasion."
+     },
+     {
+      "url": "https://www.opentable.com/features/best-restaurants-for-groups-hells-kitchen-ny",
+      "text": "73 Best Restaurants for Groups in Hell's Kitchen | OpenTable\nBook now at restaurants for Groups near me in Hell&#x27;s Kitchen on OpenTable. Explore reviews, menus &amp; photos and find the perfect spot for any occasion."
+     },
+     {
+      "url": "https://www.opentable.com/features/healthy-restaurants-hells-kitchen-ny",
+      "text": "83 Best Healthy Restaurants in Hell's Kitchen | OpenTable\nBook now at Healthy restaurants near me in Hell&#x27;s Kitchen on OpenTable. Explore reviews, menus &amp; photos and find the perfect spot for any occasion."
+     },
+     {
+      "url": "https://www.opentable.com/cuisine/best-pizzeria-restaurants-hells-kitchen-ny",
+      "text": "20 Best Pizzerias In Hell's Kitchen | OpenTable\nBook now at pizzerias near me in Hell&#x27;s Kitchen on OpenTable. Explore reviews, menus &amp; photos and find the perfect spot for any occasion."
+     }
+    ]
+   }
+  },
+  "place:674": {
+   "title": "Rosa Mexicano - Lincoln Center",
+   "category": "restaurant",
+   "summary": "Rosa Mexicano - Lincoln Center has moved from 61 Columbus Ave to a new flagship on the mezzanine of the Empire Hotel at 44 W 63rd Street, with expanded dining areas and multiple bars. The draw is theater-adjacent fun and the signature tableside guacamole. Reviews are mixed, with Tripadvisor travelers praising the look and staff yet flagging uneven service and some weaker mains, so treat it as a lively, convenient pre-show choice.",
+   "longDetails": "The new space sits across from the Metropolitan Opera House, which suits a pre-show meal. Fiesta Hour runs Monday to Friday, 4–7 pm, in the bar area, and Taco Tuesdays bring half-price tacos all day (dine-in only). Search snapshots show OpenTable at 4.4 (9,790 reviews) and Tripadvisor at 4.1 of 5 bubbles (1,460 reviews). Guests write “The decor is gorgeous, the waitstaff attentive”. Guests also flag “Service is indifferent at best.” and “the pork and beef Enchiladas were disappointing”.",
+   "description": "The new space sits across from the Metropolitan Opera House, which suits a pre-show meal. Fiesta Hour runs Monday to Friday, 4–7 pm, in the bar area, and Taco Tuesdays bring half-price tacos all day (dine-in only). Search snapshots show OpenTable at 4.4 (9,790 reviews) and Tripadvisor at 4.1 of 5 bubbles (1,460 reviews). Guests write “The decor is gorgeous, the waitstaff attentive”. Guests also flag “Service is indifferent at best.” and “the pork and beef Enchiladas were disappointing”.",
+   "missingFields": [
+    "knownFor",
+    "phone",
+    "ratings",
+    "hours"
+   ],
+   "review1Rating": "5",
+   "review2Rating": "4",
+   "review3Rating": "5",
+   "review4Rating": "5",
+   "evidenceDossier": {
+    "pages": [
+     {
+      "url": "https://www.opentable.com/r/rosa-mexicano-lincoln-center-new-york-3",
+      "text": "OpenTable\n4.5 ★ · 10218 reviews · $30 and under"
+     },
+     {
+      "url": "https://www.opentable.com/r/rosa-mexicano-by-lincoln-center-new-york-3",
+      "text": "OpenTable: Rosa Mexicano by Lincoln Center (search snapshot)\n by Lincoln Center (search snapshot) | SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch) | Rosa Mexicano by Lincoln Center 4.4 (9790) … 61 Columbus Ave, New York, NY 10023\n by Lincoln Center (search snapshot) | SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch) | Rosa Mexicano by Lincoln Center 4.4 (9790) … 61 Columbus Ave, New York, NY 10023"
+     }
+    ]
+   }
+  },
+  "place:678": {
+   "title": "Famous Original Ray's Pizza",
+   "category": "restaurant",
+   "summary": "Famous Original Ray's Pizza is a family-owned Manhattan pizzeria serving Midtown, Times Square & Upper West, offering authentic Italian pizza, pastas, and more. It suits a quick, casual slice wherever the day lands, so pick the branch closest to that day's plans.",
+   "longDetails": "Famous Original Ray's Pizza is a family-owned Manhattan pizzeria. Its site says to enjoy authentic Italian pizza, pastas, and more at Famous Original Ray’s Pizza. It serves Midtown, Times Square & Upper West, so a slice is never far from the hotel. Order a slice at the counter for a cheap, fast stop between sights rather than a sit-down dinner.",
+   "description": "Famous Original Ray's Pizza is a family-owned Manhattan pizzeria. Its site says to enjoy authentic Italian pizza, pastas, and more at Famous Original Ray’s Pizza. It serves Midtown, Times Square & Upper West, so a slice is never far from the hotel. Order a slice at the counter for a cheap, fast stop between sights rather than a sit-down dinner.",
+   "missingFields": [
+    "hours",
+    "happyHour",
+    "knownFor",
+    "ratings",
+    "phone"
+   ],
+   "review1Rating": "1",
+   "review2Rating": "5",
+   "review3Rating": "5",
+   "review4Rating": "5",
+   "evidenceDossier": {
+    "pages": []
+   }
+  },
+  "place:680": {
+   "title": "Piccola Cucina Uptown",
+   "category": "restaurant",
+   "summary": "Piccola Cucina Uptown is the Upper East Side sibling of the Piccola Cucina group, at 106 East 60th Street, New York, serving fresh seafood, handmade pasta and Sicilian specialties. Restaurantji diners rate it 4.5 from 1138 ratings and praise both kitchen and floor, saying everything they make is delicious and very fresh, with service described as exceptional. It suits a relaxed, conversation-friendly Italian dinner near the park.",
+   "longDetails": "Piccola Cucina Uptown is an Italian restaurant, located right across from Central Park. The group invites guests to experience authentic Italian cuisine and indulge in Italian delicacies. It belongs to the Piccola Cucina family, which started with a Sicilian osteria downtown. OpenTable diners rate Piccola Cucina Uptown 4.8 from 2,842 reviews. Restaurantji diners add that they have gluten-free bread and pasta, and even the eggplant parmesan is gluten-free, and one notes the room is comfortable for conversation.",
+   "description": "Piccola Cucina Uptown is an Italian restaurant, located right across from Central Park. The group invites guests to experience authentic Italian cuisine and indulge in Italian delicacies. It belongs to the Piccola Cucina family, which started with a Sicilian osteria downtown. OpenTable diners rate Piccola Cucina Uptown 4.8 from 2,842 reviews. Restaurantji diners add that they have gluten-free bread and pasta, and even the eggplant parmesan is gluten-free, and one notes the room is comfortable for conversation.",
+   "missingFields": [
+    "happyHour",
+    "knownFor",
+    "neighborhood",
+    "ratings"
+   ],
+   "review1Rating": "5",
+   "review2Rating": "5",
+   "review3Rating": "5",
+   "review4Rating": "5",
+   "evidenceDossier": {
+    "pages": [
+     {
+      "url": "https://www.opentable.com/r/piccola-cucina-uptown-new-york",
+      "text": "Piccola Cucina Uptown Restaurant - New York, NY | OpenTable\nPiccola Cucina Uptown Restaurant - New York, NY | OpenTable | | Piccola Cucina Uptown Restaurant - New York, NY | OpenTable # Piccola Cucina Uptown 4.8 (2842) $31 to $50 Italian 106 E 60th St, New York, NY 10022 The menu features fresh seafood, handmade pastas, and traditional Sicilian specialties like the \nPiccola Cucina Uptown Restaurant - New York, NY | OpenTable | | Piccola Cucina Uptown Restaurant - New York, NY | OpenTable # Piccola Cucina Uptown 4.8 (2842) $31 to $50 Italian 106 E 60th St, New York, NY 10022 The menu features fresh seafood, handmade pastas, and traditional Sicilian specialties l"
+     },
+     {
+      "url": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/",
+      "text": "Piccola Cucina Uptown reviews | Restaurantji\nPiccola Cucina Uptown | Restaurantji listing | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | 106 East 60th Street, New York … 4.5 1138 ratings … Everything they make is delicious and very fresh … They have gluten free bread, pasta and even their eggplant parmesan is gluten free … is comfortable for conversation … Best service I've maybe ever had at a restaurant! … Service was exceptional … One element that could be improved is the variety (and quality) of the wines by the glass\n106 East 60th Street, New York"
+     }
+    ]
+   }
+  },
+  "place:681": {
+   "title": "Estiatorio Milos Hudson Yards",
+   "category": "restaurant",
+   "summary": "Estiatorio Milos Hudson Yards is a high-end Greek seafood restaurant at 20 Hudson Yards, Fifth Floor, where Milos' signature fish market showcases the daily catch and diners pick their fish. Restaurantji guests rate it 4.2 from 717 ratings and praise an amazing view of Hudson River and Hudson Yards, while Tripadvisor (search snapshot) shows 4.3 of 5 bubbles. It suits a business lunch, a date or a celebration, with prices to match.",
+   "longDetails": "Estiatorio Milos Hudson Yards is a Greek restaurant at 20 Hudson Yards, Fifth Floor. The restaurant offers the matchless seafood of Milos served high up, with unrivaled views of the spectacular sunsets over the Hudson River. Book a sunset table if the view matters. OpenTable diners rate Estiatorio Milos Hudson Yards 4.8 from 1,503 reviews. Tripadvisor travelers (search snapshot) call it a “great place for a business lunch or a date,” though one July 2026 review said the service was somewhat slow and the prawns had a bad taste but were quite expensive.",
+   "description": "Estiatorio Milos Hudson Yards is a Greek restaurant at 20 Hudson Yards, Fifth Floor. The restaurant offers the matchless seafood of Milos served high up, with unrivaled views of the spectacular sunsets over the Hudson River. Book a sunset table if the view matters. OpenTable diners rate Estiatorio Milos Hudson Yards 4.8 from 1,503 reviews. Tripadvisor travelers (search snapshot) call it a “great place for a business lunch or a date,” though one July 2026 review said the service was somewhat slow and the prawns had a bad taste but were quite expensive.",
+   "missingFields": [
+    "happyHour",
+    "knownFor",
+    "ratings"
+   ],
+   "review1Rating": "5",
+   "review2Rating": "5",
+   "review3Rating": "5",
+   "review4Rating": "5",
+   "evidenceDossier": {
+    "pages": [
+     {
+      "url": "https://www.opentable.com/r/estiatorio-milos-hudson-yards-new-york",
+      "text": "Estiatorio Milos – Hudson Yards Restaurant - New York, NY | OpenTable\nrds Restaurant - New York, NY | OpenTable | | Estiatorio Milos – Hudson Yards Restaurant - New York, NY | OpenTable # Estiatorio Milos – Hudson Yards 4.8 (1503) $50 and over Seafood 20 Hudson Yards, Fifth Floor, New York, NY 10001 Milos at Hudson Yards features an open kitchen, private dining rooms, walls of \nrds Restaurant - New York, NY | OpenTable | | Estiatorio Milos – Hudson Yards Restaurant - New York, NY | OpenTable # Estiatorio Milos – Hudson Yards 4.8 (1503) $50 and over Seafood 20 Hudson Yards, Fifth Floor, New York, NY 10001 Milos at Hudson Yards features an open kitchen, private dining rooms,"
+     },
+     {
+      "url": "https://www.opentable.com/r/estiatorio-milos-hudson-yards-new-york",
+      "text": "Estiatorio Milos – Hudson Yards Restaurant - New York, NY | OpenTable\nrds Restaurant - New York, NY | OpenTable | | Estiatorio Milos – Hudson Yards Restaurant - New York, NY | OpenTable # Estiatorio Milos – Hudson Yards 4.8 (1503) $50 and over Seafood 20 Hudson Yards, Fifth Floor, New York, NY 10001 Milos at Hudson Yards features an open kitchen, private dining rooms, walls of  … Milos' signature fish market showcases the daily catch\nrds Restaurant - New York, NY | OpenTable | | Estiatorio Milos – Hudson Yards Restaurant - New York, NY | OpenTable # Estiatorio Milos – Hudson Yards 4.8 (1503) $50 and over Seafood 20 Hudson Yards, Fifth Floor, New York, NY 10001 Milos at Hudson Yards features an open kitchen, private dining rooms,"
+     },
+     {
+      "url": "https://www.restaurantji.com/ny/new-york/estiatorio-milos-2/",
+      "text": "Estiatorio Milos Hudson Yards reviews | Restaurantji\nEstiatorio Milos Hudson Yards | Restaurantji listing | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | 4.2 717 ratings … an amazing view of Hudson River and Hudson Yards … Loved their grilled octopus. … We were blown away by the service!\n4.2 717 ratings"
+     }
+    ]
+   }
+  },
+  "place:682": {
+   "title": "The Original John's of Bleecker Street",
+   "category": "restaurant",
+   "summary": "The Original John's of Bleecker Street is a historic Greenwich Village pizzeria, founded in 1915, that serves coal-fired brick-oven pizza prepared in the style of a tomato pie. It sells whole pies, so it suits pairs and groups. Tripadvisor travelers (search snapshot) rate it 4.4 of 5 bubbles (1,975 reviews) and say the wait pays off.",
+   "longDetails": "The Original John's of Bleecker Street is a historic pizzeria on Bleecker Street in the Greenwich Village neighborhood. The pizzeria serves coal fired brick oven pizza prepared in the style of a tomato pie. It sells whole pies only, so come hungry or bring a friend. Guests write “Pizza was great, staff was friendly and welcoming.” Guests also flag “About 40-45 mins of waiting line, but it was worth it.” Tripadvisor shows 4.4 of 5 bubbles (1,975 reviews) for the 278 Bleecker St pizzeria.",
+   "description": "The Original John's of Bleecker Street is a historic pizzeria on Bleecker Street in the Greenwich Village neighborhood. The pizzeria serves coal fired brick oven pizza prepared in the style of a tomato pie. It sells whole pies only, so come hungry or bring a friend. Guests write “Pizza was great, staff was friendly and welcoming.” Guests also flag “About 40-45 mins of waiting line, but it was worth it.” Tripadvisor shows 4.4 of 5 bubbles (1,975 reviews) for the 278 Bleecker St pizzeria.",
+   "missingFields": [
+    "price",
+    "hours",
+    "happyHour",
+    "knownFor",
+    "ratings"
+   ],
+   "googleRating": "",
+   "yelpRating": "",
+   "thirdPartyRating": "4.4",
+   "thirdPartySource": "Tripadvisor",
+   "rating": "4.4",
+   "review1Rating": "4",
+   "review2Rating": "5",
+   "review3Rating": "4",
+   "review4Rating": "5",
+   "evidenceDossier": {
+    "pages": []
+   }
+  },
+  "place:685": {
+   "title": "Carmine's Times Square",
+   "category": "restaurant",
+   "summary": "Carmine's Times Square is a family-style Italian restaurant at 200 West 44th Street, in the heart of the Theater District, where platters are sized for the table. OpenTable diners rate it 4.6 across a huge review count, and one wrote that the servers were really nice and the portions big. It suits a group meal before a Broadway show.",
+   "longDetails": "Carmine's Times Square is an Italian restaurant at 200 West 44th Street New York, NY 10036. Guests can enjoy traditional, family-style Italian food served in generous portions. Platters are made for sharing, so it works well for a group before a Broadway show. OpenTable diners rate Carmine's Times Square 4.6 from 33,242 reviews,. One OpenTable diner wrote I loved the stuffed mushrooms the most, the spicy vodka pasta and peach spritz were great too.",
+   "description": "Carmine's Times Square is an Italian restaurant at 200 West 44th Street New York, NY 10036. Guests can enjoy traditional, family-style Italian food served in generous portions. Platters are made for sharing, so it works well for a group before a Broadway show. OpenTable diners rate Carmine's Times Square 4.6 from 33,242 reviews,. One OpenTable diner wrote I loved the stuffed mushrooms the most, the spicy vodka pasta and peach spritz were great too.",
+   "missingFields": [
+    "price",
+    "happyHour",
+    "knownFor",
+    "ratings",
+    "hours"
+   ],
+   "review1Rating": "5",
+   "review2Rating": "4",
+   "review3Rating": "5",
+   "review4Rating": "4",
+   "evidenceDossier": {
+    "pages": [
+     {
+      "url": "https://www.opentable.com/carmines-44th-street-nyc",
+      "text": "Carmine's - 44th Street - NYC Restaurant - New York, NY | OpenTable\nthe 1, 2, 3, 7, N, R subways. Reviews OpenTable reviews from verified diners Reviews from people who have dined at Carmine's - 44th Street - NYC. 4.6 4.6 (33242) 4.6 Food 4.6 Service 4.5 Ambience 4.4 Value Noise • Moderate Review summary AI-generated from verified diner reviews Carmine's on 44th Street in NYC  … th Street - NYC. 4.6 4.6 (33242) 4.6 Food 4.6 Service 4.5 Ambience 4.4 Value Noise • Moderate Review summary AI-generated from verified diner reviews Carmine's on 44th Street in NYC offers an authentic Italian dining experience with enormous portions perfect for sharing. Guests rave about the \"scrumptious Italian cuisine\" and \"exceptional service.\" The lively atmosphere and \"amazing\" staff add to the memorable experi\nthe 1, 2, 3, 7, N, R subways. Reviews OpenTable reviews from verified diners Reviews from people who have dined at Carmine's - 44th Street - NYC. 4.6 4.6 (33242) 4.6 Food 4.6 Service 4.5 Ambience 4.4 Value Noise • Moderate Review summary AI-generated from verified diner reviews Carmine's on 44th Str"
+     },
+     {
+      "url": "https://www.opentable.com/carmines-44th-street-nyc",
+      "text": "Carmine's - 44th Street - NYC Restaurant - New York, NY | OpenTable\nthe 1, 2, 3, 7, N, R subways. Reviews OpenTable reviews from verified diners Reviews from people who have dined at Carmine's - 44th Street - NYC. 4.6 4.6 (33242) 4.6 Food 4.6 Service 4.5 Ambience 4.4 Value Noise • Moderate Review summary AI-generated from verified diner reviews Carmine's on 44th Street in NYC  … th Street - NYC. 4.6 4.6 (33242) 4.6 Food 4.6 Service 4.5 Ambience 4.4 Value Noise • Moderate Review summary AI-generated from verified diner reviews Carmine's on 44th Street in NYC offers an authentic Italian dining experience with enormous portions perfect for sharing. Guests rave about the \"scrumptious Italian cuisine\" and \"exceptional service.\" The lively atmosphere and \"amazing\" staff add to the memorable experi … Servers were really nice, portions were big. … I loved the stuffed mushrooms the most, the spicy vodka pasta and peach spritz were great too.\nthe 1, 2, 3, 7, N, R subways. Reviews OpenTable reviews from verified diners Reviews from people who have dined at Carmine's - 44th Street - NYC. 4.6 4.6 (33242) 4.6 Food 4.6 Service 4.5 Ambience 4.4 Value Noise • Moderate Review summary AI-generated fr"
+     }
+    ]
+   }
+  },
+  "place:695": {
+   "title": "Cafe Luxembourg",
+   "category": "restaurant",
+   "summary": "Cafe Luxembourg is the Upper West Side brasserie people return to around Lincoln Center performances, a polished but relaxed room of regulars where service is consistently praised. Good neighborhood spot, conveniently close to Lincoln Center sums up its appeal, and the steak au poivre and house-made ice cream are the orders to remember.",
+   "longDetails": "Cafe Luxembourg has been a fixture of the neighborhood, a classic Upper West Side American brasserie since 1983 serving American classics with a nod to French cooking a short walk from Lincoln Center. Its strongest identity is timing: diners recommend it before or after a play or ballet, and the room fills with regulars and performance-goers. The kitchen gets steady praise (“The steak au poivre is delicious”), and Restaurantji shows 4.3 from 1186 ratings. Expect a loud, busy room at curtain times and prices that match its institution status, so reserve and leave time before a show.",
+   "description": "Cafe Luxembourg has been a fixture of the neighborhood, a classic Upper West Side American brasserie since 1983 serving American classics with a nod to French cooking a short walk from Lincoln Center. Its strongest identity is timing: diners recommend it before or after a play or ballet, and the room fills with regulars and performance-goers. The kitchen gets steady praise (“The steak au poivre is delicious”), and Restaurantji shows 4.3 from 1186 ratings. Expect a loud, busy room at curtain times and prices that match its institution status, so reserve and leave time before a show.",
+   "missingFields": [
+    "hours",
+    "happyHour",
+    "knownFor",
+    "ratings",
+    "phone"
+   ],
+   "googleRating": "",
+   "yelpRating": "",
+   "thirdPartyRating": "4.3",
+   "thirdPartySource": "and Restaurantji",
+   "rating": "4.3",
+   "review1Rating": "5",
+   "review2Rating": "5",
+   "review3Rating": "5",
+   "review4Rating": "5",
+   "evidenceDossier": {
+    "pages": [
+     {
+      "url": "https://www.opentable.com/cafe-luxembourg",
+      "text": "Cafe Luxembourg Restaurant - New York, NY | OpenTable\nCafe Luxembourg Restaurant - New York, NY | OpenTable | | Cafe Luxembourg 4.8 (9547) $31 to $50 French American 200 W. 70th, New York, NY 10023 Cafe Luxembourg 4.8 $31 to $50 French American Upper West Side Booked 192 times today Abou …  West Side institution, delivers consistently delightful experiences with \"excellent classic upper west spot\" and \"delicious food and great service.\" Patrons adore the \"French onion soup\" and the \"best fries in town,\" while the \"friendly staff\" and \"great ambiance\" enhance every visit. 9,547 Reviews Good neighborhood spot, conveniently close to Lincoln Center. Love\nCafe Luxembourg Restaurant - New York, NY | OpenTable | | Cafe Luxembourg 4.8 (9547) $31 to $50 French American 200 W. 70th, New York, NY 10023 Cafe Luxembourg 4.8 $31 to $50 French American Upper West Side Booked 192 times today Abou"
+     },
+     {
+      "url": "https://www.opentable.com/cafe-luxembourg",
+      "text": "Cafe Luxembourg Restaurant - New York, NY | OpenTable\nCafe Luxembourg Restaurant - New York, NY | OpenTable | | Cafe Luxembourg 4.8 (9547) $31 to $50 French American 200 W. 70th, New York, NY 10023 Cafe Luxembourg 4.8 $31 to $50 French American Upper West Side Booked 192 times today Abou …  West Side institution, delivers consistently delightful experiences with \"excellent classic upper west spot\" and \"delicious food and great service.\" Patrons adore the \"French onion soup\" and the \"best fries in town,\" while the \"friendly staff\" and \"great ambiance\" enhance every visit. 9,547 Reviews Good neighborhood spot, conveniently close to Lincoln Center. Love … Stands the test of time with great food and service … Lovely dinner in a place filled with locals.\nCafe Luxembourg Restaurant - New York, NY | OpenTable | | Cafe Luxembourg 4.8 (9547) $31 to $50 French American 200 W. 70th, New York, NY 10023 Cafe Luxembourg 4.8 $31 to $50 French American Upper West Side Booked 192 times today Abou"
+     },
+     {
+      "url": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/",
+      "text": "Cafe Luxembourg reviews | Restaurantji\nCafe Luxembourg | Restaurantji listing | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | 4.3 1186 ratings … Pre or post play or ballet … The steak au poivre is delicious … Wonderful meal! Pre or post play or ballet. Great service. … The steak au poivre is delicious and they make their own in house ice cream … Such an institution you’ll see all sorts of fashion icons here.\n4.3 1186 ratings"
+     }
+    ]
+   }
+  }
+ }
+}

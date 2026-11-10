@@ -47,6 +47,24 @@ const DETAIL_HEADER_PATCH =
 
 const REVIEW_CSS_NEEDLE = '.review-stars-inline{font-size:10px;letter-spacing:.2px;color:#f59e0b;font-weight:900;white-space:nowrap}';
 
+const LIST_ROW_KEY_NEEDLE = '"data-rental-company":Mi(G)?String(ha(G).rentalCompany||"").trim():"",style:{listStyle:"none"';
+const LIST_ROW_KEY_PATCH = '"data-rental-company":Mi(G)?String(ha(G).rentalCompany||"").trim():"","data-ts-thing-key":Qt(G),style:{listStyle:"none"';
+const DETAIL_KEY_NEEDLE = '"data-ts-thing-header":"1","data-ts-detail-title-wrap":"1",';
+const DETAIL_KEY_PATCH = '"data-ts-thing-header":"1","data-ts-detail-title-wrap":"1","data-ts-detail-thing-key":Qt(Dt),';
+
+export function patchStarRatingThingKeys(source = '') {
+  let js = String(source || '');
+  if (!js.includes(LIST_ROW_KEY_PATCH)) {
+    if (!js.includes(LIST_ROW_KEY_NEEDLE)) throw new Error('list row thing key patch did not apply');
+    js = js.replaceAll(LIST_ROW_KEY_NEEDLE, LIST_ROW_KEY_PATCH);
+  }
+  if (!js.includes(DETAIL_KEY_PATCH)) {
+    if (!js.includes(DETAIL_KEY_NEEDLE)) throw new Error('thing detail key patch did not apply');
+    js = js.replace(DETAIL_KEY_NEEDLE, DETAIL_KEY_PATCH);
+  }
+  return js;
+}
+
 function injectStarHelpers(js) {
   if (js.includes('tsRenderStarRatingHtml=v=>')) return js;
   const inject = trekStarRatingBundleInject();
