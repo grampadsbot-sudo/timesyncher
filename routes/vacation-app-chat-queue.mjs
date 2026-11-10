@@ -275,7 +275,9 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     `;
   }
 
-  const { replyCustomerTurn, itineraryEditResult } = await prepareChatItineraryEditForQueueTurn({ db, trip, seat, tripId, requestText, turnId: turnRows[0]?.id || null, httpReq: intake?.httpReq || null, env });
+  const { replyCustomerTurn, itineraryEditResult, itineraryEditAuthoritative } = await prepareChatItineraryEditForQueueTurn({
+    db, trip, seat, tripId, requestText, turnId: turnRows[0]?.id || null, httpReq: intake?.httpReq || null, env,
+  });
   let produced;
   const replyStarted = Date.now();
   try {
@@ -297,7 +299,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
       });
     } else {
       produced = await produceLiveAppReply({
-        customerTurn: replyCustomerTurn,
+        customerTurn: itineraryEditAuthoritative ? requestText : replyCustomerTurn,
         session: { ...session, trip_id: tripId },
         priorTurns,
         tripTitle: trip?.title || '',
@@ -317,18 +319,14 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
         savedStart: jobFields.startDate,
         savedEnd: jobFields.endDate,
         loadOwnerPlan,
-        turnActionResults,
+        turnActionResults: itineraryEditAuthoritative ? { ...(turnActionResults || {}), itineraryEditAuthoritative } : turnActionResults,
         placeSearchReplyFacts,
       });
     }
   } catch (error) {
-    produced = {
-      reply: null,
-      rules: null,
-      jev: { jevRan: false, error: error?.message || 'live dispatcher failed' },
-      model: null,
-      reason: error?.message || 'live dispatcher failed',
-    };
+    const message = String(error?.message || error || 'live_dispatcher_failed');
+    console.error('vacation_app_reply_failed', message);
+    produced = { reply: null, rules: null, jev: { jevRan: false, error: message }, model: null, reason: message };
   }
   const replyStages = replyStageMillis(produced, Date.now() - replyStarted);
   payload.stageTimings = turnStageTimings({ ...(payload.stageTimings || {}), ...replyStages });

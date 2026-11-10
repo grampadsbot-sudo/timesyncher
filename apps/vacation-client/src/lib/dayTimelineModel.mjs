@@ -127,7 +127,6 @@ function assignmentDayNumbers(place, trip) {
   numbers.sort((a, b) => a - b);
   return { start: numbers[0], end: numbers[numbers.length - 1] };
 }
-
 function hotelStayDayNumbers(place, trip) {
   const span = carSpanDayNumbers(place, trip) || assignmentDayNumbers(place, trip);
   if (span) return span;
@@ -457,15 +456,20 @@ export function buildDayTimeline(trip, day) {
       summary: rowSummary(place, trip),
       itineraryNote: itineraryNoteFor(place, trip, row.notes),
       media: mediaForPlace(trip, place),
+      orderIndex: Number(row.order_index ?? row.orderIndex ?? rowIndex),
     });
   }
   pushHotelRows(entries, trip, day);
   pushFlightRows(entries, trip, day, dayId);
   pushCarRows(entries, trip, day);
   entries.sort((a, b) => {
-    const aMin = a.startMin ?? 10_000 + entries.indexOf(a);
-    const bMin = b.startMin ?? 10_000 + entries.indexOf(b);
-    return aMin - bMin;
+    const rank = (e) => (e.kind === 'hotel-sleep' ? 3 : (e.startMin == null && e.kind !== 'travel' ? 2 : 1));
+    const r = rank(a) - rank(b);
+    if (r) return r;
+    if (rank(a) !== 1) return String(a.id).localeCompare(String(b.id));
+    return Number(a.startMin ?? 0) - Number(b.startMin ?? 0)
+      || Number(a.orderIndex ?? 0) - Number(b.orderIndex ?? 0)
+      || String(a.id).localeCompare(String(b.id));
   });
   const withTravel = insertTravelRows(entries, trip);
   markConflicts(withTravel);

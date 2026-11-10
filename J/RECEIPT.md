@@ -1,41 +1,45 @@
-# PR #912 / #890 — vkfill-890 port onto vk (cursor round)
+# PR #913 / vkfill-905 port — CI `unit-tests` fix (HOST PUBLICATION ONLY)
 
-**HEAD start:** `3a66ce9ad349579bf521a65546f6a28164a0acf1` (verified before edit)
+**Starting HEAD:** `e18a08efa3df43c116adb0ca58917c46a4759a18` (verified before edit)
 
-**GBrain handoff:** `bot-admin/lanes/vk-pr-handoff/pr-912` — page_not_found on this pass (noted per lane brief).
+**GBrain handoff:** `bot-admin/lanes/vk-pr-handoff/pr-913` — page_not_found on this pass (per lane brief).
 
-## Assessment
+## This round change
 
-PR branch `vkfill/890-port-20261110012727` already carries the #895 rebrand replay (`59948969`, `2a6b78d8`): Vacay Keepsake surfaces, `trek-vk-890-rebrand-patch.mjs`, served bundle rebaked, header mic inject removed from `public/ts-shared-audio-recorder.js` (wires only pre-existing `[data-ts-shared-audio]`; `TripHeaderActions` has no `SharedAudioButton`).
+| File | Why |
+|------|-----|
+| `vacation-app.html` | Host replay of #909 routed chat send failures through `handleChatSendFailure` in `public/vacation-app-request.js` only. `scripts/test_reply_action_claim_d2_paia_save_route.mjs` still requires the literal `showComposerStatus(customerSafeErrorMessage` call in `vacation-app.html`. Inlined the same catch logic (90s `AbortError` bubble + composer status) so static contract and runtime behavior match. |
 
-**Gap found:** `scripts/test_shared_trip_spa_console.mjs` mock static server did not serve `#890` assets referenced from `shared-app.html` (`/brand/*`, `/ts-vk-rebrand-chrome.js`, `/favicon.ico`), causing console 404 failures after rebrand HTML landed on vk.
+## Turn-2 hang (inherited from #909 port on this branch; documented for host demo)
 
-## Changes (uncommitted; host publication only)
+**Root cause (staging run A, copy trip 199):** Turn 1 without an explicit day returned `day_not_found` / “Day ?” because Carbone spans inference failed; turn 2 then waited on the queued reply path without a customer-visible terminal state within 420s.
 
-1. **`scripts/test_shared_trip_spa_console.mjs`** — Extend `publicFiles` map and MIME selection so the puppeteer harness serves vk rebrand static assets; no assertion or product change.
+**Fix already on branch (not re-authored this round):** `resolveItineraryEditDayNumber` / `dayNumbersForPlace` infer day when the place sits on exactly one day; `prepareChatItineraryEditForQueueTurn` logs and returns explicit `edit_failed` on overrides PUT failures (e.g. 413 — covered in `scripts/test_chat_itinerary_edit.mjs`); client `CHAT_SEND_TIMEOUT_MS` 90s with “That took too long — please try again.”
 
-## Checks run @ `3a66ce9a` + local patch
+## Fix-6 Zinc logo (inherited from #909 port)
+
+**Finding:** `apps/vacation-client/src/lib/logoChipHandlers.mjs` `onLogoImgLoad` accepts a loaded `.ico` when `naturalWidth/Height >= 1` instead of treating small favicons as broken and falling through to emoji. Gray chevron on the live copy was a failed-logo fallback path, not the standard category default; host should confirm Zinc Bar (place 8967) on a fresh copy after deploy.
+
+## Decision trail
+
+1. CI failure is the static HTML regex in `test_reply_action_claim_d2_paia_save_route.mjs`, not queue/reply logic — queue half of that test already passed locally.
+2. Re-inline catch in `vacation-app.html` rather than loosening the test (banned).
+3. Keep `handleChatSendFailure` on `tsVacationAppRequest` for API symmetry; only `vacation-app.html` uses the inlined path.
+
+## Checks run @ `e18a08ef` + local patch
 
 | Command | Result |
-|---|---|
-| `node scripts/test_shared_trip_spa_console.mjs` | pass (header mic absent; no origin 404 console errors) |
-| `node scripts/test_vacation_app_865_chrome.mjs` | pass |
-| `node scripts/test_served_trek_bundle.mjs` | pass |
-| `npm run test:keepsake-style2` | pass |
-| `node scripts/test_offline_manifest.mjs` | pass (433 offline, 18 online) |
+|---------|--------|
+| `node scripts/test_reply_action_claim_d2_paia_save_route.mjs` | pass |
+| `node scripts/test_vacation_app_client_errors.mjs` | pass |
+| `node scripts/test_chat_itinerary_edit_905.mjs` | pass |
+| `node scripts/test_chat_itinerary_edit.mjs` | pass |
+| `node scripts/test_offline_manifest.mjs` | pass |
+| `node scripts/check-no-comments.mjs` | pass (after `apps/vacation-client/npm ci`) |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | pass |
 
-`node scripts/check-no-comments.mjs` — blocked locally (`apps/vacation-client/node_modules/typescript` missing); host should run pre-DONE on full checkout.
+## Host next steps
 
-Gate B / host capture / Keepsake QA live+PDF — not run (Cursor must not self-certify; host publish + pipeline).
+Commit/push `vacation-app.html` only on `vkfill/905-port-20261110012849`. Re-run full CI + Gate B on host build.
 
-## Host receipt path
-
-Detail: `/home/ubishere9995/tsv-work/vkfill-890-20261109180801-job/vkfill-890-RECEIPT.md`
-
-**DONE file:** see `vkfill-890-DONE` in job dir (written by this round).
-
-## Left alone (scope)
-
-- No rebake (bundle already matches patcher).
-- Fixtures, dossier overlay, budget row-check capture, baselines, workflows, `package.json`, deploy config.
-- `features/voice-note.md` still documents header mic (stale vs #865 rule); feature doc only.
+**Uncommitted diff:** `vacation-app.html` (+9 −1)
