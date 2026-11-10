@@ -3237,11 +3237,11 @@
   {
    "id": 664,
    "trip_id": 99,
-   "name": "Guided walking/audio history tours",
+   "name": "Big Apple Greeter",
    "description": "",
-   "lat": 40.758,
-   "lng": -73.9855,
-   "address": "Midtown / UWS, New York, NY",
+   "lat": 40.7129,
+   "lng": -74.006,
+   "address": "1 Centre Street, New York, NY 10007",
    "category_id": 3,
    "category_name": "Attraction",
    "category_icon": "🏛️",
@@ -3256,8 +3256,7 @@
    "notes": "",
    "source": "fixture-nyc",
    "logoUrl": "https://www.bigapplegreeter.org/favicon.ico",
-   "price": 25,
-   "externalId": "Guided walking/audio history tours"
+   "price": 65
   },
   {
    "id": 665,
@@ -3361,11 +3360,11 @@
   {
    "id": 669,
    "trip_id": 99,
-   "name": "Village Vanguard / Smoke / Birdland / Jazz Gallery",
+   "name": "Birdland Jazz Club",
    "description": "",
    "lat": 40.759,
    "lng": -73.989,
-   "address": "Midtown / Village jazz rooms",
+   "address": "315 W 44th St, New York, NY 10036",
    "category_id": 3,
    "category_name": "Attraction",
    "category_icon": "🏛️",
@@ -3376,12 +3375,11 @@
    },
    "reservation_status": "considering",
    "place_time": "11:00",
-   "website": "https://birdlandjazz.com/",
+   "website": "https://www.birdlandjazz.com/",
    "notes": "",
    "source": "fixture-nyc",
    "logoUrl": "https://icons.duckduckgo.com/ip3/birdlandjazz.com.ico",
-   "price": 40,
-   "externalId": "Village Vanguard / Smoke / Birdland / Jazz Gallery"
+   "price": 40
   },
   {
    "id": 670,
@@ -3436,11 +3434,11 @@
   {
    "id": 672,
    "trip_id": 99,
-   "name": "e’s BAR / The Dead Poet / Lilly’s Cocktail & Wine",
+   "name": "e’s BAR",
    "description": "",
    "lat": 40.787,
    "lng": -73.975,
-   "address": "Upper West Side, New York, NY",
+   "address": "511 Amsterdam Ave, New York, NY 10024",
    "category_id": 2,
    "category_name": "Restaurant",
    "category_icon": "🍽️",
@@ -4826,7 +4824,7 @@
    "trip_id": 99,
    "day_id": 501,
    "place_id": 664,
-   "title": "Guided walking/audio history tours",
+   "title": "Big Apple Greeter",
    "status": "candidate",
    "type": "activity",
    "start_time": "11:00"
@@ -4876,7 +4874,7 @@
    "trip_id": 99,
    "day_id": 501,
    "place_id": 669,
-   "title": "Village Vanguard / Smoke / Birdland / Jazz Gallery",
+   "title": "Birdland Jazz Club",
    "status": "candidate",
    "type": "activity",
    "start_time": "11:00"
@@ -4906,7 +4904,7 @@
    "trip_id": 99,
    "day_id": 501,
    "place_id": 672,
-   "title": "e’s BAR / The Dead Poet / Lilly’s Cocktail & Wine",
+   "title": "e’s BAR",
    "status": "candidate",
    "type": "activity",
    "start_time": "11:00"
@@ -12850,8 +12848,8 @@
   },
   "place:664": {
    "category": "activity",
-   "title": "Guided walking/audio history tours",
-   "address": "Midtown / UWS, New York, NY",
+   "title": "Big Apple Greeter",
+   "address": "1 Centre Street, New York, NY 10007",
    "phone": "(646) 320-1277",
    "website": "https://www.bigapplegreeter.org/",
    "summary": "Guided walking/audio history tours here mean an unhurried walk with a volunteer New Yorker who chooses streets around your interests. It feels like time with a generous friend, it is accessible for mixed-ability groups, and you get to enjoy the Greeter’s favorite neighborhoods, restaurants, shops, and hidden places.",
@@ -12862,9 +12860,9 @@
    ],
    "longDetails": "Guided walking/audio history tours can start with Big Apple Greeter, a free volunteer program that matches visitors with a resident. Visitors are paired By language and by the neighborhoods the visitor requests, and Visitors’ personal interests are also considered and fulfilled if possible. Testimonials stress the people more than the route: He has real passion and knowledge of his home town., Gave us info and input only a New Yorker could give., and One of our group was in a wheelchair. Bob was mindful of the challenge and didn’t miss a beat. The trade-off is that a Greeter is a volunteer rather than a scripted guide, so plan it as a relaxed, personal walk rather than a landmark checklist.",
    "itineraryNote": "Guided walking/audio history tours: a friend-style Big Apple Greeter walk; Like meeting your best friend’s uncle who was willing to share his time with you.",
-   "lat": 40.758,
-   "lng": -73.9855,
-   "price": 25,
+   "lat": 40.7129,
+   "lng": -74.006,
+   "price": 65,
    "timeline": false,
    "logoUrl": "https://www.bigapplegreeter.org/favicon.ico",
    "source": "fixture-nyc",
@@ -12872,20 +12870,17 @@
    "details": "Self-guided or docent audio tours for Midtown/UWS history loops; useful filler between meals.",
    "startTime": "11:00",
    "description": "Guided walking/audio history tours can start with Big Apple Greeter, a free volunteer program that matches visitors with a resident. Visitors are paired By language and by the neighborhoods the visitor requests, and Visitors’ personal interests are also considered and fulfilled if possible. Testimonials stress the people more than the route: He has real passion and knowledge of his home town., Gave us info and input only a New Yorker could give., and One of our group was in a wheelchair. Bob was mindful of the challenge and didn’t miss a beat. The trade-off is that a Greeter is a volunteer rather than a scripted guide, so plan it as a relaxed, personal walk rather than a landmark checklist.",
-   "externalId": "Guided walking/audio history tours",
    "sourceRecord": {
     "category": "tour",
     "description": "Self-guided or docent audio tours for Midtown/UWS history loops; useful filler between meals.",
     "summary": "Walking/audio history tours",
-    "price": 25,
+    "price": 65,
     "website": "https://www.bigapplegreeter.org/",
     "logoUrl": "https://www.bigapplegreeter.org/favicon.ico",
     "lat": 40.758,
     "lng": -73.9855,
-    "address": "Midtown / UWS, New York, NY",
-    "ccabKey": "Guided walking/audio history tours"
+    "address": "Midtown / UWS, New York, NY"
    },
-   "ccabKey": "Guided walking/audio history tours",
    "dataShortcomings": [
     {
      "field": "knownFor",
@@ -14015,8 +14010,8 @@
   },
   "place:669": {
    "category": "activity",
-   "title": "Village Vanguard / Smoke / Birdland / Jazz Gallery",
-   "address": "Midtown / Village jazz rooms",
+   "title": "Birdland Jazz Club",
+   "address": "315 W 44th St, New York, NY 10036",
    "website": "https://www.birdlandjazz.com/",
    "summary": "Village Vanguard / Smoke / Birdland / Jazz Gallery jazz plan, anchored by Birdland at 315 West 44th St. Reviews favor booking ahead and arriving early for good seats, and they single out tight trio musicianship and friendly, attentive service. The closest subway station is 42nd St Port Authority, and there are multiple parking garages on this street as well.",
    "summarySourceUrls": [
@@ -14033,11 +14028,10 @@
    "timeline": false,
    "logoUrl": "https://icons.duckduckgo.com/ip3/birdlandjazz.com.ico",
    "source": "fixture-nyc",
-   "url": "https://birdlandjazz.com/",
+   "url": "https://www.birdlandjazz.com/",
    "details": "Shortlist bundle comparing four NYC jazz rooms for the same weekend window.",
    "startTime": "11:00",
    "description": "Village Vanguard / Smoke / Birdland / Jazz Gallery is a jazz-night shortlist anchored by Birdland. Birdland says we are located at 315 West 44th St, between 8th and 9th Ave’s. There is a $20 minimum on food or drinks (per person.) on top of the ticket, plus a $5 per person plating fee. The club serves dinner and drinks before and during shows, so arrive early to be seated and dine.",
-   "externalId": "Village Vanguard / Smoke / Birdland / Jazz Gallery",
    "sourceRecord": {
     "category": "music",
     "description": "Shortlist bundle comparing four NYC jazz rooms for the same weekend window.",
@@ -14047,10 +14041,8 @@
     "logoUrl": "https://icons.duckduckgo.com/ip3/birdlandjazz.com.ico",
     "lat": 40.759,
     "lng": -73.989,
-    "address": "Midtown / Village jazz rooms",
-    "ccabKey": "Village Vanguard / Smoke / Birdland / Jazz Gallery"
+    "address": "Midtown / Village jazz rooms"
    },
-   "ccabKey": "Village Vanguard / Smoke / Birdland / Jazz Gallery",
    "dataShortcomings": [
     {
      "field": "knownFor",
@@ -14091,7 +14083,6 @@
    "happyHour": false,
    "missingFields": [
     "knownFor",
-    "address",
     "phone",
     "neighborhood",
     "ratings",
@@ -14406,10 +14397,10 @@
   },
   "place:672": {
    "category": "restaurant",
-   "title": "e’s BAR / The Dead Poet / Lilly’s Cocktail & Wine",
-   "address": "Upper West Side, New York, NY",
+   "title": "e’s BAR",
+   "address": "511 Amsterdam Ave, New York, NY 10024",
    "phone": "(212) 799-4140",
-   "website": "https://www.e-barnyc.com/",
+   "website": "https://e-barnyc.com/",
    "summary": "e’s BAR / The Dead Poet / Lilly’s Cocktail & Wine groups a relaxed Upper West Side night out on Amsterdam Avenue: e’s BAR is a neighborhood joint with good food, good drinks, fun games and smiling people, and The Dead Poet is a literary Irish pub that Drew Dvorkin opened The Dead Poet in September of 2000 to celebrate famous writers. It suits an easy, walkable evening of drinks.",
    "summarySourceUrls": [
     "https://lillyscocktailandwine.com/menus",

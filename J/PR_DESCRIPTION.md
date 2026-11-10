@@ -1,7 +1,28 @@
-Closes #547
+Closes #884
 
-Restores the chief-approved wrap-under-name category rows by reversing the inline-description restore from c40abb7222f203dd57cc9769f814dbc4c686478c. That restore removed the descriptions below the name and failed Gate B run 20261104-220631 (22/32 screens). The source patch and sanctioned rebake now exactly match parent 95d2314244145092c34889c60b680a675612e04b. Governing disposition: GBrain bot-admin/receipts/gpt-816-judgment-disposition-20261104-1407; U4 in bot-admin/messages/time-syncher/ui-acceptance-matrix.
+## Summary
 
-Local validation on the uncommitted candidate: hotel capture-leaf browser checks at 390 and 1280, shared-list summary, #471 name frame, served-bundle parity, row-name frame, car-brand scope, #734 punchlist, keepsake-style2, no-comments, offline manifest and BASE=vk code ratchet all exit 0. Job screenshot traces show all 94 category description rows below the name at both widths. Local screenshots have font/logo/payload differences from the approved-look capture, so no pixel acceptance is claimed.
+Fixes logo chips that left the category fallback emoji (`.tsv-logo-fallback`, e.g. hotel suitcase) visible on top of a loaded brand `img` — TownePlace detail showed suitcase-over-Marriott after the Marriott favicon painted.
 
-HOST PUBLICATION ONLY: source changes remain uncommitted. Host must independently publish and verify ordinary CI and Gate B on that exact head, with the required combined Craig review. No checks, fixtures, baselines, data, dependency manifests, round guards or deployment settings changed. #796/#802 remain separate. Details and named log paths: J/RECEIPT.md.
+- Trek `dc()` patch: fallback hidden until load fails; `onLoad` / ref hide fallback when `naturalWidth > 1`; ink-center path also hides fallback on successful paint (`thing-logo-ink-center.mjs`, `thing-logo-fallback-url.mjs`).
+- Vacation-client `logoChipHandlers.mjs`: same hide-on-load / show-on-final-error contract for detail and list chips.
+- Gate B DOM audit: `fallback_stack` when a loaded img and visible fallback coexist (`shared-trip-logo-audit.mjs`).
+- Rebaked `public/assets/index-BKun7ofk.js` via `scripts/rebake_served_trek_bundle.mjs` (sha256 `9183847c5fa72e9d7696dfdbb3b6f3b3128bfe37d97f097bd1457fe81a1f27aa`).
+
+**vk base merge (same commit):** trip 99 stand-in fixture/replay + capture guard from #901 on the staged index; see `J/RECEIPT.md` — not #884 UI scope.
+
+## Test plan
+
+- [x] `node scripts/test_ui_884_logo_chip_fallback_hide.mjs`
+- [x] `node scripts/test_shared_logo_chip_center_bundle.mjs`
+- [x] `node scripts/test_shared_trip_live_tab_logos.mjs`
+- [x] `node scripts/test_served_trek_bundle.mjs`
+- [x] `node scripts/check-no-comments.mjs`, `node scripts/test_offline_manifest.mjs`, `BASE=vk node scripts/check-code-ratchet.mjs`
+- [ ] CI on pushed head (`e1307ba6` + host merge commit)
+- [ ] Gate B structure (logo-chip allowance for TownePlace; `fallback_stack` probe)
+
+## Left alone (scope)
+
+- `hold:test-trip fixture` — Marriott `logoUrl` replay vs live is data/harness, not this stacking fix.
+- Baselines, Gate B thresholds, workflows, `package.json`, deploy config.
+- Broader favicon upscaling beyond Marriott 16px → gstatic repair.
