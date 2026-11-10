@@ -128,6 +128,15 @@
 }
 @media (max-width: 480px) {
   .topbar .vk-app-brand { max-width: 58%; }
+  .topbar .vk-app-brand small,
+  .topbar .vk-app-brand .wordmark small {
+    visibility: hidden;
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
   .topbar .vacation-dropdown { max-width: 38%; flex: 0 1 auto; }
   .fullscreen-button .fs-label { display: none; }
   .fullscreen-button .fs-glyph { display: inline-block; font-size: 18px; line-height: 1; }
