@@ -446,6 +446,7 @@
       chevron: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>', send: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
     };
     const MAX_INLINE_FILE_BYTES = 2 * 1024 * 1024;
+    const CHAT_SEND_TIMEOUT_MS = 90_000;
     function realSiteUrl(url, trip) {
       const value = String(url || '').trim();
       if (!value) return '';
@@ -730,10 +731,13 @@
       renderAttachments();
       messages.insertAdjacentHTML('beforeend', `<article class="bubble" id="tsTyping" aria-live="polite" aria-busy="true"><small>TimeSyncher</small>…</article>`);
       if (!hadSite && currentTrip()?.id) startProgressPoll(currentTrip().id);
+      const sendController = new AbortController();
+      const sendTimeout = setTimeout(() => sendController.abort(), CHAT_SEND_TIMEOUT_MS);
       try {
         const res = await fetch(`/api/vacation-itinerary?app=1&session=${encodeURIComponent(sessionToken)}`, {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
+          signal: sendController.signal,
           body: JSON.stringify({
             tripId: currentTrip()?.id,
             text,
@@ -782,9 +786,16 @@
       } catch (error) {
         document.getElementById('tsTyping')?.remove();
         console.error(error);
-        showComposerStatus(customerSafeErrorMessage(error, error?.response));
+        const timedOut = error?.name === 'AbortError';
+        if (timedOut) {
+          messages.insertAdjacentHTML('beforeend', '<article class="bubble" role="alert"><small>TimeSyncher</small>That took too long — please try again.</article>');
+          showComposerStatus('');
+        } else {
+          showComposerStatus(customerSafeErrorMessage(error, error?.response));
+        }
         stopProgressPoll();
       } finally {
+        clearTimeout(sendTimeout);
         state.sending = false;
       }
       messages.scrollTop = messages.scrollHeight;
@@ -816,7 +827,11 @@
         state.turns = data.turns || [];
         state.things = Array.isArray(data.itinerary) ? data.itinerary : [];
         state.searchProgress = data.searchProgress || null;
-        state.currentTripId = tripId || data.session?.currentTripId || state.vacations[0]?.id || '';
+        const requestedTripId = tripId || params.get('tripId') || '';
+        const allowedTrip = requestedTripId && (data.vacations || []).some((item) => item.id === requestedTripId)
+          ? requestedTripId
+          : '';
+        state.currentTripId = allowedTrip || data.session?.currentTripId || state.vacations[0]?.id || '';
         if (state.eula?.accepted !== true) {
           renderEula();
           return;
@@ -838,6 +853,7 @@
       applyServerProgress,
       paintSearchProgress,
     } = window.tsVacationAppProgress.attach({ getState, setState, getSessionToken, loadApp, currentTrip, realSiteUrl });
-    loadApp();
+    const initialTripId = params.get('tripId') || '';
+    loadApp(initialTripId);
   </script></body>
 </html>

@@ -1546,12 +1546,10 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const destination = resolvedDestination.destination;
   const genStarted = Date.now();
   const speaker = String(tripFacts.addressedTo || '').trim();
-  const turnInviteExtra = tripContext?.turnInvite?.ok === true
-    ? String(tripContext.turnInviteRule || 'This turn only sent a pending collaborator invite. Do not welcome the invitee or say they are joining or on the trip.')
-    : '';
   const draftExtra = [
+    [String(turnActionResults?.itineraryEditAuthoritative || '').trim().slice(0, 4000), turnActionResults?.itineraryEditAuthoritative ? 'When AUTHORITATIVE_SYSTEM is present, ignore any rule that says chat cannot edit or needs website edit access.' : ''].filter(Boolean).join(' '),
     tripContext.roster || '',
-    turnInviteExtra,
+    tripContext?.turnInvite?.ok === true ? String(tripContext.turnInviteRule || 'This turn only sent a pending collaborator invite. Do not welcome the invitee or say they are joining or on the trip.') : '',
     'When you list who is coming, name every traveler in the saved roster. Do not add a name that is not in that roster.',
     speaker ? `The person speaking now is ${speaker}. Address ${speaker}. Do not address ${tripFacts.ownerName || 'the account holder'} as if they sent this message.` : '',
     placeResultExtra(modelPlaceSources),
