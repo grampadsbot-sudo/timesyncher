@@ -1060,9 +1060,11 @@ button.tsv-timeline-link {
   margin-bottom: 6px;
   min-width: 0;
   max-width: 100%;
+  line-height: 1.35;
   overflow: visible;
   white-space: normal;
   overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .tsv-timeline-conflict-bar {
