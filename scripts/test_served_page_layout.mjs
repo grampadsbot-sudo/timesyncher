@@ -23,8 +23,8 @@ async function assertSpec() {
   assert.match(text, /\| 0 vacations \| hidden \(0px, not rendered\) \|/);
   assert.match(text, /\| 1 vacation, no site content yet \| hidden \(0px, not rendered\) \|/);
   assert.match(text, /\| 1 vacation with site content \| hidden \(0px, not rendered\) \|/);
-  assert.match(text, /\| 2\+ vacations \| vacation dropdown only \|/);
-  assert.match(text, /\| Website full-screen \| none \| website fills the viewport, with an exit-full-screen control \| none \| none \|/);
+  assert.match(text, /\| 2\+ vacations \| Vacay Keepsake book lockup left/);
+  assert.match(text, /\| Website full-screen \| none \(top bar hidden\) \| website fills the viewport, with an exit-full-screen control in the top bar \| none \| none \|/);
   assert.match(text, /text box with file-add, speak and send buttons/);
   assert.match(text, /never removes the basic controls any chat app needs, such as a send button/);
 }
