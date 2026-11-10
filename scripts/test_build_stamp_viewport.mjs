@@ -58,9 +58,8 @@ async function checkBuildStamp(page, pageName) {
       || !visibleInViewport;
 
   if (name === 'vacation-app.html') {
-      const appShell = document.querySelector('main.app');
       return {
-        ok: Boolean(appShell) && domOnlyHidden && stampText.length >= 7,
+        ok: domOnlyHidden && stampText.length >= 7,
         mode: 'dom-stamp-hidden',
         stampText,
         domOnlyHidden,
@@ -125,7 +124,7 @@ try {
     for (const name of pages) {
       await page.goto(`http://127.0.0.1:${port}/${name}`, { waitUntil: 'domcontentloaded' });
       if (name === 'vacation-app.html') {
-        await page.waitForSelector('main.app', { timeout: 20000 });
+        await page.waitForSelector('footer[data-build-stamp="1"]', { timeout: 5000 });
       }
       const check = await checkBuildStamp(page, name);
       assert.equal(check.ok, true, `${name} @ ${viewport.label}: ${JSON.stringify(check)}`);

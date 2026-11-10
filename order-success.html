@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex,nofollow" />
-  <title>Start TimeSyncher Vacation Onboarding</title>
+  <title>Start Vacay Keepsake Onboarding</title>
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -36,9 +36,9 @@
 <body>
   <main class="shell">
     <section class="card">
-      <img class="logo" src="/timesyncher-logo-gold.png" alt="TimeSyncher" />
+      <img class="logo" src="/brand/vk-book-logo.svg" alt="Vacay Keepsake" width="40" height="44" />
       <h1>Purchase confirmed</h1>
-      <p id="intro">Your TimeSyncher Vacation purchase is confirmed. Check your email and click the link in that email.</p>
+      <p id="intro">Your Vacay Keepsake purchase is confirmed. Check your email and click the link in that email.</p>
       <div class="meta" id="meta">Loading your purchase...</div>
       <div class="button-row hidden" id="actions">
         <a class="button" id="purchaseLink" href="/vacation-app.html">Review Terms &amp; Privacy</a>
@@ -57,7 +57,7 @@
     const openApp = document.getElementById('openApp');
     const state = { token: params.get('session') || '', session: null };
 
-    const emailCopy = 'Your TimeSyncher Vacation purchase is confirmed. Check your email and click the link in that email.';
+    const emailCopy = 'Your Vacay Keepsake purchase is confirmed. Check your email and click the link in that email.';
 
     function vacationAppHref(token) {
       const value = String(token || '').trim();

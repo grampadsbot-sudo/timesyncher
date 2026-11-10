@@ -248,7 +248,7 @@ try {
   const purchase = await get('/shared/?eulaSession=vacation-route-token&purchase=1');
   assertStamp(purchase, 'purchase');
   assert.match(purchase.type, /text\/html/);
-  assert.match(purchase.body, /TimeSyncher Vacation App/);
+  assert.match(purchase.body, /Vacay Keepsake App/);
   assert.doesNotMatch(purchase.body, /index-BKun7ofk\.js/);
   const script = purchase.body.match(/src="(\/assets\/vacationApp-[^"]+\.js)"/);
   assert.ok(script, purchase.body);
@@ -275,7 +275,7 @@ try {
   const home = await get('/');
   assertStamp(home, 'home');
   assert.match(home.type, /text\/html/);
-  assert.match(home.body, /TimeSyncher/);
+  assert.match(home.body, /Vacay Keepsake/);
 
   const editAccess = await get('/edit-access');
   assertStamp(editAccess, 'edit-access');
