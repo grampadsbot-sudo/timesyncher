@@ -77,6 +77,7 @@ scripts/test_issue_832_day_timeline_binding.mjs
 scripts/test_issue_832_events_flight_classification.mjs
 scripts/test_issue_832_vk_search_census_flight_presentation.mjs
 scripts/test_issue_870_composer_mic.mjs
+scripts/test_issue_888_clipped_text.mjs
 scripts/test_issue_887_daybyday_time_column.mjs
 scripts/test_issue_903_live_qa_polish.mjs
 scripts/test_issue_901_trip99_single_venue_standins.mjs

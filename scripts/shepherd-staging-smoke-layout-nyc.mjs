@@ -54,6 +54,17 @@ const EVALUATE_LAYOUT_NYC_DOM_SOURCE = `(() => {
         if (sr.left > lr.left + lr.width * 0.45) rowsNameLeft = false;
       }
       const vw = window.innerWidth;
+      const ellipsisClipped = [];
+      const clipsEllipsis = (st) => st.textOverflow === 'ellipsis'
+        || ((st.overflowX === 'hidden' || st.overflow === 'hidden') && st.whiteSpace === 'nowrap');
+      for (const el of document.querySelectorAll('[data-ts-flight-time="1"], [data-ts-conflict-label="1"]')) {
+        const st = getComputedStyle(el);
+        const text = (el.textContent || '').replace(/\\s+/g, ' ').trim();
+        if (!text) continue;
+        if (el.scrollWidth > el.clientWidth + 1 && clipsEllipsis(st)) {
+          ellipsisClipped.push({ text: text.slice(0, 80), scrollWidth: el.scrollWidth, clientWidth: el.clientWidth });
+        }
+      }
       return {
         tabOrder,
         sortPills: card.sortControls || [],
@@ -65,6 +76,8 @@ const EVALUATE_LAYOUT_NYC_DOM_SOURCE = `(() => {
         horizontalOverflow: document.documentElement.scrollWidth > vw + 1,
         scrollWidth: document.documentElement.scrollWidth,
         innerWidth: vw,
+        ellipsisClippedCount: ellipsisClipped.length,
+        ellipsisClipped,
       };
     },
   };
@@ -205,6 +218,9 @@ export function gradeLayoutNycStagingDom(summary = {}, { tab, viewport } = {}) {
   if (!summary.header?.present) failLayoutNyc(failures, tabKey, vp, 'header block missing or not visible');
   if (vp === '390' && summary.horizontalOverflow) {
     failLayoutNyc(failures, tabKey, vp, `staging horizontal_overflow scrollWidth=${summary.scrollWidth} innerWidth=${summary.innerWidth}`);
+  }
+  if (vp === '390' && (tabKey === 'flights' || tabKey === 'day-by-day') && (summary.ellipsisClippedCount || 0) > 0) {
+    failLayoutNyc(failures, tabKey, vp, `ellipsis_text_clipped count=${summary.ellipsisClippedCount}`);
   }
   return { pass: failures.length === 0, failures, nycReferenceDefects: layoutNycReferenceDefects(tabKey, vp) };
 }

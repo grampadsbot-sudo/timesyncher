@@ -40,8 +40,47 @@ export function sampleUnclippedHorizontalOverflow(vw, getComputedStyle, queryAll
   return overflowEls;
 }
 
-export function horizontalOverflowHelperSource() {
+export function ellipsisClippedTextHelperSource() {
   return `
+function tsStyleEllipsisClips(st) {
+  if (st.textOverflow === 'ellipsis') return true;
+  const clamp = st.webkitLineClamp || st.getPropertyValue?.('-webkit-line-clamp');
+  if (clamp && clamp !== 'none' && clamp !== '0') return true;
+  return (st.overflowX === 'hidden' || st.overflow === 'hidden') && st.whiteSpace === 'nowrap';
+}
+function tsElementOwnText(el) {
+  return Array.from(el.childNodes)
+    .filter((n) => n.nodeType === 3 && String(n.textContent || '').trim())
+    .map((n) => String(n.textContent || '').trim())
+    .join(' ');
+}
+function tsSampleEllipsisClippedOwnText(root, getComputedStyle, limit) {
+  const scope = root && root.querySelectorAll ? root : document;
+  const out = [];
+  const cap = limit == null ? 8 : limit;
+  for (const el of scope.querySelectorAll('*')) {
+    const st = getComputedStyle(el);
+    if (st.display === 'none' || st.visibility === 'hidden' || Number(st.opacity) === 0) continue;
+    const own = tsElementOwnText(el);
+    if (!own) continue;
+    if (!tsStyleEllipsisClips(st)) continue;
+    if (el.scrollWidth > el.clientWidth + 1) {
+      out.push({
+        tag: el.tagName,
+        text: own.slice(0, 96),
+        scrollWidth: el.scrollWidth,
+        clientWidth: el.clientWidth,
+      });
+      if (out.length >= cap) break;
+    }
+  }
+  return out;
+}
+`;
+}
+
+export function horizontalOverflowHelperSource() {
+  return `${ellipsisClippedTextHelperSource()}
 function tsParentOverflowClipsX(style) {
   const clips = (v) => v === 'hidden' || v === 'clip' || v === 'auto' || v === 'scroll';
   return clips(style.overflowX) || clips(style.overflow);

@@ -107,7 +107,7 @@ assert.doesNotMatch(
   /data-ts-conflict-label":"1"[\s\S]*flexWrap:"nowrap"[\s\S]*whiteSpace:"nowrap"[\s\S]*overflow:"hidden"/,
   'conflict label must not clip with nowrap+hidden',
 );
-assert.match(committed, /gridTemplateColumns:"minmax\(72px,80px\) 22px minmax\(0,1fr\)"/, 'day timeline grid must widen time column');
+assert.match(committed, /gridTemplateColumns:"minmax\(52px,max-content\) 22px minmax\(0,1fr\)"/, 'day timeline grid time column must size to the unwrapped time+zone');
 
 const css = await readFile(path.join(root, 'public/assets/index-CbEHlMj6.css'), 'utf8');
 const html = await readFile(path.join(root, 'shared-app.html'), 'utf8');
@@ -168,6 +168,13 @@ try {
         }
         if (/(\d{1,2}:\d{2}\s*(?:am|pm)?)\s*\n\s*(PT|ET)\b/i.test(rawText)) {
           timeZoneLines.push(rawText);
+        }
+        const range = document.createRange();
+        range.selectNodeContents(cell);
+        const rects = [...range.getClientRects()].filter((r) => r.width && r.height);
+        if (/\d{1,2}:\d{2}\s*(?:am|pm)?\s*(PT|ET)\b/i.test(rawText.replace(/\s+/g, ' '))) {
+          const looksWrappedZone = rects.some((r, i) => r.width < 24 && i > 0);
+          if (looksWrappedZone) timeZoneLines.push(rawText + ' [rects=' + rects.length + ' w=' + rects.map((r) => Math.round(r.width)).join(',') + ']');
         }
       }
     }

@@ -52,7 +52,7 @@ assert.match(committed, /paddingTop:Zn\?8:2/);
 
 assert.doesNotMatch(committed, /gridTemplateColumns:"minmax\(52px,64px\) 22px minmax\(0,1fr\)"/);
 
-const timelineStart = committed.indexOf('return n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"minmax(72px,80px)');
+const timelineStart = committed.indexOf('return n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"minmax(52px,max-content)');
 const timelineEndMarker = ']},`${ua.type}-${Rn}-${ua.title}`)';
 const timelineEnd = committed.indexOf(timelineEndMarker, timelineStart);
 assert.ok(timelineStart > 0 && timelineEnd > timelineStart);

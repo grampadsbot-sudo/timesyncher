@@ -10,28 +10,14 @@ const DAY_TIMELINE_GRID_NEEDLE = 'display:"grid",gridTemplateColumns:"74px 22px 
 const DAY_TIMELINE_GRID_NARROW_PATCH =
   'display:"grid",gridTemplateColumns:"minmax(52px,64px) 22px minmax(0,1fr)",gap:8,alignItems:"start",minWidth:0,maxWidth:"100%"';
 const DAY_TIMELINE_GRID_PATCH =
-  'display:"grid",gridTemplateColumns:"minmax(72px,80px) 22px minmax(0,1fr)",gap:8,alignItems:"start",minWidth:0,maxWidth:"100%"';
+  'display:"grid",gridTemplateColumns:"minmax(52px,max-content) 22px minmax(0,1fr)",gap:8,alignItems:"start",minWidth:0,maxWidth:"100%"';
 const DAY_TIMELINE_TIME_NEEDLE = 'n.jsxs("div",{style:{fontSize:11,fontWeight:700,color:ua.isConflict?"#b91c1c":ua.time?"#111827":"#9ca3af",textAlign:"right",paddingTop:Zn?8:2},children:[ua.time?Yo(ua.time):';
 const DAY_TIMELINE_TIME_SINGLE_LINE = '!ua.endTime&&!ua.isConflict?n.jsx("div",{"data-ts-timeline-time":"1",style:{fontSize:11,fontWeight:700,color:ua.time?"#111827":"#9ca3af",textAlign:"right",whiteSpace:"nowrap",alignSelf:"baseline"},children:ua.time?tsTimelineRowTime(ua):"TB"+"D"}):';
 const DAY_TIMELINE_TIME_SINGLE_LINE_LEGACY = 'ua.time&&!ua.endTime&&!ua.isConflict?n.jsx("div",{"data-ts-timeline-time":"1",style:{fontSize:11,fontWeight:700,color:"#111827",textAlign:"right",whiteSpace:"nowrap",alignSelf:"baseline"},children:Yo(ua.time)}):';
 const DAY_TIMELINE_TITLE_WRAP_NEEDLE = '}:{paddingTop:1},children:[ua.isConflict&&n.jsxs(';
 const DAY_TIMELINE_TITLE_WRAP_BASELINE = '}:{paddingTop:1,alignSelf:!ua.endTime&&!ua.isConflict?"baseline":"start"},children:[ua.isConflict&&n.jsxs(';
-const CONFLICT_LABEL_NEEDLE = 'ua.isConflict&&n.jsxs("div",{style:{display:"flex",alignItems:"center",gap:8,color:"#b91c1c",fontSize:11,fontWeight:900,marginBottom:6},children:[n.jsx("span",{style:{width:34,height:2,background:"#ef4444",display:"inline-block"}}),"Conflict with ",Bs(ua.conflictWith||"another timeline item")]}),n.jsx("button",{"data-ts-timeline-title":"1"';
-const CONFLICT_LABEL_CLIP_NEEDLE = 'ua.isConflict&&n.jsxs("div",{"data-ts-conflict-label":"1",style:{display:"flex",alignItems:"center",gap:8,flexWrap:"nowrap",width:"100%",minWidth:0,color:"#b91c1c",fontSize:11,fontWeight:900,marginBottom:6,lineHeight:1.35,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"},children:[n.jsx("span",{style:{width:34,height:2,background:"#ef4444",display:"inline-block",flexShrink:0}}),"Conflict with ",Bs(ua.conflictWith||"another timeline item")]}),n.jsx("button",{"data-ts-timeline-title":"1"';
-const CONFLICT_LABEL_PATCH = 'ua.isConflict&&n.jsxs("div",{"data-ts-conflict-label":"1",style:{display:"flex",alignItems:"flex-start",gap:8,flexWrap:"wrap",width:"100%",minWidth:0,color:"#b91c1c",fontSize:11,fontWeight:900,marginBottom:6,lineHeight:1.35,whiteSpace:"normal",overflow:"visible",wordBreak:"break-word"},children:[n.jsx("span",{style:{width:34,height:2,background:"#ef4444",display:"inline-block",flexShrink:0,marginTop:6}}),"Conflict with ",Bs(ua.conflictWith||"another timeline item")]}),n.jsx("button",{"data-ts-timeline-title":"1"';
-
-export function patchConflictTimelineLabel(js = '', options = {}) {
-  const served = options.served === true;
-  let out = String(js || '');
-  if (out.includes(CONFLICT_LABEL_CLIP_NEEDLE)) out = out.replace(CONFLICT_LABEL_CLIP_NEEDLE, CONFLICT_LABEL_PATCH);
-  else if (out.includes(CONFLICT_LABEL_NEEDLE)) out = out.replace(CONFLICT_LABEL_NEEDLE, CONFLICT_LABEL_PATCH);
-  else if (served && !out.includes('data-ts-conflict-label":"1"')) {
-    throw new Error('conflict timeline label patch did not apply');
-  } else if (served && out.includes('data-ts-conflict-label":"1",style:{display:"flex",alignItems:"center",gap:8,flexWrap:"nowrap"')) {
-    throw new Error('conflict timeline label must wrap at 390');
-  }
-  return out;
-}
+const CONFLICT_LABEL_PATCH_ELLIPSIS = 'flexWrap:"nowrap",width:"100%",minWidth:0,color:"#b91c1c",fontSize:11,fontWeight:900,marginBottom:6,lineHeight:1.35,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"},children:[n.jsx("span",{style:{width:34,height:2,background:"#ef4444",display:"inline-block",flexShrink:0}}),"Conflict with ",Bs(ua.conflictWith||"another timeline item")]}),n.jsx("button",{"data-ts-timeline-title":"1"';
+const CONFLICT_LABEL_PATCH_WRAP = 'flexWrap:"wrap",width:"100%",minWidth:0,maxWidth:"100%",color:"#b91c1c",fontSize:11,fontWeight:900,marginBottom:6,lineHeight:1.35,overflow:"visible",whiteSpace:"normal",overflowWrap:"anywhere",boxSizing:"border-box"},children:[n.jsx("span",{style:{width:34,height:2,background:"#ef4444",display:"inline-block",flexShrink:0,marginTop:"calc(0.675em - 1px)"}}),n.jsxs("span",{style:{flex:"1 1 0",minWidth:0},children:["Conflict with ",Bs(ua.conflictWith||"another timeline item")]})]}),n.jsx("button",{"data-ts-timeline-title":"1"';
 
 export function patchSharedTabRowOverflow(source = '', options = {}) {
   const served = options.served === true;
@@ -86,5 +72,6 @@ export function patchSharedLayoutOverflow(source = '', options = {}) {
   } else if (served && !js.includes(DAY_TIMELINE_TITLE_WRAP_BASELINE)) {
     throw new Error('day timeline title baseline patch did not apply');
   }
+  if (js.includes(CONFLICT_LABEL_PATCH_ELLIPSIS)) js = js.replace(CONFLICT_LABEL_PATCH_ELLIPSIS, CONFLICT_LABEL_PATCH_WRAP);
   return js;
 }
