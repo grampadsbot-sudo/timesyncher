@@ -247,7 +247,16 @@ const retryCopy = "Didn't catch that — tap the mic and try again.";
   delete h.sandbox.SpeechRecognition;
   delete h.sandbox.webkitSpeechRecognition;
   await loadBindVoice(h.sandbox);
-  assert.equal(h.nodes.voiceButton.disabled, true);
+  assert.equal(h.nodes.voiceButton.hidden, true);
+  assert.equal(h.nodes.composerStatus.textContent, '');
+}
+
+{
+  const h = buildHarness({});
+  delete h.sandbox.navigator.mediaDevices;
+  await loadBindVoice(h.sandbox);
+  await h.nodes.voiceButton.click();
+  await microtaskDrain();
   assert.match(h.nodes.composerStatus.textContent, /not available in this browser/);
 }
 
