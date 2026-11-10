@@ -1,7 +1,28 @@
-Closes #547
+Closes #902
 
-Restores the chief-approved wrap-under-name category rows by reversing the inline-description restore from c40abb7222f203dd57cc9769f814dbc4c686478c. That restore removed the descriptions below the name and failed Gate B run 20261104-220631 (22/32 screens). The source patch and sanctioned rebake now exactly match parent 95d2314244145092c34889c60b680a675612e04b. Governing disposition: GBrain bot-admin/receipts/gpt-816-judgment-disposition-20261104-1407; U4 in bot-admin/messages/time-syncher/ui-acceptance-matrix.
+## Summary
 
-Local validation on the uncommitted candidate: hotel capture-leaf browser checks at 390 and 1280, shared-list summary, #471 name frame, served-bundle parity, row-name frame, car-brand scope, #734 punchlist, keepsake-style2, no-comments, offline manifest and BASE=vk code ratchet all exit 0. Job screenshot traces show all 94 category description rows below the name at both widths. Local screenshots have font/logo/payload differences from the approved-look capture, so no pixel acceptance is claimed.
+Hide the customer-visible build-stamp bar on every page while keeping machine-readable build id (`<meta name="timesyncher-build">` and `/api/version`). The DOM footer with the 7-char sha remains for probes; CSS hides it unless `?debug=1`.
 
-HOST PUBLICATION ONLY: source changes remain uncommitted. Host must independently publish and verify ordinary CI and Gate B on that exact head, with the required combined Craig review. No checks, fixtures, baselines, data, dependency manifests, round guards or deployment settings changed. #796/#802 remain separate. Details and named log paths: J/RECEIPT.md.
+Host base-merge from `origin/vk` (`85fae5b`) is included in the same publish: #901 trip 99 single-venue fixture/SQL path and inherited #905 chat-itinerary edits already on `026a586c`.
+
+## #902 changes
+
+- Inline `timesyncher-build-stamp-style` + `public/ts-build-stamp-customer-hide.{css,js}` on static shells (`routes/version.mjs`, `vite.config.mjs`).
+- React `BuildStampFooter` + **`apps/vacation-client/src/styles.css`**: bundled trip client hides `.tsv-build-footer` by default; debug query shows the fixed bar.
+
+## Test plan
+
+- [x] `node scripts/test_build_stamp_customer_hidden.mjs`
+- [x] `PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser node scripts/test_build_stamp_viewport.mjs`
+- [x] `node apps/vacation-client/test/shell-layout.mjs`
+- [x] `node scripts/test_issue_901_trip99_single_venue_standins.mjs`
+- [x] `node scripts/test_gate_b_live_replay_display_facts.mjs`
+- [x] `node scripts/check-no-comments.mjs`, `node scripts/test_offline_manifest.mjs`, `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs`
+- [ ] CI on pushed PR head `026a586c`+ (see J/RECEIPT.md)
+- [ ] Gate B structure: no viewport-visible build sha on hub/lists/detail at 390 and 1280
+
+## Left alone
+
+- Baselines, check config workflows, deploy config, package deps.
+- Live Neon apply for trip 99 SQL (host).

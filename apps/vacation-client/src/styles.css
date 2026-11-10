@@ -331,13 +331,36 @@ body {
   overflow-x: hidden;
 }
 
-.tsv-build-footer {
+footer.tsv-build-footer[data-build-stamp="1"] {
+  visibility: hidden;
+  position: absolute;
+  width: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  pointer-events: none;
+}
+
+html[data-ts-debug-build] footer.tsv-build-footer[data-build-stamp="1"] {
+  visibility: visible;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip: auto;
+  z-index: 10000;
   text-align: center;
   font: 11px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
   color: rgba(255, 255, 255, 0.9);
   padding: 3px 8px;
   background: rgba(12, 12, 12, 0.78);
   border-top: 1px solid var(--border);
+  pointer-events: none;
 }
 
 .tsv-list-screen {
