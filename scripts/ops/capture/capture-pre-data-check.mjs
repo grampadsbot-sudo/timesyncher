@@ -15,12 +15,13 @@ function captureModuleRoot() {
 async function loadVacationDeps() {
   const root = captureModuleRoot();
   const vacDir = pathToFileURL(join(root, 'src/vacation/'));
-  const [{ descriptionPassesDetailJudge }, { productThingCategory }, { GATE_B_INCOMPLETE_LIST_ROW_IDS }] = await Promise.all([
+  const [{ descriptionPassesDetailJudge }, { productThingCategory }, { GATE_B_INCOMPLETE_LIST_ROW_IDS }, { scanTripThingStandIns }] = await Promise.all([
     import(new URL('thing-detail-fields.mjs', vacDir).href),
     import(new URL('keepsake-product-overrides.mjs', vacDir).href),
     import(new URL('stored-ccab-narrative-merge.mjs', vacDir).href),
+    import(new URL('trip99-thing-standin-check.mjs', vacDir).href),
   ]);
-  return { descriptionPassesDetailJudge, productThingCategory, GATE_B_INCOMPLETE_LIST_ROW_IDS };
+  return { descriptionPassesDetailJudge, productThingCategory, GATE_B_INCOMPLETE_LIST_ROW_IDS, scanTripThingStandIns };
 }
 
 function text(value) {
@@ -53,8 +54,20 @@ function hotelLongDetails(place = {}, override = {}) {
 }
 
 export async function gateBCapturePreDataCheck(shared = {}) {
-  const { descriptionPassesDetailJudge, productThingCategory, GATE_B_INCOMPLETE_LIST_ROW_IDS } = await loadVacationDeps();
+  const { descriptionPassesDetailJudge, productThingCategory, GATE_B_INCOMPLETE_LIST_ROW_IDS, scanTripThingStandIns } = await loadVacationDeps();
   const failures = [];
+  const standin = scanTripThingStandIns(shared);
+  if (!standin.pass) {
+    for (const row of standin.failures) {
+      failures.push({
+        id: row.id,
+        name: row.name,
+        category: row.category,
+        reason: row.reason,
+        detail: row.address,
+      });
+    }
+  }
   for (const place of shared.places || []) {
     if (!place || place.id == null) continue;
     const override = shared.thingOverrides?.[`place:${place.id}`] || shared.thingOverrides?.[String(place.id)] || {};

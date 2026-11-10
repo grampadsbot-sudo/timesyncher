@@ -1,60 +1,47 @@
-# PR #876 / #870 — composer mic (cursor-ubuntu / composer-2.5)
+# #901 — trip 99 stand-in bundle Things → single venues
 
-**Outcome:** source-ready PATCH after `origin/vk` base merge (uncommitted; host commit). **Start HEAD:** `73d22a93fcd49facea15261531e08528589baf15`. **Base merge:** host merged `origin/vk` at `db5f9ee883a513cdb479f706354d4eae25725159` into `73d22a93` (2026-11-09 ~12:58 PM PT).
+**Outcome:** source-ready PATCH (uncommitted; host publication). **Start HEAD:** `968c7ac8b01fda265bd4d2e265ab7115883191ea`.
 
-## Changes (#870)
+## Changes
 
-1. **`public/vacation-app-request.js` — `bindVoice`**
-   - Inline composer errors via `showComposerStatus`: blocked mic (iPhone Settings › browser › Microphone vs desktop site settings), unsupported API, no-speech / aborted retry copy.
-   - `try/catch` on `getUserMedia` and `recognition.start()`; `onerror` handler (no silent mic tap).
-   - Fresh `SpeechRecognition` per recording; `getUserMedia` once per page session (stream reused).
-   - Recording timer `m:ss` on `#voiceElapsed` while the mic is active.
+| id | was | now |
+| --- | --- | --- |
+| 664 | Guided walking/audio history tours (neighborhood address) | **Big Apple Greeter**, 1 Centre Street, New York, NY 10007 |
+| 669 | Village Vanguard / Smoke / Birdland / Jazz Gallery (bundle title) | **Birdland Jazz Club**, 315 W 44th St, New York, NY 10036 |
+| 672 | e’s BAR / The Dead Poet / Lilly’s Cocktail & Wine (bundle title) | **e’s BAR**, 511 Amsterdam Ave, New York, NY 10024 |
 
-2. **`vacation-app.html`**
-   - `#voiceElapsed` beside `#voiceButton` in `.voice-mic-wrap` + minimal CSS.
+Data source: VK Search dossiers under `scripts/fixtures/vk-search-census/results/{664,669,672}.json`; Big Apple Greeter street address from official site metadata on `https://www.bigapplegreeter.org/` (`One Center Street` → 1 Centre Street).
 
-3. **`scripts/test_issue_870_composer_mic.mjs`**
-   - Offline harness: fakes `getUserMedia` / `SpeechRecognition`; controlled fake `Date` + `setInterval` for timer; 20s hard timeout; three recordings one session, single `getUserMedia`, timer tick, `NotAllowedError`, iPhone blocked copy, `no-speech`, unsupported API.
+### Files
 
-## Host base merge conflict resolution
+- `scripts/fixtures/pr336-vk-search-places.snapshot.json`
+- `scripts/fixtures/gate-b-nyc-shared-staging.json`
+- `src/vacation/trip99-thing-standin-check.mjs` (bundle/generic title + targeted address guard)
+- `scripts/ops/capture/capture-pre-data-check.mjs` (wires stand-in scan into Gate B pre-data)
+- `scripts/test_issue_901_trip99_single_venue_standins.mjs`
+- `J/trip99-backup.sql`, `J/trip99-change.sql`, `J/REVERT.md` (Neon; host applies)
 
-| File | Resolution |
-| --- | --- |
-| `J/RECEIPT.md` | Kept #870 receipt (this file) + merge note. |
-| `evidence/vacation-client-836-nyc-tabs/*.png`, `evidence/vacation-client-p2-6-keepsake/keepsake-1280.png` | vk (`origin/vk`) blobs — no new evidence from this round. |
-| `src/vacation/chat-itinerary-edit.mjs`, `chat-itinerary-edit-intent.mjs`, `scripts/test_chat_itinerary_edit.mjs` | vk merge (clean). |
-| `public/ts-pic-popup-viewer.js`, `list-row-pic-popup-audit.mjs`, `test_ui_877_*` | vk #877 (clean). |
-| `public/assets/*.js` | vk versions on disk; rebake via `node scripts/rebake_served_trek_bundle.mjs`. |
-
-## Checks run (this lane)
+## Checks (this lane)
 
 | Check | Result |
 | --- | --- |
-| `timeout 60 node scripts/test_issue_870_composer_mic.mjs` | PASS (wall=0.03s) |
-| `node scripts/rebake_served_trek_bundle.mjs` | PASS sha256=6748012103be769972219c26b9406f943d410f6aae625b873ffb839fe96b8780 |
-| `timeout 120 node scripts/test_chat_itinerary_edit.mjs` | PASS |
-| `cd apps/vacation-client && timeout 900 npm test` | PASS |
-| `timeout 120 node scripts/test_ui_877_pic_popup_media_strip.mjs` | PASS |
-| `timeout 120 node scripts/test_ui_877_pic_popup_media_strip_chrome.mjs` | PASS |
-| `node scripts/check-no-comments.mjs` | PASS (1115 files) |
-| `node scripts/test_offline_manifest.mjs` | PASS (429 offline, 18 online) |
-| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS (252 report, 0 fail) |
+| `node scripts/test_issue_901_trip99_single_venue_standins.mjs` | PASS |
+| `node scripts/test_gate_b_capture_pre_data_check.mjs` | PASS |
+| `node scripts/check-no-comments.mjs` | PASS |
+| `node scripts/test_offline_manifest.mjs` | PASS |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | PASS (round 2: dropped unused exports in `trip99-thing-standin-check.mjs`) |
 
-## Uncommitted (host publish)
+### Pre-DONE gatefix round 2 (2026-11-10)
 
-- `J/RECEIPT.md` (conflict resolved; `git add` required)
-- Evidence PNGs (vk side; `git add` required for AA/UU rows)
-- Merge-staged vk paths: pic-popup, chat-itinerary-edit, `public/assets/index-BKun7ofk.js`, etc.
-- Side effect (vacation-client layout tests): `evidence/vacation-client-p2-3-day/*.png`, `evidence/vacation-client-p2-5-detail/*.png` — discard unless host wants updated evidence
+- `scripts/offline-tests.txt`: added `scripts/test_issue_901_trip99_single_venue_standins.mjs`
+- `src/vacation/trip99-thing-standin-check.mjs`: `THING_TITLE_SLASH_ALLOWLIST_IDS`, `thingTitleSlashSegments`, `TRIP99_STANDIN_ADDRESS_PLACE_IDS` are module-private (still used internally; removes DEAD-CODE ratchet fails)
 
-## Gate B / screen_probe
+## Host publish
 
-**Host:** `git add` conflict resolutions; `node scripts/rebake_served_trek_bundle.mjs` if needed; `git commit --no-edit`; push `vkfill/870-20261109102834`; CI + Gate B on new head lifts `hold:test-trip-fixture` when live data stable.
+1. `git add` changed paths above (includes `scripts/offline-tests.txt`).
+2. Apply `J/trip99-change.sql` on Neon with timestamped backup from `J/trip99-backup.sql`.
+3. Commit; open PR into `vk` with `Closes #901`; push once; CI + Gate B on head.
 
-## WebKit note
+## Left alone (scope)
 
-After a full page reload, iOS may require a fresh mic allow prompt; within one session we reuse one `getUserMedia` stream and rebuild `SpeechRecognition` each tap.
-
-## Not touched
-
-Baselines, Gate B config, `package.json`, NYC trip fixture data, server STT, header mic (#865 scope).
+Other trip 99 bundle rows (665, 667, …), `nyc-screen-trip99-live-shared-api.json`, `nyc_ccab_place_enrichment.json`, hotel neighborhood addresses (#889).
