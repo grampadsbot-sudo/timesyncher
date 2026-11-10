@@ -10,7 +10,9 @@ import {
   offlineParseItineraryEditIntent,
 } from './chat-itinerary-edit-intent.mjs';
 import {
+  buildChatItineraryOverridesPutBody,
   buildItineraryEditAuthoritativeSystemExtra,
+  buildItineraryEditFailureAuthoritativeSystemExtra,
   dayEditSkipLabels,
   dayNumbersForPlace,
   resolveItineraryEditDayNumber,
@@ -22,7 +24,10 @@ export {
   offlineParseItineraryEditIntent,
 } from './chat-itinerary-edit-intent.mjs';
 export {
+  assertChatEditPutStaysSmallUnderHugeOverrides,
+  buildChatItineraryOverridesPutBody,
   buildItineraryEditAuthoritativeSystemExtra,
+  buildItineraryEditFailureAuthoritativeSystemExtra,
   dayNumbersForPlace,
   resolveItineraryEditDayNumber,
 } from './chat-itinerary-edit-day.mjs';
@@ -320,7 +325,8 @@ function itineraryEditReplyContext(result) {
 }
 
 async function persistItineraryWrite(db, trip, slug, turnId, placeId, applied, webAccessToken, env, putOverrides) {
-  await putSharedTripOverrides({ slug, overrides: applied.thingOverrides, webAccessToken, env, putOverrides });
+  const overrides = buildChatItineraryOverridesPutBody({ before: applied.before, after: applied.after, keys: applied.keys });
+  await putSharedTripOverrides({ slug, overrides, webAccessToken, env, putOverrides });
   dropSharedUpstreamCacheForSlug(clean(slug, 240));
   await db`insert into chat_itinerary_edits (trip_id, share_slug, turn_id, touched_keys, before_json, after_json, anchor_place_id)
     values (${trip.id}, ${slug}, ${turnId}, ${JSON.stringify(applied.keys)}, ${JSON.stringify(applied.before)}::jsonb, ${JSON.stringify(applied.after)}::jsonb, ${String(placeId)})`;
@@ -365,12 +371,9 @@ export async function runChatItineraryEditTurn({
       return editSkip('nothing_to_undo', 'There is no recent chat itinerary edit to undo.', { applied: false, reason: 'nothing_to_undo' });
     }
     const before = latest.before_json && typeof latest.before_json === 'object' ? latest.before_json : {};
-    const merged = deepCloneJson(payload.thingOverrides || {});
-    for (const [key, value] of Object.entries(before)) {
-      if (value && typeof value === 'object' && Object.keys(value).length) merged[key] = deepCloneJson(value);
-      else delete merged[key];
-    }
-    await putSharedTripOverrides({ slug, overrides: merged, webAccessToken, env, putOverrides });
+    const undoKeys = Object.keys(before);
+    const overrides = buildChatItineraryOverridesPutBody({ before, after: {}, keys: undoKeys });
+    await putSharedTripOverrides({ slug, overrides, webAccessToken, env, putOverrides });
     dropSharedUpstreamCacheForSlug(clean(slug, 240));
     return { applied: true, op: 'undo', client: { applied: true, op: 'undo' }, replyContext: itineraryEditReplyContext({ applied: true, op: 'undo' }) };
   }
@@ -480,15 +483,12 @@ export async function prepareChatItineraryEditForQueueTurn({ db, trip, seat, tri
   } catch (error) {
     const message = String(error?.message || error);
     const statusCode = error?.statusCode;
-    if (statusCode != null && statusCode !== '') {
-      console.error('chat_itinerary_edit_failed', message, `status=${statusCode}`);
-    } else {
-      console.error('chat_itinerary_edit_failed', message);
-    }
+    console.error('chat_itinerary_edit_failed', message, statusCode != null && statusCode !== '' ? `status=${statusCode}` : '');
+    const itineraryEditAuthoritative = buildItineraryEditFailureAuthoritativeSystemExtra('edit_failed');
     return {
-      replyCustomerTurn: requestText,
-      itineraryEditResult: editSkip(message, '', { applied: false, reason: 'edit_failed' }),
-      itineraryEditAuthoritative: '',
+      replyCustomerTurn: itineraryEditAuthoritative ? `${requestText}\n\n${itineraryEditAuthoritative}` : requestText,
+      itineraryEditResult: editSkip(message, 'The itinerary change did not save. Ask the customer to try again in a moment.', { applied: false, reason: 'edit_failed' }),
+      itineraryEditAuthoritative,
     };
   }
 }
