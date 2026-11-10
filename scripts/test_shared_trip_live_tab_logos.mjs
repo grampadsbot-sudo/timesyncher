@@ -44,7 +44,9 @@ assert.equal(nestedLogoPayload.thingOverrides['place:802'].logoUrl, 'https://sou
 
 const dcSnippet = bundle.slice(bundle.indexOf('dc=({item:G,size:Re=28})'), bundle.indexOf('dc=({item:G,size:Re=28})') + 900);
 assert.match(dcSnippet, /"data-ts-logo-chip":"1"/, 'logo chip exposes Gate B marker');
-assert.match(dcSnippet, /className:"tsv-logo-fallback"/, 'logo chip keeps type-icon fallback visible');
+assert.match(dcSnippet, /className:"tsv-logo-fallback"/, 'logo chip keeps type-icon fallback for errors');
+assert.match(dcSnippet, /display:zt\?"none":"grid"/, 'logo chip hides fallback until logo missing or broken');
+assert.match(bundle, /if\(fb\)fb\.style\.display='none'/);
 assert.match(dcSnippet, /tsLogoFallback/, 'logo chip retries favicon services before emoji fallback');
 
 console.log('shared trip live tab logo tests passed');

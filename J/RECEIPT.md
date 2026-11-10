@@ -1,67 +1,81 @@
-# PR #907 — host vk merge conflict resolve @ `74d3ea6b`
+# PR #907 — host vk merge conflict resolve @ `308ed5e4`
 
-**Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Start HEAD:** `74d3ea6bd3256823860a4444bf68b899b41ba4b6` (verified). **Lane:** cursor-ubuntu, composer-2.5.
+**Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Start HEAD:** `308ed5e44d95f7be292644a7d620ad107eb29e8c` (verified). **Lane:** cursor-ubuntu, composer-2.5.
 
-## Host merge `origin/vk` @ `86d90ed1` into `74d3ea6b`
+## Host merge `origin/vk` @ `f8d4748f` into `308ed5e4`
 
-| file | resolution |
-| --- | --- |
-| `J/PR_DESCRIPTION.md`, `J/RECEIPT.md` | Both sides kept: #903 stored-data binding receipt + #927/#925 vk merge notes |
-| Staged from merge (no re-author) | `apps/vacation-client/src/lib/budgetModel.mjs`, `public/ts-trip-hero-collapse.js`, `public/vacation-app-request.js`, splitter CSS, #927 tests, `src/vacation/chat-itinerary-edit*.mjs`, `scripts/test_chat_itinerary_edit*.mjs`, etc. |
+Conflicts resolved: `J/PR_DESCRIPTION.md`, `J/RECEIPT.md`, `public/assets/index-BKun7ofk.js` (took vk bundle, then `node scripts/rebake_served_trek_bundle.mjs` → sha256 `acddd4e7783da2996c8eb61bfee84907fc5fb303edd88d7b664743a74792f713`).
 
-No `public/assets/*.js` conflict; rebake not required this round.
+Staged vk carry from merge index (no re-author unless noted): #884 logo sources, #927 splitter/hero/budget, #925 chat itinerary, offline tests for logo regression.
 
 ---
 
-# PR #907 / #903 — stored data + provenance test @ `74d3ea6b`
+## Root cause (#884 — vk carry)
 
-## Root cause (prior round on `db729549`)
+`dc()` logo chips stacked `.tsv-logo-fallback` with brand `img` in the same grid cell; TownePlace showed suitcase-over-Marriott after favicon load.
 
-CI unit-tests red at `scripts/test_pr336_ccab_search_provenance.mjs:24`: the test pinned the pre-#903 stored title `'Priceline opaque Standard sedan'` for row 609. Stored source row and snapshot read `'Priceline Express Deal (car company shown after booking) Standard sedan'`. Fix landed in `74d3ea6b` (host-published merge).
+| Path | Change |
+| --- | --- |
+| `src/vacation/thing-logo-ink-center.mjs` | Fallback hidden on successful img load / ink center |
+| `src/vacation/thing-logo-fallback-url.mjs` | `logoImgOnLoadInline` / onError inline handlers |
+| `apps/vacation-client/src/lib/logoChipHandlers.mjs` | Same hide-on-load contract for client chips |
+| `src/vacation/shared-trip-logo-audit.mjs` | `fallback_stack` DOM check |
+| `scripts/test_ui_884_logo_chip_fallback_hide.mjs` | Offline regression (new; host must ensure `offline-tests.txt` already staged from merge) |
 
-## TARGET D (alias)
+---
 
-`GATE_B_DISPLAY_TITLE_ALIASES[609]` kept. Without it, `assertGateBRowProvenance` throws `row 609: title Priceline Express Deal … does not match ccab key Priceline opaque JFK — Standard sedan`.
+## #903 stored data (PR branch — unchanged this round)
 
-## TARGET E (all snapshot rows bind)
+- No serve-time title/narrative rewrites in `live-qa-903-presentation.mjs`.
+- `GATE_B_DISPLAY_TITLE_ALIASES[609]` retained for ccab provenance.
+- All 94 snapshot rows bind vs canonical builder (prior rounds).
 
-`node scripts/build_gateb_canonical_shared_trip.mjs` → `vkfill-907-20261110001306-job/canonical.json`, inline bind script vs `scripts/fixtures/pr336-vk-search-places.snapshot.json`: **all 94 rows match** @ `74d3ea6b`.
-
-Leftover grep (`retitleFlightUpsell|SOUTHWEST_LGA_ARRIVAL_BY_ROW|row.id === 609` in `live-qa-903-presentation.mjs` and `nyc-craig-kim-daybyday-trip.mjs`): no matches.
-
-## #927 Gate B fixes (inherited vk merge, staged)
+## #927 / budget (vk carry)
 
 | failure | fix |
 | --- | --- |
-| `price budget-390/1280` | `budgetLineAmount` copies `numericPrice` before `thingBudgetAmount` (`budgetModel.mjs`) |
+| `price budget-390/1280` | `budgetLineAmount` copies `numericPrice` (`budgetModel.mjs`) |
 | `daybyday-1280.png` chrome | `ts-trip-hero-collapse.js` mounts only for `max-width: 844px` |
 
-## Checks @ PATCH (merge index + resolved J files)
+## vk carry — chat edit sequential PUT merge
 
-| check | result |
+| Path | Behaviour kept |
+| --- | --- |
+| `src/vacation/chat-itinerary-edit-day.mjs` | `mergeStoredChatItineraryScheduleOverride` |
+| `src/vacation/chat-itinerary-edit.mjs` | `persistItineraryWrite` passes `thingOverrides` |
+
+---
+
+## Checks @ PATCH (this lane)
+
+| Command | Result |
 | --- | --- |
 | `node scripts/test_pr336_ccab_search_provenance.mjs` | PASS |
 | `node scripts/test_shared_tab_list_summary.mjs` | PASS |
+| `node scripts/test_ui_884_logo_chip_fallback_hide.mjs` | PASS |
+| `node scripts/test_shared_logo_chip_center_bundle.mjs` | PASS |
+| `node scripts/test_shared_trip_live_tab_logos.mjs` | PASS |
+| `node scripts/test_served_trek_bundle.mjs` | PASS |
 | `cd apps/vacation-client && npm test` | PASS |
 | `node apps/vacation-client/test/budget.unit.mjs` | PASS |
 | `node scripts/test_vacation_app_927_hero_collapse.mjs` | PASS |
 | `node scripts/test_vacation_app_927_touch_splitter.mjs` | PASS |
-| `node scripts/regenerate_pr336_search_trip_fixture.mjs` | ok, 94 places, snapshot unchanged |
-| `node scripts/check-no-comments.mjs` | PASS |
-| `node scripts/test_offline_manifest.mjs` | PASS (441 offline, 19 online) |
-| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS |
-| `node scripts/test_chat_itinerary_edit_905.mjs` | not run (staged merge; host after commit) |
+| `node scripts/test_chat_itinerary_edit.mjs` | PASS |
+| `node scripts/test_chat_itinerary_edit_905.mjs` | PASS |
+| `node scripts/regenerate_pr336_search_trip_fixture.mjs` | ok, 94 places |
+| `node scripts/check-no-comments.mjs` | PASS (1138 files) |
+| `node scripts/test_offline_manifest.mjs` | PASS (442 offline, 19 online) |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS (252 report, 0 fail) |
 
-CI run id and Gate B verdict for the published merge commit: not available from this lane (host publishes).
+CI run id and Gate B verdict: pending host push.
 
 ## Host publish
 
-1. Mark `J/PR_DESCRIPTION.md` and `J/RECEIPT.md` resolved; `git add` unmerged paths + staged merge files; `git commit --no-edit` (merge completion) on `vkfill/903-20261109163214`; push once.
-2. Discard accidental `evidence/vacation-client-p2-*/*.png` diffs from local `npm test` (not part of product patch).
-3. After push: exact-head CI, pregate Gate B (overall look, never height), look batch.
-4. Post-deploy: `node scripts/test_vacation_app_927_webkit_touch_live.mjs` when WebKit URL available.
+1. Mark conflicts resolved: `git add J/PR_DESCRIPTION.md J/RECEIPT.md public/assets/index-BKun7ofk.js` plus staged merge paths; discard `evidence/vacation-client-p2-*/*.png` diffs from local `npm test` (not product); `git commit --no-edit` on `vkfill/903-20261109163214`; push once.
+2. Exact-head CI, pregate Gate B (overall look, never height), look batch.
+3. Post-deploy: `node scripts/test_vacation_app_927_webkit_touch_live.mjs` when WebKit URL available.
 
 ## Scope left alone
 
-- Baselines, check config, workflows, force-push / deploy from lane.
-- `vk_contract_check_local.mjs` DATA-CONTRACT rows (692–695, 710): unchanged by this merge.
+- Lane did not stage, commit, push, or merge (HOST PUBLICATION ONLY).
+- Baselines, Gate B thresholds, workflows, force-push from lane.
