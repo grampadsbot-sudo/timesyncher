@@ -1,3 +1,7 @@
+import {
+  applyDayTimelineConflictFlags,
+  resolveFlightTimelineTimes,
+} from '../../../../src/vacation/day-by-day-flight-conflicts.mjs';
 import { itineraryLineText } from '../../../../src/vacation/itinerary-line.mjs';
 import {
   logoUrlForPlace,
@@ -219,33 +223,6 @@ export function itineraryNoteFor(place, trip, assignmentNotes) {
   return itineraryLineText(overrideFor(trip, place));
 }
 
-function endMinutes(entry) {
-  if (entry.startMin == null || entry.durationMin == null) return null;
-  return entry.startMin + entry.durationMin;
-}
-
-function markConflicts(entries) {
-  const timed = entries.filter((entry) => entry.startMin != null);
-  for (let i = 0; i < timed.length; i += 1) {
-    for (let j = i + 1; j < timed.length; j += 1) {
-      const a = timed[i];
-      const b = timed[j];
-      if (a.startMin === b.startMin) {
-        a.conflictWith = b.title;
-        b.conflictWith = a.title;
-        continue;
-      }
-      const aEnd = endMinutes(a);
-      const bEnd = endMinutes(b);
-      if (aEnd == null || bEnd == null) continue;
-      if (a.startMin < bEnd && b.startMin < aEnd) {
-        a.conflictWith = b.title;
-        b.conflictWith = a.title;
-      }
-    }
-  }
-}
-
 function pushCarRows(entries, trip, day) {
   const dayNumber = Number(day.day_number);
   for (const place of trip.places || []) {
@@ -350,19 +327,22 @@ function pushFlightRows(entries, trip, day, dayId) {
     const id = String(place.id);
     if (seen.has(id) || override.timeline !== true || tabCategoryKey(place, trip) !== 'flight') return;
     seen.add(id);
-    const { depart, arrive } = flightSchedule(place, trip);
+    const flightTimes = resolveFlightTimelineTimes(place, trip, override, {
+      flightSchedule,
+      parseClockToMinutes,
+      parseDurationMinutes,
+      flightDurationMinutes,
+    });
     entries.push({
       kind: 'flight',
       id: `flight-${place.id}`,
       place,
       title: placeName(place),
-      startMin: parseClockToMinutes(depart),
-      startLabel: depart,
-      endLabel: arrive,
-      durationMin:
-        parseDurationMinutes(override.duration) ??
-        flightDurationMinutes(depart, arrive) ??
-        null,
+      startMin: flightTimes.startMin,
+      startLabel: flightTimes.flightDepart,
+      endLabel: flightTimes.flightArrive,
+      endMin: flightTimes.endMin,
+      durationMin: flightTimes.durationMin,
       category: 'flight',
       fare: flightPriceDisplay(place, trip),
       summary: rowSummary(place, trip),
@@ -472,7 +452,7 @@ export function buildDayTimeline(trip, day) {
       || String(a.id).localeCompare(String(b.id));
   });
   const withTravel = insertTravelRows(entries, trip);
-  markConflicts(withTravel);
+  applyDayTimelineConflictFlags(withTravel);
   return withTravel;
 }
 
