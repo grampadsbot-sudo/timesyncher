@@ -1,6 +1,6 @@
-# #901 — trip 99 stand-in bundle Things → single venues
+# #901 / PR #908 — trip 99 stand-in bundle Things → single venues (+ vk base merge)
 
-**Outcome:** source-ready PATCH (uncommitted; host publication). **Start HEAD:** `968c7ac8b01fda265bd4d2e265ab7115883191ea`.
+**Outcome:** source-ready PATCH (uncommitted; host publication). **Start HEAD:** `9913e4604884694d8eda4a07cd66f7f2ce31b7eb`.
 
 ## Changes
 
@@ -8,40 +8,38 @@
 | --- | --- | --- |
 | 664 | Guided walking/audio history tours (neighborhood address) | **Big Apple Greeter**, 1 Centre Street, New York, NY 10007 |
 | 669 | Village Vanguard / Smoke / Birdland / Jazz Gallery (bundle title) | **Birdland Jazz Club**, 315 W 44th St, New York, NY 10036 |
-| 672 | e’s BAR / The Dead Poet / Lilly’s Cocktail & Wine (bundle title) | **e’s BAR**, 511 Amsterdam Ave, New York, NY 10024 |
+| 672 | e's BAR / The Dead Poet / Lilly's Cocktail & Wine (bundle title) | **e's BAR**, 511 Amsterdam Ave, New York, NY 10024 |
 
-Data source: VK Search dossiers under `scripts/fixtures/vk-search-census/results/{664,669,672}.json`; Big Apple Greeter street address from official site metadata on `https://www.bigapplegreeter.org/` (`One Center Street` → 1 Centre Street).
+**CI fix (unit-tests):** `nyc_ccab_place_enrichment.json` — Big Apple Greeter `price` `0` → `null` (free program; `test_gate_b_product_row_fields.mjs` requires positive price only when `price != null`).
 
-### Files
+**Host vk merge (`d9b60879` into `9913e460`):** Resolved conflicts keeping #901 single-venue rows (664/669/672) and vk #889 dossier/address overlay code paths from merged tree (already staged non-fixture sources).
 
-- `scripts/fixtures/pr336-vk-search-places.snapshot.json`
-- `scripts/fixtures/gate-b-nyc-shared-staging.json`
-- `src/vacation/trip99-thing-standin-check.mjs` (bundle/generic title + targeted address guard)
-- `scripts/ops/capture/capture-pre-data-check.mjs` (wires stand-in scan into Gate B pre-data)
-- `scripts/test_issue_901_trip99_single_venue_standins.mjs`
-- `J/trip99-backup.sql`, `J/trip99-change.sql`, `J/REVERT.md` (Neon; host applies)
+### Files (this round)
+
+- `scripts/fixtures/nyc_ccab_place_enrichment.json` (merge + price null)
+- `scripts/fixtures/gate-b-nyc-shared-staging.json` (merge: #901 titles/addresses)
+- `scripts/fixtures/pr336-vk-search-places.snapshot.json` (merge: #901 titles)
+- `J/RECEIPT.md`
 
 ## Checks (this lane)
 
 | Check | Result |
 | --- | --- |
+| `node scripts/test_gate_b_product_row_fields.mjs` | PASS |
 | `node scripts/test_issue_901_trip99_single_venue_standins.mjs` | PASS |
-| `node scripts/test_gate_b_capture_pre_data_check.mjs` | PASS |
+| `node scripts/test_dossier_evidence_hydrate_682.mjs` | PASS |
 | `node scripts/check-no-comments.mjs` | PASS |
 | `node scripts/test_offline_manifest.mjs` | PASS |
-| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | PASS (round 2: dropped unused exports in `trip99-thing-standin-check.mjs`) |
-
-### Pre-DONE gatefix round 2 (2026-11-10)
-
-- `scripts/offline-tests.txt`: added `scripts/test_issue_901_trip99_single_venue_standins.mjs`
-- `src/vacation/trip99-thing-standin-check.mjs`: `THING_TITLE_SLASH_ALLOWLIST_IDS`, `thingTitleSlashSegments`, `TRIP99_STANDIN_ADDRESS_PLACE_IDS` are module-private (still used internally; removes DEAD-CODE ratchet fails)
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | PASS |
 
 ## Host publish
 
-1. `git add` changed paths above (includes `scripts/offline-tests.txt`).
-2. Apply `J/trip99-change.sql` on Neon with timestamped backup from `J/trip99-backup.sql`.
-3. Commit; open PR into `vk` with `Closes #901`; push once; CI + Gate B on head.
+1. Complete merge commit after conflict resolution in four files.
+2. `git add` changed paths; push once to `vkfill/901-20261109163211`.
+3. Apply `J/trip99-change.sql` on Neon if not already applied (host).
+4. CI + Gate B on new head.
 
 ## Left alone (scope)
 
-Other trip 99 bundle rows (665, 667, …), `nyc-screen-trip99-live-shared-api.json`, `nyc_ccab_place_enrichment.json`, hotel neighborhood addresses (#889).
+- `gate-b-nyc` place `price: 0` on free Greeter trip row (budget semantics); ccab enrichment uses `null`.
+- Baselines, offline-tests.txt, workflows, rebake unless host requires served bundle refresh.
