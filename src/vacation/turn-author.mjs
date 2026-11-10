@@ -69,7 +69,7 @@ function findAuthor(turn, people) {
 
 export function turnAuthorLabel(turn = {}, session = {}, people = []) {
   const inbound = turn.speaker === 'customer' || turn.direction === 'inbound';
-  if (!inbound) return { label: 'TimeSyncher', reason: '' };
+  if (!inbound) return { label: 'Vacay Keepsake', reason: '' };
   const authorId = String(turn.authorId || turn.payload?.authorId || '').trim();
   const viewerId = String(session.viewerId || session.customer_id || '').trim();
   if (authorId && viewerId && authorId === viewerId) return { label: 'You', reason: '' };

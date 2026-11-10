@@ -163,7 +163,7 @@ assert.equal(ownerSeenByCollab.reason, '');
 const ownTurn = turnAuthorLabel({ speaker: 'customer', direction: 'inbound', authorId: collabId, authorName: 'Nico Hale' }, collab, people);
 assert.equal(ownTurn.label, 'You');
 assert.equal(ownTurn.reason, '');
-assert.equal(turnAuthorLabel({ speaker: 'app', direction: 'outbound', authorName: 'Ada Lovelace' }, collab, people).label, 'TimeSyncher');
+assert.equal(turnAuthorLabel({ speaker: 'app', direction: 'outbound', authorName: 'Ada Lovelace' }, collab, people).label, 'Vacay Keepsake');
 const unnamed = turnAuthorLabel({ speaker: 'customer', direction: 'inbound', authorId: 'someone-else' }, collab, people);
 assert.equal(unnamed.label, '');
 assert.equal(unnamed.reason, 'author_name_missing');
