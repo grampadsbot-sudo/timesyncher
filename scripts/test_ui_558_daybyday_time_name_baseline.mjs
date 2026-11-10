@@ -82,6 +82,94 @@ async function clickTab(page, label) {
   }, label);
 }
 
+async function collectSingleTimeBaselineSamples(page, tolerance) {
+  return page.evaluate((tol) => {
+    const tl = document.querySelector('[data-ts-day-timeline]');
+    if (!tl) return [];
+    const ctx = document.createElement('canvas').getContext('2d');
+    const measureBaseline = (textNode) => {
+      const parent = textNode.parentElement;
+      const rg = document.createRange();
+      rg.selectNodeContents(textNode);
+      const q = [...rg.getClientRects()].find((r) => r.width && r.height);
+      if (!q) return null;
+      ctx.font = window.getComputedStyle(parent).font;
+      const ascent = ctx.measureText(textNode.textContent || '').fontBoundingBoxAscent;
+      return Number.isFinite(ascent) ? q.top + ascent : null;
+    };
+    const samples = [];
+    for (const titleBtn of tl.querySelectorAll('[data-ts-timeline-title]')) {
+      const title = String(titleBtn.textContent || '').replace(/\s+/g, ' ').trim();
+      if (!title || /check-in:|sleep:|wake:/i.test(title)) continue;
+      let row = null;
+      for (let p = titleBtn.parentElement; p && p !== tl; p = p.parentElement) {
+        if (p.querySelectorAll('[data-ts-timeline-title]').length !== 1) break;
+        if (p.querySelector('[data-ts-timeline-icon], [data-ts-tab-emoji]')) {
+          row = p;
+          break;
+        }
+      }
+      if (!row) continue;
+      const notes = String(row.innerText || '')
+        .split('\n')
+        .map((x) => x.replace(/\s+/g, ' ').trim())
+        .filter((x) => x && x !== title && !/^\d{1,2}:\d{2}\s?(am|pm)$/i.test(x));
+      if (notes.some((x) => /^conflict with /i.test(x))) continue;
+      const timeEl = row.querySelector('[data-ts-timeline-time]');
+      if (!timeEl || timeEl.querySelector('div')) continue;
+      const timeText = [...timeEl.childNodes].find((n) => n.nodeType === Node.TEXT_NODE && n.textContent.trim());
+      const titleText = [...titleBtn.childNodes].find((n) => n.nodeType === Node.TEXT_NODE && n.textContent.trim());
+      if (!timeText || !titleText) continue;
+      const timeBaseline = measureBaseline(timeText);
+      const titleBaseline = measureBaseline(titleText);
+      if (timeBaseline == null || titleBaseline == null) continue;
+      samples.push({
+        title: title.slice(0, 60),
+        delta: Math.abs(timeBaseline - titleBaseline),
+      });
+    }
+    return samples;
+  }, tolerance);
+}
+
+function timelineTitleFingerprint() {
+  return [...document.querySelectorAll('[data-ts-timeline-title]')]
+    .map((el) => String(el.textContent || '').replace(/\s+/g, ' ').trim())
+    .join('\n');
+}
+
+async function clickDayChip(page, dayNum) {
+  const before = await page.evaluate(timelineTitleFingerprint);
+  await page.evaluate((n) => {
+    const btn = [...document.querySelectorAll('button')].find((b) => {
+      const t = String(b.textContent || '').replace(/\s+/g, ' ').trim();
+      return new RegExp(`^Day ${n}\\b`, 'i').test(t);
+    });
+    if (!btn) throw new Error(`day chip not found: Day ${n}`);
+    btn.click();
+  }, dayNum);
+  await page.waitForFunction(
+    (prev) => {
+      const now = [...document.querySelectorAll('[data-ts-timeline-title]')]
+        .map((el) => String(el.textContent || '').replace(/\s+/g, ' ').trim())
+        .join('\n');
+      return now.length > 0 && now !== prev;
+    },
+    { timeout: 120000 },
+    before,
+  );
+}
+
+async function waitForDay2TimelineMarker(page) {
+  await page.waitForFunction(
+    () =>
+      [...document.querySelectorAll('[data-ts-timeline-title]')].some((el) =>
+        /statue of liberty|strand book store/i.test(String(el.textContent || '')),
+      ),
+    { timeout: 120000 },
+  );
+}
+
 const raw = execFileSync('git', ['show', '06e47169699ffdee8accf48e74b0a247a8793ebc^:public/assets/upstream/index-BKun7ofk.js'], {
   maxBuffer: 30 * 1024 * 1024,
 });
@@ -110,72 +198,34 @@ try {
     await clickTab(page, 'Day-by-Day');
     await page.waitForSelector('[data-ts-day-timeline]', { timeout: 120000 });
 
-    const rows = await page.evaluate((tolerance) => {
-      const tl = document.querySelector('[data-ts-day-timeline]');
-      if (!tl) return { ok: false, reason: 'missing timeline' };
-      const ctx = document.createElement('canvas').getContext('2d');
-      const measureBaseline = (textNode) => {
-        const parent = textNode.parentElement;
-        const rg = document.createRange();
-        rg.selectNodeContents(textNode);
-        const q = [...rg.getClientRects()].find((r) => r.width && r.height);
-        if (!q) return null;
-        ctx.font = window.getComputedStyle(parent).font;
-        const ascent = ctx.measureText(textNode.textContent || '').fontBoundingBoxAscent;
-        return Number.isFinite(ascent) ? q.top + ascent : null;
-      };
-      const dayButtons = [...document.querySelectorAll('button')].filter((b) => /\bDay \d+\b/i.test(String(b.textContent || '').replace(/\s+/g, ' ').trim()));
-      const samples = [];
-      const visitDay = () => {
-        for (const titleBtn of tl.querySelectorAll('[data-ts-timeline-title]')) {
-          const title = String(titleBtn.textContent || '').replace(/\s+/g, ' ').trim();
-          if (!title || /check-in:|sleep:|wake:/i.test(title)) continue;
-          let row = null;
-          for (let p = titleBtn.parentElement; p && p !== tl; p = p.parentElement) {
-            if (p.querySelectorAll('[data-ts-timeline-title]').length !== 1) break;
-            if (p.querySelector('[data-ts-timeline-icon], [data-ts-tab-emoji]')) {
-              row = p;
-              break;
-            }
-          }
-          if (!row) continue;
-          const notes = String(row.innerText || '')
-            .split('\n')
-            .map((x) => x.replace(/\s+/g, ' ').trim())
-            .filter((x) => x && x !== title && !/^\d{1,2}:\d{2}\s?(am|pm)$/i.test(x));
-          if (notes.some((x) => /^conflict with /i.test(x))) continue;
-          const timeEl = row.querySelector('[data-ts-timeline-time]');
-          if (!timeEl || timeEl.querySelector('div')) continue;
-          const timeText = [...timeEl.childNodes].find((n) => n.nodeType === Node.TEXT_NODE && n.textContent.trim());
-          const titleText = [...titleBtn.childNodes].find((n) => n.nodeType === Node.TEXT_NODE && n.textContent.trim());
-          if (!timeText || !titleText) continue;
-          const timeBaseline = measureBaseline(timeText);
-          const titleBaseline = measureBaseline(titleText);
-          if (timeBaseline == null || titleBaseline == null) continue;
-          samples.push({
-            title: title.slice(0, 60),
-            delta: Math.abs(timeBaseline - titleBaseline),
-          });
-        }
-      };
-      visitDay();
-      for (const btn of dayButtons) {
-        btn.click();
-        visitDay();
-      }
-      const amelie = samples.find((s) => /amelie bistro/i.test(s.title));
-      const worst = samples.reduce((best, s) => (s.delta > (best?.delta ?? -1) ? s : best), null);
-      const bad = samples.filter((s) => s.delta > tolerance);
-      return {
-        ok: bad.length === 0 && Boolean(worst) && worst.delta <= tolerance,
-        amelie,
-        worst,
-        bad: bad.slice(0, 5),
-        count: samples.length,
-      };
-    }, BASE_TOLERANCE_PX);
+    const hasDay2Chip = await page.evaluate(
+      () =>
+        [...document.querySelectorAll('button')].some((b) =>
+          /^Day 2\b/i.test(String(b.textContent || '').replace(/\s+/g, ' ').trim()),
+        ),
+    );
+    assert.ok(hasDay2Chip, `Day 2 chip missing at ${width}`);
+
+    const samples = await collectSingleTimeBaselineSamples(page, BASE_TOLERANCE_PX);
+    await clickDayChip(page, 2);
+    await waitForDay2TimelineMarker(page);
+    const day2Samples = await collectSingleTimeBaselineSamples(page, BASE_TOLERANCE_PX);
+    const measuredDay2 = day2Samples.some((s) => /statue of liberty|strand book store/i.test(s.title));
+    samples.push(...day2Samples);
+
+    const amelie = samples.find((s) => /amelie bistro/i.test(s.title));
+    const worst = samples.reduce((best, s) => (s.delta > (best?.delta ?? -1) ? s : best), null);
+    const bad = samples.filter((s) => s.delta > BASE_TOLERANCE_PX);
+    const rows = {
+      ok: bad.length === 0 && Boolean(worst) && worst.delta <= BASE_TOLERANCE_PX,
+      amelie,
+      worst,
+      bad: bad.slice(0, 5),
+      count: samples.length,
+    };
 
     assert.ok(rows.count > 0, `no single-time rows measured at ${width}`);
+    assert.ok(measuredDay2, `day chip switch did not surface Day 2 single-time rows at ${width}`);
     assert.ok(
       rows.ok,
       `#558 time/name baseline at ${width}: worst=${rows.worst?.title} ${rows.worst?.delta?.toFixed(2)} bad=${JSON.stringify(rows.bad)}`,

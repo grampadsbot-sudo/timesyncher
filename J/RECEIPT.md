@@ -1,14 +1,24 @@
-# Issue #859 — chat itinerary edit (assignment move + post-gen timeout)
+# PR #940 — #859 chat edit + host merge `origin/vk` @ `1fc2ef77`
 
-**Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Start HEAD:** `ed8687b929c9473e6f9f2915ac5bc82d6dd802d1`. **Lane:** cursor-ubuntu, composer-2.5.
+**Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Start HEAD:** `527d2ed33a538a9f429baa65324f678996130389`. **Lane:** cursor-ubuntu, composer-2.5.
 
-## Root cause
+## Host merge `origin/vk` @ `1fc2ef7708aeed7a318b11b9fb3fef518f1b4044` into `527d2ed3`
+
+| Path | Resolution |
+| --- | --- |
+| `J/RECEIPT.md` | Merged both sides (this file). |
+| `public/assets/index-BKun7ofk.js` | Took merge stage-3 (`origin/vk`), then `node scripts/rebake_served_trek_bundle.mjs` → sha256 `31e9a3798d0a68adbc154e850d1ea263f9c609ba66112af115f4330703fc8364` (6597750 bytes). |
+| #928 / #558 carry | Kept vk paths: `day-by-day-flight-conflicts.mjs`, trek-live flight patches, `dayTimelineModel.mjs`, `styles.css`, `test_issue_928_daybyday_arrival_conflicts.mjs`, `test_ui_558_daybyday_time_name_baseline.mjs`, `scripts/offline-tests.txt` registration. |
+
+## Issue #859 — chat itinerary edit (already on `527d2ed3`)
+
+### Root cause
 
 1. **set_time / “Move Carbone to Day 2”:** `applySetTimeOp` wrote `thingOverrides` + `perDaySchedule` only; no TREK assignment move. `buildDayTimeline` lists Thing rows from `assignments[dayId]` only, so UI stayed on Day 1 while chat returned success.
 2. **add_bar_before / turn 2 hang:** Post-generation `rewriteBlockedActionClaim` and `blockVacationAppReplyIdCitation` had no wall-clock bound; slow paths could hit the 60s Vercel limit after Haiku returned.
 3. **Day resolution:** `placeOnDay` treated override-only `dayIds` as “on day,” masking missing assignments.
 
-## Fix (product)
+### Fix (product, commit `527d2ed3`)
 
 | Path | Change |
 | --- | --- |
@@ -23,11 +33,15 @@
 | `scripts/test_chat_itinerary_edit.mjs` | Assignment mocks, guard scan targets trek-write module |
 | `scripts/test_chat_itinerary_edit_905.mjs` | Copy-shape two-turn Carbone Day1→Day2 @20:30 + Zinc before Carbone; 413 + huge-overrides + queue postgen wiring checks |
 
-## New cases vs vk@ed8687b
+Copy-shape turn 1/2 in `_905.mjs` **fail** on vk before patch `527d2ed3` (Carbone stays on Day 1 assignment-only timeline).
 
-On start HEAD `ed8687b929c9473e6f9f2915ac5bc82d6dd802d1`, `scripts/test_chat_itinerary_edit_905.mjs` copy-shape turn 1/2 and timeline assertions **fail** (Carbone stays on Day 1 assignment-only timeline).
+## #558 / #928 (vk merge carry)
 
-## Checks (this workspace, uncommitted tree)
+**#558:** `scripts/test_ui_558_daybyday_time_name_baseline.mjs` waits for timeline title fingerprint after Day chip click; measures Day 1 + Day 2.
+
+**#928:** Day-by-day arrival conflict flags + `scripts/test_issue_928_daybyday_arrival_conflicts.mjs` (product logic from vk; not re-authored this round).
+
+## Checks (workspace @ `527d2ed3` + uncommitted merge tree, 2026-11-10)
 
 ```text
 timeout 120 node scripts/test_chat_itinerary_edit.mjs
@@ -40,28 +54,36 @@ node scripts/test_chat_itinerary_edit_905.mjs
 cd apps/vacation-client && timeout 900 npm test
 # vacation-client tests finished
 
+node scripts/test_issue_928_daybyday_arrival_conflicts.mjs
+# issue #928 day-by-day arrival conflict checks passed
+
+node scripts/test_ui_558_daybyday_time_name_baseline.mjs
+# ui #558 day-by-day time/name baseline chrome checks passed
+
+node scripts/test_served_trek_bundle.mjs
+# served trek bundle matches the patcher
+
 node scripts/check-no-comments.mjs
-# no-comment check passed (1143 files scanned)
+# no-comment check passed (1145 files scanned)
 
 node scripts/test_offline_manifest.mjs
-# offline manifest ok (442 offline, 19 online)
+# offline manifest ok (443 offline, 19 online)
 
 BASE=vk node scripts/check-code-ratchet.mjs
 # code ratchet check passed (252 report, 0 fail)
 ```
 
-Not run here: live two-turn proof (`~/tsv-dispatch/lanes/jobs/chat-edit-live-proof-859-next/`), Gate B, CI, deploy.
+CI run id: pending host merge commit + push on `vkfill/859-20261110023051` @ rebaked bundle.
+
+Not run here: live two-turn proof (`~/tsv-dispatch/lanes/jobs/chat-edit-live-proof-859-next/`), Gate B, deploy.
 
 ## Host publish
 
-Stage all under:
+1. Resolve `J/RECEIPT.md` (done in tree).
+2. `git add` merge paths: `public/assets/index-BKun7ofk.js`, vk carry files, `J/RECEIPT.md`; **omit** accidental `.artifacts/nyc-screen-verify/*.png` and `evidence/vacation-client-p2-5-detail/*.png` unless host intends them.
+3. Merge commit on `vkfill/859-20261110023051`; push once; `Closes #859` per `J/PR_DESCRIPTION.md`.
+4. Exact-head CI + Ubuntu Gate B per PR brief.
 
-- `routes/vacation-app-chat-queue.mjs`
-- `scripts/test_chat_itinerary_edit.mjs`, `scripts/test_chat_itinerary_edit_905.mjs`
-- `src/vacation/bounded-await.mjs`
-- `src/vacation/chat-itinerary-edit*.mjs` (edit, assignment, day, slug-guard, trek-write)
-- `src/vacation/vacation-app-chat-postgen.mjs`
+**#859 product paths (already in `527d2ed3`, no re-stage needed unless amending):** `routes/vacation-app-chat-queue.mjs`, `scripts/test_chat_itinerary_edit*.mjs`, `src/vacation/bounded-await.mjs`, `src/vacation/chat-itinerary-edit*.mjs`, `src/vacation/vacation-app-chat-postgen.mjs`.
 
-Do **not** include accidental evidence PNGs (reverted).
-
-Single commit + push + PR into `vk` with `Closes #859`; use `J/PR_DESCRIPTION.md`.
+Did not stage, commit, push, or merge (HOST PUBLICATION ONLY).
