@@ -1,30 +1,20 @@
-Closes #888
+Closes #952
 
-#896 / #888 — flight row layout @390, conflict-badge wrap, trip switcher dates (`Jun 23–30, 2026`). Host vk base-merge @ `b1211bf9eea151ba7aec5eca2bdf39cabbc0cd6a` into `49e1fab3d710d3b86d2f06779b5ace0ce2eaab2e` also carries #884 logo-chip fallback hide, #927 touch splitter + collapsible trip hero, #905 chat-itinerary merge, #903 live QA polish, and related vk shell paths.
+## Summary
 
-**#888 layout:** conflict badges and trip switcher wrap (no ellipsis); flight time chips show full arrival/depart text inside the card @390; one font weight on chips. Vacation client: `@media (max-width: 480px)` multi-row `.tsv-row-flight-main`. Served trek: `ISSUE_888_SERVED_LAYOUT_CSS` two-line grid + `SHARED_LIVE_FLIGHT_LOGO_NAME_CSS` centers logo with airline name.
+- Reparent `#fullScreenButton` onto the app shell when entering CSS full screen so the exit control is not inside `display: none` topbar (multi-vacation iPhone case).
+- Style fixed top-right exit with safe-area insets and 44×44 tap target while full screen.
+- Extend layout harness/tests for single-trip and multi-trip full-screen enter/exit.
 
-**#884:** logo chips hide `.tsv-logo-fallback` after brand `img` loads; rebaked served bundle.
+## Why
 
-**#927 (vk carry):** `public/ts-trip-hero-collapse.js` expanded `h1` uses `overflow-wrap:anywhere`; collapse metrics test updated.
+On iOS, full screen is `.site-fullscreen` only (no Fullscreen API). Hiding the topbar hid the only exit button for NYC-style multi-trip sessions.
 
-**#903:** No serve-time title/narrative rewrites; stored fixture rows 609/630–634 carry customer wording. See `live-qa-903-presentation.mjs`.
+## Checks
 
-## Verification (lane @ `49e1fab3` + conflict resolution, uncommitted)
+- `node .cursor/skills/verify-timesyncher-vacation/scripts/layout-self-check.mjs` — PASS on lane worker
+- `node scripts/test_served_page_layout.mjs` — host Ubuntu + Chrome (not run on lane worker: no browser)
 
-- `node scripts/rebake_served_trek_bundle.mjs`
-- `node scripts/test_issue_888_clipped_text.mjs`
-- `node scripts/test_issue_903_live_qa_polish.mjs`
-- `node scripts/test_ui_884_logo_chip_fallback_hide.mjs`
-- `node scripts/test_shared_logo_chip_center_bundle.mjs`
-- `node scripts/test_shared_trip_live_tab_logos.mjs`
-- `node scripts/test_served_trek_bundle.mjs`
-- `node scripts/test_vacation_app_927_hero_collapse.mjs`
-- `cd apps/vacation-client && npm test`
-- `node scripts/check-no-comments.mjs`, `node scripts/test_offline_manifest.mjs`, `BASE=vk node scripts/check-code-ratchet.mjs`
+## Left alone (scope)
 
-CI + Gate B with `gateb-allow.json["888"]` on host-published merge commit.
-
-## Scope left alone
-
-Baselines, Gate B host scripts/workflows, unrelated #882/#889/#865 paths. `GATE_B_DISPLAY_TITLE_ALIASES[609]` retained (#903).
+#951 UI, trip 99 / NYC fixture data, offline manifest entry (extended existing layout test only).

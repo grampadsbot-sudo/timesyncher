@@ -1,37 +1,45 @@
-# TSV #949 — NYC demo chat edit unlock (HOST PUBLICATION ONLY)
+# TSV #952 — iPhone full screen exit control (HOST PUBLICATION ONLY)
 
-**Outcome:** source-ready PATCH. **Lane start HEAD:** `9c6b1df2d17c43fc87b29c6a510d391cd447d651`. **Lane:** cursor-ubuntu / composer-2.5. **Authority:** eggbot 7:14–7:15 AM PT 11/10 (`eggbot:unlock-nyc-chat-edit-20261110-0714`; GBrain `bot-admin/decisions/vk-demo-nyc-chat-edit-unlock-20261110`).
+**Outcome:** source-ready PATCH. **Lane start HEAD:** `9c6b1df2d17c43fc87b29c6a510d391cd447d651`. **Lane:** cursor-ubuntu, composer-2.5. **Authority:** eggbot 7:33 AM PT 11/10 (`eggbot:exit-fullscreen-iphone-20261110-0733`).
 
-## Change
+## Root cause
 
-Craig: unlock NYC demo trip chat edits; do not restore from backup; keep user edits.
+`bindFullScreen` toggles `.site-fullscreen`, which sets `.topbar { display: none }`. On 2+ vacation sessions `#fullScreenButton` lives inside the topbar, so iOS/CSS-only full screen hid the only exit control.
 
-1. `config/chat-itinerary-edit-trips.json` — NYC demo share slug moved from `demo_locked` to `allowlist`; `chat-edit-demo-locked-fixture` retained in `demo_locked` for lock-path unit tests (no trip 99 / live data writes).
-2. `src/vacation/chat-itinerary-edit.mjs` — `shareSlugEditGuardDecision` no longer hard-locks `DEMO_LOCKED_SLUG`; only `demo_locked` config entries block writes. Canned `demo_locked` reply path unchanged.
-3. `scripts/test_chat_itinerary_edit.mjs`, `scripts/test_chat_itinerary_edit_905.mjs` — expect NYC allowlisted + guard `ok: true`; lock proofs use fixture slug only.
+## Fix (vacation-app chrome)
 
-**Untouched:** trip 99 itinerary DB/JSON, demo chat history, baselines, deploy/CI config, dependencies.
+1. **`public/vacation-app-request.js`** — On enter full screen, reparent `#fullScreenButton` onto `.app` (outside the hidden topbar); on exit, restore it to the header or splitter slot.
+2. **`public/vacation-app-shell.css`** — Fixed top-right exit: `position: fixed`, safe-area insets, `min-width`/`min-height` 44px, `z-index: 10`. Removed bottom-right splitter-row pinning for full screen.
+3. **`scripts/layout-app-measure.mjs`** — `fullScreenSource()` asserts exit visible, 44px, and top-right in viewport.
+4. **`scripts/test_served_page_layout.mjs`** — Stricter SITE full-screen assertions; new `layout-many-site` harness session + `MANY-SITE-FULLSCREEN` / `MANY-SITE-EXIT` checks (multi-trip header path).
+5. **`scripts/layout-shell-harness.mjs`** — `MANY_SITE` session (2 trips, site on active trip).
+6. **`.cursor/skills/verify-timesyncher-vacation/scripts/layout-measure.mjs`** — Resolve `#fullScreenButton` as full-screen enter control.
 
-## Uncommitted files (host commit + push)
+## Uncommitted paths (host commit/push)
 
-- `config/chat-itinerary-edit-trips.json`
-- `src/vacation/chat-itinerary-edit.mjs`
-- `scripts/test_chat_itinerary_edit.mjs`
-- `scripts/test_chat_itinerary_edit_905.mjs`
-- `J/RECEIPT.md`
+| Path |
+| --- |
+| `public/vacation-app-request.js` |
+| `public/vacation-app-shell.css` |
+| `scripts/layout-app-measure.mjs` |
+| `scripts/layout-shell-harness.mjs` |
+| `scripts/test_served_page_layout.mjs` |
+| `.cursor/skills/verify-timesyncher-vacation/scripts/layout-measure.mjs` |
+| `J/RECEIPT.md` |
+| `J/PR_DESCRIPTION.md` |
 
-## Checks (worktree `9c6b1df2`, 2026-11-10)
+## Checks (this lane)
 
 | Command | Result |
 | --- | --- |
-| `node scripts/test_chat_itinerary_edit.mjs` | PASS |
-| `node scripts/test_chat_itinerary_edit_905.mjs` | PASS |
-| `node scripts/check-no-comments.mjs` | PASS |
+| `node .cursor/skills/verify-timesyncher-vacation/scripts/layout-self-check.mjs` | PASS |
 | `node scripts/test_offline_manifest.mjs` | PASS |
 | `BASE=vk node scripts/check-code-ratchet.mjs` | PASS |
+| `node scripts/test_served_page_layout.mjs` | **BLOCKED** — no Chrome at `/usr/bin/google-chrome-stable` on this worker |
+| `node scripts/check-no-comments.mjs` | **BLOCKED** — missing `apps/vacation-client/node_modules/typescript` |
 
-CI / Gate B not run in lane (host publication).
+Host should run `test_served_page_layout.mjs` on Ubuntu with Chrome before push/Gate B.
 
-## Host next
+## Scope left alone
 
-Branch from `vk` @ `9c6b1df2`, commit patch, push once, open PR into `vk` with `Closes #949`.
+NYC demo trip data, #951 pencil/price/chevron, `offline-tests.txt`, baselines, workflows.

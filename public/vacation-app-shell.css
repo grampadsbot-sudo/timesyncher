@@ -19,13 +19,22 @@
 .app.site-fullscreen .splitter-row .splitter,
 .app.site-fullscreen .chat-pane { display: none; }
 .app.site-fullscreen .splitter-row {
-  position: fixed;
-  right: 8px;
-  bottom: calc(8px + env(safe-area-inset-bottom, 0px));
-  z-index: 6;
   width: auto;
   min-height: 0;
   background: transparent;
+}
+.app.site-fullscreen #fullScreenButton {
+  position: fixed;
+  top: calc(10px + env(safe-area-inset-top, 0px));
+  right: calc(10px + env(safe-area-inset-right, 0px));
+  bottom: auto;
+  left: auto;
+  min-width: 44px;
+  min-height: 44px;
+  z-index: 10;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
 }
 .session-gate {
   min-height: 100vh;

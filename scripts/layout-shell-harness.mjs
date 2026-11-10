@@ -24,6 +24,7 @@ export const sessions = {
   ONE: 'layout-one',
   SITE: 'layout-site',
   MANY: 'layout-many',
+  MANY_SITE: 'layout-many-site',
 };
 
 export function loadPuppeteer() {
@@ -82,6 +83,12 @@ function appPayload(state, origin) {
   if (state === 'MANY') {
     vacations = [
       tripRecord('trip-layout-1', 'Sample week', 'Coastal region', ''),
+      tripRecord('trip-layout-2', 'Second week', 'Inland region', ''),
+    ];
+  }
+  if (state === 'MANY_SITE') {
+    vacations = [
+      tripRecord('trip-layout-1', 'Sample week', 'Coastal region', site),
       tripRecord('trip-layout-2', 'Second week', 'Inland region', ''),
     ];
   }

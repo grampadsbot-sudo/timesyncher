@@ -153,7 +153,7 @@ function measureInPage(request) {
   }) || null;
   const settings = [...document.querySelectorAll('button')].find((el) => (accName(el) || flatText(el)) === 'Settings') || null;
   const signupForm = document.querySelector('input[name="firstName"]')?.closest('form') || null;
-  const fullscreen = document.querySelector('#fullscreenButton') || namedButton(['Full screen', 'Enter full screen']);
+  const fullscreen = document.querySelector('#fullscreenButton') || document.querySelector('#fullScreenButton') || namedButton(['Full screen', 'Enter full screen']);
   const fullscreenExit = document.querySelector('#exitFullscreenButton') || namedButton(['Exit full screen', 'Close full screen']);
 
   const textboxes = [...document.querySelectorAll('textarea')].filter((el) => {
