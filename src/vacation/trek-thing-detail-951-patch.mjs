@@ -28,6 +28,12 @@ const VIEWONLY_STATUS_NEEDLE =
 const VIEWONLY_STATUS_PATCH =
   '(Ce||tsDetailEdit)&&n.jsx("div",{style:{marginTop:6,fontSize:10,fontWeight:800,color:Ce?ke==="error"?"#dc2626":ke==="saving"?"#d97706":"#0f766e":"#6b7280"},children:He?"Checking edit access…":Ce?ke==="saving"?"Saving…":ke==="error"?"Could not save — check your connection and try again":"Saved to itinerary":"View-only — editing requires an approved email invite"})';
 
+const HH_CHECK_951_NEEDLE =
+  '}),(zi(Dt)||It(Dt)==="bar")&&n.jsxs("label",{style:{...Hn,flexDirection:"row",alignItems:"center",gap:8,textTransform:"none",fontSize:12,paddingBottom:8},children:[n.jsx("input",{type:"checkbox",checked:!!(ha(Dt).happyHour||tsPf.some(row=>row.happyHour===true&&row.match.test(String(Dt.name||Dt.title||"")))),onChange:G=>Xa(Dt,"happyHour",G.target.checked)})," Happy hour"]})]})]}):n.jsxs(n.Fragment';
+
+const HH_CHECK_951_PATCH =
+  '}),(zi(Dt)||It(Dt)==="bar")&&(Ce||tsDetailEdit)&&n.jsxs("label",{style:{...Hn,flexDirection:"row",alignItems:"center",gap:8,textTransform:"none",fontSize:12,paddingBottom:8},children:[n.jsx("input",{type:"checkbox",checked:!!(ha(Dt).happyHour||tsPf.some(row=>row.happyHour===true&&row.match.test(String(Dt.name||Dt.title||"")))),onChange:G=>Xa(Dt,"happyHour",G.target.checked)})," Happy hour"]})]})]}):n.jsxs(n.Fragment';
+
 export function patchThingDetail951(source = '') {
   let js = String(source || '');
   if (!js.includes('[Sa,Kt]=I.useState(!1)')) {
@@ -57,6 +63,9 @@ export function patchThingDetail951(source = '') {
   }
   if (js.includes(VIEWONLY_STATUS_NEEDLE)) {
     js = js.replace(VIEWONLY_STATUS_NEEDLE, VIEWONLY_STATUS_PATCH);
+  }
+  if (js.includes(HH_CHECK_951_NEEDLE)) {
+    js = js.replace(HH_CHECK_951_NEEDLE, HH_CHECK_951_PATCH);
   }
   return js;
 }
