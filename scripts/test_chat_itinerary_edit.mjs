@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import {
   applyAddBarBeforeOp,
   applySetTimeOp,
+  assertChatEditPutStaysSmallUnderHugeOverrides,
   coalesceChatItineraryEditIntent,
   loadChatItineraryEditConfig,
   normalizeItineraryPlaceQuery,
@@ -13,6 +14,13 @@ import {
   selectNearestBarBeforeAnchor,
   shareSlugEditGuardDecision,
 } from '../src/vacation/chat-itinerary-edit.mjs';
+
+function mergeSharedOverrides(thingOverrides, patch) {
+  for (const [key, value] of Object.entries(patch)) {
+    if (value && typeof value === 'object' && Object.keys(value).length) thingOverrides[key] = { ...(thingOverrides[key] || {}), ...value };
+    else delete thingOverrides[key];
+  }
+}
 import { buildDayTimeline } from '../apps/vacation-client/src/lib/dayTimelineModel.mjs';
 import { webAccessCookieName, webAccessTokenHash } from '../src/vacation/web-access.mjs';
 
@@ -337,7 +345,8 @@ for (const [op, customerTurn] of turns) {
       assert.equal(slug, copySlug);
       assert.equal(webAccessToken, 'mock-owner-session');
       writes.push(structuredClone(overrides));
-      stored = { ...stored, thingOverrides: overrides };
+      if (!stored.thingOverrides) stored.thingOverrides = {};
+      mergeSharedOverrides(stored.thingOverrides, overrides);
     },
   });
   assert.equal(result.applied, true, `${op}: ${result.reason}`);
@@ -404,6 +413,12 @@ const ownerHttpReq = {
   headers: { cookie: `${webAccessCookieName()}=${encodeURIComponent(ownerSession)}` },
 };
 const chatEditTrip = { id: chatEditTripId, metadata: { sharedToken: copySlug } };
+const ownerEditEnv = { ...chatEditEnv, CHAT_ITINERARY_EDIT_OFFLINE_PARSE: '1' };
+const ownerSetTimeTurn = (extra = {}) => runChatItineraryEditTurn({
+  db: makeChatItineraryEditDbStub({ sessionToken: ownerSession }), trip: chatEditTrip,
+  customerTurn: 'move dinner at Carbone to 8:30 PM on Day 2', httpReq: ownerHttpReq, env: ownerEditEnv,
+  extractIntent: offlineParseItineraryEditIntent, ...extra,
+});
 let liveOverrides = structuredClone(miniPayload().thingOverrides);
 const fetchLivePayload = async () => ({
   ...miniPayload(),
@@ -412,20 +427,11 @@ const fetchLivePayload = async () => ({
 let lastPutOverrides = null;
 const capturePutOverrides = async ({ overrides }) => {
   lastPutOverrides = structuredClone(overrides);
-  liveOverrides = structuredClone(overrides);
+  mergeSharedOverrides(liveOverrides, overrides);
 };
 
 const nothingUndoDb = makeChatItineraryEditDbStub({ sessionToken: ownerSession });
-const nothingUndo = await runChatItineraryEditTurn({
-  db: nothingUndoDb,
-  trip: chatEditTrip,
-  customerTurn: 'undo',
-  httpReq: ownerHttpReq,
-  env: { ...chatEditEnv, CHAT_ITINERARY_EDIT_OFFLINE_PARSE: '1' },
-  fetchPayload: fetchLivePayload,
-  putOverrides: capturePutOverrides,
-  extractIntent: offlineParseItineraryEditIntent,
-});
+const nothingUndo = await ownerSetTimeTurn({ db: nothingUndoDb, customerTurn: 'undo', fetchPayload: fetchLivePayload, putOverrides: capturePutOverrides });
 assert.equal(nothingUndo.applied, false);
 assert.equal(nothingUndo.reason, 'nothing_to_undo');
 assert.deepEqual(nothingUndo.client, { applied: false, reason: 'nothing_to_undo' });
@@ -434,31 +440,12 @@ assert.equal(lastPutOverrides, null);
 liveOverrides = structuredClone(miniPayload().thingOverrides);
 lastPutOverrides = null;
 const setTimeDb = makeChatItineraryEditDbStub({ sessionToken: ownerSession });
-const setTimeTurn = await runChatItineraryEditTurn({
-  db: setTimeDb,
-  trip: chatEditTrip,
-  customerTurn: 'move dinner at Carbone to 8:30 PM on Day 2',
-  turnId: 'turn-set-time-861',
-  httpReq: ownerHttpReq,
-  env: { ...chatEditEnv, CHAT_ITINERARY_EDIT_OFFLINE_PARSE: '1' },
-  fetchPayload: fetchLivePayload,
-  putOverrides: capturePutOverrides,
-  extractIntent: offlineParseItineraryEditIntent,
-});
+const setTimeTurn = await ownerSetTimeTurn({ db: setTimeDb, turnId: 'turn-set-time-861', fetchPayload: fetchLivePayload, putOverrides: capturePutOverrides });
 assert.equal(setTimeTurn.applied, true);
 assert.equal(setTimeTurn.op, 'set_time');
 assert.equal(liveOverrides['place:610'].perDaySchedule['502'].startTime, '20:30');
 
-const undoTurn = await runChatItineraryEditTurn({
-  db: setTimeDb,
-  trip: chatEditTrip,
-  customerTurn: 'undo',
-  httpReq: ownerHttpReq,
-  env: { ...chatEditEnv, CHAT_ITINERARY_EDIT_OFFLINE_PARSE: '1' },
-  fetchPayload: fetchLivePayload,
-  putOverrides: capturePutOverrides,
-  extractIntent: offlineParseItineraryEditIntent,
-});
+const undoTurn = await ownerSetTimeTurn({ db: setTimeDb, customerTurn: 'undo', fetchPayload: fetchLivePayload, putOverrides: capturePutOverrides });
 assert.equal(undoTurn.applied, true);
 assert.equal(undoTurn.op, 'undo');
 assert.deepEqual(undoTurn.client, { applied: true, op: 'undo' });
@@ -487,11 +474,18 @@ try {
     if (href.includes('/api/shared/') && (!init?.method || init.method === 'GET')) return { ok: true, status: 200, json: async () => miniPayload() };
     return origFetch(url, init);
   };
-  const queueOversize = await prepareChatItineraryEditForQueueTurn({ db: makeChatItineraryEditDbStub({ sessionToken: ownerSession }), trip: chatEditTrip, tripId: chatEditTripId, seat: null, requestText: 'Move Carbone to 8:30 PM on Day 2', turnId: 'turn-oversize-859', httpReq: ownerHttpReq, env: { ...chatEditEnv, CHAT_ITINERARY_EDIT_OFFLINE_PARSE: '1', TIMESYNCHER_TREK_PUBLIC_BASE_URL: trekBase } });
+  const queueOversize = await prepareChatItineraryEditForQueueTurn({ db: makeChatItineraryEditDbStub({ sessionToken: ownerSession }), trip: chatEditTrip, tripId: chatEditTripId, seat: null, requestText: 'Move Carbone to 8:30 PM on Day 2', turnId: 'turn-oversize-859', httpReq: ownerHttpReq, env: { ...ownerEditEnv, TIMESYNCHER_TREK_PUBLIC_BASE_URL: trekBase } });
   assert.equal(queueOversize.itineraryEditResult?.client?.reason, 'edit_failed');
   const logged = oversizeLogs.find((args) => args[0] === 'chat_itinerary_edit_failed');
   assert.ok(logged);
   assert.match(String(logged[1]), /overrides_put_failed 413/);
   assert.equal(logged[2], 'status=413');
+  assert.match(queueOversize.itineraryEditAuthoritative || queueOversize.itineraryEditResult?.replyContext || '', /did not save/i);
 } finally { console.error = origConsoleError; globalThis.fetch = origFetch; }
+
+const bulkMb = 'x'.repeat(10 * 1024 * 1024);
+await assertChatEditPutStaysSmallUnderHugeOverrides((extra) => ownerSetTimeTurn(extra), {
+  payload: { ...miniPayload(), thingOverrides: { ...miniPayload().thingOverrides, 'place:6999': { evidenceDossier: { pages: [{ body: bulkMb }] } } } },
+});
+
 console.log('test_chat_itinerary_edit: ok');
