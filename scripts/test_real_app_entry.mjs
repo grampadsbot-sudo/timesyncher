@@ -155,7 +155,11 @@ const selectorSource = vacationApp.slice(
   vacationApp.indexOf('function customerPlaceName'),
   vacationApp.indexOf('function realVacations'),
 );
-const selector = new Function('safe', 'icon', `${selectorSource}; return { isPlaceholderTrip, tripBadge, vacationSelector };`)(
+const selector = new Function(
+  'safe',
+  'icon',
+  `${selectorSource}; return { isPlaceholderTrip, tripDates, tripTitle, vacationSelector };`,
+)(
   (value) => String(value ?? ''),
   { chevron: '', check: '' },
 );
@@ -170,7 +174,8 @@ const shellTrip = {
   shareToken: 'shell-xxxxxxxx',
 };
 assert.equal(selector.isPlaceholderTrip(shellTrip), true);
-assert.equal(selector.tripBadge(shellTrip), '');
+assert.equal(selector.tripTitle(shellTrip), '');
+assert.equal(selector.tripDates(shellTrip), '');
 const zeroTrips = [shellTrip].filter((trip) => !selector.isPlaceholderTrip(trip));
 const zeroSelector = selector.vacationSelector(zeroTrips, null);
 assert.equal(zeroTrips.length, 0);
@@ -178,11 +183,11 @@ assert.equal(zeroSelector.includes('trip-option'), false);
 assert.equal(zeroSelector.includes('shell-'), false);
 assert.equal(zeroSelector.replace(/<[^>]+>/g, '').trim(), '');
 const datedShell = { ...shellTrip, startDate: '2026-06-01', endDate: '2026-06-03', status: 'planning' };
-assert.equal(selector.tripBadge(datedShell).includes('shell-'), false);
-assert.match(selector.tripBadge(datedShell), /Jun 1–3 2026/);
+assert.equal(selector.tripDates(datedShell).includes('shell-'), false);
+assert.equal(selector.tripDates(datedShell), 'Jun 1–3, 2026');
 const named = { title: 'shell-abc12xy', destination: 'Sample City', startDate: '2026-06-01', endDate: '2026-06-03' };
-assert.equal(selector.tripBadge(named).includes('shell-'), false);
-assert.match(selector.tripBadge(named), /Sample City/);
+assert.equal(selector.tripTitle(named).includes('shell-'), false);
+assert.equal(selector.tripTitle(named), 'Sample City');
 
 assert.equal(withoutCarBrand(offers, 'Budget').some((row) => row.brand === 'Budget'), false);
 assert.equal(withoutCarBrand(offers, 'Budget').length <= 10, true);
