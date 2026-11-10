@@ -47,7 +47,7 @@ assert.match(committed, /const tsChipLabel=raw=>/);
 assert.match(committed, /return raw\?tsChipLabel\(raw\):""/);
 assert.match(committed, /const nk=n\.toLowerCase\(\);if\(!seen\.has\(nk\)\)/);
 assert.match(committed, /const n=\(raw=>\{let s=String\(raw\?\?""\)/);
-assert.match(committed, /Ce&&n\.jsxs\("fieldset",\{"data-shared-readonly":void 0/);
+assert.match(committed, /Ce&&Sa&&n\.jsxs\("fieldset",\{"data-shared-readonly":void 0/);
 
 const round737Only = patchUi737(committed);
 assert.equal(round737Only, committed);

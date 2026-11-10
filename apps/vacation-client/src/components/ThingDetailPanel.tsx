@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 import { buildDetailViewModel } from '../lib/detailModel.mjs';
 import { onLogoImgError, onLogoImgLoad } from '../lib/logoChipHandlers.mjs';
@@ -11,6 +11,8 @@ type Props = {
   place: SharedPlace;
   trip: SharedTripPayload;
   onClose: () => void;
+  canEdit?: boolean;
+  onPatchField?: (field: string, value: string) => void;
 };
 
 function DetailLogo({ logoUrl }: { logoUrl: string }) {
@@ -27,9 +29,10 @@ function DetailLogo({ logoUrl }: { logoUrl: string }) {
   );
 }
 
-export function ThingDetailPanel({ place, trip, onClose }: Props) {
+function ThingDetailPanelInner({ place, trip, onClose, canEdit = false, onPatchField }: Props) {
   const model = buildDetailViewModel(place, trip);
   const override = overrideFor(trip, place);
+  const [editMode, setEditMode] = useState(false);
   const details = String(override.longDetails ?? '');
   const photos = mediaForPlace(trip, place).filter((row) => String(row.kind || row.mediaKind || '') !== 'video' && !String(row.mimeType || row.mime_type || '').startsWith('video/') && !/\.mp4(?:[?#]|$)/i.test(String(row.url || row.publicUrl || '')));
   const dayIds = Array.isArray(override.dayIds) ? override.dayIds : (trip.days || []).filter((day) =>
@@ -43,7 +46,8 @@ export function ThingDetailPanel({ place, trip, onClose }: Props) {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault();
-        onClose();
+        if (editMode) setEditMode(false);
+        else onClose();
       }
     };
     document.addEventListener('keydown', onKeyDown);
@@ -54,7 +58,7 @@ export function ThingDetailPanel({ place, trip, onClose }: Props) {
       document.removeEventListener('keydown', onKeyDown);
       document.body.style.overflow = prevOverflow;
     };
-  }, [onClose]);
+  }, [editMode, onClose]);
 
   return (
     <div
@@ -85,18 +89,52 @@ export function ThingDetailPanel({ place, trip, onClose }: Props) {
               {model.headerLabel}
             </p>
           ) : null}
-          <div className="tsv-detail-title-row">
+          <div className="tsv-detail-title-row" data-ts-detail-title-wrap="1">
             {model.showLogo ? <DetailLogo logoUrl={model.logoUrl} /> : null}
             <h2 id={titleId} className="tsv-detail-name" data-ts-detail-name="1">
               {model.name}
             </h2>
-            <button type="button" className="tsv-detail-close" onClick={onClose} aria-label="Close">
-              ×
-            </button>
+            <span className="tsv-detail-title-actions">
+              {canEdit && !editMode ? (
+                <button
+                  type="button"
+                  className="tsv-detail-edit"
+                  data-ts-detail-edit="1"
+                  aria-label="Edit thing"
+                  onClick={() => setEditMode(true)}
+                >
+                  ✎
+                </button>
+              ) : null}
+              <button
+                type="button"
+                className="tsv-detail-close"
+                data-ts-detail-close="1"
+                onClick={() => {
+                  setEditMode(false);
+                  onClose();
+                }}
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </span>
           </div>
         </header>
         <div className="tsv-detail-body">
-          {model.priceLabel ? (
+          {editMode && canEdit ? (
+            <label className="tsv-detail-price tsv-detail-field" data-ts-detail-field="price">
+              <strong>Price:</strong>{' '}
+              <input
+                type="text"
+                value={String(override.price ?? '')}
+                onChange={(event) => onPatchField?.('price', event.target.value)}
+                inputMode="decimal"
+                aria-label="Price"
+                style={{ marginLeft: 4, maxWidth: '100%', fontSize: 13 }}
+              />
+            </label>
+          ) : model.priceLabel ? (
             <p className="tsv-detail-price" data-ts-detail-field="price">
               <strong>Price:</strong> {model.priceLabel}
             </p>
@@ -224,4 +262,8 @@ export function ThingDetailPanel({ place, trip, onClose }: Props) {
       </aside>
     </div>
   );
+}
+
+export function ThingDetailPanel(props: Props) {
+  return <ThingDetailPanelInner key={String(props.place.id)} {...props} />;
 }

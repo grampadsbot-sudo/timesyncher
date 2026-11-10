@@ -20,6 +20,7 @@ import {
   starRatingAccessibilityLabel,
 } from '../src/lib/starRatingModel.mjs';
 import { buildEnrichedDetailSharedTrip } from './fixtures/enriched-detail-shared-trip.mjs';
+import { budgetLineAmount } from '../src/lib/budgetModel.mjs';
 
 assert.equal(safeHttpUrl('https://example.com/path'), 'https://example.com/path');
 assert.equal(safeHttpUrl('javascript:alert(1)'), null);
@@ -165,6 +166,19 @@ const flightRows = detailFieldRows(flightTrip.places[0], flightTrip);
 assert.ok(flightRows.some((row) => row.key === 'airline'));
 assert.equal(detailReviews(flightTrip.thingOverrides['place:2'], 'flight').length, 0);
 assert.equal(buildDetailViewModel(flightTrip.places[0], flightTrip).priceLabel, '$248 one-way');
+
+const storeTrip = {
+  trip: {
+    currency: 'USD',
+    metadata: { dialogParty: { primary: { name: 'Solo' }, collaborators: [] } },
+  },
+  places: [{ id: 77, name: "Macy's", category_name: 'Store', price: 80 }],
+  thingOverrides: { 'place:77': { price: 80 } },
+};
+const storePricing = budgetLineAmount(storeTrip.places[0], storeTrip);
+assert.equal(storePricing.hasPrice, true);
+assert.equal(buildDetailViewModel(storeTrip.places[0], storeTrip).priceLabel, '$80');
+assert.equal(buildDetailViewModel({ ...storeTrip.places[0], price: null }, { ...storeTrip, thingOverrides: {} }).priceLabel, '');
 
 console.log('vacation-client detail unit checks passed');
 
