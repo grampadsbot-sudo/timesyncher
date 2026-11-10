@@ -201,10 +201,10 @@ assert.equal(seqStored.thingOverrides['place:8977'].perDaySchedule['1250'].start
 assert.equal(seqPuts[1]['place:8977'].perDaySchedule['1250'].startTime, '21:15');
 assert.equal(seqPuts[1]['place:9061'].perDaySchedule['1250'].startTime, '20:15');
 
-const demoSlug = '8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y';
+const lockedFixtureSlug = 'chat-edit-demo-locked-fixture';
 const lockedPrep = await prepareChatItineraryEditForQueueTurn({
   db: async () => [],
-  trip: { id: 'trip-lock-905', metadata: { sharedToken: demoSlug } },
+  trip: { id: 'trip-lock-905', metadata: { sharedToken: lockedFixtureSlug } },
   tripId: 'trip-lock-905',
   seat: null,
   requestText: 'Add a bar hop before Carbone that night.',
