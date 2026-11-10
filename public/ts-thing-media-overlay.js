@@ -35,13 +35,9 @@
   }
 
   function detailHost() {
-    const nodes = [...document.querySelectorAll('div,section,aside')];
-    return nodes.find((el) => {
-      const text = (el.textContent || '').slice(0, 80);
-      if (!/DETAIL PAGE/i.test(text)) return false;
-      const style = window.getComputedStyle(el);
-      return style.position === 'fixed' || style.position === 'absolute' || Number(style.zIndex) > 10;
-    }) || [...document.querySelectorAll('[role="dialog"],dialog')].at(-1) || null;
+    const named = document.querySelector('[data-ts-detail-name]');
+    if (named) return named.closest('[role="dialog"]') || named.closest('div,section,aside') || named.parentElement;
+    return [...document.querySelectorAll('[data-ts-thing-header], [role="dialog"], dialog')].at(-1) || null;
   }
 
   function injectThingPhotos(bindings) {

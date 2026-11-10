@@ -1,16 +1,16 @@
-# PR #906 — #902 customer build stamp + vk merge (#884 / #927 / #905)
+# PR #906 — #902 customer build stamp + vk merge (#884 / #927 / #905 / #903)
 
-**Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Start HEAD:** `7392475c290fb54c2c4fceabdd55b71d3e5bbded` (verified). **Lane:** cursor-ubuntu, composer-2.5.
+**Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Start HEAD:** `7b96b9691311b255de0bceee3bdd356f06a042c5` (verified). **Lane:** cursor-ubuntu, composer-2.5.
 
 **GBrain handoff:** `bot-admin/lanes/vk-pr-handoff/pr-906`.
 
 ## Host merge `origin/vk` into PR branch
 
-Host published merge through `7392475c` (base `f8d4748f8ea8104e8722fecaa383588d5d7b010c`). Conflicted: `J/PR_DESCRIPTION.md`, `J/RECEIPT.md` only — resolved this round keeping both sides (#902 primary + #884 logo + vk carry). Staged vk tree: #927 splitter/hero, budget price parity, #925/#905 chat-itinerary sequential PUT merge, #884 logo-chip sources; `public/assets/index-BKun7ofk.js` rebaked after trek edits.
+Host published merge base `ed8687b929c9473e6f9f2915ac5bc82d6dd802d1` into `7b96b969`. Conflicted: `J/PR_DESCRIPTION.md`, `J/RECEIPT.md`, `evidence/vacation-client-p2-*/*.png` (36 PNGs). Resolved this round keeping both sides (#902 primary + vk #884/#927/#905/#903 carry). `public/assets/index-BKun7ofk.js` rebaked via `node scripts/rebake_served_trek_bundle.mjs` → sha256 `acddd4e7783da2996c8eb61bfee84907fc5fb303edd88d7b664743a74792f713`.
 
 ---
 
-## Root cause (#884)
+## Root cause (#884 — vk carry)
 
 `dc()` logo chips stacked `.tsv-logo-fallback` (category emoji) in the same grid cell as the brand `img`, so TownePlace detail showed suitcase-over-Marriott after favicon load.
 
@@ -40,6 +40,11 @@ Host published merge through `7392475c` (base `f8d4748f8ea8104e8722fecaa383588d5
 
 `<meta name="timesyncher-build">` and `/api/version` unchanged.
 
+## #903 (vk carry — stored data)
+
+- No serve-time title/narrative rewrites in `live-qa-903-presentation.mjs`.
+- `GATE_B_DISPLAY_TITLE_ALIASES[609]` retained for ccab provenance.
+
 ## Gate B / vk fixes carried in merge
 
 | failure | root cause | fix |
@@ -49,17 +54,17 @@ Host published merge through `7392475c` (base `f8d4748f8ea8104e8722fecaa383588d5
 
 ## Uncommitted source (host `git add`)
 
-- Resolved `J/PR_DESCRIPTION.md`, `J/RECEIPT.md` (conflict markers cleared; index still `UU` until host `git add`)
-- Staged index: #884 logo paths, trek rebake, `scripts/offline-tests.txt` entry for `test_ui_884_logo_chip_fallback_hide.mjs`
-- Working tree (not staged): `public/assets/index-BKun7ofk.js` rebake delta on top of index; `evidence/vacation-client-p2-*/*.png` refreshed by `shell-layout.mjs` — **do not ship** unless host wants those PNGs on the PR (out of #902/#884 scope)
+- Resolved `J/PR_DESCRIPTION.md`, `J/RECEIPT.md` (conflict markers cleared)
+- Resolved 36 `evidence/vacation-client-p2-*/*.png` (vk stage-3 bytes; host may regenerate via `shell-layout.mjs` before ship)
+- Working tree: `public/assets/index-BKun7ofk.js` rebake delta
 
-**Host:** `git add` conflict files + index, `git commit --no-edit` or single publish commit on `vkfill/902-20261109163213`; push once. Gate B structure + CI on new head.
+**Host:** `git add` conflict files + merge index, `git commit --no-edit` on `vkfill/902-20261109163213`; push once. Gate B structure + CI on new head.
 
-## Checks @ `7392475c` + this receipt (lane END)
+## Checks @ `7b96b969` + this receipt (lane END)
 
 | Command | Result |
 | --- | --- |
-| `node scripts/rebake_served_trek_bundle.mjs` | **PASS** sha256=9183847c… |
+| `node scripts/rebake_served_trek_bundle.mjs` | **PASS** sha256=acddd4e7… |
 | `node scripts/test_build_stamp_customer_hidden.mjs` | **PASS** |
 | `PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser node scripts/test_build_stamp_viewport.mjs` | **PASS** |
 | `node apps/vacation-client/test/shell-layout.mjs` | **PASS** |
@@ -67,13 +72,16 @@ Host published merge through `7392475c` (base `f8d4748f8ea8104e8722fecaa383588d5
 | `node scripts/test_shared_logo_chip_center_bundle.mjs` | **PASS** |
 | `node scripts/test_shared_trip_live_tab_logos.mjs` | **PASS** |
 | `node scripts/test_served_trek_bundle.mjs` | **PASS** |
+| `node scripts/test_pr336_ccab_search_provenance.mjs` | **PASS** |
+| `node scripts/test_shared_tab_list_summary.mjs` | **PASS** |
 | `node scripts/test_chat_itinerary_edit.mjs` | **PASS** |
 | `node scripts/test_chat_itinerary_edit_905.mjs` | **PASS** |
 | `node apps/vacation-client/test/budget.unit.mjs` | **PASS** |
 | `node scripts/test_vacation_app_927_hero_collapse.mjs` | **PASS** |
 | `node scripts/test_vacation_app_927_touch_splitter.mjs` | **PASS** |
-| `node scripts/check-no-comments.mjs` | **PASS** (1135 files) |
-| `node scripts/test_offline_manifest.mjs` | **PASS** (441 offline, 19 online) |
+| `node scripts/test_vacation_app_shell.mjs` | **PASS** |
+| `node scripts/check-no-comments.mjs` | **PASS** (1139 files) |
+| `node scripts/test_offline_manifest.mjs` | **PASS** (443 offline, 19 online) |
 | `BASE=vk node scripts/check-code-ratchet.mjs` | **PASS** (252 report, 0 fail) |
 
 Gate B structure / host capture / evidence `J/evidence/hub-390.png` + `hub-1280.png` — host pipeline after push. Holds: `hold:test-trip-fixture` until Gate B verdict on pushed head (per `bot-admin/lanes/vk-pr-handoff/pr-906`).
@@ -82,5 +90,4 @@ Gate B structure / host capture / evidence `J/evidence/hub-390.png` + `hub-1280.
 
 - Baselines, Gate B capture scripts, workflows, `package.json` / lock, deploy config.
 - DATA_FAULT replay risk on stale fixture (handoff) — not a UI patch in this round.
-- Deploy config / force-push / Neon writes from lane.
-- Keepsake QA not run (lean mode).
+- Lane did not stage, commit, push, or merge (HOST PUBLICATION ONLY).

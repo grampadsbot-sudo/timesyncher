@@ -159,8 +159,13 @@
       position: relative;
     }
     .fullscreen-button {
-      min-width: auto;
-      min-height: 38px;
+      position: absolute;
+      z-index: 3;
+      top: auto;
+      bottom: 8px;
+      right: 8px;
+      min-width: 42px;
+      min-height: 42px;
       border: 1px solid var(--line);
       border-radius: 8px;
       background: var(--panel);
