@@ -1,4 +1,5 @@
 import { itineraryLineText } from '../../../../src/vacation/itinerary-line.mjs';
+import { markTimelineConflicts } from './dayTimelineArrivalConflicts.mjs';
 import {
   logoUrlForPlace,
   flightPriceDisplay,
@@ -217,33 +218,6 @@ export function estimateTravelMinutes(fromPlace, toPlace) {
 export function itineraryNoteFor(place, trip, assignmentNotes) {
   void assignmentNotes;
   return itineraryLineText(overrideFor(trip, place));
-}
-
-function endMinutes(entry) {
-  if (entry.startMin == null || entry.durationMin == null) return null;
-  return entry.startMin + entry.durationMin;
-}
-
-function markConflicts(entries) {
-  const timed = entries.filter((entry) => entry.startMin != null);
-  for (let i = 0; i < timed.length; i += 1) {
-    for (let j = i + 1; j < timed.length; j += 1) {
-      const a = timed[i];
-      const b = timed[j];
-      if (a.startMin === b.startMin) {
-        a.conflictWith = b.title;
-        b.conflictWith = a.title;
-        continue;
-      }
-      const aEnd = endMinutes(a);
-      const bEnd = endMinutes(b);
-      if (aEnd == null || bEnd == null) continue;
-      if (a.startMin < bEnd && b.startMin < aEnd) {
-        a.conflictWith = b.title;
-        b.conflictWith = a.title;
-      }
-    }
-  }
 }
 
 function pushCarRows(entries, trip, day) {
@@ -472,7 +446,7 @@ export function buildDayTimeline(trip, day) {
       || String(a.id).localeCompare(String(b.id));
   });
   const withTravel = insertTravelRows(entries, trip);
-  markConflicts(withTravel);
+  markTimelineConflicts(withTravel, trip);
   return withTravel;
 }
 

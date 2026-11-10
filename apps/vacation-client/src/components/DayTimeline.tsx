@@ -182,7 +182,9 @@ export function DayTimeline({ trip, entries, onOpen }: Props) {
               {entry.conflictWith ? (
                 <div className="tsv-timeline-conflict" data-ts-conflict-label="1">
                   <span className="tsv-timeline-conflict-bar" aria-hidden="true" />
-                  Conflict with {entry.conflictWith}
+                  <span className="tsv-timeline-conflict-text" data-ts-conflict-text="1">
+                    Conflict with {entry.conflictWith}
+                  </span>
                 </div>
               ) : null}
               <div className="tsv-timeline-head">
