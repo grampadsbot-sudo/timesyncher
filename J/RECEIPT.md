@@ -1,32 +1,23 @@
-# TSV #944 — PT/ET one-line at 390 without breaking #558 (HOST PUBLICATION ONLY)
+# TSV #945 — Deterministic locked-trip chat reply (HOST PUBLICATION ONLY)
 
-**Outcome:** source-ready PATCH. **Base after merge:** `origin/vk` `6017b330` (PR #896 / #888 already live: conflict banners wrap). **Lane start HEAD was:** `5a0d72e`. **Lane:** cursor-ubuntu. **Authority:** eggbot 5:56 AM PT 11/10 (`eggbot:banner-tz-clip-20261110-0556`), continued 6:12 AM PT after #896 shipped.
-
-## Residual after #896
-
-Live `6017b330` already unwraps Day-by-Day conflict banners at 390 ("Conflict with American Airlines LAS → JFK" unclipped). `12:37 pm PT` still soft-wraps because the served timeline grid caps the time column at `minmax(52px,64px)` (intrinsic width of `12:37 pm PT` at 11px/700 is 77.58px). A fixed `72px` or `80px` cap fails `test_ui_558_daybyday_time_name_baseline.mjs` (Statue of Liberty walking tour baseline delta 14.94px) by stealing title width on Day 2.
+**Outcome:** source-ready PATCH. **Lane start HEAD:** `5a0d72e5a607fa4234bf687a956bb34e96cd10e2`. **Merged onto:** `origin/vk` `8646e9e2` (PR #946 / #944 max-content time column, after #896). **Lane:** cursor-ubuntu. **Authority:** eggbot 5:59 AM PT 11/10 (`eggbot:lock-template-20261110-0600`).
 
 ## Product fix
 
-- Keep #896 conflict-label wrap (`CONFLICT_LABEL_PATCH_WRAP` in `trek-shared-layout-patches.mjs` and the matching patches in `trek-live-product-patches.mjs` / flight-day patches). Do not revert it.
-- Change the day timeline grid from `minmax(52px,64px)` to `minmax(52px,max-content)` so a time+zone string can size the column on days that need it (Day 1 flights), while Day 2 single-time rows keep a narrow column and pass #558.
-- New `scripts/test_issue_944_daybyday_banner_tz_390.mjs`: banners unclipped (no nowrap+hidden), and PT/ET must not sit on their own line box (client-rect check, not only innerText newlines).
-- Vacation-client `styles.css` timeline column left at #896/`vk` (72px). The live site pane uses the served inline grid, not that CSS.
+Locked-trip chat edits use a fixed customer template and do not call the model:
 
-**Unchanged:** conflict calc, #891 TZ text, NYC lock / trip 99, Gate B baselines.
+> This demo trip is locked for chat edits. You can change it on the trip site.
+
+- `src/vacation/chat-itinerary-edit-day.mjs` exports `DEMO_LOCKED_CHAT_EDIT_CUSTOMER_REPLY` and `producedDemoLockedChatEditReply`.
+- `prepareChatItineraryEditForQueueTurn` sets `itineraryEditCannedReply` on `demo_locked` and leaves `itineraryEditAuthoritative` empty.
+- `routes/vacation-app-chat-queue.mjs` short-circuits: if `itineraryEditCannedReply` is set, return the canned reply and do not call `produceLiveAppReply`.
+
+**Unchanged:** NYC lock / allowlist / trip 99 data. Proofs only on a throwaway locked copy, never Craig's NYC demo session.
+
+## Merge note
+
+Receipt-only conflict vs `origin/vk` `8646e9e2` (PR #946) resolved by keeping this #945 receipt. No product overlap with #944/#946.
 
 ## Checks
 
-Recorded after rebake on the merged tree.
-
-## Checks (merged tree on `6017b330` + max-content)
-
-| Command | Result |
-| --- | --- |
-| `node scripts/rebake_served_trek_bundle.mjs` | PASS sha256 `7794499c32f24a71a4843357adc5c85a752435b9ef8508fad6dfaa3a16d4f87c` |
-| `node scripts/test_ui_558_daybyday_time_name_baseline.mjs` | PASS |
-| `node scripts/test_issue_944_daybyday_banner_tz_390.mjs` | PASS |
-| `node scripts/test_itinerary_fresh_daybyday_bundle.mjs` | PASS |
-| `node scripts/test_issue_887_daybyday_time_column.mjs` | PASS |
-| `node scripts/test_issue_888_clipped_text.mjs` | PASS |
-| `node scripts/test_issue_928_daybyday_arrival_conflicts.mjs` | PASS |
+`test_chat_itinerary_edit.mjs` and `test_chat_itinerary_edit_905.mjs` PASS on the prior merge onto `6017b330`.

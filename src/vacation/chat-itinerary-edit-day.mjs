@@ -179,12 +179,11 @@ export function applyItineraryEditAuthoritativeReplyFacts(ctx, turnActionResults
   return prior.includes(extra) ? ctx : { ...ctx, roster: [prior, extra].filter(Boolean).join(' ') };
 }
 
-export function buildItineraryEditDemoLockedAuthoritativeSystemExtra() {
-  return [
-    'AUTHORITATIVE_SYSTEM: This demo trip is locked for chat itinerary edits.',
-    'Reply in one or two short sentences: the trip cannot be changed from chat; edits belong on the trip website.',
-    'Do not invent itinerary records, roster details, dates, or place names for this refusal.',
-  ].join(' ');
+export const DEMO_LOCKED_CHAT_EDIT_CUSTOMER_REPLY =
+  'This demo trip is locked for chat edits. You can change it on the trip site.';
+
+export function producedDemoLockedChatEditReply(reply) {
+  return { reply, rules: null, jev: { jevRan: false, reason: 'demo_locked_chat_edit' }, model: null };
 }
 
 export function buildItineraryEditFailureAuthoritativeSystemExtra(reason = 'edit_failed') {
