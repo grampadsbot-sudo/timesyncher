@@ -1,33 +1,33 @@
-# PR #906 — #902 customer build stamp + vk merge conflict resolve
+# PR #906 — #902 customer build stamp + vk merge (#884 / #927 / #905)
 
-**Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Start HEAD:** `d627872fe9dbca667d76c25621b5de6017f15fa5` (verified). **Lane:** cursor-ubuntu, composer-2.5.
+**Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Start HEAD:** `7392475c290fb54c2c4fceabdd55b71d3e5bbded` (verified). **Lane:** cursor-ubuntu, composer-2.5.
 
 **GBrain handoff:** `bot-admin/lanes/vk-pr-handoff/pr-906`.
 
 ## Host merge `origin/vk` into PR branch
 
-Host published merge through `d627872f` (conflicted: `J/PR_DESCRIPTION.md`, `J/RECEIPT.md` only in this round). Brings vk #922 / #905 chat-itinerary sequential PUT merge (`mergeStoredChatItineraryScheduleOverride` in `src/vacation/chat-itinerary-edit-day.mjs`), #927 touch splitter + hero collapse, budget price parity, plus prior #902 build-stamp work on the PR branch.
+Host published merge through `7392475c` (base `f8d4748f8ea8104e8722fecaa383588d5d7b010c`). Conflicted: `J/PR_DESCRIPTION.md`, `J/RECEIPT.md` only — resolved this round keeping both sides (#902 primary + #884 logo + vk carry). Staged vk tree: #927 splitter/hero, budget price parity, #925/#905 chat-itinerary sequential PUT merge, #884 logo-chip sources; `public/assets/index-BKun7ofk.js` rebaked after trek edits.
 
-| file | resolution |
+---
+
+## Root cause (#884)
+
+`dc()` logo chips stacked `.tsv-logo-fallback` (category emoji) in the same grid cell as the brand `img`, so TownePlace detail showed suitcase-over-Marriott after favicon load.
+
+## Fix (#884 — product sources)
+
+| Path | Change |
 | --- | --- |
-| `J/PR_DESCRIPTION.md` | Both sides: #902 primary + vk #927/#905/budget notes |
-| `J/RECEIPT.md` | This file; markers cleared |
-| Staged from merge (no re-author) | `src/vacation/chat-itinerary-edit*.mjs`, `scripts/test_chat_itinerary_edit*.mjs`, #927 splitter/hero paths per index |
-
-No `public/assets/*.js` conflict on this merge; rebake not required.
-
-## Gate B / vk fixes carried in merge index (not #902)
-
-| failure | root cause | fix |
-| --- | --- | --- |
-| `price budget-390/1280` | Budget used `thingBudgetAmount` on bare `place.price` only | `budgetLineAmount` uses `numericPrice` (`apps/vacation-client/src/lib/budgetModel.mjs`) |
-| `daybyday-1280` hero chrome | #927 hero collapse at desktop width | `public/ts-trip-hero-collapse.js` mobile-only mount (`max-width: 844px`) |
+| `src/vacation/thing-logo-ink-center.mjs` | Fallback hide on successful img paint; ink-center path |
+| `src/vacation/thing-logo-fallback-url.mjs` | `logoImgOnLoadInline` / `logoImgOnErrorInline`; Marriott favicon repair |
+| `src/vacation/shared-trip-logo-audit.mjs` | Gate B `fallback_stack` DOM check |
+| `apps/vacation-client/src/lib/logoChipHandlers.mjs` | Hide fallback on load; show on final error |
+| `scripts/test_ui_884_logo_chip_fallback_hide.mjs` | Offline regression |
+| `public/assets/index-BKun7ofk.js` | Rebaked `node scripts/rebake_served_trek_bundle.mjs` @ lane END |
 
 ## #902 — hide customer-visible build stamp
 
 **Bug:** Dark fixed footer with 7-char build sha visible on hub, static pages, and trip React shell (390 + 1280).
-
-**Fix (on branch; re-verified this round):**
 
 | Piece | What |
 | --- | --- |
@@ -40,27 +40,33 @@ No `public/assets/*.js` conflict on this merge; rebake not required.
 
 `<meta name="timesyncher-build">` and `/api/version` unchanged.
 
-## Staged index (host publish with this receipt)
+## Gate B / vk fixes carried in merge
 
-| path | notes |
-| --- | --- |
-| `src/vacation/chat-itinerary-edit.mjs`, `chat-itinerary-edit-day.mjs` | vk #905 merge-on-put |
-| `scripts/test_chat_itinerary_edit.mjs`, `scripts/test_chat_itinerary_edit_905.mjs` | #905 regression |
-| #927 / budget / shell | per `git diff --cached` at lane END |
+| failure | root cause | fix |
+| --- | --- | --- |
+| `price budget-390/1280` | Budget used `thingBudgetAmount` on bare `place.price` only | `budgetLineAmount` uses `numericPrice` (`budgetModel.mjs`) |
+| `daybyday-1280` hero chrome | #927 hero collapse at desktop width | `ts-trip-hero-collapse.js` mobile-only mount (≤844px) |
 
 ## Uncommitted source (host `git add`)
 
-- `J/RECEIPT.md`, `J/PR_DESCRIPTION.md` (conflict resolved)
+- Resolved `J/PR_DESCRIPTION.md`, `J/RECEIPT.md` (conflict markers cleared; index still `UU` until host `git add`)
+- Staged index: #884 logo paths, trek rebake, `scripts/offline-tests.txt` entry for `test_ui_884_logo_chip_fallback_hide.mjs`
+- Working tree (not staged): `public/assets/index-BKun7ofk.js` rebake delta on top of index; `evidence/vacation-client-p2-*/*.png` refreshed by `shell-layout.mjs` — **do not ship** unless host wants those PNGs on the PR (out of #902/#884 scope)
 
-**Host:** resolve merge index, `git add` conflict files + any unstaged receipt paths, `git commit --no-edit` or single publish commit on `vkfill/902-20261109163213`; push once. Then Gate B structure + CI on new head.
+**Host:** `git add` conflict files + index, `git commit --no-edit` or single publish commit on `vkfill/902-20261109163213`; push once. Gate B structure + CI on new head.
 
-## Checks @ `d627872f` + this receipt
+## Checks @ `7392475c` + this receipt (lane END)
 
 | Command | Result |
 | --- | --- |
+| `node scripts/rebake_served_trek_bundle.mjs` | **PASS** sha256=9183847c… |
 | `node scripts/test_build_stamp_customer_hidden.mjs` | **PASS** |
 | `PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser node scripts/test_build_stamp_viewport.mjs` | **PASS** |
 | `node apps/vacation-client/test/shell-layout.mjs` | **PASS** |
+| `node scripts/test_ui_884_logo_chip_fallback_hide.mjs` | **PASS** |
+| `node scripts/test_shared_logo_chip_center_bundle.mjs` | **PASS** |
+| `node scripts/test_shared_trip_live_tab_logos.mjs` | **PASS** |
+| `node scripts/test_served_trek_bundle.mjs` | **PASS** |
 | `node scripts/test_chat_itinerary_edit.mjs` | **PASS** |
 | `node scripts/test_chat_itinerary_edit_905.mjs` | **PASS** |
 | `node apps/vacation-client/test/budget.unit.mjs` | **PASS** |
@@ -76,6 +82,5 @@ Gate B structure / host capture / evidence `J/evidence/hub-390.png` + `hub-1280.
 
 - Baselines, Gate B capture scripts, workflows, `package.json` / lock, deploy config.
 - DATA_FAULT replay risk on stale fixture (handoff) — not a UI patch in this round.
-- Live override narratives for 664/669/672 bundle copy until host re-fill.
 - Deploy config / force-push / Neon writes from lane.
 - Keepsake QA not run (lean mode).
