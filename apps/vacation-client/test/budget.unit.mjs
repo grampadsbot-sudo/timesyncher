@@ -38,6 +38,22 @@ const flightTrip = {
 };
 assert.equal(budgetLineAmount(flightTrip.places[0], flightTrip).amount, 496);
 
+const sourceRecordOnlyTrip = {
+  trip: { currency: 'USD' },
+  days: [{ id: 50, day_number: 1 }],
+  places: [{
+    id: 651,
+    name: 'Delta LAS-JFK 2026-06-23 07:05-15:13',
+    category_name: 'Flight',
+    sourceRecord: { price: 278 },
+  }],
+  assignments: { 50: [{ place_id: 651, place: { id: 651 } }] },
+  thingOverrides: { 'place:651': { category: 'flight', timeline: true } },
+};
+const sourceRecordPricing = budgetLineAmount(sourceRecordOnlyTrip.places[0], sourceRecordOnlyTrip);
+assert.equal(sourceRecordPricing.hasPrice, true);
+assert.equal(sourceRecordPricing.amount, 556);
+
 const model = buildBudgetModel(hotelTrip);
 assert.equal(model.buckets.find((b) => b.label === 'Hotel')?.planned, 1556);
 assert.equal(model.tripPlanned, 1556);

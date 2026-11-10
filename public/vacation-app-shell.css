@@ -7,6 +7,15 @@
   grid-row: 1;
   grid-template-rows: minmax(0, 1fr);
 }
+.splitter-row,
+.splitter-row .splitter,
+#splitter {
+  min-height: 44px;
+  touch-action: none;
+}
+.app.splitter-dragging .site-pane iframe {
+  pointer-events: none;
+}
 .app.site-fullscreen .splitter-row .splitter,
 .app.site-fullscreen .chat-pane { display: none; }
 .app.site-fullscreen .splitter-row {
