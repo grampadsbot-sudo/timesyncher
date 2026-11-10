@@ -25,6 +25,7 @@ export const sessions = {
   SITE: 'layout-site',
   MANY: 'layout-many',
   MANY_SITE: 'layout-many-site',
+  SWITCHER: 'layout-switcher',
 };
 
 export function loadPuppeteer() {
@@ -92,6 +93,29 @@ function appPayload(state, origin) {
       tripRecord('trip-layout-2', 'Second week', 'Inland region', ''),
     ];
   }
+  if (state === 'SWITCHER') {
+    vacations = [
+      {
+        id: 'trip-nyc',
+        title: 'New York adventure',
+        destination: 'New York City',
+        startDate: '2026-06-23',
+        endDate: '2026-06-30',
+        status: 'active',
+        publicUrl: site,
+      },
+      {
+        id: 'trip-paris',
+        title: 'Paris, France',
+        destination: 'Paris, France',
+        shortName: 'Paris',
+        startDate: '2026-07-01',
+        endDate: '2026-07-07',
+        status: 'active',
+        publicUrl: '',
+      },
+    ];
+  }
   return {
     ok: true,
     session: {
@@ -150,6 +174,8 @@ function sharedPayload() {
 
 export async function startServer() {
   const publicFiles = new Map([
+    ['/vacation-app-shell.css', path.join(root, 'public/vacation-app-shell.css')],
+    ['/brand/vk-wordmark.css', path.join(root, 'public/brand/vk-wordmark.css')],
     ['/vacation-app-request.js', path.join(root, 'public/vacation-app-request.js')],
     ['/ts-timeline-icon-patch.js', path.join(root, 'public/ts-timeline-icon-patch.js')],
     ['/ts-car-brand-filter.js', path.join(root, 'public/ts-car-brand-filter.js')],
@@ -171,7 +197,11 @@ export async function startServer() {
     }
     if (publicFiles.has(pathname)) {
       const file = await readFile(publicFiles.get(pathname));
-      const type = pathname.endsWith('.json') ? 'application/json; charset=utf-8' : 'text/javascript; charset=utf-8';
+      const type = pathname.endsWith('.json')
+        ? 'application/json; charset=utf-8'
+        : pathname.endsWith('.css')
+          ? 'text/css; charset=utf-8'
+          : 'text/javascript; charset=utf-8';
       return sendText(res, 200, file, type);
     }
     if (pathname.startsWith('/src/')) {

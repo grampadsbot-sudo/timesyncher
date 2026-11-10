@@ -6,8 +6,8 @@ const from = html.indexOf('function customerPlaceName(');
 const to = html.indexOf('function realVacations(');
 assert.ok(from >= 0 && to > from, 'dropdown helpers found in vacation-app.html');
 
-const load = new Function('safe', 'icon', `${html.slice(from, to)}; return { tripDates, tripTitle, tripTriggerInner, vacationSelector };`);
-const { tripDates, tripTitle, tripTriggerInner, vacationSelector } = load(String, { chevron: '', check: '' });
+const load = new Function('safe', 'icon', `${html.slice(from, to)}; return { tripDates, tripTitle, tripSwitcherShortName, tripTriggerInner, vacationSelector };`);
+const { tripDates, tripTitle, tripSwitcherShortName, tripTriggerInner, vacationSelector } = load(String, { chevron: '', check: '' });
 
 const enums = ['shared_ready', 'onboarding', 'draft', 'active', 'Vacation'];
 const dated = { id: 'a', title: 'Paris, France', shortName: 'Paris', status: 'shared_ready', startDate: '2026-11-11', endDate: '2026-11-14' };
@@ -36,6 +36,25 @@ const closedTrigger = tripTriggerInner(dated);
 assert.equal(closedTrigger.includes('Nov 11–14, 2026'), false);
 assert.match(closedTrigger, /Paris/);
 assert.doesNotMatch(closedTrigger, /<small>/);
+const nycNoShort = {
+  id: 'nyc',
+  title: 'New York adventure',
+  destination: 'New York City',
+  startDate: '2026-06-23',
+  endDate: '2026-06-30',
+  status: 'active',
+};
+assert.equal(tripSwitcherShortName(nycNoShort), 'NYC June 2026');
+assert.match(tripTriggerInner(nycNoShort), /NYC June 2026/);
+assert.equal(tripSwitcherShortName(dated), 'Paris');
+const derived = (destination, title = 'Sample week') => tripSwitcherShortName({ id: 'd', title, destination, startDate: '2026-08-01', status: 'active' });
+assert.equal(derived('Coastal Sample Region, Somewhere'), 'CSR August 2026');
+assert.equal(derived('Inland region, Somewhere'), 'Inland region August 2026');
+assert.equal(derived('Alpha & Beta'), 'Alpha & Beta August 2026');
+assert.equal(derived('', 'Long sample week title'), 'Long sample week title August 2026');
+assert.equal(tripSwitcherShortName({ id: 'e', title: 'Rome' }), 'Rome');
+assert.doesNotMatch(html.slice(from, to), /===\s*'[a-z ]+'\)\s*return\s*'/, 'no destination alias table in switcher helpers');
+assert.ok(tripSwitcherShortName({ id: 'x', title: 'Mystery', destination: '', startDate: '2026-08-01', status: 'active' }).length > 0);
 assert.equal(tripTitle(undated), 'Rome');
 assert.equal(tripDates({ startDate: '2026-11-11', endDate: '2026-11-14' }), 'Nov 11–14, 2026');
 

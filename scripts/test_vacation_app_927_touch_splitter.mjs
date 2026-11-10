@@ -16,6 +16,12 @@ assert.doesNotMatch(vacationAppRequest, /Math\.min\(76,\s*Math\.max\(26/);
 
 assert.match(vacationApp, /\.splitter-row[\s\S]*min-height:\s*44px/);
 assert.match(vacationApp, /@media \(max-width: 480px\)[\s\S]*\.splitter-row \.splitter[\s\S]*min-height:\s*22px/);
+assert.match(vacationApp, /\.splitter::after[\s\S]*width:\s*54px[\s\S]*height:\s*3px/);
+assert.match(vacationApp, /@media \(max-width: 480px\)[\s\S]*\.splitter::after \{ width: 27px; height: 1\.5px; \}/);
+assert.match(
+  vacationApp,
+  /@media \(pointer: coarse\) and \(hover: none\)[\s\S]*\.splitter::after \{ width: 27px; height: 1\.5px; \}/,
+);
 assert.match(shellCss, /#splitter[\s\S]*min-height:\s*44px/);
 assert.match(shellCss, /@media \(max-width: 480px\)[\s\S]*min-height:\s*22px/);
 assert.match(wordmarkCss, /\.splitter-row\{[^}]*min-height:44px/);

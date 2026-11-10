@@ -128,9 +128,11 @@
     }
     .trip-list {
       position: absolute;
+      left: auto;
       right: 0;
       top: calc(100% + 8px);
       width: min(92vw, 420px);
+      max-width: calc(100vw - 16px);
       border: 1px solid var(--line);
       border-radius: 8px;
       background: var(--panel);
@@ -234,6 +236,7 @@
         height: auto;
         background-clip: content-box;
       }
+      .splitter::after { width: 27px; height: 1.5px; }
     }
     .app.splitter-dragging .site-pane iframe {
       pointer-events: none;
@@ -248,6 +251,9 @@
       border-radius: 999px;
       background: #9ca8b5;
       transform: translate(-50%, -50%);
+    }
+    @media (pointer: coarse) and (hover: none) and (min-width: 481px) and (max-width: 932px) {
+      .splitter::after { width: 27px; height: 1.5px; }
     }
     .chat-pane {
       display: grid;
@@ -434,22 +440,39 @@
       return (customerPlaceName(trip.title) || customerPlaceName(trip.destination)).split(',')[0].trim();
     }
 
+    const tripMonthsFull = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    function tripDestinationToken(value) {
+      return (customerPlaceName(value) || '').split(',')[0].trim();
+    }
+    function tripDestinationCompact(value) {
+      const first = tripDestinationToken(value);
+      const words = first.split(/\s+/).filter((word) => /^[\p{L}\p{N}]/u.test(word));
+      return words.length >= 3 ? words.map((word) => Array.from(word)[0].toUpperCase()).join('') : first;
+    }
     function tripSwitcherShortName(trip) {
+      if (!trip || isPlaceholderTrip(trip)) return 'Trip';
       const stored = String(trip?.shortName ?? trip?.short_name ?? '').trim();
-      return stored;
+      if (stored) return stored;
+      let compact = tripDestinationCompact(trip.destination) || tripDestinationToken(trip.title);
+      if (!compact) compact = (customerPlaceName(trip.title) || '').split(/[\s,]+/).find(Boolean) || '';
+      const start = dateParts(trip?.startDate ?? trip?.start_date);
+      const parts = compact ? [compact] : [];
+      if (start && tripMonthsFull[start.m - 1]) parts.push(tripMonthsFull[start.m - 1], start.y);
+      return parts.length ? parts.join(' ') : 'Trip';
     }
 
     function tripTriggerInner(trip) {
+      if (!trip || isPlaceholderTrip(trip)) return '';
       const label = tripSwitcherShortName(trip);
-      if (!label) return '';
       return `<span class="trip-trigger-text"><span class="trip-trigger-title">${safe(label)}</span></span>`;
     }
 
     function refreshTripTrigger(button, trip) {
       if (!button || !trip) return;
-      const titleEl = button.querySelector('.trip-trigger-title');
       const label = tripSwitcherShortName(trip);
+      const titleEl = button.querySelector('.trip-trigger-title');
       if (titleEl) titleEl.textContent = label;
+      else button.insertAdjacentHTML('afterbegin', `<span class="trip-trigger-text"><span class="trip-trigger-title">${safe(label)}</span></span>`);
     }
 
     function vacationSelector(trips, trip) {
@@ -603,6 +626,20 @@
       if (progressActive && state.searchProgress) paintSearchProgress(state.searchProgress);
     }
 
+    function alignTripList(menu) {
+      const list = menu?.querySelector('.trip-list');
+      if (!list) return;
+      list.style.removeProperty('width');
+      list.style.removeProperty('left');
+      list.style.right = '0';
+      const menuBox = menu.getBoundingClientRect();
+      list.style.width = `${Math.min(420, window.innerWidth - 16, Math.max(120, menuBox.right - 8))}px`;
+      const left = list.getBoundingClientRect().left;
+      if (left < 8) {
+        list.style.left = `${8 - menuBox.left}px`;
+        list.style.right = 'auto';
+      }
+    }
     function bindApp() {
       const menu = document.getElementById('vacationDropdown');
       const button = document.getElementById('tripButton');
@@ -612,6 +649,8 @@
           const open = !menu.classList.contains('open');
           menu.classList.toggle('open', open);
           button.setAttribute('aria-expanded', String(open));
+          if (open) alignTripList(menu);
+          else menu.querySelector('.trip-list')?.style.removeProperty('width');
         });
         document.addEventListener('click', () => {
           menu.classList.remove('open');
