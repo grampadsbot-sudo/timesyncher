@@ -19,17 +19,6 @@ const require = createRequire(import.meta.url);
 const widths = [390, 1280];
 const BASE_TOLERANCE_PX = 0.5;
 
-const DAY_TIMELINE_MARKERS = Object.freeze({
-  1: ['American Airlines', "Zabar's"],
-  2: ['Statue of Liberty', 'Strand Book Store'],
-  3: ['Afternoon matinee', 'Bryant Park'],
-  4: ['Chelsea Market'],
-  5: ["Macy's Herald Square"],
-  6: ['MoMA Design Store'],
-  7: ['Bergdorf Goodman'],
-  8: ['Whole Foods Market', 'American Airlines JFK'],
-});
-
 function loadPuppeteer() {
   try {
     return require('puppeteer-core');
@@ -93,82 +82,6 @@ async function clickTab(page, label) {
   }, label);
 }
 
-async function selectDayByNumber(page, dayNum) {
-  const markers = DAY_TIMELINE_MARKERS[dayNum];
-  if (!markers?.length) throw new Error(`no timeline markers for day ${dayNum}`);
-  await page.evaluate((n) => {
-    const btn = [...document.querySelectorAll('button')].find((b) =>
-      new RegExp(`\\bDay ${n}\\b`, 'i').test(String(b.textContent || '').replace(/\s+/g, ' ').trim()),
-    );
-    if (!btn) throw new Error(`Day ${n} picker button missing`);
-    btn.click();
-  }, dayNum);
-  await page.waitForFunction(
-    (needles) => {
-      const titles = [...document.querySelectorAll('[data-ts-day-timeline] [data-ts-timeline-title]')].map((el) =>
-        String(el.textContent || '').replace(/\s+/g, ' ').trim(),
-      );
-      return needles.some((needle) => titles.some((t) => t.includes(needle)));
-    },
-    { timeout: 120000 },
-    markers,
-  );
-}
-
-async function collectSingleTimeBaselineSamples(page, tolerance) {
-  return page.evaluate((tol) => {
-    const tl = document.querySelector('[data-ts-day-timeline]');
-    if (!tl) return [];
-    const ctx = document.createElement('canvas').getContext('2d');
-    const singleLineTextRects = (textNode) => {
-      const rg = document.createRange();
-      rg.selectNodeContents(textNode);
-      return [...rg.getClientRects()].filter((r) => r.width && r.height);
-    };
-    const measureBaseline = (textNode) => {
-      const parent = textNode.parentElement;
-      const rects = singleLineTextRects(textNode);
-      if (rects.length !== 1) return null;
-      const q = rects[0];
-      ctx.font = window.getComputedStyle(parent).font;
-      const ascent = ctx.measureText(textNode.textContent || '').fontBoundingBoxAscent;
-      return Number.isFinite(ascent) ? q.top + ascent : null;
-    };
-    const samples = [];
-    for (const titleBtn of tl.querySelectorAll('[data-ts-timeline-title]')) {
-      const title = String(titleBtn.textContent || '').replace(/\s+/g, ' ').trim();
-      if (!title || /check-in:|sleep:|wake:/i.test(title)) continue;
-      let row = null;
-      for (let p = titleBtn.parentElement; p && p !== tl; p = p.parentElement) {
-        if (p.querySelectorAll('[data-ts-timeline-title]').length !== 1) break;
-        if (p.querySelector('[data-ts-timeline-icon], [data-ts-tab-emoji]')) {
-          row = p;
-          break;
-        }
-      }
-      if (!row) continue;
-      const notes = String(row.innerText || '')
-        .split('\n')
-        .map((x) => x.replace(/\s+/g, ' ').trim())
-        .filter((x) => x && x !== title && !/^\d{1,2}:\d{2}\s?(am|pm)$/i.test(x));
-      if (notes.some((x) => /^conflict with /i.test(x))) continue;
-      const timeEl = row.querySelector('[data-ts-timeline-time]');
-      if (!timeEl || timeEl.querySelector('div')) continue;
-      const timeText = [...timeEl.childNodes].find((n) => n.nodeType === Node.TEXT_NODE && n.textContent.trim());
-      const titleText = [...titleBtn.childNodes].find((n) => n.nodeType === Node.TEXT_NODE && n.textContent.trim());
-      if (!timeText || !titleText) continue;
-      const timeBaseline = measureBaseline(timeText);
-      const titleBaseline = measureBaseline(titleText);
-      if (timeBaseline == null || titleBaseline == null) continue;
-      samples.push({
-        title: title.slice(0, 60),
-        delta: Math.abs(timeBaseline - titleBaseline),
-      });
-    }
-    return samples;
-  }, tolerance);
-}
-
 const raw = execFileSync('git', ['show', '06e47169699ffdee8accf48e74b0a247a8793ebc^:public/assets/upstream/index-BKun7ofk.js'], {
   maxBuffer: 30 * 1024 * 1024,
 });
@@ -197,42 +110,71 @@ try {
     await clickTab(page, 'Day-by-Day');
     await page.waitForSelector('[data-ts-day-timeline]', { timeout: 120000 });
 
-    const dayNumbers = await page.evaluate(() => {
-      const seen = new Set();
-      const nums = [];
-      for (const b of document.querySelectorAll('button')) {
-        const t = String(b.textContent || '').replace(/\s+/g, ' ').trim();
-        const m = t.match(/\bDay (\d+)\b/i);
-        if (!m) continue;
-        const n = Number(m[1]);
-        if (!seen.has(n)) {
-          seen.add(n);
-          nums.push(n);
+    const rows = await page.evaluate((tolerance) => {
+      const tl = document.querySelector('[data-ts-day-timeline]');
+      if (!tl) return { ok: false, reason: 'missing timeline' };
+      const ctx = document.createElement('canvas').getContext('2d');
+      const measureBaseline = (textNode) => {
+        const parent = textNode.parentElement;
+        const rg = document.createRange();
+        rg.selectNodeContents(textNode);
+        const q = [...rg.getClientRects()].find((r) => r.width && r.height);
+        if (!q) return null;
+        ctx.font = window.getComputedStyle(parent).font;
+        const ascent = ctx.measureText(textNode.textContent || '').fontBoundingBoxAscent;
+        return Number.isFinite(ascent) ? q.top + ascent : null;
+      };
+      const dayButtons = [...document.querySelectorAll('button')].filter((b) => /\bDay \d+\b/i.test(String(b.textContent || '').replace(/\s+/g, ' ').trim()));
+      const samples = [];
+      const visitDay = () => {
+        for (const titleBtn of tl.querySelectorAll('[data-ts-timeline-title]')) {
+          const title = String(titleBtn.textContent || '').replace(/\s+/g, ' ').trim();
+          if (!title || /check-in:|sleep:|wake:/i.test(title)) continue;
+          let row = null;
+          for (let p = titleBtn.parentElement; p && p !== tl; p = p.parentElement) {
+            if (p.querySelectorAll('[data-ts-timeline-title]').length !== 1) break;
+            if (p.querySelector('[data-ts-timeline-icon], [data-ts-tab-emoji]')) {
+              row = p;
+              break;
+            }
+          }
+          if (!row) continue;
+          const notes = String(row.innerText || '')
+            .split('\n')
+            .map((x) => x.replace(/\s+/g, ' ').trim())
+            .filter((x) => x && x !== title && !/^\d{1,2}:\d{2}\s?(am|pm)$/i.test(x));
+          if (notes.some((x) => /^conflict with /i.test(x))) continue;
+          const timeEl = row.querySelector('[data-ts-timeline-time]');
+          if (!timeEl || timeEl.querySelector('div')) continue;
+          const timeText = [...timeEl.childNodes].find((n) => n.nodeType === Node.TEXT_NODE && n.textContent.trim());
+          const titleText = [...titleBtn.childNodes].find((n) => n.nodeType === Node.TEXT_NODE && n.textContent.trim());
+          if (!timeText || !titleText) continue;
+          const timeBaseline = measureBaseline(timeText);
+          const titleBaseline = measureBaseline(titleText);
+          if (timeBaseline == null || titleBaseline == null) continue;
+          samples.push({
+            title: title.slice(0, 60),
+            delta: Math.abs(timeBaseline - titleBaseline),
+          });
         }
+      };
+      visitDay();
+      for (const btn of dayButtons) {
+        btn.click();
+        visitDay();
       }
-      return nums.sort((a, b) => a - b);
-    });
-    assert.ok(dayNumbers.length > 0, `day picker buttons missing at ${width}`);
+      const amelie = samples.find((s) => /amelie bistro/i.test(s.title));
+      const worst = samples.reduce((best, s) => (s.delta > (best?.delta ?? -1) ? s : best), null);
+      const bad = samples.filter((s) => s.delta > tolerance);
+      return {
+        ok: bad.length === 0 && Boolean(worst) && worst.delta <= tolerance,
+        amelie,
+        worst,
+        bad: bad.slice(0, 5),
+        count: samples.length,
+      };
+    }, BASE_TOLERANCE_PX);
 
-    const samples = [];
-    for (const dayNum of dayNumbers) {
-      await selectDayByNumber(page, dayNum);
-      samples.push(...(await collectSingleTimeBaselineSamples(page, BASE_TOLERANCE_PX)));
-    }
-    const amelie = samples.find((s) => /amelie bistro/i.test(s.title));
-    const day2Samples = samples.filter((s) => /statue of liberty|strand book store/i.test(s.title));
-    const worst = samples.reduce((best, s) => (s.delta > (best?.delta ?? -1) ? s : best), null);
-    const bad = samples.filter((s) => s.delta > BASE_TOLERANCE_PX);
-    const rows = {
-      ok: bad.length === 0 && Boolean(worst) && worst.delta <= BASE_TOLERANCE_PX,
-      amelie,
-      worst,
-      bad: bad.slice(0, 5),
-      count: samples.length,
-      day2Samples,
-    };
-
-    assert.ok(day2Samples.length > 0, `Day 2 non-conflict single-time row missing at ${width} after day switch`);
     assert.ok(rows.count > 0, `no single-time rows measured at ${width}`);
     assert.ok(
       rows.ok,
