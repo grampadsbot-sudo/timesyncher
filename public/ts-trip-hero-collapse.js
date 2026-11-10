@@ -30,13 +30,18 @@
     document.head.appendChild(style);
   };
 
+  const isBlackHeroGradient = (styleText) => {
+    if (!styleText.includes('linear-gradient(135deg')) return false;
+    return /linear-gradient\(135deg,\s*(?:#000(?:000)?|rgb\(\s*0\s*,\s*0\s*,\s*0\s*\))/.test(styleText);
+  };
+
   const findHero = () => {
     const tripView = document.querySelector('[data-trip-view-root]');
     if (!tripView) return null;
     let node = tripView.parentElement;
     while (node && node !== document.body) {
       const styleText = String(node.getAttribute('style') || '');
-      if (styleText.includes('linear-gradient(135deg, #000') && node.querySelector('h1')) return node;
+      if (isBlackHeroGradient(styleText) && node.querySelector('h1')) return node;
       node = node.parentElement;
     }
     return null;
