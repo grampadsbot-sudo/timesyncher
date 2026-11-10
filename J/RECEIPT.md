@@ -1,3 +1,5 @@
+Host base-merge: `origin/vk` `1fc2ef7708aeed7a318b11b9fb3fef518f1b4044` at 3:18 AM PT 11/10. Only conflict was this receipt (kept the #939 hero receipt). Product files auto-merged; no product edits by the host.
+
 # PR #939 / #937 — expanded hero title unclip (HOST PUBLICATION ONLY)
 
 **Outcome:** source-ready PATCH (uncommitted). **Lane start HEAD:** `8da3206c309b82ebed7947ae25240c69d033e6b4` (verified). **Lane:** cursor-ubuntu, composer-2.5. **Authority:** eggbot 3:04 AM PT 11/10 (title clip ship-blocker; wrapping OK; ~32px shorter expanded OK; no expanded one-line or within-8px-height tests).
