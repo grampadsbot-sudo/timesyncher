@@ -1,8 +1,68 @@
-# vkfill-925 — chat edit sequential PUT merge @ `1ffd23ca`
+# PR #929 / Issue #927 — host base-merge + Gate B round 1 @ `6b92b55d`
 
-**Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Start HEAD:** `1ffd23ca895d39db3ea28eff62c7e02279881557`.
+**Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Start HEAD:** `6b92b55da6bc566bba556106be2d52f98e211b73` (verified). **Lane:** cursor-ubuntu, composer-2.5.
 
-Merge-on-put: `mergeStoredChatItineraryScheduleOverride` (`src/vacation/chat-itinerary-edit-day.mjs`). Tests: `scripts/test_chat_itinerary_edit_905.mjs`. Host receipt: `~/tsv-work/vkfill-925-job/J-RECEIPT.md`.
+**GBrain handoff:** `bot-admin/lanes/vk-pr-handoff/pr-929` page not found (noted per brief).
+
+## Host merge `origin/vk` @ `bb440e0f`
+
+| file | resolution |
+| --- | --- |
+| `J/RECEIPT.md` | Both sides kept: #927 touch splitter + hero receipt (HEAD) and #925 chat-edit sequential PUT merge (`origin/vk`) |
+| Staged from merge (no re-author) | `src/vacation/chat-itinerary-edit*.mjs`, `scripts/test_chat_itinerary_edit*.mjs` |
+
+No `public/assets/*.js` conflict; rebake not required this round.
+
+## Gate B round 1 fixes (chief dr on `6b92b55d`)
+
+| failure | root cause | fix |
+| --- | --- | --- |
+| `price budget-390/1280` (flights/hotels/cars) | List tabs resolve price via `numericPrice` (`sourceRecord.price`, etc.); budget used `thingBudgetAmount` on bare `place.price` only → "Add price" in `BudgetScreen` | `budgetLineAmount` copies `numericPrice` onto the merged row before `thingBudgetAmount` (`apps/vacation-client/src/lib/budgetModel.mjs`) |
+| `daybyday-1280.png` (~13.68% vs `base-1ffd23c`, `tsv-gateb/runs/20261110-070333`) | #927 hero collapse injected header chrome at 1280 capture width | `public/ts-trip-hero-collapse.js` mounts only for `max-width: 844px`; unmounts on desktop |
+
+## Changes (this round, uncommitted)
+
+| area | files |
+| --- | --- |
+| Budget price parity with list tabs | `apps/vacation-client/src/lib/budgetModel.mjs`, `apps/vacation-client/test/budget.unit.mjs` |
+| Hero collapse mobile-only (#927) | `public/ts-trip-hero-collapse.js` |
+| Inherited #927 (prior host commit) | `public/vacation-app-request.js`, splitter CSS, `scripts/test_vacation_app_927_*.mjs`, etc. |
+| Inherited #925 (staged merge) | `src/vacation/chat-itinerary-edit-day.mjs` (`mergeStoredChatItineraryScheduleOverride`) |
+
+## Checks @ PATCH (uncommitted)
+
+| check | result |
+| --- | --- |
+| `node apps/vacation-client/test/budget.unit.mjs` | PASS (incl. `sourceRecord`-only flight budget row) |
+| `node scripts/test_vacation_app_927_hero_collapse.mjs` | PASS |
+| `node scripts/test_vacation_app_927_touch_splitter.mjs` | PASS |
+| `node scripts/test_chat_itinerary_edit_905.mjs` | not run (staged merge; host after commit) |
+| `node scripts/check-no-comments.mjs` | BLOCKED: missing `apps/vacation-client/node_modules/typescript` (host `npm ci` before pre-DONE) |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | not run (same deps block) |
+
+## Host publish
+
+1. Resolve `J/RECEIPT.md` (done in tree), `git add` merge index + modified files above; `git commit --no-edit` or single publish commit on `vkfill/927-20261109224243`; push once.
+2. After `npm ci`: pre-DONE gates, CI on new head, Gate B structure + `gateb_coverage` price rows on budget 390/1280.
+3. Post-deploy: `node scripts/test_vacation_app_927_webkit_touch_live.mjs` when WebKit URL available.
+
+---
+
+# Issue #927 — iOS touch splitter + collapsible trip hero @ `1ffd23ca` (prior round summary)
+
+**Outcome:** host-published on `6b92b55d`. **Lane:** cursor-ubuntu, composer-2.5.
+
+| area | files |
+| --- | --- |
+| Task A — finger drag | `public/vacation-app-request.js` (`bindSplitter`: 44px row/handle, non-passive touch listeners, full-screen `splitterDragShield`, iframe `pointer-events` during drag); `vacation-app.html`, `public/vacation-app-shell.css`, `public/brand/vk-wordmark.css` |
+| Task B — hero collapse | `public/ts-trip-hero-collapse.js`; `shared-app.html` script include |
+| Tests | `scripts/test_vacation_app_927_touch_splitter.mjs`, `scripts/test_vacation_app_927_hero_collapse.mjs`, `scripts/test_vacation_app_927_webkit_touch_live.mjs`; manifest rows in `scripts/offline-tests.txt` + `scripts/online-tests.txt` |
+
+---
+
+# vkfill-925 — chat edit sequential PUT merge @ `1ffd23ca` (`origin/vk`)
+
+Merge-on-put: `mergeStoredChatItineraryScheduleOverride` (`src/vacation/chat-itinerary-edit-day.mjs`). Tests: `scripts/test_chat_itinerary_edit_905.mjs`.
 
 ---
 
@@ -110,4 +170,4 @@ Turn-2 hang / Fix-6 Zinc logo / chat-itinerary edits from #905 port remain on th
 
 - Live override narratives for 664/669/672 bundle copy until host re-fill.
 - Baselines, check config, workflows, `offline-tests.txt` ratchet files (per brief).
-- Deploy / force-push / Neon writes from lane.
+- Deploy config / force-push / Neon writes from lane.
