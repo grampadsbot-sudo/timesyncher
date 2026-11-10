@@ -1,47 +1,32 @@
-Host base-merge: `origin/vk` `5a0d72e5a607fa4234bf687a956bb34e96cd10e2` into PR head `9bbe396156779192097e76f12b9e46eaa0453d1c`. **Lane start HEAD:** `9bbe396156779192097e76f12b9e46eaa0453d1c` (verified). **Model:** composer-2.5. **Outcome:** SOURCE-READY (uncommitted; HOST PUBLICATION ONLY).
+# TSV #944 — PT/ET one-line at 390 without breaking #558 (HOST PUBLICATION ONLY)
 
-# PR #896 / issue #888 — flight time chips @390
+**Outcome:** source-ready PATCH. **Base after merge:** `origin/vk` `6017b330` (PR #896 / #888 already live: conflict banners wrap). **Lane start HEAD was:** `5a0d72e`. **Lane:** cursor-ubuntu. **Authority:** eggbot 5:56 AM PT 11/10 (`eggbot:banner-tz-clip-20261110-0556`), continued 6:12 AM PT after #896 shipped.
 
-## Problem restatement
+## Residual after #896
 
-At 390px, flight list cards keep departure and arrival on one horizontal track with `min-width: max-content` on `.tsv-row-flight-time` and `[data-ts-flight-time="1"]` (`apps/vacation-client/src/styles.css` @media max-width 480px; `ISSUE_888_SERVED_LAYOUT_CSS` in `src/vacation/shared-trip-oe-list-row-patch.mjs`). Non-shrinking time chips plus a four-column mobile grid let arrival text extend past the card padding and clip the right border. Day-by-day conflict wrap and airline logos on this head are intended and must stay.
+Live `6017b330` already unwraps Day-by-Day conflict banners at 390 ("Conflict with American Airlines LAS → JFK" unclipped). `12:37 pm PT` still soft-wraps because the served timeline grid caps the time column at `minmax(52px,64px)` (intrinsic width of `12:37 pm PT` at 11px/700 is 77.58px). A fixed `72px` or `80px` cap fails `test_ui_558_daybyday_time_name_baseline.mjs` (Statue of Liberty walking tour baseline delta 14.94px) by stealing title width on Day 2.
 
 ## Product fix
 
-- **Served rows:** `ISSUE_888_SERVED_LAYOUT_CSS` two-row CSS grid for `[data-ts-flight-row-grid="1"]` at ≤480px (times on row 2; logo/name spans rows).
-- **Vacation client:** `.tsv-row-flight-main` @390 — three-column grid (`auto minmax(0,1fr) auto`); logo spans rows 1–2; title and price row 1; depart col 2 and arrive col 3 on row 2, right-aligned inside the card.
-- **Merge:** keep PR #888 conflict-label wrap (`trek-live-product-patches.mjs`, `trek-live-product-flight-day-patches.mjs`) plus vk #887 timeline patches; both offline tests in manifest.
-- **Rebake:** `node scripts/rebake_served_trek_bundle.mjs` after patch files resolve (host index).
+- Keep #896 conflict-label wrap (`CONFLICT_LABEL_PATCH_WRAP` in `trek-shared-layout-patches.mjs` and the matching patches in `trek-live-product-patches.mjs` / flight-day patches). Do not revert it.
+- Change the day timeline grid from `minmax(52px,64px)` to `minmax(52px,max-content)` so a time+zone string can size the column on days that need it (Day 1 flights), while Day 2 single-time rows keep a narrow column and pass #558.
+- New `scripts/test_issue_944_daybyday_banner_tz_390.mjs`: banners unclipped (no nowrap+hidden), and PT/ET must not sit on their own line box (client-rect check, not only innerText newlines).
+- Vacation-client `styles.css` timeline column left at #896/`vk` (72px). The live site pane uses the served inline grid, not that CSS.
 
-## Conflict resolution @ `9bbe3961`
+**Unchanged:** conflict calc, #891 TZ text, NYC lock / trip 99, Gate B baselines.
 
-| Path | Resolution |
-| --- | --- |
-| `J/RECEIPT.md` | This file (PR #896 receipt; vk #941 mic receipt dropped). |
-| `public/assets/index-BKun7ofk.js` | `origin/vk` then rebake. |
-| `scripts/offline-tests.txt` | Both `test_issue_888_clipped_text.mjs` and `test_issue_887_daybyday_time_column.mjs`. |
-| `trek-live-product-patches.mjs` | PR wrap conflict label + served guard; vk car/budget/timeline patches retained. |
-| `trek-live-product-flight-day-patches.mjs` | vk #887 imports + PR conflict-label wrap needles/patches. |
+## Checks
 
-## Checks @ PATCH (lane END)
+Recorded after rebake on the merged tree.
+
+## Checks (merged tree on `6017b330` + max-content)
 
 | Command | Result |
 | --- | --- |
-| `node scripts/rebake_served_trek_bundle.mjs` | PASS sha256 `31e18ae6bc65be8d1380f39abaa5f51af7ef58ef9d771cbedd54d42c4d29c128` |
-| `node scripts/test_served_trek_bundle.mjs` | PASS |
-| `node scripts/test_issue_888_clipped_text.mjs` | PASS (390 DOM chip bounds) |
+| `node scripts/rebake_served_trek_bundle.mjs` | PASS sha256 `7794499c32f24a71a4843357adc5c85a752435b9ef8508fad6dfaa3a16d4f87c` |
+| `node scripts/test_ui_558_daybyday_time_name_baseline.mjs` | PASS |
+| `node scripts/test_issue_944_daybyday_banner_tz_390.mjs` | PASS |
+| `node scripts/test_itinerary_fresh_daybyday_bundle.mjs` | PASS |
 | `node scripts/test_issue_887_daybyday_time_column.mjs` | PASS |
-| `node scripts/test_issue_870_composer_mic.mjs` | PASS |
-| `node scripts/test_chat_itinerary_edit.mjs` | PASS |
-| `cd apps/vacation-client && npm test` | PASS |
-| `node scripts/check-no-comments.mjs` | PASS (1145 files) |
-| `node scripts/test_offline_manifest.mjs` | PASS (446 offline, 19 online) |
-| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS (251 report, 0 fail) |
-
-## Uncommitted for host
-
-Conflict markers cleared (still UU until `git add`): `J/RECEIPT.md`, `public/assets/index-BKun7ofk.js`, `scripts/offline-tests.txt`, `src/vacation/trek-live-product-flight-day-patches.mjs`, `src/vacation/trek-live-product-patches.mjs`. Product edits: `apps/vacation-client/src/styles.css` (@390 three-column flight grid). Rebaked bundle + vacation-client dist from checks. Host merge tree + vk carry files staged from merge (see `git status`).
-
-## Host publish
-
-`git add` resolved paths; `git commit --no-edit` (merge); push `vkfill/888-20261109142715`; CI; Gate B allow `888`. Lane did not stage, commit, push, or merge.
+| `node scripts/test_issue_888_clipped_text.mjs` | PASS |
+| `node scripts/test_issue_928_daybyday_arrival_conflicts.mjs` | PASS |
