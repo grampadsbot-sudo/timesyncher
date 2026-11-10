@@ -1,11 +1,21 @@
 import { parseStarRating } from './star-rating-model.mjs';
 import { productThingCategory } from './keepsake-product-overrides.mjs';
 
-const MONTH_RE = /\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\b/gi;
-const MONTH_INDEX = {
-  jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
-  jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12,
-};
+const TRIP_MONTH_TOKEN_RE = /\b([A-Za-z]{3,9})\b/g;
+
+function englishMonthIndexLookup() {
+  const byLabel = new Map();
+  for (let month = 0; month < 12; month += 1) {
+    const anchor = new Date(Date.UTC(2020, month, 15));
+    for (const style of ['short', 'long']) {
+      const label = new Intl.DateTimeFormat('en', { month: style, timeZone: 'UTC' }).format(anchor);
+      byLabel.set(label.toLowerCase(), month + 1);
+    }
+  }
+  return byLabel;
+}
+
+const ENGLISH_MONTH_INDEX = englishMonthIndexLookup();
 const CLOCK_TITLE_RE = /\s+\d{1,2}:\d{2}(?:\s*[–—-]\s*\d{1,2}:\d{2})?/g;
 const CITED_SHOWS_RE = /\b([A-Za-z][A-Za-z0-9'’-]*(?:\s+[A-Za-z][A-Za-z0-9'’-]*){0,3})\s+shows\s+(\d(?:\.\d)?)/gi;
 const UPGRADE_BUSINESS_SELECT_RE = /^\s*Upgrade to Business Select/i;
@@ -43,9 +53,9 @@ function tripMonthSet(trip = {}) {
 function hourLineMentionsOutsideTripMonths(hoursLine, tripMonths) {
   const line = text(hoursLine, 800);
   if (!line || !tripMonths.size) return false;
-  for (const match of line.matchAll(MONTH_RE)) {
-    const key = match[1].slice(0, 3).toLowerCase();
-    const month = MONTH_INDEX[key];
+  TRIP_MONTH_TOKEN_RE.lastIndex = 0;
+  for (const match of line.matchAll(TRIP_MONTH_TOKEN_RE)) {
+    const month = ENGLISH_MONTH_INDEX.get(match[1].toLowerCase());
     if (month && !tripMonths.has(month)) return true;
   }
   return false;

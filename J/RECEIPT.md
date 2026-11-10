@@ -1,6 +1,11 @@
 # Issue #903 — P2 live QA polish (cursor-ubuntu / composer-2.5)
 
-**Outcome:** source-ready (local commit `737fc7c8`; host push/PR). **Start HEAD:** `968c7ac8b01fda265bd4d2e265ab7115883191ea`.
+**Outcome:** source-ready (uncommitted patch; host push/PR). **Start HEAD:** `a3ed17e56a6c8a50f54f61bb0c461b27aa694a6a`.
+
+## This round (CI blockers on `a3ed17e5`)
+
+- **DATE-LITERAL / secrets:** `live-qa-903-presentation.mjs` — `Intl` month map + letter-token scan replaces `MONTH_RE` (0 hardcode fails).
+- **unit-tests timeout:** `apps/vacation-client/test/day-layout.mjs` waits for `Priceline Express Deal` drop-off label after #903 jargon sanitize.
 
 ## Changes (7 acceptance items)
 
@@ -25,6 +30,8 @@
 | `node scripts/check-no-comments.mjs` | PASS |
 | `BASE=vk node scripts/check-code-ratchet.mjs` | PASS (252 report, 0 fail) |
 | `node scripts/test_offline_manifest.mjs` | PASS (432 offline; `scripts/test_issue_903_live_qa_polish.mjs` registered) |
+| `node scripts/check-hardcoded-content.mjs` | PASS (88 report, 0 fail) |
+| `node apps/vacation-client/test/day-layout.mjs` | PASS |
 
 ## Host follow-up
 
