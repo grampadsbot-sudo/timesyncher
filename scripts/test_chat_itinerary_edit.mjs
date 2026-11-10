@@ -9,6 +9,7 @@ import {
   loadChatItineraryEditConfig,
   normalizeItineraryPlaceQuery,
   offlineParseItineraryEditIntent,
+  prepareChatItineraryEditForQueueTurn,
   resolvePlaceByQuery,
   runChatItineraryEditTurn,
   selectNearestBarBeforeAnchor,
@@ -275,9 +276,8 @@ const topLevelDemoLocked = await runChatItineraryEditTurn({
   putOverrides: async () => {},
   extractIntent: offlineParseItineraryEditIntent,
 });
-assert.equal(topLevelDemoLocked.applied, false);
 assert.equal(topLevelDemoLocked.reason, 'demo_locked');
-
+assert.equal(topLevelDemoLocked.applied, false);
 const configText = fs.readFileSync(new URL('../config/chat-itinerary-edit-trips.json', import.meta.url), 'utf8');
 assert.match(configText, /demo_locked/);
 assert.doesNotMatch(configText, /8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y.*allowlist/);
@@ -317,6 +317,7 @@ for (const [op, customerTurn] of turns) {
       assert.equal(result.applied, false, op);
       assert.equal(result.reason, 'demo_locked', op);
       assert.equal(result.client.reason, 'demo_locked', op);
+      assert.equal(result.replyContext, '', op);
       assert.deepEqual(calls, [], op);
       assert.deepEqual(stored, before, op);
     }
@@ -491,5 +492,7 @@ const undoDemoLocked = await runChatItineraryEditTurn({
 });
 assert.equal(undoDemoLocked.applied, false);
 assert.equal(undoDemoLocked.reason, 'demo_locked');
+const barHopLocked = await prepareChatItineraryEditForQueueTurn({ db: async () => [], trip: { id: chatEditTripId, metadata: { sharedToken: demoSlug } }, tripId: chatEditTripId, seat: null, requestText: 'Add a bar hop before Carbone that night.', httpReq: ownerHttpReq, env: {} });
+assert.ok(/locked for chat itinerary edits[\s\S]*trip website/i.test(barHopLocked.itineraryEditAuthoritative) && !/saved record shows two unscheduled items|bar hop before Carbone and Carbone itself/i.test(barHopLocked.itineraryEditAuthoritative));
 
 console.log('test_chat_itinerary_edit: ok');

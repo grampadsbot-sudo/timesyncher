@@ -9,6 +9,7 @@ import {
 import {
   buildChatItineraryOverridesPutBody,
   buildItineraryEditAuthoritativeSystemExtra,
+  buildItineraryEditDemoLockedAuthoritativeSystemExtra,
   buildItineraryEditFailureAuthoritativeSystemExtra,
   assignedDayNumbersForPlace,
   dayEditSkipLabels,
@@ -37,6 +38,7 @@ export {
   assertChatEditPutStaysSmallUnderHugeOverrides,
   buildChatItineraryOverridesPutBody,
   buildItineraryEditAuthoritativeSystemExtra,
+  buildItineraryEditDemoLockedAuthoritativeSystemExtra,
   buildItineraryEditFailureAuthoritativeSystemExtra,
   dayNumbersForPlace,
   mergeStoredChatItineraryScheduleOverride,
@@ -295,10 +297,10 @@ export async function runChatItineraryEditTurn({
   if (!slug) return editSkip('no_share_slug');
   const guard = shareSlugEditGuardDecision(slug);
   if (!guard.ok) {
-    const msg = guard.reason === 'not_allowlisted'
+    const replyContext = guard.reason === 'not_allowlisted'
       ? 'Tell the customer itinerary editing is not enabled for this trip yet.'
-      : 'Tell the customer this demo trip cannot be edited via chat.';
-    return editSkip(guard.reason, msg, { applied: false, reason: guard.reason });
+      : guard.reason === 'demo_locked' ? '' : 'Tell the customer this demo trip cannot be edited via chat.';
+    return editSkip(guard.reason, replyContext, { applied: false, reason: guard.reason });
   }
   const webAccessToken = readCookie(httpReq, webAccessCookieName())
     || clean(httpReq?.headers?.['x-timesyncher-web-access-token'], 400) || '';
@@ -476,6 +478,8 @@ export async function prepareChatItineraryEditForQueueTurn({ db, trip, seat, tri
         console.error('chat_itinerary_edit_fresh_payload', String(freshError?.message || freshError));
       }
       itineraryEditAuthoritative = buildItineraryEditAuthoritativeSystemExtra(itineraryEditResult, freshPayload);
+    } else if (itineraryEditResult?.reason === 'demo_locked') {
+      itineraryEditAuthoritative = buildItineraryEditDemoLockedAuthoritativeSystemExtra();
     } else if (itineraryEditResult?.replyContext) {
       replyCustomerTurn = `${requestText}\n\n${itineraryEditResult.replyContext}`;
     }
