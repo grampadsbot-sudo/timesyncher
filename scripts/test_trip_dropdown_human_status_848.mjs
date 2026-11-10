@@ -10,7 +10,7 @@ const load = new Function('safe', 'icon', `${html.slice(from, to)}; return { tri
 const { tripDates, tripTitle, tripTriggerInner, vacationSelector } = load(String, { chevron: '', check: '' });
 
 const enums = ['shared_ready', 'onboarding', 'draft', 'active', 'Vacation'];
-const dated = { id: 'a', title: 'Paris, France', status: 'shared_ready', startDate: '2026-11-11', endDate: '2026-11-14' };
+const dated = { id: 'a', title: 'Paris, France', shortName: 'Paris', status: 'shared_ready', startDate: '2026-11-11', endDate: '2026-11-14' };
 const undated = { id: 'b', title: 'Rome', status: 'onboarding' };
 
 const markup = vacationSelector([dated, undated], dated);
@@ -32,7 +32,10 @@ for (const status of enums) {
   assert.equal(tripDates({ status, startDate: status, endDate: status }), '', `${status} is not a date`);
 }
 
-assert.equal(tripTriggerInner(dated).includes('Nov 11–14, 2026'), true);
+const closedTrigger = tripTriggerInner(dated);
+assert.equal(closedTrigger.includes('Nov 11–14, 2026'), false);
+assert.match(closedTrigger, /Paris/);
+assert.doesNotMatch(closedTrigger, /<small>/);
 assert.equal(tripTitle(undated), 'Rome');
 assert.equal(tripDates({ startDate: '2026-11-11', endDate: '2026-11-14' }), 'Nov 11–14, 2026');
 
