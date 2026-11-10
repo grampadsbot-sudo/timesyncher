@@ -379,10 +379,10 @@ const queueSource = fs.readFileSync(new URL('../routes/vacation-app-chat-queue.m
 assert.match(queueSource, /createBoundedRewriteClaim/);
 assert.match(queueSource, /createBoundedReplyShipGate/);
 
-const demoSlug = '8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y';
+const lockedFixtureSlug = 'chat-edit-demo-locked-fixture';
 const lockedPrep = await prepareChatItineraryEditForQueueTurn({
   db: async () => [],
-  trip: { id: 'trip-lock-905', metadata: { sharedToken: demoSlug } },
+  trip: { id: 'trip-lock-905', metadata: { sharedToken: lockedFixtureSlug } },
   tripId: 'trip-lock-905',
   seat: null,
   requestText: 'Add a bar hop before Carbone that night.',

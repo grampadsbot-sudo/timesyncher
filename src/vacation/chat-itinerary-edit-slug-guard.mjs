@@ -27,7 +27,7 @@ export function shareSlugEditGuardDecision(slug, config = null) {
   const cfg = config || loadChatItineraryEditConfig();
   const token = clean(slug, 240);
   if (!token) return { ok: false, reason: 'missing_slug' };
-  if (cfg.demoLocked.includes(token) || token === DEMO_LOCKED_SLUG) {
+  if (cfg.demoLocked.includes(token)) {
     return { ok: false, reason: 'demo_locked' };
   }
   if (!cfg.allowlist.includes(token)) {

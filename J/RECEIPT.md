@@ -1,6 +1,6 @@
-# PR #940 — #859 chat edit + vk base merge
+# PR #940 — #859 chat edit + vk base merge (#945 NYC unlock)
 
-**Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Lane start HEAD:** `c20beedc562dfb9588c5d45744a38867c16086c0` (verified). **Host base-merge:** `origin/vk` into `c20beedc`. **Lane:** cursor-ubuntu, composer-2.5.
+**Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Lane start HEAD:** `cc656a381458bdd6ae740c2eb2b94ea4b4c8278a` (verified). **Host base-merge:** `origin/vk` (`7d17944a68b48cebb8236692659d9c488da975bc`) into PR head. **Lane:** cursor-ubuntu, composer-2.5.
 
 **GBrain handoff:** `bot-admin/lanes/vk-pr-handoff/pr-940`.
 
@@ -8,9 +8,10 @@
 
 | Path | Resolution |
 | --- | --- |
-| `routes/vacation-app-chat-queue.mjs` | Both: `producedDemoLockedChatEditReply` canned path (vk #945) + `createBoundedRewriteClaim` / `createBoundedReplyShipGate` (#859). |
-| `scripts/test_chat_itinerary_edit.mjs` | vk demo-locked canned reply + 413 oversize cases; PR assignment-move cases unchanged. |
-| `scripts/test_chat_itinerary_edit_905.mjs` | PR copy-shape two-turn + bounded post-gen wiring + vk demo-locked route asserts. |
+| `src/vacation/chat-itinerary-edit.mjs` | HEAD: modular slug-guard + trek-write imports; dropped vk duplicate inline `loadChatItineraryEditConfig` / guard / `trekPublicBase`. |
+| `src/vacation/chat-itinerary-edit-slug-guard.mjs` | vk #949: guard uses `demo_locked` config only (removed hard lock on NYC slug); NYC in allowlist per merged config. |
+| `scripts/test_chat_itinerary_edit_905.mjs` | PR copy-shape two-turn + bounded post-gen + vk demo-locked fixture slug + route asserts. |
+| `config/chat-itinerary-edit-trips.json` | Staged from merge: NYC allowlisted, `chat-edit-demo-locked-fixture` in `demo_locked`. |
 | `J/RECEIPT.md` | This file. |
 
 ## Issue #859 — chat itinerary edit
@@ -33,16 +34,14 @@
 
 Copy-shape turn 1/2 in `_905.mjs` **fail** on vk tip before assignment/bounded-postgen patch.
 
-## Vk carry — demo-locked chat (#945)
+## Vk carry — demo-locked chat (#945 / #949)
 
-Locked-trip chat edits use a fixed customer template and do not call the model:
-
-> This demo trip is locked for chat edits. You can change it on the trip site.
+Craig: unlock NYC demo trip chat edits; keep `chat-edit-demo-locked-fixture` for lock-path tests only.
 
 - `prepareChatItineraryEditForQueueTurn` sets `itineraryEditCannedReply` on `demo_locked` and leaves `itineraryEditAuthoritative` empty.
 - Queue short-circuits: if `itineraryEditCannedReply` is set, `producedDemoLockedChatEditReply` and skip `produceLiveAppReply`.
 
-**Unchanged:** NYC lock / allowlist / trip 99 data.
+**Untouched:** trip 99 itinerary DB/JSON, demo chat history, baselines, deploy/CI config, dependencies.
 
 ## Checks (conflict-resolution tree)
 
@@ -62,16 +61,15 @@ BASE=vk node scripts/check-code-ratchet.mjs
 | `node scripts/test_offline_manifest.mjs` | ok (447 offline, 19 online) |
 | `BASE=vk node scripts/check-code-ratchet.mjs` | ok (251 report, 0 fail) |
 
-Merge note: vk 413 oversize + bulk put cases live in `_905.mjs` only (ratchet FILE-SIZE-500); demo-locked canned reply in `.mjs`. `producedDemoLockedChatEditReply` imported from `chat-itinerary-edit-day.mjs` in queue + `_905`.
-
 ## Uncommitted source for host
 
 | Path | Note |
 | --- | --- |
 | `J/RECEIPT.md` | Conflict resolved |
-| `routes/vacation-app-chat-queue.mjs` | Merged imports + both behaviors |
-| `scripts/test_chat_itinerary_edit.mjs`, `_905.mjs` | Tests from both sides |
-| `src/vacation/chat-itinerary-edit.mjs`, `chat-itinerary-edit-day.mjs` | Staged merge tree |
+| `src/vacation/chat-itinerary-edit.mjs` | Conflict resolved |
+| `src/vacation/chat-itinerary-edit-slug-guard.mjs` | NYC guard: `demo_locked` config only (#949) |
+| `scripts/test_chat_itinerary_edit_905.mjs` | Conflict resolved |
+| Merge already staged: `config/chat-itinerary-edit-trips.json`, `scripts/test_chat_itinerary_edit.mjs` |
 
 **Host:** `git add` conflict resolutions, `git commit --no-edit` for merge; push once to `vkfill/859-20261110023051`. Rebake served bundle if `public/assets/` was taken from vk.
 
@@ -80,4 +78,4 @@ Merge note: vk 413 oversize + bulk put cases live in `_905.mjs` only (ratchet FI
 - Baselines, Gate B, workflows, deploy config, `package.json` / lock.
 - Lane did not stage, commit, push, or merge (HOST PUBLICATION ONLY).
 
-Not run here: Gate B, live two-turn proof (`lanes/jobs/chat-edit-live-proof-940-20261110-0331/watch940.py`).
+Not run here: Gate B, live two-turn proof (`lanes/jobs/chat-edit-live-proof-940-2026111000331/watch940.py`).

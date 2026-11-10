@@ -1,9 +1,10 @@
 {
   "allowlist": [
     "lane-test-slug",
-    "chat-edit-copy-a47f5a7f2150c5e887a81972"
+    "chat-edit-copy-a47f5a7f2150c5e887a81972",
+    "8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y"
   ],
   "demo_locked": [
-    "8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y"
+    "chat-edit-demo-locked-fixture"
   ]
 }
