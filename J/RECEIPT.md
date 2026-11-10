@@ -1,3 +1,37 @@
+# Issue #927 — iOS touch splitter + collapsible trip hero @ `1ffd23ca`
+
+**Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Start HEAD:** `1ffd23ca895d39db3ea28eff62c7e02279881557` (verified). **Lane:** cursor-ubuntu, composer-2.5.
+
+## Changes
+
+| area | files |
+| --- | --- |
+| Task A — finger drag | `public/vacation-app-request.js` (`bindSplitter`: 44px row/handle, non-passive touch listeners, full-screen `splitterDragShield`, iframe `pointer-events` during drag); `vacation-app.html`, `public/vacation-app-shell.css`, `public/brand/vk-wordmark.css` |
+| Task B — hero collapse | `public/ts-trip-hero-collapse.js` (control: `[data-ts-trip-hero-collapse]` / `[data-ts-hero-collapse]`); `shared-app.html` script include |
+| Tests | `scripts/test_vacation_app_927_touch_splitter.mjs`, `scripts/test_vacation_app_927_hero_collapse.mjs`, `scripts/test_vacation_app_927_webkit_touch_live.mjs`; manifest rows in `scripts/offline-tests.txt` + `scripts/online-tests.txt` |
+
+## Checks @ `1ffd23ca` + PATCH (uncommitted)
+
+| check | result |
+| --- | --- |
+| `node scripts/test_vacation_app_927_touch_splitter.mjs` | PASS |
+| `node scripts/test_vacation_app_927_hero_collapse.mjs` | PASS |
+| `node scripts/test_vacation_app_865_chrome.mjs` | PASS |
+| `node scripts/test_offline_manifest.mjs` | PASS (440 offline, 19 online) |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS (252 report, 0 fail) |
+| `node scripts/check-no-comments.mjs` | BLOCKED locally: missing `apps/vacation-client/node_modules/typescript` (run `npm ci` in repo root + `apps/vacation-client` before host pre-DONE) |
+| `node scripts/test_vacation_app_927_webkit_touch_live.mjs` | not run (needs playwright WebKit + `TSV_927_VACATION_APP_URL` or `~/TSV-Share/nyc-demo/demo-vacation-app-link.txt`; host after staging deploy) |
+
+## Host publish
+
+1. Stage all paths above; commit on `vkfill/927-20261109224243`; push once into `vk` with `Closes #927`.
+2. After `npm ci`: `node scripts/check-no-comments.mjs`, full offline suite, CI on PR head, then Gate B on visible screens.
+3. Post-deploy: `SCREENSHOT_DIR=artifacts/issue-927 node scripts/test_vacation_app_927_webkit_touch_live.mjs` (WebKit touch divider + hero screenshots; do not log demo URL).
+
+**Touch-drag test file:** `scripts/test_vacation_app_927_webkit_touch_live.mjs` (offline guards: `scripts/test_vacation_app_927_touch_splitter.mjs`). **Hero collapse control:** `[data-ts-trip-hero-collapse]` in `public/ts-trip-hero-collapse.js`.
+
+---
+
 # PR #922 — host base-merge conflict resolve @ `578510a2`
 
 **Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Start HEAD:** `578510a284ac0081e7ad40a99820ee0a5e6013f1` (verified). **Lane:** cursor-ubuntu, composer-2.5. Host merged `origin/vk` at `ce649c0cde4e7ecac6dc0138e2dddd5cc523ecde` (chief `basemerge.json` dirty-head requeue).

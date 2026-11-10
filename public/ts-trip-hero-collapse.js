@@ -1,0 +1,98 @@
+(() => {
+  const sharedMatch = location.pathname.match(/^\/shared\/([^/]+)/);
+  if (!sharedMatch) return;
+  const slug = decodeURIComponent(sharedMatch[1]);
+  const storageKey = `vk-trip-hero-collapsed:${slug}`;
+  const styleId = 'ts-trip-hero-collapse-css';
+
+  const injectCss = () => {
+    if (document.getElementById(styleId)) return;
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = [
+      '[data-ts-trip-site-hero]{transition:padding 200ms ease}',
+      '[data-ts-trip-site-hero][data-collapsed="1"]{padding-top:10px!important;padding-bottom:10px!important}',
+      '[data-ts-trip-site-hero][data-collapsed="1"] [data-ts-trip-hero-detail]{display:none!important}',
+      '[data-ts-trip-site-hero] h1{margin:0;font-size:26px;font-weight:700;letter-spacing:-.5px}',
+      '[data-ts-trip-site-hero][data-collapsed="1"] h1{font-size:17px;line-height:1.2;padding-right:44px}',
+      '[data-ts-trip-hero-collapse]{position:absolute;left:10px;top:8px;z-index:30;min-width:44px;min-height:44px;border:1px solid rgba(255,255,255,.28);border-radius:999px;background:rgba(255,255,255,.1);color:#fff;font:inherit;font-size:20px;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0}',
+      '[data-ts-trip-site-hero][data-collapsed="1"] [data-ts-trip-hero-collapse]{transform:rotate(180deg)}',
+      '[data-ts-trip-hero-actions]{margin-top:8px;display:flex;justify-content:center;gap:6px;flex-wrap:wrap}',
+    ].join('');
+    document.head.appendChild(style);
+  };
+
+  const findHero = () => {
+    const tripView = document.querySelector('[data-trip-view-root]');
+    if (!tripView) return null;
+    let node = tripView.parentElement;
+    while (node && node !== document.body) {
+      const styleText = String(node.getAttribute('style') || '');
+      if (styleText.includes('linear-gradient(135deg, #000') && node.querySelector('h1')) return node;
+      node = node.parentElement;
+    }
+    return null;
+  };
+
+  const markDetails = (hero) => {
+    const h1 = hero.querySelector('h1');
+    if (!h1) return;
+    for (const child of [...hero.children]) {
+      if (child === h1) continue;
+      if (child.matches('[data-ts-trip-hero-collapse]')) continue;
+      if (child.querySelector('[data-trip-view-root]')) {
+        child.setAttribute('data-ts-trip-hero-actions', '1');
+        continue;
+      }
+      if (!child.hasAttribute('data-ts-trip-hero-detail')) child.setAttribute('data-ts-trip-hero-detail', '1');
+    }
+  };
+
+  const attachToggle = (hero) => {
+    if (hero.querySelector('[data-ts-trip-hero-collapse]')) return;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.setAttribute('data-ts-hero-collapse', '1');
+    btn.setAttribute('data-ts-trip-hero-collapse', '1');
+    btn.setAttribute('aria-label', 'Collapse trip header');
+    btn.textContent = '▾';
+    btn.addEventListener('click', () => {
+      const collapsed = hero.getAttribute('data-collapsed') === '1';
+      const next = !collapsed;
+      hero.setAttribute('data-collapsed', next ? '1' : '0');
+      btn.setAttribute('aria-expanded', next ? 'false' : 'true');
+      btn.setAttribute('aria-label', next ? 'Expand trip header' : 'Collapse trip header');
+      try { localStorage.setItem(storageKey, next ? '1' : '0'); } catch {}
+    });
+    hero.appendChild(btn);
+  };
+
+  const mount = () => {
+    injectCss();
+    const hero = findHero();
+    if (!hero) return false;
+    if (hero.getAttribute('data-ts-trip-site-hero') !== '1') {
+      hero.setAttribute('data-ts-trip-site-hero', '1');
+      if (!hero.style.position) hero.style.position = 'relative';
+      markDetails(hero);
+      attachToggle(hero);
+      let collapsed = false;
+      try { collapsed = localStorage.getItem(storageKey) === '1'; } catch {}
+      hero.setAttribute('data-collapsed', collapsed ? '1' : '0');
+      const btn = hero.querySelector('[data-ts-trip-hero-collapse]');
+      if (btn) {
+        btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        btn.setAttribute('aria-label', collapsed ? 'Expand trip header' : 'Collapse trip header');
+      }
+    }
+    return true;
+  };
+
+  const observer = new MutationObserver(() => mount());
+  observer.observe(document.documentElement, { childList: true, subtree: true });
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => mount(), { once: true });
+  } else {
+    mount();
+  }
+})();
