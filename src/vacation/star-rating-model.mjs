@@ -1,3 +1,5 @@
+import { placeRatingEvidence } from './place-rating-evidence.mjs';
+
 const STAR_PATH =
   'M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z';
 
@@ -49,25 +51,8 @@ export function buildStarRatingStates(value) {
 }
 
 export function primaryPlaceStarRating(override = {}) {
-  const missing = Array.isArray(override.missingFields)
-    ? override.missingFields.map((row) => String(row || '').trim().toLowerCase())
-    : [];
-  if (missing.includes('ratings')) return null;
-  const cited = parseStarRating(override.thirdPartyRating);
-  const narrative = String(
-    override.longDetails || override.description || override.summary || '',
-  );
-  const citedInText = narrative.match(/\bshows\s+(\d(?:\.\d)?)/i);
-  if (citedInText) {
-    const fromText = parseStarRating(citedInText[1]);
-    if (fromText != null) return fromText;
-  }
-  if (cited != null && /\bshows\s+\d/i.test(narrative)) return cited;
-  for (const key of ['googleRating', 'yelpRating', 'thirdPartyRating', 'rating']) {
-    const parsed = parseStarRating(override[key]);
-    if (parsed != null) return parsed;
-  }
-  return null;
+  const evidence = placeRatingEvidence(override);
+  return evidence ? evidence.rating : null;
 }
 
 function escapeHtmlAttr(value) {
@@ -115,7 +100,8 @@ export function trekStarRatingBundleInject() {
     `tsStarPath='${path}'`,
     `tsStarSvg=(state,id)=>state==="full"?'<svg class="ts-star ts-star-full" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="'+tsStarPath+'" fill="#f59e0b"/></svg>':state==="empty"?'<svg class="ts-star ts-star-empty" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="'+tsStarPath+'" fill="#e5e7eb"/></svg>':'<svg class="ts-star ts-star-half" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><defs><clipPath id="'+id+'"><rect x="0" y="0" width="12" height="24"/></clipPath></defs><path class="ts-star-half-empty" d="'+tsStarPath+'" fill="#e5e7eb"/><path class="ts-star-half-full" d="'+tsStarPath+'" fill="#f59e0b" clip-path="url(#'+id+')"/></svg>'`,
     `tsRenderStarRatingHtml=v=>{const st=tsStarRatingStates(v);if(!st)return "";const label=String(tsStarRatingAria(v)).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");return '<span class="ts-star-rating" role="img" aria-label="'+label+'" title="'+label+'" style="display:inline-flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:2px;vertical-align:middle">'+st.map((state,index)=>tsStarSvg(state,"tsb"+index)).join("")+"</span>";}`,
-    `tsPrimaryPlaceStarRating=d=>{const miss=Array.isArray(d.missingFields)?d.missingFields.map(r=>String(r||"").trim().toLowerCase()):[];if(miss.includes("ratings"))return null;const nar=String(d.longDetails||d.description||d.summary||"");const cite=nar.match(/\\bshows\\s+(\\d(?:\\.\\d)?)/i);if(cite){const p=tsParseStarRating(cite[1]);if(p!=null)return p;}const tp=tsParseStarRating(d.thirdPartyRating);if(tp!=null&&/\\bshows\\s+\\d/i.test(nar))return tp;for(const k of["googleRating","yelpRating","thirdPartyRating","rating"]){const p=tsParseStarRating(d[k]);if(p!=null)return p;}return null;}`,
+    `tsPrimaryPlaceRatingEvidence=${placeRatingEvidence.toString()}`,
+    `tsPrimaryPlaceStarRating=d=>{const e=tsPrimaryPlaceRatingEvidence(d);if(e)return e.rating;return null;}`,
     `tsThingReviewLines=G=>{const d=ha(G)||{},out=[];for(let i=1;i<=4;i++){const body=String(d["review"+i]||"").replace(/\\s+/g," ").trim();if(!body)continue;const stars=tsRenderStarRatingHtml(d["review"+i+"Rating"]);out.push('<div data-ts-thing-review="1">'+(stars?stars+" ":"")+an(body)+"</div>");}if(out.length)return out.join("");const th=d.reviewThemes;let bits=[];if(Array.isArray(th))bits=th;else if(th&&typeof th==="object")bits=[].concat(th.praise||[],th.watchOuts||[]);const text=bits.map(t=>String((t&&t.text)||t||"").replace(/\\s+/g," ").trim()).filter(Boolean).slice(0,2).join(" ");const rating=tsPrimaryPlaceStarRating(d);if(!text||rating==null)return "";const stars=tsRenderStarRatingHtml(rating);return '<div data-ts-thing-review="1">'+(stars?stars+" ":"")+an(text)+"</div>";}`,
   ].join(',');
 }

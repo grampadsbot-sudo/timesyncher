@@ -18,7 +18,7 @@ function englishMonthIndexLookup() {
 
 const ENGLISH_MONTH_INDEX = englishMonthIndexLookup();
 const CLOCK_TITLE_RE = /\s+\d{1,2}:\d{2}(?:\s*[–—-]\s*\d{1,2}:\d{2})?/g;
-const CITED_SHOWS_RE = /\b([A-Za-z][A-Za-z0-9'’-]*(?:\s+[A-Za-z][A-Za-z0-9'’-]*){0,3})\s+shows\s+(\d(?:\.\d)?)/gi;
+const CITED_SHOWS_RE = /\b([A-Za-z][A-Za-z0-9'’-]*(?:\s+[A-Za-z][A-Za-z0-9'’-]*){0,3})\s+shows\s+(\d(?:\.\d)?)(?![.,]?\d)(?!\s*(?:reviews?|ratings?|photos?|votes?)\b)/gi;
 
 function text(value, max = 12000) {
   return String(value ?? '').replace(/\s+/g, ' ').trim().slice(0, max);
