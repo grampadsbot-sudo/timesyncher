@@ -6,6 +6,7 @@ import { timelineCategoryIcon } from './timeline-icons.mjs';
 import { resolveThingLogoDisplayUrl, resolveThingLogoUrl } from './thing-logo-capture.mjs';
 import { logoImgOnErrorInline, logoImgOnLoadInline } from './thing-logo-fallback-url.mjs';
 import { applyThingDetailOverrides } from './thing-detail-fields.mjs';
+import { applyLiveQa903Presentation } from './live-qa-903-presentation.mjs';
 
 const LOGO_IMG_STYLE = 'width:18px;height:18px;max-width:18px;max-height:18px;object-fit:contain;object-position:center center;display:block';
 const LOGO_FALLBACK_SPAN_STYLE = 'width:18px;height:18px;font-size:13px;display:inline-grid;place-items:center;transform:translateY(-2.5px)';
@@ -24,7 +25,8 @@ function escapeHtml(value) {
 export function prepareSharedTripForLiveApp(shared = {}) {
   const presented = applyThingPresentation(shared);
   const detailed = applyThingDetailOverrides(presented);
-  const keepsake = applyProductKeepsakeOverrides(detailed);
+  const polished = applyLiveQa903Presentation(detailed);
+  const keepsake = applyProductKeepsakeOverrides(polished);
   const withListFields = applyLiveAppListRowFields(keepsake);
   return syncSharedTripApiBudget(withListFields);
 }

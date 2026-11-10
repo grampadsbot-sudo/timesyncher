@@ -29,7 +29,7 @@ export const NYC_PR336_SEARCH_TRIP_ID = '5f03f326-a1b2-4c3d-9e4f-001122334455';
 
 export const GATE_B_DISPLAY_TITLE_ALIASES = {
   609: {
-    title: 'Priceline opaque Standard sedan',
+    title: 'Priceline Express Deal (car company shown after booking) Standard sedan',
     ccabKey: 'Priceline opaque JFK — Standard sedan',
   },
 };
@@ -200,8 +200,9 @@ export function buildGateBSearchPlaceForRow({ id, name, cat, ccabKey: rowCcabKey
   if (id === 609) {
     ccabRecord = {
       ...ccabRecord,
+      rentalCompany: 'Priceline Express Deal (car company shown after booking)',
       identityProvenance: {
-        approvedDisplayTitle: 'Priceline opaque Standard sedan',
+        approvedDisplayTitle: 'Priceline Express Deal (car company shown after booking) Standard sedan',
         ccabKey: 'Priceline opaque JFK — Standard sedan',
         evidenceUrl: 'https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp',
         reason: 'Opaque JFK card hides the supplier; display title matches the Priceline Standard sedan class on the sourced card.',

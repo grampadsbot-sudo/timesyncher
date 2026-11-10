@@ -66,9 +66,9 @@ const SYNTHETIC_BY_PLACE_ID = {
 
 const TEST_ONLY_CAR = {
   summary:
-    'Priceline opaque Toyota Corolla or similar at JFK Federal Circle; supplier name stays hidden until booking. Fixture pickup Jun 23 2026 10:00 at JFK rental shuttle, return Jun 30 2026 09:00 same facility; $172 total is synthetic test pricing only. Review toll, fuel, and cancellation terms before paying; do not treat counter reputation as verified.',
+    'Priceline Express Deal (car company shown after booking) Toyota Corolla or similar at JFK Federal Circle; supplier name stays hidden until booking. Fixture pickup Jun 23 2026 10:00 at JFK rental shuttle, return Jun 30 2026 09:00 same facility; $172 total is synthetic test pricing only. Review toll, fuel, and cancellation terms before paying; do not treat counter reputation as verified.',
   price: 172,
-  rentalCompany: 'Priceline opaque (test fixture)',
+  rentalCompany: 'Priceline Express Deal (car company shown after booking)',
   vehicleClass: 'Toyota Corolla or similar',
   pickupLocation: 'JFK Federal Circle rental shuttle, Jamaica, NY (fixture test window Jun 23 2026 10:00)',
   returnLocation: 'JFK Federal Circle rental shuttle, Jamaica, NY (fixture test window Jun 30 2026 09:00)',

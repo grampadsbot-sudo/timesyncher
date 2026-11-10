@@ -108,7 +108,7 @@ try {
 
     await clickTab(page, 'Cars');
     await page.waitForFunction(
-      () => /Priceline opaque/i.test(document.body?.innerText || ''),
+      () => /Priceline Express Deal/i.test(document.body?.innerText || ''),
       { timeout: 120000 },
     );
     await new Promise((r) => setTimeout(r, 300));

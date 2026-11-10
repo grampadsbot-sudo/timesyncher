@@ -71,8 +71,12 @@ export function mergeStoredChatItineraryScheduleOverride(storedRow = {}, desired
 }
 
 export function buildChatItineraryOverridesPutBody({ before = {}, after = {}, keys = [], stored = {} } = {}) {
-  const patch = {};
   const storedMap = stored && typeof stored === 'object' ? stored : {};
+  const patch = {};
+  for (const [storedKey, storedRow] of Object.entries(storedMap)) {
+    const scheduleRow = chatItineraryScheduleOverridePatch(storedRow);
+    if (Object.keys(scheduleRow).length) patch[storedKey] = scheduleRow;
+  }
   for (const key of keys) {
     const afterRow = after[key];
     const beforeRow = before[key];
