@@ -9,12 +9,23 @@ import {
   normalizeItineraryPlaceQuery,
   offlineParseItineraryEditIntent,
 } from './chat-itinerary-edit-intent.mjs';
+import {
+  buildItineraryEditAuthoritativeSystemExtra,
+  dayEditSkipLabels,
+  dayNumbersForPlace,
+  resolveItineraryEditDayNumber,
+} from './chat-itinerary-edit-day.mjs';
 
 export {
   coalesceChatItineraryEditIntent,
   normalizeItineraryPlaceQuery,
   offlineParseItineraryEditIntent,
 } from './chat-itinerary-edit-intent.mjs';
+export {
+  buildItineraryEditAuthoritativeSystemExtra,
+  dayNumbersForPlace,
+  resolveItineraryEditDayNumber,
+} from './chat-itinerary-edit-day.mjs';
 
 const CONFIG_PATH = path.join(path.dirname(fileURLToPath(import.meta.url)), '../../config/chat-itinerary-edit-trips.json');
 const DEMO_LOCKED_SLUG = '8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y';
@@ -388,9 +399,23 @@ export async function runChatItineraryEditTurn({
     if (anchorId) place = (payload.places || []).find((p) => String(p.id) === String(anchorId)) || null;
   }
   if (!place) return editSkip('place_not_found', 'Ask which itinerary place they want to change, using names from the trip.', { applied: false, reason: 'place_not_found' });
-  const dayNumber = Number(intent.dayNumber);
+  const storedAnchorId = intent.op === 'add_bar_before' ? (await loadAnchorPlaceId(db, trip.id)) : '';
+  const dayResolve = resolveItineraryEditDayNumber({
+    payload,
+    place,
+    intent,
+    customerTurn,
+    anchorPlaceId: storedAnchorId || place.id,
+  });
+  const dayNumber = dayResolve.dayNumber;
+  if (!dayNumber) {
+    const skip = dayEditSkipLabels(payload, place, dayResolve);
+    return editSkip(skip.reason, skip.reply, { applied: false, reason: skip.reason, candidates: skip.candidates });
+  }
   const day = dayForNumber(payload, dayNumber);
-  if (!day) return editSkip('day_not_found', `Day ${dayNumber || '?'} is not on this trip.`, { applied: false, reason: 'day_not_found' });
+  if (!day) {
+    return editSkip('day_not_found', 'Ask which day number on this trip they mean.', { applied: false, reason: 'day_not_found' });
+  }
   if (intent.op === 'set_time') {
     const timeHHMM = parseTimeToHHMM(intent.time);
     if (!timeHHMM) return editSkip('time_invalid', 'Ask what time they want, like 8:30 PM.', { applied: false, reason: 'time_invalid' });
@@ -399,7 +424,16 @@ export async function runChatItineraryEditTurn({
       || payload?.thingOverrides?.[key]?.startTime || place.place_time || '';
     const applied = applySetTimeOp(payload, { placeId: place.id, dayId: day.id, timeHHMM });
     await persistItineraryWrite(db, trip, slug, turnId, place.id, applied, webAccessToken, env, putOverrides);
-    const result = { applied: true, op: 'set_time', placeName: place.name || place.title, dayNumber, oldTime: clean(oldTime, 40), newTime: timeHHMM, client: { applied: true } };
+    const result = {
+      applied: true,
+      op: 'set_time',
+      placeName: place.name || place.title,
+      dayNumber,
+      dayTitle: clean(day.title, 120),
+      oldTime: clean(oldTime, 40),
+      newTime: timeHHMM,
+      client: { applied: true },
+    };
     return { ...result, replyContext: itineraryEditReplyContext(result) };
   }
   if (intent.op === 'add_bar_before') {
@@ -419,11 +453,30 @@ export async function runChatItineraryEditTurn({
 }
 
 export async function prepareChatItineraryEditForQueueTurn({ db, trip, seat, tripId, requestText, turnId, httpReq, env }) {
-  if (!tripId || !trip || seat) return { replyCustomerTurn: requestText, itineraryEditResult: null };
+  if (!tripId || !trip || seat) {
+    return { replyCustomerTurn: requestText, itineraryEditResult: null, itineraryEditAuthoritative: '' };
+  }
   try {
     const itineraryEditResult = await runChatItineraryEditTurn({ db, trip, customerTurn: requestText, turnId, httpReq, env });
-    const replyCustomerTurn = itineraryEditResult?.replyContext ? `${requestText}\n\n${itineraryEditResult.replyContext}` : requestText;
-    return { replyCustomerTurn, itineraryEditResult };
+    let replyCustomerTurn = requestText;
+    let itineraryEditAuthoritative = '';
+    if (itineraryEditResult?.applied) {
+      const slug = tripShareSlug(trip);
+      let freshPayload = null;
+      try {
+        const webAccessToken = readCookie(httpReq, webAccessCookieName())
+          || clean(httpReq?.headers?.['x-timesyncher-web-access-token'], 400) || '';
+        if (slug && webAccessToken) {
+          freshPayload = await fetchFreshSharedTripPayload(slug, { env, cookie: `${webAccessCookieName()}=${encodeURIComponent(webAccessToken)}` });
+        }
+      } catch (freshError) {
+        console.error('chat_itinerary_edit_fresh_payload', String(freshError?.message || freshError));
+      }
+      itineraryEditAuthoritative = buildItineraryEditAuthoritativeSystemExtra(itineraryEditResult, freshPayload);
+    } else if (itineraryEditResult?.replyContext) {
+      replyCustomerTurn = `${requestText}\n\n${itineraryEditResult.replyContext}`;
+    }
+    return { replyCustomerTurn, itineraryEditResult, itineraryEditAuthoritative };
   } catch (error) {
     const message = String(error?.message || error);
     const statusCode = error?.statusCode;
@@ -435,6 +488,7 @@ export async function prepareChatItineraryEditForQueueTurn({ db, trip, seat, tri
     return {
       replyCustomerTurn: requestText,
       itineraryEditResult: editSkip(message, '', { applied: false, reason: 'edit_failed' }),
+      itineraryEditAuthoritative: '',
     };
   }
 }

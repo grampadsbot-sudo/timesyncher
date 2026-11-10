@@ -5,7 +5,7 @@ export function logoChipFallbackEmoji(raw, fallback = '📍') {
 }
 
 function applyLogoImgFallback(img, fallbackEmoji = '📍') {
-  const chip = img.closest('[data-ts-logo-chip]');
+  const chip = img.closest('[data-ts-logo-chip]') || img.closest('[data-ts-timeline-icon]');
   if (!chip || chip.dataset.tsLogoFailed === '1') return;
   const stage = img.dataset.tsLogoFallback || '0';
   if (stage === '0') {
@@ -36,6 +36,7 @@ function applyLogoImgFallback(img, fallbackEmoji = '📍') {
   const emoji = logoChipFallbackEmoji(fallbackEmoji);
   if (fb) {
     fb.textContent = emoji;
+    fb.style.display = 'grid';
     return;
   }
   chip.innerHTML = `<span class="tsv-logo-fallback">${emoji}</span>`;
@@ -48,9 +49,21 @@ export function onLogoImgError(event, fallbackEmoji = '📍') {
 export function onLogoImgLoad(event, fallbackEmoji = '📍') {
   const img = event.currentTarget;
   const chip = img.closest('[data-ts-logo-chip]');
-  if (!chip || chip.dataset.tsLogoFailed === '1') return;
+  const timelineIcon = img.closest('[data-ts-timeline-icon]');
+  const host = chip || timelineIcon;
+  if (!host || host.dataset?.tsLogoFailed === '1') return;
+  const hideFallback = () => {
+    const fb = host.querySelector('.tsv-logo-fallback');
+    if (fb) fb.style.display = 'none';
+  };
+  if (/\.ico(?:[?#]|$)/i.test(String(img.src || '')) && img.naturalWidth >= 1 && img.naturalHeight >= 1) {
+    hideFallback();
+    return;
+  }
   const box = img.getBoundingClientRect();
   if (box.width < 4 || box.height < 4 || img.naturalWidth < 16 || img.naturalHeight < 16) {
     applyLogoImgFallback(img, fallbackEmoji);
+    return;
   }
+  hideFallback();
 }
