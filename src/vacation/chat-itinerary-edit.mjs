@@ -1,6 +1,3 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { readCookie, requireWebEditAccess, webAccessCookieName } from './web-access.mjs';
 import { invalidateSharedUpstreamCacheForSlug as dropSharedUpstreamCacheForSlug } from './shared-trip-upstream-cache.mjs';
 import {
@@ -13,8 +10,8 @@ import {
   buildChatItineraryOverridesPutBody,
   buildItineraryEditAuthoritativeSystemExtra,
   DEMO_LOCKED_CHAT_EDIT_CUSTOMER_REPLY,
-  producedDemoLockedChatEditReply,
   buildItineraryEditFailureAuthoritativeSystemExtra,
+  assignedDayNumbersForPlace,
   dayEditSkipLabels,
   dayNumbersForPlace,
   hhmmFromMinutes,
@@ -23,6 +20,14 @@ import {
   parseTimeToHHMM,
   resolveItineraryEditDayNumber,
 } from './chat-itinerary-edit-day.mjs';
+import {
+  findPlaceAssignment,
+  placeAssignedOnDay,
+} from './chat-itinerary-edit-assignment.mjs';
+import { shareSlugEditGuardDecision } from './chat-itinerary-edit-slug-guard.mjs';
+import { ensurePlaceAssignedOnDay, putSharedTripOverrides, trekPublicBase } from './chat-itinerary-edit-trek-write.mjs';
+
+export { loadChatItineraryEditConfig, shareSlugEditGuardDecision } from './chat-itinerary-edit-slug-guard.mjs';
 
 export {
   coalesceChatItineraryEditIntent,
@@ -34,15 +39,12 @@ export {
   buildChatItineraryOverridesPutBody,
   buildItineraryEditAuthoritativeSystemExtra,
   DEMO_LOCKED_CHAT_EDIT_CUSTOMER_REPLY,
-  producedDemoLockedChatEditReply,
   buildItineraryEditFailureAuthoritativeSystemExtra,
   dayNumbersForPlace,
   mergeStoredChatItineraryScheduleOverride,
   resolveItineraryEditDayNumber,
 } from './chat-itinerary-edit-day.mjs';
 
-const CONFIG_PATH = path.join(path.dirname(fileURLToPath(import.meta.url)), '../../config/chat-itinerary-edit-trips.json');
-const DEMO_LOCKED_SLUG = '8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y';
 const BAR_SIGNAL = /\b(bar|wine\s*bar|cocktail|jazz\s*bar|pub)\b/i;
 
 function clean(value, max = 500) {
@@ -51,39 +53,6 @@ function clean(value, max = 500) {
 
 function normalizeName(value) {
   return clean(value, 240).toLowerCase().replace(/[^a-z0-9]+/g, ' ');
-}
-
-export function loadChatItineraryEditConfig(env = process.env) {
-  const override = clean(env.CHAT_ITINERARY_EDIT_TRIPS_CONFIG, 400);
-  const filePath = override || CONFIG_PATH;
-  try {
-    const raw = fs.readFileSync(filePath, 'utf8');
-    const parsed = JSON.parse(raw);
-    const allowlist = Array.isArray(parsed.allowlist) ? parsed.allowlist.map((s) => clean(s, 240)).filter(Boolean) : [];
-    const demoLocked = Array.isArray(parsed.demo_locked) ? parsed.demo_locked.map((s) => clean(s, 240)).filter(Boolean) : [];
-    return { allowlist, demoLocked, filePath };
-  } catch (error) {
-    return { allowlist: [], demoLocked: [DEMO_LOCKED_SLUG], filePath, error: String(error?.message || error) };
-  }
-}
-
-export function shareSlugEditGuardDecision(slug, config = null) {
-  const cfg = config || loadChatItineraryEditConfig();
-  const token = clean(slug, 240);
-  if (!token) return { ok: false, reason: 'missing_slug' };
-  if (cfg.demoLocked.includes(token)) {
-    return { ok: false, reason: 'demo_locked' };
-  }
-  if (!cfg.allowlist.includes(token)) {
-    return { ok: false, reason: 'not_allowlisted' };
-  }
-  return { ok: true, reason: null };
-}
-
-function trekPublicBase(env = process.env) {
-  const base = clean(env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || env.TIMESYNCHER_PUBLIC_BASE_URL, 400).replace(/\/+$/, '');
-  if (!base) throw Object.assign(new Error('TIMESYNCHER_TREK_PUBLIC_BASE_URL is missing'), { code: 'trek_upstream_unconfigured' });
-  return base;
 }
 
 async function fetchFreshSharedTripPayload(slug, { env = process.env, cookie = '' } = {}) {
@@ -152,12 +121,7 @@ function dayForNumber(payload, dayNumber) {
 }
 
 function placeOnDay(payload, placeId, dayId) {
-  const key = `place:${placeId}`;
-  const override = payload?.thingOverrides?.[key] || {};
-  const dayIds = Array.isArray(override.dayIds) ? override.dayIds.map(String) : [];
-  if (dayIds.includes(String(dayId))) return true;
-  const rows = payload?.assignments?.[String(dayId)] || [];
-  return rows.some((row) => String(row.place_id ?? row.place?.id) === String(placeId));
+  return placeAssignedOnDay(payload, placeId, dayId);
 }
 
 export function selectNearestBarBeforeAnchor(payload, anchorPlace, dayId) {
@@ -190,7 +154,19 @@ function ensurePlaceOverride(thingOverrides, placeId) {
   return thingOverrides[key];
 }
 
-export function applySetTimeOp(payload, { placeId, dayId, timeHHMM }) {
+function pruneScheduleDay(row, dayKey) {
+  if (!row || typeof row !== 'object') return;
+  if (Array.isArray(row.dayIds)) {
+    row.dayIds = row.dayIds.map(String).filter((id) => id !== String(dayKey));
+  }
+  if (row.perDaySchedule && typeof row.perDaySchedule === 'object' && row.perDaySchedule[dayKey]) {
+    const next = { ...row.perDaySchedule };
+    delete next[dayKey];
+    row.perDaySchedule = next;
+  }
+}
+
+export function applySetTimeOp(payload, { placeId, dayId, timeHHMM, removeFromDayId = null }) {
   const before = {};
   const after = {};
   const thingOverrides = deepCloneJson(payload.thingOverrides || {});
@@ -198,6 +174,9 @@ export function applySetTimeOp(payload, { placeId, dayId, timeHHMM }) {
   before[key] = deepCloneJson(thingOverrides[key] || {});
   const row = ensurePlaceOverride(thingOverrides, placeId);
   const dayKey = String(dayId);
+  if (removeFromDayId != null && String(removeFromDayId) !== dayKey) {
+    pruneScheduleDay(row, String(removeFromDayId));
+  }
   if (!Array.isArray(row.dayIds)) {
     const fromSchedule = row.perDaySchedule && typeof row.perDaySchedule === 'object'
       ? Object.keys(row.perDaySchedule)
@@ -266,28 +245,13 @@ async function loadLatestEdit(db, tripId) {
   return rows[0] || null;
 }
 
-async function putSharedTripOverrides({ slug, overrides, webAccessToken, env = process.env, putOverrides = null }) {
-  const guard = shareSlugEditGuardDecision(slug);
-  if (!guard.ok) throw Object.assign(new Error(guard.reason), { statusCode: 403 });
-  if (putOverrides) return await putOverrides({ slug, overrides, webAccessToken, env });
-  const token = clean(slug, 240);
-  const base = trekPublicBase(env);
-  const sessionToken = clean(webAccessToken, 400);
-  if (!sessionToken) throw Object.assign(new Error('web_edit_access_required'), { statusCode: 403 });
-  const res = await fetch(`${base}/api/shared/${encodeURIComponent(token)}/overrides`, {
-    method: 'PUT',
-    headers: {
-      accept: 'application/json',
-      'content-type': 'application/json',
-      cookie: `${webAccessCookieName()}=${encodeURIComponent(sessionToken)}`,
-    },
-    body: JSON.stringify({ overrides }),
-  });
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    throw Object.assign(new Error(`overrides_put_failed ${res.status} ${body.slice(0, 200)}`), { statusCode: res.status });
-  }
-}
+export {
+  placeAssignedOnDay,
+  findPlaceAssignment,
+  planPlaceOnDayAssignment,
+  applyAssignmentMoveOnPayload,
+  applyAssignmentCreateOnPayload,
+} from './chat-itinerary-edit-assignment.mjs';
 
 function editSkip(reason, replyContext = '', client = null) {
   return { applied: false, skipped: true, reason, client, replyContext };
@@ -326,18 +290,16 @@ async function persistItineraryWrite(db, trip, slug, turnId, placeId, applied, s
 
 export async function runChatItineraryEditTurn({
   db, trip, customerTurn, turnId = null, httpReq = null, env = process.env,
-  fetchPayload = fetchFreshSharedTripPayload, putOverrides = null, extractIntent = extractItineraryEditIntent,
+  fetchPayload = fetchFreshSharedTripPayload, putOverrides = null, putAssignmentMove = null,
+  postDayAssignment = null, extractIntent = extractItineraryEditIntent,
 } = {}) {
   const slug = tripShareSlug(trip);
   if (!slug) return editSkip('no_share_slug');
   const guard = shareSlugEditGuardDecision(slug);
   if (!guard.ok) {
-    let replyContext = '';
-    if (guard.reason === 'not_allowlisted') {
-      replyContext = 'Tell the customer itinerary editing is not enabled for this trip yet.';
-    } else if (guard.reason !== 'demo_locked') {
-      replyContext = 'Tell the customer this demo trip cannot be edited via chat.';
-    }
+    const replyContext = guard.reason === 'not_allowlisted'
+      ? 'Tell the customer itinerary editing is not enabled for this trip yet.'
+      : guard.reason === 'demo_locked' ? '' : 'Tell the customer this demo trip cannot be edited via chat.';
     return editSkip(guard.reason, replyContext, { applied: false, reason: guard.reason });
   }
   const webAccessToken = readCookie(httpReq, webAccessCookieName())
@@ -358,7 +320,7 @@ export async function runChatItineraryEditTurn({
     offlineIntent,
   );
   if (!intent || intent.op === 'none') return editSkip('no_intent');
-  const payload = await fetchPayload(slug, { env, cookie: `${webAccessCookieName()}=${encodeURIComponent(webAccessToken)}` });
+  let payload = await fetchPayload(slug, { env, cookie: `${webAccessCookieName()}=${encodeURIComponent(webAccessToken)}` });
   if (intent.op === 'undo') {
     const latest = await loadLatestEdit(db, trip.id);
     if (!latest) {
@@ -421,7 +383,40 @@ export async function runChatItineraryEditTurn({
     const key = overrideKey(place.id);
     const oldTime = payload?.thingOverrides?.[key]?.perDaySchedule?.[String(day.id)]?.startTime
       || payload?.thingOverrides?.[key]?.startTime || place.place_time || '';
-    const applied = applySetTimeOp(payload, { placeId: place.id, dayId: day.id, timeHHMM });
+    const priorAssignment = findPlaceAssignment(payload, place.id);
+    const removeFromDayId = priorAssignment && String(priorAssignment.dayId) !== String(day.id)
+      ? priorAssignment.dayId
+      : null;
+    if (!placeAssignedOnDay(payload, place.id, day.id)) {
+      const assignment = await ensurePlaceAssignedOnDay({
+        payload, slug, placeId: place.id, dayId: day.id, webAccessToken, env, putAssignmentMove, postDayAssignment,
+      });
+      if (!assignment.ok) {
+        const assignedDays = assignedDayNumbersForPlace(payload, place.id);
+        const onDay = priorAssignment
+          ? (assignedDays.length ? `Day ${assignedDays.join(', ')}` : `day ${priorAssignment.dayId}`)
+          : 'this trip';
+        return editSkip(
+          'assignment_move_failed',
+          `${place.name || place.title} could not be moved onto Day ${dayNumber}; it is still scheduled on ${onDay}.`,
+          { applied: false, reason: 'assignment_move_failed' },
+        );
+      }
+      payload = assignment.payload;
+    }
+    if (!placeAssignedOnDay(payload, place.id, day.id)) {
+      return editSkip(
+        'assignment_move_failed',
+        `${place.name || place.title} is not on Day ${dayNumber} yet; try again after refreshing the trip.`,
+        { applied: false, reason: 'assignment_move_failed' },
+      );
+    }
+    const applied = applySetTimeOp(payload, {
+      placeId: place.id,
+      dayId: day.id,
+      timeHHMM,
+      removeFromDayId,
+    });
     await persistItineraryWrite(db, trip, slug, turnId, place.id, applied, payload.thingOverrides, webAccessToken, env, putOverrides);
     const result = {
       applied: true,
@@ -442,6 +437,17 @@ export async function runChatItineraryEditTurn({
     if (!anchorTime) return editSkip('anchor_time_missing', `Set a time for ${place.name || place.title} on that day before adding a bar before it.`, { applied: false, reason: 'anchor_time_missing' });
     const bar = selectNearestBarBeforeAnchor(payload, place, day.id);
     if (!bar) return editSkip('no_bar_candidate', 'No unused bar already on this trip is available to schedule before that dinner.', { applied: false, reason: 'no_bar_candidate' });
+    const barAssignment = await ensurePlaceAssignedOnDay({
+      payload, slug, placeId: bar.id, dayId: day.id, webAccessToken, env, putAssignmentMove, postDayAssignment,
+    });
+    if (!barAssignment.ok) {
+      return editSkip(
+        'assignment_move_failed',
+        `${bar.name || bar.title} could not be scheduled on Day ${dayNumber} before ${place.name || place.title}.`,
+        { applied: false, reason: 'assignment_move_failed' },
+      );
+    }
+    payload = barAssignment.payload;
     const duration = Number(payload?.thingOverrides?.[overrideKey(bar.id)]?.duration) || 60;
     const applied = applyAddBarBeforeOp(payload, { barPlaceId: bar.id, anchorPlaceId: place.id, dayId: day.id, anchorStartHHMM: anchorTime, barDurationMin: duration });
     await persistItineraryWrite(db, trip, slug, turnId, place.id, applied, payload.thingOverrides, webAccessToken, env, putOverrides);
@@ -452,14 +458,8 @@ export async function runChatItineraryEditTurn({
 }
 
 export async function prepareChatItineraryEditForQueueTurn({ db, trip, seat, tripId, requestText, turnId, httpReq, env }) {
-  const emptyQueuePrep = {
-    replyCustomerTurn: requestText,
-    itineraryEditResult: null,
-    itineraryEditAuthoritative: '',
-    itineraryEditCannedReply: '',
-  };
   if (!tripId || !trip || seat) {
-    return emptyQueuePrep;
+    return { replyCustomerTurn: requestText, itineraryEditResult: null, itineraryEditAuthoritative: '', itineraryEditCannedReply: '' };
   }
   try {
     const itineraryEditResult = await runChatItineraryEditTurn({ db, trip, customerTurn: requestText, turnId, httpReq, env });

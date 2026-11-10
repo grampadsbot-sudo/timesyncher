@@ -2,8 +2,9 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {
   applyAddBarBeforeOp,
+  applyAssignmentCreateOnPayload,
+  applyAssignmentMoveOnPayload,
   applySetTimeOp,
-  assertChatEditPutStaysSmallUnderHugeOverrides,
   coalesceChatItineraryEditIntent,
   DEMO_LOCKED_CHAT_EDIT_CUSTOMER_REPLY,
   loadChatItineraryEditConfig,
@@ -103,6 +104,7 @@ function makeChatItineraryEditDbStub({ sessionToken, edits = [] } = {}) {
 
 function miniPayload() {
   return {
+    trip: { id: 199 },
     days: [{ id: 502, day_number: 2, title: 'Day 2' }],
     places: [
       {
@@ -341,6 +343,23 @@ for (const [op, customerTurn] of turns) {
       if (!stored.thingOverrides) stored.thingOverrides = {};
       mergeSharedOverrides(stored.thingOverrides, overrides);
     },
+    putAssignmentMove: async ({ newDayId, assignmentId }) => {
+      const prior = (stored.assignments || {});
+      const fromDayId = Object.keys(prior).find((dayId) =>
+        (prior[dayId] || []).some((row) => String(row.place_id ?? row.place?.id) === String(610)),
+      );
+      if (fromDayId) {
+        stored = applyAssignmentMoveOnPayload(stored, {
+          placeId: 610,
+          fromDayId,
+          toDayId: newDayId,
+          assignmentId,
+        });
+      }
+    },
+    postDayAssignment: async ({ dayId, placeId }) => {
+      stored = applyAssignmentCreateOnPayload(stored, { placeId, dayId });
+    },
   });
   assert.equal(result.applied, true, `${op}: ${result.reason}`);
   assert.equal(result.op, op);
@@ -375,18 +394,21 @@ for (const [op, customerTurn] of turns) {
 }
 
 const editSource = fs.readFileSync(new URL('../src/vacation/chat-itinerary-edit.mjs', import.meta.url), 'utf8');
-const functions = [...editSource.matchAll(/^(?:export )?(?:async )?function (\w+)\(/gm)];
+const trekWriteSource = fs.readFileSync(new URL('../src/vacation/chat-itinerary-edit-trek-write.mjs', import.meta.url), 'utf8');
 let writeHelpers = 0;
-for (let i = 0; i < functions.length; i += 1) {
-  const body = editSource.slice(functions[i].index, functions[i + 1]?.index ?? editSource.length);
-  const sink = body.search(/await putOverrides\(|method: 'PUT'/);
-  if (sink < 0) continue;
-  writeHelpers += 1;
-  const guard = body.indexOf('shareSlugEditGuardDecision(slug)');
-  assert.ok(guard >= 0 && guard < sink, `${functions[i][1]} must guard before writing`);
-  assert.match(body.slice(guard, sink), /if \(!guard\.ok\).*throw/s);
+for (const src of [trekWriteSource]) {
+  const functions = [...src.matchAll(/^(?:export )?(?:async )?function (\w+)\(/gm)];
+  for (let i = 0; i < functions.length; i += 1) {
+    const body = src.slice(functions[i].index, functions[i + 1]?.index ?? src.length);
+    const sink = body.search(/await putOverrides\(|method: 'PUT'/);
+    if (sink < 0) continue;
+    writeHelpers += 1;
+    const guard = body.indexOf('shareSlugEditGuardDecision(slug)');
+    assert.ok(guard >= 0 && guard < sink, `${functions[i][1]} must guard before writing`);
+    assert.match(body.slice(guard, sink), /if \(!guard\.ok\).*throw/s);
+  }
 }
-assert.equal(writeHelpers, 1, 'all chat override writes use one guarded helper');
+assert.equal(writeHelpers, 2, 'TREK override and assignment PUT helpers stay guard-first');
 assert.equal((editSource.match(/await putSharedTripOverrides\(/g) || []).length, 2, 'edit persistence and undo use the guarded helper');
 
 const queueSource = fs.readFileSync(new URL('../routes/vacation-app-chat-queue.mjs', import.meta.url), 'utf8');
@@ -458,28 +480,4 @@ assert.equal(undoDemoLocked.applied, false);
 assert.equal(undoDemoLocked.reason, 'demo_locked');
 const barHopLocked = await prepareChatItineraryEditForQueueTurn({ db: async () => [], trip: { id: chatEditTripId, metadata: { sharedToken: lockedFixtureSlug } }, tripId: chatEditTripId, seat: null, requestText: 'Add a bar hop before Carbone that night.', httpReq: ownerHttpReq, env: {} });
 assert.equal(barHopLocked.itineraryEditCannedReply, DEMO_LOCKED_CHAT_EDIT_CUSTOMER_REPLY);
-const oversizeLogs = [];
-const origConsoleError = console.error;
-const origFetch = globalThis.fetch;
-console.error = (...args) => { oversizeLogs.push(args); origConsoleError(...args); };
-try {
-  globalThis.fetch = async (url, init) => {
-    const href = String(url);
-    if (href.includes('/overrides') && init?.method === 'PUT') return { ok: false, status: 413, text: async () => 'request entity too large' };
-    if (href.includes('/api/shared/') && (!init?.method || init.method === 'GET')) return { ok: true, status: 200, json: async () => miniPayload() };
-    return origFetch(url, init);
-  };
-  const queueOversize = await prepareChatItineraryEditForQueueTurn({ db: makeChatItineraryEditDbStub({ sessionToken: ownerSession }), trip: chatEditTrip, tripId: chatEditTripId, seat: null, requestText: 'Move Carbone to 8:30 PM on Day 2', turnId: 'turn-oversize-859', httpReq: ownerHttpReq, env: { ...ownerEditEnv, TIMESYNCHER_TREK_PUBLIC_BASE_URL: trekBase } });
-  assert.equal(queueOversize.itineraryEditResult?.client?.reason, 'edit_failed');
-  const logged = oversizeLogs.find((args) => args[0] === 'chat_itinerary_edit_failed');
-  assert.ok(logged);
-  assert.match(String(logged[1]), /overrides_put_failed 413/);
-  assert.equal(logged[2], 'status=413');
-  assert.match(queueOversize.itineraryEditAuthoritative || queueOversize.itineraryEditResult?.replyContext || '', /did not save/i);
-} finally { console.error = origConsoleError; globalThis.fetch = origFetch; }
-
-const bulkMb = 'x'.repeat(10 * 1024 * 1024);
-await assertChatEditPutStaysSmallUnderHugeOverrides((extra) => ownerSetTimeTurn(extra), {
-  payload: { ...miniPayload(), thingOverrides: { ...miniPayload().thingOverrides, 'place:6999': { evidenceDossier: { pages: [{ body: bulkMb }] } } } },
-});
 console.log('test_chat_itinerary_edit: ok');

@@ -1,30 +1,44 @@
-Closes #888
+Closes #859
 
-#896 / #888 — flight row layout @390, conflict-badge wrap, trip switcher dates (`Jun 23–30, 2026`). Host vk base-merge @ `b1211bf9eea151ba7aec5eca2bdf39cabbc0cd6a` into `49e1fab3d710d3b86d2f06779b5ace0ce2eaab2e` also carries #884 logo-chip fallback hide, #927 touch splitter + collapsible trip hero, #905 chat-itinerary merge, #903 live QA polish, and related vk shell paths.
+## Summary — #859 chat itinerary edit
 
-**#888 layout:** conflict badges and trip switcher wrap (no ellipsis); flight time chips show full arrival/depart text inside the card @390; one font weight on chips. Vacation client: `@media (max-width: 480px)` multi-row `.tsv-row-flight-main`. Served trek: `ISSUE_888_SERVED_LAYOUT_CSS` two-line grid + `SHARED_LIVE_FLIGHT_LOGO_NAME_CSS` centers logo with airline name.
+- Chat **set_time** on a place not assigned to the target day now moves the TREK **assignment** (move/create APIs) before writing schedule overrides, so `buildDayTimeline` shows the place on the requested day at the requested time and removes it from the prior day.
+- **add_bar_before** anchors to the assignment day and assigns the bar on that day with a real timeline row ending before the anchor.
+- Post-generation **rewrite** and **reply ship gate** steps in `vacation-app-chat-queue` are wrapped in a 12s bounded await so the endpoint returns JSON instead of timing out at 60s.
+- `placeOnDay` for itinerary edit resolution is assignment-only (override `dayIds` no longer count as “on day” for Thing rows).
 
-**#884:** logo chips hide `.tsv-logo-fallback` after brand `img` loads; rebaked served bundle.
+## Inherited from `origin/vk` merge (keep both behaviours)
 
-**#927 (vk carry):** `public/ts-trip-hero-collapse.js` expanded `h1` uses `overflow-wrap:anywhere`; collapse metrics test updated.
+Host base-merge `origin/vk` @ `6017b330` into PR head @ `9ec105f0`.
 
-**#903:** No serve-time title/narrative rewrites; stored fixture rows 609/630–634 carry customer wording. See `live-qa-903-presentation.mjs`.
+- **#888 / #896:** flight time chips stay inside the card @390; conflict-badge wrap; `ISSUE_888_SERVED_LAYOUT_CSS` two-row grid; vacation client `.tsv-row-flight-main` three-column @390.
+- **#902 / customer build stamp:** hide customer-visible build-stamp bar; keep meta + `/api/version`.
+- **#939 / #927:** trip hero collapse / touch splitter tests.
+- **#905:** chat-itinerary sequential PUT merge.
+- **#884:** logo-chip fallback hide; rebaked `public/assets/index-BKun7ofk.js`.
+- **#941:** hide mic when SpeechRecognition missing; demo-locked authoritative reply wording.
+- Budget price parity, vk trip shell / stored-data polish paths as merged.
 
-## Verification (lane @ `49e1fab3` + conflict resolution, uncommitted)
+## Tests
 
-- `node scripts/rebake_served_trek_bundle.mjs`
-- `node scripts/test_issue_888_clipped_text.mjs`
-- `node scripts/test_issue_903_live_qa_polish.mjs`
-- `node scripts/test_ui_884_logo_chip_fallback_hide.mjs`
-- `node scripts/test_shared_logo_chip_center_bundle.mjs`
-- `node scripts/test_shared_trip_live_tab_logos.mjs`
-- `node scripts/test_served_trek_bundle.mjs`
-- `node scripts/test_vacation_app_927_hero_collapse.mjs`
-- `cd apps/vacation-client && npm test`
-- `node scripts/check-no-comments.mjs`, `node scripts/test_offline_manifest.mjs`, `BASE=vk node scripts/check-code-ratchet.mjs`
+```bash
+timeout 120 node scripts/test_chat_itinerary_edit.mjs
+node scripts/test_chat_itinerary_edit_905.mjs
+node scripts/test_issue_888_clipped_text.mjs
+node scripts/test_issue_870_composer_mic.mjs
+cd apps/vacation-client && npm test
+node scripts/test_served_trek_bundle.mjs
+node scripts/check-no-comments.mjs
+node scripts/test_offline_manifest.mjs
+BASE=vk node scripts/check-code-ratchet.mjs
+```
 
-CI + Gate B with `gateb-allow.json["888"]` on host-published merge commit.
+Copy-shape two-turn cases in `_905.mjs` fail on vk tip before the assignment/bounded-postgen patch.
 
-## Scope left alone
+## Out of scope
 
-Baselines, Gate B host scripts/workflows, unrelated #882/#889/#865 paths. `GATE_B_DISPLAY_TITLE_ALIASES[609]` retained (#903).
+Haiku empty reply (#858), TREK body limits, NYC 8CQX / live fixture writes, live two-turn proof (host watcher `chat-edit-live-proof-940`).
+
+## Left alone
+
+Baselines, check config workflows, deploy config (`vercel.json` / `vite.config.mjs` except vk-merge carry), package deps.
