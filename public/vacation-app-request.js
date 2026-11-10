@@ -252,9 +252,9 @@ window.tsVacationAppChrome = {
     );
 
     if (!SpeechRecognition) {
-      voiceButton.disabled = true;
-      voiceButton.title = unsupportedMessage;
-      showStatus(unsupportedMessage);
+      const voiceWrap = voiceButton.closest('.voice-mic-wrap');
+      if (voiceWrap) voiceWrap.hidden = true;
+      else voiceButton.hidden = true;
       return;
     }
 

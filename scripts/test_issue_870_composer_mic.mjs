@@ -10,13 +10,18 @@ setTimeout(() => {
 class MockNode {
   constructor(id) {
     this.id = id;
-    this.hidden = true;
+    this.hidden = id === 'composerStatus';
     this.textContent = '';
     this.value = '';
     this.title = '';
     this.disabled = false;
     this.className = '';
     this.listeners = {};
+    this.parentNode = null;
+  }
+
+  closest() {
+    return null;
   }
 
   get classList() {
@@ -247,7 +252,16 @@ const retryCopy = "Didn't catch that — tap the mic and try again.";
   delete h.sandbox.SpeechRecognition;
   delete h.sandbox.webkitSpeechRecognition;
   await loadBindVoice(h.sandbox);
-  assert.equal(h.nodes.voiceButton.disabled, true);
+  assert.equal(h.nodes.voiceButton.hidden, true);
+  assert.equal(h.nodes.composerStatus.textContent, '');
+}
+
+{
+  const h = buildHarness({});
+  h.sandbox.navigator.mediaDevices = {};
+  await loadBindVoice(h.sandbox);
+  await h.nodes.voiceButton.click();
+  await microtaskDrain();
   assert.match(h.nodes.composerStatus.textContent, /not available in this browser/);
 }
 

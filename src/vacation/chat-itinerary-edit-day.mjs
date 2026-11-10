@@ -188,6 +188,14 @@ export function buildItineraryEditFailureAuthoritativeSystemExtra(reason = 'edit
   ].join(' ');
 }
 
+export function buildItineraryEditDemoLockedAuthoritativeSystemExtra() {
+  return [
+    'AUTHORITATIVE_SYSTEM: This trip is locked for chat itinerary edits.',
+    'Reply in one or two short sentences: this demo trip cannot be changed from chat; the customer can update the itinerary on the trip website.',
+    'Do not invent itinerary facts or describe venues, days, or times from this turn.',
+  ].join(' ');
+}
+
 export function buildItineraryEditAuthoritativeSystemExtra(result, payload = null) {
   if (!result?.applied) return '';
   const day = payload ? dayForNumber(payload, result.dayNumber) : null;

@@ -12,6 +12,7 @@ import {
 import {
   buildChatItineraryOverridesPutBody,
   buildItineraryEditAuthoritativeSystemExtra,
+  buildItineraryEditDemoLockedAuthoritativeSystemExtra,
   buildItineraryEditFailureAuthoritativeSystemExtra,
   dayEditSkipLabels,
   dayNumbersForPlace,
@@ -31,6 +32,7 @@ export {
   assertChatEditPutStaysSmallUnderHugeOverrides,
   buildChatItineraryOverridesPutBody,
   buildItineraryEditAuthoritativeSystemExtra,
+  buildItineraryEditDemoLockedAuthoritativeSystemExtra,
   buildItineraryEditFailureAuthoritativeSystemExtra,
   dayNumbersForPlace,
   mergeStoredChatItineraryScheduleOverride,
@@ -328,6 +330,9 @@ export async function runChatItineraryEditTurn({
   if (!slug) return editSkip('no_share_slug');
   const guard = shareSlugEditGuardDecision(slug);
   if (!guard.ok) {
+    if (guard.reason === 'demo_locked') {
+      return editSkip('demo_locked', 'This demo trip is locked for chat edits.', { applied: false, reason: 'demo_locked' });
+    }
     const msg = guard.reason === 'not_allowlisted'
       ? 'Tell the customer itinerary editing is not enabled for this trip yet.'
       : 'Tell the customer this demo trip cannot be edited via chat.';
@@ -465,6 +470,8 @@ export async function prepareChatItineraryEditForQueueTurn({ db, trip, seat, tri
         console.error('chat_itinerary_edit_fresh_payload', String(freshError?.message || freshError));
       }
       itineraryEditAuthoritative = buildItineraryEditAuthoritativeSystemExtra(itineraryEditResult, freshPayload);
+    } else if (itineraryEditResult?.reason === 'demo_locked') {
+      itineraryEditAuthoritative = buildItineraryEditDemoLockedAuthoritativeSystemExtra();
     } else if (itineraryEditResult?.replyContext) {
       replyCustomerTurn = `${requestText}\n\n${itineraryEditResult.replyContext}`;
     }
