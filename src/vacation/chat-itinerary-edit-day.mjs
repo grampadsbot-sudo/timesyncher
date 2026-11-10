@@ -2,6 +2,36 @@ function clean(value, max = 500) {
   return String(value ?? '').trim().slice(0, max);
 }
 
+export function parseTimeToHHMM(raw) {
+  let s = clean(raw, 40).toLowerCase().replace(/\./g, '');
+  if (!s) return null;
+  const m = s.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/i);
+  if (!m) return null;
+  let hours = Number(m[1]);
+  const minutes = m[2] != null ? Number(m[2]) : 0;
+  const meridiem = m[3];
+  if (meridiem === 'pm' && hours < 12) hours += 12;
+  if (meridiem === 'am' && hours === 12) hours = 0;
+  if (hours > 23 || minutes > 59) return null;
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+}
+
+export function minutesFromHHMM(hhmm) {
+  const parts = clean(hhmm, 12).split(':');
+  if (parts.length !== 2) return null;
+  const h = Number(parts[0]);
+  const m = Number(parts[1]);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
+  return h * 60 + m;
+}
+
+export function hhmmFromMinutes(total) {
+  const normalized = ((Math.round(total) % (24 * 60)) + 24 * 60) % (24 * 60);
+  const h = Math.floor(normalized / 60);
+  const m = normalized % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
 const CHAT_ITINERARY_SCHEDULE_OVERRIDE_KEYS = [
   'timeline', 'dayIds', 'perDaySchedule', 'duration', 'startTime',
 ];
@@ -16,16 +46,42 @@ function chatItineraryScheduleOverridePatch(overrideRow = {}) {
   return patch;
 }
 
-export function buildChatItineraryOverridesPutBody({ before = {}, after = {}, keys = [] } = {}) {
+export function mergeStoredChatItineraryScheduleOverride(storedRow = {}, desiredRow = {}) {
+  const stored = storedRow && typeof storedRow === 'object' ? storedRow : {};
+  const desired = desiredRow && typeof desiredRow === 'object' ? desiredRow : {};
+  const desiredPatch = chatItineraryScheduleOverridePatch(desired);
+  const merged = chatItineraryScheduleOverridePatch(stored);
+  for (const key of CHAT_ITINERARY_SCHEDULE_OVERRIDE_KEYS) {
+    if (desiredPatch[key] === undefined) continue;
+    if (key === 'perDaySchedule') {
+      const base = { ...(merged.perDaySchedule || {}) };
+      for (const [dayId, dayVal] of Object.entries(desiredPatch.perDaySchedule || {})) {
+        const prior = base[dayId] && typeof base[dayId] === 'object' ? { ...base[dayId] } : {};
+        base[dayId] = {
+          ...prior,
+          ...(dayVal && typeof dayVal === 'object' ? dayVal : {}),
+        };
+      }
+      merged.perDaySchedule = base;
+    } else {
+      merged[key] = structuredClone(desiredPatch[key]);
+    }
+  }
+  return merged;
+}
+
+export function buildChatItineraryOverridesPutBody({ before = {}, after = {}, keys = [], stored = {} } = {}) {
   const patch = {};
+  const storedMap = stored && typeof stored === 'object' ? stored : {};
   for (const key of keys) {
     const afterRow = after[key];
     const beforeRow = before[key];
     const source = afterRow && typeof afterRow === 'object' && Object.keys(afterRow).length
       ? afterRow
       : beforeRow;
+    const storedRow = storedMap[key];
     if (source && typeof source === 'object' && Object.keys(source).length) {
-      patch[key] = chatItineraryScheduleOverridePatch(source);
+      patch[key] = mergeStoredChatItineraryScheduleOverride(storedRow, source);
     } else {
       patch[key] = {};
     }
