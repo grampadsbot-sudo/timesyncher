@@ -297,9 +297,9 @@ export const NYC_STAGING_CAPTURE_LIST_ROWS = [
   },
   {
     "id": 659,
-    "name": "Guided walking/audio history tours",
+    "name": "Big Apple Greeter",
     "cat": "activity",
-    "ccabKey": "Guided walking/audio history tours"
+    "ccabKey": "Big Apple Greeter"
   },
   {
     "id": 660,
@@ -327,9 +327,9 @@ export const NYC_STAGING_CAPTURE_LIST_ROWS = [
   },
   {
     "id": 664,
-    "name": "Village Vanguard / Smoke / Birdland / Jazz Gallery",
+    "name": "Birdland Jazz Club",
     "cat": "activity",
-    "ccabKey": "Village Vanguard / Smoke / Birdland / Jazz Gallery"
+    "ccabKey": "Birdland Jazz Club"
   },
   {
     "id": 665,
@@ -345,9 +345,9 @@ export const NYC_STAGING_CAPTURE_LIST_ROWS = [
   },
   {
     "id": 667,
-    "name": "e’s BAR / The Dead Poet / Lilly’s Cocktail & Wine",
+    "name": "e’s BAR",
     "cat": "restaurant",
-    "ccabKey": "e’s BAR / The Dead Poet / Lilly’s Cocktail & Wine"
+    "ccabKey": "e’s BAR"
   },
   {
     "id": 668,
