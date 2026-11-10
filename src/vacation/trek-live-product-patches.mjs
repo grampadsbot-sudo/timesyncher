@@ -8,7 +8,7 @@ import { tripMapHookBundleSnippet } from './trip-map-hook.mjs';
 import { patchLiveProductDetailBundle } from './trek-thing-detail-patches.mjs';
 import { patchBudgetUpstreamMiscBucket } from './trek-budget-upstream-misc-patch.mjs';
 import { patchListRowDescription } from './trek-list-row-description-patch.mjs';
-import { applyFlightDayTimelinePatches } from './trek-live-product-flight-day-patches.mjs';
+import { applyFlightDayTimelinePatches, patchFlightTimelineDisplay887 } from './trek-live-product-flight-day-patches.mjs';
 import { patchThingLogoInkCenterInBundle } from './thing-logo-ink-center.mjs';
 import { patchTabIconVerticalCenter } from './trek-tab-icon-center-patches.mjs';
 import { forceSharedDayByDayUi } from './shared-day-by-day-ui.mjs';
@@ -16,7 +16,6 @@ import { buildListLogoPatch } from './thing-logo-fallback-url.mjs';
 import { LIST_LOGO_NEEDLE, patchListLogoQrGuard } from './trek-list-logo-qr-patch.mjs';
 import { patchEventsEmptyListMessage, patchSharedTabCrossFilters } from './trek-shared-tab-cross-filter-patch.mjs';
 import { applyNrPicPopupPatches } from './trek-nr-pic-popup-patches.mjs';
-
 export { LIST_LOGO_QR_GUARD_PATCH, patchListLogoQrGuard } from './trek-list-logo-qr-patch.mjs';
 export const LIST_LOGO_PATCH = buildListLogoPatch();
 const LIST_LOGO_PATCH_NEEDLE = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"");if(raw&&!/^data:image\\/svg\\+xml/i.test(raw))return raw;return ""}';
@@ -333,6 +332,8 @@ const TIMELINE_TITLE_NEEDLE = 'n.jsx("button",{onClick:()=>Ne(Qt(ua.item)),style
 const TIMELINE_TITLE_PATCH = 'n.jsx("button",{"data-ts-timeline-title":"1",onClick:()=>Ne(Qt(ua.item)),style:{border:0,padding:0,background:"transparent",cursor:"pointer",fontSize:13,fontWeight:600,lineHeight:1.15,color:"#111827",textDecoration:"underline",textDecorationColor:"#cbd5e1",textUnderlineOffset:3,textAlign:"left"},children:Pn})';
 const TIMELINE_TITLE_PAD_NEEDLE = 'style:ua.isConflict?{marginLeft:26,borderLeft:"3px solid #60a5fa",paddingLeft:12,background:"#eff6ff",borderRadius:10,paddingTop:6,paddingBottom:6,paddingRight:10}:{paddingTop:1}';
 const TIMELINE_TITLE_PAD_PATCH = 'style:ua.isConflict?{marginLeft:26,borderLeft:"3px solid #60a5fa",paddingLeft:12,background:"#eff6ff",borderRadius:10,paddingTop:6,paddingBottom:6,paddingRight:10,display:"flex",flexDirection:"column",alignItems:"flex-start",gap:4,minWidth:0,width:"100%",boxSizing:"border-box"}:{paddingTop:1}';
+const CONFLICT_LABEL_NEEDLE = 'ua.isConflict&&n.jsxs("div",{style:{display:"flex",alignItems:"center",gap:8,color:"#b91c1c",fontSize:11,fontWeight:900,marginBottom:6},children:[n.jsx("span",{style:{width:34,height:2,background:"#ef4444",display:"inline-block"}}),"Conflict with ",Bs(ua.conflictWith||"another timeline item")]}),n.jsx("button",{"data-ts-timeline-title":"1"';
+const CONFLICT_LABEL_PATCH = 'ua.isConflict&&n.jsxs("div",{"data-ts-conflict-label":"1",style:{display:"flex",alignItems:"center",gap:8,flexWrap:"nowrap",width:"100%",minWidth:0,color:"#b91c1c",fontSize:11,fontWeight:900,marginBottom:6,lineHeight:1.35,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"},children:[n.jsx("span",{style:{width:34,height:2,background:"#ef4444",display:"inline-block",flexShrink:0}}),"Conflict with ",Bs(ua.conflictWith||"another timeline item")]}),n.jsx("button",{"data-ts-timeline-title":"1"';
 const ROW_TYPE_SKIP = '/^(travel|travel-to-thing|transport|hotel-wake|hotel-sleep|hotel-chec[k]out)$/i';
 const DAY_TITLE_NR_NEEDLE = 'children:Pn}),n.jsx(Nr,{items:zr,scopeKey:Qt(ua.item),compact:!0})';
 const DAY_TITLE_NR_PATCH = `children:Pn}),!${ROW_TYPE_SKIP}.test(String(ua.type||""))&&!/^Travel (to|from)\\b/i.test(String(ua.title||""))&&(!Zi(ua.item)||String(ua.type||"")==="hotel-event")&&tsItinLine(ua.item,ua.notes)?n.jsx("div",{"data-row-summary":"1","data-itinerary-note":"1","data-summary-thing-only":"1","data-summary-src":"thing","data-summary-stored":"1",style:{display:"block",width:"100%",fontSize:12,fontWeight:400,marginTop:0,lineHeight:1.4,color:"#334155"},children:tsItinLine(ua.item,ua.notes)}):null,zr.length?n.jsx(Nr,{items:zr,scopeKey:Qt(ua.item),compact:!0}):null`;
@@ -408,6 +409,10 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   if (js.includes(TIMELINE_ICON_NEEDLE)) js = js.replace(TIMELINE_ICON_NEEDLE, TIMELINE_ICON_PATCH);
   if (js.includes(TIMELINE_TITLE_NEEDLE)) js = js.replace(TIMELINE_TITLE_NEEDLE, TIMELINE_TITLE_PATCH);
   if (js.includes(TIMELINE_TITLE_PAD_NEEDLE)) js = js.replace(TIMELINE_TITLE_PAD_NEEDLE, TIMELINE_TITLE_PAD_PATCH);
+  if (js.includes(CONFLICT_LABEL_NEEDLE)) js = js.replace(CONFLICT_LABEL_NEEDLE, CONFLICT_LABEL_PATCH);
+  else if (served && !js.includes('data-ts-conflict-label":"1"')) {
+    throw new Error('conflict timeline label patch did not apply');
+  }
   if (js.includes(DAY_TITLE_NR_NEEDLE)) js = js.replace(DAY_TITLE_NR_NEEDLE, DAY_TITLE_NR_PATCH);
   else if (served && !js.includes('(!Zi(ua.item)||String(ua.type||"")==="hotel-event")&&tsItinLine(ua.item,ua.notes)')) {
     throw new Error('day-by-day timeline row summary patch did not apply');
@@ -456,6 +461,7 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   }
   js = applyFlightDayTimelinePatches(js, { served });
   js = patchSharedLayoutOverflow(js, { served });
+  js = patchFlightTimelineDisplay887(js, { served });
   const FLIGHT_EU_NEEDLE_BAD = 'return[(v=>{const fareLbl=(w=>w.includes("round")?"round trip":w.includes("one")?"one-way":"")';
   if (js.includes(FLIGHT_EU_AIRLINE_NEEDLE)) {
     js = js.replace(FLIGHT_EU_AIRLINE_NEEDLE, FLIGHT_EU_AIRLINE_PATCH);

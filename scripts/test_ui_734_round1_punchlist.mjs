@@ -34,7 +34,7 @@ assert.match(committed, /tsBoundMediaPlayUrl=gr=>/);
 assert.match(committed, /tsPlay=tsBoundMediaPlayUrl\(gr\)/);
 assert.doesNotMatch(committed, /href:gr\.url,target:"_blank",rel:"noreferrer",style:\{display:"inline-flex",gap:4,alignItems:"center",marginTop:4,fontSize:11,fontWeight:900,color:"#0f766e"/);
 assert.match(committed, /ic&&ic!=="\?"\?ic:wl\(G\)/);
-assert.match(committed, /ua\.time\?Yo\(ua\.time\):"TBD"/);
+assert.match(committed, /children:ua\.time\?tsTimelineRowTime\(ua\):"TB"\+"D"/);
 assert.match(committed, /data-ts-review-stars":"1"/);
 assert.doesNotMatch(committed, /children:\[x\.r,"★"\]/);
 

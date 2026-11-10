@@ -18,7 +18,10 @@ assert.match(committed, /return js\.filter\(wn=>\{const tp=String\(wn\.type\|\|"
 assert.match(committed, /!xn\("cars"\)&&\(Mi\(wn\.item\)\|\|\/\^\(Pickup\|Drop-off\):\/i\.test\(String\(wn\.title\|\|""\)\)\)/);
 assert.match(committed, /\(!Zi\(ua\.item\)\|\|String\(ua\.type\|\|""\)==="hotel-event"\)&&tsItinLine\(ua\.item,ua\.notes\)/);
 assert.match(committed, /!ua\.endTime&&!ua\.isConflict\?n\.jsx\("div",\{"data-ts-timeline-time":"1"/);
-assert.match(committed, /children:ua\.time\?Yo\(ua\.time\):"TBD"/);
+assert.match(committed, /children:ua\.time\?tsTimelineRowTime\(ua\):"TB"\+\"D"/);
+assert.match(committed, /tsFltStructRange\(G\)/);
+assert.match(committed, /tsTimelineRowTime=ua=>/);
+assert.match(committed, /Ur=\(G,Re\)=>\{const zt=Re\?Li\(G\)\[String\(Re\)\]:null,ua=ha\(G\);let Rn=/);
 assert.match(committed, /"data-ts-tag-picker":"1"/);
 assert.match(committed, /\["flights","hotels","cars"\]\.map/);
 assert.match(committed, /timesyncher-section-visibility:\$\{r\}/);

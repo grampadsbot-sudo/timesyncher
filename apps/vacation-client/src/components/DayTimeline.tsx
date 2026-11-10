@@ -166,7 +166,9 @@ export function DayTimeline({ trip, entries, onOpen }: Props) {
               {!isTravel && entry.startLabel ? (
                 <span className="tsv-timeline-time">{entry.startLabel}</span>
               ) : null}
-              {!isTravel && !entry.startLabel && entry.kind === 'thing' ? (
+              {!isTravel &&
+              !entry.startLabel &&
+              (entry.kind === 'thing' || entry.kind === 'hotel-wake' || entry.kind === 'hotel-sleep') ? (
                 <span className="tsv-timeline-time tsv-timeline-time--tbd">TBD</span>
               ) : null}
               {entry.kind === 'flight' && entry.endLabel ? (

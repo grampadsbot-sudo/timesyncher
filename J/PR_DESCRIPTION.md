@@ -9,7 +9,7 @@ Closes #859
 
 ## Inherited from `origin/vk` merge (keep both behaviours)
 
-Host base-merge `origin/vk` @ `b1211bf9` into PR head @ `613fb4f0`.
+Host base-merge `origin/vk` @ `9ce029fa` into PR head @ `5541a08c`.
 
 - **#902 / customer build stamp:** Hide customer-visible build-stamp bar; keep `<meta name="timesyncher-build">` and `/api/version`. `public/ts-build-stamp-customer-hide.{css,js}`, `BuildStampFooter`, `apps/vacation-client/src/styles.css`.
 - **#939 / #927:** `public/ts-trip-hero-collapse.js` expanded title unclip; touch splitter / hero collapse tests.

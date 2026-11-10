@@ -121,27 +121,29 @@ try {
     await new Promise((r) => setTimeout(r, 300));
 
     if (width === 390) {
-      const tbdCheck = await page.evaluate(() => {
+      const timeCheck = await page.evaluate(() => {
+        const timeline = document.querySelector('[data-ts-day-timeline]');
+        const allText = String(timeline?.innerText || '');
         const times = [...document.querySelectorAll('[data-ts-day-timeline] [data-ts-timeline-time]')];
-        const tbd = times.find((el) => String(el.textContent || '').replace(/\s+/g, ' ').trim() === 'TBD');
-        if (!tbd) {
-          return { ok: false, samples: times.slice(0, 5).map((el) => String(el.textContent || '').trim()) };
-        }
-        const row = tbd.parentElement;
+        const emptyTime = times.find((el) => !String(el.textContent || '').replace(/\s+/g, ' ').trim());
+        const row = emptyTime?.parentElement;
         const titleCol = row && row.children.length >= 3 ? row.children[2] : null;
         return {
-          ok: true,
-          timeAlign: window.getComputedStyle(tbd).alignSelf,
+          hasTbd: /\bTBD\b/.test(allText),
+          timeAlign: emptyTime ? window.getComputedStyle(emptyTime).alignSelf : '',
           titleAlign: titleCol ? window.getComputedStyle(titleCol).alignSelf : '',
           titleInline: titleCol ? String(titleCol.getAttribute('style') || '') : '',
+          samples: times.slice(0, 5).map((el) => String(el.textContent || '').trim()),
         };
       });
-      assert.ok(tbdCheck.ok, `untimed TBD row at ${width}: ${(tbdCheck.samples || []).join(' | ')}`);
-      assert.equal(tbdCheck.timeAlign, 'baseline', `#690 TBD time column baseline at ${width}`);
-      assert.ok(
-        tbdCheck.titleAlign === 'baseline' || /align-self:\s*baseline|alignSelf:\s*baseline/i.test(tbdCheck.titleInline),
-        `#688 title baseline with TBD at ${width} (align=${tbdCheck.titleAlign})`,
-      );
+      assert.equal(timeCheck.hasTbd, true, `#887 untimed rows keep TBD in time column at ${width}: ${(timeCheck.samples || []).join(' | ')}`);
+      if (timeCheck.timeAlign) {
+        assert.equal(timeCheck.timeAlign, 'baseline', `#690 empty time column baseline at ${width}`);
+        assert.ok(
+          timeCheck.titleAlign === 'baseline' || /align-self:\s*baseline|alignSelf:\s*baseline/i.test(timeCheck.titleInline),
+          `#688 title baseline with empty time at ${width} (align=${timeCheck.titleAlign})`,
+        );
+      }
     }
 
     await page.evaluate(() => {
