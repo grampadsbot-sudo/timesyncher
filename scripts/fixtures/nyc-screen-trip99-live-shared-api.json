@@ -93,7 +93,7 @@
      "description": "",
      "lat": 36.084,
      "lng": -115.1537,
-     "address": "Flight options / Bookings tab",
+     "address": "LAS → JFK",
      "category_id": 5,
      "category_name": "Flight",
      "category_icon": "✈️",
@@ -358,7 +358,7 @@
     "place": {
      "id": 611,
      "trip_id": 99,
-     "name": "Blue Note Jazz Club",
+     "name": "Blue Note Jazz Club (late set)",
      "description": "",
      "lat": 40.7301,
      "lng": -74.001,
@@ -1357,7 +1357,7 @@
      "description": "",
      "lat": 40.6413,
      "lng": -73.7781,
-     "address": "Flight options / Bookings tab",
+     "address": "JFK → LAS",
      "category_id": 5,
      "category_name": "Flight",
      "category_icon": "✈️",
@@ -1388,7 +1388,7 @@
    "description": "",
    "lat": 36.084,
    "lng": -115.1537,
-   "address": "Flight options / Bookings tab",
+   "address": "LAS → JFK",
    "category_id": 5,
    "category_name": "Flight",
    "category_icon": "✈️",
@@ -1622,7 +1622,7 @@
   {
    "id": 611,
    "trip_id": 99,
-   "name": "Blue Note Jazz Club",
+   "name": "Blue Note Jazz Club (late set)",
    "description": "",
    "lat": 40.7301,
    "lng": -74.001,
@@ -2149,7 +2149,7 @@
    "description": "",
    "lat": 40.6413,
    "lng": -73.7781,
-   "address": "Flight options / Bookings tab",
+   "address": "JFK → LAS",
    "category_id": 5,
    "category_name": "Flight",
    "category_icon": "✈️",
@@ -2245,7 +2245,7 @@
    "description": "",
    "lat": 36.084,
    "lng": -115.1537,
-   "address": "Flight options / Bookings tab",
+   "address": "LAS → LGA",
    "category_id": 5,
    "category_name": "Flight",
    "category_icon": "✈️",
@@ -2270,7 +2270,7 @@
    "description": "",
    "lat": 36.084,
    "lng": -115.1537,
-   "address": "Flight options / Bookings tab",
+   "address": "LAS → LGA",
    "category_id": 5,
    "category_name": "Flight",
    "category_icon": "✈️",
@@ -2295,7 +2295,7 @@
    "description": "",
    "lat": 36.084,
    "lng": -115.1537,
-   "address": "Flight options / Bookings tab",
+   "address": "LAS → LGA",
    "category_id": 5,
    "category_name": "Flight",
    "category_icon": "✈️",
@@ -2320,7 +2320,7 @@
    "description": "",
    "lat": 36.084,
    "lng": -115.1537,
-   "address": "Flight options / Bookings tab",
+   "address": "LAS → LGA",
    "category_id": 5,
    "category_name": "Flight",
    "category_icon": "✈️",
@@ -2345,7 +2345,7 @@
    "description": "",
    "lat": 36.084,
    "lng": -115.1537,
-   "address": "Flight options / Bookings tab",
+   "address": "LAS → LGA",
    "category_id": 5,
    "category_name": "Flight",
    "category_icon": "✈️",
@@ -3040,11 +3040,11 @@
   {
    "id": 651,
    "trip_id": 99,
-   "name": "Delta LAS-JFK 2026-06-23 07:05-15:13",
+   "name": "Delta LAS → JFK",
    "description": "",
    "lat": 40.774,
    "lng": -73.982,
-   "address": "Flight options / Bookings tab",
+   "address": "LAS → JFK",
    "category_id": 5,
    "category_name": "Flight",
    "category_icon": "✈️",
@@ -3060,16 +3060,16 @@
    "source": "fixture-nyc",
    "logoUrl": "https://icons.duckduckgo.com/ip3/delta.com.ico",
    "price": 257,
-   "title": "Delta LAS-JFK 2026-06-23 07:05-15:13"
+   "title": "Delta LAS → JFK"
   },
   {
    "id": 652,
    "trip_id": 99,
-   "name": "JetBlue LAS-JFK 2026-06-23 23:59-08:04+1",
+   "name": "JetBlue LAS → JFK",
    "description": "",
    "lat": 40.774,
    "lng": -73.982,
-   "address": "Flight options / Bookings tab",
+   "address": "LAS → JFK",
    "category_id": 5,
    "category_name": "Flight",
    "category_icon": "✈️",
@@ -3085,16 +3085,16 @@
    "source": "fixture-nyc",
    "logoUrl": "https://icons.duckduckgo.com/ip3/jetblue.com.ico",
    "price": 252,
-   "title": "JetBlue LAS-JFK 2026-06-23 23:59-08:04+1"
+   "title": "JetBlue LAS → JFK"
   },
   {
    "id": 658,
    "trip_id": 99,
-   "name": "United LAS-EWR 2026-06-23 07:00-15:00",
+   "name": "United LAS → EWR",
    "description": "",
    "lat": 40.774,
    "lng": -73.982,
-   "address": "Flight options / Bookings tab",
+   "address": "LAS → EWR",
    "category_id": 5,
    "category_name": "Flight",
    "category_icon": "✈️",
@@ -3110,12 +3110,12 @@
    "source": "fixture-nyc",
    "logoUrl": "https://icons.duckduckgo.com/ip3/united.com.ico",
    "price": 257,
-   "title": "United LAS-EWR 2026-06-23 07:00-15:00"
+   "title": "United LAS → EWR"
   },
   {
    "id": 659,
    "trip_id": 99,
-   "name": "Blue Note",
+   "name": "Blue Note (October 2026)",
    "description": "",
    "lat": 40.7301,
    "lng": -74.001,
@@ -3139,7 +3139,7 @@
   {
    "id": 660,
    "trip_id": 99,
-   "name": "Blue Note Jazz Club",
+   "name": "Blue Note Jazz Club (West 3rd St)",
    "description": "",
    "lat": 40.7301,
    "lng": -74.001,
@@ -3188,7 +3188,7 @@
   {
    "id": 662,
    "trip_id": 99,
-   "name": "Boat tour candidates",
+   "name": "Circle Line Sightseeing Cruise",
    "description": "",
    "lat": 40.701,
    "lng": -74.012,
@@ -3262,7 +3262,7 @@
   {
    "id": 665,
    "trip_id": 99,
-   "name": "Open-air bus tour candidates",
+   "name": "Big Bus Hop-On Hop-Off",
    "description": "",
    "lat": 40.758,
    "lng": -73.9855,
@@ -3311,7 +3311,7 @@
   {
    "id": 667,
    "trip_id": 99,
-   "name": "Statue of Liberty / Ellis Island tour candidate",
+   "name": "Statue of Liberty & Ellis Island",
    "description": "",
    "lat": 40.6892,
    "lng": -74.0445,
@@ -3388,9 +3388,9 @@
    "trip_id": 99,
    "name": "Amelie Bistro & Wine Bar",
    "description": "",
-   "lat": 40.731,
-   "lng": -73.998,
-   "address": "566 Hudson St, New York, NY 10014",
+   "lat": 40.7874,
+   "lng": -73.9725,
+   "address": "566 Amsterdam Ave, New York, NY 10024",
    "category_id": 2,
    "category_name": "Restaurant",
    "category_icon": "🍽️",
@@ -3401,10 +3401,10 @@
    },
    "reservation_status": "considering",
    "place_time": "11:00",
-   "website": "https://www.ameliebistro.com/",
+   "website": "https://www.ameliewinebar.com/uws",
    "notes": "",
    "source": "fixture-nyc",
-   "logoUrl": "https://icons.duckduckgo.com/ip3/ameliewinebar.com.ico",
+   "logoUrl": "https://www.ameliewinebar.com/favicon.ico",
    "price": 65,
    "externalId": "Amelie Bistro & Wine Bar"
   },
@@ -3487,9 +3487,9 @@
    "trip_id": 99,
    "name": "Rosa Mexicano - Lincoln Center",
    "description": "",
-   "lat": 40.772,
-   "lng": -73.982,
-   "address": "61 Columbus Ave, New York, NY 10023",
+   "lat": 40.7725,
+   "lng": -73.983,
+   "address": "44 W 63rd St, 2nd Fl, New York, NY 10023",
    "category_id": 2,
    "category_name": "Restaurant",
    "category_icon": "🍽️",
@@ -3500,12 +3500,13 @@
    },
    "reservation_status": "considering",
    "place_time": "11:00",
-   "website": "https://www.rosamexicano.com/location/rosa-mexicano-lincoln-center/",
+   "website": "https://rosamexicano.com/location/lincoln-center/",
    "notes": "",
    "source": "fixture-nyc",
    "logoUrl": "https://icons.duckduckgo.com/ip3/rosamexicano.com.ico",
    "price": 42,
-   "externalId": "Rosa Mexicano - Lincoln Center"
+   "externalId": "Rosa Mexicano - Lincoln Center",
+   "phone": "(212) 977-7700"
   },
   {
    "id": 675,
@@ -3931,12 +3932,13 @@
    },
    "reservation_status": "considering",
    "place_time": "11:00",
-   "website": "https://www.cilantrorestaurant.com/",
+   "website": "https://www.opentable.com/r/cilantro-new-york",
    "notes": "",
    "source": "fixture-nyc",
-   "logoUrl": "https://icons.duckduckgo.com/ip3/cilantrorestaurant.com.ico",
+   "logoUrl": "https://icons.duckduckgo.com/ip3/opentable.com.ico",
    "price": 32,
-   "externalId": "Cilantro UWS"
+   "externalId": "Cilantro UWS",
+   "phone": "(212) 712-9090"
   },
   {
    "id": 688,
@@ -3970,7 +3972,7 @@
    "description": "",
    "lat": 40.73,
    "lng": -74.001,
-   "address": "Greenwich Village, New York, NY",
+   "address": "82 W 3rd St, New York, NY 10003",
    "category_id": 2,
    "category_name": "Restaurant",
    "category_icon": "🍽️",
@@ -4045,7 +4047,7 @@
    "description": "",
    "lat": 40.731,
    "lng": -74.003,
-   "address": "Bleecker Street, New York, NY",
+   "address": "233 Bleecker St, New York, NY 10014",
    "category_id": 2,
    "category_name": "Restaurant",
    "category_icon": "🍽️",
@@ -4059,7 +4061,7 @@
    "website": "https://us.venchi.com/",
    "notes": "",
    "source": "fixture-nyc",
-   "logoUrl": "https://us.venchi.com/cdn/shop/files/favicon-1.webp?crop=center&height=32&v=1776701868&width=32",
+   "logoUrl": "https://us.venchi.com/favicon.ico",
    "price": 14,
    "externalId": "Venchi Bleecker Street"
   },
@@ -4744,7 +4746,7 @@
    "trip_id": 99,
    "day_id": 501,
    "place_id": 651,
-   "title": "Delta LAS-JFK 2026-06-23 07:05-15:13",
+   "title": "Delta LAS → JFK",
    "status": "candidate",
    "type": "flight",
    "start_time": "11:00"
@@ -4754,7 +4756,7 @@
    "trip_id": 99,
    "day_id": 501,
    "place_id": 652,
-   "title": "JetBlue LAS-JFK 2026-06-23 23:59-08:04+1",
+   "title": "JetBlue LAS → JFK",
    "status": "candidate",
    "type": "flight",
    "start_time": "11:00"
@@ -4764,7 +4766,7 @@
    "trip_id": 99,
    "day_id": 501,
    "place_id": 658,
-   "title": "United LAS-EWR 2026-06-23 07:00-15:00",
+   "title": "United LAS → EWR",
    "status": "candidate",
    "type": "flight",
    "start_time": "11:00"
@@ -4804,7 +4806,7 @@
    "trip_id": 99,
    "day_id": 501,
    "place_id": 662,
-   "title": "Boat tour candidates",
+   "title": "Circle Line Sightseeing Cruise",
    "status": "candidate",
    "type": "activity",
    "start_time": "11:00"
@@ -4834,7 +4836,7 @@
    "trip_id": 99,
    "day_id": 501,
    "place_id": 665,
-   "title": "Open-air bus tour candidates",
+   "title": "Big Bus Hop-On Hop-Off",
    "status": "candidate",
    "type": "activity",
    "start_time": "11:00"
@@ -4854,7 +4856,7 @@
    "trip_id": 99,
    "day_id": 501,
    "place_id": 667,
-   "title": "Statue of Liberty / Ellis Island tour candidate",
+   "title": "Statue of Liberty & Ellis Island",
    "status": "candidate",
    "type": "activity",
    "start_time": "11:00"
@@ -5228,7 +5230,7 @@
    "trip_id": 99,
    "place_id": 611,
    "category": "Events",
-   "name": "Blue Note Jazz Club",
+   "name": "Blue Note Jazz Club (late set)",
    "total_price": 110,
    "note": "",
    "sort_order": 4
@@ -5239,7 +5241,7 @@
    "place_id": 604,
    "category": "Events",
    "name": "Statue of Liberty walking tour",
-   "total_price": 26,
+   "total_price": 52,
    "note": "",
    "sort_order": 5
   },
@@ -5259,7 +5261,7 @@
    "place_id": 606,
    "category": "Events",
    "name": "Afternoon matinee show",
-   "total_price": 78,
+   "total_price": 156,
    "note": "",
    "sort_order": 7
   },
@@ -5269,7 +5271,7 @@
    "place_id": 607,
    "category": "Events",
    "name": "Friend meetup at Bryant Park",
-   "total_price": 20,
+   "total_price": 40,
    "note": "",
    "sort_order": 8
   },
@@ -5446,7 +5448,7 @@
    "trip_id": 99,
    "category": "Trip",
    "name": "Trip budget total",
-   "total_price": 234,
+   "total_price": 358,
    "note": "",
    "sort_order": 27
   },
@@ -5455,7 +5457,7 @@
    "trip_id": 99,
    "category": "Trip",
    "name": "Trip budget total",
-   "total_price": 5708,
+   "total_price": 5832,
    "note": "",
    "sort_order": 28
   }
@@ -5465,7 +5467,7 @@
   "place:601": {
    "category": "flight",
    "title": "American Airlines LAS → JFK",
-   "address": "Flight options / Bookings tab",
+   "address": "LAS → JFK",
    "website": "https://www.aa.com/booking/find-flights?fromAirport=LAS&toAirport=JFK&departDate=06%2F23%2F2026&returnDate=06%2F30%2F2026&tripType=roundTrip&adults=1",
    "summary": "American Airlines offers flights from Las Vegas to New York, and American Airlines LAS → JFK is the outbound row into John F. Kennedy International Airport (JFK). Plan to arrive at least 2 hours before domestic flights, and check in online or in the American app first. Plan to arrive at least 2 hours before domestic flights, and check in online or in the American app first.",
    "summarySourceUrls": [
@@ -6088,7 +6090,7 @@
   },
   "place:611": {
    "category": "music",
-   "title": "Blue Note Jazz Club",
+   "title": "Blue Note Jazz Club (late set)",
    "address": "131 W 3rd St, New York, NY 10012",
    "phone": "212-475-8592",
    "website": "https://www.bluenotejazz.com/",
@@ -6600,7 +6602,9 @@
    "review1Url": null,
    "review2Url": null,
    "review3Url": null,
-   "review4Url": null
+   "review4Url": null,
+   "pricePerPerson": 26,
+   "people": 2
   },
   "place:605": {
    "category": "store",
@@ -6829,7 +6833,9 @@
     "ratings",
     "hours",
     "reviews"
-   ]
+   ],
+   "pricePerPerson": 78,
+   "people": 2
   },
   "place:607": {
    "category": "activity",
@@ -7088,7 +7094,9 @@
    "review1Url": null,
    "review2Url": null,
    "review3Url": null,
-   "review4Url": null
+   "review4Url": null,
+   "pricePerPerson": 20,
+   "people": 2
   },
   "place:612": {
    "category": "store",
@@ -7838,7 +7846,7 @@
   "place:635": {
    "category": "flight",
    "title": "American Airlines JFK → LAS",
-   "address": "Flight options / Bookings tab",
+   "address": "JFK → LAS",
    "website": "https://www.aa.com/booking/find-flights?fromAirport=LAS&toAirport=JFK&departDate=06%2F23%2F2026&returnDate=06%2F30%2F2026&tripType=roundTrip&adults=1",
    "summary": "On the return row American Airlines JFK → LAS, AAdvantage® members can earn miles on eligible American Airlines flights from New York back to Las Vegas. Seats at the front of the Main Cabin or in exit rows give more space, and full beverage service is offered.",
    "summarySourceUrls": [
@@ -8124,7 +8132,7 @@
   "place:630": {
    "category": "flight",
    "title": "Southwest LAS → LGA 07:25–16:35",
-   "address": "Flight options / Bookings tab",
+   "address": "LAS → LGA",
    "website": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
    "summary": "Southwest LAS → LGA 07:25–16:35 covers Las Vegas (LAS) to New York LaGuardia (LGA), leaving mid-morning and arriving at 16:35 Eastern. The flight covers 2242 miles, a long morning in the air that still leaves the evening free in Manhattan.",
    "summarySourceUrls": [
@@ -8189,7 +8197,7 @@
   "place:631": {
    "category": "flight",
    "title": "Southwest LAS → LGA 11:30–22:25",
-   "address": "Flight options / Bookings tab",
+   "address": "LAS → LGA",
    "website": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
    "summary": "A late-morning departure makes Southwest LAS → LGA 11:30–22:25 the easy-going pick, and You can rent a car at La Guardia Airport after the 22:25 arrival. The 22:25 Eastern arrival means a late night at LaGuardia, so a pre-booked car or taxi plan matters more than on the earlier departures.",
    "summarySourceUrls": [
@@ -8237,7 +8245,7 @@
   "place:632": {
    "category": "flight",
    "title": "Southwest LAS → LGA 05:05–15:45",
-   "address": "Flight options / Bookings tab",
+   "address": "LAS → LGA",
    "website": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
    "summary": "The earliest kept option, Southwest LAS → LGA 05:05–15:45, departs Las Vegas before dawn on a route where There are 152 weekly flights from Las Vegas to New York (LaGuardia) on Southwest Airlines. It covers 2242 miles and lands mid-afternoon.",
    "summarySourceUrls": [
@@ -8286,7 +8294,7 @@
   "place:633": {
    "category": "flight",
    "title": "Southwest LAS → LGA 06:30–16:55",
-   "address": "Flight options / Bookings tab",
+   "address": "LAS → LGA",
    "website": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
    "summary": "Boarding position matters on an early start, and EarlyBird Check-in® is sold for Southwest LAS → LGA 06:30–16:55 into LaGuardia. It lands at LaGuardia at 16:55 Eastern after a flight of 2242 miles, ahead of the evening rush into Manhattan.",
    "summarySourceUrls": [
@@ -8334,7 +8342,7 @@
   "place:634": {
    "category": "flight",
    "title": "Southwest LAS → LGA 06:50–18:55",
-   "address": "Flight options / Bookings tab",
+   "address": "LAS → LGA",
    "website": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
    "summary": "Travelers wanting more comfort can look at Upgrade to Business Select® on Southwest LAS → LGA 06:50–18:55, which lands at 18:55 Eastern. It flies Las Vegas (LAS) to New York LaGuardia (LGA) on the longest day of the kept Southwest options, departing 06:50.",
    "summarySourceUrls": [
@@ -11707,8 +11715,8 @@
   },
   "place:651": {
    "category": "flight",
-   "title": "Delta LAS-JFK 2026-06-23 07:05-15:13",
-   "address": "Flight options / Bookings tab",
+   "title": "Delta LAS → JFK",
+   "address": "LAS → JFK",
    "website": "https://www.delta.com/flight-search/book-a-flight?cacheKeySuffix=1932f&tripType=ROUND_TRIP&originCity=LAS&destinationCity=JFK&departureDate=06%2F23%2F2026&returnDate=06%2F30%2F2026&paxCount=1",
    "summary": "FlightMapper lists Delta Air Lines DL 510 Non-stop at 07:05 from Las Vegas, the departure behind Delta LAS-JFK 2026-06-23 07:05-15:13 into New York JFK. The route is a nonstop on an Airbus A321neo, and the 15:13 Eastern arrival leaves time to check in before dinner.",
    "summarySourceUrls": [
@@ -11729,7 +11737,7 @@
    "source": "fixture-nyc",
    "url": "https://www.delta.com/flight-search/book-a-flight?cacheKeySuffix=1932f&tripType=ROUND_TRIP&originCity=LAS&destinationCity=JFK&departureDate=06%2F23%2F2026&returnDate=06%2F30%2F2026&paxCount=1",
    "details": "Airline: Delta; Route: LAS-JFK; Stops: nonstop; Outbound: 2026-06-23 07:05-15:13; Return: 2026-06-30 11:30-14:02; Duration: 5h08m out / 5h32m return; Price: $257 Main Basic / $367 Main Classic; Status: candidate only; not booked.",
-   "name": "Delta LAS-JFK 2026-06-23 07:05-15:13",
+   "name": "Delta LAS → JFK",
    "departureTime": "07:05",
    "arrivalTime": "15:13",
    "dataShortcomings": [
@@ -11754,8 +11762,8 @@
   },
   "place:652": {
    "category": "flight",
-   "title": "JetBlue LAS-JFK 2026-06-23 23:59-08:04+1",
-   "address": "Flight options / Bookings tab",
+   "title": "JetBlue LAS → JFK",
+   "address": "LAS → JFK",
    "website": "https://www.jetblue.com/booking/flights?from=LAS&to=JFK&departure=2026-06-23&return=2026-06-30&adults=1",
    "summary": "JetBlue's overnight JetBlue LAS-JFK 2026-06-23 23:59-08:04+1 is a red-eye, and FlightMapper notes for late JetBlue departures that the flight arrives 1 day after departure. The direct flight time runs between 4:44 and 5:15.",
    "summarySourceUrls": [
@@ -11776,7 +11784,7 @@
    "source": "fixture-nyc",
    "url": "https://www.jetblue.com/booking/flights?from=LAS&to=JFK&departure=2026-06-23&return=2026-06-30&adults=1",
    "details": "Airline: JetBlue; Route: LAS-JFK; Stops: nonstop; Outbound: 2026-06-23 23:59-08:04+1; Return: 2026-06-30 06:40-09:10; Duration: 5h05m out / 5h30m return; Price: $252 Blue Basic / $254 Economy Cabin; Status: candidate only; not booked.",
-   "name": "JetBlue LAS-JFK 2026-06-23 23:59-08:04+1",
+   "name": "JetBlue LAS → JFK",
    "departureTime": "23:59",
    "arrivalTime": "08:04",
    "dataShortcomings": [
@@ -11801,8 +11809,8 @@
   },
   "place:658": {
    "category": "flight",
-   "title": "United LAS-EWR 2026-06-23 07:00-15:00",
-   "address": "Flight options / Bookings tab",
+   "title": "United LAS → EWR",
+   "address": "LAS → EWR",
    "website": "https://www.united.com/en/us/fsr/choose-flights?f=LAS&t=EWR&d=2026-06-23&r=2026-06-30&tt=1&at=1",
    "summary": "United's 07:00 Newark departure United LAS-EWR 2026-06-23 07:00-15:00 matches FlightMapper's United Airlines UA 394 Non-stop from Las Vegas Harry Reid to Newark Liberty. The 737-900 nonstop covers 2220 miles in about five hours.",
    "summarySourceUrls": [
@@ -11841,7 +11849,7 @@
    "source": "fixture-nyc",
    "url": "https://www.united.com/en/us/fsr/choose-flights?f=LAS&t=EWR&d=2026-06-23&r=2026-06-30&tt=1&at=1",
    "details": "Airline: United; Route: LAS-EWR; Stops: nonstop; Outbound: 2026-06-23 07:00-15:00; Return: 2026-06-30 14:40-17:08; Duration: 5h00m out / 5h28m return; Price: $257 Basic Economy / $367 Economy; Status: candidate only; not booked.",
-   "name": "United LAS-EWR 2026-06-23 07:00-15:00",
+   "name": "United LAS → EWR",
    "departureTime": "07:00",
    "arrivalTime": "15:00",
    "dataShortcomings": [
@@ -11866,7 +11874,7 @@
   },
   "place:659": {
    "category": "activity",
-   "title": "Blue Note",
+   "title": "Blue Note (October 2026)",
    "address": "131 W 3rd St, New York, NY 10012",
    "phone": "(212) 475-8592",
    "website": "https://www.bluenote.net/",
@@ -12066,7 +12074,7 @@
   },
   "place:660": {
    "category": "activity",
-   "title": "Blue Note Jazz Club",
+   "title": "Blue Note Jazz Club (West 3rd St)",
    "address": "131 W 3rd St, New York, NY 10012",
    "phone": "212-475-8592",
    "website": "https://www.bluenotejazz.com/",
@@ -12390,7 +12398,7 @@
   },
   "place:662": {
    "category": "activity",
-   "title": "Boat tour candidates",
+   "title": "Circle Line Sightseeing Cruise",
    "address": "Pier 83, New York, NY",
    "phone": "(212) 563-3200",
    "website": "https://www.circleline.com/",
@@ -12926,7 +12934,7 @@
   },
   "place:665": {
    "category": "activity",
-   "title": "Open-air bus tour candidates",
+   "title": "Big Bus Hop-On Hop-Off",
    "address": "Times Square area, New York, NY",
    "phone": "(212) 685-8687",
    "website": "https://www.bigbustours.com/",
@@ -13480,7 +13488,7 @@
   },
   "place:667": {
    "category": "activity",
-   "title": "Statue of Liberty / Ellis Island tour candidate",
+   "title": "Statue of Liberty & Ellis Island",
    "address": "Battery Park / Liberty Island ferries",
    "website": "https://www.statuecruises.com/",
    "summary": "Statue of Liberty / Ellis Island tour candidate: official Statue City Cruises ferry from Battery Park to Liberty Island and Ellis Island, with both island museums included. Tickets should be purchased through Statue City Cruises , the ONLY ferry service that brings visitors to Liberty and Ellis Islands.",
@@ -14095,9 +14103,9 @@
   "place:670": {
    "category": "restaurant",
    "title": "Amelie Bistro & Wine Bar",
-   "address": "566 Hudson St, New York, NY 10014",
+   "address": "566 Amsterdam Ave, New York, NY 10024",
    "phone": "(646) 422-7167",
-   "website": "https://www.ameliebistro.com/",
+   "website": "https://www.ameliewinebar.com/uws",
    "summary": "Amelie Bistro & Wine Bar is a French bistro and wine bar on Amsterdam Avenue on the Upper West Side, built around small plates and a long wine list. Restaurantji diners call it The best restaurant on the UWS, single out beef tartare, salade nicoise, moules-frites, burger as favorites, and say the staff make you feel at home the moment you walk in. It suits an early evening drink and snack or a relaxed neighborhood dinner.",
    "summarySourceUrls": [
     "https://restaurent.com/venue-details/amelie-upper-west-side-bistro-wine-bar/r/recuKL6pqhzfBpezG",
@@ -14106,17 +14114,17 @@
    ],
    "longDetails": "Amelie Bistro & Wine Bar is a French wine bar and bistro on Amsterdam Avenue, serving small plates and more than 90 wines. Its happy hour runs every day, 4 to 6 pm. Deals include $14 wine flights and $10 wine of the day. Representative Tripadvisor praise (traveler reviews, search snapshot): “Amazing selection of reasonably priced wines, knowledgeable waitstaff.”. Representative watch-outs: “the place is so noisy that it is hard to have a conversation”. Restaurantji shows 4.3 263 ratings for the 566 Amsterdam Avenue bistro. A Restaurantji regular adds that Happy hour 4-6pm with $1.5 oysters and other delicious options and $14 wine flights is incredible, and another sums it up as Great vibe. The mussels were excellent.",
    "itineraryNote": "Amelie Bistro & Wine Bar: a cozy French wine bar on Amsterdam Avenue; come for happy hour and try the $1.5 oysters with a $14 wine flights pour.",
-   "lat": 40.731,
-   "lng": -73.998,
+   "lat": 40.7874,
+   "lng": -73.9725,
    "googleRating": "4.5",
    "googleReviewCount": "619",
    "thirdPartyRating": "4.3",
    "thirdPartyReviewCount": "263",
    "price": 65,
    "timeline": false,
-   "logoUrl": "https://icons.duckduckgo.com/ip3/ameliewinebar.com.ico",
+   "logoUrl": "https://www.ameliewinebar.com/favicon.ico",
    "source": "fixture-nyc",
-   "url": "https://www.ameliebistro.com/",
+   "url": "https://www.ameliewinebar.com/uws",
    "details": "West Village French bistro with strong wine list; reservations recommended on Friday nights.",
    "description": "Amelie Bistro & Wine Bar is a French wine bar and bistro on Amsterdam Avenue, serving small plates and more than 90 wines. Its happy hour runs every day, 4 to 6 pm. Deals include $14 wine flights and $10 wine of the day. Representative Tripadvisor praise (traveler reviews, search snapshot): “Amazing selection of reasonably priced wines, knowledgeable waitstaff.”. Representative watch-outs: “the place is so noisy that it is hard to have a conversation”. Restaurantji shows 4.3 263 ratings for the 566 Amsterdam Avenue bistro. A Restaurantji regular adds that Happy hour 4-6pm with $1.5 oysters and other delicious options and $14 wine flights is incredible, and another sums it up as Great vibe. The mussels were excellent.",
    "externalId": "Amelie Bistro & Wine Bar",
@@ -14125,11 +14133,11 @@
     "description": "West Village French bistro with strong wine list; reservations recommended on Friday nights.",
     "summary": "West Village French bistro",
     "price": 65,
-    "website": "https://www.ameliebistro.com/",
-    "logoUrl": "https://icons.duckduckgo.com/ip3/ameliewinebar.com.ico",
-    "lat": 40.731,
-    "lng": -73.998,
-    "address": "566 Hudson St, New York, NY 10014",
+    "website": "https://www.ameliewinebar.com/uws",
+    "logoUrl": "https://www.ameliewinebar.com/favicon.ico",
+    "lat": 40.7874,
+    "lng": -73.9725,
+    "address": "566 Amsterdam Ave, New York, NY 10024",
     "ccabKey": "Amelie Bistro & Wine Bar"
    },
    "ccabKey": "Amelie Bistro & Wine Bar",
@@ -14658,8 +14666,8 @@
   "place:674": {
    "category": "restaurant",
    "title": "Rosa Mexicano - Lincoln Center",
-   "address": "61 Columbus Ave, New York, NY 10023",
-   "website": "https://www.rosamexicano.com/",
+   "address": "44 W 63rd St, 2nd Fl, New York, NY 10023",
+   "website": "https://rosamexicano.com/location/lincoln-center/",
    "summary": "Rosa Mexicano - Lincoln Center has moved into 61 Columbus Ave The Empire Hotel, where Our new flagship space, located on the hotel’s mezzanine floor, offers expanded dining areas, multiple bars. The draw is theater-adjacent fun: Its signature dish is guacamole prepared by the table. Reviews are mixed, with Tripadvisor travelers praising the look and staff yet flagging uneven service and some weaker mains, so treat it as a lively, convenient pre-show choice.",
    "summarySourceUrls": [
     "https://www.rosamexicano.com/location/rosa-mexicano-lincoln-center/",
@@ -14674,13 +14682,13 @@
    ],
    "longDetails": "Rosa Mexicano - Lincoln Center has moved around the corner into the Empire Hotel. Its listing says Our new flagship space, located on the hotel’s mezzanine floor, offers expanded dining areas, multiple bars, and a Tripadvisor reviewer notes that Its signature dish is guacamole prepared by the table. Fiesta Hour runs Monday to Friday, 4–7pm, in the bar area, and Taco Tuesdays: Enjoy half-price tacos all day, every Tuesday (dine-in only), which suits a pre-show meal at Rosa Mexicano across from Lincoln Center. Search snapshots show OpenTable at Rosa Mexicano by Lincoln Center 4.4 (9790) and Tripadvisor at 4.1 of 5 bubbles (1,460 reviews). Representative Tripadvisor praise (search snapshot): “The decor is gorgeous, the waitstaff attentive”. Representative watch-outs: “Service is indifferent at best.” and “the pork and beef Enchiladas were disappointing”.",
    "itineraryNote": "Rosa Mexicano - Lincoln Center: a festive pre-show Mexican spot across from Lincoln Center; order the table-side guacamole and come for Fiesta Hour runs Monday to Friday, 4–7pm.",
-   "lat": 40.772,
-   "lng": -73.982,
+   "lat": 40.7725,
+   "lng": -73.983,
    "price": 42,
    "timeline": false,
    "logoUrl": "https://icons.duckduckgo.com/ip3/rosamexicano.com.ico",
    "source": "fixture-nyc",
-   "url": "https://www.rosamexicano.com/location/rosa-mexicano-lincoln-center/",
+   "url": "https://rosamexicano.com/location/lincoln-center/",
    "details": "Lincoln Center-area Mexican with tableside guacamole; reliable group dinners.",
    "description": "Rosa Mexicano - Lincoln Center has moved around the corner into the Empire Hotel. Its listing says Our new flagship space, located on the hotel’s mezzanine floor, offers expanded dining areas, multiple bars, and a Tripadvisor reviewer notes that Its signature dish is guacamole prepared by the table. Fiesta Hour runs Monday to Friday, 4–7pm, in the bar area, and Taco Tuesdays: Enjoy half-price tacos all day, every Tuesday (dine-in only), which suits a pre-show meal at Rosa Mexicano across from Lincoln Center. Search snapshots show OpenTable at Rosa Mexicano by Lincoln Center 4.4 (9790) and Tripadvisor at 4.1 of 5 bubbles (1,460 reviews). Representative Tripadvisor praise (search snapshot): “The decor is gorgeous, the waitstaff attentive”. Representative watch-outs: “Service is indifferent at best.” and “the pork and beef Enchiladas were disappointing”.",
    "externalId": "Rosa Mexicano - Lincoln Center",
@@ -14965,7 +14973,8 @@
     }
    ],
    "review4Label": "Representative reviews written from 37 reviews",
-   "review4CompositeLabel": "Representative reviews written from 37 reviews"
+   "review4CompositeLabel": "Representative reviews written from 37 reviews",
+   "phone": "(212) 977-7700"
   },
   "place:675": {
    "category": "restaurant",
@@ -17187,8 +17196,8 @@
    "category": "restaurant",
    "title": "Cilantro UWS",
    "address": "485 Columbus Ave, New York, NY 10024",
-   "phone": "(212) 712-9099",
-   "website": "https://www.cilantrorestaurant.com/",
+   "phone": "(212) 712-9090",
+   "website": "https://www.opentable.com/r/cilantro-new-york",
    "hours": "2:00pm–10:00pm Delivery:",
    "summary": "Cilantro UWS is a casual Mexican and Southwestern restaurant at 485 Columbus Ave, around the corner from the American Museum of Natural History, with a tequila-heavy bar and weekend brunch. Restaurantji diners rate it 4.1 425 ratings and call it a Great brunch spot right by the museum of natural history. It suits a post-museum lunch with outdoor seating.",
    "summarySourceUrls": [
@@ -17202,9 +17211,9 @@
    "lng": -73.973,
    "price": 32,
    "timeline": false,
-   "logoUrl": "https://icons.duckduckgo.com/ip3/cilantrorestaurant.com.ico",
+   "logoUrl": "https://icons.duckduckgo.com/ip3/opentable.com.ico",
    "source": "fixture-nyc",
-   "url": "https://www.cilantrorestaurant.com/",
+   "url": "https://www.opentable.com/r/cilantro-new-york",
    "details": "Source email: CILANTRO - Potato Leek Soup, Tacos, 485 Columbus Ave. Use as nearby casual meal option.",
    "description": "Cilantro UWS is a casual Mexican restaurant at 485 Columbus Ave on the Upper West Side. OpenTable describes authentic Mexican and Southwestern American cuisine in a casual, upbeat atmosphere, with a full bar of specialty cocktails and many varieties of tequila. The menu runs from guacamole and nachos to fajitas, tacos, burritos and enchiladas, with vegetarian and gluten-sensitive options. Brunch is served Friday through Sunday from 11am to 4pm, and OpenTable diners rate Cilantro UWS 4.1 from 23 reviews. Restaurantji diners recommend it for margaritas and mention very pleasant outdoor sitting.",
    "externalId": "Cilantro UWS",
@@ -17470,7 +17479,7 @@
   "place:689": {
    "category": "restaurant",
    "title": "Zinc Bar",
-   "address": "Greenwich Village, New York, NY",
+   "address": "82 W 3rd St, New York, NY 10003",
    "website": "https://www.zincbar.com/",
    "hours": "Monday - Wednesday 5 pm - 12 am Thursday 5 pm - 1 am Friday 5 pm - 2 am Saturday 2 pm - 2 am Sunday 5 pm - 12 am",
    "summary": "Zinc Bar is a historic Greenwich Village bar and jazz club at 82 W 3rd Street, the former Cinderella Club where Billie Holiday performed, with late hours and live music nightly. Restaurantji diners fell for the romantic Art-Deco-era Paris jazz bar vibe, and one couple returned a year later to propose there. It suits a late, music-first night out.",
@@ -17502,7 +17511,7 @@
     "logoUrl": "https://www.zincbar.com/wp-content/uploads/2025/04/cropped-Zinc-web-icon-32x32.png",
     "lat": 40.73,
     "lng": -74.001,
-    "address": "Greenwich Village, New York, NY",
+    "address": "82 W 3rd St, New York, NY 10003",
     "ccabKey": "Zinc Bar"
    },
    "ccabKey": "Zinc Bar",
@@ -18080,8 +18089,8 @@
   "place:692": {
    "category": "restaurant",
    "title": "Venchi Bleecker Street",
-   "address": "Bleecker Street, New York, NY",
-   "website": "https://www.us.venchi.com/",
+   "address": "233 Bleecker St, New York, NY 10014",
+   "website": "https://us.venchi.com/",
    "summary": "Venchi Bleecker Street is the Italian chocolate and gelato shop at 233 Bleecker Street in Greenwich Village. Since 1878, we celebrate Made in Italy taste with iconic creations like Chocoviar, our excellence line, alongside Gianduiotto, Cremino, and chocolate pralines.",
    "summarySourceUrls": [
     "https://us.venchi.com/",

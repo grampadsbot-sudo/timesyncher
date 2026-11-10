@@ -174,9 +174,23 @@ function retitleFlightUpsell(place, override) {
   }
 }
 
+function flightHasStructuredTimes(place = {}, override = {}) {
+  const timeKeys = [
+    override.departureTime,
+    override.arrivalTime,
+    override.start_time,
+    override.end_time,
+    place.place_time,
+    place.start_time,
+    place.end_time,
+  ];
+  return timeKeys.some((value) => text(value, 40));
+}
+
 function applyFlightTitleTimes(place, override) {
   const category = productThingCategory(place, override);
   if (category !== 'flight') return;
+  if (!flightHasStructuredTimes(place, override)) return;
   const cleaned = stripClockRangeFromTitle(place.name || place.title || override.title);
   if (!cleaned) return;
   place.name = cleaned;
