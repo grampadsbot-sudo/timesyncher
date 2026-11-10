@@ -442,6 +442,7 @@ scripts/test_issue_951_thing_detail_pencil_price.mjs
 scripts/test_issue_951_trip_switcher_short_name.mjs
 scripts/test_nyc_list_row_summary_not_details.mjs
 scripts/test_trip_dropdown_human_status_848.mjs
+scripts/test_vacation_app_switcher_dropdown_webkit.mjs
 scripts/test_chat_tiers_haiku_5_5.mjs
 scripts/test_vkprloop_claude_hard_898.mjs
 scripts/test_vkprloop_drift_900.mjs
