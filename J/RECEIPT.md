@@ -1,29 +1,66 @@
-Host base-merge: `origin/vk` `1fc2ef7708aeed7a318b11b9fb3fef518f1b4044` at 3:18 AM PT 11/10. Only conflict was this receipt (kept the #939 hero receipt). Product files auto-merged; no product edits by the host.
+# PR #906 — #902 customer build stamp + vk merge conflict round
 
-# PR #939 / #937 — expanded hero title unclip (HOST PUBLICATION ONLY)
+**Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Start HEAD:** `0ef05cdc97a57eb4b117c7bb48894fbd6deae925` (verified). **Lane:** cursor-ubuntu, composer-2.5.
 
-**Outcome:** source-ready PATCH (uncommitted). **Lane start HEAD:** `8da3206c309b82ebed7947ae25240c69d033e6b4` (verified). **Lane:** cursor-ubuntu, composer-2.5. **Authority:** eggbot 3:04 AM PT 11/10 (title clip ship-blocker; wrapping OK; ~32px shorter expanded OK; no expanded one-line or within-8px-height tests).
+**GBrain handoff:** `bot-admin/lanes/vk-pr-handoff/pr-906`.
 
-**GBrain:** `bot-admin/lanes/vk-pr-handoff/pr-939` — page not found on this pass (handoff in job brief only).
+## Host base-merge: `origin/vk` @ `52d88438fefbb108ea67795faeeb08904b77f65c` into `0ef05cdc`
 
-## Changes
-
-| Path | Change |
+| Path | Resolution |
 | --- | --- |
-| `public/ts-trip-hero-collapse.js` | Expanded `h1`: removed `white-space:nowrap`; use `overflow-wrap:anywhere` so full title is unclipped at 390. Kept CSS grid chevron column, slim collapsed bar, collapsed-only ellipsis. |
-| `scripts/test_vacation_app_927_hero_collapse.mjs` | Dropped expanded one-line `clientHeight` and expanded height within 8px of ed8687b assertions. Kept zero overlap, collapsed ≤57px, collapsed one-line, `scrollWidth <= clientWidth` expanded, no expanded ellipsis. |
+| `J/RECEIPT.md` | Merged both sides: #902 receipt + vk #939 hero title unclip carry (this file). |
+| `public/ts-trip-hero-collapse.js` | vk carry: expanded `h1` uses `overflow-wrap:anywhere` (no expanded one-line clip); CSS grid chevron column; collapsed bar ≤57px with ellipsis. |
+| `scripts/test_vacation_app_927_hero_collapse.mjs` | vk carry: dropped expanded one-line `clientHeight` and within-8px-height vs ed8687b; kept overlap, collapse metrics, expanded no-ellipsis, `scrollWidth <= clientWidth`. |
+
+Product files auto-merged except this receipt. **#902 product code not re-authored** per handoff (`7a978cf3` Gate B PASS).
+
+## #902 — hide customer-visible build stamp (on PR branch)
+
+**Bug:** Dark fixed footer with 7-char build sha visible on hub, static pages, and trip React shell (390 + 1280).
+
+| Piece | What |
+| --- | --- |
+| `routes/version.mjs` | Customer-hide asset URLs; visible bar only under `html[data-ts-debug-build]` (`?debug=1`). |
+| Static HTML shells + `public/ts-build-stamp-customer-hide.{css,js}` | Hide `footer[data-build-stamp="1"]` by default. |
+| `shared-app.html` | vk `#root` flex column shell **and** customer hide on stamp footer. |
+| `apps/vacation-client/src/components/BuildStampFooter.tsx` | Mount stamp for DOM/meta probes; `data-ts-debug-build` when `?debug=1`. |
+| `apps/vacation-client/src/styles.css` | Hide `.tsv-build-footer` unless `?debug=1`. |
+
+`<meta name="timesyncher-build">` and `/api/version` unchanged. Gate B PASS on pre-merge head `7a978cf3` per handoff (capture `textContent` host fix).
+
+## #939 carry — expanded hero title unclip (vk only in this merge)
+
+**Authority:** eggbot 3:04 AM PT 11/10 (title clip ship-blocker; wrapping OK; ~32px shorter expanded OK).
+
+| Piece | What |
+| --- | --- |
+| `public/ts-trip-hero-collapse.js` | See merge table above. |
+| `scripts/test_vacation_app_927_hero_collapse.mjs` | See merge table above. |
 
 **Out of scope (unchanged):** splitter, chat-edit, conflicts, trip data, `gateb-allow.json`, bundles (standalone `shared-app.html` script).
 
-## Checks
+## Uncommitted source (host `git add` + merge commit)
+
+- `J/RECEIPT.md` (conflict markers cleared)
+- `public/ts-trip-hero-collapse.js`
+- `scripts/test_vacation_app_927_hero_collapse.mjs`
+
+**Host:** `git add` merge index + paths above, `git commit --no-edit` on `vkfill/902-20261109163213`; push once. Gate B structure + CI on new head.
+
+## Checks @ `0ef05cdc` + vk merge working tree (lane END)
 
 | Command | Result |
 | --- | --- |
-| `node scripts/test_vacation_app_927_hero_collapse.mjs` | PASS |
-| `node scripts/test_offline_manifest.mjs` | PASS |
-| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS (252 report, 0 fail) |
-| `node scripts/check-no-comments.mjs` | FAIL — `apps/vacation-client/node_modules/typescript` missing in worktree; host re-run after deps install |
+| `node scripts/test_build_stamp_customer_hidden.mjs` | **PASS** (after `npm ci` in worktree) |
+| `node scripts/test_vacation_app_927_hero_collapse.mjs` | **PASS** |
+| `node scripts/test_offline_manifest.mjs` | **PASS** (444 offline, 19 online) |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | **PASS** (252 report, 0 fail) |
+| `node scripts/check-no-comments.mjs` | **PASS** (after `npm ci` at repo root + `apps/vacation-client`) |
 
-## Host publish
+Gate B structure on pushed head — host pipeline after push (`bot-admin/lanes/vk-pr-handoff/pr-906`).
 
-Uncommitted diff (2 files): `public/ts-trip-hero-collapse.js`, `scripts/test_vacation_app_927_hero_collapse.mjs`. Commit on `vkfill/937-20261110021736`, push once, Gate B hero allowance via eggbot (do not edit `gateb-allow.json` here). Ref: start HEAD `8da3206c`.
+## Left alone (scope)
+
+- Baselines, Gate B capture scripts, workflows, `package.json` / lock, deploy config.
+- #902 product code — no further coder round per handoff.
+- Lane did not stage, commit, push, or merge (HOST PUBLICATION ONLY).
