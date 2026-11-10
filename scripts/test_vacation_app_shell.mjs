@@ -4,7 +4,7 @@ import { purchaseEmail } from '../src/vacation/email.mjs';
 import { collaboratorSeatJoinEvent } from '../src/vacation/collaborator-app-seat.mjs';
 
 const page = await readFile(new URL('../vacation-app.html', import.meta.url), 'utf8');
-assert.match(page, /TimeSyncher Vacation App/);
+assert.match(page, /Vacay Keepsake App/);
 assert.match(page, /id="splitter"/);
 assert.match(page, /class="trip-list"/);
 assert.match(page, /type="file"/);
@@ -17,8 +17,8 @@ assert.match(page, /state\.turns/);
 assert.match(page, /browserTranscription/);
 assert.match(page, /MAX_INLINE_FILE_BYTES/);
 assert.match(page, /FileReader/);
-assert.match(page, /\/timesyncher-logo-gold\.png/);
-assert.match(page, /alt="TimeSyncher"/);
+assert.match(page, /\/brand\/vk-book-logo\.svg/);
+assert.match(page, /alt="Vacay Keepsake"/);
 assert.match(page, /function vacationSelector/);
 assert.match(page, /trips\.length < 2/);
 assert.doesNotMatch(page, /id="collaboratorInviteForm"/);
@@ -116,7 +116,7 @@ assert.match(onboarding, /in_app_text_voice_and_file_intake/);
 
 const orderSuccess = await readFile(new URL('../order-success.html', import.meta.url), 'utf8');
 assert.match(orderSuccess, /Purchase confirmed/);
-assert.match(orderSuccess, /Your TimeSyncher Vacation purchase is confirmed\./);
+assert.match(orderSuccess, /Your Vacay Keepsake purchase is confirmed\./);
 assert.match(orderSuccess, /Check your email and click the link in that email/i);
 assert.match(orderSuccess, /purchase_email_ack/);
 assert.match(orderSuccess, /id="openApp"/);
@@ -135,7 +135,7 @@ assert.equal(
   confirmed.launchUrl,
   'https://vacation-staging.timesyncher.com/vacation-app.html?session=app-session-token',
 );
-assert.match(confirmed.textBody, /Open TimeSyncher Vacation: https:\/\/vacation-staging\.timesyncher\.com\/vacation-app\.html\?session=app-session-token/);
+assert.match(confirmed.textBody, /Open Vacay Keepsake: https:\/\/vacation-staging\.timesyncher\.com\/vacation-app\.html\?session=app-session-token/);
 assert.match(confirmed.htmlBody, /href="https:\/\/vacation-staging\.timesyncher\.com\/vacation-app\.html\?session=app-session-token"/);
 assert.doesNotMatch(`${confirmed.launchUrl}\n${confirmed.textBody}\n${confirmed.htmlBody}`, /\/shared\/intake-/);
 assert.doesNotMatch(`${confirmed.subject}\n${confirmed.textBody}\n${confirmed.htmlBody}`, /order-success|\/accept\/|telegram|telegraph/i);

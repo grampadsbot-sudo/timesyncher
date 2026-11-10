@@ -8,7 +8,7 @@ export function layoutNycSharedHeaderVisible(el, getComputedStyle) {
   const w = el.offsetWidth ?? 0;
   if (h <= 4 || w <= 20) return false;
   const hay = String(el.textContent || '').replace(/\s+/g, ' ').trim();
-  if (/vacation|timesyncher/i.test(hay) && hay.length >= 8) return true;
+  if (/vacay|keepsake|vacation/i.test(hay) && hay.length >= 8) return true;
   return Boolean(el.querySelector?.('[data-trip-view-root],[data-print-menu-root]'));
 }
 
@@ -32,7 +32,7 @@ function __layoutNycSharedHeaderVisible(el) {
   if (st.display === 'none' || st.visibility === 'hidden' || Number(st.opacity) === 0) return false;
   if (el.offsetHeight <= 4 || el.offsetWidth <= 20) return false;
   const hay = String(el.textContent || '').replace(/\\s+/g, ' ').trim();
-  if (/vacation|timesyncher/i.test(hay) && hay.length >= 8) return true;
+  if (/vacay|keepsake|vacation/i.test(hay) && hay.length >= 8) return true;
   return Boolean(el.querySelector('[data-trip-view-root],[data-print-menu-root]'));
 }
 function __layoutNycProbeSharedHeader() {

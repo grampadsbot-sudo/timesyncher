@@ -134,6 +134,7 @@ function sendJson(res, status, body) {
 async function startServer({ html, js, css, tripPayload }) {
   const publicFiles = {
     '/ts-timeline-icon-patch.js': path.join(root, 'public/ts-timeline-icon-patch.js'),
+    '/ts-vk-rebrand-chrome.js': path.join(root, 'public/ts-vk-rebrand-chrome.js'),
     '/ts-car-brand-filter.js': path.join(root, 'public/ts-car-brand-filter.js'),
     '/ts-thing-media-overlay.js': path.join(root, 'public/ts-thing-media-overlay.js'),
     '/ts-shared-audio-recorder.js': path.join(root, 'public/ts-shared-audio-recorder.js'),
@@ -141,6 +142,9 @@ async function startServer({ html, js, css, tripPayload }) {
     '/ts-pic-popup-viewer.js': path.join(root, 'public/ts-pic-popup-viewer.js'),
     '/post-purchase-gate.mjs': path.join(root, 'public/post-purchase-gate.mjs'),
     '/ts-thing-media/bindings.json': path.join(root, 'public/ts-thing-media/bindings.json'),
+    '/brand/vk-wordmark.css': path.join(root, 'public/brand/vk-wordmark.css'),
+    '/brand/vk-book-logo.svg': path.join(root, 'public/brand/vk-book-logo.svg'),
+    '/favicon.ico': path.join(root, 'public/favicon.ico'),
   };
   const server = createServer(async (req, res) => {
     const url = new URL(req.url || '/', 'http://127.0.0.1');
@@ -149,11 +153,21 @@ async function startServer({ html, js, css, tripPayload }) {
     if (pathname === '/assets/index-CbEHlMj6.css') return sendText(res, 200, css, 'text/css; charset=utf-8');
     if (publicFiles[pathname]) {
       const file = await readFile(publicFiles[pathname]);
-      const type = pathname.endsWith('.json') ? 'application/json; charset=utf-8' : pathname.endsWith('.mjs') ? 'text/javascript; charset=utf-8' : 'text/javascript; charset=utf-8';
+      const type = pathname.endsWith('.json')
+        ? 'application/json; charset=utf-8'
+        : pathname.endsWith('.css')
+          ? 'text/css; charset=utf-8'
+          : pathname.endsWith('.svg')
+            ? 'image/svg+xml'
+            : pathname.endsWith('.ico')
+              ? 'image/x-icon'
+              : pathname.endsWith('.mjs')
+                ? 'text/javascript; charset=utf-8'
+                : 'text/javascript; charset=utf-8';
       return sendText(res, 200, file, type);
     }
     if (pathname === '/manifest.webmanifest') {
-      return sendText(res, 200, JSON.stringify({ name: 'TimeSyncher Vacation', start_url: '/' }), 'application/manifest+json');
+      return sendText(res, 200, JSON.stringify({ name: 'Vacay Keepsake', start_url: '/' }), 'application/manifest+json');
     }
     if (pathname.startsWith('/icons/')) return sendText(res, 200, '', 'image/png');
     if (pathname.endsWith('/edit-access')) return sendJson(res, 200, { canEdit: false });

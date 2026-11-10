@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TimeSyncher Vacation App</title>
+  <title>Vacay Keepsake App</title>
   <style>
     :root {
       color-scheme: light;
@@ -527,8 +527,8 @@
     function renderGate(message = '') {
       root.innerHTML = `<main class="session-gate">
         <section class="gate-card">
-          <img class="mark" src="/timesyncher-logo-gold.png" alt="TimeSyncher" />
-          <h1>TimeSyncher Vacation</h1>
+          <img class="mark" src="/brand/vk-book-logo.svg" alt="Vacay Keepsake" />
+          <h1>Vacay Keepsake</h1>
           ${message ? `<p class="error" role="alert">${safe(message)}</p>` : '<p>Open your vacation workspace with the link from your welcome email.</p>'}
           <form class="session-form" id="sessionForm">
             <input name="session" placeholder="Vacation session token" value="${safe(sessionToken)}" autocomplete="off" required>
@@ -547,10 +547,10 @@
     function renderEula() {
       document.title = 'Review Terms & Privacy';
       const eula = state.eula || {}, name = state.session?.customerName || '', collabSeat = Boolean(state.session?.seat);
-      const eulaLead = collabSeat ? 'Agree to join this vacation chat.' : 'These terms are the first step in TimeSyncher Vacation. Agree to continue into onboarding.', eulaWait = collabSeat ? 'Terms are not ready yet. Open your invite link again in a moment.' : 'Terms are not ready yet. Open the link from your purchase email again in a moment.';
+      const eulaLead = collabSeat ? 'Agree to join this vacation chat.' : 'These terms are the first step in Vacay Keepsake. Agree to continue into onboarding.', eulaWait = collabSeat ? 'Terms are not ready yet. Open your invite link again in a moment.' : 'Terms are not ready yet. Open the link from your purchase email again in a moment.';
       root.innerHTML = `<main class="app">
         <header class="topbar">
-          <div class="brand"><img class="mark" src="/timesyncher-logo-gold.png" alt="TimeSyncher" /><span>TimeSyncher Vacation<small>Terms &amp; Privacy</small></span></div>
+          <div class="brand"><img class="mark" src="/brand/vk-book-logo.svg" alt="Vacay Keepsake" /><span>Vacay Keepsake<small>Terms &amp; Privacy</small></span></div>
         </header>
         <section class="eula-screen" id="eulaScreen" aria-label="Terms and privacy">
           <h1>Review Terms &amp; Privacy</h1>
@@ -558,7 +558,7 @@
           <div class="eula-text" id="eulaText">${eula.text ? renderEulaMarkdown(eula.text) : safe(eulaWait)}</div>
           <form class="eula-form" id="eulaForm">
             <label>Your name<input id="eulaName" name="name" type="text" required value="${safe(name)}" autocomplete="name"></label>
-            <label><input id="eulaAgree" type="checkbox" required> I agree to TimeSyncher's Terms and Privacy Policy and understand the service is advisory-only.</label>
+            <label><input id="eulaAgree" type="checkbox" required> I agree to Vacay Keepsake's Terms and Privacy Policy and understand the service is advisory-only.</label>
             <button class="agree-button" id="eulaAgreeButton" type="submit">Agree</button>
             <div class="error" id="eulaError" hidden></div>
           </form>
@@ -730,7 +730,7 @@
       const attachments = await Promise.all(state.attachments.map(filePayload));
       state.attachments = [];
       renderAttachments();
-      messages.insertAdjacentHTML('beforeend', `<article class="bubble" id="tsTyping" aria-live="polite" aria-busy="true"><small>TimeSyncher</small>…</article>`);
+      messages.insertAdjacentHTML('beforeend', `<article class="bubble" id="tsTyping" aria-live="polite" aria-busy="true"><small>Vacay Keepsake</small>…</article>`);
       if (!hadSite && currentTrip()?.id) startProgressPoll(currentTrip().id);
       try {
         const res = await fetch(`/api/vacation-itinerary?app=1&session=${encodeURIComponent(sessionToken)}`, {
@@ -749,7 +749,7 @@
         if (data.status === 'interim') {
           const typing = document.getElementById('tsTyping');
           if (data.interimReply?.text && typing) {
-            typing.insertAdjacentHTML('beforebegin', `<article class="bubble"><small>TimeSyncher</small>${chatText(data.interimReply.text)}</article>`);
+            typing.insertAdjacentHTML('beforebegin', `<article class="bubble"><small>Vacay Keepsake</small>${chatText(data.interimReply.text)}</article>`);
           }
           const finRes = await fetch(`/api/vacation-itinerary?app=1&session=${encodeURIComponent(sessionToken)}`, {
             method: 'POST',
@@ -760,7 +760,7 @@
           document.getElementById('tsTyping')?.remove();
           if (!finRes.ok || fin.ok === false || !fin.reply) failAppRequest(fin, 'The app did not return a reply.');
           if (Array.isArray(fin.itinerary)) state.things = fin.itinerary;
-          messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>TimeSyncher</small>${chatText(fin.reply)}</article>`);
+          messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>Vacay Keepsake</small>${chatText(fin.reply)}</article>`);
         } else {
           document.getElementById('tsTyping')?.remove();
           if (!data.reply) failAppRequest(data, 'The app did not return a reply.');
@@ -779,7 +779,7 @@
             }
           }
           if (data.searchProgress) applyServerProgress(data.searchProgress, data.vacation || data.trip, data.vacation?.publicUrl);
-          messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>TimeSyncher</small>${chatText(data.reply)}</article>`);
+          messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>Vacay Keepsake</small>${chatText(data.reply)}</article>`);
         }
       } catch (error) {
         document.getElementById('tsTyping')?.remove();

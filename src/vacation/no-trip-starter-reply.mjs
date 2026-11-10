@@ -15,7 +15,7 @@ const FIRST_INTAKE_TONE = [
 ].join('\n');
 
 export const NO_TRIP_STARTER_INSTRUCTION = [
-  'You are writing a reply in the TimeSyncher vacation app before a vacation record exists yet. Write it in your own words. Do not copy this instruction back.',
+  'You are writing a reply in the Vacay Keepsake vacation app before a vacation record exists yet. Write it in your own words. Do not copy this instruction back.',
   'The customer has not given enough detail to start a vacation yet. Ask only for what is still missing to begin planning: where they are going and when.',
   'Use exactly one question.',
   'Do not mention a trip link, shared site, or URL. Do not include /shared/ or any website link.',

@@ -24,7 +24,7 @@ type MediaRow = Record<string, unknown>;
 
 export function KeepsakePrintBrand({ tripTitle, style }: { tripTitle: string; style: 1 | 2 }) {
   const label =
-    style === 2 ? 'TimeSyncher · Journey Book · Style 2' : 'TimeSyncher · Journey';
+    style === 2 ? 'Vacay Keepsake · Journey Book · Style 2' : 'Vacay Keepsake · Journey';
   return (
     <div className="tsv-keepsake-print-brand print-brand" data-print-brand="1">
       <p className="tsv-keepsake-brand">{label}</p>
@@ -248,7 +248,7 @@ export function KeepsakeDailyPage({
 export function KeepsakeLogoFooter() {
   return (
     <p className="tsv-keepsake-brand-logo print-brand pdf-final-logo" data-last-page-logo="1">
-      TimeSyncher ⌛ Vacation
+      Vacay Keepsake ⌛ Vacation
     </p>
   );
 }
