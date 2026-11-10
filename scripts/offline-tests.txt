@@ -435,3 +435,4 @@ scripts/test_chat_tiers_haiku_5_5.mjs
 scripts/test_vkprloop_claude_hard_898.mjs
 scripts/test_vkprloop_drift_900.mjs
 scripts/test_vkprloop_drift_910.mjs
+scripts/test_vkprloop_drift_921.mjs
