@@ -9,7 +9,7 @@ import {
 import {
   buildChatItineraryOverridesPutBody,
   buildItineraryEditAuthoritativeSystemExtra,
-  buildItineraryEditDemoLockedAuthoritativeSystemExtra,
+  DEMO_LOCKED_CHAT_EDIT_CUSTOMER_REPLY,
   buildItineraryEditFailureAuthoritativeSystemExtra,
   assignedDayNumbersForPlace,
   dayEditSkipLabels,
@@ -38,7 +38,7 @@ export {
   assertChatEditPutStaysSmallUnderHugeOverrides,
   buildChatItineraryOverridesPutBody,
   buildItineraryEditAuthoritativeSystemExtra,
-  buildItineraryEditDemoLockedAuthoritativeSystemExtra,
+  DEMO_LOCKED_CHAT_EDIT_CUSTOMER_REPLY,
   buildItineraryEditFailureAuthoritativeSystemExtra,
   dayNumbersForPlace,
   mergeStoredChatItineraryScheduleOverride,
@@ -459,12 +459,13 @@ export async function runChatItineraryEditTurn({
 
 export async function prepareChatItineraryEditForQueueTurn({ db, trip, seat, tripId, requestText, turnId, httpReq, env }) {
   if (!tripId || !trip || seat) {
-    return { replyCustomerTurn: requestText, itineraryEditResult: null, itineraryEditAuthoritative: '' };
+    return { replyCustomerTurn: requestText, itineraryEditResult: null, itineraryEditAuthoritative: '', itineraryEditCannedReply: '' };
   }
   try {
     const itineraryEditResult = await runChatItineraryEditTurn({ db, trip, customerTurn: requestText, turnId, httpReq, env });
     let replyCustomerTurn = requestText;
     let itineraryEditAuthoritative = '';
+    let itineraryEditCannedReply = '';
     if (itineraryEditResult?.applied) {
       const slug = tripShareSlug(trip);
       let freshPayload = null;
@@ -479,11 +480,11 @@ export async function prepareChatItineraryEditForQueueTurn({ db, trip, seat, tri
       }
       itineraryEditAuthoritative = buildItineraryEditAuthoritativeSystemExtra(itineraryEditResult, freshPayload);
     } else if (itineraryEditResult?.reason === 'demo_locked') {
-      itineraryEditAuthoritative = buildItineraryEditDemoLockedAuthoritativeSystemExtra();
+      itineraryEditCannedReply = DEMO_LOCKED_CHAT_EDIT_CUSTOMER_REPLY;
     } else if (itineraryEditResult?.replyContext) {
       replyCustomerTurn = `${requestText}\n\n${itineraryEditResult.replyContext}`;
     }
-    return { replyCustomerTurn, itineraryEditResult, itineraryEditAuthoritative };
+    return { replyCustomerTurn, itineraryEditResult, itineraryEditAuthoritative, itineraryEditCannedReply };
   } catch (error) {
     const message = String(error?.message || error);
     const statusCode = error?.statusCode;
@@ -493,6 +494,7 @@ export async function prepareChatItineraryEditForQueueTurn({ db, trip, seat, tri
       replyCustomerTurn: itineraryEditAuthoritative ? `${requestText}\n\n${itineraryEditAuthoritative}` : requestText,
       itineraryEditResult: editSkip(message, 'The itinerary change did not save. Ask the customer to try again in a moment.', { applied: false, reason: 'edit_failed' }),
       itineraryEditAuthoritative,
+      itineraryEditCannedReply: '',
     };
   }
 }

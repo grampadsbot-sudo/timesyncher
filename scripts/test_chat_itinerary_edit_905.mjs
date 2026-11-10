@@ -7,13 +7,14 @@ import {
   applySetTimeOp,
   buildItineraryEditAuthoritativeSystemExtra,
   dayNumbersForPlace,
+  DEMO_LOCKED_CHAT_EDIT_CUSTOMER_REPLY,
   offlineParseItineraryEditIntent,
   placeAssignedOnDay,
-  resolveItineraryEditDayNumber,
   prepareChatItineraryEditForQueueTurn,
+  resolveItineraryEditDayNumber,
   runChatItineraryEditTurn,
 } from '../src/vacation/chat-itinerary-edit.mjs';
-import { assignedDayNumbersForPlace } from '../src/vacation/chat-itinerary-edit-day.mjs';
+import { assignedDayNumbersForPlace, producedDemoLockedChatEditReply } from '../src/vacation/chat-itinerary-edit-day.mjs';
 import { boundedAwait } from '../src/vacation/bounded-await.mjs';
 import {
   assertChatEditPutStaysSmallUnderHugeOverrides,
@@ -377,5 +378,31 @@ await assertChatEditPutStaysSmallUnderHugeOverrides((extra) => runChatItineraryE
 const queueSource = fs.readFileSync(new URL('../routes/vacation-app-chat-queue.mjs', import.meta.url), 'utf8');
 assert.match(queueSource, /createBoundedRewriteClaim/);
 assert.match(queueSource, /createBoundedReplyShipGate/);
+
+const demoSlug = '8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y';
+const lockedPrep = await prepareChatItineraryEditForQueueTurn({
+  db: async () => [],
+  trip: { id: 'trip-lock-905', metadata: { sharedToken: demoSlug } },
+  tripId: 'trip-lock-905',
+  seat: null,
+  requestText: 'Add a bar hop before Carbone that night.',
+  httpReq: { headers: {} },
+  env: {},
+});
+assert.equal(lockedPrep.itineraryEditResult?.reason, 'demo_locked');
+assert.equal(lockedPrep.itineraryEditCannedReply, DEMO_LOCKED_CHAT_EDIT_CUSTOMER_REPLY);
+assert.equal(lockedPrep.itineraryEditAuthoritative, '');
+assert.doesNotMatch(lockedPrep.itineraryEditCannedReply, /saved record|unscheduled items|isn't on a specific day|Carbone isn't|trip website|AUTHORITATIVE_SYSTEM/i);
+const queueRoute = fs.readFileSync(new URL('../routes/vacation-app-chat-queue.mjs', import.meta.url), 'utf8');
+assert.match(queueRoute, /itineraryEditCannedReply/);
+assert.match(queueRoute, /producedDemoLockedChatEditReply/);
+assert.doesNotMatch(queueRoute, /buildItineraryEditDemoLockedAuthoritativeSystemExtra/);
+const cannedBranch = queueRoute.match(/if \(itineraryEditCannedReply\) produced = producedDemoLockedChatEditReply\(itineraryEditCannedReply\);/);
+assert.ok(cannedBranch);
+const produced = producedDemoLockedChatEditReply(DEMO_LOCKED_CHAT_EDIT_CUSTOMER_REPLY);
+assert.equal(produced.reply, DEMO_LOCKED_CHAT_EDIT_CUSTOMER_REPLY);
+assert.equal(produced.jev?.jevRan, false);
+assert.equal(produced.jev?.reason, 'demo_locked_chat_edit');
+assert.equal(produced.model, null);
 
 console.log('test_chat_itinerary_edit_905: ok');

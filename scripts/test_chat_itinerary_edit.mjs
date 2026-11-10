@@ -6,6 +6,7 @@ import {
   applyAssignmentMoveOnPayload,
   applySetTimeOp,
   coalesceChatItineraryEditIntent,
+  DEMO_LOCKED_CHAT_EDIT_CUSTOMER_REPLY,
   loadChatItineraryEditConfig,
   normalizeItineraryPlaceQuery,
   offlineParseItineraryEditIntent,
@@ -493,6 +494,5 @@ const undoDemoLocked = await runChatItineraryEditTurn({
 assert.equal(undoDemoLocked.applied, false);
 assert.equal(undoDemoLocked.reason, 'demo_locked');
 const barHopLocked = await prepareChatItineraryEditForQueueTurn({ db: async () => [], trip: { id: chatEditTripId, metadata: { sharedToken: demoSlug } }, tripId: chatEditTripId, seat: null, requestText: 'Add a bar hop before Carbone that night.', httpReq: ownerHttpReq, env: {} });
-assert.ok(/locked for chat itinerary edits[\s\S]*trip website/i.test(barHopLocked.itineraryEditAuthoritative) && !/saved record shows two unscheduled items|bar hop before Carbone and Carbone itself/i.test(barHopLocked.itineraryEditAuthoritative));
-
+assert.equal(barHopLocked.itineraryEditCannedReply, DEMO_LOCKED_CHAT_EDIT_CUSTOMER_REPLY);
 console.log('test_chat_itinerary_edit: ok');

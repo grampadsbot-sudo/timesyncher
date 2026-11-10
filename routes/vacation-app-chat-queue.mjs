@@ -16,6 +16,7 @@ import { placeSearchClientError } from '../src/vacation/place-search-reply-facts
 import { failedInTurnSearchTurn, replyStageMillis, turnStageTimings } from '../src/vacation/turn-stage-timings.mjs';
 import { persistVacationAppCustomerTurn } from '../src/vacation/vacation-app-queue-persist.mjs';
 import { prepareChatItineraryEditForQueueTurn } from '../src/vacation/chat-itinerary-edit.mjs';
+import { producedDemoLockedChatEditReply } from '../src/vacation/chat-itinerary-edit-day.mjs';
 import { createBoundedReplyShipGate, createBoundedRewriteClaim } from '../src/vacation/vacation-app-chat-postgen.mjs';
 export async function queueVacationAppTurn(db, session, trip, body, hooks, intake = {}) {
   const env = process.env;
@@ -273,7 +274,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     `;
   }
 
-  const { replyCustomerTurn, itineraryEditResult, itineraryEditAuthoritative } = await prepareChatItineraryEditForQueueTurn({
+  const { replyCustomerTurn, itineraryEditResult, itineraryEditAuthoritative, itineraryEditCannedReply } = await prepareChatItineraryEditForQueueTurn({
     db, trip, seat, tripId, requestText, turnId: turnRows[0]?.id || null, httpReq: intake?.httpReq || null, env,
   });
   let produced;
@@ -285,7 +286,8 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
       env: opts?.env ?? env,
       db,
     });
-    if (!tripId) {
+    if (itineraryEditCannedReply) produced = producedDemoLockedChatEditReply(itineraryEditCannedReply);
+    else if (!tripId) {
       const rules = await loadVacationAppReplyRules(env);
       produced = await produceNoTripStarterReply({
         customerTurn: requestText,
