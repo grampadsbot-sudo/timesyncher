@@ -1,6 +1,6 @@
 # Issue #903 — P2 live QA polish (cursor-ubuntu / composer-2.5)
 
-**Outcome:** source-ready PATCH (uncommitted; host publication). **Start HEAD:** `968c7ac8b01fda265bd4d2e265ab7115883191ea`.
+**Outcome:** source-ready (local commit `737fc7c8`; host push/PR). **Start HEAD:** `968c7ac8b01fda265bd4d2e265ab7115883191ea`.
 
 ## Changes (7 acceptance items)
 
@@ -24,20 +24,11 @@
 | `node scripts/test_served_star_rating_bundle.mjs` | PASS |
 | `node scripts/check-no-comments.mjs` | PASS |
 | `BASE=vk node scripts/check-code-ratchet.mjs` | PASS (252 report, 0 fail) |
-| `node scripts/test_offline_manifest.mjs` | **Host:** register `scripts/test_issue_903_live_qa_polish.mjs` in `scripts/offline-tests.txt` (coder lane may not edit manifest per brief) |
-
-## Uncommitted (host publish)
-
-- `src/vacation/live-qa-903-presentation.mjs` (new)
-- `src/vacation/trek-qa-903-ui-patch.mjs` (new)
-- `scripts/test_issue_903_live_qa_polish.mjs` (new)
-- `src/vacation/star-rating-model.mjs`, `shared-trip-live-tab-lists.mjs`, `trek-style2-bundle.mjs`
-- `vacation-app.html`, `public/ts-thing-media-overlay.js`, `public/assets/index-BKun7ofk.js`
-- `scripts/test_bind_thing_media.mjs`, `J/RECEIPT.md`
+| `node scripts/test_offline_manifest.mjs` | PASS (432 offline; `scripts/test_issue_903_live_qa_polish.mjs` registered) |
 
 ## Host follow-up
 
-- Register offline test + one push/PR with `Closes #903`
+- One push/PR with `Closes #903` from `737fc7c8`
 - Gate B / NYC screen probes on new head (not self-certified here)
 - `npm install` was run locally for tests; do not commit `package-lock.json` unless host intentionally refreshes lockfile
 
