@@ -1,0 +1,68 @@
+{
+  "scope": "trip_id = 99 only; places 664, 669, 672",
+  "store": "TREK trip 99 thingOverrides (served as /api/shared thingOverrides[\"place:<id>\"]); storage table not found in this repo",
+  "thingOverrides": {
+    "place:664": {
+      "set": {
+        "title": "Big Apple Greeter",
+        "address": "1 Centre Street, New York, NY 10007",
+        "lat": 40.7129,
+        "lng": -74.006,
+        "website": "https://www.bigapplegreeter.org/",
+        "url": "https://www.bigapplegreeter.org/",
+        "price": 65
+      },
+      "delete": [
+        "externalId",
+        "ccabKey"
+      ],
+      "deleteSourceRecordKeys": [
+        "ccabKey"
+      ],
+      "setSourceRecordKeys": {
+        "price": 65
+      },
+      "missingFieldsAdd": [],
+      "missingFieldsRemove": []
+    },
+    "place:669": {
+      "set": {
+        "title": "Birdland Jazz Club",
+        "address": "315 W 44th St, New York, NY 10036",
+        "lat": 40.759,
+        "lng": -73.989,
+        "website": "https://www.birdlandjazz.com/",
+        "url": "https://www.birdlandjazz.com/",
+        "price": 40
+      },
+      "delete": [
+        "externalId",
+        "ccabKey"
+      ],
+      "deleteSourceRecordKeys": [
+        "ccabKey"
+      ],
+      "setSourceRecordKeys": {},
+      "missingFieldsAdd": [],
+      "missingFieldsRemove": [
+        "address"
+      ]
+    },
+    "place:672": {
+      "set": {
+        "title": "e’s BAR",
+        "address": "511 Amsterdam Ave, New York, NY 10024",
+        "lat": 40.787,
+        "lng": -73.975,
+        "website": "https://e-barnyc.com/",
+        "url": "https://e-barnyc.com/",
+        "price": 22
+      },
+      "delete": [],
+      "deleteSourceRecordKeys": [],
+      "setSourceRecordKeys": {},
+      "missingFieldsAdd": [],
+      "missingFieldsRemove": []
+    }
+  }
+}

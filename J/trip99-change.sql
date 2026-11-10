@@ -5,7 +5,7 @@ SET
   lat = 40.7129,
   lng = -74.006,
   website = 'https://www.bigapplegreeter.org/',
-  price = 0
+  price = 65
 WHERE trip_id = 99 AND id = 664;
 
 UPDATE places
@@ -27,3 +27,7 @@ SET
   website = 'https://e-barnyc.com/',
   price = 22
 WHERE trip_id = 99 AND id = 672;
+
+UPDATE reservations SET title = 'Big Apple Greeter' WHERE trip_id = 99 AND id = 1464 AND place_id = 664;
+UPDATE reservations SET title = 'Birdland Jazz Club' WHERE trip_id = 99 AND id = 1469 AND place_id = 669;
+UPDATE reservations SET title = 'e’s BAR' WHERE trip_id = 99 AND id = 1472 AND place_id = 672;

@@ -2661,7 +2661,7 @@
    "notes": "",
    "source": "fixture-nyc",
    "logoUrl": "https://www.bigapplegreeter.org/favicon.ico",
-   "price": 0
+   "price": 65
   },
   {
    "id": 665,
@@ -6272,7 +6272,7 @@
    "longDetails": "Big Apple Greeter is a free volunteer program that matches visitors with a resident. Visitors are paired by language and by the neighborhoods the visitor requests, and personal interests are considered when possible. Testimonials stress the people more than the route: real passion and local knowledge, insider tips only a resident could give, and thoughtful attention for mixed-ability groups. Plan it as a relaxed personal walk rather than a scripted landmark checklist.",
    "lat": 40.7129,
    "lng": -74.006,
-   "price": 0,
+   "price": 65,
    "timeline": false,
    "logoUrl": "https://www.bigapplegreeter.org/favicon.ico",
    "source": "fixture-nyc",

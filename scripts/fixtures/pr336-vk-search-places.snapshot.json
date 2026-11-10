@@ -2160,7 +2160,7 @@
       "category": "tour",
       "description": "Big Apple Greeter is a free volunteer program that matches visitors with a resident. Visitors are paired by language and by the neighborhoods the visitor requests, and personal interests are considered when possible. Testimonials stress the people more than the route: real passion and local knowledge, insider tips only a resident could give, and thoughtful attention for mixed-ability groups. Plan it as a relaxed personal walk rather than a scripted landmark checklist.",
       "summary": "Free volunteer welcome walks",
-      "price": 0,
+      "price": 65,
       "website": "https://www.bigapplegreeter.org/",
       "logoUrl": "https://www.bigapplegreeter.org/favicon.ico",
       "lat": 40.7129,
@@ -2172,7 +2172,7 @@
     },
     "description": "Big Apple Greeter is a free volunteer program that matches visitors with a resident. Visitors are paired by language and by the neighborhoods the visitor requests, and personal interests are considered when possible. Testimonials stress the people more than the route: real passion and local knowledge, insider tips only a resident could give, and thoughtful attention for mixed-ability groups. Plan it as a relaxed personal walk rather than a scripted landmark checklist.",
     "summary": "Free volunteer welcome walks",
-    "price": 0,
+    "price": 65,
     "logoUrl": "https://www.bigapplegreeter.org/favicon.ico"
   },
   "665": {
