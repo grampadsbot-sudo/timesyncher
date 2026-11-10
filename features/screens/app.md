@@ -27,16 +27,20 @@ Composer in every state below = the text box with file-add, speak and send butto
 | 0 vacations | hidden (0px, not rendered) | conversation only | nothing | text box with file-add, speak and send buttons |
 | 1 vacation, no site content yet | hidden (0px, not rendered) | conversation only | nothing | text box with file-add, speak and send buttons |
 | 1 vacation with site content | hidden (0px, not rendered) | the vacation website, with a full-screen control | the control slider | text box with file-add, speak and send buttons |
-| 2+ vacations | vacation dropdown only | the selected vacation's website once it has content, with a full-screen control | the control slider once the website shows | text box with file-add, speak and send buttons |
-| Website full-screen | none | website fills the viewport, with an exit-full-screen control | none | none |
+| 2+ vacations | Vacay Keepsake book lockup left, one vacation dropdown right, full-screen control in the top bar when a site is loaded (embedded site header hides its own switcher) | the selected vacation's website once it has content | the control slider once the website shows | text box with file-add, speak and send buttons |
+| Website full-screen | none (top bar hidden) | website fills the viewport, with an exit-full-screen control in the top bar | none | none |
 
-Every state is checked at 390x844 and 1280x800. "Nothing else" means: no logo pill, no Open navigation, no Settings, no extra buttons beyond the composer's send, file-add and speak and the full-screen control, no placeholder or internal copy, no second text box.
+Every state is checked at 390x844 and 1280x800. "Nothing else" means: no Open navigation, no Settings, no extra buttons beyond the composer's send, file-add and speak and the full-screen control, no placeholder or internal copy, no second text box, no second trip switcher while the app shows its own.
+
+## Issue #917, 2026-11-09 (demo header; supersedes the 2+ vacations row above for lockup + switcher placement only)
+With 2+ vacations the app top bar shows the VK book lockup and **vacay keepsake** on the left and exactly one trip switcher on the right; full screen lives in the top bar (not over the embedded header). The site iframe uses `embed=1` and must not show a second trip switcher in its header.
 
 ## Open points (Product to confirm with Craig via CoS; do not guess)
 - Whether the conversation stays visible between the website and the text box when a site exists, and how the slider divides them.
 - Whether a brand mark is allowed anywhere ("nothing in the header" reads as no).
 
 ## Changelog
+- 2026-11-09: #917 — logo left + one switcher right in app top bar; full screen in top bar when 2+ vacations; embedded shared header hides trip switcher.
 - 2026-10-03 10:50 AM PT: send button restored (it had been removed by reading "nothing else" literally); common-sense rule added. The composer is the text box with file-add, speak and send buttons.
 - 2026-10-03 9:42 AM PT: header hidden (not just empty) under 2 vacations; full-screen control in the website area.
 - 2026-10-03 9:26 AM PT: captured from Craig (relayed by the TSV Eng lead).

@@ -1,10 +1,18 @@
 # PR #906 — #902 customer build stamp + host `origin/vk` merge (HOST PUBLICATION ONLY)
 
-**Outcome:** source-ready PATCH (host commit + push). **Start HEAD:** `026a586cff9c7efd4e8e9be0255afc0ef110f1a4` (verified). **Lane:** cursor-ubuntu, composer-2.5.
+**Outcome:** source-ready PATCH (host commit + push). **Start HEAD:** `9fc6d2f85fd83417718de5bed7db907761763ddb` (verified). **Lane:** cursor-ubuntu, composer-2.5.
+
+## Conflict round 2026-11-10 (base `b8b9f13f` → head `9fc6d2f8`)
+
+Host merged `origin/vk` into `9fc6d2f8`. Conflicted file: **`shared-app.html`** only.
+
+**Resolution:** Kept vk `#root` flex column shell (`html[data-ts-trip] body` / `#root`) and **PR #902 customer hide** on `footer[data-build-stamp="1"]` (clip/visibility hidden). Rejected vk-only `position: static !important` on the stamp footer — that resurfaced the dark build bar on shared trip pages. Preserved vk `flex: 0 0 auto` on the hidden footer rule.
+
+**Host:** `git add shared-app.html` (clears `UU`), complete merge commit if index mid-merge, push `vkfill/902-20261109163213`.
 
 **GBrain handoff:** `bot-admin/lanes/vk-pr-handoff/pr-906` — page_not_found on this pass (per lane brief).
 
-Host merged `origin/vk` at `85fae5b37a899e737b570b71d052def772d42b16` into `026a586c`. Conflicted file: `J/RECEIPT.md` only — resolved here keeping PR #906 intent (#902) and vk port/data from the merge index.
+Earlier round: host merged `origin/vk` into `026a586c` (receipt + `styles.css`). This round superseded by head `9fc6d2f8` + `shared-app.html` conflict above (`basemerge.json` in job dir).
 
 ## #902 — hide customer-visible build stamp
 
@@ -38,18 +46,17 @@ Host merged `origin/vk` at `85fae5b37a899e737b570b71d052def772d42b16` into `026a
 - Staged merge paths (`git diff --cached`) from host base merge
 - Host: `git add J/RECEIPT.md apps/vacation-client/src/styles.css`, finish merge commit if index mid-merge, one push to `vkfill/902-20261109163213` (PR #906)
 
-## Checks @ `026a586c` + conflict resolution + `styles.css`
+## Checks @ `9fc6d2f8` + `shared-app.html` conflict resolution
 
 | Command | Result |
 | --- | --- |
 | `node scripts/test_build_stamp_customer_hidden.mjs` | **PASS** |
 | `PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser node scripts/test_build_stamp_viewport.mjs` | **PASS** |
 | `node apps/vacation-client/test/shell-layout.mjs` | **PASS** |
-| `node scripts/test_issue_901_trip99_single_venue_standins.mjs` | **PASS** |
-| `node scripts/test_gate_b_live_replay_display_facts.mjs` | **PASS** |
-| `node scripts/test_chat_itinerary_edit_905.mjs` | **PASS** |
-| `node scripts/check-no-comments.mjs` | **PASS** (1129 files; `apps/vacation-client/npm ci` first) |
-| `node scripts/test_offline_manifest.mjs` | **PASS** (437 offline, 18 online) |
+| `node scripts/test_vacation_app_shell.mjs` | **PASS** |
+| `node scripts/test_shared_trip_boot_fetch.mjs` | **PASS** |
+| `node scripts/check-no-comments.mjs` | **PASS** (1131 files) |
+| `node scripts/test_offline_manifest.mjs` | **PASS** (438 offline, 18 online) |
 | `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | **PASS** (252 report, 0 fail) |
 
 Gate B structure / host capture / evidence `J/evidence/hub-390.png` + `hub-1280.png` — host pipeline after push.

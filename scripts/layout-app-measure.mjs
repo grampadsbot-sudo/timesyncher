@@ -32,12 +32,17 @@ export function measureSource() {
     const dropdown = document.querySelector('#vacationDropdown');
     const headerKids = header ? [...header.children] : [];
     if (state === 'MANY') {
-      const onlyDropdown = Boolean(header) && headerKids.length === 1 && headerKids[0] === dropdown;
-      const extra = header?.querySelector('img, .brand, .path-nav, .trip-menu, #tripMenu');
+      const hasBrand = Boolean(header?.querySelector('.vk-app-brand, [data-vk-wordmark]'));
+      const hasDropdown = Boolean(dropdown);
+      const hasFs = Boolean(header?.querySelector('#fullScreenButton'));
+      const badExtra = header?.querySelector('.path-nav, .trip-menu, #tripMenu');
       const height = header ? header.getBoundingClientRect().height : 0;
-      check(id('HEADER'), onlyDropdown && !extra && height > 0, {
+      check(id('HEADER'), hasBrand && hasDropdown && !badExtra && height > 0, {
         children: headerKids.map((node) => node.id || node.className),
-        extra: extra ? (extra.id || extra.className) : '',
+        hasBrand,
+        hasDropdown,
+        hasFs,
+        extra: badExtra ? (badExtra.id || badExtra.className) : '',
         height,
       });
     } else {
@@ -59,7 +64,7 @@ export function measureSource() {
     const allowed = state === 'SITE'
       ? ['attachButton', 'fullScreenButton', 'sendButton', 'splitter', 'voiceButton']
       : state === 'MANY'
-        ? ['attachButton', 'sendButton', 'tripButton', 'voiceButton']
+        ? ['attachButton', 'fullScreenButton', 'sendButton', 'tripButton', 'voiceButton']
         : ['attachButton', 'sendButton', 'voiceButton'];
     const sameButtons = visibleButtons.length === allowed.length && allowed.every((name) => visibleButtons.includes(name));
     check(id('BUTTONS'), sameButtons, { visibleButtons, allowed });
@@ -151,7 +156,7 @@ export function measureSource() {
     }
     check(id('HIDDEN'), hiddenBad.length === 0, { hiddenBad });
 
-    const chrome = document.querySelector('.app img.mark, .app .brand, .path-nav, [aria-label="Vacation path"], .trip-menu, #tripMenu');
+    const chrome = document.querySelector('.app .path-nav, [aria-label="Vacation path"], .trip-menu, #tripMenu');
     check(id('CHROME'), !chrome, { found: chrome ? (chrome.id || chrome.className || chrome.tagName) : '' });
 
     if (!pane) {
@@ -191,10 +196,12 @@ export function measureSource() {
           const footers = [...doc.querySelectorAll('footer')].filter((el) => visible(el, win));
           const stamp = doc.querySelector('footer[data-build-stamp]');
           const stampVisible = Boolean(stamp && visible(stamp, win));
+          const iframeSwitcher = [...doc.querySelectorAll('[data-trip-switcher], [data-trip-switcher-root] select')].filter((el) => visible(el, win));
           embed = {
             ready: true,
             guestVisible,
             stampVisible,
+            iframeSwitcher: iframeSwitcher.length,
             footers: footers.map((el) => el.getAttribute('data-build-stamp') || el.className || el.id || 'footer'),
             embed: doc.documentElement.getAttribute('data-ts-embed') || '',
           };
@@ -202,7 +209,7 @@ export function measureSource() {
       } catch (error) {
         embed = { ready: false, error: String(error) };
       }
-      check(id('EMBED'), embed.ready && !embed.guestVisible && !embed.stampVisible && embed.footers.length === 0, embed);
+      check(id('EMBED'), embed.ready && !embed.guestVisible && !embed.stampVisible && embed.footers.length === 0 && embed.iframeSwitcher === 0, embed);
     }
     return out;
   };

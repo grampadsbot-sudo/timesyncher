@@ -4,7 +4,7 @@ Closes #902
 
 Hide the customer-visible build-stamp bar on every page while keeping machine-readable build id (`<meta name="timesyncher-build">` and `/api/version`). The DOM footer with the 7-char sha remains for probes; CSS hides it unless `?debug=1`.
 
-Host base-merge from `origin/vk` (`85fae5b`) is included in the same publish: #901 trip 99 single-venue fixture/SQL path and inherited #905 chat-itinerary edits already on `026a586c`.
+Host base-merge from `origin/vk` (`b8b9f13f` into `9fc6d2f8`) is in the same publish: staged vk paths (#901/#913 header shell, etc.). **`shared-app.html` conflict resolved:** vk trip flex shell + #902 hide rules on `footer[data-build-stamp="1"]` (vk `position:static` on the stamp dropped — it brought back the dark bar).
 
 ## #902 changes
 
@@ -19,7 +19,8 @@ Host base-merge from `origin/vk` (`85fae5b`) is included in the same publish: #9
 - [x] `node scripts/test_issue_901_trip99_single_venue_standins.mjs`
 - [x] `node scripts/test_gate_b_live_replay_display_facts.mjs`
 - [x] `node scripts/check-no-comments.mjs`, `node scripts/test_offline_manifest.mjs`, `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs`
-- [ ] CI on pushed PR head `026a586c`+ (see J/RECEIPT.md)
+- [x] `node scripts/test_vacation_app_shell.mjs`, `node scripts/test_shared_trip_boot_fetch.mjs`
+- [ ] CI on pushed PR head `9fc6d2f8`+ (see J/RECEIPT.md)
 - [ ] Gate B structure: no viewport-visible build sha on hub/lists/detail at 390 and 1280
 
 ## Left alone
