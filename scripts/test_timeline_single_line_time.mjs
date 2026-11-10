@@ -6,13 +6,14 @@ import { patchSharedLayoutOverflow } from '../src/vacation/trek-shared-layout-pa
 
 const bundle = readFileSync(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
 
-const GUARD = 'ua.time&&!ua.endTime&&!ua.isConflict?';
+const GUARD = 'ua.time&&!ua.endTime?n.jsx("div",{"data-ts-timeline-time":"1"';
 const TWO_LINE_CELL = 'n.jsxs("div",{style:{fontSize:11,fontWeight:700,color:ua.isConflict?"#b91c1c":ua.time?"#111827":"#9ca3af",textAlign:"right",paddingTop:Zn?8:2},children:[ua.time?Yo(ua.time):"",ua.endTime?n.jsxs(n.Fragment,{children:[n.jsx("br",{}),n.jsx("span",{style:{fontWeight:500,color:ua.isConflict?"#ef4444":"#9ca3af"},children:Yo(ua.endTime)})]}):null]})';
 const WRAP_PLAIN = '}:{paddingTop:1},children:[ua.isConflict&&n.jsxs(';
 
 assert.equal(bundle.split(GUARD).length - 1, 1, 'served bundle has one single-line time branch');
 assert.equal(bundle.split(TWO_LINE_CELL).length - 1, 1, 'two-line time cell stays byte-identical');
 const start = bundle.indexOf(GUARD);
+assert.ok(start >= 0, 'served bundle has single-line time branch');
 const twoLineAt = bundle.indexOf(TWO_LINE_CELL, start);
 const singleLine = bundle.slice(start, twoLineAt);
 assert.ok(singleLine.endsWith(':'), 'single-line branch falls through to the two-line cell');
@@ -21,10 +22,11 @@ assert.ok(singleLine.length < 400, 'single-line branch sits directly before the 
 const grid = bundle.slice(bundle.lastIndexOf('n.jsxs("div",{style:{', start), start);
 assert.match(grid, /display:"grid",gridTemplateColumns:"[^"]+",gap:\d+,alignItems:"start"/, 'time cell and title wrapper share one grid row');
 
-const cell = singleLine.match(/^ua\.time&&!ua\.endTime&&!ua\.isConflict\?n\.jsx\("div",\{"data-ts-timeline-time":"1",style:\{([^}]*)\},children:Yo\(ua\.time\)\}\):$/);
+const cell = singleLine.match(/^ua\.time&&!ua\.endTime\?n\.jsx\("div",\{"data-ts-timeline-time":"1",style:\{([^}]*)\},children:Yo\(ua\.time\)\}\):$/);
 assert.ok(cell, 'single-line time cell is marked and holds only the time text');
 assert.match(cell[1], /(^|,)alignSelf:"baseline"(,|$)/, 'time cell sits on the grid row baseline');
 assert.match(cell[1], /fontSize:11,fontWeight:700/, 'time text keeps the two-line cell font');
+assert.match(cell[1], /color:ua\.isConflict\?"#b91c1c":"#111827"/, 'conflict rows keep red time text');
 assert.match(cell[1], /textAlign:"right"/, 'time stays right aligned');
 assert.match(cell[1], /whiteSpace:"nowrap"/, 'single-line time never wraps');
 assert.doesNotMatch(cell[1], /padding|margin|top|transform|position|lineHeight/i, 'no pixel nudges: the baseline comes from layout');
@@ -58,7 +60,9 @@ assert.equal(twoLine.props.children[1].props.children[0].type, 'br', 'two-line r
 assert.equal(wrapAlign({ time: '05:05', endTime: '15:45', isConflict: false }), 'start', 'two-line title wrapper keeps the row start alignment');
 
 const conflict = render({ time: '17:00', isConflict: true });
-assert.equal(conflict.props['data-ts-timeline-time'], undefined, 'conflict row keeps the original cell');
+assert.equal(conflict.props['data-ts-timeline-time'], '1', 'conflict row uses the single-line time cell');
+assert.equal(conflict.props.style.whiteSpace, 'nowrap', 'conflict row time never wraps');
+assert.equal(conflict.props.style.color, '#b91c1c', 'conflict row time stays red');
 
 const untimed = render({ time: '', isConflict: false });
 assert.equal(untimed.props['data-ts-timeline-time'], undefined, 'row with no time keeps the original cell');
