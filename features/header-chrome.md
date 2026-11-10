@@ -15,3 +15,5 @@ Shared-trip header hero row has no microphone (#865). Voice input stays on the v
 - A header **Expand** / **Fullscreen** button — no such `aria-label` on the shared-trip header. Mapbox map control has **Enter fullscreen** / **Exit fullscreen**; see `maps.md`
 
 Not in this header dump: media toggle, QR toggle.
+
+Vacation app splitter (#959, `vacation-app.html`, not the shared-trip header): the 54×3 pill sits on a 22px gray bar (`#splitterTrack`) at 480px and narrower, and on coarse-pointer touch screens up to 932px. The whole 44px row (`#splitterRow`) stays the drag target.

@@ -191,13 +191,14 @@ export async function createWebEditorInvite(db, {
   };
 }
 
-async function createAcceptedWebAccessSession(db, {
+export async function createAcceptedWebAccessSession(db, {
   ownerCustomerId,
   tripId,
   email,
   displayName = '',
   role = 'owner',
   metadata = {},
+  sessionToken: presetSessionToken = '',
   env = process.env,
 }) {
   await ensureVacationWebAccessSchema(db);
@@ -222,7 +223,7 @@ async function createAcceptedWebAccessSession(db, {
   `;
   if (!ownerTrip[0]) throw Object.assign(new Error('Only the vacation owner can create website access.'), { statusCode: 403 });
 
-  const sessionToken = randomToken();
+  const sessionToken = clean(presetSessionToken, 400) || randomToken();
   const rows = await db`
     insert into vacation_web_access_grants (
       owner_customer_id, trip_id, email, display_name, role, status,
@@ -452,7 +453,7 @@ export async function webAccessForSession(db, {
   return rows[0];
 }
 
-async function verifiedOwnerWebGrant(db, webGrant, tripId) {
+export async function verifiedOwnerWebGrant(db, webGrant, tripId) {
   if (!webGrant || webGrant.role !== 'owner') return webGrant;
   const normalizedTripId = clean(tripId, 80);
   if (!normalizedTripId) return null;

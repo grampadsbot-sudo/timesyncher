@@ -441,6 +441,8 @@ scripts/test_fast_origin_transfer_808.mjs
 scripts/test_detail_title_no_clip_nyc.mjs
 scripts/test_issue_951_thing_detail_pencil_price.mjs
 scripts/test_issue_951_trip_switcher_short_name.mjs
+scripts/test_issue_959_owner_session_web_access.mjs
+scripts/test_issue_959_flight_row_detail_price.mjs
 scripts/test_nyc_list_row_summary_not_details.mjs
 scripts/test_trip_dropdown_human_status_848.mjs
 scripts/test_chat_tiers_haiku_5_5.mjs

@@ -50,7 +50,7 @@ assert.match(bundle, /Rn=tsListRowDescription\(G\)/);
 assert.doesNotMatch(bundle, /Rn=Bs\(rr\(G\)\)/);
 assert.match(
   bundle,
-  /return String\(ov\.summary\?\?""\)/,
+  /const ov=ha\(G\)\|\|\{\},summary=String\(ov\.summary\?\?""\);return It\(G\)==="flight"\?/,
 );
 
 function renderedDescription(js, shared, id) {

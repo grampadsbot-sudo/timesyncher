@@ -20,7 +20,7 @@ assert.match(rendered, /overflowWrap:"anywhere"/);
 assert.match(rendered, /whiteSpace:"normal"/);
 assert.match(
   rendered,
-  /"data-ts-detail-header-stars":"1",style:\{display:"flex",flexDirection:"row",flexWrap:"nowrap",alignItems:"center",justifyContent:"center",width:"100%"/,
+  /"data-ts-detail-header-stars":"1",style:\{display:"flex",flexDirection:"row",flexWrap:"nowrap",alignItems:"center",justifyContent:"center",flex:"0 0 auto"/,
 );
 
 const nycNames = [

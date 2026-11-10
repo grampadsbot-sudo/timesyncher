@@ -17,7 +17,8 @@ assert.equal(committed, rendered, 'committed served bundle must match renderServ
 const snippet = listRowDescriptionBundleSnippet();
 assert.match(snippet, /ov\.summary/);
 assert.doesNotMatch(snippet, /ov\.description|longDetails|sr\.description/);
-assert.match(rendered, /tsListRowDescription=function\(G\)\{const ov=ha\(G\)\|\|\{\};return String\(ov\.summary\?\?""\);\}/);
+assert.match(rendered, /tsListRowDescription=function\(G\)\{const ov=ha\(G\)\|\|\{\},summary=String\(ov\.summary\?\?""\);return It\(G\)==="flight"\?\(function naturalFlightSummary\(value\)/);
+assert.ok(rendered.includes(snippet), 'served bundle carries the list row summary snippet');
 assert.match(rendered, /Rn=tsListRowDescription\(G\)/);
 assert.doesNotMatch(rendered, /Rn=Bs\(rr\(G\)\|\|Co\(G\)\|\|Fl\(G\)\)/);
 
