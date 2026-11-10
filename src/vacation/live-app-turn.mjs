@@ -6,7 +6,7 @@ import {
   jevPrecall,
   jevQualityRewrite,
   JEV_QUALITY_MODEL,
-  loadVacationAppReplyRules,
+  loadVacationAppReplyRules, openRouterChatVisibleText, openRouterTemperatureSpread,
 } from '../../scripts/vacation-app-reply-rules.mjs';
 import { DESTINATION_ASK, resolveTripDestination } from './trip-destination.mjs';
 import { activityCommits, customerIntent, emptyIntent } from './customer-intent.mjs';
@@ -1116,7 +1116,7 @@ export async function judgeInterimReply({ text, customerTurn, facts = {}, env = 
     headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json', accept: 'application/json' },
     body: JSON.stringify({
       model: INTERIM_MODEL,
-      temperature: 0,
+      ...openRouterTemperatureSpread(INTERIM_MODEL, 0),
       max_tokens: 80,
       messages: [
         { role: 'system', content: 'Return only JSON {"template":boolean,"canShip":boolean}. template means a stock acknowledgement or a reply that misses the customer. canShip means it answers this turn. Do not write a reply.' },
@@ -1129,7 +1129,7 @@ export async function judgeInterimReply({ text, customerTurn, facts = {}, env = 
   if (!response?.ok) throw interimJudgeError('INTERIM_JUDGE_HTTP');
   let parsed = null;
   try {
-    const raw = String(body?.choices?.[0]?.message?.content || '');
+    const raw = openRouterChatVisibleText(body?.choices?.[0]?.message?.content);
     const start = raw.indexOf('{');
     const end = raw.lastIndexOf('}');
     const json = start >= 0 && end > start ? JSON.parse(raw.slice(start, end + 1)) : null;

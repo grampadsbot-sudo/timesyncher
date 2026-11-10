@@ -1,7 +1,11 @@
 import { PR336_GATE_B_XAI_PLACE_TARGETS } from '../../scripts/fixtures/pr336-gate-b-xai-place-targets.mjs';
-import { addressIsSpecific, normalizeDossierEvidence } from './dossier-evidence-hydrate.mjs';
+import {
+  addressIsSpecific,
+  dossierScalarClaimRejected,
+  normalizeDossierEvidence,
+} from './dossier-evidence-hydrate.mjs';
 import { resolveThingLogoUrl } from './thing-logo-capture.mjs';
-import { applyDossierFields, publicReviewFieldKeys } from './thing-dossier-fields.mjs';
+import { applyDossierFields, claimsSupported, publicReviewFieldKeys } from './thing-dossier-fields.mjs';
 import { placeFromTarget } from './thing-evidence-dossier-execution.mjs';
 import { sharedTripDossierKeyForPlace } from './shared-trip-dossier-keys.mjs';
 import { loadDossiersByKeys, loadThingEvidenceDossier, thingEvidenceDossierKey } from './thing-evidence-dossier-store.mjs';
@@ -38,6 +42,27 @@ function gateBPlaceContext(place = {}) {
   };
 }
 
+function dossierAddressClaim(normalized = {}) {
+  const claim = normalized.fields?.address;
+  if (!claim) return '';
+  const value = text(claim.value ?? claim);
+  if (!value || !addressIsSpecific(value)) return '';
+  if (dossierScalarClaimRejected('address', claim) || !claimsSupported(normalized, claim)) return '';
+  return value;
+}
+
+function resolveServedThingAddress({ record = {}, normalized = {}, current = {}, place = {}, placeCtx = {} }) {
+  const fromRecord = text(record.address);
+  if (addressIsSpecific(fromRecord)) return fromRecord;
+  const fromDossier = dossierAddressClaim(normalized);
+  if (fromDossier) return fromDossier;
+  const prior = text(current.address);
+  if (addressIsSpecific(prior)) return prior;
+  const placeSeed = text(placeCtx.address || place.address);
+  if (addressIsSpecific(placeSeed)) return placeSeed;
+  return fromRecord || prior || '';
+}
+
 function mergeOverride(base = {}, patch = {}) {
   const next = { ...base, ...patch };
   for (const key of publicReviewFieldKeys()) {
@@ -68,6 +93,8 @@ export function applyStoredDossiersToSharedTripSync(shared = {}, dossiersByPlace
     const normalized = normalizeDossierEvidence(dossier, placeCtx);
     const record = applyDossierFields({ ...(place.sourceRecord || {}), ...(current.sourceRecord || {}), ...current }, normalized);
     const patch = { ...record };
+    const servedAddress = resolveServedThingAddress({ record, normalized, current, place, placeCtx });
+    if (servedAddress) patch.address = servedAddress;
     const ccabLogo = text(placeCtx.sourceRecord?.logoUrl || place.sourceRecord?.logoUrl || current.logoUrl || record.logoUrl);
     if (ccabLogo) patch.logoUrl = ccabLogo;
     const resolvedLogo = resolveThingLogoUrl({ ...place, ...placeCtx, sourceRecord: record }, patch);
