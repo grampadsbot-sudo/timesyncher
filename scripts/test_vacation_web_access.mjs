@@ -90,7 +90,7 @@ assert.match(vercel, /webAccess=1/);
 
 const checkout = await readFile(new URL('../addons-checkout.html', import.meta.url), 'utf8');
 assert.match(checkout, /name="planScope"/);
-assert.match(checkout, /TimeSyncher Vacation Add-ons/i);
+assert.match(checkout, /Vacay Keepsake Add-ons/i);
 assert.doesNotMatch(checkout, /collaborator-checkout\.html/);
 assert.match(checkout, /value="single_trip"/);
 assert.doesNotMatch(checkout, /telegram_collaborators_single_trip/);

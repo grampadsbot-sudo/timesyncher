@@ -269,7 +269,7 @@ export async function ensureVacationEulaSession(row, { contact = {}, env = proce
   const session = await createOnboardingSessionPersistent(store, {
     sessionId,
     clientKey: eulaClientKeyForOnboarding(row),
-    clientLabel: cleanText(contact.displayName || row.display_name || [row.first_name, row.last_name].filter(Boolean).join(' '), 180) || 'TimeSyncher Vacation customer',
+    clientLabel: cleanText(contact.displayName || row.display_name || [row.first_name, row.last_name].filter(Boolean).join(' '), 180) || 'Vacay Keepsake customer',
     contact: eulaContactFromOnboarding(row, contact),
     selectedFunctionality: [
       'vacation_planning_onboarding',

@@ -265,7 +265,7 @@ async function ownerMediaPaymentIntent({ stripe, contact, body = {} }) {
     customer: stripeCustomer.id,
     automatic_payment_methods: { enabled: true },
     receipt_email: contact.email,
-    description: 'TimeSyncher Vacation media uploads',
+    description: 'Vacay Keepsake media uploads',
     metadata,
   });
   return {
@@ -358,7 +358,7 @@ async function accessPlanPaymentIntent({ db, stripe, body = {} }) {
     currency: checkout.currency || checkoutCurrency(),
     automatic_payment_methods: { enabled: true },
     receipt_email: contact.email,
-    description: `TimeSyncher Vacation access for ${checkout.trip_title || 'a vacation'}`,
+    description: `Vacay Keepsake access for ${checkout.trip_title || 'a vacation'}`,
     metadata: {
       product: 'timesyncher_vacation_access_plan',
       access_plan_checkout_id: checkout.id,
@@ -660,7 +660,7 @@ export default async function handler(req, res) {
     if (invoice?.payment_intent?.id) {
       await stripe.paymentIntents.update(invoice.payment_intent.id, {
         receipt_email: customer.email,
-        description: 'TimeSyncher Vacation',
+        description: 'Vacay Keepsake',
         metadata: {
           ...orderMetadata,
           stripe_subscription_id: subscription.id,

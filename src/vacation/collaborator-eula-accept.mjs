@@ -85,7 +85,7 @@ async function collaboratorPersistentSession(store, invite, joined, env) {
   const created = await createOnboardingSessionPersistent(store, {
     sessionId,
     clientKey: collaboratorEulaClientKey(invite),
-    clientLabel: contact.displayName || 'TimeSyncher Vacation collaborator',
+    clientLabel: contact.displayName || 'Vacay Keepsake collaborator',
     contact: { email: contact.email, phone: null },
     selectedFunctionality: [
       'vacation_planning_onboarding',
