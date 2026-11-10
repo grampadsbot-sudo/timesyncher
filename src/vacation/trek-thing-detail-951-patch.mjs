@@ -2,7 +2,7 @@ const READONLY_PRICE_NEEDLE =
   'return n.jsxs(n.Fragment,{children:[(addr||hours)?n.jsxs("div",{"data-ts-detail-info-box":"address-hours"';
 
 const READONLY_PRICE_PATCH =
-  'return n.jsxs(n.Fragment,{children:[(()=>{const tsPriceAmt=zt(Dt),tsPriceHas=/\\$?\\d/.test(String(bi(Dt)||""));return tsPriceHas?n.jsxs("p",{"data-ts-detail-field":"price",style:{fontSize:13,lineHeight:1.45,margin:"0 0 10px"},children:[n.jsx("strong",{children:"Price:"})," ",Re(tsPriceAmt)]}):null})(),(addr||hours)?n.jsxs("div",{"data-ts-detail-info-box":"address-hours"';
+  'return n.jsxs(n.Fragment,{children:[(()=>{const raw=String(d.price??"").trim();const unit=typeof d.price==="number"?d.price:Number(raw.replace(/[^0-9.]/g,""));const tsPriceHas=Number.isFinite(unit)&&unit>0;return tsPriceHas?n.jsxs("p",{"data-ts-detail-field":"price",style:{fontSize:13,lineHeight:1.45,margin:"0 0 10px"},children:[n.jsx("strong",{children:"Price:"})," ",`$${unit}`]}):null})(),(addr||hours)?n.jsxs("div",{"data-ts-detail-info-box":"address-hours"';
 
 const CLOSE_BTN_NEEDLE =
   'n.jsx("button",{onClick:()=>Ne(null),style:{border:"1px solid #e5e7eb",background:"#f9fafb",borderRadius:999,width:34,height:34,cursor:"pointer",fontWeight:900},children:"×"})';
@@ -15,12 +15,6 @@ const FIELDSET_EDIT_NEEDLE =
 
 const FIELDSET_EDIT_PATCH =
   'Ce&&Sa&&n.jsxs("fieldset",{"data-shared-readonly":void 0,disabled:!1,style:{border:0,padding:0,margin:0,minInlineSize:0,opacity:1},children:[n.jsx(Nr,{items:fo(Dt),scopeKey:Qt(Dt)}),';
-
-const OPEN_DETAIL_NEEDLE = 'onClick:()=>Ne(Qt(G))';
-const OPEN_DETAIL_PATCH = 'onClick:()=>{Kt(!1),Ne(Qt(G))}';
-
-const OPEN_DETAIL_ITEM_NEEDLE = 'onClick:()=>Ne(Qt(di.item))';
-const OPEN_DETAIL_ITEM_PATCH = 'onClick:()=>{Kt(!1),Ne(Qt(di.item))}';
 
 const DETAIL_NAME_EDIT_NEEDLE =
   'Ce?n.jsx("input",{"aria-label":"Detail name","data-ts-detail-name":"1",disabled:!1,value:mr(Dt),onChange:G=>kd(Dt,G.target.value)';
@@ -43,12 +37,6 @@ export function patchThingDetail951(source = '') {
     js = js.replace(FIELDSET_EDIT_NEEDLE, FIELDSET_EDIT_PATCH);
   } else if (!js.includes('Ce&&Sa&&n.jsxs("fieldset",{"data-shared-readonly":void 0')) {
     throw new Error('thing detail #951 edit fieldset gate patch did not apply');
-  }
-  if (js.includes(OPEN_DETAIL_NEEDLE)) {
-    js = js.replaceAll(OPEN_DETAIL_NEEDLE, OPEN_DETAIL_PATCH);
-  }
-  if (js.includes(OPEN_DETAIL_ITEM_NEEDLE)) {
-    js = js.replaceAll(OPEN_DETAIL_ITEM_NEEDLE, OPEN_DETAIL_ITEM_PATCH);
   }
   if (js.includes(DETAIL_NAME_EDIT_NEEDLE)) {
     js = js.replace(DETAIL_NAME_EDIT_NEEDLE, DETAIL_NAME_EDIT_PATCH);

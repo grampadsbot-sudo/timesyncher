@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const appHtml = readFileSync(path.join(root, 'vacation-app.html'), 'utf8');
 const itineraryRoute = readFileSync(path.join(root, 'routes/vacation-itinerary.mjs'), 'utf8');
-const migration = readFileSync(path.join(root, 'db/migrations/009_trips_short_name.sql'), 'utf8');
+const migrationPath = path.join(root, 'db/migrations/009_trips_short_name.sql');
 
-assert.match(migration, /short_name/);
-assert.match(itineraryRoute, /shortName:\s*cleanText\(row\.short_name/);
-assert.match(itineraryRoute, /trips\.short_name/);
+assert.equal(existsSync(migrationPath), false, 'trips short_name migration must not ship under db/');
+assert.match(itineraryRoute, /shortName:\s*cleanText\(metadata\.shortName/);
+assert.doesNotMatch(itineraryRoute, /trips\.short_name/);
 assert.match(appHtml, /function tripSwitcherShortName\(trip\)/);
 assert.match(appHtml, /trip\?\.shortName \?\? trip\?\.short_name/);
 assert.doesNotMatch(
