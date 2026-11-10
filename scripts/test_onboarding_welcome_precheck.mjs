@@ -254,9 +254,9 @@ assert.equal(precheckSource.includes("You're all set"), false);
 const ownerNote = 'we are going to zon-abcdef12 for several nights together';
 const ownerTurns = [{ speaker: 'customer', text: ownerNote, at: '2026-10-01T00:00:02.000Z' }];
 assert.deepEqual(gradeAuthorLabels([
-  { label: 'TimeSyncher', text: ownerWelcome, user: false },
+  { label: 'Vacay Keepsake', text: ownerWelcome, user: false },
   { label: ownerName, text: ownerNote, user: true },
-  { label: 'TimeSyncher', text: collabWelcome, user: false },
+  { label: 'Vacay Keepsake', text: collabWelcome, user: false },
 ], { ownerName, collabName, ownerTurns }), []);
 const mislabeled = gradeAuthorLabels([
   { label: 'You', text: ownerNote, user: true },
@@ -383,9 +383,9 @@ const dialog = precheckOnboardingRun({
       { speaker: 'app', text: collabWelcome, at: '2026-10-01T00:00:11.000Z' },
     ],
     bubbles: [
-      { label: 'TimeSyncher', text: ownerWelcome, user: false },
+      { label: 'Vacay Keepsake', text: ownerWelcome, user: false },
       { label: ownerName, text: ownerNote, user: true },
-      { label: 'TimeSyncher', text: collabWelcome, user: false },
+      { label: 'Vacay Keepsake', text: collabWelcome, user: false },
     ],
   },
   noVacation: { vacationCount: 0, opened: true, selected: '', options: [], visibleText: '', label: '' },

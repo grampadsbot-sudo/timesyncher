@@ -80,6 +80,7 @@ function makeChatItineraryEditDbStub({ sessionToken, edits = [] } = {}) {
       return [];
     }
     if (/insert into chat_itinerary_anchor_state/i.test(query)) return [];
+    if (/from chat_itinerary_anchor_state/i.test(query) && /anchor_place_id/i.test(query)) return [];
     throw new Error(`unexpected query in chat itinerary edit db stub: ${query}`);
   };
 }
@@ -324,6 +325,7 @@ for (const [op, customerTurn] of turns) {
     }
     if (/^insert into chat_itinerary_edits/.test(sql)) { audit.push(values); return []; }
     if (/^insert into chat_itinerary_anchor_state/.test(sql)) return [];
+    if (/^select anchor_place_id from chat_itinerary_anchor_state/.test(sql)) return [];
     throw new Error(`unexpected_mock_sql: ${sql}`);
   };
   const result = await runChatItineraryEditTurn({

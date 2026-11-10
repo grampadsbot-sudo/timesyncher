@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TimeSyncher Vacation App</title>
+  <title>Vacay Keepsake App</title>
   <style>
     :root {
       color-scheme: light;
@@ -84,37 +84,10 @@
       margin-top: 1px;
     }
     .vacation-dropdown { position: relative; min-width: 0; max-width: 100%; justify-self: end; }
-    .trip-button {
-      max-width: 100%;
-      min-height: 38px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: var(--panel);
-      color: var(--ink);
-      display: inline-flex;
-      align-items: flex-start;
-      gap: 8px;
-      padding: 7px 10px;
-      font-weight: 750;
-      text-align: left;
-    }
-    .trip-button .trip-trigger-text,
-    .trip-button .trip-trigger-title,
-    .trip-button .trip-trigger-dates,
-    .trip-option b,
-    .trip-option small {
-      min-width: 0;
-      display: block;
-      width: 100%;
-      overflow: visible;
-      text-overflow: clip;
-      white-space: normal;
-      overflow-wrap: anywhere;
-      font-weight: 750;
-    }
+    .trip-button { max-width: 100%; min-height: 38px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); display: inline-flex; align-items: flex-start; gap: 8px; padding: 7px 10px; font-weight: 750; text-align: left; }
+    .trip-button .trip-trigger-text,.trip-button .trip-trigger-title,.trip-button .trip-trigger-dates,.trip-option b,.trip-option small { min-width: 0; display: block; width: 100%; overflow: visible; text-overflow: clip; white-space: normal; overflow-wrap: anywhere; font-weight: 750; }
     .trip-button .trip-trigger-text { flex: 1 1 auto; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
-    .trip-button .trip-trigger-dates,
-    .trip-option small { color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .trip-button .trip-trigger-dates,.trip-option small { color: var(--muted); font-size: 12px; margin-top: 2px; }
     .trip-list {
       position: absolute;
       right: 0;
@@ -156,7 +129,7 @@
       grid-row: 2;
       min-height: 0;
       display: grid;
-      grid-template-rows: minmax(128px, var(--site-height, 52fr)) 10px minmax(220px, 48fr);
+      grid-template-rows: minmax(0, var(--site-height, 52fr)) 10px minmax(0, var(--chat-height, 48fr));
     }
     .workspace.chat-only {
       grid-template-rows: minmax(0, 1fr);
@@ -225,7 +198,9 @@
       gap: 10px;
     }
     .bubble {
-      max-width: min(720px, 88%);
+      box-sizing: border-box;
+      width: 100%;
+      max-width: 100%;
       border: 1px solid var(--line);
       border-radius: 8px;
       padding: 10px 12px;
@@ -294,17 +269,8 @@
       border-color: var(--danger);
       background: var(--danger);
     }
-    .voice-mic-wrap {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    #voiceElapsed {
-      font-size: 13px;
-      font-weight: 750;
-      color: var(--danger);
-      min-width: 2.5em;
-    }
+    .voice-mic-wrap { display: inline-flex; align-items: center; gap: 6px; }
+    #voiceElapsed { font-size: 13px; font-weight: 750; color: var(--danger); min-width: 2.5em; }
     textarea {
       width: 100%;
       min-height: 42px;
@@ -425,7 +391,7 @@
       justify-self: start;
     }
     @media (max-width: 700px) {
-      .topbar { grid-template-columns: minmax(0, 1fr); align-items: start; } .trip-button { max-width: 100%; } .trip-list { left: 0; right: auto; width: 100%; } .workspace:not(.chat-only) { grid-template-rows: minmax(160px, var(--site-height, 48fr)) 10px minmax(260px, 52fr); } .bubble { max-width: 94%; }
+      .topbar { grid-template-columns: minmax(0, 1fr); align-items: start; } .trip-button { max-width: 100%; } .trip-list { left: 0; right: auto; width: 100%; } .workspace:not(.chat-only) { grid-template-rows: minmax(0, var(--site-height, 48fr)) 10px minmax(0, var(--chat-height, 52fr)); }
     }
     html:has(main.app) body { padding-bottom: 0 !important; }
     html:has(main.app) footer[data-build-stamp="1"] { visibility: hidden; position: absolute; width: 0; height: 0; margin: 0; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); }
@@ -524,15 +490,7 @@
       const place = tripTitle(trip);
       const when = tripDates(trip);
       if (titleEl) titleEl.textContent = place;
-      if (datesEl) {
-        if (when) {
-          datesEl.textContent = when;
-          datesEl.hidden = false;
-        } else {
-          datesEl.textContent = '';
-          datesEl.hidden = true;
-        }
-      }
+      if (datesEl) { datesEl.textContent = when; datesEl.hidden = !when; }
     }
 
     function vacationSelector(trips, trip) {
@@ -553,8 +511,8 @@
     function renderGate(message = '') {
       root.innerHTML = `<main class="session-gate">
         <section class="gate-card">
-          <img class="mark" src="/timesyncher-logo-gold.png" alt="TimeSyncher" />
-          <h1>TimeSyncher Vacation</h1>
+          <img class="mark" src="/brand/vk-book-logo.svg" alt="Vacay Keepsake" />
+          <h1>Vacay Keepsake</h1>
           ${message ? `<p class="error" role="alert">${safe(message)}</p>` : '<p>Open your vacation workspace with the link from your welcome email.</p>'}
           <form class="session-form" id="sessionForm">
             <input name="session" placeholder="Vacation session token" value="${safe(sessionToken)}" autocomplete="off" required>
@@ -573,10 +531,10 @@
     function renderEula() {
       document.title = 'Review Terms & Privacy';
       const eula = state.eula || {}, name = state.session?.customerName || '', collabSeat = Boolean(state.session?.seat);
-      const eulaLead = collabSeat ? 'Agree to join this vacation chat.' : 'These terms are the first step in TimeSyncher Vacation. Agree to continue into onboarding.', eulaWait = collabSeat ? 'Terms are not ready yet. Open your invite link again in a moment.' : 'Terms are not ready yet. Open the link from your purchase email again in a moment.';
+      const eulaLead = collabSeat ? 'Agree to join this vacation chat.' : 'These terms are the first step in Vacay Keepsake. Agree to continue into onboarding.', eulaWait = collabSeat ? 'Terms are not ready yet. Open your invite link again in a moment.' : 'Terms are not ready yet. Open the link from your purchase email again in a moment.';
       root.innerHTML = `<main class="app">
         <header class="topbar">
-          <div class="brand"><img class="mark" src="/timesyncher-logo-gold.png" alt="TimeSyncher" /><span>TimeSyncher Vacation<small>Terms &amp; Privacy</small></span></div>
+          <div class="brand"><img class="mark" src="/brand/vk-book-logo.svg" alt="Vacay Keepsake" /><span>Vacay Keepsake<small>Terms &amp; Privacy</small></span></div>
         </header>
         <section class="eula-screen" id="eulaScreen" aria-label="Terms and privacy">
           <h1>Review Terms &amp; Privacy</h1>
@@ -584,7 +542,7 @@
           <div class="eula-text" id="eulaText">${eula.text ? renderEulaMarkdown(eula.text) : safe(eulaWait)}</div>
           <form class="eula-form" id="eulaForm">
             <label>Your name<input id="eulaName" name="name" type="text" required value="${safe(name)}" autocomplete="name"></label>
-            <label><input id="eulaAgree" type="checkbox" required> I agree to TimeSyncher's Terms and Privacy Policy and understand the service is advisory-only.</label>
+            <label><input id="eulaAgree" type="checkbox" required> I agree to Vacay Keepsake's Terms and Privacy Policy and understand the service is advisory-only.</label>
             <button class="agree-button" id="eulaAgreeButton" type="submit">Agree</button>
             <div class="error" id="eulaError" hidden></div>
           </form>
@@ -756,12 +714,14 @@
       const attachments = await Promise.all(state.attachments.map(filePayload));
       state.attachments = [];
       renderAttachments();
-      messages.insertAdjacentHTML('beforeend', `<article class="bubble" id="tsTyping" aria-live="polite" aria-busy="true"><small>TimeSyncher</small>…</article>`);
+      messages.insertAdjacentHTML('beforeend', `<article class="bubble" id="tsTyping" aria-live="polite" aria-busy="true"><small>Vacay Keepsake</small>…</article>`);
       if (!hadSite && currentTrip()?.id) startProgressPoll(currentTrip().id);
+      const sendAbort = window.tsVacationAppRequest.beginChatSendAbort();
       try {
         const res = await fetch(`/api/vacation-itinerary?app=1&session=${encodeURIComponent(sessionToken)}`, {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
+          signal: sendAbort.signal,
           body: JSON.stringify({
             tripId: currentTrip()?.id,
             text,
@@ -775,7 +735,7 @@
         if (data.status === 'interim') {
           const typing = document.getElementById('tsTyping');
           if (data.interimReply?.text && typing) {
-            typing.insertAdjacentHTML('beforebegin', `<article class="bubble"><small>TimeSyncher</small>${chatText(data.interimReply.text)}</article>`);
+            typing.insertAdjacentHTML('beforebegin', `<article class="bubble"><small>Vacay Keepsake</small>${chatText(data.interimReply.text)}</article>`);
           }
           const finRes = await fetch(`/api/vacation-itinerary?app=1&session=${encodeURIComponent(sessionToken)}`, {
             method: 'POST',
@@ -786,7 +746,7 @@
           document.getElementById('tsTyping')?.remove();
           if (!finRes.ok || fin.ok === false || !fin.reply) failAppRequest(fin, 'The app did not return a reply.');
           if (Array.isArray(fin.itinerary)) state.things = fin.itinerary;
-          messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>TimeSyncher</small>${chatText(fin.reply)}</article>`);
+          messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>Vacay Keepsake</small>${chatText(fin.reply)}</article>`);
         } else {
           document.getElementById('tsTyping')?.remove();
           if (!data.reply) failAppRequest(data, 'The app did not return a reply.');
@@ -804,14 +764,12 @@
             }
           }
           if (data.searchProgress) applyServerProgress(data.searchProgress, data.vacation || data.trip, data.vacation?.publicUrl);
-          messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>TimeSyncher</small>${chatText(data.reply)}</article>`);
+          messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>Vacay Keepsake</small>${chatText(data.reply)}</article>`);
         }
       } catch (error) {
-        document.getElementById('tsTyping')?.remove();
-        console.error(error);
-        showComposerStatus(customerSafeErrorMessage(error, error?.response));
-        stopProgressPoll();
+        window.tsVacationAppRequest.handleChatSendFailure(error, { messages, showComposerStatus, customerSafeErrorMessage, stopProgressPoll });
       } finally {
+        sendAbort.clear();
         state.sending = false;
       }
       messages.scrollTop = messages.scrollHeight;
@@ -843,7 +801,13 @@
         state.turns = data.turns || [];
         state.things = Array.isArray(data.itinerary) ? data.itinerary : [];
         state.searchProgress = data.searchProgress || null;
-        state.currentTripId = tripId || data.session?.currentTripId || state.vacations[0]?.id || '';
+        state.currentTripId = window.tsVacationAppRequest.resolveCurrentTripId({
+          vacations: data.vacations,
+          tripId,
+          urlTripId: params.get('tripId') || '',
+          sessionTripId: data.session?.currentTripId,
+          fallbackTripId: state.vacations[0]?.id || '',
+        });
         if (state.eula?.accepted !== true) {
           renderEula();
           return;
@@ -865,6 +829,6 @@
       applyServerProgress,
       paintSearchProgress,
     } = window.tsVacationAppProgress.attach({ getState, setState, getSessionToken, loadApp, currentTrip, realSiteUrl });
-    loadApp();
+    loadApp(window.tsVacationAppRequest.initialTripIdFromSearch(params));
   </script></body>
 </html>

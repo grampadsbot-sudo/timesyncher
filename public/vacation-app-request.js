@@ -65,6 +65,31 @@ window.tsVacationAppRequest = {
       response: data,
     });
   },
+  CHAT_SEND_TIMEOUT_MS: 90_000,
+  beginChatSendAbort(timeoutMs = window.tsVacationAppRequest.CHAT_SEND_TIMEOUT_MS) {
+    const sendController = new AbortController();
+    const sendTimeout = setTimeout(() => sendController.abort(), timeoutMs);
+    return { signal: sendController.signal, clear() { clearTimeout(sendTimeout); } };
+  },
+  handleChatSendFailure(error, { messages, showComposerStatus, customerSafeErrorMessage, stopProgressPoll }) {
+    document.getElementById('tsTyping')?.remove();
+    console.error(error);
+    if (error?.name === 'AbortError') {
+      messages.insertAdjacentHTML('beforeend', '<article class="bubble" role="alert"><small>TimeSyncher</small>That took too long — please try again.</article>');
+      showComposerStatus('');
+    } else {
+      showComposerStatus(customerSafeErrorMessage(error, error?.response));
+    }
+    stopProgressPoll();
+  },
+  resolveCurrentTripId({ vacations, tripId, urlTripId, sessionTripId, fallbackTripId }) {
+    const requestedTripId = tripId || urlTripId || '';
+    const allowedTrip = requestedTripId && (vacations || []).some((item) => item.id === requestedTripId) ? requestedTripId : '';
+    return allowedTrip || sessionTripId || fallbackTripId || '';
+  },
+  initialTripIdFromSearch(searchParams) {
+    return String(searchParams?.get('tripId') || '').trim();
+  },
 };
 
 window.tsVacationAppProgress = {
@@ -365,12 +390,19 @@ window.tsVacationAppChrome = {
   bindSplitter() {
     const workspace = document.getElementById('workspace');
     const splitter = document.getElementById('splitter');
+    if (!workspace || !splitter) return;
+    const splitterPx = splitter.getBoundingClientRect().height || 10;
     let dragging = false;
     const resize = (clientY) => {
       const rect = workspace.getBoundingClientRect();
-      const pct = Math.min(76, Math.max(26, ((clientY - rect.top) / rect.height) * 100));
-      workspace.style.setProperty('--site-height', `${pct}fr`);
+      const usable = Math.max(1, rect.height - splitterPx);
+      const sitePx = Math.min(usable, Math.max(0, clientY - rect.top));
+      const sitePct = (sitePx / usable) * 100;
+      const clamped = Math.min(99.5, Math.max(0.5, sitePct));
+      workspace.style.setProperty('--site-height', `${clamped}fr`);
+      workspace.style.setProperty('--chat-height', `${100 - clamped}fr`);
     };
+    const stopDrag = () => { dragging = false; };
     splitter.addEventListener('pointerdown', (event) => {
       dragging = true;
       splitter.setPointerCapture(event.pointerId);
@@ -379,6 +411,7 @@ window.tsVacationAppChrome = {
     splitter.addEventListener('pointermove', (event) => {
       if (dragging) resize(event.clientY);
     });
-    splitter.addEventListener('pointerup', () => { dragging = false; });
+    splitter.addEventListener('pointerup', stopDrag);
+    splitter.addEventListener('pointercancel', stopDrag);
   },
 };

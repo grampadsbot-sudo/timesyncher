@@ -1,0 +1,13 @@
+--- harness-retry ---
+elif g.get("sha") == sha and g.get("verdict") and g.get("effective") == "NO_VERDICT" and harness_lookup_retry_ok(n, sha, g):
+--- harness-cap ---
+if row["count"] >= HARNESS_LOOKUP_RETRIES:
+--- gateb-one ---
+if T.held(pr): T.log("gateb_one: PR #%d held; not run" % n); sys.exit(2)
+T.pregate_one(pr, files); T.save_state()
+--- data-fault-round ---
+if hl == ["hold:test-trip-fixture"]:
+--- data-fault-call ---
+conflict_round_if_dirty(gh, n, _dsha, log, verdict="DATA_FAULT (stale replay / base drift)")
+--- unit-tests-wait ---
+unit-tests still running on %s; coder round waits for the CI result

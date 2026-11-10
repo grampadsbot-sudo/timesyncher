@@ -31,7 +31,7 @@ import {
   styleOneLocationStaysOnStaging,
 } from '../src/vacation/keepsake-style2-handler.mjs';
 import keepsakeStyle2Handler from '../src/vacation/keepsake-style2-handler.mjs';
-import { patchStyleTwoToConfigRenderer, assertPatchedStyleTwo, assertStyleTwoPatchParses, STYLE2_USES_AE, STYLE2_USES_ZU } from '../src/vacation/trek-style2-bundle.mjs';
+import { patchStyleTwoToConfigRenderer, assertPatchedStyleTwo, assertStyleTwoPatchParses, STYLE2_USES_AE, STYLE2_USES_ZU } from '../src/vacation/trek-style2-bundle.mjs'; import { patchVk890Rebrand } from '../src/vacation/trek-vk-890-rebrand-patch.mjs';
 import { applyProductKeepsakeOverrides, keepsakeListBuckets, resolveThingCoords } from '../src/vacation/keepsake-product-overrides.mjs';
 import { KEEPSAKE_LIST_MINIMUMS } from '../src/vacation/keepsake-list-minimums.mjs';
 import { DEFAULT_FIRST_PASS_MINIMUMS } from '../scripts/vacation-public-research-worker.mjs';
@@ -644,7 +644,7 @@ const aeFixture = [
   '.thing{break-inside:avoid;page-break-inside:avoid;border:1px solid #e5e7eb;border-radius:14px;padding:12px;margin:0 0 10px}',
   '.style2-details{display:grid;grid-template-columns:1fr;gap:10px}',
 ].join('\n');
-const patchedAe = patchStyleTwoToConfigRenderer(aeFixture);
+const patchedAe = patchVk890Rebrand(patchStyleTwoToConfigRenderer(aeFixture));
 assertPatchedStyleTwo(patchedAe);
 assert.match(patchedAe, /tsListThings=\(rows\)/);
 assert.doesNotMatch(patchedAe, /logoUrl:tsLogo\(name\)/);
@@ -776,8 +776,8 @@ assert.match(patchedAe, /data-day-things-flow="1"/);
 assert.match(patchedAe, /data-stories-packed="1"/);
 assert.match(patchedAe, /data-last-page-logo="1"/);
 assert.match(patchedAe, /data-hourglass-between="1"/);
-assert.match(patchedAe, /data-brand-lockup="timesyncher-hourglass-vacation"/);
-assert.match(patchedAe, /<span>TimeSyncher<\/span><img class="ts-logo"/);
+assert.match(patchedAe, /data-brand-lockup="vacay-keepsake-book"/);
+assert.match(patchedAe, /vk-print-wordmark/);
 assert.match(patchedAe, /\[data-last-page-logo="1"\]\{display:flex!important;flex-direction:row/);
 assert.doesNotMatch(patchedAe, /<span>TimeSyncher Vacation<\/span>/);
 assert.doesNotMatch(patchedAe, /\[data-last-page-logo="1"\]\{display:flex!important;flex-direction:column/);

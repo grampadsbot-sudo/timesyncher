@@ -392,18 +392,13 @@
     cleanupRecording();
   });
 
-  function installButton() {
-    if (document.querySelector('[data-ts-shared-audio]')) return true;
-    const tripButton = document.querySelector('[data-trip-view-root]');
-    const printButton = document.querySelector('[data-print-menu-root]');
-    const row = tripButton?.parentElement || printButton?.parentElement;
-    if (!row) return false;
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'ts-shared-audio-button';
-    button.dataset.tsSharedAudio = '1';
-    button.setAttribute('aria-label', 'Record voice note');
-    button.title = 'Record voice note';
+  const recordVoiceNoteLabel = 'Record voice note';
+
+  function wireSharedAudioButton(button) {
+    if (button.dataset.tsSharedAudioWired === '1') return;
+    button.dataset.tsSharedAudioWired = '1';
+    button.setAttribute('aria-label', recordVoiceNoteLabel);
+    button.title = recordVoiceNoteLabel;
     setIcon(button, 'mic');
     if (!canRecord()) {
       button.disabled = true;
@@ -411,7 +406,12 @@
     } else {
       button.addEventListener('click', beginRecording);
     }
-    row.insertBefore(button, printButton || null);
+  }
+
+  function installButton() {
+    const buttons = document.querySelectorAll('[data-ts-shared-audio]');
+    if (!buttons.length) return false;
+    buttons.forEach(wireSharedAudioButton);
     return true;
   }
 

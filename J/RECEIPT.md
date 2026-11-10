@@ -1,3 +1,49 @@
+# PR #896 / issue #888 — host vk base-merge conflict resolution (ce649c0 → c5ac2c57)
+
+**Outcome:** SOURCE-READY for host commit (merge completion). **Starting HEAD:** `c5ac2c57b28980eb2535697829e16a22dcd72659`. **Merged base:** `origin/vk` @ `ce649c0cde4e7ecac6dc0138e2dddd5cc523ecde` (`basemerge.json` in job `vkfill-896-20261109210939-job`). **Model:** composer-2.5; HOST PUBLICATION ONLY — no commit, stage, push, or Git metadata write by this round.
+
+## Conflict resolution
+
+Host merge left three conflicts: `J/RECEIPT.md`, `public/assets/index-BKun7ofk.js`, `scripts/offline-tests.txt`.
+
+| File | Resolution |
+| --- | --- |
+| `scripts/offline-tests.txt` | Both sides: `test_issue_888_clipped_text.mjs` (PR #896) and `test_issue_901_trip99_single_venue_standins.mjs` (vk). |
+| `public/assets/index-BKun7ofk.js` | Took vk index side for conflict hunk, then `node scripts/rebake_served_trek_bundle.mjs` (full rebake from product patcher). |
+| `J/RECEIPT.md` | Both sides: this round header plus inherited #896 and vk receipts below. |
+
+Product behaviour: PR #888 clipped-text / switcher / flight-row / conflict-card rules on branch head, plus vk rebrand, dossier overlay, Trip 99 fixture rows, and related staged merge sources.
+
+## Checks (uncommitted tree @ c5ac2c57 + resolutions)
+
+| Command | Result |
+| --- | --- |
+| `node scripts/rebake_served_trek_bundle.mjs` | PASS sha256 `56dadc233c00f6d24d4ca70dbd818a7cc4e38f1a583209f898f6dc1ab51cc82c` |
+| `node scripts/test_served_trek_bundle.mjs` | PASS |
+| `node scripts/test_issue_888_clipped_text.mjs` | PASS |
+| `node scripts/test_issue_901_trip99_single_venue_standins.mjs` | PASS |
+| `node apps/vacation-client/test/list-layout.mjs` | PASS (after `npm ci` root + `apps/vacation-client`) |
+| `node scripts/test_real_app_entry.mjs` | PASS (after root `npm ci`) |
+| `node scripts/test_trip_dropdown_human_status_848.mjs` | PASS |
+| `node scripts/test_dossier_evidence_hydrate_682.mjs` | PASS |
+| `node scripts/test_gate_b_product_row_fields.mjs` | PASS |
+| `node scripts/test_gate_b_live_replay_display_facts.mjs` | PASS |
+| `node scripts/test_reply_action_claim_d2_paia_save_route.mjs` | PASS |
+| `npm run test:keepsake-style2` | PASS |
+| `node scripts/check-no-comments.mjs` | PASS (1130 files) |
+| `node scripts/test_offline_manifest.mjs` | PASS (438 offline, 18 online) |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | **FAIL** `FILE-SIZE-500` `vacation-app.html` `lines:886>872` (vk merge growth; baseline not updated — host owns `scripts/code-ratchet-baseline.json`, out of lane scope) |
+| `git diff --check` | PASS (no conflict markers in resolved files) |
+
+**Verdict:** Conflict resolution SOURCE-READY; host commit blocked on code ratchet until baseline records `vacation-app.html` line count ≥886 (merged vk + branch). No new #888 product edits this round. Re-run official Gate B on published post-merge SHA (`handoff/pr-896`).
+
+## Host handoff
+
+- Uncommitted: conflict resolutions above plus this `J/RECEIPT.md`.
+- Host: `git add` conflicted paths, `git commit --no-edit`, push `vkfill/888-20261109142715` once, re-run CI and official Gate B on published SHA.
+
+---
+
 # PR #896 / issue #888 — containment repair, host publication only
 
 Starting and final HEAD: `6dafbb249baa787fec0a9e3cf971c3100b0527b8`. Source remains **uncommitted for host review**. No Git metadata mutation, publication, deployment, PR comment, model delegation, OpenRouter or paid fallback occurred.
@@ -103,11 +149,82 @@ Earlier partial noted Southwest logo 3px vs 2px tolerance on full Gate B flights
 
 ## Changes (in staged merge index)
 
-1. **`src/vacation/shared-trip-dossier-overlay.mjs`** — When a stored dossier has a supported, `addressIsSpecific` street address, it wins over neighborhood-only `thingOverrides` / fixture placeholders.
-2. **`src/vacation/intake-shared-trip.mjs`** — `applyThingPresentation` no longer overwrites a specific override address with a non-specific trip-row address.
-3. **Fixtures** — Street addresses for #889 addendum table in `gate-b-nyc-shared-staging.json`, `pr336-vk-search-places.snapshot.json`, and `nyc_ccab_place_enrichment.json`; flight rows in snapshot/staging use `AAA → BBB` routes instead of `Flight options / Bookings tab`.
-4. **`scripts/test_dossier_evidence_hydrate_682.mjs`** — Overlay regression: Park Central dossier `870 7th Ave` beats `Midtown / Central Park South`.
+# PR #908 / #901 — host base-merge follow-up (9420e788)
 
-## Left alone (vk scope)
+**Outcome:** source-ready PATCH (uncommitted; HOST PUBLICATION ONLY). **Start HEAD:** `9420e788aaf9d712bbcc2ce6c96f9eb7c77c7381` (verified). **Lane:** cursor-ubuntu, composer-2.5.
+
+Host merged `origin/vk` at `2608a0ecbf08f33cc735b9824a357982a96d914e` into `9420e788`. Conflicted file: `J/RECEIPT.md` only. This round resolved that conflict (both sides kept below), ran `node scripts/rebake_served_trek_bundle.mjs` (no asset delta vs index), and re-ran pre-DONE gates.
+
+## Checks @ `9420e788` + conflict resolution
+
+| check | result |
+| --- | --- |
+| `node scripts/test_gate_b_product_row_fields.mjs` | PASS |
+| `node scripts/test_gate_b_live_replay_display_facts.mjs` | PASS |
+| `node scripts/test_issue_901_trip99_single_venue_standins.mjs` | PASS |
+| `node scripts/test_reply_action_claim_d2_paia_save_route.mjs` | PASS |
+| `node scripts/check-no-comments.mjs` | PASS (1128 files; `apps/vacation-client/npm ci` first) |
+| `node scripts/test_offline_manifest.mjs` | PASS (436 offline, 18 online) |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS (252 report, 0 fail) |
+
+## Left alone (vk scope) — #896 inherited
 
 - Gate B pixel/screenshot capture beyond regression tests above, Piccola hours garbage, duplicate Blue Note titles, Zinc 404 logo hunt.
+
+No CI run id on this uncommitted tree; pending host commit of staged merge + this `J/RECEIPT.md` resolution.
+
+## Host publish (vk #901 / #908 — historical)
+
+1. `git add J/RECEIPT.md` (conflict resolved); commit the staged host-merge index (80 paths) with merge message; push once to `vkfill/901-20261109163211`.
+2. CI `unit-tests`, then Gate B structure on the new head.
+3. Trip 99 live: apply `J/trip99-change.sql` + `J/trip99-change.json` per sections below before expecting live `/api/shared` to match fixtures.
+
+**Uncommitted / staged (host):** merge index ~80 files from `origin/vk` (rebrand, #905 chat-itinerary pieces, `vacation-app.html` composer catch, etc.) plus this `J/RECEIPT.md`.
+
+---
+
+# #901 / PR #908: unit-tests fix (prior round summary, still authoritative)
+
+**Prior start HEAD:** `3e710445c8aba3bc661ac65cafb9f4b1fed9470c`.
+
+## Failure reproduced (9913e460 / 3e710445)
+
+`node scripts/test_gate_b_live_replay_display_facts.mjs` gave `served: place 664 price must match hosted` (`65 !== 25`), and `externalId` wrong for 664 and 669 (served undefined; hosted had old bundle titles).
+
+## Root cause
+
+- The PR rewrote 664/669/672 in the Gate B served fixture, but the hosted live replay `scripts/fixtures/nyc-screen-trip99-live-shared-api.json` still held the old bundle rows. Live staging had not applied `J/trip99-change.sql` yet.
+- The ccab fix set `Big Apple Greeter.price` 0 → null. With null price, `buildGateBSearchPlaceForRow` → `enrichSearchPlace` uses the activity default (`src/vacation/search-place-price-estimate.mjs:62` → 65). Staging fixture, VK search snapshot, and SQL still said `0` (banned `$0`).
+- Served `externalId` undefined for 664/669 when new narratives exceed 30 words (`mergeStoredCcabNarrativeIntoOverride` returns early in `src/vacation/stored-ccab-narrative-merge.mjs`).
+
+## Data changes (on branch; in staged merge)
+
+| file | change |
+| --- | --- |
+| `scripts/fixtures/nyc-screen-trip99-live-shared-api.json` | Trip 99 post-image for 664/669/672 |
+| `scripts/fixtures/gate-b-nyc-shared-staging.json` | 664 place + override `price` 0 → 65 |
+| `scripts/fixtures/pr336-vk-search-places.snapshot.json` | 664 `price` / `sourceRecord.price` 0 → 65 |
+| `scripts/fixtures/nyc_ccab_place_enrichment.json` | `Big Apple Greeter.price` → null (skips `test_gate_b_product_row_fields.mjs:270`; served build still estimates 65) |
+| `J/trip99-change.sql`, `J/trip99-change.json`, `J/trip99-backup.sql`, `J/REVERT.md` | Host Neon apply path |
+
+**Price for 664:** dossier says free; `$0` banned; positive Gate B contract requires a price on every Thing — staging/live-replay/snapshot use estimator **65**; ccab enrichment keeps **null**.
+
+---
+
+# PR #913 / vkfill-905 port — inherited from `origin/vk` merge
+
+**Starting HEAD (vk side doc):** `e18a08efa3df43c116adb0ca58917c46a4759a18`
+
+## Vk merge change (staged; not re-authored this round)
+
+| File | Why |
+|------|-----|
+| `vacation-app.html` | `scripts/test_reply_action_claim_d2_paia_save_route.mjs` requires `showComposerStatus(customerSafeErrorMessage` in static HTML; inlined catch matches `public/vacation-app-request.js` (90s `AbortError` + composer status). |
+
+Turn-2 hang / Fix-6 Zinc logo / chat-itinerary edits from #905 port remain on the staged index (`src/vacation/chat-itinerary-edit*.mjs`, `DayTimeline.tsx`, etc.); see vk PR #913 receipt in GBrain when needed.
+
+## Left alone (scope)
+
+- Live override narratives for 664/669/672 bundle copy until host re-fill.
+- Baselines, check config, workflows, `offline-tests.txt` ratchet files (per brief).
+- Deploy / force-push / Neon writes from lane.

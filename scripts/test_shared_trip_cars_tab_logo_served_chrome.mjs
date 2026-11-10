@@ -98,7 +98,7 @@ async function startServer({ html, js, css, tripPayload, timelinePatch }) {
       return sendText(res, 200, file, type);
     }
     if (pathname === '/manifest.webmanifest') {
-      return sendJson(res, 200, { name: 'TimeSyncher Vacation', start_url: '/' });
+      return sendJson(res, 200, { name: 'Vacay Keepsake', start_url: '/' });
     }
     if (pathname.startsWith('/icons/')) return sendText(res, 200, '', 'image/png');
     if (/^\/shared\/[^/]+\/?$/.test(pathname)) return sendText(res, 200, html, 'text/html; charset=utf-8');
