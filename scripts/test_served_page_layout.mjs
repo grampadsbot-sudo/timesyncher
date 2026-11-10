@@ -50,9 +50,77 @@ function expectedIds() {
       ids.push(`APP-${tag}-PUBLIC-NOMIC`, `APP-${tag}-COMPOSER-MIC`);
     }
     ids.push(`APP-${tag}-PUBLIC`, `APP-${tag}-SEND`);
+    ids.push(`APP-${tag}-MANY-SITE-FULLSCREEN`, `APP-${tag}-MANY-SITE-EXIT`);
     if (tag === '390') ids.push('APP-390-SEND-TAP', 'APP-390-SEND-BLANK');
   }
   return ids;
+}
+
+async function checkManySiteFullscreen(browser, server, viewport, results, mobile, shotDir, shot) {
+  const page = await browser.newPage();
+  await page.setViewport({
+    width: viewport.width,
+    height: viewport.height,
+    deviceScaleFactor: 1,
+    isMobile: mobile,
+    hasTouch: mobile,
+  });
+  await page.setRequestInterception(true);
+  page.on('request', (request) => {
+    const url = request.url();
+    if (url.startsWith(server.origin) || url.startsWith('data:')) request.continue();
+    else request.abort().catch((error) => { console.error(error); });
+  });
+  const fullId = `APP-${viewport.tag}-MANY-SITE-FULLSCREEN`;
+  const exitId = `APP-${viewport.tag}-MANY-SITE-EXIT`;
+  try {
+    await page.goto(`${server.origin}/vacation-app.html?session=${sessions.MANY_SITE}`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await page.waitForSelector('#fullScreenButton', { timeout: 15000 });
+    await page.waitForSelector('.site-pane iframe', { timeout: 10000 });
+    await page.evaluate(() => new Promise((resolve) => {
+      const frame = document.querySelector('.site-pane iframe');
+      if (!frame) return resolve();
+      if (frame.contentDocument?.readyState === 'complete' && frame.contentDocument.body) return resolve();
+      frame.addEventListener('load', () => resolve(), { once: true });
+    }));
+    await page.waitForFunction(() => {
+      const doc = document.querySelector('.site-pane iframe')?.contentDocument;
+      return (doc?.body?.innerText || '').includes('Sample week');
+    }, { timeout: 15000 });
+    const inHeader = await page.$eval('header.topbar', (node) => Boolean(node.querySelector('#fullScreenButton')));
+    await page.click('#fullScreenButton');
+    const entered = await page.evaluate(fullScreenSource());
+    const onlyExit = entered.visibleButtons.length === 1 && entered.visibleButtons[0] === 'fullScreenButton';
+    results.push({
+      id: fullId,
+      ok: inHeader
+        && entered.fills
+        && entered.headerGone
+        && entered.label === 'Exit full screen'
+        && onlyExit
+        && entered.exitVisible
+        && entered.exitSizeOk
+        && entered.exitTopRight,
+      detail: { inHeader, ...entered },
+    });
+    await shot(page, shotDir, `app-${viewport.tag}-many-site-fullscreen.png`);
+    await page.click('#fullScreenButton');
+    const restoredHeader = await page.$eval('header.topbar', (node) => Boolean(node.querySelector('#fullScreenButton')));
+    const exitControl = await page.$eval('#fullScreenButton', (node) => ({
+      label: node.getAttribute('aria-label'),
+      pressed: node.getAttribute('aria-pressed'),
+    }));
+    results.push({
+      id: exitId,
+      ok: restoredHeader && exitControl.label === 'Full screen' && exitControl.pressed === 'false',
+      detail: { restoredHeader, ...exitControl },
+    });
+  } catch (error) {
+    results.push({ id: fullId, ok: false, detail: { error: String(error?.message || error) } });
+    results.push({ id: exitId, ok: false, detail: { error: String(error?.message || error) } });
+  } finally {
+    await page.close();
+  }
 }
 
 async function openComposer(browser, server, viewport, mobile) {
@@ -247,7 +315,7 @@ async function main() {
             const onlyExit = entered.visibleButtons.length === 1 && entered.visibleButtons[0] === 'fullScreenButton';
             results.push({
               id: fullId,
-              ok: entered.fills && entered.chatHidden && entered.composerHidden && entered.splitterHidden && entered.headerGone && entered.stampHidden && entered.label === 'Exit full screen' && onlyExit,
+              ok: entered.fills && entered.chatHidden && entered.composerHidden && entered.splitterHidden && entered.headerGone && entered.stampHidden && entered.label === 'Exit full screen' && onlyExit && entered.exitVisible && entered.exitSizeOk && entered.exitTopRight,
               detail: entered,
             });
             await page.click('#fullScreenButton');
@@ -270,6 +338,7 @@ async function main() {
         }
         await page.close();
       }
+      await checkManySiteFullscreen(browser, server, viewport, results, mobile, shotDir, shot);
       const pub = await browser.newPage();
       await pub.setViewport({ width: viewport.width, height: viewport.height, deviceScaleFactor: 1 });
       await pub.setRequestInterception(true);

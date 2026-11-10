@@ -377,8 +377,24 @@ window.tsVacationAppChrome = {
     const button = document.getElementById('fullScreenButton');
     const app = document.querySelector('.app');
     if (!button || !app) return;
+    let homeParent = button.parentElement;
+    let homeNext = button.nextSibling;
+    const rememberHome = () => {
+      if (button.parentElement !== app) {
+        homeParent = button.parentElement;
+        homeNext = button.nextSibling;
+      }
+    };
+    rememberHome();
     button.addEventListener('click', () => {
       const on = app.classList.toggle('site-fullscreen');
+      if (on) {
+        rememberHome();
+        app.appendChild(button);
+      } else if (homeParent) {
+        homeParent.insertBefore(button, homeNext);
+        rememberHome();
+      }
       const label = on ? 'Exit full screen' : 'Full screen';
       button.setAttribute('aria-pressed', String(on));
       button.setAttribute('aria-label', label);

@@ -1,44 +1,20 @@
-Closes #859
+Closes #952
 
-## Summary — #859 chat itinerary edit
+## Summary
 
-- Chat **set_time** on a place not assigned to the target day now moves the TREK **assignment** (move/create APIs) before writing schedule overrides, so `buildDayTimeline` shows the place on the requested day at the requested time and removes it from the prior day.
-- **add_bar_before** anchors to the assignment day and assigns the bar on that day with a real timeline row ending before the anchor.
-- Post-generation **rewrite** and **reply ship gate** steps in `vacation-app-chat-queue` are wrapped in a 12s bounded await so the endpoint returns JSON instead of timing out at 60s.
-- `placeOnDay` for itinerary edit resolution is assignment-only (override `dayIds` no longer count as “on day” for Thing rows).
+- Reparent `#fullScreenButton` onto the app shell when entering CSS full screen so the exit control is not inside `display: none` topbar (multi-vacation iPhone case).
+- Style fixed top-right exit with safe-area insets and 44×44 tap target while full screen.
+- Extend layout harness/tests for single-trip and multi-trip full-screen enter/exit.
 
-## Inherited from `origin/vk` merge (keep both behaviours)
+## Why
 
-Host base-merge `origin/vk` @ `6017b330` into PR head @ `9ec105f0`.
+On iOS, full screen is `.site-fullscreen` only (no Fullscreen API). Hiding the topbar hid the only exit button for NYC-style multi-trip sessions.
 
-- **#888 / #896:** flight time chips stay inside the card @390; conflict-badge wrap; `ISSUE_888_SERVED_LAYOUT_CSS` two-row grid; vacation client `.tsv-row-flight-main` three-column @390.
-- **#902 / customer build stamp:** hide customer-visible build-stamp bar; keep meta + `/api/version`.
-- **#939 / #927:** trip hero collapse / touch splitter tests.
-- **#905:** chat-itinerary sequential PUT merge.
-- **#884:** logo-chip fallback hide; rebaked `public/assets/index-BKun7ofk.js`.
-- **#941:** hide mic when SpeechRecognition missing; demo-locked authoritative reply wording.
-- Budget price parity, vk trip shell / stored-data polish paths as merged.
+## Checks
 
-## Tests
+- `node .cursor/skills/verify-timesyncher-vacation/scripts/layout-self-check.mjs` — PASS on lane worker
+- `node scripts/test_served_page_layout.mjs` — host Ubuntu + Chrome (not run on lane worker: no browser)
 
-```bash
-timeout 120 node scripts/test_chat_itinerary_edit.mjs
-node scripts/test_chat_itinerary_edit_905.mjs
-node scripts/test_issue_888_clipped_text.mjs
-node scripts/test_issue_870_composer_mic.mjs
-cd apps/vacation-client && npm test
-node scripts/test_served_trek_bundle.mjs
-node scripts/check-no-comments.mjs
-node scripts/test_offline_manifest.mjs
-BASE=vk node scripts/check-code-ratchet.mjs
-```
+## Left alone (scope)
 
-Copy-shape two-turn cases in `_905.mjs` fail on vk tip before the assignment/bounded-postgen patch.
-
-## Out of scope
-
-Haiku empty reply (#858), TREK body limits, NYC 8CQX / live fixture writes, live two-turn proof (host watcher `chat-edit-live-proof-940`).
-
-## Left alone
-
-Baselines, check config workflows, deploy config (`vercel.json` / `vite.config.mjs` except vk-merge carry), package deps.
+#951 UI, trip 99 / NYC fixture data, offline manifest entry (extended existing layout test only).

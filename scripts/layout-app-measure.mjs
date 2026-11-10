@@ -314,6 +314,16 @@ export function fullScreenSource() {
       return style.display !== 'none' && style.visibility !== 'hidden' && el.getClientRects().length > 0;
     };
     const visibleButtons = [...document.querySelectorAll('.app button')].filter(shown).map((el) => el.id || el.getAttribute('aria-label'));
+    const btnBox = button?.getBoundingClientRect();
+    const exitVisible = shown(button);
+    const exitSizeOk = Boolean(btnBox && btnBox.width >= 44 && btnBox.height >= 44);
+    const exitTopRight = Boolean(
+      btnBox
+      && btnBox.right >= vw - 72
+      && btnBox.right <= vw + 1
+      && btnBox.top >= -1
+      && btnBox.top <= 96,
+    );
     return {
       fills: Boolean(site) && site.top <= 2 && site.left <= 2 && site.right >= vw - 2 && site.bottom >= vh - 2,
       chatHidden: !shown(chat),
@@ -322,7 +332,16 @@ export function fullScreenSource() {
       headerGone: !header || header.getBoundingClientRect().height === 0,
       stampHidden: !stamp || stampStyle.visibility === 'hidden' || stamp.getClientRects().length === 0,
       label: button?.getAttribute('aria-label') || '',
+      exitVisible,
+      exitSizeOk,
+      exitTopRight,
       visibleButtons,
+      exitButton: btnBox ? {
+        top: Math.round(btnBox.top),
+        right: Math.round(btnBox.right),
+        width: Math.round(btnBox.width),
+        height: Math.round(btnBox.height),
+      } : null,
       site: site ? {
         top: Math.round(site.top),
         right: Math.round(site.right),
