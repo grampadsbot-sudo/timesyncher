@@ -193,6 +193,10 @@ function titleHasClockRange(rawTitle = '') {
   return CLOCK_TITLE_RE.test(row);
 }
 
+function southwestBrandedFlightTitle(rawTitle = '') {
+  return /^\s*Southwest\b/i.test(text(rawTitle, 240));
+}
+
 function applyFlightTitleTimes(place, override) {
   const category = productThingCategory(place, override);
   if (category !== 'flight') return;
@@ -202,6 +206,7 @@ function applyFlightTitleTimes(place, override) {
   const fromTitle = flightFieldsFromBlob(rawTitle, '');
   copyOverrideTimeIfBlank(override, 'departureTime', fromTitle.departureTime, place.place_time, place.start_time);
   copyOverrideTimeIfBlank(override, 'arrivalTime', fromTitle.arrivalTime, place.end_time);
+  if (!southwestBrandedFlightTitle(rawTitle)) return;
   const cleaned = stripClockRangeFromTitle(rawTitle);
   if (!cleaned) return;
   place.name = cleaned;
