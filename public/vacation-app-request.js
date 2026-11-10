@@ -392,28 +392,111 @@ window.tsVacationAppChrome = {
   bindSplitter() {
     const workspace = document.getElementById('workspace');
     const splitter = document.getElementById('splitter');
+    const splitterRow = document.getElementById('splitterRow');
+    const app = document.querySelector('.app');
+    const siteFrame = document.querySelector('.site-pane iframe');
     if (!workspace || !splitter) return;
-    const splitterPx = splitter.getBoundingClientRect().height || 10;
+    const dragRow = splitterRow || splitter;
+    const splitterPx = () => Math.max(44, dragRow.getBoundingClientRect().height || 44);
     let dragging = false;
+    let activePointerId = null;
+    let touchId = null;
+    let shield = document.getElementById('splitterDragShield');
+    const ensureShield = () => {
+      if (shield) return shield;
+      shield = document.createElement('div');
+      shield.id = 'splitterDragShield';
+      shield.setAttribute('data-splitter-drag-shield', '1');
+      shield.setAttribute('aria-hidden', 'true');
+      shield.style.cssText = 'position:fixed;inset:0;z-index:99999;touch-action:none;cursor:row-resize;display:none;';
+      document.body.appendChild(shield);
+      return shield;
+    };
     const resize = (clientY) => {
       const rect = workspace.getBoundingClientRect();
-      const usable = Math.max(1, rect.height - splitterPx);
+      const usable = Math.max(1, rect.height - splitterPx());
       const sitePx = Math.min(usable, Math.max(0, clientY - rect.top));
       const sitePct = (sitePx / usable) * 100;
       const clamped = Math.min(99.5, Math.max(0.5, sitePct));
       workspace.style.setProperty('--site-height', `${clamped}fr`);
       workspace.style.setProperty('--chat-height', `${100 - clamped}fr`);
     };
-    const stopDrag = () => { dragging = false; };
-    splitter.addEventListener('pointerdown', (event) => {
+    const beginDrag = (clientY, pointerId) => {
       dragging = true;
-      splitter.setPointerCapture(event.pointerId);
-      resize(event.clientY);
-    });
-    splitter.addEventListener('pointermove', (event) => {
-      if (dragging) resize(event.clientY);
-    });
-    splitter.addEventListener('pointerup', stopDrag);
-    splitter.addEventListener('pointercancel', stopDrag);
+      activePointerId = pointerId ?? null;
+      if (app) app.classList.add('splitter-dragging');
+      if (siteFrame) siteFrame.style.pointerEvents = 'none';
+      ensureShield().style.display = 'block';
+      resize(clientY);
+    };
+    const endDrag = () => {
+      if (!dragging) return;
+      dragging = false;
+      activePointerId = null;
+      touchId = null;
+      if (app) app.classList.remove('splitter-dragging');
+      if (siteFrame) siteFrame.style.pointerEvents = '';
+      if (shield) shield.style.display = 'none';
+    };
+    const moveDrag = (clientY) => {
+      if (dragging) resize(clientY);
+    };
+    const passiveTouch = { passive: false };
+    const onPointerDown = (event) => {
+      event.preventDefault();
+      if (splitter.setPointerCapture) {
+        try { splitter.setPointerCapture(event.pointerId); } catch {}
+      }
+      beginDrag(event.clientY, event.pointerId);
+    };
+    const onPointerMove = (event) => {
+      if (!dragging || (activePointerId !== null && event.pointerId !== activePointerId)) return;
+      event.preventDefault();
+      moveDrag(event.clientY);
+    };
+    const pickTouch = (event) => {
+      const list = event.changedTouches || event.touches || [];
+      if (touchId === null) return list[0] || null;
+      return [...list].find((item) => item.identifier === touchId) || list[0] || null;
+    };
+    const onTouchStart = (event) => {
+      const touch = pickTouch(event);
+      if (!touch) return;
+      event.preventDefault();
+      touchId = touch.identifier;
+      beginDrag(touch.clientY, null);
+    };
+    const onTouchMove = (event) => {
+      if (!dragging) return;
+      const touch = pickTouch(event);
+      if (!touch) return;
+      event.preventDefault();
+      moveDrag(touch.clientY);
+    };
+    const onTouchEnd = (event) => {
+      if (!dragging) return;
+      event.preventDefault();
+      endDrag();
+    };
+    const bindHandle = (node) => {
+      if (!node) return;
+      node.addEventListener('pointerdown', onPointerDown);
+      node.addEventListener('pointermove', onPointerMove);
+      node.addEventListener('pointerup', endDrag);
+      node.addEventListener('pointercancel', endDrag);
+      node.addEventListener('touchstart', onTouchStart, passiveTouch);
+      node.addEventListener('touchmove', onTouchMove, passiveTouch);
+      node.addEventListener('touchend', onTouchEnd, passiveTouch);
+      node.addEventListener('touchcancel', onTouchEnd, passiveTouch);
+    };
+    bindHandle(splitter);
+    bindHandle(splitterRow);
+    const overlay = ensureShield();
+    overlay.addEventListener('pointermove', onPointerMove);
+    overlay.addEventListener('pointerup', endDrag);
+    overlay.addEventListener('pointercancel', endDrag);
+    overlay.addEventListener('touchmove', onTouchMove, passiveTouch);
+    overlay.addEventListener('touchend', onTouchEnd, passiveTouch);
+    overlay.addEventListener('touchcancel', onTouchEnd, passiveTouch);
   },
 };
