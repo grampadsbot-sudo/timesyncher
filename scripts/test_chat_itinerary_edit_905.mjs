@@ -40,6 +40,30 @@ function mergeSharedOverrides(thingOverrides, patch) {
 }
 import { buildDayTimeline } from '../apps/vacation-client/src/lib/dayTimelineModel.mjs';
 
+const nycSharedFixture = JSON.parse(
+  fs.readFileSync(new URL('./fixtures/nyc-screen-trip99-live-shared-api.json', import.meta.url), 'utf8'),
+);
+const nycCarbone = nycSharedFixture.places.find((p) => /carbone/i.test(p.name || ''));
+const nycDay2 = nycSharedFixture.days.find((d) => Number(d.day_number) === 2);
+const nycSetTime = applySetTimeOp(nycSharedFixture, {
+  placeId: nycCarbone.id,
+  dayId: nycDay2.id,
+  timeHHMM: '20:30',
+});
+const nycPut = buildChatItineraryOverridesPutBody({
+  before: nycSetTime.before,
+  after: nycSetTime.after,
+  keys: nycSetTime.keys,
+  stored: nycSharedFixture.thingOverrides,
+});
+assert.equal(Object.keys(nycPut).length, 1, 'PUT must include only touched override keys');
+assert.ok(nycPut[`place:${nycCarbone.id}`]);
+assert.equal(
+  Buffer.byteLength(JSON.stringify({ overrides: nycPut }), 'utf8') < 16 * 1024,
+  true,
+  'PUT body must stay small on full NYC override map',
+);
+
 const craigTurn = "Please change Carbone's dinner time to 8:30 PM in the itinerary.";
 const craigParsed = offlineParseItineraryEditIntent(craigTurn);
 assert.equal(craigParsed.op, 'set_time');
@@ -156,7 +180,7 @@ const barPut = buildChatItineraryOverridesPutBody({
   keys: barAdd.keys,
   stored: carboneStored,
 });
-assert.equal(barPut['place:8977'].perDaySchedule['1250'].startTime, '21:15');
+assert.deepEqual(Object.keys(barPut), ['place:9061']);
 assert.equal(barPut['place:9061'].perDaySchedule['1250'].startTime, '20:15');
 const mergedPartial = mergeStoredChatItineraryScheduleOverride(
   multiDayStored['place:610'],
@@ -215,7 +239,7 @@ assert.equal((await runSeqTurn('Move Carbone to 9:15 PM on Day 1')).op, 'set_tim
 assert.equal(seqStored.thingOverrides['place:8977'].perDaySchedule['1250'].startTime, '21:15');
 assert.equal((await runSeqTurn('Add a bar hop before Carbone on Day 1')).op, 'add_bar_before');
 assert.equal(seqStored.thingOverrides['place:8977'].perDaySchedule['1250'].startTime, '21:15');
-assert.equal(seqPuts[1]['place:8977'].perDaySchedule['1250'].startTime, '21:15');
+assert.deepEqual(Object.keys(seqPuts[1]), ['place:9061']);
 assert.equal(seqPuts[1]['place:9061'].perDaySchedule['1250'].startTime, '20:15');
 
 const stalled = await boundedAwait(new Promise(() => {}), 40, () => 'fallback');
