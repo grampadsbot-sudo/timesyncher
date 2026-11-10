@@ -116,7 +116,7 @@ export function mountPostPurchaseGate(doc, loc) {
   const title = doc.createElement('h1');
   title.textContent = 'Review Terms & Privacy';
   const lead = doc.createElement('p');
-  lead.textContent = 'These terms are the first step in TimeSyncher Vacation. Agree to continue.';
+  lead.textContent = 'These terms are the first step in Vacay Keepsake. Agree to continue.';
   const terms = doc.createElement('div');
   terms.className = 'eula-text';
   terms.id = 'eulaText';
@@ -139,7 +139,7 @@ export function mountPostPurchaseGate(doc, loc) {
   agree.id = 'eulaAgree';
   agree.type = 'checkbox';
   agree.required = true;
-  agreeLabel.append(agree, ' I agree to TimeSyncher\'s Terms and Privacy Policy and understand the service is advisory-only.');
+  agreeLabel.append(agree, ' I agree to Vacay Keepsake\'s Terms and Privacy Policy and understand the service is advisory-only.');
 
   const button = doc.createElement('button');
   button.className = 'agree-button';

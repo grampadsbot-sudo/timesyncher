@@ -40,7 +40,7 @@ export function generateCouponCode() {
 
 export async function createCoupon(db, body = {}, env = process.env) {
   const rawCode = normalizeCouponCode(body.code) || generateCouponCode();
-  const label = cleanText(body.label || body.name, 180) || 'TimeSyncher checkout coupon';
+  const label = cleanText(body.label || body.name, 180) || 'Vacay Keepsake checkout coupon';
   const maxRedemptions = Math.max(1, Math.min(1000, Number.parseInt(body.maxRedemptions || body.max_redemptions || '1', 10)));
   const expiresAt = cleanText(body.expiresAt || body.expires_at, 80) || null;
   const metadata = body.metadata && typeof body.metadata === 'object' && !Array.isArray(body.metadata) ? body.metadata : {};

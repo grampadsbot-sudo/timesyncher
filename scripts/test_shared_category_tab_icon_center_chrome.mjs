@@ -155,7 +155,7 @@ async function startServer({ html, js, css, tripPayload }) {
       return sendText(res, 200, file, type);
     }
     if (pathname === '/manifest.webmanifest') {
-      return sendText(res, 200, JSON.stringify({ name: 'TimeSyncher Vacation', start_url: '/' }), 'application/manifest+json');
+      return sendText(res, 200, JSON.stringify({ name: 'Vacay Keepsake', start_url: '/' }), 'application/manifest+json');
     }
     if (pathname.startsWith('/icons/')) return sendText(res, 200, '', 'image/png');
     if (pathname.endsWith('/edit-access')) return sendJson(res, 200, { canEdit: false });

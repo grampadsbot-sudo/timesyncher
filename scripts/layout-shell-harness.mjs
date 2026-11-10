@@ -146,6 +146,7 @@ export async function startServer() {
     ['/ts-timeline-icon-patch.js', path.join(root, 'public/ts-timeline-icon-patch.js')],
     ['/ts-car-brand-filter.js', path.join(root, 'public/ts-car-brand-filter.js')],
     ['/ts-thing-media-overlay.js', path.join(root, 'public/ts-thing-media-overlay.js')],
+    ['/ts-pic-popup-viewer.js', path.join(root, 'public/ts-pic-popup-viewer.js')],
     ['/post-purchase-gate.mjs', path.join(root, 'public/post-purchase-gate.mjs')],
     ['/ts-thing-media/bindings.json', path.join(root, 'public/ts-thing-media/bindings.json')],
   ]);

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { SharedDay, SharedTripPayload } from '../types/sharedTrip';
-import { SharedAudioButton } from './SharedAudioButton';
 
 type Props = {
   shareToken: string;
@@ -226,7 +225,6 @@ export function TripHeaderActions({
           </div>
         ) : null}
       </div>
-      <SharedAudioButton shareToken={shareToken} />
     </div>
   );
 }

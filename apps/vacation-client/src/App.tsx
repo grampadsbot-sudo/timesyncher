@@ -26,7 +26,7 @@ export default function App() {
   const [detail, setDetail] = useState<SharedPlace | null>(null);
 
   const title = useMemo(() => {
-    if (tripState.status !== 'ready') return 'TimeSyncher Vacation';
+    if (tripState.status !== 'ready') return 'Vacay Keepsake';
     return tripState.data.trip?.title || 'Vacation';
   }, [tripState]);
 
