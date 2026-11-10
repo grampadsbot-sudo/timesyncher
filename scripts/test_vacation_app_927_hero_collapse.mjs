@@ -6,6 +6,7 @@ const require = createRequire(import.meta.url);
 
 const heroScript = await readFile(new URL('../public/ts-trip-hero-collapse.js', import.meta.url), 'utf8');
 const sharedApp = await readFile(new URL('../shared-app.html', import.meta.url), 'utf8');
+const upstreamCss = await readFile(new URL('../public/assets/index-CbEHlMj6.css', import.meta.url), 'utf8');
 
 assert.match(heroScript, /data-ts-trip-site-hero/);
 assert.match(heroScript, /data-ts-trip-hero-collapse/);
@@ -48,15 +49,17 @@ const cssRules = [...heroScript.matchAll(/'([^']+)'/g)]
 const heroCss = cssRules.join('\n');
 assert.ok(heroCss.includes('data-ts-trip-site-hero'), 'injected hero CSS must be present');
 
-const heroFixture = (collapsed) => `<!doctype html>
-<html><head><meta charset="utf-8"><style>${heroCss}</style></head><body style="margin:0">
-<div data-ts-trip-site-hero="1" data-collapsed="${collapsed}" style="position:relative;box-sizing:border-box;width:100%;padding:20px 16px;color:#fff;background:linear-gradient(135deg, rgb(0, 0, 0) 0%, rgb(15, 23, 42) 50%, rgb(30, 41, 59) 100%);">
-  <h1>Craig / Kim NYC June 2026</h1>
-  <p data-ts-trip-hero-detail="1" style="margin:8px 0 0;text-align:center">Vacation together</p>
-  <div data-ts-trip-hero-detail="1" style="text-align:center;margin-top:4px">Jun 23 – 30, 2026</div>
-  <div data-ts-trip-hero-actions="1"><span data-trip-view-root="1" style="display:inline-flex;gap:6px"><span style="width:40px;height:40px;border-radius:999px;background:rgba(255,255,255,.15)"></span><span style="width:40px;height:40px;border-radius:999px;background:rgba(255,255,255,.15)"></span><span style="width:40px;height:40px;border-radius:999px;background:rgba(255,255,255,.15)"></span></span></div>
-  <button type="button" data-ts-trip-hero-collapse="1" aria-label="Collapse">▾</button>
+const heroFixture = `<!doctype html>
+<html><head><meta charset="utf-8"><style>${upstreamCss}</style></head><body style="margin:0;font-family:Arial,sans-serif">
+<div id="hero" style="position:relative;padding:32px 20px 28px;text-align:center;color:#fff;background:linear-gradient(135deg, rgb(0, 0, 0) 0%, rgb(15, 23, 42) 50%, rgb(30, 41, 59) 100%);">
+  <div style="position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.03)"></div>
+  <div style="position:absolute;bottom:-40px;left:-40px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.02)"></div>
+  <h1 style="margin:0 0 4px;font-size:26px;font-weight:700;letter-spacing:-.5px">Craig / Kim NYC June 2026</h1>
+  <div id="description" style="font-size:13px;opacity:.5;max-width:400px;margin:0 auto;line-height:1.5">Las Vegas to New York · Jun 23–30, 2026 · UWS / Lincoln Center priority · planning options only</div>
+  <div id="dates" style="margin-top:10px;display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:20px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08)"><span style="font-size:12px;font-weight:500;opacity:.8">Jun 23, 2026 — Jun 30, 2026</span><span style="font-size:11px;opacity:.4">·</span><span style="font-size:11px;opacity:.5">8 days</span></div>
+  <div id="actions" style="margin-top:8px;display:flex;justify-content:center;gap:6px;flex-wrap:wrap"><div data-trip-view-root="1" style="display:inline-flex"><button style="width:30px;height:30px" aria-label="Config Options"></button></div><button style="width:30px;height:30px" aria-label="PDFs"></button><button style="width:30px;height:30px" aria-label="Order Keepsakes"></button></div>
 </div>
+<main>Itinerary</main>
 </body></html>`;
 
 const rectsOverlap = (a, b, gap = 1) =>
@@ -79,11 +82,13 @@ const browser = await puppeteer.launch({
 try {
   const page = await browser.newPage();
   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
+  await page.setRequestInterception(true);
+  page.on('request', (request) => request.respond({ status: 200, contentType: 'text/html', body: heroFixture }));
+  await page.goto('http://hero.test/shared/hero-layout', { waitUntil: 'load' });
 
-  const measureHero = async (collapsed) => {
-    await page.setContent(heroFixture(collapsed ? '1' : '0'), { waitUntil: 'load' });
+  const measureHero = async () => {
     return page.evaluate(() => {
-      const hero = document.querySelector('[data-ts-trip-site-hero="1"]');
+      const hero = document.getElementById('hero');
       const h1 = hero?.querySelector('h1');
       const btn = hero?.querySelector('[data-ts-trip-hero-collapse]');
       const heroBox = hero?.getBoundingClientRect();
@@ -100,11 +105,21 @@ try {
         titleLineHeight: h1Style ? parseFloat(h1Style.lineHeight) || parseFloat(h1Style.fontSize) : 0,
         titleScrollWidth: h1?.scrollWidth ?? 0,
         titleClientWidth: h1?.clientWidth ?? 0,
+        titleOverflow: h1Style?.textOverflow,
+        detailBoxes: ['description', 'dates', 'actions'].map((id) => {
+          const node = document.getElementById(id);
+          const rect = node.getBoundingClientRect();
+          return { top: rect.top, bottom: rect.bottom, width: rect.width, display: getComputedStyle(node).display };
+        }),
+        itineraryTop: document.querySelector('main').getBoundingClientRect().top,
       };
     });
   };
 
-  const expanded = await measureHero(false);
+  const base = await measureHero();
+  assert.ok(Math.abs(base.heroHeight - 222) <= 1, 'ed8687b expanded hero fixture must retain its measured 390 height');
+  await page.evaluate(heroScript);
+  const expanded = await measureHero();
   assert.ok(expanded.titleBox && expanded.btnBox, 'hero title and collapse control required');
   assert.equal(rectsOverlap(expanded.titleBox, expanded.btnBox), false, '#937 expanded: chevron must not overlap title @390');
   assert.ok(
@@ -112,16 +127,36 @@ try {
     '#937 expanded title must stay one line',
   );
   assert.ok(
-    expanded.titleScrollWidth <= expanded.titleClientWidth + 1,
-    `#937 expanded title must not wrap (scroll ${expanded.titleScrollWidth} vs client ${expanded.titleClientWidth})`,
+    expanded.titleScrollWidth <= expanded.titleClientWidth,
+    `#937 expanded title must not clip (scroll ${expanded.titleScrollWidth} vs client ${expanded.titleClientWidth})`,
   );
+  assert.notEqual(expanded.titleOverflow, 'ellipsis', '#937 expanded title must not use ellipsis');
+  assert.ok(Math.abs(expanded.heroHeight - base.heroHeight) <= 8, `#937 expanded height must stay within 8px of ed8687b (${base.heroHeight}); got ${expanded.heroHeight}`);
+  for (let i = 1; i < expanded.detailBoxes.length; i += 1) {
+    assert.ok(expanded.detailBoxes[i].top >= expanded.detailBoxes[i - 1].bottom, '#937 subtitle, date chip and actions must occupy separate rows');
+  }
+  assert.ok(Math.abs(expanded.detailBoxes[1].width - base.detailBoxes[1].width) <= 1, '#937 expanded date chip must retain its natural width');
 
-  const collapsed = await measureHero(true);
+  await page.click('[data-ts-trip-hero-collapse]');
+  await page.waitForFunction(() => getComputedStyle(document.getElementById('hero')).paddingTop === '8px');
+  const collapsed = await measureHero();
   assert.ok(collapsed.titleBox && collapsed.btnBox, 'collapsed hero chrome required');
   assert.equal(rectsOverlap(collapsed.titleBox, collapsed.btnBox), false, '#937 collapsed: chevron must not overlap title @390');
   assert.ok(collapsed.heroHeight <= 57, `#937 collapsed hero height must be ≤56px (+2px slop); got ${collapsed.heroHeight}`);
   assert.ok(collapsed.titleClientHeight <= collapsed.titleLineHeight + 2, '#937 collapsed title must stay one line');
   assert.ok(expanded.heroHeight > collapsed.heroHeight + 24, '#937 expanded hero must stay clearly taller than collapsed');
+  assert.ok(collapsed.detailBoxes.every((box) => box.display === 'none'), '#937 collapsed details and actions must be hidden');
+  assert.ok(collapsed.itineraryTop < expanded.itineraryTop, '#937 collapsing must move the itinerary up');
+  assert.equal(await page.evaluate(() => localStorage.getItem('vk-trip-hero-collapsed:hero-layout')), '1');
+  await page.reload({ waitUntil: 'load' });
+  await page.evaluate(heroScript);
+  assert.equal(await page.$eval('#hero', (hero) => hero.dataset.collapsed), '1', '#937 collapse must survive reload');
+  await page.click('[data-ts-trip-hero-collapse]');
+  await page.waitForFunction(() => getComputedStyle(document.getElementById('hero')).paddingTop === '32px');
+  assert.ok(Math.abs((await measureHero()).heroHeight - expanded.heroHeight) <= 1, '#937 re-expanding must restore the full height');
+  await page.setViewport({ width: 1280, height: 800, deviceScaleFactor: 1 });
+  await page.waitForFunction(() => !document.querySelector('[data-ts-trip-site-hero]'));
+  assert.equal(await page.$('[data-ts-trip-hero-collapse]'), null, '#937 desktop must not retain mobile chrome');
 } finally {
   await browser.close();
 }
