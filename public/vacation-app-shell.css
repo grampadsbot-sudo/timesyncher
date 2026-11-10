@@ -35,7 +35,7 @@
   #splitter.splitter::after,
   .splitter-row .splitter::after {
     width: 27px;
-    height: 2px;
+    height: 1.5px;
   }
 }
 .app.splitter-dragging .site-pane iframe {
@@ -191,7 +191,11 @@
     overflow: hidden;
     clip: rect(0, 0, 0, 0);
   }
-  .topbar .vacation-dropdown { max-width: 38%; flex: 0 1 auto; }
+  #appHeader.topbar { gap: 6px; }
+  .topbar .vk-app-brand .vk-print-wordmark { font-size: 14px; }
+  .topbar .vacation-dropdown { max-width: none; flex: 0 0 auto; }
+  .topbar .trip-button { padding: 7px 8px; gap: 4px; }
+  .topbar .trip-button .trip-trigger-title { font-size: 14px; }
   .fullscreen-button .fs-label { display: none; }
   .fullscreen-button .fs-glyph { display: inline-block; font-size: 18px; line-height: 1; }
   .fullscreen-button { min-width: 38px; padding: 0 8px; justify-content: center; }

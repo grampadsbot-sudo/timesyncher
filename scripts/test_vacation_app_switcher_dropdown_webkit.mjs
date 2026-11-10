@@ -36,10 +36,15 @@ const viewports = [
 async function assertSwitcher(page, tag) {
   const closed = await page.evaluate(() => {
     const title = document.querySelector('#tripButton .trip-trigger-title');
-    return (title?.textContent || '').trim();
+    return {
+      text: (title?.textContent || '').trim(),
+      scrollWidth: title?.scrollWidth || 0,
+      clientWidth: title?.clientWidth || 0,
+    };
   });
-  assert.ok(closed.length > 0, `${tag}: closed switcher label must be non-empty`);
-  assert.equal(closed, 'NYC June 2026', `${tag}: derived NYC short name`);
+  assert.ok(closed.text.length > 0, `${tag}: closed switcher label must be non-empty`);
+  assert.equal(closed.text, 'NYC June 2026', `${tag}: derived NYC short name`);
+  assert.ok(closed.scrollWidth <= closed.clientWidth, `${tag}: closed label fits its box ${JSON.stringify(closed)}`);
 
   await page.click('#tripButton');
   await page.waitForFunction(() => document.querySelector('#vacationDropdown')?.classList.contains('open'));
