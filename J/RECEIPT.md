@@ -1,3 +1,42 @@
+# PR #896 / issue #888 — host kickback: flights-390 logo vs first name line (@ `597fcf43`)
+
+**Outcome:** SOURCE-READY (uncommitted; HOST PUBLICATION ONLY). **Starting HEAD:** `597fcf437864730b2c6ea0303b4f8917f8d539ef`. **Model:** composer-2.5.
+
+## Host kickback (2026-11-10): logo not centred with name @390
+
+Gate B live row check on `flights-390.png` / `flights-390-top.png`: Southwest rows logo **high** vs first name line by 5–6 px (tolerance 1.5 px). **Cause:** `SHARED_LIVE_FLIGHT_LOGO_NAME_CSS` used `align-items:flex-start` + `margin-top:calc(0.5lh - 11px)` on flight `[data-ts-logo-chip="1"]`, offsetting single-line airline titles. **Fix:** restore base alignment — `align-items:center` on flight `[data-ts-logo-name-pair="1"]`, `align-self:center` on chip, no margin-top; sync `public/assets/index-CbEHlMj6.css` to patch SoT. Time-chip grid @390 unchanged.
+
+## Prior round — flights @390 time chips
+
+## Problem restatement (before fix)
+
+At 390px, flight list cards still clip the arrival time and the card’s right border: logo, airline name, price, departure, and arrival compete for one horizontal band, so the row is wider than the card (`overflow: hidden` on `.tsv-row-main` cuts the text). **Vacation client:** `@media (max-width: 480px)` assigns both `.tsv-row-flight-time` chips to `grid-column: 2` on the same row as `.tsv-row-title-stack`, so the two `min-width: max-content` nowrap chips overflow the card. **Served shared-trip / trek live:** `ISSUE_888_SERVED_LAYOUT_CSS` keeps `[data-ts-flight-row-grid="1"]` at `flex-wrap: nowrap` with `[data-ts-flight-time="1"]{ flex-shrink: 0; min-width: max-content }`, and `FLIGHT_QO_INLINE_PATCH` sets `flexWrap:"nowrap"` on the Qo flight row — same single-line pressure at ≤480px.
+
+## Fix (@390 only)
+
+- `apps/vacation-client/src/styles.css`: four-column flight grid row 1 = logo / name (span) / price; row 2 = departure + arrival in cols 3–4 (full times, inside card).
+- `src/vacation/shared-trip-oe-list-row-patch.mjs`: `ISSUE_888_SERVED_LAYOUT_CSS` switches served Qo / QoRest rows to the same two-line grid; `data-ts-flight-qo-rest="1"` on `QoRest` for route+time placement; rebaked `public/assets/index-BKun7ofk.js` (sha256 `85cc991848aa9da1c3aa97f445adee17d8a5ff1c029c9fb9be66536c0abeb74a`); synced `public/assets/index-CbEHlMj6.css` to patch SoT.
+- `scripts/test_issue_888_clipped_text.mjs`: DOM bounds check at 390 + grid-source asserts.
+
+## Checks (uncommitted tree)
+
+| Command | Result |
+| --- | --- |
+| `node scripts/rebake_served_trek_bundle.mjs` | PASS sha256 `85cc991848aa9da1c3aa97f445adee17d8a5ff1c029c9fb9be66536c0abeb74a` |
+| `node scripts/test_served_trek_bundle.mjs` | PASS |
+| `node scripts/test_issue_888_clipped_text.mjs` | PASS (incl. 390 DOM chip bounds) |
+| `VACATION_CLIENT_LIST_ARTIFACT_ROOT=…888…/client-list node apps/vacation-client/test/list-layout.mjs` | PASS @390/1280 |
+| `cd apps/vacation-client && npm test` | PASS |
+| `node scripts/check-no-comments.mjs` | PASS |
+| `node scripts/test_offline_manifest.mjs` | PASS |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | PASS (0 fail) |
+
+**Uncommitted:** `apps/vacation-client/src/styles.css`, `src/vacation/shared-trip-oe-list-row-patch.mjs`, `public/assets/index-BKun7ofk.js`, `public/assets/index-CbEHlMj6.css`, `scripts/test_issue_888_clipped_text.mjs`, `J/RECEIPT.md`.
+
+**Host:** commit + push `vkfill/888-20261109142715`; Gate B pre-merge with `gateb-allow.json["888"]`.
+
+---
+
 # PR #896 / issue #888 — host vk base-merge @ `fcdd2d24` (merge f8d4748)
 
 **Outcome:** SOURCE-READY (uncommitted; HOST PUBLICATION ONLY). **Starting HEAD:** `fcdd2d242cfc1b7ab9374b50af8de6f3e564174e`. **Merged base:** `origin/vk` @ `f8d4748f8ea8104e8722fecaa383588d5d7b010c`. **Model:** composer-2.5.
