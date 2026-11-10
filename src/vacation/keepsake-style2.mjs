@@ -378,7 +378,7 @@ function dailyPageHtml(model, dayBlock, origin) {
   const dailyTitle = model.trip.title ? `<h1>${esc(model.trip.title)}</h1>` : '';
   const dayHeading = day.title ? `<h2 style="margin:0">${esc(day.title)}</h2>` : '';
   return `<section class="page daily-page keepsake-day" data-print-ready="daily" data-day="${esc(day.day_number || '')}">
-    <div class="print-brand">TimeSyncher · Journey Book · Style 2</div>
+    <div class="print-brand">Vacay Keepsake · Journey Book · Style 2</div>
     ${dailyTitle}
     <div class="daily-grid">
       <aside class="daily-left">
@@ -421,7 +421,7 @@ export function renderStyle2Html(sharedInput = {}, bindings = [], options = {}) 
   const titleHtml = model.trip.title ? `<h1>${esc(model.trip.title)}</h1>` : '';
   const documentTitle = model.trip.title ? `${esc(model.trip.title)} · Style 2` : '';
   const page1 = `<section class="page keepsake-report" data-page="1" data-style="2">
-    <div class="print-brand">TimeSyncher · Journey Book · Style 2</div>
+    <div class="print-brand">Vacay Keepsake · Journey Book · Style 2</div>
     ${titleHtml}
     ${subtitleHtml}
     <p class="muted">Trip summary</p>
@@ -433,7 +433,7 @@ export function renderStyle2Html(sharedInput = {}, bindings = [], options = {}) 
   </section>`;
 
   const storiesPage = `<section class="page keepsake-report keepsake-list-page" data-stories-up-front="1">
-    <div class="print-brand">TimeSyncher · Journey Book · Style 2</div>
+    <div class="print-brand">Vacay Keepsake · Journey Book · Style 2</div>
     <h2>Saved stories</h2>
     <div class="recap-grid">${storyCards}</div>
   </section>`;
@@ -444,11 +444,11 @@ export function renderStyle2Html(sharedInput = {}, bindings = [], options = {}) 
     const items = rows.map(({ place, override }) => (
       `<li data-thing-id="${esc(place.id)}" data-icon-type="${esc(timelineIcon(place, override).type)}">${iconHtml(place, override)}<span>${esc(displayName(place, override))}</span></li>`
     )).join('');
-    return `<section class="page keepsake-report keepsake-list-page" data-post-itinerary="1"><div class="print-brand">TimeSyncher · Style 2</div><h2>${esc(label)}</h2><ul class="logo-list">${items}</ul></section>`;
+    return `<section class="page keepsake-report keepsake-list-page" data-post-itinerary="1"><div class="print-brand">Vacay Keepsake · Style 2</div><h2>${esc(label)}</h2><ul class="logo-list">${items}</ul></section>`;
   }).join('');
 
   const mapsPage = model.includeMaps
-    ? `<section class="page daily-map-page" data-maps="included"><div class="print-brand">TimeSyncher · Style 2</div><h2>Maps</h2><p class="muted">Maps follow trip print config.</p></section>`
+    ? `<section class="page daily-map-page" data-maps="included"><div class="print-brand">Vacay Keepsake · Style 2</div><h2>Maps</h2><p class="muted">Maps follow trip print config.</p></section>`
     : `<section hidden data-maps="omitted"></section>`;
 
   return `<!doctype html>

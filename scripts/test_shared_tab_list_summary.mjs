@@ -26,8 +26,11 @@ assert.ok(hotelPlaces.length > 0, 'hotels in places');
 assert.ok(carPlaces.length > 0, 'cars in places');
 assert.ok(flightPlaces.length > 0, 'flights in places');
 assert.match(String(hotelPlaces[0].name || ''), /The Manhattan Club/i);
-assert.match(String(carPlaces[0].name || ''), /Priceline opaque/i);
-assert.equal(payload.thingOverrides[`place:${carPlaces[0].id}`]?.rentalCompany, 'Priceline opaque');
+assert.match(String(carPlaces[0].name || ''), /Priceline Express Deal/i);
+assert.equal(
+  payload.thingOverrides[`place:${carPlaces[0].id}`]?.rentalCompany,
+  'Priceline Express Deal (car company shown after booking)',
+);
 assert.equal(payload.thingOverrides[`place:${flightPlaces[0].id}`]?.fareDirection, 'one-way');
 assert.equal(payload.thingOverrides[`place:${carPlaces[0].id}`]?.price, 172);
 assert.match(String(payload.thingOverrides[`place:${hotelPlaces[0].id}`]?.summary || ''), /subway access|transit access|walkable neighborhood access/i);

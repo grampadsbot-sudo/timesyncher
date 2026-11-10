@@ -14,6 +14,7 @@ import { gateBBudgetPriceCompleteness } from '../src/vacation/gate-b-budget-pric
 import { categoryFor } from '../src/vacation/intake-shared-trip-category.mjs';
 import { sharedTripFromIntake, thingRecordFromTripRow } from '../src/vacation/intake-shared-trip.mjs';
 import { placeToTripThing } from '../src/vacation/place-search.mjs';
+import { sanitizeCustomerJargon } from '../src/vacation/live-qa-903-presentation.mjs';
 import { finalizeServedSharedTripPayload } from '../src/vacation/shared-trip-served-page.mjs';
 import {
   descriptionPassesDetailJudge,
@@ -108,7 +109,7 @@ assert.ok(car, 'car place');
 const carOverride = payload.thingOverrides[`place:${car.id}`] || {};
 assert.equal(carOverride.price, 172);
 assert.match(String(carOverride.summary || ''), /JFK AirTrain/i);
-assert.equal(carOverride.rentalCompany, 'Priceline opaque');
+assert.equal(carOverride.rentalCompany, 'Priceline Express Deal (car company shown after booking)');
 
 const hotel = (payload.places || []).find((place) => /the manhattan club/i.test(place.name || ''));
 assert.ok(hotel, 'hotel place');
@@ -330,11 +331,19 @@ for (const rowId of VK_SEARCH_SNAPSHOT_COPY_ROW_IDS) {
   assert.ok(snapshot, `missing pr336 snapshot row ${rowId}`);
   const place = vkSnapshotBindingTrip.places.find((p) => p.id === rowId);
   assert.ok(place, `built trip missing place ${rowId}`);
-  assert.equal(vkBindingText(place.name), vkBindingText(snapshot.title), `${rowId} identity (place.name)`);
-  assert.equal(vkBindingSummary(vkSnapshotBindingTrip, place), vkBindingText(snapshot.summary), `${rowId} summary`);
+  assert.equal(
+    vkBindingText(place.name),
+    vkBindingText(sanitizeCustomerJargon(snapshot.title)),
+    `${rowId} identity (place.name)`,
+  );
+  assert.equal(
+    vkBindingSummary(vkSnapshotBindingTrip, place),
+    vkBindingText(sanitizeCustomerJargon(snapshot.summary)),
+    `${rowId} summary`,
+  );
   assert.equal(
     vkBindingDescription(vkSnapshotBindingTrip, place),
-    vkBindingText(snapshot.description),
+    vkBindingText(sanitizeCustomerJargon(snapshot.description)),
     `${rowId} description`,
   );
 }

@@ -1,48 +1,51 @@
-# PR #907 / Issue #903 — post–vk-base-merge CI fix (cursor-ubuntu / composer-2.5)
+# PR #907 / Issue #903 — vk base merge + CI unit-tests (cursor-ubuntu / composer-2.5)
 
-**Outcome:** source-ready (uncommitted patch; host push). **Start HEAD:** `9461cd7898ae1d02d9d365fcb6b6e744f34c2ed4`.
+**Outcome:** source-ready (uncommitted patch; host push). **Start HEAD:** `30bfe48d950e97325681a213a41840334dc53efc`.
 
 **GBrain handoff:** `bot-admin/lanes/vk-pr-handoff/pr-907` — page_not_found (noted per brief).
 
-## Host base merge (retained)
+## Host base merge
 
-Host merged `origin/vk` at `d9b60879c1ab28aac0a1c5939e5e56fd178ed6ce` into `9461cd7898ae1d02d9d365fcb6b6e744f34c2ed4`. Non-receipt vk deltas remain staged: dossier overlay / intake address specificity (#889), fixtures, offline manifest rows, layout harness tests, etc. (see `git status`).
+Host merged `origin/vk` into `30bfe48d950e97325681a213a41840334dc53efc` (see `basemerge.json` in job dir). Conflicts resolved in source:
 
-## This round — CI unit-tests (#832 vs #903)
+- `src/vacation/trek-style2-bundle.mjs` — chain **both** `patchVk890Rebrand` and `patchUi903DetailChrome` (vk rebrand + #903 detail chrome).
+- `public/assets/index-BKun7ofk.js` — took `origin/vk` served asset, then `node scripts/rebake_served_trek_bundle.mjs` (sha256 `7afd665f3b75cb37e4aa2ba85b4d2043d6ef08a1dbec93725c1c3b5bc6417c8b`).
 
-Live CI on `9461cd78` failed `scripts/test_issue_832_day_timeline_binding.mjs`: `prepareSharedTripForLiveApp` stripped clock times from catalog flight names (e.g. `Delta LAS-JFK 2026-06-23 07:05-15:13` → date-only), while #832 expects stored names to pass through when there is no prefix repair.
+## This round — CI unit-tests
 
-**Root cause:** `applyFlightTitleTimes` in `src/vacation/live-qa-903-presentation.mjs` always stripped `HH:MM` ranges. #903 still requires titles without embedded clocks when structured timing exists on the Thing (zoned time chip / `departureTime`).
+Live CI on `30bfe48d` failed `scripts/test_shared_tab_list_summary.mjs`: fixture car rows still asserted `Priceline opaque` after `applyLiveQa903Presentation` (#903 jargon item 6).
 
-**Fix:** Gate clock stripping on `flightHasStructuredTimes()` (override `departureTime` / `arrivalTime` / `start_time` / `end_time`, or place `place_time` / `start_time` / `end_time`). Bare catalog rows without timing metadata keep stored names; assigned Southwest rows with `departureTime` still strip clocks for #903.
+**Fix:** Align offline assertions with served customer copy (`Priceline Express Deal (car company shown after booking)`), and compare pr336 snapshot binding through `sanitizeCustomerJargon()` in `scripts/test_gate_b_product_row_fields.mjs` so raw snapshot titles are not compared to sanitized live names.
 
-## #903 acceptance (inherited on branch)
+## #903 acceptance (inherited)
 
-Seven polish items remain covered by `scripts/test_issue_903_live_qa_polish.mjs` and product files on HEAD (fullscreen chrome, borrowed ratings, star/text alignment, detail chrome patch, trip-month hours, jargon/upsell, flight title times when structured timing present). `#836` chrome wait already targets `Priceline Express Deal` on HEAD.
+Seven polish items remain covered by `scripts/test_issue_903_live_qa_polish.mjs` on this patch. #890 vk rebrand patches retained in trek rebake chain.
 
-## Checks run @ `9461cd78` + local patch
+## Checks run @ `30bfe48d` + local patch
 
 | Check | Result |
 | --- | --- |
-| `node scripts/test_issue_832_day_timeline_binding.mjs` | PASS |
+| `node scripts/test_shared_tab_list_summary.mjs` | PASS |
 | `node scripts/test_issue_903_live_qa_polish.mjs` | PASS |
+| `node scripts/test_served_trek_bundle.mjs` | PASS |
+| `node scripts/test_gate_b_product_row_fields.mjs` | PASS |
+| `node scripts/test_shared_trip_live_tab_logos.mjs` | PASS |
+| `node scripts/test_offline_manifest.mjs` | PASS (435 offline) |
 | `node scripts/check-no-comments.mjs` | PASS |
-| `node scripts/test_offline_manifest.mjs` | PASS (434 offline) |
 | `BASE=vk node scripts/check-code-ratchet.mjs` | PASS (252 report, 0 fail) |
+| `npm run test:keepsake-style2` | PASS |
 
 ## Uncommitted files (host)
 
-- `src/vacation/live-qa-903-presentation.mjs` (flight title time guard)
-- `J/RECEIPT.md` (this file; resolve merge conflict vs vk receipt)
-- Plus staged host merge index from vk (not committed by lane)
+- `src/vacation/trek-style2-bundle.mjs`
+- `public/assets/index-BKun7ofk.js` (rebaked)
+- `scripts/test_shared_tab_list_summary.mjs`
+- `scripts/test_gate_b_product_row_fields.mjs`
+- `scripts/test_shared_trip_live_tab_logos.mjs`
+- `J/RECEIPT.md`
 
-## Host follow-up
-
-- Finish merge commit for vk + this patch; one push to `vkfill/903-20261109163214`.
-- Rebake served bundle if `public/assets/*.js` conflict policy applies post-merge.
-- Gate B / live screenshots — not self-certified here.
-- Do not commit root or `apps/vacation-client/node_modules` from local `npm install`.
+Host: finish merge commit, one push to `vkfill/903-20261109163214`. Gate B / live screenshots — not self-certified here.
 
 ## Not touched (scope)
 
-Baselines, Gate B capture config, `.github/` workflows, `package.json` / lock, deploy config, NYC reference PNGs. No test edits.
+Baselines, `scripts/offline-tests.txt`, Gate B capture config, `.github/` workflows, `package.json` / lock, deploy config, NYC reference PNGs.
