@@ -24,7 +24,7 @@ const OE_ROW_INLINE_DESC_FLAG_PATCH = 'Pn=(Mi(G),Rn),Zn=';
 const OE_LIST_ROW_SR_NEEDLE = 'sr=n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"28px minmax(0, 1fr)",gap:9,alignItems:"center",width:"100%",minWidth:0},children:[n.jsx(dc,{item:G}),n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})]})';
 const OE_LIST_ROW_SR_NEEDLE_V1 = 'sr=n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"28px minmax(0,1fr)",gap:9,alignItems:"center",width:"100%",minWidth:0},children:[n.jsx(dc,{item:G}),n.jsxs("span",{style:{display:"flex",alignItems:"center",gap:8,minWidth:0,width:"100%",overflow:"hidden"},children:[n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,flex:"0 1 auto",maxWidth:"42%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn}),Pn?n.jsx("span",{"data-list-summary":"1","data-summary-src":"thing","data-ts-list-desc":"1",style:{flex:"1 1 0",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontSize:11,fontWeight:700,color:"#475569",lineHeight:1.4},children:Pn}):null]})]})';
 const OE_LIST_ROW_SR_NEEDLE_V2 = 'sr=n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"28px minmax(0,1fr)",gap:9,alignItems:"center",width:"100%",minWidth:0},children:[n.jsx(dc,{item:G}),tsRowInlineDesc?n.jsxs("span",{style:{display:"flex",alignItems:"center",gap:8,minWidth:0,width:"100%",overflow:"hidden"},children:[n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,flex:"0 1 auto",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn}),Pn?n.jsx("span",{"data-list-summary":"1","data-summary-src":"thing","data-ts-list-desc":"1",style:{flex:"1 1 0",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontSize:11,fontWeight:700,color:"#475569",lineHeight:1.4},children:Pn}):null]}):n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",width:"100%"},children:Zn})]})';
-const OE_LIST_ROW_SR_PATCH = 'sr=n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"28px minmax(0,1fr)",gap:9,alignItems:"center",width:"100%",minWidth:0,maxWidth:"100%"},children:[n.jsx(dc,{item:G}),n.jsxs("span",{style:{display:"flex",alignItems:"center",gap:8,minWidth:0,width:"100%",maxWidth:"100%",overflow:"hidden",flex:"1 1 0"},children:[n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,flex:"0 1 auto",maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})]})]})';
+const OE_LIST_ROW_SR_PATCH = 'sr=n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"28px minmax(0,1fr)",gap:9,alignItems:"start",width:"100%",minWidth:0,maxWidth:"100%"},children:[n.jsx(dc,{item:G}),n.jsxs("span",{style:{display:"flex",alignItems:"center",gap:8,minWidth:0,width:"100%",maxWidth:"100%",overflow:"hidden",flex:"1 1 0"},children:[n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,flex:"0 1 auto",maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})]})]})';
 const OE_LIST_ROW_TITLE_BTN_STYLE_NEEDLE = 'fontWeight:800,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",textDecoration:"underline"';
 const OE_LIST_ROW_TITLE_BTN_WRAP_NEEDLE = 'fontWeight:800,width:"100%",minWidth:0,maxWidth:"100%",whiteSpace:"normal",overflowWrap:"anywhere",textDecoration:"underline"';
 const OE_LIST_ROW_TITLE_BTN_STYLE_PATCH = 'fontWeight:800,width:"100%",minWidth:0,maxWidth:"100%",overflow:"hidden",display:"block",textDecoration:"underline"';
@@ -41,7 +41,7 @@ const FLIGHT_HEADER_REST_AFTER_PAIR_PATCH =
 const OE_THING_HEADER_LOGO_PAIR_FLEX_OLD =
   '"data-ts-logo-name-pair":"1",style:{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:9,minWidth:0,maxWidth:"100%"}';
 const OE_THING_HEADER_LOGO_PAIR_FLEX_NEW =
-  '"data-ts-logo-name-pair":"1",style:{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:9,minWidth:0,maxWidth:"55%",flex:"0 1 auto",overflow:"hidden"}';
+  '"data-ts-logo-name-pair":"1",style:{display:"inline-flex",alignItems:"flex-start",justifyContent:"flex-start",gap:9,minWidth:0,maxWidth:"55%",flex:"0 1 auto",overflow:"hidden"}';
 const OE_THING_HEADER_LIST_ROW_NAME_WIDTH_OLD =
   '"data-ts-list-row-name":"1",style:{minWidth:0,maxWidth:"100%",width:"100%",display:"inline-flex",alignItems:"center",lineHeight:1,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}';
 const OE_THING_HEADER_LIST_ROW_NAME_WIDTH_NEW =
@@ -59,11 +59,13 @@ const OE_THING_HEADER_INLINE_DESC_WRAP_MARK =
 const FLIGHT_QO_INLINE_NEEDLE =
   'Qo=({item:G})=>{const parts=eu(G);return n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto auto auto",gap:8,width:"100%",alignItems:"center",minWidth:0},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:parts[0]||""}),n.jsx("span",{style:{whiteSpace:"nowrap",flexShrink:0,color:"#0f766e",fontWeight:900},children:parts[1]||""}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:parts[2]||""}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:parts[3]||""})]})}';
 const FLIGHT_QO_AIRLINE_STRONG_STYLE =
-  'lineHeight:1,display:"block",fontWeight:800,minWidth:0,maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"';
+  'lineHeight:1,display:"block",fontWeight:800,minWidth:0,maxWidth:"100%",whiteSpace:"normal",overflowWrap:"anywhere"';
 const FLIGHT_QO_AIRLINE_CELL_STYLE =
-  'overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,flex:"1 1 0",width:0,maxWidth:"100%"';
+  'flex:"1 1 0",minWidth:0,maxWidth:"100%",overflow:"visible",whiteSpace:"normal",overflowWrap:"anywhere"';
+const FLIGHT_QO_TIME_CHIP_STYLE =
+  'whiteSpace:"nowrap",flexShrink:0,minWidth:"max-content",overflow:"visible",fontWeight:700';
 const FLIGHT_QO_INLINE_PATCH =
-  `Qo=({item:G})=>{const parts=eu(G);return n.jsxs("span",{style:{display:"flex",alignItems:"center",gap:6,minWidth:0,maxWidth:"100%",overflow:"hidden",width:"100%"},children:[n.jsx("span",{style:{${FLIGHT_QO_AIRLINE_CELL_STYLE}},children:n.jsx("strong",{style:{${FLIGHT_QO_AIRLINE_STRONG_STYLE}},children:parts[0]||""})}),n.jsx("span",{style:{whiteSpace:"nowrap",flexShrink:0,color:"#0f766e",fontWeight:900},children:parts[1]||""}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,flex:"0 1 auto"},children:parts[2]||""}),n.jsx("span",{style:{flex:"1 1 0",minWidth:0,width:0,maxWidth:"100%",display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:parts[3]||""})]})}`;
+  `Qo=({item:G})=>{const parts=eu(G);return n.jsxs("span",{"data-ts-flight-row-grid":"1",style:{display:"flex",alignItems:"flex-start",gap:6,minWidth:0,maxWidth:"100%",overflow:"hidden",width:"100%",flexWrap:"nowrap"},children:[n.jsx("span",{style:{${FLIGHT_QO_AIRLINE_CELL_STYLE}},children:n.jsx("strong",{style:{${FLIGHT_QO_AIRLINE_STRONG_STYLE}},children:parts[0]||""})}),n.jsx("span",{style:{whiteSpace:"nowrap",flexShrink:0,color:"#0f766e",fontWeight:900},children:parts[1]||""}),n.jsx("span",{"data-ts-flight-time":"1",style:{${FLIGHT_QO_TIME_CHIP_STYLE}},children:parts[2]||""}),n.jsx("span",{"data-ts-flight-time":"1",style:{${FLIGHT_QO_TIME_CHIP_STYLE}},children:parts[3]||""})]})}`;
 const FLIGHT_QO_AIRLINE_STRONG_NEEDLE =
   'Qo=({item:G})=>{const parts=eu(G);return n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto auto auto",gap:8,width:"100%",alignItems:"center",minWidth:0},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,flexShrink:0},children:n.jsx("strong",{style:{lineHeight:1,display:"block",fontWeight:800},children:parts[0]||""})}),n.jsx("span",{style:{whiteSpace:"nowrap",flexShrink:0,color:"#0f766e",fontWeight:900},children:parts[1]||""})';
 const FLIGHT_QO_AIRLINE_STRONG_PATCH =
@@ -79,9 +81,9 @@ const FLIGHT_QO_ROUTE_CELL_WIDTH_PATCH =
 const FLIGHT_QO_REST_FLEX_OLD =
   'QoRest=({item:G})=>{const parts=eu(G);return n.jsxs("span",{style:{display:"flex",alignItems:"center",gap:6,minWidth:0,flex:"1 1 0",maxWidth:"100%",overflow:"hidden"}';
 const FLIGHT_QO_REST_FLEX_NEW =
-  'QoRest=({item:G})=>{const parts=eu(G);return n.jsxs("span",{style:{display:"flex",alignItems:"center",gap:6,minWidth:0,flex:"0 1 auto",maxWidth:"55%",overflow:"hidden"}';
+  'QoRest=({item:G})=>{const parts=eu(G);return n.jsxs("span",{"data-ts-flight-row-grid":"1","data-ts-flight-qo-rest":"1",style:{display:"flex",alignItems:"center",gap:6,minWidth:0,flex:"0 1 auto",maxWidth:"55%",overflow:"hidden"}';
 const FLIGHT_QO_REST_INLINE =
-  `${FLIGHT_QO_REST_FLEX_NEW},children:[n.jsx("span",{style:{whiteSpace:"nowrap",flexShrink:0,color:"#0f766e",fontWeight:900},children:parts[1]||""}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,flex:"0 1 auto"},children:parts[2]||""}),n.jsx("span",{style:{flex:"1 1 0",minWidth:0,width:0,maxWidth:"100%",display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:parts[3]||""})]})},`;
+  `${FLIGHT_QO_REST_FLEX_NEW},children:[n.jsx("span",{style:{whiteSpace:"nowrap",flexShrink:0,color:"#0f766e",fontWeight:900},children:parts[1]||""}),n.jsx("span",{"data-ts-flight-time":"1",style:{${FLIGHT_QO_TIME_CHIP_STYLE}},children:parts[2]||""}),n.jsx("span",{"data-ts-flight-time":"1",style:{${FLIGHT_QO_TIME_CHIP_STYLE}},children:parts[3]||""})]})},`;
 const OE_ROW_ZN_FLIGHT_AIRLINE_NEEDLE = 'Zn=bn(G)?n.jsx(Qo,{item:G}):';
 const OE_ROW_ZN_FLIGHT_AIRLINE_PATCH =
   'Zn=bn(G)?n.jsx("strong",{style:{lineHeight:1,display:"block",fontWeight:800,minWidth:0,maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:(eu(G)[0]||"")}):';
@@ -109,7 +111,7 @@ const OE_ROW_TITLE_SPAN_NEEDLE = 'n.jsx("span",{style:{minWidth:0,overflow:"hidd
 const OE_ROW_TITLE_SPAN_PATCH = 'n.jsx("span",{style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",width:"100%"},children:Mi(G)||Zi(G)||bn(G)?Zn:n.jsx("strong",{children:Bs(mr(G))})})';
 
 const OE_ROW_ZN_STRONG_NEEDLE = 'Zn=bn(G)?n.jsx(Qo,{item:G}):Mi(G)?n.jsx(be,{item:G}):Zi(G)?n.jsx(je,{item:G,title:ua}):ua,sr=n.jsxs';
-const OE_ROW_ZN_STRONG_PATCH = 'Zn=bn(G)?n.jsx(Qo,{item:G}):Mi(G)?n.jsx(be,{item:G}):Zi(G)?n.jsx(je,{item:G,title:ua}):n.jsx("strong",{style:{lineHeight:1,display:"block"},children:ua}),sr=n.jsxs';
+const OE_ROW_ZN_STRONG_PATCH = 'Zn=bn(G)?n.jsx("strong",{style:{lineHeight:1,display:"block",fontWeight:800,minWidth:0,maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:(eu(G)[0]||"")}):Mi(G)?n.jsx(be,{item:G}):Zi(G)?n.jsx(je,{item:G,title:ua}):n.jsx("strong",{style:{lineHeight:1,display:"block"},children:ua}),sr=n.jsxs';
 
 const OE_LOGO_PAIR_LIST_ROW_NAME_NEEDLE =
   'children:[n.jsx(dc,{item:G}),n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,maxWidth:"100%",width:"100%",display:"inline-flex",alignItems:"center",lineHeight:1,whiteSpace:"normal",overflowWrap:"anywhere"},children:Zn})]';
@@ -163,6 +165,9 @@ function injectFlightQoRest(js = '') {
 }
 
 function patchFlightQoAirlineNameFrame(js = '') {
+  if (js.includes('data-ts-flight-time":"1"') && js.includes(`children:n.jsx("strong",{style:{${FLIGHT_QO_AIRLINE_STRONG_STYLE}},children:parts[0]||""})`)) {
+    return js;
+  }
   js = injectFlightQoRest(js);
   if (js.includes(FLIGHT_QO_REST_FLEX_OLD)) {
     js = js.replace(FLIGHT_QO_REST_FLEX_OLD, FLIGHT_QO_REST_FLEX_NEW);
@@ -244,7 +249,7 @@ export function patchInlineListRowDescriptionOnThingHeader(source = '') {
     .replaceAll('maxWidth:"100%",overflow:"hidden"', 'maxWidth:"100%",overflow:"visible"');
   const ratingRow = 'tsRowStars?n.jsx("span",{"data-ts-list-row-rating":"1",style:{display:"flex",flexDirection:"row",flexWrap:"nowrap",alignItems:"center",justifyContent:"flex-end"},dangerouslySetInnerHTML:{__html:tsRowStars},role:"img","aria-label":tsStarRatingAria(tsRowRating)}):n.jsx("span",{"aria-hidden":"true"})';
   const headerRows = rows
-    .replace('"data-ts-thing-header":"1",style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto minmax(0,1fr)",alignItems:"center",columnGap:8,width:"100%",minWidth:0},children:[n.jsx("span",{"aria-hidden":"true"}),', '"data-ts-thing-header":"1",style:{display:"flex",flexWrap:Zi(G)?"wrap":"nowrap",alignItems:"center",columnGap:8,width:"100%",minWidth:0},children:[')
+    .replace('"data-ts-thing-header":"1",style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto minmax(0,1fr)",alignItems:"center",columnGap:8,width:"100%",minWidth:0},children:[n.jsx("span",{"aria-hidden":"true"}),', '"data-ts-thing-header":"1",style:{display:"flex",flexWrap:Zi(G)?"wrap":"nowrap",alignItems:bn(G)?"flex-start":"center",columnGap:8,width:"100%",minWidth:0},children:[')
     .replace('overflow:"visible",flex:"1 1 0",width:"100%"', 'overflow:"visible",flex:"1 1 auto",width:Zi(G)?"auto":"100%"')
     .replace(',n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)})', '')
     .replace(ratingRow, `Zi(G)?n.jsxs("span",{style:{display:"inline-flex",alignItems:"center",gap:8,marginLeft:"auto",flexShrink:0},children:[n.jsx("span",{style:{whiteSpace:"nowrap",color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)}),${ratingRow}]}):${ratingRow}`)
@@ -413,6 +418,15 @@ export function patchSharedTripListWrapping(source = '') {
   const next = js.slice(0, start) + rows + js.slice(end);
   return ensureListDescCaptureLeaf(next);
 }
+
+export const SHARED_LIVE_CONFLICT_LAYOUT_CSS =
+  '[data-ts-conflict-label="1"]{display:flex!important;align-items:flex-start!important;flex-wrap:wrap!important;white-space:normal!important;overflow:visible!important;overflow-wrap:anywhere!important;max-width:100%!important;box-sizing:border-box!important}';
+
+export const SHARED_LIVE_FLIGHT_LOGO_NAME_CSS =
+  'li[data-list-row="1"][data-thing-category="flight"] [data-ts-logo-name-pair="1"]{align-items:center!important}li[data-list-row="1"][data-thing-category="flight"] [data-ts-logo-chip="1"]{align-self:center!important}[data-ts-flight-row-grid="1"]{align-items:flex-start!important}';
+
+export const ISSUE_888_SERVED_LAYOUT_CSS =
+  `${SHARED_LIVE_CONFLICT_LAYOUT_CSS}@media (max-width:480px){[data-ts-flight-time="1"]{white-space:nowrap!important;overflow:visible!important;text-overflow:clip!important;flex-shrink:0!important;min-width:max-content!important}[data-ts-conflict-label="1"]{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere!important;flex-wrap:wrap!important;max-width:100%!important}[data-ts-flight-row-grid="1"]:not([data-ts-flight-qo-rest="1"]){display:grid!important;grid-template-columns:minmax(0,1fr) auto auto!important;grid-template-rows:auto auto!important;gap:6px!important;max-width:100%!important;min-width:0!important;width:100%!important;overflow:hidden!important;flex-wrap:unset!important}[data-ts-flight-row-grid="1"]:not([data-ts-flight-qo-rest="1"])>span:first-child{grid-column:1!important;grid-row:1/3!important;min-width:0!important}[data-ts-flight-row-grid="1"]:not([data-ts-flight-qo-rest="1"])>span:nth-child(2){grid-column:3!important;grid-row:1!important;justify-self:end!important}[data-ts-flight-row-grid="1"]:not([data-ts-flight-qo-rest="1"])>span:nth-child(3){grid-column:2!important;grid-row:2!important;justify-self:end!important}[data-ts-flight-row-grid="1"]:not([data-ts-flight-qo-rest="1"])>span:nth-child(4){grid-column:3!important;grid-row:2!important;justify-self:end!important}[data-ts-flight-qo-rest="1"]{display:grid!important;grid-template-columns:minmax(0,1fr) auto auto!important;grid-template-rows:auto auto!important;gap:6px!important;max-width:100%!important;min-width:0!important;width:100%!important;overflow:hidden!important;flex:1 1 100%!important}[data-ts-flight-qo-rest="1"]>span:nth-child(1){grid-column:1/-1!important;grid-row:1!important;min-width:0!important}[data-ts-flight-qo-rest="1"]>span:nth-child(2){grid-column:2!important;grid-row:2!important;justify-self:end!important}[data-ts-flight-qo-rest="1"]>span:nth-child(3){grid-column:3!important;grid-row:2!important;justify-self:end!important}[data-ts-flight-row-grid="1"] [data-ts-list-row-name="1"] strong,[data-ts-flight-row-grid="1"]>span:first-child strong{white-space:normal!important;overflow-wrap:anywhere!important}${SHARED_LIVE_FLIGHT_LOGO_NAME_CSS}}`;
 
 function ensureListDescCaptureLeaf(js = '') {
   let out = String(js || '');

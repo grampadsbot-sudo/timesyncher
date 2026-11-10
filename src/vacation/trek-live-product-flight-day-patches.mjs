@@ -23,6 +23,15 @@ const MR_TITLE_BIND_NEEDLE =
 const MR_TITLE_BIND_PATCH =
   'mr=G=>{var tsOv,tsPl,tsPid;tsPid=G&&(G.place_id??(G.place&&G.place.id));tsPl=tsPid?((typeof Ft<"u"&&Ft.get(tsPid))||((Gt||[]).find(p=>p&&String(p.id)===String(tsPid)))||null):null;tsOv=le[Qt(G)]||{};const Re=String((tsPl&&(tsPl.name||tsPl.title))||tsOv.name||G.name||"").trim();return Re}';
 
+const CONFLICT_LABEL_CLIP_PATCH =
+  'ua.isConflict&&n.jsxs("div",{"data-ts-conflict-label":"1",style:{display:"flex",alignItems:"center",gap:8,flexWrap:"nowrap",width:"100%",minWidth:0,color:"#b91c1c",fontSize:11,fontWeight:900,marginBottom:6,lineHeight:1.35,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"},children:[n.jsx("span",{style:{width:34,height:2,background:"#ef4444",display:"inline-block",flexShrink:0}}),"Conflict with ",Bs(ua.conflictWith||"another timeline item")]}),n.jsx("button",{"data-ts-timeline-title":"1"';
+
+const CONFLICT_LABEL_WRAP_PATCH =
+  'ua.isConflict&&n.jsxs("div",{"data-ts-conflict-label":"1",style:{display:"flex",alignItems:"flex-start",gap:8,flexWrap:"wrap",width:"100%",minWidth:0,color:"#b91c1c",fontSize:11,fontWeight:900,marginBottom:6,lineHeight:1.35,whiteSpace:"normal",overflow:"visible",wordBreak:"break-word"},children:[n.jsx("span",{style:{width:34,height:2,background:"#ef4444",display:"inline-block",flexShrink:0,marginTop:6}}),"Conflict with ",Bs(ua.conflictWith||"another timeline item")]}),n.jsx("button",{"data-ts-timeline-title":"1"';
+
+const CONFLICT_LABEL_NEEDLE =
+  'ua.isConflict&&n.jsxs("div",{style:{display:"flex",alignItems:"center",gap:8,color:"#b91c1c",fontSize:11,fontWeight:900,marginBottom:6},children:[n.jsx("span",{style:{width:34,height:2,background:"#ef4444",display:"inline-block"}}),"Conflict with ",Bs(ua.conflictWith||"another timeline item")]}),n.jsx("button",{"data-ts-timeline-title":"1"';
+
 export function applyFlightDayTimelinePatches(js, { served }) {
   let out = patchFlightTimezone887Core(js, { served });
   if (out.includes(CAR_DAY_LOOP_NEEDLE)) out = out.replace(CAR_DAY_LOOP_NEEDLE, CAR_DAY_LOOP_PATCH);
@@ -49,6 +58,17 @@ export function applyFlightDayTimelinePatches(js, { served }) {
     out = out.replace(CONFLICT_LOOP_NEEDLE, CONFLICT_LOOP_PATCH);
   } else if (served && !out.includes('nr===99999?Qi+1')) {
     throw new Error('day timeline in-transit conflict loop patch did not apply');
+  }
+  if (out.includes(CONFLICT_LABEL_NEEDLE)) out = out.replace(CONFLICT_LABEL_NEEDLE, CONFLICT_LABEL_WRAP_PATCH);
+  else if (out.includes(CONFLICT_LABEL_CLIP_PATCH)) out = out.replace(CONFLICT_LABEL_CLIP_PATCH, CONFLICT_LABEL_WRAP_PATCH);
+  else if (served && !out.includes('data-ts-conflict-label":"1"')) throw new Error('conflict timeline label patch did not apply');
+  else if (
+    served
+    && out.includes(
+      'data-ts-conflict-label":"1",style:{display:"flex",alignItems:"center",gap:8,flexWrap:"nowrap"',
+    )
+  ) {
+    throw new Error('conflict timeline label must wrap at 390');
   }
   return out;
 }
