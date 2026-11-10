@@ -22,6 +22,10 @@ import {
   mergeStoredChatItineraryScheduleOverride,
 } from '../src/vacation/chat-itinerary-edit-day.mjs';
 import { webAccessCookieName, webAccessTokenHash } from '../src/vacation/web-access.mjs';
+import {
+  buildTrekWebAccessRequestHeaders,
+  ensurePlaceAssignedOnDay,
+} from '../src/vacation/chat-itinerary-edit-trek-write.mjs';
 
 const copySlug = 'chat-edit-copy-a47f5a7f2150c5e887a81972';
 
@@ -428,5 +432,54 @@ assert.equal(produced.reply, DEMO_LOCKED_CHAT_EDIT_CUSTOMER_REPLY);
 assert.equal(produced.jev?.jevRan, false);
 assert.equal(produced.jev?.reason, 'demo_locked_chat_edit');
 assert.equal(produced.model, null);
+
+const trekWriteSource = fs.readFileSync(new URL('../src/vacation/chat-itinerary-edit-trek-write.mjs', import.meta.url), 'utf8');
+assert.match(trekWriteSource, /buildTrekWebAccessRequestHeaders/);
+assert.match(trekWriteSource, /\/api\/shared\/.*assignments.*move/);
+assert.match(trekWriteSource, /\/api\/shared\/.*days.*assignments/);
+assert.doesNotMatch(trekWriteSource, /\/api\/trips\/\$\{/);
+
+const authHeaders = buildTrekWebAccessRequestHeaders('copy-edit-session-859');
+assert.ok(authHeaders);
+assert.equal(authHeaders['x-timesyncher-web-access-token'], 'copy-edit-session-859');
+assert.match(authHeaders.cookie, /ts_vacation_web_access=copy-edit-session-859/);
+assert.equal(buildTrekWebAccessRequestHeaders(''), null);
+
+const authProbePayload = copyShapePayload();
+const carbonePlace = authProbePayload.places.find((p) => p.id === 8977);
+const day2Probe = authProbePayload.days.find((d) => d.day_number === 2);
+let authProbeFetch = null;
+const savedAuthFetch = globalThis.fetch;
+globalThis.fetch = async (url, init = {}) => {
+  authProbeFetch = { url: String(url), headers: init.headers || {} };
+  return { ok: false, status: 401, text: async () => '{"error":"Access token required","code":"AUTH_REQUIRED"}' };
+};
+try {
+  await assert.rejects(ensurePlaceAssignedOnDay({
+    payload: authProbePayload,
+    slug: copySlug,
+    placeId: carbonePlace.id,
+    dayId: day2Probe.id,
+    webAccessToken: copySession,
+    env: { ...copyEditEnv, TIMESYNCHER_TREK_PUBLIC_BASE_URL: trekBase },
+  }), /trek_edit_write_failed 401/);
+  assert.ok(authProbeFetch);
+  assert.match(authProbeFetch.url, /\/api\/shared\/chat-edit-copy/);
+  assert.match(authProbeFetch.url, /\/assignments\/8914\/move/);
+  assert.doesNotMatch(authProbeFetch.url, /\/api\/trips\//);
+  assert.equal(authProbeFetch.headers['x-timesyncher-web-access-token'], copySession);
+  assert.match(String(authProbeFetch.headers.cookie), /ts_vacation_web_access/);
+  await assert.rejects(ensurePlaceAssignedOnDay({
+    payload: authProbePayload,
+    slug: copySlug,
+    placeId: carbonePlace.id,
+    dayId: day2Probe.id,
+    webAccessToken: '',
+    env: copyEditEnv,
+  }), /web_edit_access_required/);
+  assert.equal(authProbeFetch.url.match(/\/move/g)?.length, 1, 'denied empty token must not retry trek');
+} finally {
+  globalThis.fetch = savedAuthFetch;
+}
 
 console.log('test_chat_itinerary_edit_905: ok');
