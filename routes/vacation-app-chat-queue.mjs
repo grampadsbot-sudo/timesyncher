@@ -9,16 +9,15 @@ import { tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
 import { tripIntakeJobKind } from '../src/vacation/vacation-from-chat-intake.mjs';
 import { intakeExtractedThings, intakeThingsForPersistence, runVacationAppInTurnSearch } from '../src/vacation/chat-place-search.mjs';
 import { seatFromSession, transcriptCustomerId } from '../src/vacation/collaborator-app-seat.mjs';
-import { blockVacationAppReplyIdCitation } from '../src/vacation/reply-id-citation.mjs';
-import { replyActionClaimReason } from '../src/vacation/reply-action-claim.mjs';
-import { rewriteBlockedActionClaim } from '../src/vacation/reply-action-claim-rewrite.mjs';
 import { vacationAppReplyClaimContext } from '../src/vacation/chat-place-search-when.mjs';
 import { runVacationAppTurnActions } from '../src/vacation/vacation-app-turn-actions.mjs';
 import { loadOwnerReplyPlanForTurn } from '../src/vacation/reply-plan-entitlement.mjs';
 import { placeSearchClientError } from '../src/vacation/place-search-reply-facts.mjs';
-import { failedInTurnSearchTurn, replyStageMillis, turnStageTimings, withGateMs } from '../src/vacation/turn-stage-timings.mjs';
+import { failedInTurnSearchTurn, replyStageMillis, turnStageTimings } from '../src/vacation/turn-stage-timings.mjs';
 import { persistVacationAppCustomerTurn } from '../src/vacation/vacation-app-queue-persist.mjs';
-import { prepareChatItineraryEditForQueueTurn, producedDemoLockedChatEditReply } from '../src/vacation/chat-itinerary-edit.mjs';
+import { prepareChatItineraryEditForQueueTurn } from '../src/vacation/chat-itinerary-edit.mjs';
+import { producedDemoLockedChatEditReply } from '../src/vacation/chat-itinerary-edit-day.mjs';
+import { createBoundedReplyShipGate, createBoundedRewriteClaim } from '../src/vacation/vacation-app-chat-postgen.mjs';
 export async function queueVacationAppTurn(db, session, trip, body, hooks, intake = {}) {
   const env = process.env;
   const tripId = trip?.id ?? null;
@@ -373,46 +372,29 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     stageTimings: payload.stageTimings,
   };
   const replyClaimContext = vacationAppReplyClaimContext(trip, placeSearchReplyFacts, { roster: classification.roster, turnActionResults });
-  const rewriteClaim = async (replyText) => {
-    const draft = String(replyText || '').trim();
-    const reason = replyActionClaimReason(draft, turnActionResults, replyClaimContext);
-    if (!draft || !reason) return draft;
-    const recovered = await rewriteBlockedActionClaim({
-      draft,
-      reason,
-      customerTurn: requestText,
-      customerTurnId: turnRows[0].id,
-      tripId,
-      turnActionResults,
-      replyClaimContext,
-      jev: produced.jev,
-      rules: produced.rules,
-      env,
-      destination: String(jobFields.destination || ''),
-      postIntake: firstIntake === true,
-    });
-    if (recovered.model) produced.model = recovered.model;
-    if (!recovered.reply || recovered.reason) return '';
-    return String(recovered.reply).trim();
-  };
-  const blockReplyShipGate = async (replyText) => {
-    const gateStarted = Date.now();
-    const blocked = await blockVacationAppReplyIdCitation({
-      replyText,
-      tripId,
-      db,
-      turnId: turnRows[0].id,
-      payload,
-      customerLive,
-      base,
-      storeReplyFailure,
-      turnActionResults,
-      replyClaimContext,
-    });
-    withGateMs(payload, customerLive, base, gateStarted);
-    await db`update transcript_turns set payload = ${payload} where id = ${turnRows[0].id}`;
-    return blocked;
-  };
+  const rewriteClaim = createBoundedRewriteClaim({
+    turnActionResults,
+    replyClaimContext,
+    requestText,
+    turnId: turnRows[0].id,
+    tripId,
+    produced,
+    env,
+    jobFields,
+    firstIntake,
+  });
+  const blockReplyShipGate = createBoundedReplyShipGate({
+    tripId,
+    db,
+    turnId: turnRows[0].id,
+    payload,
+    customerLive,
+    base,
+    storeReplyFailure,
+    turnActionResults,
+    replyClaimContext,
+    env,
+  });
   if (produced.status === 'interim' && produced.pending) {
     const interimDraft = produced.interimReply?.text || '';
     const interimText = await rewriteClaim(interimDraft);
