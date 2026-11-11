@@ -411,7 +411,17 @@ window.tsVacationAppChrome = {
     const siteFrame = document.querySelector('.site-pane iframe');
     if (!workspace || !splitter) return;
     const dragRow = splitterRow || splitter;
-    const splitterPx = () => Math.max(44, dragRow.getBoundingClientRect().height || 44);
+    const splitterLayoutPx = () => {
+      const track = document.getElementById('splitterTrack');
+      if (track) {
+        const cs = window.getComputedStyle(track);
+        if (cs.display !== 'none' && cs.visibility !== 'hidden') {
+          const th = track.getBoundingClientRect().height;
+          if (th > 0) return th;
+        }
+      }
+      return Math.max(44, dragRow.getBoundingClientRect().height || 44);
+    };
     let dragging = false;
     let activePointerId = null;
     let touchId = null;
@@ -428,7 +438,7 @@ window.tsVacationAppChrome = {
     };
     const resize = (clientY) => {
       const rect = workspace.getBoundingClientRect();
-      const usable = Math.max(1, rect.height - splitterPx());
+      const usable = Math.max(1, rect.height - splitterLayoutPx());
       const sitePx = Math.min(usable, Math.max(0, clientY - rect.top));
       const sitePct = (sitePx / usable) * 100;
       const clamped = Math.min(99.5, Math.max(0.5, sitePct));
