@@ -441,7 +441,7 @@ window.tsVacationAppChrome = {
       const usable = Math.max(1, rect.height - splitterLayoutPx());
       const sitePx = Math.min(usable, Math.max(0, clientY - rect.top));
       const sitePct = (sitePx / usable) * 100;
-      const clamped = Math.min(99.5, Math.max(0.5, sitePct));
+      const clamped = Math.min(100, Math.max(0, sitePct));
       workspace.style.setProperty('--site-height', `${clamped}fr`);
       workspace.style.setProperty('--chat-height', `${100 - clamped}fr`);
     };
