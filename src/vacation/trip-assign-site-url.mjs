@@ -40,7 +40,9 @@ export async function assignTripSiteUrl(db, tripId, env = process.env) {
   }
   const priorSlug = tripSlugFromMetadata(priorMeta);
   if (priorSlug && priorSlug !== publicSlug) {
-    throw tripSiteUrlFailure('onboarding trip site url not stored', tripId);
+    const keptUrl = String(priorMeta.publicUrl || priorMeta.public_url || '').trim()
+      || sharedTripWebsiteUrl(priorSlug, env);
+    return { publicSlug: priorSlug, publicUrl: keptUrl };
   }
   const metadataPatch = JSON.stringify({ publicSlug, intakeShare: true, publicUrl });
   const updated = await db`
@@ -57,15 +59,21 @@ export async function assignTripSiteUrl(db, tripId, env = process.env) {
   const stored = String(updated[0]?.public_slug || '').trim();
   if (stored === publicSlug) return { publicSlug, publicUrl };
   const reread = await db`
-    select metadata->>'publicSlug' as public_slug, metadata->>'publicUrl' as public_url
+    select metadata
     from trips
     where id = ${tripId}
     limit 1
   `;
-  const afterSlug = String(reread[0]?.public_slug || '').trim();
+  const afterMeta = reread[0]?.metadata && typeof reread[0].metadata === 'object' ? reread[0].metadata : {};
+  const afterSlug = tripSlugFromMetadata(afterMeta);
   if (afterSlug === publicSlug) {
-    const savedUrl = String(reread[0]?.public_url || '').trim();
+    const savedUrl = String(afterMeta.publicUrl || afterMeta.public_url || '').trim();
     return { publicSlug, publicUrl: savedUrl || publicUrl };
+  }
+  if (afterSlug) {
+    const keptUrl = String(afterMeta.publicUrl || afterMeta.public_url || '').trim()
+      || sharedTripWebsiteUrl(afterSlug, env);
+    return { publicSlug: afterSlug, publicUrl: keptUrl };
   }
   throw tripSiteUrlFailure('onboarding trip site url not stored', tripId);
 }
