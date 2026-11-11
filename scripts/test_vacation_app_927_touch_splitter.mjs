@@ -25,6 +25,10 @@ const phoneTrack = shellCss.match(/@media \(max-width: 480px\), \(pointer: coars
 assert.ok(phoneTrack, 'phone/touch splitter block must cover iOS 390-430 even when max-width 480 misses');
 assert.match(phoneTrack[1], /#splitterRow\.splitter-row \{[^}]*background: var\(--panel, #fff\);[^}]*border-top: 0;[^}]*border-bottom: 0;/);
 assert.match(phoneTrack[1], /#splitterRow > \.splitter-track \{[^}]*display: block;[^}]*height: 22px;[^}]*background: linear-gradient/);
+assert.match(phoneTrack[1], /#splitterRow\.splitter-row \{[^}]*min-height:\s*22px;[^}]*height:\s*22px;/);
+assert.match(phoneTrack[1], /#splitterRow > #splitter\.splitter \{[^}]*min-height:\s*44px;[^}]*margin:\s*-11px 0;/);
+assert.match(vacationAppRequest, /splitterLayoutPx/);
+assert.match(vacationAppRequest, /getElementById\('splitterTrack'\)/);
 assert.match(shellCss, /#splitterRow > \.splitter-track \{ display: none; \}/);
 assert.match(shellCss, /#splitter[\s\S]*min-height:\s*44px/);
 assert.match(shellCss, /@media \(max-width: 480px\)[\s\S]*min-height:\s*22px/);

@@ -85,7 +85,8 @@ for (const [price, label] of [[48, 'Price: $48'], ['$48', 'Price: $48'], [1250, 
   const row = renderRow({ jsx, jsxs: jsx }, {}, () => ({ price }), () => '<svg></svg>', () => 4);
   assert.equal(row.props['data-ts-detail-rating-row'], '1');
   assert.equal(row.props.style.display, 'flex');
-  const [stars, priceSpan] = row.props.children;
+  const [leftCluster, priceSpan] = row.props.children;
+  const stars = leftCluster.props.children[1];
   assert.equal(stars.props['data-ts-detail-header-stars'], '1');
   assert.equal(priceSpan.props['data-ts-detail-field'], 'price');
   assert.equal(priceSpan.props.style.whiteSpace, 'nowrap');

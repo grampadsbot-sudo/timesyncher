@@ -73,11 +73,12 @@ async function assertSplitterPill(page, tag) {
     const row = document.getElementById('splitterRow');
     if (!splitter) return null;
     const after = getComputedStyle(splitter, '::after');
-    const touch = (row || splitter).getBoundingClientRect();
+    const rowBox = row?.getBoundingClientRect();
+    const splitterBox = splitter.getBoundingClientRect();
     return {
       width: Math.round(parseFloat(after.width) || 0),
       height: Math.round(parseFloat(after.height) || 0),
-      handleHeight: Math.round(touch.height),
+      handleHeight: Math.round(Math.max(rowBox?.height || 0, splitterBox.height || 0)),
       trackHeight: document.getElementById('splitterTrack')?.getBoundingClientRect().height || 0,
       rowPaint: row ? getComputedStyle(row).backgroundImage : '',
     };

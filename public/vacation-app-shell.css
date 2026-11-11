@@ -44,18 +44,37 @@
     background: var(--panel, #fff);
     border-top: 0;
     border-bottom: 0;
+    min-height: 22px;
+    height: 22px;
+    align-items: stretch;
+    position: relative;
+    overflow: visible;
   }
   #splitterRow > .splitter-track {
     display: block;
     grid-column: 1 / -1;
     grid-row: 1;
-    align-self: center;
+    align-self: stretch;
     height: 22px;
     box-sizing: border-box;
     border-top: 1px solid #cdd5df;
     border-bottom: 1px solid #cdd5df;
     background: linear-gradient(180deg, #edf1f5, #dfe6ee);
     pointer-events: none;
+  }
+  #splitterRow > #splitter.splitter {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+    justify-self: stretch;
+    z-index: 2;
+    box-sizing: border-box;
+    min-height: 44px;
+    height: 44px;
+    margin: -11px 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
   }
   .app.site-fullscreen #splitterRow > .splitter-track { display: none; }
 }
