@@ -27,6 +27,9 @@ import { isNominatimOpenStreetMapUrl } from './place-search-geocode.mjs';
 import { normalizePlaceSearchCategory } from './place-search-category-keys.mjs';
 import { normalizePlaceSearchTargetKind } from './place-search-target-kind.mjs';
 import { overpassQuery, placesFromOsmPayload } from './place-search-osm.mjs';
+import { boundedAwait } from './bounded-await.mjs';
+
+export const PLACE_SEARCH_OVERPASS_TIMEOUT_MS = 8000;
 import { mergePlaces as mergePlaceRows } from './place-search-merge.mjs';
 import { distanceMeters, samePlace } from './place-search-same-place.mjs';
 import { ANCHOR_RADIUS_SCOPE_DESTINATION, ANCHOR_RADIUS_SCOPE_LODGING, radiusMetersForAnchorScope } from './place-search-radius-filter.mjs';
@@ -264,12 +267,20 @@ function categoryNameField(name) {
 
 async function queryOsm(fetchImpl, center, categoryFilter = null) {
   const body = `data=${encodeURIComponent(overpassQuery(center, categoryFilter))}`;
-  const payload = await placeSearchReadJson(fetchImpl, 'https://overpass-api.de/api/interpreter', {
-    label: 'OpenStreetMap Overpass',
-    method: 'POST',
-    headers: { 'content-type': 'application/x-www-form-urlencoded' },
-    body,
-  });
+  const timedOut = { overpassTimedOut: true };
+  const payload = await boundedAwait(
+    placeSearchReadJson(fetchImpl, 'https://overpass-api.de/api/interpreter', {
+      label: 'OpenStreetMap Overpass',
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body,
+    }),
+    PLACE_SEARCH_OVERPASS_TIMEOUT_MS,
+    () => timedOut,
+  );
+  if (payload === timedOut) {
+    fail('OpenStreetMap Overpass timed out', 'source_failed');
+  }
   return placesFromOsmPayload(payload, center, { finite, metersInsideCategory, ratingFromRecord });
 }
 
