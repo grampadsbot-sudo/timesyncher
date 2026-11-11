@@ -70,8 +70,18 @@ function mockDb({ existing = null, trip = tripId, tripMeta = {} } = {}) {
     const text = sqlText(strings);
     calls.push({ text, values });
     if (/update trips/i.test(text)) {
-      if (values.some((value) => value && value.publicSlug)) return [{ public_slug: values.find((v) => v?.publicSlug)?.publicSlug }];
+      const patchRaw = values.find((value) => typeof value === 'string' && value.includes('publicSlug'));
+      if (patchRaw) {
+        const patch = JSON.parse(patchRaw);
+        return [{ public_slug: String(patch.publicSlug || '').trim() }];
+      }
+      if (values.some((value) => value && value.publicSlug)) {
+        return [{ public_slug: values.find((v) => v?.publicSlug)?.publicSlug }];
+      }
       return [];
+    }
+    if (/select metadata\s/i.test(text) && /from trips/i.test(text)) {
+      return [{ metadata: { ...tripMeta } }];
     }
     if (/select metadata->>'publicSlug'/i.test(text)) {
       return [{ public_slug: tripMeta.publicSlug || '' }];
@@ -177,39 +187,25 @@ try {
   assertNoPurchaseSlug(collabDb.calls);
 
   const publicSlug = intakeShareSlug(tripId);
-  const siteDb = mockDb({ tripMeta: { publicSlug } });
+  const siteDb = mockDb({ tripMeta: {} });
   const site = await assignTripSiteUrl(siteDb, tripId, env);
   assert.equal(site.publicSlug, publicSlug);
   assert.match(site.publicUrl, new RegExp(`/shared/${publicSlug}/$`));
   assert.equal(siteDb.calls.filter((call) => /update trips/i.test(call.text)).length, 1);
 
-  const failCalls = [];
-  const failDb = async (strings, ...values) => {
+  const keptCalls = [];
+  const keptDb = async (strings, ...values) => {
     const text = sqlText(strings);
-    failCalls.push({ text, values });
-    if (/update trips/i.test(text)) return [];
-    if (/select metadata\s/i.test(text) && !/->>'publicSlug'/i.test(text)) {
+    keptCalls.push({ text, values });
+    if (/select metadata\s/i.test(text) && /from trips/i.test(text)) {
       return [{ metadata: { publicSlug: 'other-slug' } }];
     }
-    if (/select metadata->>'publicSlug'/i.test(text)) return [{ public_slug: 'other-slug' }];
-    throw new Error(`unexpected fail sql: ${text}`);
+    throw new Error(`unexpected kept sql: ${text}`);
   };
-  const logs = [];
-  const originalLog = console.log;
-  console.log = (...args) => { logs.push(args); };
-  let siteError;
-  try {
-    await assignTripSiteUrl(failDb, tripId, env);
-  } catch (error) {
-    siteError = error;
-  } finally {
-    console.log = originalLog;
-  }
-  assert.equal(siteError?.code, 'onboarding_trip_site_url_failed');
-  assert.equal(siteError?.reason, 'onboarding trip site url not stored');
-  assert.equal(siteError?.tripId, tripId);
-  assert.equal(logs.length, 1);
-  assert.deepEqual(JSON.parse(logs[0][0]), { reason: siteError.reason, tripId });
+  const kept = await assignTripSiteUrl(keptDb, tripId, env);
+  assert.equal(kept.publicSlug, 'other-slug');
+  assert.match(kept.publicUrl, /\/shared\/other-slug\/$/);
+  assert.equal(keptCalls.some((call) => /update trips/i.test(call.text)), false);
 
   const ownerNoSite = renderOnboardingWelcome({ audience: 'owner_no_site', firstName: 'Ada' });
   assert.doesNotMatch(ownerNoSite, /https?:\/\//);
