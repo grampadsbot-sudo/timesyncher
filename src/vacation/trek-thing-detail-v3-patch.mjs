@@ -79,6 +79,33 @@ function detailBodyV3({ n, d, edit, days, selectedDays, scheduled, start, durati
     edit ? n.jsx('button', { type: 'button', disabled: !days.length, onClick: () => saveVisits([...visits, { dayId: days[0]?.id, startTime: '', duration: '', status: 'considering' }]), style: buttonStyle, children: '+ Add visit' }) : null,
   ] }) : null;
   const reviews = [1, 2, 3, 4].filter(index => text(d[`review${index}`]));
+  const platformRatings = edit ? n.jsx('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }, children: [
+    ['googleRating', 'Google rating'],
+    ['yelpRating', 'Yelp rating'],
+    ['thirdPartyRating', 'Other rating'],
+  ].map(([key, label]) => {
+    const rv = d[key];
+    const starHtml = stars(rv);
+    if (!starHtml) return null;
+    return n.jsxs('label', { style: { display: 'grid', gap: 4, minWidth: 0, position: 'relative' }, children: [
+      label,
+      n.jsx('div', {
+        'data-ts-detail-rating-stars': '1',
+        style: { display: 'flex', alignItems: 'center', minHeight: 28 },
+        dangerouslySetInnerHTML: { __html: starHtml },
+        role: 'img',
+        'aria-label': typeof tsStarRatingAria === 'function' ? tsStarRatingAria(rv) : '',
+      }),
+      n.jsx('input', {
+        value: String(rv ?? ''),
+        onChange: event => write(key, event.target.value),
+        placeholder: '',
+        style: { ...inputStyle, position: 'absolute', opacity: 0, width: 1, height: 1, padding: 0, border: 0 },
+        tabIndex: -1,
+        'aria-hidden': 'true',
+      }),
+    ] }, key);
+  }).filter(Boolean) }) : null;
   return n.jsxs('div', { 'data-ts-detail-v3': '1', 'data-ts-detail-mode': edit ? 'edit' : 'view', style: { fontSize: 13, lineHeight: 1.45, color: '#1f2937', minWidth: 0 }, children: [
     timeline,
     field('story', 'Story', true),
@@ -105,6 +132,7 @@ function detailBodyV3({ n, d, edit, days, selectedDays, scheduled, start, durati
     field('itineraryNote', 'Itinerary note', true), field('longDetails', 'Details', true),
     field('lat', 'Latitude'), field('lng', 'Longitude'),
     edit ? field('logoUrl', 'Logo URL') : null, edit ? field('travelTime', 'Estimated travel time') : null,
+    platformRatings,
     extras,
   ] });
 }
