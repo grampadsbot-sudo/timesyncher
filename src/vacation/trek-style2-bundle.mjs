@@ -19,6 +19,7 @@ import { LIST_LOGO_NEEDLE, LIST_LOGO_QR_GUARD_PATCH, patchListLogoQrGuard } from
 import { patchThingDetailCapture, patchThingDetailPanel } from './trek-thing-detail-patches.mjs';
 import { patchStarRatings, patchStarRatingThingKeys } from './trek-star-rating-patch.mjs'; import { patchUi903DetailChrome } from './trek-qa-903-ui-patch.mjs';
 import { patchInlineListRowDescriptionOnThingHeader, patchSharedTripListWrapping } from './shared-trip-oe-list-row-patch.mjs';
+import { patchListRowDates } from './list-row-dates.mjs';
 import { patchDayByDayKeepsakeMap } from './trek-day-by-day-map-patches.mjs';
 import { patchTimelineItineraryNote } from './trek-timeline-itinerary-note-patch.mjs';
 import { patchListRowDescription } from './trek-list-row-description-patch.mjs';
@@ -512,7 +513,7 @@ export function renderServedTrekBundle(raw) {
   assertServedBundleClean(js);
   const finalJs = patchUi903DetailChrome(patchVk890Rebrand(patchUi754(patchUi737(patchUi735SharedPdf(patchTimelineItineraryNote(patchUi734Round2(patchUi734Round1(patchInlineListRowDescriptionOnThingHeader(patchSharedTripListWrapping(patchStarRatings(patchThingDetailCapture(js))))))))))));
   const servedJs = patchStarRatingThingKeys(patchThingDetail951(patchListRowDescription(finalJs)));
-  return patchThingDetail964In951(servedJs);
+  return patchListRowDates(patchThingDetail964In951(servedJs));
 }
 
 function endOfCall(text, callStart) {
