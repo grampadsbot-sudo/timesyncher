@@ -455,3 +455,6 @@ scripts/test_vkprloop_drift_900.mjs
 scripts/test_vkprloop_drift_910.mjs
 scripts/test_vkprloop_drift_921.mjs
 scripts/test_vkprloop_drift_915.mjs
+
+# Pixel compares are review-only artifacts; they must never fail CI (Craig 2026-11-12 1:56 PM PT).
+scripts/test_no_blocking_pixel_ci.mjs
