@@ -1,4 +1,16 @@
 export function listRowDateRange({ category, thing = {}, trip = {}, days = [], dayIds = [], depZone = '', arrZone = '' } = {}) {
+  const proseCalendarDate = /\b([A-Za-z]{3,9})\s+(\d{1,2}),?\s+(\d{4})\b/;
+  const englishMonthIndex = (() => {
+    const byLabel = new Map();
+    for (let month = 0; month < 12; month += 1) {
+      const anchor = new Date(Date.UTC(2020, month, 15));
+      for (const style of ['short', 'long']) {
+        const label = new Intl.DateTimeFormat('en', { month: style, timeZone: 'UTC' }).format(anchor);
+        byLabel.set(label.toLowerCase(), month + 1);
+      }
+    }
+    return byLabel;
+  })();
   const row = { ...thing.sourceRecord, ...thing };
   const date = (value) => {
     const match = String(value ?? '').match(/^\d{4}-\d{2}-\d{2}/);
@@ -19,9 +31,12 @@ export function listRowDateRange({ category, thing = {}, trip = {}, days = [], d
     const text = String(value ?? '');
     const iso = text.match(/\b\d{4}-\d{2}-\d{2}\b/);
     if (iso) return iso[0];
-    const named = text.match(/\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2},?\s+\d{4}\b/i);
+    const named = text.match(proseCalendarDate);
     if (!named) return '';
-    const stamp = Date.parse(`${named[0]} UTC`);
+    const month = englishMonthIndex.get(named[1].toLowerCase());
+    if (!month) return '';
+    const proseIso = `${named[3]}-${String(month).padStart(2, '0')}-${String(named[2]).padStart(2, '0')}`;
+    const stamp = Date.parse(`${proseIso}T00:00:00Z`);
     return Number.isFinite(stamp) ? new Date(stamp).toISOString().slice(0, 10) : '';
   };
   const range = (start, end, startLabel, endLabel) => {
@@ -102,5 +117,6 @@ export function patchListRowDates(source = '') {
   if (rowEnd < 0) throw new Error('list dates row boundary missing');
   const body = source.slice(end, rowEnd).replaceAll('"data-ts-thing-key":Qt(G),', '"data-ts-thing-key":Qt(G),"data-ts-list-row":(bn(G)||Zi(G)||Mi(G))?"1":void 0,');
   const patched = source.slice(0, header) + `sr=n.jsxs("span",(bn(G)||Zi(G)||Mi(G))?${props(travel)}:${props(original)})` + body + source.slice(rowEnd);
-  return patched.replace('be=({item:G})=>', `tsListDateRange=${listRowDateRange.toString()},be=({item:G})=>`);
+  if (patched.includes('tsListDateRange=function listRowDateRange')) return patched;
+  return patched.replace('Oe=(G,Re,zt=!1)=>', `tsListDateRange=${listRowDateRange.toString()},Oe=(G,Re,zt=!1)=>`);
 }
