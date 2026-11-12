@@ -1,44 +1,45 @@
-# PR #970 round — vkfill-970 (composer-2.5, cursor-ubuntu)
+# PR #970 round — vkfill-970 tier-1 (composer-2.5, cursor-ubuntu)
 
-Outcome: **source-ready** for host publication from starting HEAD `4f0fa505a4ad5499512a663a59cc5c10fd071b37`. Not CI-green or Gate B-complete on this pass; host must publish and re-run CI/Gate B.
+Outcome: **source-ready** for host publication from starting HEAD `a42768b60791ef8337785c7386881e2281e95f7d`. Not CI-green until host publishes; Gate B not re-run locally on this pass.
 
-GBrain handoff `bot-admin/lanes/vk-pr-handoff/pr-970`: **not found** on this pass (noted per brief).
+GBrain handoff `bot-admin/lanes/vk-pr-handoff/pr-970`: **not found** on this pass (per brief).
 
-## Root cause
+## Root cause (why round 2 CI still red)
 
-1. **unit-tests** `scripts/test_shared_hotels_390_text_wrap.mjs`: `patchListRowDates` injected `tsListDateRange` before `be=`, outside the harness slice (`be=`…`,tt=G=>`). Puppeteer eval defined `Oe` without `tsListDateRange` in scope → `ReferenceError`. Harness expectations still assumed pre-v3 stars-right layout (#968 v3 = stars left, dates right).
+`scripts/test_shared_tab_list_summary.mjs` eval-harness for `Oe()` was not updated when #968 landed `patchListRowDates` / travel-list header v3 in `public/assets/index-BKun7ofk.js`:
 
-2. **secrets** / `check-hardcoded-content`: `writtenDate` used a regex with literal month tokens (`Jan|Feb|…`) → `DATE-LITERAL` failures in `src/vacation/list-row-dates.mjs:22`.
+1. **ReferenceError `Ar is not defined`**: hotel rows call `Ar(G)` / `hn(G)` inside `tsListDateRange({...})` but the harness env omitted those stubs (same gap fixed earlier in `test_shared_hotels_390_text_wrap.mjs`).
+2. **Stale bundle/row assertions**: price moved to `[data-ts-list-price]` with `$X / night` suffix; old regex expected inline `children:ie(G)` on the legacy header.
+
+Product bundle + `list-row-dates.mjs` on `a42768b6` are unchanged; this round only aligns the offline harness with the served contract.
 
 ## Source changes (uncommitted)
 
 | File | Why |
 | --- | --- |
-| `src/vacation/list-row-dates.mjs` | Inject `tsListDateRange` immediately before `Oe=(G,Re,zt=!1)=>` so served bundle and hotel harness share scope; prose dates via `Intl` month index + `[A-Za-z]{3,9}` pattern (no month literals in source). |
-| `public/assets/index-BKun7ofk.js` | Rebaked via `node scripts/rebake_served_trek_bundle.mjs` (sha256 `07d223ae027b4983e2389d2ec348ea267904697a608fa4ddad0b31f12e545b56`). |
-| `scripts/test_shared_hotels_390_text_wrap.mjs` | v3 row contract: stars-before-dates, price on name row; stub `la`/`Qa`/`Yi`/`Ar`/`hn`; allow ≤3 name lines for long hotel titles. |
+| `scripts/test_shared_tab_list_summary.mjs` | Stub `Ar`/`hn`/`la`/`Qa`/`Yi`/`tsStarRatingAria`/`tsFltLegTz`/`Ne`/`lc`; assert `data-ts-travel-list-header` + `data-ts-list-price`; hotel row price expects `$1,234 / night`. |
 
-## Checks (local, starting HEAD `4f0fa505`)
+## Checks (local, starting HEAD `a42768b6`)
 
 | Command | Result |
 | --- | --- |
-| `node scripts/rebake_served_trek_bundle.mjs` | exit 0 |
+| `node scripts/test_shared_tab_list_summary.mjs` | exit 0 (was `ReferenceError: Ar is not defined`) |
+| `node scripts/test_shared_hotels_390_text_wrap.mjs` | exit 0 |
 | `node scripts/test_served_star_rating_bundle.mjs` | exit 0 |
-| `CHROME_PATH=/usr/bin/chromium-browser node scripts/test_shared_hotels_390_text_wrap.mjs` | exit 0 |
-| `node scripts/test_check_hardcoded_content.mjs` | exit 0 |
-| `node scripts/check-hardcoded-content.mjs` | exit 0 |
+| `node scripts/test_budget_required_price_completeness.mjs` | exit 0 |
+| `node scripts/test_gate_b_product_row_fields.mjs` | exit 0 |
 | `node scripts/check-no-comments.mjs` | exit 0 |
-| `node scripts/test_offline_manifest.mjs` | exit 0 (455 offline, 21 online) |
+| `node scripts/test_offline_manifest.mjs` | exit 0 |
 | `BASE=vk node scripts/check-code-ratchet.mjs` | exit 0 |
 | `npm run test:keepsake-style2` | exit 0 |
 
-Pre-DONE gates above all pass on this dirty tree. No commit, stage, push, merge, rebase or deploy performed (HOST PUBLICATION ONLY).
+Pre-DONE gates above pass on dirty tree. No commit, stage, push, merge, rebase or deploy (HOST PUBLICATION ONLY).
 
-## Left for host / out of scope
+## Gate B / budget (left for host)
 
-- Chief-dr **Gate B** list (32 structure PNGs + budget price/description completeness on NYC fixture): not re-run locally on this pass. Budget missing-price rows are **data/harness** (`gate-b-budget-price-completeness.mjs` / `budgetModel.mjs`), not addressed in this UI patch. Structure compares need host Gate B after publish.
-- Acceptance **968** `topmost:false` visibility (split-pane scroll): unchanged; product brief scoped row layout only.
+- Hermes run `20261112-220558` on head `a42768b6`: **pixel FAIL** vs NYC reference (not approved baseline); `-top` ratio ~0.09–0.19; full-page **width drift** (baseline 1340 vs candidate 1280). Intentional #968 travel-list layout shift; structure JSON on candidates shows list prices present on hotels capture (`~/tsv-gateb/runs/20261112-220558/v6/_v6-hotels-390.json`).
+- Chief-dr budget **missing-price** / **hotel description quality** lines: fixture checks (`gate-b-budget-price-completeness`, `test_nyc_budget_search_fill_prices.mjs`) **pass** locally on `a42768b6`; live capture failures may reflect staging fixture/data or managing-dr verdict gaps — not addressed in this harness-only patch.
 
 ## Host next
 
-One ff push to `vkfill/968-20261112114229`, refresh PR #970, wait for CI. If unit-tests + secrets green, chase Gate B structure + DATA prices on authorized follow-up.
+One ff push to `vkfill/968-20261112114229`, wait for CI (`unit-tests` must include `scripts/test_shared_tab_list_summary.mjs`). Re-run Gate B structure mode vs staging after publish.
