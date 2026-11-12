@@ -17,7 +17,7 @@ export function tripThingSource(thing) {
 }
 
 export function tripThingRow(thing) {
-  const title = String(thing?.title || '').trim().slice(0, 240);
+  const title = Array.from(String(thing?.title || '').trim()).slice(0, 240).join('');
   if (!title) return null;
   const category = String(thing?.category || 'note').trim().slice(0, 80) || 'note';
   const source = tripThingSource(thing);
@@ -25,7 +25,7 @@ export function tripThingRow(thing) {
     category,
     subtype: String(thing?.subtype || '').trim().slice(0, 120) || null,
     title,
-    description: String(thing?.description || '').trim().slice(0, 4000) || null,
+    description: Array.from(String(thing?.description || '').trim()).slice(0, 4000).join('') || null,
     startsAt: thing?.startsAt || thing?.starts_at || null,
     endsAt: thing?.endsAt || thing?.ends_at || null,
     costEstimateCents: Number.isInteger(thing?.costEstimateCents)

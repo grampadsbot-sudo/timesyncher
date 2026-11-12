@@ -25,7 +25,7 @@ const NON_TRANSPORT_CATEGORIES = new Set([
 const HAPPY_HOUR_CATEGORIES = new Set(['restaurant', 'bar']);
 
 export function text(value, max = 5000) {
-  return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
+  return Array.from(String(value || '').replace(/\s+/g, ' ').trim()).slice(0, max).join('');
 }
 
 function wordCount(value) {

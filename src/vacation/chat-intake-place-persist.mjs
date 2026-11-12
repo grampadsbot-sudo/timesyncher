@@ -12,7 +12,7 @@ import { applyEnrichedDetailToTripThing, enrichPlaceDetail } from './place-detai
 const GEOCODABLE_KINDS = new Set(['grocery', 'market', 'restaurant', 'store', 'garden', 'activity', 'hotel', 'car']);
 
 function clean(value, max = 240) {
-  return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
+  return Array.from(String(value || '').replace(/\s+/g, ' ').trim()).slice(0, max).join('');
 }
 
 function normalizedTitleKey(title = '') {
