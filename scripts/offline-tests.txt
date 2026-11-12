@@ -21,6 +21,7 @@ scripts/test_chat_place_search.mjs
 scripts/test_chat_place_search_when.mjs
 scripts/test_chat_itinerary_edit.mjs
 scripts/test_chat_itinerary_edit_905.mjs
+scripts/test_acceptance_859_chat_edit_put_small.mjs
 scripts/test_place_search_reply_no_internal_ids.mjs
 scripts/test_in_turn_citable_places.mjs
 scripts/test_kihei_coffee_area_scope.mjs
