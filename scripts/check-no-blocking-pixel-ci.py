@@ -31,8 +31,6 @@ def workflow_files():
 def blocking_hits(text: str, rel: str):
     hits = []
     lines = text.splitlines()
-    # Only a run/uses/command line can fail a job. Names and comments may mention
-    # the policy itself ("forbid blocking pixel-diff") without being a gate.
     for i, line in enumerate(lines):
         if COMMENT_RE.match(line) or not PIXEL_RE.search(line):
             continue
