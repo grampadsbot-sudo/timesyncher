@@ -106,12 +106,18 @@ function detailBodyV3({ n, d, edit, days, selectedDays, scheduled, start, durati
       }),
     ] }, key);
   }).filter(Boolean) }) : null;
+  const happyHourBlock = (() => {
+    const raw = String(d.happyHourDetails || '').replace(/\s+/g, ' ').trim();
+    const showHH = !!raw && raw !== 'false' && !/^no happy hour\b/i.test(raw);
+    if (!edit && !showHH) return null;
+    return field('happyHourDetails', 'Happy Hour', true);
+  })();
   return n.jsxs('div', { 'data-ts-detail-v3': '1', 'data-ts-detail-mode': edit ? 'edit' : 'view', style: { fontSize: 13, lineHeight: 1.45, color: '#1f2937', minWidth: 0 }, children: [
     timeline,
     field('story', 'Story', true),
     flag('includeInTripRecap', 'Include this story in the final keepsake'),
     flag('nextTime', 'Add to Next Time list'),
-    field('happyHourDetails', 'Happy Hour', true), field('summary', 'Summary', true),
+    happyHourBlock, field('summary', 'Summary', true),
     reviews.length ? n.jsxs('section', { 'data-ts-detail-reviews': '1', 'data-ts-detail-reviews-readonly': '1', style: sectionStyle, children: [
       n.jsx('h3', { style: headingStyle, children: 'Reviews' }),
       reviews.map(index => n.jsxs('div', { 'data-ts-detail-review': '1', style: { marginBottom: 8 }, children: [
@@ -137,6 +143,9 @@ function detailBodyV3({ n, d, edit, days, selectedDays, scheduled, start, durati
   ] });
 }
 
+const HH_V3_EDIT_EXTRAS =
+  '(zi(Dt)||It(Dt)==="bar")&&n.jsxs("label",{style:{...Hn,flexDirection:"row",alignItems:"center",gap:8,textTransform:"none",fontSize:12,paddingBottom:8},children:[n.jsx("input",{type:"checkbox",checked:!!(ha(Dt).happyHour||tsPf.some(row=>row.happyHour===true&&row.match.test(String(Dt.name||Dt.title||"")))),onChange:G=>Xa(Dt,"happyHour",G.target.checked)})," Happy hour"]}),(zi(Dt)||It(Dt)==="bar")&&(Ce||((()=>{const raw=String(ha(Dt).happyHourDetails||"").replace(/\\s+/g," ").trim();return !!raw&&raw!=="false"&&!/^no happy hour\\b/i.test(raw)})()))&&n.jsxs("label",{style:Hn,children:["Happy hour details",n.jsx("textarea",{value:String(ha(Dt).happyHourDetails||""),onChange:G=>Xa(Dt,"happyHourDetails",G.target.value),placeholder:"Recent/current happy-hour offer, menu items, discount, days/times, caveats, and source note",style:{...ur,minHeight:84},disabled:!Ce})]})';
+
 export function patchThingDetailV3(source = '') {
   if (source.includes('function detailBodyV3(')) return source;
   const start = source.indexOf('Dt&&n.jsx("div",{style:{position:"fixed",inset:0,zIndex:1e4');
@@ -150,7 +159,7 @@ export function patchThingDetailV3(source = '') {
   const tagsEnd = panel.indexOf(',Ce?n.jsxs("label",{style:Hn,children:["Details"', tagsStart);
   if ([bodyStart, extrasStart, extrasEnd, tagsStart, tagsEnd].some(index => index < 0)) throw new Error('v3 detail content boundary missing');
   const areaEdit = 'n.jsxs("label",{style:Hn,children:["Area",n.jsx("select",{value:En(Dt),onChange:G=>Xa(Dt,"area",G.target.value),style:he,children:Ke.map(G=>n.jsx("option",{value:G,children:G},G))})]}),';
-  const extras = panel.slice(extrasStart, extrasEnd) + ',' + panel.slice(tagsStart, tagsEnd);
+  const extras = panel.slice(extrasStart, extrasEnd) + ',' + panel.slice(tagsStart, tagsEnd) + ',' + HH_V3_EDIT_EXTRAS;
   panel = panel.slice(0, bodyStart) + `(${detailBodyV3.toString()})({n,d:ha(Dt),edit:Ce&&Sa,days:Qa,selectedDays:Yi(Dt),scheduled:Ds(Dt),start:Ji(Dt),duration:br(Dt),status:hs(Dt),write:(key,value)=>Xa(Dt,key,value),update:fn=>{if(Ce){ge(!0);pe(prev=>({...prev,[Qt(Dt)]:fn(prev[Qt(Dt)]||{})}))}},stars:tsRenderStarRatingHtml,media:fo(Dt),renderMedia:items=>n.jsx(Nr,{items,scopeKey:Qt(Dt)}),captionWrite:(id,caption)=>pi(Qt(Dt),id,caption),extras:Ce&&Sa&&n.jsxs("fieldset",{"data-shared-readonly":void 0,disabled:!1,style:{border:0,padding:0,margin:0,minInlineSize:0,opacity:1},children:[${areaEdit}${extras}]})})]})})`;
   panel = panel.replace('onClick:()=>Ne(null)', 'onClick:()=>{Kt(!1),Ne(null)}');
   panel = panel.replace('maxWidth:760,margin:"24px auto"', 'maxWidth:760,margin:"0 auto"');

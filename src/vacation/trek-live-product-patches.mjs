@@ -16,7 +16,7 @@ import { buildListLogoPatch } from './thing-logo-fallback-url.mjs';
 import { LIST_LOGO_NEEDLE, patchListLogoQrGuard } from './trek-list-logo-qr-patch.mjs';
 import { patchEventsEmptyListMessage, patchSharedTabCrossFilters } from './trek-shared-tab-cross-filter-patch.mjs';
 import { applyNrPicPopupPatches } from './trek-nr-pic-popup-patches.mjs';
-export { LIST_LOGO_QR_GUARD_PATCH, patchListLogoQrGuard } from './trek-list-logo-qr-patch.mjs';
+import { patchThingPriceReader } from './trek-thing-price-bundle-patch.mjs';
 export const LIST_LOGO_PATCH = buildListLogoPatch();
 const LIST_LOGO_PATCH_NEEDLE = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"");if(raw&&!/^data:image\\/svg\\+xml/i.test(raw))return raw;return ""}';
 const REST_ALL_TAGS_NEEDLE = 'q==="restaurants"&&n.jsxs("div",{style:{display:"flex",flexDirection:"column",gap:10},children:[ci.length>0&&n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2},children:[n.jsx("button",{onClick:()=>qt([])';
@@ -270,7 +270,7 @@ export function patchSharedTripHostnameForLocalHarness(js = '') {
 
 export function applyLiveProductPatches(patched = '', options = {}) {
   const served = options.served === true;
-  let js = stripHotelBrandNameGuessing(String(patched || ''));
+  let js = patchThingPriceReader(stripHotelBrandNameGuessing(String(patched || '')), { served });
   if (js.includes(XA_STATIC_MAP_TILE_NEEDLE)) {
     js = js.replaceAll(XA_STATIC_MAP_TILE_NEEDLE, XA_STATIC_MAP_TILE_PATCH);
   }
