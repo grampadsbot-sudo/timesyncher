@@ -101,7 +101,7 @@ function detailBodyV3({ n, d, edit, days, selectedDays, scheduled, start, durati
       ] }, item.id)) }),
     ] }) : null,
     edit || text(d.address) || text(d.hours) ? n.jsxs('div', { 'data-ts-detail-info-box': 'address-hours', style: { border: '1px solid #e5e7eb', borderRadius: 10, padding: '0 10px', background: '#f8f9fa' }, children: [field('address', 'Address', true), field('hours', 'Hours', true)] }) : null,
-    field('phone', 'Phone'), field('website', 'Website'), field('area', 'Area'),
+    field('phone', 'Phone'), field('website', 'Website'), !edit ? field('area', 'Area') : null,
     field('itineraryNote', 'Itinerary note', true), field('longDetails', 'Details', true),
     field('lat', 'Latitude'), field('lng', 'Longitude'),
     edit ? field('logoUrl', 'Logo URL') : null, edit ? field('travelTime', 'Estimated travel time') : null,
@@ -113,16 +113,17 @@ export function patchThingDetailV3(source = '') {
   if (source.includes('function detailBodyV3(')) return source;
   const start = source.indexOf('Dt&&n.jsx("div",{style:{position:"fixed",inset:0,zIndex:1e4');
   const end = source.indexOf(',n.jsxs("div",{style:{maxWidth:1120', start);
-  if (start < 0 || end < 0) throw new Error('Thing v3 detail panel boundary missing');
+  if (start < 0 || end < 0) throw new Error('v3 detail panel boundary missing');
   let panel = source.slice(start, end);
   const bodyStart = panel.indexOf('(()=>{const d=ha(Dt)||{},addr=');
   const extrasStart = panel.indexOf('Zi(Dt)&&n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"repeat(2, minmax(0, 1fr))"');
   const extrasEnd = panel.indexOf(',[1,2,3,4].filter', extrasStart);
   const tagsStart = panel.indexOf('(zi(Dt)&&(Ce||or(Dt).length))');
   const tagsEnd = panel.indexOf(',Ce?n.jsxs("label",{style:Hn,children:["Details"', tagsStart);
-  if ([bodyStart, extrasStart, extrasEnd, tagsStart, tagsEnd].some(index => index < 0)) throw new Error('Thing v3 detail content boundary missing');
+  if ([bodyStart, extrasStart, extrasEnd, tagsStart, tagsEnd].some(index => index < 0)) throw new Error('v3 detail content boundary missing');
+  const areaEdit = 'n.jsxs("label",{style:Hn,children:["Area",n.jsx("select",{value:En(Dt),onChange:G=>Xa(Dt,"area",G.target.value),style:he,children:Ke.map(G=>n.jsx("option",{value:G,children:G},G))})]}),';
   const extras = panel.slice(extrasStart, extrasEnd) + ',' + panel.slice(tagsStart, tagsEnd);
-  panel = panel.slice(0, bodyStart) + `(${detailBodyV3.toString()})({n,d:ha(Dt),edit:Ce&&Sa,days:Qa,selectedDays:Yi(Dt),scheduled:Ds(Dt),start:Ji(Dt),duration:br(Dt),status:hs(Dt),write:(key,value)=>Xa(Dt,key,value),update:fn=>{if(Ce){ge(!0);pe(prev=>({...prev,[Qt(Dt)]:fn(prev[Qt(Dt)]||{})}))}},stars:tsRenderStarRatingHtml,media:fo(Dt),renderMedia:items=>n.jsx(Nr,{items,scopeKey:Qt(Dt)}),captionWrite:(id,caption)=>pi(Qt(Dt),id,caption),extras:Ce&&Sa&&n.jsxs("fieldset",{"data-shared-readonly":void 0,disabled:!1,style:{border:0,padding:0,margin:0,minInlineSize:0,opacity:1},children:[${extras}]})})]})})`;
+  panel = panel.slice(0, bodyStart) + `(${detailBodyV3.toString()})({n,d:ha(Dt),edit:Ce&&Sa,days:Qa,selectedDays:Yi(Dt),scheduled:Ds(Dt),start:Ji(Dt),duration:br(Dt),status:hs(Dt),write:(key,value)=>Xa(Dt,key,value),update:fn=>{if(Ce){ge(!0);pe(prev=>({...prev,[Qt(Dt)]:fn(prev[Qt(Dt)]||{})}))}},stars:tsRenderStarRatingHtml,media:fo(Dt),renderMedia:items=>n.jsx(Nr,{items,scopeKey:Qt(Dt)}),captionWrite:(id,caption)=>pi(Qt(Dt),id,caption),extras:Ce&&Sa&&n.jsxs("fieldset",{"data-shared-readonly":void 0,disabled:!1,style:{border:0,padding:0,margin:0,minInlineSize:0,opacity:1},children:[${areaEdit}${extras}]})})]})})`;
   panel = panel.replace('onClick:()=>Ne(null)', 'onClick:()=>{Kt(!1),Ne(null)}');
   panel = panel.replace('maxWidth:760,margin:"24px auto"', 'maxWidth:760,margin:"0 auto"');
   panel = panel.replace('children:[n.jsxs("div",{style:{display:"flex",flexDirection:"row",justifyContent:"space-between"', 'children:[Ce&&Sa?n.jsx("select",{"aria-label":"Type",value:It(Dt),onChange:e=>Xa(Dt,"category",e.target.value),style:{width:120,fontSize:11,padding:6,border:"1px solid #d1d5db",borderRadius:6},children:Fa.map(value=>n.jsx("option",{value,children:Jn(value)},value))}):n.jsx("div",{"data-ts-detail-category":"1",style:{fontSize:10,fontWeight:800,letterSpacing:1,color:"#6b7280",textTransform:"uppercase"},children:Jn(It(Dt))}),n.jsxs("div",{style:{display:"flex",flexDirection:"row",justifyContent:"space-between"');
