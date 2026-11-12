@@ -5,8 +5,14 @@ import path from 'node:path';
 import { createChatEditCopyAcceptance } from './acceptance-chat-edit-copy-server.mjs';
 import { buildChatItineraryOverridesPutBody } from '../src/vacation/chat-itinerary-edit-day.mjs';
 import { applySetTimeOp } from '../src/vacation/chat-itinerary-edit.mjs';
-import { offlineParseItineraryEditIntent, runChatItineraryEditTurn } from '../src/vacation/chat-itinerary-edit.mjs';
+import {
+  offlineParseItineraryEditIntent,
+  resolvePlaceByQuery,
+  runChatItineraryEditTurn,
+} from '../src/vacation/chat-itinerary-edit.mjs';
 import { webAccessCookieName, webAccessTokenHash } from '../src/vacation/web-access.mjs';
+import { buildDayTimeline } from '../apps/vacation-client/src/lib/dayTimelineModel.mjs';
+import { placeAssignedOnDay } from '../src/vacation/chat-itinerary-edit-assignment.mjs';
 
 const copySlug = 'chat-edit-copy-a47f5a7f2150c5e887a81972';
 const nycSharedFixture = JSON.parse(
@@ -98,6 +104,70 @@ const mergeSharedOverrides = (thingOverrides, patch) => {
   }
 };
 
+function issueCopyTripPayload() {
+  return {
+    trip: { id: 199 },
+    days: [
+      { id: 1242, day_number: 1, title: 'Day 1' },
+      { id: 1243, day_number: 2, title: 'Day 2' },
+    ],
+    places: [
+      { id: 8883, name: 'Carbone', lat: 40.726, lng: -73.9997, category: 'restaurant', place_time: '21:15' },
+      { id: 8967, name: 'Zinc Bar', lat: 40.7295, lng: -73.9992, category: 'bar', description: 'jazz bar cocktails' },
+    ],
+    assignments: {
+      1242: [{
+        id: 8001, day_id: 1242, place_id: 8883, order_index: 3, place: { id: 8883, name: 'Carbone' },
+      }],
+      1243: [],
+    },
+    thingOverrides: {
+      'place:8883': { timeline: true, dayIds: [1242], perDaySchedule: { 1242: { startTime: '21:15' } } },
+    },
+  };
+}
+
+const issueStored = issueCopyTripPayload();
+assert.equal(resolvePlaceByQuery(issueStored, 'Carbone').place.id, 8883);
+assert.equal(resolvePlaceByQuery(issueStored, 'Zinc Bar').place.id, 8967);
+
+const runIssueCopyTurn = (customerTurn) => runChatItineraryEditTurn({
+  db: copyDb,
+  trip: { id: 'trip-copy-859', metadata: { sharedToken: copySlug } },
+  customerTurn,
+  httpReq: { headers: { cookie: `${webAccessCookieName()}=${encodeURIComponent(copySession)}` } },
+  env: { ...copyEditEnv, CHAT_ITINERARY_EDIT_OFFLINE_PARSE: '1' },
+  extractIntent: offlineParseItineraryEditIntent,
+  fetchPayload: async () => structuredClone(issueStored),
+  putOverrides: async ({ overrides }) => {
+    mergeSharedOverrides(issueStored.thingOverrides, overrides);
+  },
+  putAssignmentMove: async ({ newDayId }) => {
+    const { applyAssignmentMoveOnPayload } = await import('../src/vacation/chat-itinerary-edit-assignment.mjs');
+    Object.assign(issueStored, applyAssignmentMoveOnPayload(issueStored, {
+      placeId: 8883,
+      fromDayId: 1242,
+      toDayId: newDayId,
+      assignmentId: 8001,
+    }));
+  },
+  postDayAssignment: async ({ dayId, placeId }) => {
+    const { applyAssignmentCreateOnPayload } = await import('../src/vacation/chat-itinerary-edit-assignment.mjs');
+    Object.assign(issueStored, applyAssignmentCreateOnPayload(issueStored, { placeId, dayId }));
+  },
+});
+
+const issueDay2 = issueStored.days.find((d) => d.day_number === 2);
+const issueTurn1 = await runIssueCopyTurn('Move Carbone to 8:30 PM on Day 2');
+assert.equal(issueTurn1.applied, true, issueTurn1.reason || issueTurn1.replyContext);
+assert.ok(placeAssignedOnDay(issueStored, 8883, issueDay2.id));
+const issueCarboneRow = buildDayTimeline(issueStored, issueDay2).find((r) => r.place?.id === 8883);
+assert.equal(issueCarboneRow?.startLabel, '20:30');
+
+const issueTurn2 = await runIssueCopyTurn('Add a bar hop at Zinc Bar before Carbone on day 2.');
+assert.equal(issueTurn2.applied, true, issueTurn2.reason || issueTurn2.replyContext);
+assert.ok(placeAssignedOnDay(issueStored, 8967, issueDay2.id));
+
 const runCopyTurn = (customerTurn) => runChatItineraryEditTurn({
   db: copyDb,
   trip: { id: 'trip-copy-859', metadata: { sharedToken: copySlug } },
@@ -123,9 +193,6 @@ const runCopyTurn = (customerTurn) => runChatItineraryEditTurn({
     copyStored = applyAssignmentCreateOnPayload(copyStored, { placeId, dayId });
   },
 });
-
-import { buildDayTimeline } from '../apps/vacation-client/src/lib/dayTimelineModel.mjs';
-import { placeAssignedOnDay } from '../src/vacation/chat-itinerary-edit-assignment.mjs';
 
 const turn1 = await runCopyTurn('Move Carbone to 8:30 PM on Day 2');
 assert.equal(turn1.applied, true, turn1.reason || turn1.replyContext);
