@@ -64,17 +64,52 @@ assert.doesNotMatch(bundle, /marginLeft:-8,marginRight:-8,width:"calc\(100% \+ 1
 assert.doesNotMatch(bundle, /data-day-itinerary-mount|data-trek-list/);
 assert.match(bundle, /"data-ts-list-row-name":"1",style:\{minWidth:0,maxWidth:"100%",flex:"1 1 auto",display:"inline-flex",alignItems:"center",lineHeight:1,whiteSpace:"normal",overflowWrap:"anywhere"\}/);
 assert.match(bundle, /"data-list-summary":"1","data-summary-src":"thing",style:\{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"visible",whiteSpace:"normal",overflowWrap:"anywhere"/);
-assert.match(bundle, /color:"#0f766e",fontWeight:900,flexShrink:0\},children:ie\(G\)/);
+assert.match(bundle, /"data-ts-list-price":"1",style:\{whiteSpace:"nowrap",flexShrink:0,color:"#0f766e",fontWeight:900\},children:bn\(G\)\?eu\(G\)\[1\]:ie\(G\)\?ie\(G\)\+\(Zi\(G\)\?" \/ night":" total"\):""/);
+assert.match(bundle, /"data-ts-travel-list-header":"1"/);
 
 const headerStart = bundle.indexOf('be=({item:G})=>');
 const rowEnd = bundle.indexOf(',tt=G=>', headerStart);
 assert.ok(headerStart > 0 && rowEnd > headerStart);
 const jsx = (type, props) => typeof type === 'function' ? type(props) : { type, props };
 function renderedRow(place, expanded) {
-  const env = { n: { jsx, jsxs: jsx }, J: (p) => p.name, ie: (p) => p.price, uc: () => 'Car', Bs: String,
-    mr: (p) => p.name, rr: (p) => p.summary, Mi: (p) => p.category === 'car', Zi: (p) => p.category === 'hotel', bn: (p) => p.category === 'flight', eu: (p) => [p.name, p.price], QoRest: () => null,
-    tsPrimaryPlaceStarRating: () => '', tsRenderStarRatingHtml: () => '', tsThingReviewLines: () => '', ha: (p) => p, fo: () => [], _l: (p) => p.logoUrl,
-    Qt: (p) => p.id, It: (p) => p.category, Sa: expanded, xt: null, kl: () => null, Ce: false, Ds: () => false, Nr: () => null, dc: () => null };
+  const env = {
+    n: { jsx, jsxs: jsx },
+    J: (p) => p.name,
+    ie: (p) => p.price,
+    uc: () => 'Car',
+    Bs: String,
+    mr: (p) => p.name,
+    rr: (p) => p.summary,
+    Mi: (p) => p.category === 'car',
+    Zi: (p) => p.category === 'hotel',
+    bn: (p) => p.category === 'flight',
+    eu: (p) => [p.name, p.price],
+    QoRest: () => null,
+    tsPrimaryPlaceStarRating: () => '',
+    tsRenderStarRatingHtml: () => '',
+    tsStarRatingAria: () => '',
+    tsFltLegTz: () => ({ depAbbr: '', arrAbbr: '' }),
+    tsThingReviewLines: () => '',
+    ha: (p) => p,
+    fo: () => [],
+    _l: (p) => p.logoUrl,
+    Qt: (p) => p.id,
+    It: (p) => p.category,
+    Sa: expanded,
+    xt: null,
+    kl: () => null,
+    Ce: false,
+    Ds: () => false,
+    Nr: () => null,
+    dc: () => null,
+    la: { start_date: '2026-06-17' },
+    Qa: [],
+    Yi: () => [],
+    Ar: () => '',
+    hn: () => '',
+    Ne: () => {},
+    lc: () => {},
+  };
   return new Function(...Object.keys(env), `const ${bundle.slice(headerStart, rowEnd)};return Oe`)(...Object.values(env))(place);
 }
 function descendants(node) {
@@ -100,7 +135,8 @@ for (const expanded of [false, true]) {
     assert.equal(summaryNode.props.children, summary);
     assert.equal(summaryNode.props.style.whiteSpace, 'normal');
     assert.equal(nodes.find((v) => v.type === 'strong').props.children, name);
-    const priceNode = nodes.find((v) => v.props.children === '$1,234');
+    const priceNode = nodes.find((v) => v.props['data-ts-list-price']);
+    assert.equal(priceNode.props.children, '$1,234 / night');
     assert.equal(priceNode.props.style.flexShrink, 0);
     assert.equal(priceNode.props.style.whiteSpace, 'nowrap');
   }

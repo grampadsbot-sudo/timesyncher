@@ -4,6 +4,8 @@ Craig-asked: 2026-11-12 11:35 AM PT, bot-admin/decisions/vk-edit-mode-20261112, 
 
 Update the existing TREK Thing panel to the approved view/edit section order. Visits support multiple days and times, independent statuses, add/remove controls and clocks without seconds. Story inclusion writes only includeInTripRecap; Next Time writes only nextTime. Sparse Things expose the same editable fields, and empty view sections disappear. Happy Hour is one text field; Reviews stay read-only with gold stars; Photos & videos uses bound media and the existing caption persistence. Keep rating/price in the header and show a checkmark beside Close during editing.
 
+Host merged `origin/vk` at 9e641b63 into d535c3ac (2026-11-13); conflicts resolved keeping #969 detail v3 patches plus vk list-row-dates.
+
 Validation on the uncommitted candidate based on 6683cfc3e72156ca67d47f08f958d4bf75485185:
 
 - node scripts/test_issue_959_owner_pencil_webkit.mjs: iPhone WebKit touch acceptance at 390 and 430, owner/viewer access, flag independence, repeated visits, removal, reload persistence, mixed media, and sparse Story/Happy Hour/Hours fill and clear. ACCEPTANCE_DIR writes acceptance/969.json; CAPTURE_DIR writes the five view/edit states at both widths.

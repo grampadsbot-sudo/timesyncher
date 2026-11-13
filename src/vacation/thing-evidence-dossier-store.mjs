@@ -275,10 +275,15 @@ function readStoredDossierSync(dossierKey, env = process.env) {
 }
 
 export async function loadDossiersByKeys(keyByPlaceId = {}, { env = process.env, storeImpl } = {}) {
+  const rows = await Promise.all(
+    Object.entries(keyByPlaceId).map(async ([placeId, dossierKey]) => {
+      const { dossier } = await loadThingEvidenceDossierResolved(dossierKey, { env, storeImpl, placeId });
+      return dossier?.pages?.length ? [placeId, dossier] : null;
+    }),
+  );
   const out = {};
-  for (const [placeId, dossierKey] of Object.entries(keyByPlaceId)) {
-    const { dossier } = await loadThingEvidenceDossierResolved(dossierKey, { env, storeImpl, placeId });
-    if (dossier?.pages?.length) out[placeId] = dossier;
+  for (const row of rows) {
+    if (row) out[row[0]] = row[1];
   }
   return out;
 }

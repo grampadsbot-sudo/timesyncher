@@ -106,6 +106,14 @@ export function visibleLogoDomCheckSource() {
       if (chip.dataset.tsLogoFailed === '1' && !text && !fbVisible(fb)) bad.push({ reason: 'failed_without_fallback' });
       if (img && img.complete && img.naturalWidth > 0 && img.naturalWidth < 16) bad.push({ reason: 'tiny_logo', src: (img.currentSrc || img.src || '').slice(0, 120), nw: img.naturalWidth });
       if (img && img.complete && img.naturalWidth === 0) bad.push({ reason: 'broken_img', src: (img.currentSrc || img.src || '').slice(0, 120) });
+      const layout = img && img.getBoundingClientRect();
+      if (img && imgLoaded(img, chip) && layout && (layout.width < 2 || layout.height < 2)) {
+        bad.push({ reason: 'unpainted_logo', src: (img.currentSrc || img.src || '').slice(0, 120), w: layout.width, h: layout.height });
+      }
+      const failedImg = chip.dataset.tsLogoFailed === '1' ? chip.querySelector('img.tiny-logo, img.tsv-logo') : null;
+      if (failedImg && failedImg.style.display !== 'none' && imgLoaded(failedImg, chip)) {
+        bad.push({ reason: 'failed_chip_still_showing_img' });
+      }
     }
     return { pass: bad.length === 0, bad, checked: chips.length };
   })()`;

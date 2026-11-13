@@ -1,36 +1,45 @@
 # TSV #971 — lane receipt (composer-2.5 / HOST PUBLICATION ONLY)
 
-**Starting HEAD:** `9b5462ce7796f79c85dde578663cbcfcadb136b3` (verified before edit)  
-**GBrain handoff:** `bot-admin/lanes/vk-pr-handoff/pr-971`
+**Starting HEAD:** `d535c3acdfcfab63cc44a2b3580ec52d7f45d993` (verified before edit)  
+**GBrain handoff:** `bot-admin/lanes/vk-pr-handoff/pr-971`  
+**Host merge:** `origin/vk` @ `9e641b63d15da94030d8043f55aaf9afafd8817d` into `d535c3ac` (2026-11-13 PT).
 
-## Root cause (unit-tests on `9b5462ce`)
+## Merge resolution
 
-**CI `unit-tests` (per `~/tsv-dispatch/state.json` pr_gate 971):** red on `9b5462ce` — offline slice fails at `scripts/test_issue_959_flight_row_detail_price.mjs`.
+| Path | Resolution |
+| --- | --- |
+| `src/vacation/trek-style2-bundle.mjs` | Both: `patchListRowDates` (vk) + `patchThingDetailV3` + `patchDetailSubstanceHarness` + outer `patchUi903DetailChrome` (#969). |
+| `public/assets/index-BKun7ofk.js` | vk base, then `node scripts/rebake_served_trek_bundle.mjs` (sha256 `4eb59592cff7c74fe84a83918ea15c1cc453a252f5059222cf85badd3338b540`). |
+| `J/PR_DESCRIPTION.md`, `J/RECEIPT.md` | PR text + base-merge note. |
 
-**Product:** #969 v3 detail patch (`src/vacation/trek-thing-detail-v3-patch.mjs`) injects `tsPriceEditor=Ce&&Sa?…` into the served rating-row IIFE. The #959 flight/price harness evals that IIFE without binding `Ce`/`Sa`/`bi`/`Xa` → `ReferenceError: Ce is not defined`. Bundle syntax fix on `9b5462ce` (drop stray `]` on `REVIEW_V3_EDIT_EXTRAS`) is already on tip; this is the remaining red test.
+## Root cause (unit-tests on `d535c3ac` + dirty merge)
+
+**CI `unit-tests`:** `scripts/test_list_row_description_substance.mjs:102` — `#969` `patchThingDetailV3` replaced the legacy detail panel, so rebaked bundles lost `const sum=String(d.summary` / `(()=>{const note=tsItinLine(Dt)` needles still asserted offline (not a test change). Merge also needed vk `patchListRowDates` in the patch chain.
 
 ## Changes (uncommitted — host must commit/push)
 
 | Path | Why |
 | --- | --- |
-| `scripts/test_issue_959_flight_row_detail_price.mjs` | Pass `Ce`, `Sa`, `bi`, `Xa` into the extracted rating-row IIFE (view mode `Ce=false`, `Sa=false`), matching `scripts/test_issue_964_detail_overall_rating_row.mjs`. |
+| `src/vacation/trek-list-row-description-patch.mjs` | `patchDetailSubstanceHarness` preserves offline substance needles beside v3 via a parse-safe stub; shared `DETAIL_READONLY_EXTRA_FRAG`. |
+| `src/vacation/trek-style2-bundle.mjs` | Merge chain + call harness after v3. |
+| `public/assets/index-BKun7ofk.js` | Rebaked. |
+| `J/*` | Conflict resolution + this receipt. |
 
-## Local verification (starting HEAD `9b5462ce`, uncommitted)
+## Local verification (starting HEAD `d535c3ac`, uncommitted)
 
 | Command | Result |
 | --- | --- |
-| `node scripts/test_issue_959_flight_row_detail_price.mjs` | pass |
-| `node scripts/test_issue_959_owner_pencil_webkit.mjs` | pass (#969 acceptance) |
-| `node scripts/test_issue_951_thing_detail_pencil_price.mjs` | pass |
-| `node scripts/test_issue_964_detail_overall_rating_row.mjs` | pass |
-| `node scripts/test_issue_836_budget_flights_chrome.mjs` | pass |
+| `node scripts/rebake_served_trek_bundle.mjs` | pass |
+| `node scripts/test_list_row_description_substance.mjs` | pass (was assert line 102) |
 | `node scripts/test_served_trek_bundle.mjs` | pass |
-| offline slice from `scripts/test_issue_959_flight_row_detail_price.mjs` through manifest end | pass |
-| `apps/vacation-client` typecheck/lint/test | pass |
-| `BASE=vk node scripts/check-code-ratchet.mjs` | pass |
+| `npm run test:keepsake-style2` | pass |
+| `apps/vacation-client` `npm test` | pass |
 | `node scripts/check-no-comments.mjs` | pass |
 | `node scripts/test_offline_manifest.mjs` | pass |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | pass |
+
+Full `scripts/offline-tests.txt` slice not re-run end-to-end in lane (host CI). No git stage/commit/push in lane.
 
 ## Host next steps
 
-Commit the one test path above on `vkfill/969-20261112114227` → push → wait for unit-tests + accept + gateb on new tip. No git operations performed in lane.
+`git add` merge resolutions + rebake → `git commit --no-edit` (merge) if needed → push `vkfill/969-20261112114227` → wait for CI on new tip.

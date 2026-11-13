@@ -1,6 +1,7 @@
 import { sql } from './db.mjs';
 import { cleanText, headerValue, sendJson, sendSharedTripJson, vacationAppErrorBody } from './http.mjs';
 import {
+  invalidateSharedUpstreamCacheForSlug,
   readCachedUpstreamShared,
   sharedUpstreamCacheKey,
   writeCachedUpstreamShared,
@@ -288,6 +289,7 @@ async function respondShareEditAccess(req, res, shareToken) {
 }
 
 async function proxyConfiguredUpstream(req, res, trekPath) {
+  const shareToken = shareTokenFromTrekPath(trekPath);
   const url = new URL(req.url || '/', 'https://timesyncher.com');
   const incomingQuery = new URLSearchParams(url.search);
   incomingQuery.delete('trekPath');
@@ -306,6 +308,9 @@ async function proxyConfiguredUpstream(req, res, trekPath) {
     headers,
     body: chunks.length ? Buffer.concat(chunks) : undefined,
   });
+  if (req.method !== 'GET' && req.method !== 'HEAD' && upstream.ok && shareToken) {
+    invalidateSharedUpstreamCacheForSlug(shareToken);
+  }
   const contentType = upstream.headers.get('content-type') || '';
   res.statusCode = upstream.status;
   res.setHeader('cache-control', 'no-store');

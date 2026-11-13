@@ -16,19 +16,28 @@ export function trekPublicBase(env = process.env) {
   return base;
 }
 
+export function buildTrekWebAccessRequestHeaders(sessionToken) {
+  const token = clean(sessionToken, 400);
+  if (!token) return null;
+  return {
+    accept: 'application/json',
+    'content-type': 'application/json',
+    cookie: `${webAccessCookieName()}=${encodeURIComponent(token)}`,
+    'x-timesyncher-web-access-token': token,
+  };
+}
+
 async function trekSharedEditFetch({ slug, method, path, body, webAccessToken, env = process.env }) {
   const guard = shareSlugEditGuardDecision(slug);
   if (!guard.ok) throw Object.assign(new Error(guard.reason), { statusCode: 403 });
   const sessionToken = clean(webAccessToken, 400);
   if (!sessionToken) throw Object.assign(new Error('web_edit_access_required'), { statusCode: 403 });
+  const headers = buildTrekWebAccessRequestHeaders(sessionToken, env);
+  if (!headers) throw Object.assign(new Error('web_edit_access_required'), { statusCode: 403 });
   const base = trekPublicBase(env);
   const res = await fetch(`${base}${path.startsWith('/') ? path : `/${path}`}`, {
     method,
-    headers: {
-      accept: 'application/json',
-      'content-type': 'application/json',
-      cookie: `${webAccessCookieName()}=${encodeURIComponent(sessionToken)}`,
-    },
+    headers,
     body: body != null ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {
@@ -62,10 +71,11 @@ async function putSharedTripAssignmentMove({
   if (putAssignmentMove) {
     return await putAssignmentMove({ slug, tripId, assignmentId, newDayId, orderIndex, body, webAccessToken, env });
   }
+  const token = clean(slug, 240);
   await trekSharedEditFetch({
     slug,
     method: 'PUT',
-    path: `/api/trips/${encodeURIComponent(String(tripId))}/assignments/${encodeURIComponent(String(assignmentId))}/move`,
+    path: `/api/shared/${encodeURIComponent(token)}/assignments/${encodeURIComponent(String(assignmentId))}/move`,
     body,
     webAccessToken,
     env,
@@ -82,10 +92,11 @@ async function postSharedTripDayAssignment({
   if (postDayAssignment) {
     return await postDayAssignment({ slug, tripId, dayId, placeId, orderIndex, body, webAccessToken, env });
   }
+  const token = clean(slug, 240);
   await trekSharedEditFetch({
     slug,
     method: 'POST',
-    path: `/api/trips/${encodeURIComponent(String(tripId))}/days/${encodeURIComponent(String(dayId))}/assignments`,
+    path: `/api/shared/${encodeURIComponent(token)}/days/${encodeURIComponent(String(dayId))}/assignments`,
     body,
     webAccessToken,
     env,

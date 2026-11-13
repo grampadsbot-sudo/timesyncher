@@ -83,6 +83,7 @@ try {
       tsStarRatingAria: () => '4.5 out of 5 stars', fo: () => [], _l: () => '',
       Qt: (p) => p.id, It: () => 'hotel', Sa: false, xt: null, Ce: false,
       kl: () => null, Ds: () => false, Nr: () => null,
+      la: { start_date: '2026-06-17' }, Qa: [], Yi: () => [], Ar: () => '', hn: () => '',
       dc: () => jsx('span', { style: { width: 28, minWidth: 28, height: 28 } }),
     };
     const render = new Function(...Object.keys(env), `const ${rows};return Oe;`)(...Object.values(env));
@@ -98,7 +99,9 @@ try {
       const header = row.querySelector('[data-ts-thing-header]').getBoundingClientRect();
       const rating = row.querySelector('[data-ts-list-row-rating]').getBoundingClientRect();
       const glyphs = row.querySelector('.ts-star-rating').getBoundingClientRect();
-      const price = row.querySelector('[data-ts-list-row-rating]').previousElementSibling.getBoundingClientRect();
+      const dates = row.querySelector('[data-ts-list-date-range]').getBoundingClientRect();
+      const price = row.querySelector('[data-ts-list-price]').getBoundingClientRect();
+      const nameRow = row.querySelector('[data-ts-logo-name-pair]').getBoundingClientRect();
       let clipped = false;
       for (let el = title; el && el !== row; el = el.parentElement) {
         const style = getComputedStyle(el);
@@ -107,17 +110,20 @@ try {
       return { name: title.textContent, lines: new Set(rects.map((r) => Math.round(r.top))).size, clipped,
         inBounds: rects.every((r) => r.left >= header.left && r.right <= header.right),
         clearOfStars: rects.every((r) => r.right <= glyphs.left || r.bottom <= glyphs.top || r.top >= glyphs.bottom),
-        starsRight: Math.abs(glyphs.right - header.right) < 1 && glyphs.width > 80, priceGap: rating.left - price.right };
+        starsBeforeDates: glyphs.width > 40 && dates.left >= glyphs.right - 4,
+        datesRight: dates.right >= header.right - 4 && dates.left > glyphs.right,
+        priceTop: price.top <= nameRow.bottom + 2 && price.right <= header.right + 1 };
     });
   }, { rows: bundle.slice(start, end), names, stars: renderStarRatingHtml(4.5) });
   for (const [i, measured] of measurements.entries()) {
     assert.equal(measured.name, names[i]);
-    assert.ok(measured.lines > 0 && measured.lines <= 2, `${measured.name}: ${measured.lines} lines at 390px`);
+    assert.ok(measured.lines > 0 && measured.lines <= 3, `${measured.name}: ${measured.lines} lines at 390px`);
     assert.equal(measured.clipped, false, `${measured.name}: full name visible`);
     assert.equal(measured.inBounds, true, `${measured.name}: name stays in row`);
     assert.equal(measured.clearOfStars, true, `${measured.name}: name does not overlap stars`);
-    assert.equal(measured.starsRight, true, `${measured.name}: stars right-aligned`);
-    assert.ok(measured.priceGap >= 0 && measured.priceGap <= 9, `${measured.name}: price adjacent to stars`);
+    assert.equal(measured.starsBeforeDates, true, `${measured.name}: stars precede dates on second row`);
+    assert.equal(measured.datesRight, true, `${measured.name}: dates right-aligned`);
+    assert.equal(measured.priceTop, true, `${measured.name}: price on name row`);
   }
 } finally {
   await browser.close();
