@@ -116,12 +116,50 @@ function ratingTupleMatchesQuote({ site, average, count, scale, quote }) {
   const normalized = quote.replace(/\s+/g, ' ').trim();
   const explicit = normalized.match(/^(\d+(?:\.\d+)?)\s*(?:\/|(?:out )?of)\s*(5|10)\s*(?:bubbles|stars)?\s*(?:Very good|Good|Great|Excellent)?\s*\(?([\d,]+)\s+reviews?\)?$/i);
   const implicit = site === 'tripadvisor' && normalized.match(/^(\d+(?:\.\d+)?)\s+(?:Very good|Good|Great|Excellent)\s*\(([\d,]+)\)$/i);
-  const named = normalized.match(/^(yelp|tripadvisor|tripadvisor\.com|trip\.com) rating (\d+(?:\.\d+)?) from ([\d,]+) reviews?$/i);
+  const named = normalized.match(/^(yelp|tripadvisor|tripadvisor\.com|trip\.com|priceline) rating (\d+(?:\.\d+)?) from ([\d,]+) reviews?$/i);
   const namedTuple = named && named[1].toLowerCase().replace('.com', '') === site.replace('.com', '')
     ? [Number(named[2]), 5, Number(named[3].replace(/,/g, ''))] : null;
+  const brandLine = site === 'priceline'
+    && normalized.match(/^(.+?)\s+(\d+(?:\.\d+)?)\s+([\d,]+)\s+reviews?\b/i);
+  const brandTuple = brandLine ? [Number(brandLine[2]), 10, Number(brandLine[3].replace(/,/g, ''))] : null;
   const tuple = explicit ? [Number(explicit[1]), Number(explicit[2]), Number(explicit[3].replace(/,/g, ''))]
-    : implicit ? [Number(implicit[1]), 5, Number(implicit[2].replace(/,/g, ''))] : namedTuple;
+    : implicit ? [Number(implicit[1]), 5, Number(implicit[2].replace(/,/g, ''))] : namedTuple ?? brandTuple;
   return Boolean(tuple && tuple[0] === average && tuple[1] === scale && tuple[2] === count);
+}
+
+function pricelineQuoteCandidates(result) {
+  const rows = [];
+  const push = (body, sourceUrl) => {
+    const quote = text(body);
+    if (quote) rows.push({ quote, sourceUrl: text(sourceUrl) });
+  };
+  for (const claim of list(result.summaryClaims)) {
+    if (typeof claim === 'string') push(claim, '');
+    else push(claim?.claim || claim?.text, claim?.sourceUrl);
+  }
+  const written = result.fields && typeof result.fields === 'object' ? result.fields : null;
+  if (written) {
+    for (const field of Object.values(written)) {
+      for (const claim of list(field?.claims)) push(claim?.text, claim?.sourceUrl);
+    }
+  }
+  return rows;
+}
+
+function applyTenScaleRatingBinding(dossier, pages, {
+  site, average, count, scale, quote, index, rejected, pageSupports, voiceAllowed,
+}) {
+  if (!voiceAllowed || dossier.ratingEvidence || index < 0 || !quote) return false;
+  if (!['yelp', 'google', 'tripadvisor', 'trip.com', 'restaurantji', 'exa', 'priceline'].includes(site)) return false;
+  if (![5, 10].includes(scale) || average <= 0 || average > scale || !Number.isInteger(count) || count <= 0) return false;
+  if (!ratingTupleMatchesQuote({ site, average, count, scale, quote })) return false;
+  if (claimTextWasRejected(quote, rejected) || !pageSupports(index, quote)) return false;
+  const rating = { average, count, scaleMax: scale, quote, url: pages[index].url, source: site };
+  pages[index].braveRating = rating;
+  dossier.rating = Math.round((average * 50) / scale) / 10;
+  dossier.reviewsAvailable = count;
+  dossier.ratingEvidence = { ...rating, pages: [`p${index + 1}`] };
+  return true;
 }
 
 export function vkSearchResultToDossier(result = {}, place = {}) {
@@ -283,15 +321,23 @@ export function vkSearchResultToDossier(result = {}, place = {}) {
     const scale = Number(evidence.scale);
     const quote = text(evidence.quote);
     const index = text(evidence.sourceUrl) ? pageIndex(text(evidence.sourceUrl)) : -1;
-    if (['yelp', 'google', 'tripadvisor', 'trip.com', 'restaurantji', 'exa'].includes(site)
-      && [5, 10].includes(scale) && average > 0 && average <= scale && Number.isInteger(count) && count > 0
-      && ratingTupleMatchesQuote({ site, average, count, scale, quote })
-      && quote && !claimTextWasRejected(quote, rejected) && pageSupports(index, quote)) {
-      const rating = { average, count, scaleMax: scale, quote, url: pages[index].url, source: site };
-      pages[index].braveRating = rating;
-      dossier.rating = Math.round((average * 50) / scale) / 10;
-      dossier.reviewsAvailable = count;
-      dossier.ratingEvidence = { ...rating, pages: [`p${index + 1}`] };
+    applyTenScaleRatingBinding(dossier, pages, {
+      site, average, count, scale, quote, index, rejected, pageSupports, voiceAllowed,
+    });
+  }
+
+  if (!dossier.ratingEvidence && voiceAllowed && text(result.rating?.primarySource).toLowerCase() === 'priceline') {
+    const average = Number(result.rating?.primary ?? result.rating?.priceline);
+    const count = Number(result.reviewCount?.priceline);
+    const scale = 10;
+    if (average > 0 && average <= scale && Number.isInteger(count) && count > 0) {
+      for (const { quote, sourceUrl } of pricelineQuoteCandidates(result)) {
+        const index = sourceUrl ? pageIndex(sourceUrl)
+          : pages.findIndex((page) => /priceline\.com/i.test(page.url));
+        if (applyTenScaleRatingBinding(dossier, pages, {
+          site: 'priceline', average, count, scale, quote, index, rejected, pageSupports, voiceAllowed,
+        })) break;
+      }
     }
   }
 

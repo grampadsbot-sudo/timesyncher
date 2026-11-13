@@ -18,4 +18,44 @@ assert.equal(vkSearchResultToDossier(forged, {}).ratingEvidence, undefined, 'a q
 const offSite = load(623);
 offSite.rating.ratingEvidence = { ...offSite.rating.ratingEvidence, site: 'Some Travel Blog' };
 assert.equal(vkSearchResultToDossier(offSite, {}).ratingEvidence, undefined, 'only known review sites count');
+
+const hertzQuote = 'Hertz Corporation 8.4 266 reviews Typical Wait Time 0-15 Minutes';
+const pricelineUrl = 'https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp';
+const pricelineExplicit = {
+  provider: 'grok-bot',
+  sources: [{
+    url: pricelineUrl,
+    fetchedAt: '2026-10-29T06:30:00Z',
+    title: 'JFK cars',
+    text: `Find similar ${hertzQuote} Location 8.2`,
+    snippet: hertzQuote,
+  }],
+  rating: {
+    ratingEvidence: {
+      site: 'priceline',
+      sourceUrl: pricelineUrl,
+      quote: hertzQuote,
+      average: 8.4,
+      count: 266,
+      scale: 10,
+    },
+  },
+  voicePass: { claimSupportOk: true },
+};
+const pricelineBound = vkSearchResultToDossier(pricelineExplicit, {});
+assert.equal(pricelineBound.rating, 4.2, 'priceline /10 maps to 5-star card scale');
+assert.equal(pricelineBound.ratingEvidence.count, 266);
+assert.equal(pricelineBound.ratingEvidence.quote, hertzQuote);
+assert.equal(pricelineBound.ratingEvidence.source, 'priceline');
+assert.ok(pricelineBound.pages[0].braveRating, 'supporting page keeps braveRating');
+
+const pricelineForged = structuredClone(pricelineExplicit);
+pricelineForged.rating.ratingEvidence.quote = 'Hertz Corporation 9.9 999 reviews Typical Wait Time 0-15 Minutes';
+assert.equal(vkSearchResultToDossier(pricelineForged, {}).ratingEvidence, undefined, 'priceline quote not on page is rejected');
+
+const hertzCensus = vkSearchResultToDossier(load(710), { title: 'Hertz Compact SUV at JFK' });
+assert.equal(hertzCensus.rating, 4.2, 'JFK Hertz census binds priceline primary through field claims');
+assert.equal(hertzCensus.ratingEvidence?.quote, hertzQuote);
+assert.equal(vkSearchResultToDossier(load(609), {}).rating, undefined, 'opaque express deal stays unrated');
+
 console.log('ok vk search rating evidence');
