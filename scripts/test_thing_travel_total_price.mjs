@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { patchVk980TotalPrice } from '../src/vacation/trek-vk-980-total-price-patch.mjs';
 import { thingTravelTotalPrice, tripNightCount } from '../src/vacation/thing-travel-total-price.mjs';
 import { syncSharedTripApiBudget, trekBudgetAmount } from '../src/vacation/shared-trip-api-budget.mjs';
 
 const snapshot = JSON.parse(
-  readFileSync('/home/ubishere9995/tsv-dispatch/acceptance/fixtures/demo-nyc-99-snapshot-20261110/shared-trip.json', 'utf8'),
+  readFileSync(fileURLToPath(new URL('./fixtures/demo-nyc-99-hotel-car-total-price-20261110.json', import.meta.url)), 'utf8'),
 );
 
 const served = syncSharedTripApiBudget(snapshot);
