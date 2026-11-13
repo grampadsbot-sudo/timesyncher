@@ -33,6 +33,7 @@ assert.match(rendered, /\.ts-star-rating\{display:inline-flex/);
 const committed = await readFile(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
 assert.equal(rendered, committed, 'committed served bundle must match renderServedTrekBundle');
 
+assert.match(rendered, /I\.useLayoutEffect\(\(\)=>\{if\(!\["flights","hotels","cars"\]\.includes\(q\)\)return/);
 assert.equal(patchListRowDates(rendered), rendered, 'list date patch is idempotent');
 assert.match(rendered, /"data-ts-travel-list-header":"1"/);
 assert.match(rendered, /"data-ts-list-date-range":"1"/);

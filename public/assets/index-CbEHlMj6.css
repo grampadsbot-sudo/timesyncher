@@ -8,3 +8,4 @@
 
 [data-ts-travel-list-header] .ts-star-rating{gap:0!important}[data-ts-travel-list-header] .ts-star-rating svg{width:9px;height:9px;flex:0 0 9px}[data-ts-travel-list-header] .ts-star-full path,[data-ts-travel-list-header] .ts-star-half-full{fill:#F59E0B}
 button:has([data-ts-travel-list-header]){text-decoration:none!important}[data-ts-travel-list-header] [data-ts-list-row-name] strong{text-decoration:underline;text-decoration-color:#cbd5e1;text-underline-offset:3px}
+@media (max-width:480px){li[data-ts-list-row="1"] [data-ts-list-dates-row]{position:relative;z-index:2}}
