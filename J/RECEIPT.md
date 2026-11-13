@@ -1,33 +1,36 @@
 # TSV #971 — lane receipt (composer-2.5 / HOST PUBLICATION ONLY)
 
-**Starting HEAD:** `81aeed2239fb9069497cc0cd47102560b0a473c1` (verified before edit)  
+**Starting HEAD:** `b5a103153af602b00a4111e21e0aa8f4897845c4` (verified before edit)  
 **GBrain handoff:** `bot-admin/lanes/vk-pr-handoff/pr-971`
 
-## Root cause (unit-tests on `81aeed22`)
+## Root cause (unit-tests on `b5a10315`)
 
-**CI `scripts/test_product_gaps_staging.mjs`:** Assertions still targeted the pre-#969 detail chrome (`children:["Logo URL"` / `children:["Logo from media"` from `trek-live-product-patches.mjs`). `patchThingDetailV3` in `trek-thing-detail-v3-patch.mjs` replaces that panel with v3 (`data-ts-detail-v3`, `field('logoUrl', 'Logo URL')`, checkmark save `"data-ts-detail-save":"1"`). `renderServedTrekBundle()` output is correct; the staging gap test needles were stale.
+**CI `scripts/test_gate_b_product_row_fields.mjs`:** `patchThingDetailV3` (#969) bakes `detailBodyV3` with single-quoted `data-ts-detail-info-box` / `data-ts-detail-reviews` needles and dropped the edit-mode `[1,2,3,4].filter(G=>Ps(Dt,G)…)` block from v3 `extras`. `patchLiveProductDetailBundle()` still static-scans the committed `public/assets/index-BKun7ofk.js` for the pre-v3 minified double-quote needles. Earlier rounds only updated unrelated tests; the v3 ↔ live-detail patch contract stayed broken.
+
+## Root cause (Gate B price failures on `81aeed22` — not fixed in product this round)
+
+`~/tsv-dispatch/fixture-nyc/nyc-shared.json` + `finalizeServedSharedTripPayload()` show prices on travel rows (e.g. Delta LAS-JFK `257`, Arthouse Hotel `508`; 0 missing after finalize). Offline `node scripts/test_nyc_budget_search_fill_prices.mjs` passes. Named Gate B “have no price” lines are therefore unlikely to be a data/finalize regression on this head; host should re-run `staging-structure-v6` capture after publish and compare capture body vs fixture if prices still fail (harness timing or #969 layout baseline separate from this CI fix).
 
 ## Changes (uncommitted — host must commit/push)
 
 | Path | Why |
 | --- | --- |
-| `scripts/test_product_gaps_staging.mjs` | Align product-gap needles with #969 v3 detail body (logo URL field, save control, no legacy Logo-from-media grid). |
+| `src/vacation/trek-thing-detail-patches.mjs` | After detail patches, normalize baked v3 `data-ts-detail-*` needles to Gate B minified double-quote form. |
+| `src/vacation/trek-thing-detail-readonly-patch.mjs` | Treat v3 single-quote `address-hours` as already patched (skip readonly fieldset splice). |
+| `src/vacation/trek-thing-detail-v3-patch.mjs` | Keep edit-mode review rows (`Ps(Dt,G)` filter/map) inside v3 `extras` fieldset. |
+| `public/assets/index-BKun7ofk.js` | Rebaked via `renderServedTrekBundle()` from upstream pin in `scripts/test_served_trek_bundle.mjs`. |
 
-## Local verification (starting HEAD `81aeed22`, uncommitted)
+## Local verification (starting HEAD `b5a10315`, uncommitted)
 
 | Command | Result |
 | --- | --- |
-| `node scripts/test_product_gaps_staging.mjs` | **pass** (was CI fail on `81aeed22`) |
+| `node scripts/test_gate_b_product_row_fields.mjs` | **pass** (was CI fail on `b5a10315`) |
 | `node scripts/test_served_trek_bundle.mjs` | pass |
-| `node scripts/test_issue_903_live_qa_polish.mjs` | pass |
-| `node scripts/test_issue_959_owner_pencil_webkit.mjs` | pass |
-| `cd apps/vacation-client && npm ci && npm run typecheck && npm run lint && npm run test` | pass |
-| `node scripts/run-offline-tests.mjs` | **not full pass locally** — `test_live_transcript_dialog_pdf.mjs` uses live `gbrain` CLI on this host (`via=gbrain-cli-get_page`); CI ubuntu has no CLI and expects `bundled-get_page`. Not changed in this round. |
-
-## Gate B
-
-Brief: `gateb=failure` on `81aeed22`; `~/tsv-dispatch/logs/gateb-verdicts.jsonl` shows v6 `named: {}`, structure FAIL on NYC new-look reference screens (expected for #969 label `new-look`; pixel not a coder gate per brief). Host re-run `staging-structure-v6` after publish; no source fix attempted here.
+| `node scripts/check-no-comments.mjs` | pass |
+| `node scripts/test_offline_manifest.mjs` | pass |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | pass |
+| `node scripts/test_nyc_budget_search_fill_prices.mjs` | pass |
 
 ## Host next steps
 
-Single commit on `vkfill/969-20261112114227` with `scripts/test_product_gaps_staging.mjs` only → push → wait for unit-tests + accept + gateb on new tip. No git operations performed in lane.
+Single commit on `vkfill/969-20261112114227` with the four paths above → push → wait for unit-tests + accept + gateb on new tip. No git operations performed in lane.

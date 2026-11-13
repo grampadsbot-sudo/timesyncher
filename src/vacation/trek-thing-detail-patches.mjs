@@ -12,6 +12,21 @@ export function patchThingDetailPanel(source = '') {
   );
 }
 
+function normalizeBakedV3DetailGateBNeedles(js = '') {
+  if (!js.includes('function detailBodyV3(')) return js;
+  let next = String(js);
+  const swaps = [
+    ["'data-ts-detail-info-box': 'address-hours'", '"data-ts-detail-info-box":"address-hours"'],
+    ["'data-ts-detail-reviews': '1'", '"data-ts-detail-reviews":"1"'],
+  ];
+  for (const [from, to] of swaps) {
+    if (next.includes(from)) next = next.replaceAll(from, to);
+  }
+  return next;
+}
+
 export function patchLiveProductDetailBundle(source = '') {
-  return patchThingDetailCapture(patchThingDetailPanel(source));
+  return normalizeBakedV3DetailGateBNeedles(
+    patchThingDetailCapture(patchThingDetailPanel(source)),
+  );
 }
