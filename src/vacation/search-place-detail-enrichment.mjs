@@ -47,7 +47,7 @@ export function mergeWebDetailIntoSearchPlace(place = {}, enrichment = {}) {
     ...detail,
   };
   const title = text(place.title || place.name, 240);
-  const longDetails = text(detail.longDetails || detail.summary || place.description, 3000);
+  const longDetails = text(detail.longDetails || place.description, 3000);
   let summary = text(detail.summary, 500);
   if (!descriptionPassesDetailJudge(summary, title) || wordCount(summary) >= 30) {
     summary = shortLineFromLong(longDetails, 120);

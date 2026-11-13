@@ -1,26 +1,29 @@
-#968 follow-up on PR #970 (host-publish this patch)
+Closes #988
 
-## What changed
+## Summary
 
-- **`list-row-dates.mjs`**: `tsListDateRange` is injected before `Oe=` in the served bundle so list rows and the hotel 390px harness share the same runtime. Prose calendar dates use `Intl` month names instead of hardcoded month regex tokens (fixes secrets `DATE-LITERAL` CI).
-- **`index-BKun7ofk.js`**: Rebaked served bundle from upstream + existing trek patches.
-- **`test_shared_hotels_390_text_wrap.mjs`**: Asserts approved v3 layout (price on top row; stars left of dates on second row).
+Removes four fill fallbacks that copied **Summary** into **Details** (or seeded both from the same text), per Craig pt3372u and the essence-ladder contract (#68). When ladder output for `longDetails`/`details` is missing, those fields stay empty for a later ladder fill instead of duplicating summary text.
 
-## Verification (local, base `4f0fa505`)
+## Changes
 
-```text
-node scripts/rebake_served_trek_bundle.mjs
-node scripts/test_served_star_rating_bundle.mjs
-CHROME_PATH=/usr/bin/chromium-browser node scripts/test_shared_hotels_390_text_wrap.mjs
-node scripts/test_check_hardcoded_content.mjs
-node scripts/check-no-comments.mjs && node scripts/test_offline_manifest.mjs && BASE=vk node scripts/check-code-ratchet.mjs
-npm run test:keepsake-style2
+- `mergeWebDetailIntoSearchPlace`: no `detail.summary` → `longDetails`.
+- `applyEnrichedDetailToTripThing`: thing `description` from `detail.longDetails` only.
+- `enrichTripThing`: `sourceRecord` no longer sets `summary` from category `description`.
+- Hotel branch in `applyLiveAppListRowFields`: no longer overwrites generic/planning `summary` with `hotelNarrative` already applied to `longDetails`.
+
+## Tests
+
+```bash
+node scripts/test_acceptance_988_no_summary_details_fallback.mjs
+node scripts/test_vk_hotel_detail_fill.mjs
+node scripts/test_trip_thing_logo_metadata.mjs
+node scripts/test_offline_manifest.mjs
+BASE=vk node scripts/check-code-ratchet.mjs
 ```
 
-All exit 0 on the uncommitted tree at job end.
+All above passed locally except `check-no-comments.mjs` (needs `apps/vacation-client` TypeScript install on the host runner).
 
-## Not in this patch
+## Left alone (scope)
 
-Gate B structure captures (32 tabs) and budget price/description completeness on the NYC reference trip — host Gate B + DATA fill after CI on published head.
-
-Closes #968 (when merged with acceptance/Gate B policy satisfied).
+- Thing-detail UI layout, NYC trip 99 / 8CQX data, baselines, CI workflows, Gate B capture config.
+- Other unrelated `summary`/`description` helpers outside the four named paths.
