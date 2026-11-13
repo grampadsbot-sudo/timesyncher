@@ -1,45 +1,39 @@
-# PR #970 round — vkfill-970 tier-1 (composer-2.5, cursor-ubuntu)
+# VK fill #980 — Hotels/Cars list total price (cursor-ubuntu, composer-2.5)
 
-Outcome: **source-ready** for host publication from starting HEAD `a42768b60791ef8337785c7386881e2281e95f7d`. Not CI-green until host publishes; Gate B not re-run locally on this pass.
+Outcome: **source-ready** for host publication from starting HEAD `2cbd2b1077d0f7017a5210a805bc1d47508dc9b7`. Authority: `bot-admin/decisions/vk-hotels-cars-list-total-price-20261113`. Closes #980 when host publishes + CI green.
 
-GBrain handoff `bot-admin/lanes/vk-pr-handoff/pr-970`: **not found** on this pass (per brief).
+## Summary
 
-## Root cause (why round 2 CI still red)
+Hotels and Cars list rows, Thing detail **Price**, and Budget tab now show **stay totals** (`$N est. total` when estimated from nightly/rental rate × trip days/nights × 1.20; `$N total` when a real stored total exists). Removed `/ night` and per-day suffixes on Hotels/Cars lists.
 
-`scripts/test_shared_tab_list_summary.mjs` eval-harness for `Oe()` was not updated when #968 landed `patchListRowDates` / travel-list header v3 in `public/assets/index-BKun7ofk.js`:
+## Changed files (uncommitted)
 
-1. **ReferenceError `Ar is not defined`**: hotel rows call `Ar(G)` / `hn(G)` inside `tsListDateRange({...})` but the harness env omitted those stubs (same gap fixed earlier in `test_shared_hotels_390_text_wrap.mjs`).
-2. **Stale bundle/row assertions**: price moved to `[data-ts-list-price]` with `$X / night` suffix; old regex expected inline `children:ie(G)` on the legacy header.
-
-Product bundle + `list-row-dates.mjs` on `a42768b6` are unchanged; this round only aligns the offline harness with the served contract.
-
-## Source changes (uncommitted)
-
-| File | Why |
+| File | Change |
 | --- | --- |
-| `scripts/test_shared_tab_list_summary.mjs` | Stub `Ar`/`hn`/`la`/`Qa`/`Yi`/`tsStarRatingAria`/`tsFltLegTz`/`Ne`/`lc`; assert `data-ts-travel-list-header` + `data-ts-list-price`; hotel row price expects `$1,234 / night`. |
+| `src/vacation/thing-travel-total-price.mjs` | Core total/estimate math + served-bundle helpers `tsThingTravelTotalAmount` / `tsThingTravelTotalLabel` |
+| `src/vacation/trek-vk-980-total-price-patch.mjs` | Patches `ie()`, list price, budget `zt`, budget row label, detail Price, editor `priceIsTotal` |
+| `src/vacation/thing-price.mjs` | Hotel/car `thingBudgetAmount` uses travel-total logic |
+| `src/vacation/shared-trip-api-budget.mjs` | Promotes `stayTotal` on overrides for non-estimate hotel/car rows |
+| `src/vacation/list-row-dates.mjs` | Travel-list header price uses total label helper |
+| `src/vacation/trek-style2-bundle.mjs` | Applies `patchVk980TotalPrice` in `renderServedTrekBundle` |
+| `scripts/test_thing_travel_total_price.mjs` | Fixture checks on `demo-nyc-99-snapshot-20261110` |
+| `scripts/test_acceptance_980_hotel_car_totals.mjs` | Acceptance wrapper (unit_script per `tsv-dispatch/acceptance/980.json`) |
+| `scripts/test_728_budget_data.mjs` | Hotel estimate expects 1.20 markup |
+| `scripts/test_shared_tab_list_summary.mjs` | Patched bundle + total-price harness |
+| `scripts/offline-tests.txt` | Registers new tests |
 
-## Checks (local, starting HEAD `a42768b6`)
+**Host still required:** rebake `public/assets/index-BKun7ofk.js` via `renderServedTrekBundle` (committed bundle must match patched serve path).
+
+## Local checks (starting HEAD `2cbd2b1077d0f7017a5210a805bc1d47508dc9b7`)
 
 | Command | Result |
 | --- | --- |
-| `node scripts/test_shared_tab_list_summary.mjs` | exit 0 (was `ReferenceError: Ar is not defined`) |
-| `node scripts/test_shared_hotels_390_text_wrap.mjs` | exit 0 |
-| `node scripts/test_served_star_rating_bundle.mjs` | exit 0 |
-| `node scripts/test_budget_required_price_completeness.mjs` | exit 0 |
-| `node scripts/test_gate_b_product_row_fields.mjs` | exit 0 |
+| `node scripts/test_thing_travel_total_price.mjs` | exit 0 — Park Central `$1,210 est. total`; Belleclaire `$3,626 total`; car totals unchanged |
+| `node scripts/test_acceptance_980_hotel_car_totals.mjs` | exit 0 |
+| `node scripts/test_728_budget_data.mjs` | exit 0 |
+| `node scripts/test_shared_tab_list_summary.mjs` | exit 0 |
 | `node scripts/check-no-comments.mjs` | exit 0 |
 | `node scripts/test_offline_manifest.mjs` | exit 0 |
 | `BASE=vk node scripts/check-code-ratchet.mjs` | exit 0 |
-| `npm run test:keepsake-style2` | exit 0 |
 
-Pre-DONE gates above pass on dirty tree. No commit, stage, push, merge, rebase or deploy (HOST PUBLICATION ONLY).
-
-## Gate B / budget (left for host)
-
-- Hermes run `20261112-220558` on head `a42768b6`: **pixel FAIL** vs NYC reference (not approved baseline); `-top` ratio ~0.09–0.19; full-page **width drift** (baseline 1340 vs candidate 1280). Intentional #968 travel-list layout shift; structure JSON on candidates shows list prices present on hotels capture (`~/tsv-gateb/runs/20261112-220558/v6/_v6-hotels-390.json`).
-- Chief-dr budget **missing-price** / **hotel description quality** lines: fixture checks (`gate-b-budget-price-completeness`, `test_nyc_budget_search_fill_prices.mjs`) **pass** locally on `a42768b6`; live capture failures may reflect staging fixture/data or managing-dr verdict gaps — not addressed in this harness-only patch.
-
-## Host next
-
-One ff push to `vkfill/968-20261112114229`, wait for CI (`unit-tests` must include `scripts/test_shared_tab_list_summary.mjs`). Re-run Gate B structure mode vs staging after publish.
+No commit, stage, push, merge, rebase, or deploy (HOST PUBLICATION ONLY).

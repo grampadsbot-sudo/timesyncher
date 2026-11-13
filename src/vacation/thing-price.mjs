@@ -1,3 +1,5 @@
+import { thingTravelTotalPrice } from './thing-travel-total-price.mjs';
+
 const PER_PERSON_CATEGORIES = new Set([
   'restaurant', 'store', 'event', 'family_event', 'tour', 'transport', 'music',
   'workout', 'artist', 'theatre', 'sightseeing', 'other', 'flight',
@@ -32,6 +34,14 @@ function stayDays(row) {
 }
 
 export function thingBudgetAmount(place = {}, override = {}, category = '', shared = {}) {
+  const cat = String(category).toLowerCase();
+  if (cat === 'hotel' || cat === 'car') {
+    const total = thingTravelTotalPrice(place, override, cat, shared);
+    if (total.hasPrice) {
+      return { amount: total.amount, hasPrice: true, nightly: null };
+    }
+    return { amount: 0, hasPrice: false, nightly: null };
+  }
   const row = { ...place, ...override };
   const perPerson = perPersonThing(place, override, category);
   const explicit = row.pricePerPerson != null && row.pricePerPerson !== '' ? Number(row.pricePerPerson) : null;
