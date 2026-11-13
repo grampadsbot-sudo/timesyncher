@@ -107,25 +107,20 @@ export function listRowDateRange({ category, thing = {}, trip = {}, days = [], d
 const LIST_ROW_LAYOUT_EFFECT = 'if(I.useEffect(()=>{var G;(G=P==null?void 0:P.trip)';
 const LIST_ROW_REVEAL_MARKER = 'I.useLayoutEffect(()=>{if(![\"flights\",\"hotels\",\"cars\"].includes(q))return;const reveal=()=>{const row=document.querySelector(\'li[data-ts-list-row=\"1\"] [data-ts-list-date-range],li[data-list-row=\"1\"] [data-ts-list-date-range]\')||document.querySelector(\"[data-ts-list-date-range]\");row&&row.scrollIntoView({block:\"center\",inline:\"nearest\"})};reveal();const list=document.querySelector(\'[data-shared-live-tab=\"\'+q+\'\"]\');if(q===\"cars\"&&list&&!list.querySelector(\"[data-ts-car-brands]\")){const observer=new MutationObserver(()=>{if(list.querySelector(\"[data-ts-car-brands]\")){observer.disconnect();requestAnimationFrame(()=>requestAnimationFrame(reveal))}});observer.observe(list,{childList:true,subtree:true});return()=>observer.disconnect()}},[q]);';
 
+const LIST_ROW_RATING_UNCONDITIONAL =
+  'n.jsx("span",{"data-ts-list-row-rating":"1",style:{display:"flex",flexDirection:"row",flexWrap:"nowrap",alignItems:"center",justifyContent:"flex-start",flexShrink:0},dangerouslySetInnerHTML:{__html:tsRowStars},role:tsRowStars?"img":void 0,"aria-label":tsRowStars?tsStarRatingAria(tsRowRating):void 0})';
+export const LIST_ROW_RATING_CONDITIONAL =
+  'tsRowStars?n.jsx("span",{"data-ts-list-row-rating":"1",style:{display:"flex",flexDirection:"row",flexWrap:"nowrap",alignItems:"center",justifyContent:"flex-start",flexShrink:0},dangerouslySetInnerHTML:{__html:tsRowStars},role:"img","aria-label":tsStarRatingAria(tsRowRating)}):n.jsx("span",{"aria-hidden":"true"})';
+
+function patchListRowRatingConditional(source = '') {
+  if (!source.includes(LIST_ROW_RATING_UNCONDITIONAL)) return source;
+  return source.replaceAll(LIST_ROW_RATING_UNCONDITIONAL, LIST_ROW_RATING_CONDITIONAL);
+}
+
 function patchListRowRevealLayout(source = '') {
   if (source.includes(LIST_ROW_REVEAL_MARKER.slice(0, 48))) return source;
   if (!source.includes(LIST_ROW_LAYOUT_EFFECT)) throw new Error('list dates layout effect anchor missing');
   return source.replace(LIST_ROW_LAYOUT_EFFECT, `${LIST_ROW_REVEAL_MARKER}${LIST_ROW_LAYOUT_EFFECT}`);
-}
-
-const TRAVEL_ROW_STARS_NEEDLE =
-  'children:[n.jsx("span",{"data-ts-list-row-rating":"1",style:{display:"flex",flexDirection:"row",flexWrap:"nowrap",alignItems:"center",justifyContent:"flex-start",flexShrink:0},dangerouslySetInnerHTML:{__html:tsRowStars},role:tsRowStars?"img":void 0,"aria-label":tsRowStars?tsStarRatingAria(tsRowRating):void 0}),n.jsx("span",{"data-ts-list-date-range":"1"';
-
-const TRAVEL_ROW_STARS_PATCH =
-  'children:[tsRowStars?n.jsx("span",{"data-ts-list-row-rating":"1","data-ts-list-stars":"1",style:{display:"flex",flexDirection:"row",flexWrap:"nowrap",alignItems:"center",justifyContent:"flex-start",flexShrink:0},dangerouslySetInnerHTML:{__html:tsRowStars},role:"img","aria-label":tsStarRatingAria(tsRowRating)}):null,n.jsx("span",{"data-ts-list-date-range":"1"';
-
-function patchTravelListRowStars(source = '') {
-  if (!source.includes('"data-ts-travel-list-header":"1"')) return source;
-  if (source.includes('"data-ts-list-stars":"1"')) return source;
-  if (!source.includes(TRAVEL_ROW_STARS_NEEDLE)) {
-    throw new Error('travel list row star anchor patch did not apply');
-  }
-  return source.replace(TRAVEL_ROW_STARS_NEEDLE, TRAVEL_ROW_STARS_PATCH);
 }
 
 export function patchListRowDates(source = '') {
@@ -136,7 +131,7 @@ export function patchListRowDates(source = '') {
     const end = patched.indexOf(',Xr=fo(G)', header);
     if (start < 0 || header < 0 || end < 0) throw new Error('list dates header anchors missing');
     const original = patched.slice(header + 3, end);
-    const travel = 'n.jsxs("span",{"data-ts-thing-header":"1","data-ts-travel-list-header":"1",style:{display:"flex",flexDirection:"column",gap:6,width:"100%",minWidth:0},children:[n.jsxs("span",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,minWidth:0,width:"100%"},children:[n.jsxs("span",{"data-ts-logo-name-pair":"1",style:{display:"inline-flex",alignItems:"center",gap:6,minWidth:0,flex:"1 1 0"},children:[n.jsx(dc,{item:G}),n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere"},children:n.jsx("strong",{children:ua})})]}),n.jsx("span",{"data-ts-list-price":"1",style:{whiteSpace:"nowrap",flexShrink:0,color:"#0f766e",fontWeight:900},children:bn(G)?eu(G)[1]:ie(G)?ie(G)+(Zi(G)?" / night":" total"):""})]}),n.jsxs("span",{"data-ts-list-dates-row":"1",style:{display:"flex",alignItems:"center",justifyContent:"space-between",gap:4,width:"100%",minWidth:0},children:[tsRowStars?n.jsx("span",{"data-ts-list-row-rating":"1","data-ts-list-stars":"1",style:{display:"flex",flexDirection:"row",flexWrap:"nowrap",alignItems:"center",justifyContent:"flex-start",flexShrink:0},dangerouslySetInnerHTML:{__html:tsRowStars},role:"img","aria-label":tsStarRatingAria(tsRowRating)}):null,n.jsx("span",{"data-ts-list-date-range":"1",style:{whiteSpace:"nowrap",textAlign:"right",marginLeft:"auto",fontSize:"clamp(7px,2.55vw,11px)",fontWeight:700},children:tsListDateRange({category:It(G),thing:{...G,...ha(G),...(Zi(G)?{checkInDate:Ar(G),checkOutDate:hn(G)}:{})},trip:la,days:Qa,dayIds:Yi(G),depZone:bn(G)?tsFltLegTz(G).depAbbr:"",arrZone:bn(G)?tsFltLegTz(G).arrAbbr:""})})]})]})';
+    const travel = 'n.jsxs("span",{"data-ts-thing-header":"1","data-ts-travel-list-header":"1",style:{display:"flex",flexDirection:"column",gap:6,width:"100%",minWidth:0},children:[n.jsxs("span",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,minWidth:0,width:"100%"},children:[n.jsxs("span",{"data-ts-logo-name-pair":"1",style:{display:"inline-flex",alignItems:"center",gap:6,minWidth:0,flex:"1 1 0"},children:[n.jsx(dc,{item:G}),n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere"},children:n.jsx("strong",{children:ua})})]}),n.jsx("span",{"data-ts-list-price":"1",style:{whiteSpace:"nowrap",flexShrink:0,color:"#0f766e",fontWeight:900},children:bn(G)?eu(G)[1]:ie(G)?ie(G)+(Zi(G)?" / night":" total"):""})]}),n.jsxs("span",{"data-ts-list-dates-row":"1",style:{display:"flex",alignItems:"center",justifyContent:"space-between",gap:4,width:"100%",minWidth:0},children:[' + LIST_ROW_RATING_CONDITIONAL + ',n.jsx("span",{"data-ts-list-date-range":"1",style:{whiteSpace:"nowrap",textAlign:"right",marginLeft:"auto",fontSize:"clamp(7px,2.55vw,11px)",fontWeight:700},children:tsListDateRange({category:It(G),thing:{...G,...ha(G),...(Zi(G)?{checkInDate:Ar(G),checkOutDate:hn(G)}:{})},trip:la,days:Qa,dayIds:Yi(G),depZone:bn(G)?tsFltLegTz(G).depAbbr:"",arrZone:bn(G)?tsFltLegTz(G).arrAbbr:""})})]})]})';
     const props = (expression) => expression.slice('n.jsxs("span",'.length, -1);
     const rowEnd = patched.indexOf(',tt=G=>', end);
     if (rowEnd < 0) throw new Error('list dates row boundary missing');
@@ -146,6 +141,6 @@ export function patchListRowDates(source = '') {
       patched = patched.replace('Oe=(G,Re,zt=!1)=>', `tsListDateRange=${listRowDateRange.toString()},Oe=(G,Re,zt=!1)=>`);
     }
   }
-  patched = patchTravelListRowStars(patched);
+  patched = patchListRowRatingConditional(patched);
   return patchListRowRevealLayout(patched);
 }
