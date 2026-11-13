@@ -195,8 +195,6 @@ function centerThingLogoInk(img) {
         }
       }
       if (inkCy == null) {
-        const fb = chip.querySelector('.tsv-logo-fallback');
-        if (fb) fb.style.display = 'none';
         img.dataset.tsLogoInkDone = '1';
         return;
       }
