@@ -40,23 +40,40 @@ function detailBodyV3({ n, d, edit, days, selectedDays, scheduled, start, durati
     }
     return n.jsx('h3', { style: headingStyle, children: label });
   };
-  const field = (key, label, multiline = false, value = d[key]) => {
+  const detailSection = { story: 'story', happyHourDetails: 'happy-hour', summary: 'summary' };
+  const field = (key, label, multiline = false, value = d[key], { sparseEdit = false } = {}) => {
     if (!edit && !text(value)) return null;
-    return n.jsxs('section', { 'data-ts-detail-field': key, style: sectionStyle, children: [
-      fieldHeading(key, label),
+    const section = detailSection[key];
+    const sectionProps = section
+      ? { 'data-ts-detail-section': section, 'data-ts-detail-field': key }
+      : { 'data-ts-detail-field': key };
+    const editorAttrs = edit && key === 'story' ? { 'data-ts-story-editor': '1' }
+      : edit && key === 'happyHourDetails' ? { 'data-ts-happy-hour-editor': '1' } : {};
+    const heading = (key === 'itineraryNote' || key === 'longDetails')
+      ? fieldHeading(key, label)
+      : n.jsx('h3', { 'data-ts-section-label': '1', style: headingStyle, children: label });
+    return n.jsxs('section', { ...sectionProps, style: sectionStyle, children: [
+      heading,
       edit ? n.jsx(multiline ? 'textarea' : 'input', {
         'aria-label': label, value: String(value ?? ''), rows: multiline ? 3 : undefined,
         onChange: event => write(key, event.target.value),
         style: { ...inputStyle, ...(multiline ? { minHeight: 72, resize: 'vertical' } : {}) },
+        ...editorAttrs,
       }) : n.jsx('p', { style: { margin: 0, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }, children:
         key === 'phone' ? n.jsx('a', { href: 'tel:' + text(value).replace(/\s+/g, ''), style: { color: 'inherit' }, children: value }) :
         key === 'website' ? n.jsx('a', { href: /^https?:\/\//i.test(text(value)) ? text(value) : 'https://' + text(value), target: '_blank', rel: 'noreferrer', style: { color: 'inherit' }, children: value }) : value }),
     ] });
   };
+  const flagBind = {
+    includeInTripRecap: { 'data-ts-story-include': '1', name: 'includeInTripRecap' },
+    nextTime: { 'data-ts-next-time': '1', name: 'nextTime' },
+  };
   const flag = (key, label) => edit || d[key] === true ? n.jsxs('label', {
-    'data-ts-detail-flag': key, style: { display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, padding: '8px 0' },
-    children: [n.jsx('input', { type: 'checkbox', checked: d[key] === true, disabled: !edit, readOnly: !edit,
-      onChange: event => write(key, event.target.checked), style: { accentColor: '#111827' } }), label],
+    'data-ts-detail-flag': key, ...(flagBind[key] || {}), style: { display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, padding: '8px 0' },
+    children: [n.jsx('input', {
+      type: 'checkbox', name: flagBind[key]?.name, checked: d[key] === true, disabled: !edit, readOnly: !edit,
+      onChange: event => write(key, event.target.checked), style: { accentColor: '#111827' },
+    }), label],
   }) : null;
   const visits = scheduled ? selectedDays.flatMap(dayId => {
     const day = days.find(row => String(row.id) === String(dayId));
@@ -79,8 +96,8 @@ function detailBodyV3({ n, d, edit, days, selectedDays, scheduled, start, durati
   const visitInput = (index, key, label, value) => n.jsxs('label', { style: { minWidth: 0, fontSize: 9, color: '#6b7280' }, children: [label,
     n.jsx('input', { 'aria-label': `Visit ${index + 1} ${label}`, value: key === 'startTime' ? clock(value) : String(value ?? ''), onChange: event => changeVisit(index, key, event.target.value), style: { ...inputStyle, padding: '7px 3px', fontSize: 10, marginTop: 3 } }),
   ] });
-  const timeline = edit || visits.length ? n.jsxs('section', { 'data-ts-detail-timeline': '1', style: sectionStyle, children: [
-    n.jsx('h3', { style: headingStyle, children: 'Timeline' }),
+  const timeline = edit || visits.length ? n.jsxs('section', { 'data-ts-detail-timeline': '1', 'data-ts-detail-section': 'timeline', style: sectionStyle, children: [
+    n.jsx('h3', { 'data-ts-section-label': '1', style: headingStyle, children: 'Timeline' }),
     edit ? n.jsxs('div', { style: { display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap', marginBottom: 10 }, children: [
       n.jsx('span', { style: { fontSize: 10, color: '#6b7280', marginRight: 4 }, children: 'Days' }),
       days.map(day => {
@@ -105,7 +122,7 @@ function detailBodyV3({ n, d, edit, days, selectedDays, scheduled, start, durati
     ] }, index) : n.jsx('p', { 'data-ts-detail-visit': '1', style: { margin: '0 0 8px', fontSize: 'clamp(9px, 2.55vw, 12px)', fontWeight: 700, whiteSpace: 'nowrap' },
       children: [`Day ${visit.dayNumber}`, text(visit.startTime) ? `Start: ${clock(visit.startTime)}` : '', text(visit.duration) ? /^\d+$/.test(text(visit.duration)) ? `${visit.duration} min` : text(visit.duration) : '', text(visit.status) ? `Status: ${visit.status.charAt(0).toUpperCase() + visit.status.slice(1)}` : ''].filter(Boolean).join(' · '),
     }, index)),
-    edit ? n.jsx('button', { type: 'button', disabled: !days.length, onClick: () => saveVisits([...visits, { dayId: days[0]?.id, startTime: '', duration: '', status: 'considering' }]), style: buttonStyle, children: '+ Add visit' }) : null,
+    edit ? n.jsx('button', { type: 'button', 'data-ts-add-visit': '1', disabled: !days.length, onClick: () => saveVisits([...visits, { dayId: days[0]?.id, startTime: '', duration: '', status: 'considering' }]), style: buttonStyle, children: '+ Add visit' }) : null,
   ] }) : null;
   const reviews = [1, 2, 3, 4].filter(index => text(d[`review${index}`]));
   const platformRatings = edit ? n.jsx('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }, children: [
@@ -139,16 +156,19 @@ function detailBodyV3({ n, d, edit, days, selectedDays, scheduled, start, durati
     const raw = String(d.happyHourDetails || '').replace(/\s+/g, ' ').trim();
     const showHH = !!raw && raw !== 'false' && !/^no happy hour\b/i.test(raw);
     if (!edit && !showHH) return null;
-    return field('happyHourDetails', 'Happy Hour', true);
+    return field('happyHourDetails', 'Happy Hour', true, d.happyHourDetails, { sparseEdit: true });
   })();
-  return n.jsxs('div', { 'data-ts-detail-v3': '1', 'data-ts-detail-mode': edit ? 'edit' : 'view', style: { fontSize: 13, lineHeight: 1.45, color: '#1f2937', minWidth: 0 }, children: [
+  return n.jsxs('div', {
+    'data-ts-detail-v3': '1', 'data-ts-detail-mode': edit ? 'edit' : 'view', ...(edit ? { 'data-ts-detail-editing': '1' } : {}),
+    style: { fontSize: 13, lineHeight: 1.45, color: '#1f2937', minWidth: 0 },
+    children: [
     timeline,
-    field('story', 'Story', true),
+    field('story', 'Story', true, d.story, { sparseEdit: true }),
     flag('includeInTripRecap', 'Include this story in the final keepsake'),
     flag('nextTime', 'Add to Next Time list'),
     happyHourBlock, field('summary', 'Summary', true),
-    reviews.length ? n.jsxs('section', { 'data-ts-detail-reviews': '1', 'data-ts-detail-reviews-readonly': '1', style: sectionStyle, children: [
-      n.jsx('h3', { style: headingStyle, children: 'Reviews' }),
+    reviews.length ? n.jsxs('section', { 'data-ts-detail-reviews': '1', 'data-ts-detail-section': 'reviews', 'data-ts-detail-reviews-readonly': '1', style: sectionStyle, children: [
+      n.jsx('h3', { 'data-ts-detail-reviews-header': '1', 'data-ts-section-label': '1', style: headingStyle, children: 'REVIEWS' }),
       reviews.map(index => n.jsxs('div', { 'data-ts-detail-review': '1', style: { marginBottom: 8 }, children: [
         n.jsx('div', { 'data-ts-review-stars': '1', style: { lineHeight: 1 }, dangerouslySetInnerHTML: { __html: stars(d[`review${index}Rating`]) } }),
         n.jsx('p', { style: { margin: 0 }, children: d[`review${index}`] }),
