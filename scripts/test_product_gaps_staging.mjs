@@ -13,8 +13,10 @@ const raw = execFileSync('git', ['show', `${UPSTREAM_COMMIT}:${UPSTREAM_PATH}`],
 const js = renderServedTrekBundle(raw.toString('utf8'));
 
 assert.ok(js.includes('ts-thing-media\\/'));
-assert.match(js, /children:\["Logo URL"/);
-assert.match(js, /children:\["Logo from media"/);
+assert.match(js, /data-ts-detail-v3/);
+assert.match(js, /field\('logoUrl', 'Logo URL'\)/);
+assert.match(js, /"data-ts-detail-save":"1"/);
+assert.doesNotMatch(js, /children:\["Logo from media"/);
 assert.doesNotMatch(js, /\["googleRating","yelpRating","thirdPartyRating"\]\.some\(k=>/);
 
 const restaurantsAt = js.indexOf('q==="restaurants"&&');
