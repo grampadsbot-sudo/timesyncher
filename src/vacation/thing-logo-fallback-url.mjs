@@ -110,6 +110,7 @@ export function logoImgOnErrorInline() {
     'if(stage===\'0\'){img.dataset.tsLogoFallback=\'1\';try{var h=new URL(img.src).hostname.replace(/^www\\./i,\'\');img.src=\'https://icons.duckduckgo.com/ip3/\'+h+\'.ico\';return}catch(e){}}',
     'if(stage===\'1\'){img.dataset.tsLogoFallback=\'2\';try{var o=new URL(img.src).origin;img.src=\'https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=\'+encodeURIComponent(o)+\'&size=64\';return}catch(e){}}',
     'chip.dataset.tsLogoFailed=\'1\';',
+    'chip.style.background=\'transparent\';chip.style.border=\'none\';chip.style.boxShadow=\'none\';',
     'img.style.display=\'none\';',
     'var fb=chip.querySelector(\'.tsv-logo-fallback\');',
     'if(fb){fb.style.display=\'grid\';if(typeof tsCenterThingLogoFallbackEl===\'function\'){tsCenterThingLogoFallbackEl(fb);return;}}',
@@ -125,7 +126,8 @@ export function logoImgOnLoadInline() {
     'var img=this,chip=img.closest(\'[data-ts-logo-chip]\');',
     'if(!chip||chip.dataset.tsLogoFailed===\'1\')return;',
     'var box=img.getBoundingClientRect();',
-    'if(box.width<4||box.height<4||img.naturalWidth<16||img.naturalHeight<16){' + fail + 'return;}',
+    'var painted=box.width>=4&&box.height>=4&&img.naturalWidth>=16&&img.naturalHeight>=16;',
+    'if(!painted||img.getClientRects().length<1){' + fail + 'return;}',
     'var fb=chip.querySelector(\'.tsv-logo-fallback\');',
     'if(fb)fb.style.display=\'none\';',
   ].join('');
