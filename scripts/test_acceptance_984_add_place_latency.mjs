@@ -2,12 +2,12 @@
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import sharedTripHandler from '../src/vacation/shared-trip-handler.mjs';
 import { resetSharedUpstreamCacheForTests } from '../src/vacation/shared-trip-upstream-cache.mjs';
+import { buildNycCraigKimDaybydayTrip } from './fixtures/nyc-craig-kim-daybyday-trip.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const require = createRequire(import.meta.url);
@@ -36,8 +36,7 @@ function send(res, status, body, type) {
   res.end(buf);
 }
 
-const fixtureDir = path.join(os.homedir(), 'tsv-dispatch/acceptance/fixtures/demo-nyc-99-snapshot-20261110');
-const sharedRaw = JSON.parse(await readFile(path.join(fixtureDir, 'shared-trip.json'), 'utf8'));
+const sharedRaw = buildNycCraigKimDaybydayTrip();
 const slug = `accept984-${Date.now().toString(36)}`;
 let trekTrip = structuredClone(sharedRaw);
 const tripId = trekTrip.trip?.id ?? 99;
