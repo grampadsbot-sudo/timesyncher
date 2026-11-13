@@ -1,20 +1,26 @@
-Closes #952
+#968 follow-up on PR #970 (host-publish this patch)
 
-## Summary
+## What changed
 
-- Reparent `#fullScreenButton` onto the app shell when entering CSS full screen so the exit control is not inside `display: none` topbar (multi-vacation iPhone case).
-- Style fixed top-right exit with safe-area insets and 44×44 tap target while full screen.
-- Extend layout harness/tests for single-trip and multi-trip full-screen enter/exit.
+- **`list-row-dates.mjs`**: `tsListDateRange` is injected before `Oe=` in the served bundle so list rows and the hotel 390px harness share the same runtime. Prose calendar dates use `Intl` month names instead of hardcoded month regex tokens (fixes secrets `DATE-LITERAL` CI).
+- **`index-BKun7ofk.js`**: Rebaked served bundle from upstream + existing trek patches.
+- **`test_shared_hotels_390_text_wrap.mjs`**: Asserts approved v3 layout (price on top row; stars left of dates on second row).
 
-## Why
+## Verification (local, base `4f0fa505`)
 
-On iOS, full screen is `.site-fullscreen` only (no Fullscreen API). Hiding the topbar hid the only exit button for NYC-style multi-trip sessions.
+```text
+node scripts/rebake_served_trek_bundle.mjs
+node scripts/test_served_star_rating_bundle.mjs
+CHROME_PATH=/usr/bin/chromium-browser node scripts/test_shared_hotels_390_text_wrap.mjs
+node scripts/test_check_hardcoded_content.mjs
+node scripts/check-no-comments.mjs && node scripts/test_offline_manifest.mjs && BASE=vk node scripts/check-code-ratchet.mjs
+npm run test:keepsake-style2
+```
 
-## Checks
+All exit 0 on the uncommitted tree at job end.
 
-- `node .cursor/skills/verify-timesyncher-vacation/scripts/layout-self-check.mjs` — PASS on lane worker
-- `node scripts/test_served_page_layout.mjs` — host Ubuntu + Chrome (not run on lane worker: no browser)
+## Not in this patch
 
-## Left alone (scope)
+Gate B structure captures (32 tabs) and budget price/description completeness on the NYC reference trip — host Gate B + DATA fill after CI on published head.
 
-#951 UI, trip 99 / NYC fixture data, offline manifest entry (extended existing layout test only).
+Closes #968 (when merged with acceptance/Gate B policy satisfied).
