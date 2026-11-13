@@ -10,7 +10,13 @@ import { productThingCategory } from '../src/vacation/keepsake-product-overrides
 import { finalizeServedSharedTripPayload } from '../src/vacation/shared-trip-served-page.mjs';
 import { renderServedTrekBundle } from '../src/vacation/trek-style2-bundle.mjs';
 import { rowSummary } from '../apps/vacation-client/src/lib/listTabModel.mjs';
-import { detailSummary } from '../apps/vacation-client/src/lib/detailModel.mjs';
+import { detailLongDetails, detailSummary, detailSummarySource } from '../apps/vacation-client/src/lib/detailModel.mjs';
+import {
+  normDetailText,
+  sentenceWordCount,
+  sentencesShareVisibleText,
+  tsVisibleSummaryAndDetails,
+} from '../src/vacation/detail-summary-details-visibility.mjs';
 import { buildNycCraigKimDaybydayTrip } from './fixtures/nyc-craig-kim-daybyday-trip.mjs';
 
 const COMPOSED_LABEL = /\b(?:Class:|Pickup:|Drop-off:|Check-in:|Why go:|Common praise:|Location:|Set time:|Price estimate:)/i;
@@ -85,7 +91,10 @@ for (const place of payload.places) {
   const sr = ov.sourceRecord && typeof ov.sourceRecord === 'object' ? ov.sourceRecord : {};
   const expected = pickStoredThingDescription({ override: ov, source: sr, place });
   assert.equal(summary, expected, `vacation-client row summary not as stored for ${place.name}`);
-  assert.equal(detail, expected, `vacation-client detail summary not as stored for ${place.name}`);
+  const storedSummary = detailSummarySource(place, payload);
+  const visible = tsVisibleSummaryAndDetails(storedSummary, ov.longDetails ?? '');
+  assert.equal(detail, visible.summary, `vacation-client detail summary deduped for ${place.name}`);
+  assert.equal(detailLongDetails(place, payload), visible.details, `vacation-client detail longDetails deduped for ${place.name}`);
 }
 
 console.log('PASS test_list_row_description_substance');
@@ -97,7 +106,7 @@ for (const file of ['shared-trip-oe-list-row-patch.mjs', 'trek-list-row-descript
 const rowStart = bundle.indexOf('Oe=(G,Re,zt=!1)=>');
 const rowEnd = bundle.indexOf(',tt=G=>', rowStart);
 assert.doesNotMatch(bundle.slice(rowStart, rowEnd), /tsThingReviewLines|data-ts-thing-review-line|WebkitLineClamp|WebkitBoxOrient|-webkit-box/);
-const summaryStart = bundle.indexOf('const sum=String(d.summary');
+const summaryStart = bundle.indexOf('tsVisibleSummaryAndDetails(d.summary,d.longDetails).summary');
 const summaryEnd = bundle.indexOf('const rev=[1,2,3,4]', summaryStart);
 assert.ok(summaryStart > 0 && summaryEnd > summaryStart);
 assert.doesNotMatch(bundle.slice(summaryStart, summaryEnd), /WebkitLineClamp|WebkitBoxOrient|-webkit-box|overflow:"hidden"/);
@@ -106,14 +115,54 @@ const detailClose = bundle.indexOf('})()]});', detailStart);
 assert.ok(detailStart > 0 && detailClose > detailStart, 'detail readonly longDetails IIFE must be present');
 const detailEnd = detailClose + 4;
 const jsx = (type, props) => ({ type, props });
-const renderExtra = new Function('n', 'Dt', 'd', 'tsItinLine', 'tsThingPhotos', 'kl', 'Ds', 'Ce', 'lc', 'return ' + bundle.slice(detailStart, detailEnd));
-const detailExtra = (data, photos = []) => renderExtra({ jsx, jsxs: jsx, Fragment: 'fragment' }, data, data, (row) => row.itineraryNote || '', () => photos, () => ({ type: 'day-chip' }), () => true, false, () => { throw new Error('view-only write'); });
+const renderExtra = new Function(
+  'n',
+  'Dt',
+  'd',
+  'tsItinLine',
+  'tsThingPhotos',
+  'kl',
+  'Ds',
+  'Ce',
+  'lc',
+  'tsVisibleSummaryAndDetails',
+  'return ' + bundle.slice(detailStart, detailEnd),
+);
+const detailExtra = (data, photos = []) =>
+  renderExtra(
+    { jsx, jsxs: jsx, Fragment: 'fragment' },
+    data,
+    data,
+    (row) => row.itineraryNote || '',
+    () => photos,
+    () => ({ type: 'day-chip' }),
+    () => true,
+    false,
+    () => {
+      throw new Error('view-only write');
+    },
+    tsVisibleSummaryAndDetails,
+  );
+assert.match(bundle, /tsVisibleSummaryAndDetails=/);
+assert.equal(
+  tsVisibleSummaryAndDetails('Same summary text for both fields.', 'Same summary text for both fields.').details,
+  '',
+);
+const splitSummary = 'Short overview of the venue.';
+const splitDetails = `${splitSummary} Extra detail only seen here with another sentence about logistics and hours.`;
+const splitVisible = tsVisibleSummaryAndDetails(splitSummary, splitDetails);
+assert.equal(splitVisible.summary, splitSummary);
+assert.ok(splitVisible.details.includes('Extra detail only seen here'));
+assert.ok(!sentencesShareVisibleText(splitVisible.summary, splitVisible.details, 8));
 const details = '  Stored Details.\nKeep every word.  ';
 const note = '  Stored note.  ';
-const nodes = detailExtra({ itineraryNote: note, longDetails: details }, [{ id: 'photo', url: '/photo.jpg' }]).props.children;
+const nodes = detailExtra(
+  { summary: 'Stored summary line.', itineraryNote: note, longDetails: details },
+  [{ id: 'photo', url: '/photo.jpg' }],
+).props.children;
 assert.deepEqual(nodes.map((row) => row.props['data-ts-detail-field'] || (row.props['data-ts-detail-timeline'] ? 'timeline' : 'photos')), ['itineraryNote', 'longDetails', 'timeline', 'photos']);
 assert.equal(nodes[0].props.children[1].props.children, note);
-assert.equal(nodes[1].props.children[1].props.children, details);
+assert.equal(nodes[1].props.children[1].props.children, details.trim());
 const toggle = nodes[2].props.children[1].props.children[0];
 assert.equal(toggle.props.checked, true);
 assert.equal(toggle.props.disabled, true);

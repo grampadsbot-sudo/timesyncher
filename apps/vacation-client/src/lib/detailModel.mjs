@@ -13,6 +13,7 @@ import {
 } from './listTabModel.mjs';
 import { budgetLineAmount } from './budgetModel.mjs';
 import { parseStarRating } from './starRatingModel.mjs';
+import { tsVisibleSummaryAndDetails } from '../../../../src/vacation/detail-summary-details-visibility.mjs';
 
 const REVIEW_SOURCES = new Set(['Google', 'Yelp', 'TripAdvisor']);
 export const REPRESENTATIVE_REVIEWS_FOOTNOTE =
@@ -186,10 +187,32 @@ export function detailHeaderLabel(categoryLabel, source) {
   return `${label} · ${pretty}`;
 }
 
-export function detailSummary(place, trip) {
+export function detailSummarySource(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
-  return String(override.description ?? source.description ?? place.description ?? '');
+  return String(
+    override.summary ?? source.summary ?? override.description ?? source.description ?? place.description ?? '',
+  );
+}
+
+function detailLongDetailsSource(place, trip) {
+  const override = overrideFor(trip, place);
+  const source = sourceRecord(place, override);
+  return String(override.longDetails ?? source.longDetails ?? '');
+}
+
+export function detailSummary(place, trip) {
+  return tsVisibleSummaryAndDetails(
+    detailSummarySource(place, trip),
+    detailLongDetailsSource(place, trip),
+  ).summary;
+}
+
+export function detailLongDetails(place, trip) {
+  return tsVisibleSummaryAndDetails(
+    detailSummarySource(place, trip),
+    detailLongDetailsSource(place, trip),
+  ).details;
 }
 
 export function detailItineraryNote(place, trip) {

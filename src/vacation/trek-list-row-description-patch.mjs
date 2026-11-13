@@ -1,3 +1,4 @@
+import { detailSummaryDetailsBundleSnippet } from './detail-summary-details-visibility.mjs';
 import { listRowDescriptionBundleSnippet } from './list-row-description.mjs';
 
 const CO_STORED_NEEDLE =
@@ -9,7 +10,9 @@ const RR_HOTEL_SUMMARY_FALLBACK =
 const DETAIL_SUMMARY_READONLY_NEEDLE =
   'const sum=String(d.summary||"").replace(/\\s+/g," ").trim();return sum?n.jsxs("div",{"data-ts-detail-summary-readonly":"1"';
 const DETAIL_SUMMARY_READONLY_PATCH =
-  'const sum=String(d.summary||"").replace(/\\s+/g," ").trim();return sum?n.jsxs("div",{"data-ts-detail-summary-readonly":"1"';
+  'const sum=tsVisibleSummaryAndDetails(d.summary,d.longDetails).summary;return sum?n.jsxs("div",{"data-ts-detail-summary-readonly":"1"';
+const DETAIL_LONGDETAILS_NEEDLE = 'details=String(d.longDetails??"")';
+const DETAIL_LONGDETAILS_PATCH = 'details=tsVisibleSummaryAndDetails(d.summary,d.longDetails).details';
 
 function patchVkDescAsStored(source = '') {
   let js = String(source || '');
@@ -32,7 +35,7 @@ function patchVkDescAsStored(source = '') {
     js = js.replace(DETAIL_SUMMARY_READONLY_NEEDLE, DETAIL_SUMMARY_READONLY_PATCH);
   }
   const detailsFrag =
-    '(()=>{const note=tsItinLine(Dt),details=String(d.longDetails??""),photos=tsThingPhotos(Dt);return n.jsxs(n.Fragment,{children:[note?n.jsxs("section",{"data-ts-detail-field":"itineraryNote",style:{marginBottom:10,whiteSpace:"pre-wrap",overflowWrap:"anywhere"},children:[n.jsx("strong",{children:"Itinerary note"}),n.jsx("p",{children:note})]}):null,details?n.jsxs("section",{"data-ts-detail-field":"longDetails",style:{marginBottom:10,whiteSpace:"pre-wrap",overflowWrap:"anywhere"},children:[n.jsx("strong",{children:"Details"}),n.jsx("p",{children:details})]}):null,n.jsxs("div",{"data-ts-detail-timeline":"1",style:{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",marginBottom:10},children:[kl(Dt),n.jsxs("label",{style:{display:"inline-flex",alignItems:"center",gap:5,fontSize:11,fontWeight:900},children:[n.jsx("input",{type:"checkbox",checked:Ds(Dt),readOnly:!Ce,disabled:!Ce,onChange:e=>lc(Dt,e.target.checked)})," Timeline"]})]}),photos.length?n.jsx("div",{"data-ts-detail-photos":"1",style:{display:"flex",gap:8,flexWrap:"wrap",marginBottom:10},children:photos.map((photo,i)=>n.jsx("img",{src:photo.thumbnailUrl||photo.url,alt:photo.caption||photo.originalName||"",loading:"lazy",style:{width:58,height:58,objectFit:"cover",borderRadius:10}},photo.id||i))}):null]})})()';
+    '(()=>{const note=tsItinLine(Dt),details=tsVisibleSummaryAndDetails(d.summary,d.longDetails).details,photos=tsThingPhotos(Dt);return n.jsxs(n.Fragment,{children:[note?n.jsxs("section",{"data-ts-detail-field":"itineraryNote",style:{marginBottom:10,whiteSpace:"pre-wrap",overflowWrap:"anywhere"},children:[n.jsx("strong",{children:"Itinerary note"}),n.jsx("p",{children:note})]}):null,details?n.jsxs("section",{"data-ts-detail-field":"longDetails",style:{marginBottom:10,whiteSpace:"pre-wrap",overflowWrap:"anywhere"},children:[n.jsx("strong",{children:"Details"}),n.jsx("p",{children:details})]}):null,n.jsxs("div",{"data-ts-detail-timeline":"1",style:{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",marginBottom:10},children:[kl(Dt),n.jsxs("label",{style:{display:"inline-flex",alignItems:"center",gap:5,fontSize:11,fontWeight:900},children:[n.jsx("input",{type:"checkbox",checked:Ds(Dt),readOnly:!Ce,disabled:!Ce,onChange:e=>lc(Dt,e.target.checked)})," Timeline"]})]}),photos.length?n.jsx("div",{"data-ts-detail-photos":"1",style:{display:"flex",gap:8,flexWrap:"wrap",marginBottom:10},children:photos.map((photo,i)=>n.jsx("img",{src:photo.thumbnailUrl||photo.url,alt:photo.caption||photo.originalName||"",loading:"lazy",style:{width:58,height:58,objectFit:"cover",borderRadius:10}},photo.id||i))}):null]})})()';
   const readonlyAfterReviews =
     '})()]});})(),Ce&&n.jsxs("fieldset",{"data-shared-readonly":void 0,disabled:!1,style:{border:0,padding:0,margin:0,minInlineSize:0,opacity:1},children:[n.jsx(Nr,{items:fo(Dt),scopeKey:Qt(Dt)}),';
   const readonlyAfterReviewsPatch =
@@ -62,6 +65,32 @@ function bundleHasLiveTabListRows(js = '') {
     || js.includes(OE_ROW_SUMMARY_SUBSTANCE);
 }
 
+function injectDetailSummaryDetailsHelpers(js = '') {
+  if (js.includes('tsVisibleSummaryAndDetails=')) return js;
+  const anchor = js.indexOf(LIST_ROW_DESC_ANCHOR);
+  if (anchor < 0) {
+    throw new Error('trek bundle missing Oe() anchor for detail summary/details dedupe helpers');
+  }
+  return `${js.slice(0, anchor)}${detailSummaryDetailsBundleSnippet()}${js.slice(anchor)}`;
+}
+
+function patchDetailSummaryDetailsDedup(source = '') {
+  let js = String(source || '');
+  if (!js.includes('data-ts-detail-summary-readonly')) return js;
+  js = injectDetailSummaryDetailsHelpers(js);
+  if (js.includes(DETAIL_SUMMARY_READONLY_NEEDLE)) {
+    js = js.replace(DETAIL_SUMMARY_READONLY_NEEDLE, DETAIL_SUMMARY_READONLY_PATCH);
+  } else if (!js.includes('tsVisibleSummaryAndDetails(d.summary,d.longDetails).summary')) {
+    throw new Error('detail summary readonly dedupe patch did not apply');
+  }
+  if (js.includes(DETAIL_LONGDETAILS_NEEDLE)) {
+    js = js.replaceAll(DETAIL_LONGDETAILS_NEEDLE, DETAIL_LONGDETAILS_PATCH);
+  } else if (!js.includes('tsVisibleSummaryAndDetails(d.summary,d.longDetails).details')) {
+    throw new Error('detail longDetails dedupe patch did not apply');
+  }
+  return js;
+}
+
 export function patchListRowDescription(source = '') {
   let js = String(source || '');
   if (!bundleHasLiveTabListRows(js)) return js;
@@ -83,5 +112,6 @@ export function patchListRowDescription(source = '') {
   if (!js.includes(OE_ROW_SUMMARY_SUBSTANCE)) {
     throw new Error('live tab row summary must use tsListRowDescription()');
   }
-  return patchVkDescAsStored(js);
+  js = patchVkDescAsStored(js);
+  return patchDetailSummaryDetailsDedup(js);
 }

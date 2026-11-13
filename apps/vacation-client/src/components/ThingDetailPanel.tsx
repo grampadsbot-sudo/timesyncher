@@ -6,6 +6,7 @@ import { mediaForPlace } from '../lib/dayTimelineModel.mjs';
 import { overrideFor } from '../lib/placeHelpers';
 import { StarRating } from './StarRating';
 import type { DetailAddressHoursLine } from '../lib/detailModel.mjs';
+import { detailLongDetails } from '../lib/detailModel.mjs';
 
 type Props = {
   place: SharedPlace;
@@ -33,7 +34,7 @@ function ThingDetailPanelInner({ place, trip, onClose, canEdit = false, onPatchF
   const model = buildDetailViewModel(place, trip);
   const override = overrideFor(trip, place);
   const [editMode, setEditMode] = useState(false);
-  const details = String(override.longDetails ?? '');
+  const details = detailLongDetails(place, trip);
   const photos = mediaForPlace(trip, place).filter((row) => String(row.kind || row.mediaKind || '') !== 'video' && !String(row.mimeType || row.mime_type || '').startsWith('video/') && !/\.mp4(?:[?#]|$)/i.test(String(row.url || row.publicUrl || '')));
   const dayIds = Array.isArray(override.dayIds) ? override.dayIds : (trip.days || []).filter((day) =>
     (trip.assignments?.[String(day.id)] || []).some((row) => String(row.place_id ?? row.item?.id) === String(place.id)),
