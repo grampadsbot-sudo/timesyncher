@@ -22,7 +22,7 @@ function detailBodyV3({ n, d, edit, days, selectedDays, scheduled, start, durati
           textTransform: 'uppercase',
           marginBottom: 6,
         },
-        children: "Itinerary note",
+        children:"Itinerary note",
       });
     }
     if (key === 'longDetails') {
@@ -35,7 +35,7 @@ function detailBodyV3({ n, d, edit, days, selectedDays, scheduled, start, durati
           textTransform: 'uppercase',
           marginBottom: 6,
         },
-        children: "Details",
+        children:"Details",
       });
     }
     return n.jsx('h3', { style: headingStyle, children: label });

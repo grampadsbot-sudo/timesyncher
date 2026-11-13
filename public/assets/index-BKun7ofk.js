@@ -12227,7 +12227,7 @@ $2`)})})}const PLe=[{icon:b2,label:"Bold",action:{type:"wrap",before:"**",after:
           textTransform: 'uppercase',
           marginBottom: 6,
         },
-        children: "Details",
+        children:"Details",
       });
     }
     return n.jsx('h3', { style: headingStyle, children: label });
