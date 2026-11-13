@@ -1,45 +1,53 @@
-# PR #970 round — vkfill-970 tier-1 (composer-2.5, cursor-ubuntu)
+# vkfill-989 host receipt (cursor-ubuntu composer-2.5, relaunch invariant)
 
-Outcome: **source-ready** for host publication from starting HEAD `a42768b60791ef8337785c7386881e2281e95f7d`. Not CI-green until host publishes; Gate B not re-run locally on this pass.
+**Start HEAD:** `2cbd2b1077d0f7017a5210a805bc1d47508dc9b7` (verified `git rev-parse HEAD`)  
+**Outcome:** `source-ready` for host publication (#989).  
+**Gate relaunch fix:** `scripts/test_issue_989_shared_trip_load.mjs` registered; `scripts/test_keepsake_style2.mjs` and `src/vacation/trek-live-product-patches.mjs` at ratchet limits (915/500 lines); acceptance wrappers added for `tsv-dispatch/acceptance/989.json`.
 
-GBrain handoff `bot-admin/lanes/vk-pr-handoff/pr-970`: **not found** on this pass (per brief).
+## Product fix (issue #989 / Craig pt3374u)
 
-## Root cause (why round 2 CI still red)
+1. Strip fill-internal blobs (`evidenceDossier`, etc.) from served `GET /api/shared/:slug/` payload.
+2. Boot `shared-app.html`: load trek bundle in parallel with payload fetch; stash trip on `window.__TS_SHARED_BOOT_TRIP__`.
+3. Patch served `getSharedTrip` to reuse boot stash and canonical trailing-slash API URL (rebaked `public/assets/index-BKun7ofk.js`).
 
-`scripts/test_shared_tab_list_summary.mjs` eval-harness for `Oe()` was not updated when #968 landed `patchListRowDates` / travel-list header v3 in `public/assets/index-BKun7ofk.js`:
+## Changed files (uncommitted — host commits once, pushes `vkfill/989-*`, PR `Closes #989`)
 
-1. **ReferenceError `Ar is not defined`**: hotel rows call `Ar(G)` / `hn(G)` inside `tsListDateRange({...})` but the harness env omitted those stubs (same gap fixed earlier in `test_shared_hotels_390_text_wrap.mjs`).
-2. **Stale bundle/row assertions**: price moved to `[data-ts-list-price]` with `$X / night` suffix; old regex expected inline `children:ie(G)` on the legacy header.
-
-Product bundle + `list-row-dates.mjs` on `a42768b6` are unchanged; this round only aligns the offline harness with the served contract.
-
-## Source changes (uncommitted)
-
-| File | Why |
+| Path | Role |
 | --- | --- |
-| `scripts/test_shared_tab_list_summary.mjs` | Stub `Ar`/`hn`/`la`/`Qa`/`Yi`/`tsStarRatingAria`/`tsFltLegTz`/`Ne`/`lc`; assert `data-ts-travel-list-header` + `data-ts-list-price`; hotel row price expects `$1,234 / night`. |
+| `src/vacation/shared-trip-fill-internal-strip.mjs` | New stripper for fill-internal fields |
+| `src/vacation/shared-trip-served-page.mjs` | Apply strip in finalize |
+| `src/vacation/trek-shared-trip-boot-fetch-patch.mjs` | Bundle source patch for getSharedTrip |
+| `src/vacation/trek-live-product-patches.mjs` | Wire patch (500 lines) |
+| `shared-app.html` | Parallel boot + boot globals |
+| `public/assets/index-BKun7ofk.js` | Rebaked served bundle |
+| `scripts/test_issue_989_shared_trip_load.mjs` | Combined unit + Playwright timing (slice env for acceptance) |
+| `scripts/test_acceptance_989_*.mjs` | Three wrappers for acceptance/989.json |
+| `scripts/test_shared_trip_boot_fetch.mjs` | Boot parallel / globals |
+| `scripts/test_keepsake_style2.mjs` | getSharedTrip needle (915 lines) |
+| `scripts/offline-tests.txt` | Register issue + acceptance tests |
 
-## Checks (local, starting HEAD `a42768b6`)
+## T_before / T_after (Playwright 390×844 iPhone UA, local fat-dossier fixture)
 
-| Command | Result |
+| | Cold median | Warm median |
+|---|---:|---:|
+| **T_before** (staging throwaway, issue table) | 8650 ms | 5300 ms |
+| **T_after** (`test_issue_989_shared_trip_load.mjs`) | ~280 ms | ~240 ms |
+
+## Pre-DONE (HEAD `2cbd2b1`, dirty tree)
+
+| Check | Result |
 | --- | --- |
-| `node scripts/test_shared_tab_list_summary.mjs` | exit 0 (was `ReferenceError: Ar is not defined`) |
-| `node scripts/test_shared_hotels_390_text_wrap.mjs` | exit 0 |
-| `node scripts/test_served_star_rating_bundle.mjs` | exit 0 |
-| `node scripts/test_budget_required_price_completeness.mjs` | exit 0 |
-| `node scripts/test_gate_b_product_row_fields.mjs` | exit 0 |
-| `node scripts/check-no-comments.mjs` | exit 0 |
-| `node scripts/test_offline_manifest.mjs` | exit 0 |
-| `BASE=vk node scripts/check-code-ratchet.mjs` | exit 0 |
-| `npm run test:keepsake-style2` | exit 0 |
+| `node scripts/check-no-comments.mjs` | pass |
+| `node scripts/test_offline_manifest.mjs` | pass (462 offline) |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | pass (0 fail) |
+| `node scripts/test_issue_989_shared_trip_load.mjs` | pass |
+| `node scripts/test_acceptance_989_*.mjs` (×3) | pass |
+| `node scripts/test_shared_trip_boot_fetch.mjs` | pass |
+| `node scripts/test_served_trek_bundle.mjs` | pass |
+| `node scripts/test_keepsake_style2.mjs` | pass |
 
-Pre-DONE gates above pass on dirty tree. No commit, stage, push, merge, rebase or deploy (HOST PUBLICATION ONLY).
-
-## Gate B / budget (left for host)
-
-- Hermes run `20261112-220558` on head `a42768b6`: **pixel FAIL** vs NYC reference (not approved baseline); `-top` ratio ~0.09–0.19; full-page **width drift** (baseline 1340 vs candidate 1280). Intentional #968 travel-list layout shift; structure JSON on candidates shows list prices present on hotels capture (`~/tsv-gateb/runs/20261112-220558/v6/_v6-hotels-390.json`).
-- Chief-dr budget **missing-price** / **hotel description quality** lines: fixture checks (`gate-b-budget-price-completeness`, `test_nyc_budget_search_fill_prices.mjs`) **pass** locally on `a42768b6`; live capture failures may reflect staging fixture/data or managing-dr verdict gaps — not addressed in this harness-only patch.
+No commit, stage, push, merge, rebase or deploy in this lane (HOST PUBLICATION ONLY).
 
 ## Host next
 
-One ff push to `vkfill/968-20261112114229`, wait for CI (`unit-tests` must include `scripts/test_shared_tab_list_summary.mjs`). Re-run Gate B structure mode vs staging after publish.
+Commit all dirty paths above; push branch; open PR into `vk` with `Closes #989`, T_before/T_after table; wait CI unit-tests + secrets + accept + gateb on PR head.
