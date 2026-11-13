@@ -12466,6 +12466,57 @@ $2`)})})}const PLe=[{icon:b2,label:"Bold",action:{type:"wrap",before:"**",after:
     if (!edit && !showHH) return null;
     return field('happyHourDetails', 'Happy Hour', true, d.happyHourDetails, { sparseEdit: true });
   })();
+  const viewContactStrip = !edit ? (() => {
+    const phone = text(d.phone);
+    const web = text(d.website || d.url);
+    const hhRaw = String(d.happyHourDetails || '').replace(/\s+/g, ' ').trim();
+    const showHH = !!hhRaw && hhRaw !== 'false' && !/^no happy hour\b/i.test(hhRaw);
+    const infoBoxStyle = { display: 'block', border: '1px solid #e5e7eb', borderRadius: 10, padding: '10px 12px', marginBottom: 10, textDecoration: 'none', fontSize: 13 };
+    const kids = [];
+    if (phone) {
+      kids.push(n.jsxs('a', {
+        'data-ts-detail-info-box': 'phone',
+        href: 'tel:' + phone.replace(/\s+/g, ''),
+        style: { ...infoBoxStyle, background: '#f0fdf4', color: '#0f766e' },
+        children: [n.jsx('strong', { children: 'Phone:' }), ' ', phone],
+      }));
+    }
+    if (web) {
+      const href = /^https?:\/\//i.test(web) ? web : 'https://' + web.replace(/^\/\//, '');
+      kids.push(n.jsxs('a', {
+        'data-ts-detail-info-box': 'website',
+        href,
+        target: '_blank',
+        rel: 'noreferrer',
+        style: { ...infoBoxStyle, background: '#eff6ff', color: '#1d4ed8' },
+        children: [n.jsx('strong', { children: 'Website:' }), ' ', web],
+      }));
+    }
+    if (showHH) {
+      kids.push(n.jsxs('p', {
+        'data-ts-detail-field': 'happyHourDetails',
+        style: { fontSize: 13, marginBottom: 10, lineHeight: 1.45 },
+        children: [n.jsx('strong', { children: 'Happy hour:' }), ' ', d.happyHourDetails],
+      }));
+    }
+    return kids.length ? n.jsx('div', { style: { minWidth: 0 }, children: kids }) : null;
+  })() : null;
+  const summaryBlock = (() => {
+    const sum = text(d.summary);
+    if (edit) return field('summary', 'Summary', true);
+    if (!sum) return null;
+    return n.jsxs('div', {
+      'data-ts-detail-summary-readonly': '1',
+      style: { border: '1px solid #e5e7eb', borderRadius: 10, padding: '10px 12px', marginBottom: 10, background: '#fff' },
+      children: [
+        n.jsx('div', {
+          style: { fontSize: 10, fontWeight: 900, letterSpacing: 1.2, color: '#0f766e', textTransform: 'uppercase', marginBottom: 6 },
+          children: 'Summary',
+        }),
+        n.jsx('p', { style: { margin: 0, fontSize: 13, lineHeight: 1.45, color: '#334155' }, children: sum }),
+      ],
+    });
+  })();
   return n.jsxs('div', {
     'data-ts-detail-v3': '1', 'data-ts-detail-mode': edit ? 'edit' : 'view', ...(edit ? { 'data-ts-detail-editing': '1' } : {}),
     style: { fontSize: 13, lineHeight: 1.45, color: '#1f2937', minWidth: 0 },
@@ -12474,7 +12525,8 @@ $2`)})})}const PLe=[{icon:b2,label:"Bold",action:{type:"wrap",before:"**",after:
     field('story', 'Story', true, d.story, { sparseEdit: true }),
     flag('includeInTripRecap', 'Include this story in the final keepsake'),
     flag('nextTime', 'Add to Next Time list'),
-    happyHourBlock, field('summary', 'Summary', true),
+    edit ? happyHourBlock : null,
+    summaryBlock,
     reviews.length ? n.jsxs('section', { 'data-ts-detail-reviews': '1', 'data-ts-detail-section': 'reviews', 'data-ts-detail-reviews-readonly': '1', style: sectionStyle, children: [
       n.jsx('h3', { 'data-ts-detail-reviews-header': '1', 'data-ts-section-label': '1', style: headingStyle, children: 'REVIEWS' }),
       reviews.map(index => n.jsxs('div', { 'data-ts-detail-review': '1', style: { marginBottom: 8 }, children: [
@@ -12491,7 +12543,9 @@ $2`)})})}const PLe=[{icon:b2,label:"Bold",action:{type:"wrap",before:"**",after:
       ] }, item.id)) }),
     ] }) : null,
     edit || text(d.address) || text(d.hours) ? n.jsxs('div', { 'data-ts-detail-info-box': 'address-hours', style: { border: '1px solid #e5e7eb', borderRadius: 10, padding: '0 10px', background: '#f8f9fa' }, children: [field('address', 'Address', true), field('hours', 'Hours', true)] }) : null,
-    field('phone', 'Phone'), field('website', 'Website'), !edit ? field('area', 'Area') : null,
+    edit ? field('phone', 'Phone') : null,
+    edit ? field('website', 'Website') : viewContactStrip,
+    !edit ? field('area', 'Area') : null,
     field('itineraryNote', 'Itinerary note', true), field('longDetails', 'Details', true),
     field('lat', 'Latitude'), field('lng', 'Longitude'),
     edit ? field('logoUrl', 'Logo URL') : null, edit ? field('travelTime', 'Estimated travel time') : null,

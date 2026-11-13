@@ -16,7 +16,7 @@
       "carLogos": 4,
       "carRows": 7,
       "carBrandLabels": [
-        "Priceline opaque",
+        "Priceline Express Deal (car company shown after booking)",
         "Hertz",
         "Dollar",
         "Thrifty"
@@ -34,7 +34,7 @@
       "eventsGvRows": 3,
       "eventsFamilyTypeRows": 15,
       "eventsGvFamilyStaleRows": 3,
-      "eventsStaleRows": 2
+      "eventsStaleRows": 3
     },
     {
       "tag": "phone",
@@ -55,7 +55,7 @@
       "carLogos": 4,
       "carRows": 7,
       "carBrandLabels": [
-        "Priceline opaque",
+        "Priceline Express Deal (car company shown after booking)",
         "Hertz",
         "Dollar",
         "Thrifty"
@@ -73,7 +73,7 @@
       "eventsGvRows": 3,
       "eventsFamilyTypeRows": 15,
       "eventsGvFamilyStaleRows": 3,
-      "eventsStaleRows": 2
+      "eventsStaleRows": 3
     },
     {
       "tag": "desktop",
@@ -89,8 +89,8 @@
       "carboneHhHidden": true
     }
   ],
-  "origin": "http://127.0.0.1:44403",
-  "bundleSha256": "25dc6e0ebc8fdef09c912a46b47348428401d5dc0732cd9c337f60f59c94748b",
+  "origin": "http://127.0.0.1:37233",
+  "bundleSha256": "44f7baf82ecad31b6c567989386866744a628b14eed1222a1fb5fd6e99f2733a",
   "slug": "8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y",
-  "liveApiPath": "/home/ubishere9995/tsv-work/vkfill-844-20261108160757/scripts/fixtures/nyc-screen-trip99-live-shared-api.json"
+  "liveApiPath": "/home/ubishere9995/tsv-work/vkfill-969-cursor-invariant-20261113-232607/scripts/fixtures/nyc-screen-trip99-live-shared-api.json"
 }
