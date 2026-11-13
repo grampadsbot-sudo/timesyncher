@@ -9,9 +9,6 @@ const LIST_PRICE_SUFFIX_PATCH = 'children:bn(G)?eu(G)[1]:(Zi(G)||Mi(G))?tsThingT
 const BUDGET_ZT_NEEDLE = 'zt=di=>{const Xi=String(bi(di)||""),go=Array.from(Xi.matchAll(/\\$?([0-9][0-9,]*(?:\\.\\d+)?)/g)).map(au=>Number(au[1].replace(/,/g,""))).filter(au=>Number.isFinite(au));if(!go.length)return 0;let fr=go.length>=2?(go[0]+go[1])/2:go[0];const Ul=Xi.toLowerCase();return(It(di)==="hotel"||/night/.test(Ul))&&(fr=fr*Math.max(1,xi(di))),(/per person|pp|fare|ticket|flight/.test(Ul)||["restaurant","store","event","family_event","tour","transport","music","workout","artist","theatre","sightseeing","other","flight"].includes(It(di)))&&(fr=fr*2),Math.round(fr)}';
 const BUDGET_ZT_PATCH = 'zt=di=>{const row=tsThingTravelTotalAmount(di,la,cn);return row?row.amount:(()=>{const Xi=String(bi(di)||""),go=Array.from(Xi.matchAll(/\\$?([0-9][0-9,]*(?:\\.\\d+)?)/g)).map(au=>Number(au[1].replace(/,/g,""))).filter(au=>Number.isFinite(au));if(!go.length)return 0;let fr=go.length>=2?(go[0]+go[1])/2:go[0];const Ul=Xi.toLowerCase();return(/per person|pp|fare|ticket|flight/.test(Ul)||["restaurant","store","event","family_event","tour","transport","music","workout","artist","theatre","sightseeing","other","flight"].includes(It(di)))&&(fr=fr*2),Math.round(fr)})()}';
 
-const BUDGET_ROW_PRICE_NEEDLE = 'children:di.hasPrice?Re(di.amount):"Add price"';
-const BUDGET_ROW_PRICE_PATCH = 'children:di.hasPrice?(Zi(di.item)||Mi(di.item)?tsThingTravelTotalLabel(di.item,la,cn):Re(di.amount)):"Add price"';
-
 const DETAIL_PRICE_FRAG = 'const raw=String(d.price??"").trim();const unit=typeof d.price==="number"?d.price:Number(raw.replace(/[^0-9.]/g,""));const tsPriceHas=Number.isFinite(unit)&&unit>0';
 const DETAIL_PRICE_PATCH = 'const tsPriceLabel=tsThingTravelTotalLabel(Dt,la,cn);const tsPriceHas=!!tsPriceLabel';
 
@@ -44,9 +41,6 @@ export function patchVk980TotalPrice(source = '') {
     js = js.replace(BUDGET_ZT_NEEDLE, BUDGET_ZT_PATCH);
   } else if (!js.includes(BUDGET_ZT_PATCH.slice(0, 40))) {
     throw new Error('vk980 budget zt patch did not apply');
-  }
-  if (js.includes(BUDGET_ROW_PRICE_NEEDLE)) {
-    js = js.replaceAll(BUDGET_ROW_PRICE_NEEDLE, BUDGET_ROW_PRICE_PATCH);
   }
   if (js.includes(DETAIL_PRICE_FRAG)) {
     js = js.replaceAll(DETAIL_PRICE_FRAG, DETAIL_PRICE_PATCH);

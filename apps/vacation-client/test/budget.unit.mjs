@@ -27,7 +27,7 @@ const hotelTrip = {
 
 const hotelAmt = budgetLineAmount(hotelTrip.places[0], hotelTrip);
 assert.equal(hotelAmt.amount, 1867);
-assert.equal(hotelAmt.nightly, null);
+assert.equal(hotelAmt.nightly, 389);
 
 const flightTrip = {
   trip: { currency: 'USD' },

@@ -24,6 +24,7 @@ scripts/test_chat_itinerary_edit_905.mjs
 scripts/test_acceptance_859_chat_edit_put_small.mjs
 scripts/test_acceptance_974_chat_intake_unicode.mjs
 scripts/test_acceptance_980_hotel_car_totals.mjs
+scripts/test_acceptance_984_add_place_latency.mjs
 scripts/test_thing_travel_total_price.mjs
 scripts/test_place_search_reply_no_internal_ids.mjs
 scripts/test_in_turn_citable_places.mjs
@@ -66,6 +67,8 @@ scripts/test_served_star_rating_bundle.mjs
 scripts/test_thing_card_ui_keep.mjs
 scripts/test_star_rating_model.mjs
 scripts/test_issue_961_overall_star_evidence.mjs
+scripts/test_acceptance_box_align_judge.mjs
+scripts/test_issue_976_list_logo_stars.mjs
 scripts/test_issue_964_detail_overall_rating_row.mjs
 scripts/test_trip_map_initial_view.mjs
 scripts/test_trip_map_initial_view_bundle.mjs
@@ -201,6 +204,7 @@ scripts/test_gate_b_product_row_fields.mjs
 scripts/test_finalize_served_payload_idempotent.mjs
 scripts/test_gate_b_live_replay_display_facts.mjs
 scripts/test_list_row_description_substance.mjs
+scripts/test_load_dossiers_by_keys_parallel.mjs
 scripts/test_stored_ccab_canonical_identity.mjs
 scripts/test_gate_b_row_name_frame.mjs
 scripts/test_ui_471_apple_row_name_frame.mjs
@@ -226,6 +230,7 @@ scripts/test_purchase_launch_routes.mjs
 scripts/test_purchase_email_slug.mjs
 scripts/test_purchase_email_app_link.mjs
 scripts/test_harness_outbound_email_stub.mjs
+scripts/test_shared_trip_add_place_refresh_latency.mjs
 scripts/test_shared_trip_slug_miss.mjs
 scripts/test_shared_trip_boot_fetch.mjs
 scripts/test_shared_trip_report_pdf.mjs

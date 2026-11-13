@@ -12,11 +12,14 @@ export function placeRatingEvidence(override) {
   ];
   const stop = new Set(['hotel', 'the', 'and', 'new', 'york', 'nyc', 'cafe', 'club', 'restaurant', 'street', 'square', 'times', 'market', 'house', 'suites', 'city', 'center', 'centre', 'park']);
   const value = '([1-5]\\.\\d|[1-5](?=\\s*(?:out of 5|of 5|\\/\\s*5|stars?\\b|★|from\\s+\\d)))(?![.,]?\\d)';
+  const tenFromReviews = '(\\d+(?:\\.\\d+)?)(?=\\s+from\\s+\\d)';
   const phrases = [
     new RegExp(`\\brat(?:e|es|ed)\\s+(?:[^\\d.!?]{0,80}?\\s)?${value}`, 'gi'),
+    new RegExp(`\\brat(?:e|es|ed)\\s+(?:[^\\d.!?]{0,120}?\\s)${tenFromReviews}\\s+from\\s+\\d`, 'gi'),
     new RegExp(`\\bshows\\s+${value}`, 'gi'),
     new RegExp(`\\bscores?\\s+(?:it\\s+)?${value}`, 'gi'),
     new RegExp(`\\blists\\b[^\\d.!?]{0,80}?\\bat\\s+${value}`, 'gi'),
+    /\b(\d+(?:\.\d+)?)\s*\/\s*10\b/gi,
   ];
   const unfetched = /\bsnapshots?\b|\bnot a live fetch\b/i;
   const str = (v) => String(v ?? '').replace(/\s+/g, ' ').trim();
@@ -26,6 +29,15 @@ export function placeRatingEvidence(override) {
     if (!m) return null;
     const n = Number(m[1]);
     return Number.isFinite(n) && n >= 1 && n <= 5 ? n : null;
+  };
+  const scaledOverall = (raw) => {
+    const m = str(raw).match(/^(\d+(?:\.\d+)?)/);
+    if (!m) return null;
+    const n = Number(m[1]);
+    if (!Number.isFinite(n)) return null;
+    if (n >= 1 && n <= 5) return n;
+    if (n > 5 && n <= 10) return Math.min(5, n / 2);
+    return null;
   };
   const whole = (raw) => {
     const m = str(raw).match(/^\d[\d,]*$/);
@@ -55,7 +67,7 @@ export function placeRatingEvidence(override) {
       const snapshot = unfetched.test(clause);
       phrases.forEach((re, kind) => {
         for (const m of clause.matchAll(re)) {
-          const rating = num(m[1]);
+          const rating = kind === 1 || kind === 5 ? scaledOverall(m[1]) : num(m[1]);
           if (rating == null) continue;
           const end = m.index + m[0].length;
           cites.push({
