@@ -513,7 +513,7 @@ export function renderServedTrekBundle(raw) {
   assertServedBundleClean(js);
   const finalJs = patchUi903DetailChrome(patchVk890Rebrand(patchUi754(patchUi737(patchUi735SharedPdf(patchTimelineItineraryNote(patchUi734Round2(patchUi734Round1(patchInlineListRowDescriptionOnThingHeader(patchSharedTripListWrapping(patchStarRatings(patchThingDetailCapture(js))))))))))));
   const servedJs = patchStarRatingThingKeys(patchThingDetail951(patchListRowDescription(finalJs)));
-  return patchThingDetailV3(patchThingDetail964In951(servedJs));
+  return patchUi903DetailChrome(patchThingDetailV3(patchThingDetail964In951(servedJs)));
 }
 
 function endOfCall(text, callStart) {

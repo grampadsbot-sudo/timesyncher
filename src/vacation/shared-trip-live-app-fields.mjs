@@ -86,12 +86,18 @@ function rentalCompanyFromTitle(name = '') {
 function priceFromTextFields(place = {}, override = {}, source = null) {
   const meta = placeMetadata(place);
   const blobs = [
+    override.price,
+    override.longDetails,
+    override.description,
+    override.summary,
     place.notes,
     place.description,
+    place.longDetails,
     override.notes,
     source?.summary,
     source?.description,
     source?.details,
+    source?.longDetails,
     meta.reservationSummary,
     meta.reservation_summary,
     meta.pickSummary,

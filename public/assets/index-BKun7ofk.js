@@ -12203,10 +12203,39 @@ $2`)})})}const PLe=[{icon:b2,label:"Bold",action:{type:"wrap",before:"**",after:
   const headingStyle = { margin: '0 0 7px', fontSize: 10, fontWeight: 800, letterSpacing: 1, color: '#6b7280', textTransform: 'uppercase' };
   const inputStyle = { width: '100%', minWidth: 0, boxSizing: 'border-box', border: '1px solid #d1d5db', borderRadius: 6, padding: '8px 7px', font: 'inherit', color: '#111827', background: 'white' };
   const buttonStyle = { ...inputStyle, width: 'auto', cursor: 'pointer', fontSize: 11 };
+  const fieldHeading = (key, label) => {
+    if (key === 'itineraryNote') {
+      return n.jsx('div', {
+        style: {
+          fontSize: 10,
+          fontWeight: 900,
+          letterSpacing: 1.2,
+          color: '#0f766e',
+          textTransform: 'uppercase',
+          marginBottom: 6,
+        },
+        children:"Itinerary note",
+      });
+    }
+    if (key === 'longDetails') {
+      return n.jsx('div', {
+        style: {
+          fontSize: 10,
+          fontWeight: 900,
+          letterSpacing: 1.2,
+          color: '#0f766e',
+          textTransform: 'uppercase',
+          marginBottom: 6,
+        },
+        children: "Details",
+      });
+    }
+    return n.jsx('h3', { style: headingStyle, children: label });
+  };
   const field = (key, label, multiline = false, value = d[key]) => {
     if (!edit && !text(value)) return null;
     return n.jsxs('section', { 'data-ts-detail-field': key, style: sectionStyle, children: [
-      n.jsx('h3', { style: headingStyle, children: label }),
+      fieldHeading(key, label),
       edit ? n.jsx(multiline ? 'textarea' : 'input', {
         'aria-label': label, value: String(value ?? ''), rows: multiline ? 3 : undefined,
         onChange: event => write(key, event.target.value),
