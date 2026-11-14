@@ -1,26 +1,30 @@
-#968 follow-up on PR #970 (host-publish this patch)
+Closes #989
 
-## What changed
+## Summary
 
-- **`list-row-dates.mjs`**: `tsListDateRange` is injected before `Oe=` in the served bundle so list rows and the hotel 390px harness share the same runtime. Prose calendar dates use `Intl` month names instead of hardcoded month regex tokens (fixes secrets `DATE-LITERAL` CI).
-- **`index-BKun7ofk.js`**: Rebaked served bundle from upstream + existing trek patches.
-- **`test_shared_hotels_390_text_wrap.mjs`**: Asserts approved v3 layout (price on top row; stars left of dates on second row).
+Merges `origin/vk` at `01521be4` into PR #991 and resolves conflicts. Branch retains **#989** acceptance fixes (shared-trip payload / fetch-once / itinerary load latency) plus **vk** **#988** essence-ladder fill changes (no summary→details fallbacks).
 
-## Verification (local, base `4f0fa505`)
+## Conflict resolution
 
-```text
+- `scripts/offline-tests.txt`: union of `test_acceptance_988_no_summary_details_fallback.mjs` and the three #989 acceptance scripts.
+- `J/RECEIPT.md`: PR receipt + base-merge note.
+
+## Checks (local, start HEAD `36873572`, merge tree)
+
+```bash
+cd apps/vacation-client && npm test
 node scripts/rebake_served_trek_bundle.mjs
-node scripts/test_served_star_rating_bundle.mjs
-CHROME_PATH=/usr/bin/chromium-browser node scripts/test_shared_hotels_390_text_wrap.mjs
-node scripts/test_check_hardcoded_content.mjs
-node scripts/check-no-comments.mjs && node scripts/test_offline_manifest.mjs && BASE=vk node scripts/check-code-ratchet.mjs
-npm run test:keepsake-style2
+node scripts/test_acceptance_988_no_summary_details_fallback.mjs
+node scripts/test_acceptance_989_shared_payload_omits_dossier.mjs
+node scripts/test_acceptance_989_payload_fetch_once.mjs
+node scripts/test_acceptance_989_itinerary_load_latency.mjs
+node scripts/test_offline_manifest.mjs
+node scripts/check-no-comments.mjs
+BASE=vk node scripts/check-code-ratchet.mjs
 ```
 
-All exit 0 on the uncommitted tree at job end.
+All passed after root `npm ci` (468 offline manifest entries).
 
-## Not in this patch
+## Left alone (scope)
 
-Gate B structure captures (32 tabs) and budget price/description completeness on the NYC reference trip — host Gate B + DATA fill after CI on published head.
-
-Closes #968 (when merged with acceptance/Gate B policy satisfied).
+Baselines, Gate B capture config, workflows, `vercel.json`, fixture NYC data. Full offline manifest suite not re-run serially in lane (host/CI).

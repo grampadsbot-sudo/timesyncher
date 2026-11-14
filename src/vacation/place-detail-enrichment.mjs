@@ -41,7 +41,7 @@ export function applyEnrichedDetailToTripThing(thing = {}, enrichment = {}) {
   });
   return {
     ...thing,
-    description: text(detail.longDetails || detail.summary || thing.description, 4000) || thing.description,
+    description: text(detail.longDetails || thing.description, 4000) || thing.description,
     metadata,
   };
 }
