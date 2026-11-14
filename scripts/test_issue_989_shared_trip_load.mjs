@@ -268,7 +268,7 @@ const [html, css] = await Promise.all([
 
 const puppeteer = loadPuppeteer();
 const browser = await puppeteer.launch({
-  executablePath: process.env.CHROME_PATH || '/usr/local/bin/google-chrome',
+  executablePath: process.env.CHROME_PATH || process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser',
   headless: true,
   args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
 });

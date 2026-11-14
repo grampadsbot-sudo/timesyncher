@@ -1,44 +1,36 @@
-# vkfill-989 host receipt (cursor-ubuntu composer-2.5, CI relaunch)
+# vkfill-989 host receipt (cursor-ubuntu composer-2.5, invariant relaunch)
 
-**Start HEAD:** `242609ecd4eb59497261add48244f948347332ce` (verified `git rev-parse HEAD`)  
+**Start HEAD:** `b4882713e2d25cffd742802fda1158d974b9f01d` (verified `git rev-parse HEAD`)  
 **Outcome:** `source-ready` for host publication (#989 / PR #991).  
-**CI target:** red `unit-tests` (`scripts/test_acceptance_984_add_place_latency.mjs` 120s timeout) + `accept`.
+**CI target:** red `accept` (`itinerary-paint-budget` harness failure on `b4882713`; ref `tsv-dispatch/acceptance/reports/989-b488271/report.json`).
 
-## Root cause (984)
+## Root cause (accept)
 
-After add-place + full page reload, shared boot `fetch('/api/shared/:slug/')` could reuse the browser HTTP cache (`Cache-Control: public, max-age=60` on shared JSON). The UI never saw the new restaurant row (`confirmToListMs` waitForFunction timeout). Server upstream cache also needed invalidation on the test harness POST proxy.
+Host acceptance runner invokes `scripts/test_acceptance_989_itinerary_load_latency.mjs` → `test_issue_989_shared_trip_load.mjs` (latency slice). Puppeteer launched with fallback `executablePath` `/usr/local/bin/google-chrome`, which is absent on the accept Ubuntu host (`Browser was not found at the configured executablePath`). The dossier and fetch-once assertions already passed on the same head.
 
-## Fix
+## Fix (this round)
 
-1. `shared-app.html` — boot shared-trip fetch uses `cache: 'no-store'` so reload sees fresh trek data after edits.
-2. `scripts/test_acceptance_984_add_place_latency.mjs` — `invalidateSharedUpstreamCacheForSlug(slug)` on place POST + each run reset; `page.setCacheEnabled(false)`.
-3. `scripts/test_shared_trip_boot_fetch.mjs` — assert boot fetch sets `cache: 'no-store'`.
-4. `scripts/test_issue_989_shared_trip_load.mjs` — relax GET-count assertions for boot `cache: 'no-store'` (cold ≤2, warm ≤1); medians unchanged (~266ms cold / ~244ms warm local).
+`scripts/test_issue_989_shared_trip_load.mjs` — align Chromium resolution with `scripts/test_acceptance_984_add_place_latency.mjs`: `CHROME_PATH || PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser'`. Latency medians unchanged (local: cold median 283ms, warm median 224ms).
 
 ## Changed files (uncommitted — host commits + pushes)
 
 | Path | Role |
 | --- | --- |
-| `shared-app.html` | Boot fetch `cache: 'no-store'` |
-| `scripts/test_acceptance_984_add_place_latency.mjs` | Upstream cache invalidation + Puppeteer cache off |
-| `scripts/test_shared_trip_boot_fetch.mjs` | Contract assert |
-| `scripts/test_issue_989_shared_trip_load.mjs` | Fetch-count expectations |
+| `scripts/test_issue_989_shared_trip_load.mjs` | Puppeteer `executablePath` fallback for accept harness |
+| `J/RECEIPT.md` | Host handoff |
 
-## Pre-DONE (HEAD `242609ec`, dirty tree)
+## Pre-DONE (start HEAD `b4882713`, dirty tree)
 
 | Check | Result |
 | --- | --- |
-| `node scripts/check-no-comments.mjs` | pass |
 | `node scripts/test_offline_manifest.mjs` | pass (467 offline) |
 | `BASE=vk node scripts/check-code-ratchet.mjs` | pass (0 fail) |
-| `node scripts/test_shared_trip_boot_fetch.mjs` | pass |
-| `node scripts/test_acceptance_984_add_place_latency.mjs` | pass (median ~911ms, 3 runs) |
-| `node scripts/test_shared_trip_add_place_refresh_latency.mjs` | pass |
-| `node scripts/test_acceptance_989_*.mjs` (×3) | pass |
-| `node scripts/test_acceptance_989_itinerary_load_latency.mjs` | pass (coldMedian 266ms) |
+| `node scripts/test_acceptance_989_shared_payload_omits_dossier.mjs` | pass |
+| `node scripts/test_acceptance_989_payload_fetch_once.mjs` | pass |
+| `node scripts/test_acceptance_989_itinerary_load_latency.mjs` | pass (coldMedian 283ms, warmMedian 224ms) |
 
 No commit, stage, push, merge, rebase or deploy in this lane (HOST PUBLICATION ONLY).
 
 ## Host next
 
-Commit all dirty paths above on `vkfill/989-auto-242609ec`; push; wait CI `unit-tests` + `secrets` + `accept` + `gateb` green on new head (PR #991).
+Commit dirty paths on `vkfill/989-auto-242609ec`; push; wait CI `unit-tests` + `secrets` + `accept` + `gateb` green on new head (PR #991).
