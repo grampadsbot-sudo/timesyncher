@@ -113,7 +113,10 @@
         const token = decodeURIComponent(sharedMatch[1]);
         window.__TS_SHARED_BOOT_SLUG__ = token;
         appendSharedTrekBundle();
-        const response = await fetch(`/api/shared/${encodeURIComponent(token)}/`, { credentials: 'include' });
+        const response = await fetch(`/api/shared/${encodeURIComponent(token)}/`, {
+          credentials: 'include',
+          cache: 'no-store',
+        });
         if (!response.ok) {
           showSharedBootError(await readSharedBootCustomerMessage(response));
           return;

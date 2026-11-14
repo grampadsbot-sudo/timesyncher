@@ -44,6 +44,7 @@ assert.match(sharedApp, /\/api\/shared\/\$\{encodeURIComponent\(token\)\}\//);
 assert.match(sharedApp, /window\.__TS_SHARED_BOOT_SLUG__/);
 assert.match(sharedApp, /window\.__TS_SHARED_BOOT_TRIP__/);
 assert.match(sharedApp, /appendSharedTrekBundle\(\);\s*const response = await fetch/);
+assert.match(sharedApp, /cache:\s*'no-store'/);
 assert.match(sharedApp, /data-shared-boot-error/);
 assert.match(sharedApp, /showSharedBootError/);
 assert.doesNotMatch(sharedApp, /appendSharedTrekBundle\(\);\s*\}\)\.catch/);
