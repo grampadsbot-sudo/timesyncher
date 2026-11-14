@@ -240,10 +240,64 @@ const REVIEW_V3_EDIT_EXTRAS =
 const HH_V3_EDIT_EXTRAS =
   '(zi(Dt)||It(Dt)==="bar")&&n.jsxs("label",{style:{...Hn,flexDirection:"row",alignItems:"center",gap:8,textTransform:"none",fontSize:12,paddingBottom:8},children:[n.jsx("input",{type:"checkbox",checked:!!(ha(Dt).happyHour||tsPf.some(row=>row.happyHour===true&&row.match.test(String(Dt.name||Dt.title||"")))),onChange:G=>Xa(Dt,"happyHour",G.target.checked)})," Happy hour"]}),(zi(Dt)||It(Dt)==="bar")&&(Ce||((()=>{const raw=String(ha(Dt).happyHourDetails||"").replace(/\\s+/g," ").trim();return !!raw&&raw!=="false"&&!/^no happy hour\\b/i.test(raw)})()))&&n.jsxs("label",{style:Hn,children:["Happy hour details",n.jsx("textarea",{value:String(ha(Dt).happyHourDetails||""),onChange:G=>Xa(Dt,"happyHourDetails",G.target.value),placeholder:"Recent/current happy-hour offer, menu items, discount, days/times, caveats, and source note",style:{...ur,minHeight:84},disabled:!Ce})]})';
 
+const DETAIL_FS_MSG =
+  'function tsDetailFsMsg(on){try{const w=window.parent;w&&w!==window&&w.postMessage({type:"tsv-site-fullscreen",on:!!on},"*");}catch(e){}}';
+
+const DETAIL_OVERLAY_NEEDLE =
+  'Dt&&n.jsx("div",{style:{position:"fixed",inset:0,zIndex:1e4,background:"rgba(15,23,42,0.55)",padding:14,overflowY:"auto"},onClick:()=>Ne(null),children:';
+
+const DETAIL_OVERLAY_NEEDLE_KT =
+  'Dt&&n.jsx("div",{style:{position:"fixed",inset:0,zIndex:1e4,background:"rgba(15,23,42,0.55)",padding:14,overflowY:"auto"},onClick:()=>{Kt(!1),Ne(null)},children:';
+
+const DETAIL_OVERLAY_PATCH =
+  'Dt&&n.jsx("div",{"data-ts-detail-overlay":"1",ref:function(el){if(el){if(!window.__tsDetailFs){window.__tsDetailFs=1;tsDetailFsMsg(true);}}else if(window.__tsDetailFs){delete window.__tsDetailFs;tsDetailFsMsg(false);}},style:{position:"fixed",inset:0,zIndex:1e4,background:"rgba(15,23,42,0.55)",padding:14,overflowY:"auto"},onClick:()=>{tsDetailFsMsg(false);Kt(!1),Ne(null)},children:';
+
+const DETAIL_CLOSE_NEEDLE =
+  'onClick:()=>{Kt(!1),Ne(null)},style:{border:"1px solid #e5e7eb",background:"#f9fafb",borderRadius:999,width:34,height:34,cursor:"pointer",fontWeight:900},children:"✓"}):null,n.jsx("button",{type:"button",className:"tsv-detail-close"';
+
+const DETAIL_CLOSE_PATCH =
+  'onClick:()=>{tsDetailFsMsg(false);Kt(!1),Ne(null)},style:{border:"1px solid #e5e7eb",background:"#f9fafb",borderRadius:999,width:34,height:34,cursor:"pointer",fontWeight:900},children:"✓"}):null,n.jsx("button",{type:"button",className:"tsv-detail-close"';
+
+const DETAIL_CLOSE_BTN_NEEDLE =
+  'className:"tsv-detail-close","data-ts-detail-close":"1","aria-label":"Close",onClick:()=>{Kt(!1),Ne(null)}';
+
+const DETAIL_CLOSE_BTN_PATCH =
+  'className:"tsv-detail-close","data-ts-detail-close":"1","aria-label":"Close",onClick:()=>{tsDetailFsMsg(false);Kt(!1),Ne(null)}';
+
+function detailFullscreenApplied(source = '') {
+  return source.includes('data-ts-detail-overlay":"1"') && source.includes('function tsDetailFsMsg(on)');
+}
+
+function applyDetailFullscreenPatch(source = '', debugOverlay = '') {
+  if (detailFullscreenApplied(source)) return source;
+  let out = source;
+  if (out.includes(DETAIL_OVERLAY_NEEDLE)) {
+    out = out.replace(DETAIL_OVERLAY_NEEDLE, DETAIL_OVERLAY_PATCH);
+  } else if (out.includes(DETAIL_OVERLAY_NEEDLE_KT)) {
+    out = out.replace(DETAIL_OVERLAY_NEEDLE_KT, DETAIL_OVERLAY_PATCH);
+  } else if (!out.includes('data-ts-detail-overlay":"1"')) {
+  const hint = debugOverlay || out.slice(out.indexOf('Dt&&n.jsx("div",{style:{position:"fixed",inset:0,zIndex:1e4'), out.indexOf('Dt&&n.jsx("div",{style:{position:"fixed",inset:0,zIndex:1e4') + 320);
+    throw new Error(`v3 detail overlay fullscreen patch did not apply; overlay=${hint}`);
+  }
+  if (out.includes(DETAIL_CLOSE_NEEDLE)) {
+    out = out.replace(DETAIL_CLOSE_NEEDLE, DETAIL_CLOSE_PATCH);
+  }
+  if (out.includes(DETAIL_CLOSE_BTN_NEEDLE)) {
+    out = out.replace(DETAIL_CLOSE_BTN_NEEDLE, DETAIL_CLOSE_BTN_PATCH);
+  }
+  out = out.replace('onClick:()=>Ne(null)', 'onClick:()=>{tsDetailFsMsg(false);Kt(!1),Ne(null)}');
+  if (!out.includes('function tsDetailFsMsg(on)')) {
+    out = `${DETAIL_FS_MSG}${out}`;
+  }
+  return out;
+}
+
 export function patchThingDetailV3(source = '') {
-  if (source.includes('function detailBodyV3(')) return source;
-  const start = source.indexOf('Dt&&n.jsx("div",{style:{position:"fixed",inset:0,zIndex:1e4');
-  const end = source.indexOf(',n.jsxs("div",{style:{maxWidth:1120', start);
+  if (source.includes('function detailBodyV3(')) {
+    return applyDetailFullscreenPatch(source);
+  }
+  let start = source.indexOf('Dt&&n.jsx("div",{style:{position:"fixed",inset:0,zIndex:1e4');
+  let end = source.indexOf(',n.jsxs("div",{style:{maxWidth:1120', start);
   if (start < 0 || end < 0) throw new Error('v3 detail panel boundary missing');
   let panel = source.slice(start, end);
   const bodyStart = panel.indexOf('(()=>{const d=ha(Dt)||{},addr=');
@@ -262,5 +316,6 @@ export function patchThingDetailV3(source = '') {
   panel = panel.replace('tsHeadStars||tsPriceHas?', 'tsHeadStars||tsPriceHas||(Ce&&Sa)?');
   panel = panel.replace('return tsHeadStars||', 'const tsPriceEditor=Ce&&Sa?n.jsxs("label",{style:{display:"inline-flex",alignItems:"center",gap:4,fontSize:13,flexShrink:0},children:["Price: $",n.jsx("input",{"aria-label":"Price",value:bi(Dt),onChange:e=>Xa(Dt,"price",e.target.value),inputMode:"decimal",style:{width:48,minWidth:0,padding:6,border:"1px solid #d1d5db",borderRadius:6}})]}):null;return tsHeadStars||');
   panel = panel.replace('tsPriceHas?n.jsxs("span",', 'tsPriceEditor?tsPriceEditor:tsPriceHas?n.jsxs("span",');
-  return source.slice(0, start) + panel + source.slice(end);
+  let out = source.slice(0, start) + panel + source.slice(end);
+  return applyDetailFullscreenPatch(out);
 }
