@@ -55,13 +55,16 @@ const hotelAreas = areasFrom([hotel, { id: 'h2', name: 'Other' }], (row) => (row
 assert.deepEqual(hotelAreas, ['Midtown']);
 assert.equal(hotelAreas.includes('Unused area'), false);
 
-assert.match(bundle, /\$n=\[\.\.\.new Set\(tsListThings\(Fs\)\.flatMap\(Re=>vn\(Re\)/);
-assert.match(bundle, /ci=\[\.\.\.new Set\(tsListThings\(Oc\)\.flatMap\(Re=>or\(Re\)/);
+assert.match(bundle, /\$n=\[\.\.\.new Set\(Fs\.filter\(G=>!G\.__tsLiveFill/);
+assert.match(bundle, /ci=\[\.\.\.new Set\(Oc\.filter\(G=>!G\.__tsLiveFill/);
 assert.match(bundle, /Os\.map\(G=>n\.jsx\("button",\{onClick:\(\)=>Kn\(G\)/);
 assert.doesNotMatch(bundle, /\[\.\.\.new Set\(tsListThings\(Cc\)\.map\(Re=>Yd\(Re\)\)\.filter\(Boolean\)\)\]/);
 const crossPatch = readFileSync(new URL('../src/vacation/trek-shared-tab-cross-filter-patch.mjs', import.meta.url), 'utf8');
 assert.match(crossPatch, /Oa=Array\.from\(new Set\(\(q==="events"\?Cc\.filter\(G=>!G\.__tsLiveFill&&\(!vt\.length\|\|vt\.includes\(Yd\(G\)\)\)\)/);
 assert.match(crossPatch, /Os=\[\.\.\.new Set\(Cc\.filter\(G=>!G\.__tsLiveFill&&\(!ze\.length\|\|ze\.includes\(En\(G\)\)\)\)\.map\(G=>Yd\(G\)\)\.filter\(Boolean\)\)\]/);
+assert.match(crossPatch, /QN_STALE_PATCH/);
+assert.match(crossPatch, /CI_CHIP_PATCH/);
+assert.match(bundle, /Qn=tsPad\(Oc\.filter\(G=>\{const za=ze\.filter/);
 assert.match(bundle, /No events match those filters/);
 assert.doesNotMatch(bundle, /\$n=gt\.filter\(/);
 assert.doesNotMatch(bundle, /ci=ot\.filter\(/);
