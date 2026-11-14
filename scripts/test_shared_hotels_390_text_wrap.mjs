@@ -83,7 +83,12 @@ try {
       tsStarRatingAria: () => '4.5 out of 5 stars', fo: () => [], _l: () => '',
       Qt: (p) => p.id, It: () => 'hotel', Sa: false, xt: null, Ce: false,
       kl: () => null, Ds: () => false, Nr: () => null,
-      la: { start_date: '2026-06-17' }, Qa: [], Yi: () => [], Ar: () => '', hn: () => '',
+      la: { start_date: '2026-06-17' }, cn: [], Qa: [], Yi: () => [], Ar: () => '', hn: () => '',
+      tsThingTravelTotalLabel: (p) => {
+        const raw = String(p?.price ?? '$404').replace(/[^\d.]/g, '');
+        const rate = Number(raw) || 404;
+        return `$${Math.round(rate * 7 * 1.2).toLocaleString('en-US')} est. total`;
+      },
       dc: () => jsx('span', { style: { width: 28, minWidth: 28, height: 28 } }),
     };
     const render = new Function(...Object.keys(env), `const ${rows};return Oe;`)(...Object.values(env));
