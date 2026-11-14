@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
 
 import { mergeWebDetailIntoSearchPlace } from '../src/vacation/search-place-detail-enrichment.mjs';
 import { applyEnrichedDetailToTripThing } from '../src/vacation/place-detail-enrichment.mjs';
@@ -68,24 +70,36 @@ assert.equal(String(hotelOverride.summary || '').trim(), genericSummary);
 assert.ok(String(hotelOverride.longDetails || '').trim().length >= 40);
 assert.notEqual(String(hotelOverride.summary || '').trim(), String(hotelOverride.longDetails || '').trim());
 
-function rgNoMatches(...args) {
-  try {
-    return execFileSync('rg', args, { encoding: 'utf8' }).trim();
-  } catch (error) {
-    if (error?.status === 1) return '';
-    throw error;
+function collectFilesUnder(dir) {
+  const files = [];
+  if (!fs.existsSync(dir)) return files;
+  for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
+    const abs = path.join(dir, ent.name);
+    if (ent.isDirectory()) files.push(...collectFilesUnder(abs));
+    else if (ent.isFile()) files.push(abs);
   }
+  return files;
+}
+
+function grepLinesInPaths(paths, pattern) {
+  const re = new RegExp(pattern);
+  const hits = [];
+  for (const file of paths) {
+    const lines = fs.readFileSync(file, 'utf8').split('\n');
+    for (let i = 0; i < lines.length; i += 1) {
+      if (re.test(lines[i])) hits.push(`${file}:${i + 1}:${lines[i]}`);
+    }
+  }
+  return hits.join('\n').trim();
 }
 
 const srcRoot = new URL('../src/vacation/', import.meta.url);
-const grepOut = rgNoMatches('-n', '\\|\\|\\s*detail\\.summary', srcRoot.pathname);
+const vacationFiles = collectFilesUnder(srcRoot.pathname);
+const grepOut = grepLinesInPaths(vacationFiles, '\\|\\|\\s*detail\\.summary');
 assert.equal(grepOut, '', `must not copy detail.summary into longDetails/details paths:\n${grepOut}`);
 
-const dualSeed = rgNoMatches(
-  '-n',
-  'summary:\\s*description,\\s*description',
-  new URL('../src/vacation/trip-thing-enrich-row.mjs', import.meta.url).pathname,
-);
+const tripThingEnrichPath = new URL('../src/vacation/trip-thing-enrich-row.mjs', import.meta.url).pathname;
+const dualSeed = grepLinesInPaths([tripThingEnrichPath], 'summary:\\s*description,\\s*description');
 assert.equal(dualSeed, '', 'trip-thing-enrich-row must not seed summary and description from the same text');
 
 const payloadSha = gateBNycFixturePayloadSha256(buildNycCraigKimDaybydayTripPositiveV1());
