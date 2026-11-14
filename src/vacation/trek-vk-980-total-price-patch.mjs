@@ -9,16 +9,10 @@ const LIST_PRICE_SUFFIX_PATCH = 'children:bn(G)?eu(G)[1]:(Zi(G)||Mi(G))?tsThingT
 const BUDGET_ZT_NEEDLE = 'zt=di=>{const Xi=String(bi(di)||""),go=Array.from(Xi.matchAll(/\\$?([0-9][0-9,]*(?:\\.\\d+)?)/g)).map(au=>Number(au[1].replace(/,/g,""))).filter(au=>Number.isFinite(au));if(!go.length)return 0;let fr=go.length>=2?(go[0]+go[1])/2:go[0];const Ul=Xi.toLowerCase();return(It(di)==="hotel"||/night/.test(Ul))&&(fr=fr*Math.max(1,xi(di))),(/per person|pp|fare|ticket|flight/.test(Ul)||["restaurant","store","event","family_event","tour","transport","music","workout","artist","theatre","sightseeing","other","flight"].includes(It(di)))&&(fr=fr*2),Math.round(fr)}';
 const BUDGET_ZT_PATCH = 'zt=di=>{const row=tsThingTravelTotalAmount(di,la,cn);return row?row.amount:(()=>{const Xi=String(bi(di)||""),go=Array.from(Xi.matchAll(/\\$?([0-9][0-9,]*(?:\\.\\d+)?)/g)).map(au=>Number(au[1].replace(/,/g,""))).filter(au=>Number.isFinite(au));if(!go.length)return 0;let fr=go.length>=2?(go[0]+go[1])/2:go[0];const Ul=Xi.toLowerCase();return(/per person|pp|fare|ticket|flight/.test(Ul)||["restaurant","store","event","family_event","tour","transport","music","workout","artist","theatre","sightseeing","other","flight"].includes(It(di)))&&(fr=fr*2),Math.round(fr)})()}';
 
-const DETAIL_PRICE_FRAG = 'const raw=String(d.price??"").trim();const unit=typeof d.price==="number"?d.price:Number(raw.replace(/[^0-9.]/g,""));const tsPriceHas=Number.isFinite(unit)&&unit>0';
-const DETAIL_PRICE_PATCH = 'const tsPriceLabel=tsThingTravelTotalLabel(Dt,la,cn);const tsPriceHas=!!tsPriceLabel';
-
 const RATING_ROW_964_PRICE_NEEDLE =
   'const tsHeadStars=tsRenderStarRatingHtml(tsPrimaryPlaceStarRating(ha(Dt)));const d=ha(Dt)||{};const raw=String(d.price??"").trim();const unit=typeof d.price==="number"?d.price:Number(raw.replace(/[^0-9.]/g,""));const tsPriceHas=Number.isFinite(unit)&&unit>0;return tsHeadStars||tsPriceHas?n.jsxs("div",{"data-ts-detail-rating-row":"1",style:{display:"flex",flexDirection:"row",flexWrap:"nowrap"';
 const RATING_ROW_964_PRICE_PATCH =
-  'const tsHeadStars=tsRenderStarRatingHtml(tsPrimaryPlaceStarRating(ha(Dt)));const tsPriceLabel=typeof tsThingTravelTotalLabel!="undefined"?tsThingTravelTotalLabel(Dt,la,cn):(()=>{const d=ha(Dt)||{};const raw=String(d.price??"").trim();const unit=typeof d.price==="number"?d.price:Number(raw.replace(/[^0-9.]/g,""));return Number.isFinite(unit)&&unit>0?"$"+Math.round(unit).toLocaleString("en-US"):""})();const tsPriceHas=!!tsPriceLabel;return tsHeadStars||tsPriceHas?n.jsxs("div",{"data-ts-detail-rating-row":"1",style:{display:"flex",flexDirection:"row",flexWrap:"nowrap"';
-
-const DETAIL_PRICE_VALUE_NEEDLE = 'children:[n.jsx("strong",{children:"Price:"})," ","$"+Math.round(unit).toLocaleString("en-US")]';
-const DETAIL_PRICE_VALUE_PATCH = 'children:[n.jsx("strong",{children:"Price:"})," ",tsPriceLabel]';
+  'const tsHeadStars=tsRenderStarRatingHtml(tsPrimaryPlaceStarRating(ha(Dt)));const d=ha(Dt)||{};const tsTot=typeof tsThingTravelTotalAmount!="undefined"?tsThingTravelTotalAmount(Dt,la,cn):null;const raw=String(d.price??"").trim();const rawUnit=typeof d.price==="number"?d.price:Number(raw.replace(/[^0-9.]/g,""));const unit=tsTot?tsTot.amount:(Number.isFinite(rawUnit)&&rawUnit>0?rawUnit:NaN);const tsPriceHas=Number.isFinite(unit)&&unit>0;return tsHeadStars||tsPriceHas?n.jsxs("div",{"data-ts-detail-rating-row":"1",style:{display:"flex",flexDirection:"row",flexWrap:"nowrap"';
 
 const PRICE_EDIT_NEEDLE = 'onChange:G=>Xa(Dt,"price",G.target.value)';
 const PRICE_EDIT_PATCH = 'onChange:G=>{Xa(Dt,"price",G.target.value);Xa(Dt,"priceIsTotal",true)}';
@@ -49,12 +43,8 @@ export function patchVk980TotalPrice(source = '') {
   }
   if (js.includes(RATING_ROW_964_PRICE_NEEDLE)) {
     js = js.replace(RATING_ROW_964_PRICE_NEEDLE, RATING_ROW_964_PRICE_PATCH);
-  }
-  if (js.includes(DETAIL_PRICE_FRAG)) {
-    js = js.replaceAll(DETAIL_PRICE_FRAG, DETAIL_PRICE_PATCH);
-  }
-  if (js.includes(DETAIL_PRICE_VALUE_NEEDLE)) {
-    js = js.replaceAll(DETAIL_PRICE_VALUE_NEEDLE, DETAIL_PRICE_VALUE_PATCH);
+  } else if (!js.includes('const tsTot=typeof tsThingTravelTotalAmount')) {
+    throw new Error('vk980 detail rating row patch did not apply');
   }
   if (js.includes(PRICE_EDIT_NEEDLE)) {
     js = js.replaceAll(PRICE_EDIT_NEEDLE, PRICE_EDIT_PATCH);
