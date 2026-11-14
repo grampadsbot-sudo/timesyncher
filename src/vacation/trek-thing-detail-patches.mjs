@@ -17,6 +17,8 @@ function normalizeBakedV3DetailGateBNeedles(js = '') {
   let next = String(js);
   const swaps = [
     ["'data-ts-detail-info-box': 'address-hours'", '"data-ts-detail-info-box":"address-hours"'],
+    ["'data-ts-detail-info-box': 'phone'", '"data-ts-detail-info-box":"phone"'],
+    ["'data-ts-detail-info-box': 'website'", '"data-ts-detail-info-box":"website"'],
     ["'data-ts-detail-reviews': '1'", '"data-ts-detail-reviews":"1"'],
   ];
   for (const [from, to] of swaps) {
