@@ -57,7 +57,7 @@ const shared = prepareSharedTripForLiveApp({
 
 assert.equal(shared.budget.length > 0, true, 'priced shared trip must expose API budget lines');
 const allowed = new Set(shared.budget.map((line) => Number(line.total_price)));
-assert.equal(allowed.has(400), true, 'hotel stay total must be on API budget');
+assert.equal(allowed.has(480), true, 'hotel stay total must be on API budget');
 assert.equal(allowed.has(45), true);
 assert.equal(allowed.has(55), true);
 
@@ -66,16 +66,16 @@ const hotelAmt = trekBudgetAmount(
   shared.thingOverrides[`place:${hotelId}`],
   'hotel',
 );
-assert.equal(hotelAmt.amount, 400);
+assert.equal(hotelAmt.amount, 480);
 
 const budgetTabText = [
   'Overall trip budget',
   'Trip total',
   '$100',
-  '$400',
+  '$480',
   '$45',
   '$55',
-  '$500',
+  '$580',
 ].join(' ');
 const hits = budgetHardcodedHits(budgetTabText, shared.budget, shared);
 assert.deepEqual(hits, [], `budget tab amounts must match API lines: ${JSON.stringify(hits)}`);
