@@ -153,10 +153,28 @@ function restTypeLabel(place, override) {
   return humanizeTypeKey(raw);
 }
 
-export function areaChipsForTab(places, trip, tab) {
+function placeMatchesTypeFilter(place, trip, tab, typeFilter) {
+  const selected = text(typeFilter);
+  if (!selected || selected === 'All types') return true;
+  const override = overrideFor(trip, place);
+  if (tab === 'events') return restTypeLabel(place, override) === selected;
+  const source = sourceRecord(place, override);
+  return tagList(place, override, source).includes(selected);
+}
+
+function placeMatchesAreaFilter(place, trip, areaFilter) {
+  const selected = text(areaFilter);
+  if (!selected || selected === 'All areas') return true;
+  const override = overrideFor(trip, place);
+  const source = sourceRecord(place, override);
+  return neighborhood(place, override, source) === selected;
+}
+
+export function areaChipsForTab(places, trip, tab, filters = {}) {
   const chips = ['All areas'];
   const seen = new Set();
   for (const place of places) {
+    if (!placeMatchesTypeFilter(place, trip, tab, filters.type)) continue;
     const override = overrideFor(trip, place);
     const source = sourceRecord(place, override);
     const area = neighborhood(place, override, source);
@@ -165,17 +183,15 @@ export function areaChipsForTab(places, trip, tab) {
       chips.push(area);
     }
   }
-
-
-
   return chips;
 }
 
-export function typeChipsForTab(places, trip, tab) {
+export function typeChipsForTab(places, trip, tab, filters = {}) {
   if (tab === 'restaurants' || tab === 'stores' || tab === 'events') {
     const chips = ['All types'];
     const seen = new Set();
     for (const place of places) {
+      if (!placeMatchesAreaFilter(place, trip, filters.area)) continue;
       const override = overrideFor(trip, place);
       const source = sourceRecord(place, override);
       if (tab === 'events') {
@@ -198,6 +214,16 @@ export function typeChipsForTab(places, trip, tab) {
     return chips;
   }
   return [];
+}
+
+export function reconcileListFilters(filters = {}, areaChips = [], typeChips = []) {
+  const area = text(filters.area);
+  const type = text(filters.type);
+  let nextArea = area || 'All areas';
+  let nextType = type || 'All types';
+  if (nextArea !== 'All areas' && !areaChips.includes(nextArea)) nextArea = 'All areas';
+  if (nextType !== 'All types' && !typeChips.includes(nextType)) nextType = 'All types';
+  return { area: nextArea, type: nextType };
 }
 
 export function filterPlaces(places, trip, tab, filters = {}) {

@@ -700,16 +700,16 @@ export function assertPatchedStyleTwo(source = '') {
   if (js.includes('__tsLiveFill:1') || js.includes('lat:36.1147') || js.includes('address:"Nevada"') || js.includes('logoUrl:tsLogo(name)')) {
     throw new Error('Live tabs must not pad Las Vegas names or coordinates.');
   }
-  if (!js.includes('tsListThings=') || !js.includes('tsListThings(Fs)') || !js.includes('tsListThings(Oc)')) {
+  if (!js.includes('tsListThings=')) {
     throw new Error('Live list tag chips must harvest only tags on Things in that list.');
   }
   if (js.includes('$n=gt.filter(G=>Fs.some(Re=>vn(Re).includes(G)))') || js.includes('ci=ot.filter(G=>Oc.some(Re=>or(Re).includes(G)))')) {
     throw new Error('Live list tags must not harvest from the unfiltered full catalog.');
   }
-  if (js.includes('ci=ot.filter(') || !js.includes('ci=[...new Set(tsListThings(Oc).flatMap(Re=>or(Re).map(zt=>String(zt||"").trim()).filter(Boolean)))]')) {
+  if (js.includes('ci=ot.filter(') || !js.includes('ci=[...new Set(Oc.filter(G=>!G.__tsLiveFill&&(!ze.length||ze.includes(En(G)))&&(!Te.length||Te.every(Re=>or(G).includes(Re))))')) {
     throw new Error('Restaurant list chips must be saved tags on listed Things, not canned catalog names.');
   }
-  if (js.includes('$n=gt.filter(') || !js.includes('$n=[...new Set(tsListThings(Fs).flatMap(Re=>vn(Re).map(zt=>String(zt||"").trim()).filter(Boolean)))]')) {
+  if (js.includes('$n=gt.filter(') || !js.includes('$n=[...new Set(Fs.filter(G=>!G.__tsLiveFill&&(!ze.length||ze.includes(En(G)))&&(!Je.length||Je.every(Re=>vn(G).includes(Re))))')) {
     throw new Error('Store list chips must be saved tags on listed Things, not the fixed store vocabulary.');
   }
   if (!js.includes(REST_TYPE_CHIPS_NEEDLE) || js.includes(REST_TYPE_CHIPS_PATCH)) {

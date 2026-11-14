@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FilterChipRow } from '../components/FilterChipRow';
 import { ListRow } from '../components/ListRow';
 import { ListSortBar } from '../components/ListSortBar';
@@ -7,6 +7,7 @@ import {
   emptyStateMessage,
   filterPlaces,
   placesForCategoryTab,
+  reconcileListFilters,
   sortPlaces,
   typeChipsForTab,
 } from '../lib/listTabModel.mjs';
@@ -32,13 +33,30 @@ export function CategoryTabScreen({
   onTimelineChange,
 }: Props) {
   const categoryPlaces = useMemo(() => placesForCategoryTab(trip, tab), [trip, tab]);
-  const areaChips = useMemo(() => areaChipsForTab(categoryPlaces, trip, tab), [categoryPlaces, trip, tab]);
-  const typeChips = useMemo(() => typeChipsForTab(categoryPlaces, trip, tab), [categoryPlaces, trip, tab]);
 
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [selectedArea, setSelectedArea] = useState('All areas');
   const [selectedType, setSelectedType] = useState('All types');
+
+  const areaChips = useMemo(
+    () => areaChipsForTab(categoryPlaces, trip, tab, { type: selectedType }),
+    [categoryPlaces, trip, tab, selectedType],
+  );
+  const typeChips = useMemo(
+    () => typeChipsForTab(categoryPlaces, trip, tab, { area: selectedArea }),
+    [categoryPlaces, trip, tab, selectedArea],
+  );
+
+  useEffect(() => {
+    const next = reconcileListFilters(
+      { area: selectedArea, type: selectedType },
+      areaChips,
+      typeChips,
+    );
+    if (next.area !== selectedArea) setSelectedArea(next.area);
+    if (next.type !== selectedType) setSelectedType(next.type);
+  }, [areaChips, typeChips, selectedArea, selectedType]);
 
   const filtered = useMemo(
     () =>

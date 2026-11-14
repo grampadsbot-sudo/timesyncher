@@ -6,8 +6,10 @@ import { renderServedTrekBundle } from '../src/vacation/trek-style2-bundle.mjs';
 const UPSTREAM_COMMIT = '06e47169699ffdee8accf48e74b0a247a8793ebc^';
 const UPSTREAM_PATH = 'public/assets/upstream/index-BKun7ofk.js';
 
-const SAVED_TAG_CHIPS = 'ci=[...new Set(tsListThings(Oc).flatMap(Re=>or(Re).map(zt=>String(zt||"").trim()).filter(Boolean)))]';
-const LIST_FILTER = 'Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re)))';
+const SAVED_TAG_CHIPS =
+  'ci=[...new Set(Oc.filter(G=>!G.__tsLiveFill&&(!ze.length||ze.includes(En(G)))&&(!Te.length||Te.every(Re=>or(G).includes(Re)))).flatMap(Re=>or(Re).map(zt=>String(zt||"").trim()).filter(Boolean)))]';
+const LIST_FILTER =
+  'Oc.filter(G=>{const za=ze.filter(Re=>Oa.includes(Re));const tp=Te.filter(Re=>ci.includes(Re));return(!za.length||za.includes(En(G)))&&(!tp.length||tp.every(Re=>or(G).includes(Re)));})';
 
 const raw = execFileSync('git', ['show', `${UPSTREAM_COMMIT}:${UPSTREAM_PATH}`], {
   maxBuffer: 20 * 1024 * 1024,
@@ -28,12 +30,26 @@ assert.match(restaurantsBlock, /ci\.map\(G=>n\.jsx\("button",\{onClick:\(\)=>Wa\
 assert.ok(js.includes(`Qn=tsPad(${LIST_FILTER})`));
 
 function runSavedTags(expression, { rows, tagsFor, areas = [], areaFor = () => '', selected = [] }) {
-  const fn = new Function('Oc', 'ze', 'En', 'or', 'Te', `
+  const fn = new Function('Oc', 'ze', 'En', 'or', 'Te', 'Oa', 'ci', `
     const tsListThings = (rows) => rows.filter((Re) => !Re.__tsLiveFill && (!ze.length || ze.includes(En(Re))));
     const ot = ['Seafood', 'Italian'];
     return ${expression};
   `);
-  return fn(rows, areas, areaFor, tagsFor, selected);
+  const En = (row) => areaFor(row);
+  const Oa = [...new Set(rows.map(En).filter(Boolean))];
+  const ci = [
+    ...new Set(
+      rows
+        .filter(
+          (G) =>
+            !G.__tsLiveFill &&
+            (!areas.length || areas.includes(En(G))) &&
+            (!selected.length || selected.every((Re) => tagsFor(G).includes(Re))),
+        )
+        .flatMap((row) => tagsFor(row).map((tag) => String(tag || '').trim()).filter(Boolean)),
+    ),
+  ];
+  return fn(rows, areas, En, tagsFor, selected, Oa, ci);
 }
 
 const north = { id: 'north' };
