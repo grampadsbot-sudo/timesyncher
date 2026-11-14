@@ -12353,7 +12353,11 @@ $2`)})})}const PLe=[{icon:b2,label:"Bold",action:{type:"wrap",before:"**",after:
     if (!edit && !text(value)) return null;
     const section = detailSection[key];
     const sectionProps = section
-      ? { 'data-ts-detail-section': section, 'data-ts-detail-field': key }
+      ? {
+          'data-ts-detail-section': section,
+          'data-ts-detail-field': key,
+          ...(section === 'summary' && !edit ? { 'data-ts-detail-summary-readonly': '1' } : {}),
+        }
       : { 'data-ts-detail-field': key };
     const editorAttrs = edit && key === 'story' ? { 'data-ts-story-editor': '1' }
       : edit && key === 'happyHourDetails' ? { 'data-ts-happy-hour-editor': '1' } : {};
