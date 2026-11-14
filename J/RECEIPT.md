@@ -1,34 +1,45 @@
-# VK fill #980 — unit-tests CI fix (cursor-ubuntu, composer-2.5)
+# PR #985 — host merge conflict resolution (cursor-ubuntu, composer-2.5)
 
-Outcome: **source-ready** for host publication from starting HEAD `1ee412662c052a78229baf3bc13e478a5eecff45`. Issue #980 / PR #985.
+Outcome: **source-ready** from starting HEAD `8baf4679f23229fae8ec8baa2d5065818bef4cba`. Host merged `origin/vk` at `9e641b63d15da94030d8043f55aaf9afafd8817d` (conflicts resolved in source; host must `git add` + `git commit --no-edit`).
 
-## CI root cause (unit-tests red on `1ee41266`)
+GBrain handoff `bot-admin/lanes/vk-pr-handoff/pr-985`: **page_not_found** on this pass.
 
-| Failure | Fix |
+## Conflicts resolved
+
+| File | Resolution |
 | --- | --- |
-| `scripts/test_thing_travel_total_price.mjs` read absolute Ubuntu-only path `tsv-dispatch/acceptance/fixtures/demo-nyc-99-snapshot-20261110/shared-trip.json` → ENOENT on GitHub `unit-tests` | Vendored slim repo fixture `scripts/fixtures/demo-nyc-99-hotel-car-total-price-20261110.json`; test loads via `import.meta.url` |
-| `apps/vacation-client/test/budget.unit.mjs` expected pre-#980 hotel amounts (1556 / 700) | Updated to hotel **est. total** math (×1.20): 1867, 840; `nightly` now `null` for hotel/car via `thingBudgetAmount` |
+| `src/vacation/list-row-dates.mjs` | Kept PR #980 list total (`tsThingTravelTotalLabel`) on hotel/car rows |
+| `scripts/offline-tests.txt` | Union: `test_acceptance_980_hotel_car_totals`, `test_thing_travel_total_price`, `test_acceptance_984_add_place_latency` |
+| `public/assets/index-BKun7ofk.js` | Took vk base via `git show origin/vk:…`, then `node scripts/rebake_served_trek_bundle.mjs` |
 
-## Changed files (uncommitted; host must commit + push)
+## CI fix (#964 unit test)
 
-| File | Change |
+**Root cause:** `patchVk980TotalPrice` replaced detail #964 rating-row IIFE price with `tsThingTravelTotalLabel(Dt,la,cn)`; `scripts/test_issue_964_detail_overall_rating_row.mjs` evals that IIFE in an isolated `Function` without bundle helpers → `ReferenceError`.
+
+**Fix:** `src/vacation/trek-vk-980-total-price-patch.mjs` — #964 row uses `typeof tsThingTravelTotalLabel!="undefined"` guard with numeric-price fallback for eval; live bundle still uses total label; decouple `DETAIL_PRICE_VALUE` replace from `DETAIL_PRICE_FRAG` guard so rating row gets `tsPriceLabel` children.
+
+## Changed files (uncommitted; host publishes)
+
+| File | Why |
 | --- | --- |
-| `scripts/fixtures/demo-nyc-99-hotel-car-total-price-20261110.json` | New slim NYC-99 snapshot slice (hotel/car total-price assertions) |
-| `scripts/test_thing_travel_total_price.mjs` | Repo-local fixture path |
-| `apps/vacation-client/test/budget.unit.mjs` | #980 hotel budget expectations |
+| `src/vacation/list-row-dates.mjs` | Merge conflict |
+| `scripts/offline-tests.txt` | Merge conflict |
+| `src/vacation/trek-vk-980-total-price-patch.mjs` | #964 eval + price value patch |
+| `public/assets/index-BKun7ofk.js` | Rebaked served bundle |
 
-Prior #980 product edits remain on HEAD `1ee41266` (unchanged this round).
+**Leave out of commit:** `evidence/vacation-client-p2-*/**` PNG deltas from local `apps/vacation-client` test build (artifact churn only).
 
-## Local checks (starting HEAD `1ee412662c052a78229baf3bc13e478a5eecff45`)
+## Local checks (starting HEAD `8baf4679f23229fae8ec8baa2d5065818bef4cba`)
 
 | Command | Result |
 | --- | --- |
+| `node scripts/rebake_served_trek_bundle.mjs` | exit 0 |
+| `node scripts/test_issue_964_detail_overall_rating_row.mjs` | exit 0 |
 | `node scripts/test_thing_travel_total_price.mjs` | exit 0 |
 | `node scripts/test_acceptance_980_hotel_car_totals.mjs` | exit 0 |
-| `node scripts/test_728_budget_data.mjs` | exit 0 |
-| `node scripts/test_shared_tab_list_summary.mjs` | exit 0 |
-| `cd apps/vacation-client && npm run typecheck` | exit 0 |
-| `cd apps/vacation-client && npm run lint` | exit 0 |
-| `cd apps/vacation-client && npm run test` | exit 0 |
+| `node scripts/check-no-comments.mjs` | exit 0 |
+| `node scripts/test_offline_manifest.mjs` | exit 0 |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | exit 0 |
+| `cd apps/vacation-client && npm test` | exit 0 |
 
 No commit, stage, push, merge, rebase, or deploy (HOST PUBLICATION ONLY).

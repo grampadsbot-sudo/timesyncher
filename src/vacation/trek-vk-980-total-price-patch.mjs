@@ -12,6 +12,11 @@ const BUDGET_ZT_PATCH = 'zt=di=>{const row=tsThingTravelTotalAmount(di,la,cn);re
 const DETAIL_PRICE_FRAG = 'const raw=String(d.price??"").trim();const unit=typeof d.price==="number"?d.price:Number(raw.replace(/[^0-9.]/g,""));const tsPriceHas=Number.isFinite(unit)&&unit>0';
 const DETAIL_PRICE_PATCH = 'const tsPriceLabel=tsThingTravelTotalLabel(Dt,la,cn);const tsPriceHas=!!tsPriceLabel';
 
+const RATING_ROW_964_PRICE_NEEDLE =
+  'const tsHeadStars=tsRenderStarRatingHtml(tsPrimaryPlaceStarRating(ha(Dt)));const d=ha(Dt)||{};const raw=String(d.price??"").trim();const unit=typeof d.price==="number"?d.price:Number(raw.replace(/[^0-9.]/g,""));const tsPriceHas=Number.isFinite(unit)&&unit>0;return tsHeadStars||tsPriceHas?n.jsxs("div",{"data-ts-detail-rating-row":"1",style:{display:"flex",flexDirection:"row",flexWrap:"nowrap"';
+const RATING_ROW_964_PRICE_PATCH =
+  'const tsHeadStars=tsRenderStarRatingHtml(tsPrimaryPlaceStarRating(ha(Dt)));const tsPriceLabel=typeof tsThingTravelTotalLabel!="undefined"?tsThingTravelTotalLabel(Dt,la,cn):(()=>{const d=ha(Dt)||{};const raw=String(d.price??"").trim();const unit=typeof d.price==="number"?d.price:Number(raw.replace(/[^0-9.]/g,""));return Number.isFinite(unit)&&unit>0?"$"+Math.round(unit).toLocaleString("en-US"):""})();const tsPriceHas=!!tsPriceLabel;return tsHeadStars||tsPriceHas?n.jsxs("div",{"data-ts-detail-rating-row":"1",style:{display:"flex",flexDirection:"row",flexWrap:"nowrap"';
+
 const DETAIL_PRICE_VALUE_NEEDLE = 'children:[n.jsx("strong",{children:"Price:"})," ","$"+Math.round(unit).toLocaleString("en-US")]';
 const DETAIL_PRICE_VALUE_PATCH = 'children:[n.jsx("strong",{children:"Price:"})," ",tsPriceLabel]';
 
@@ -42,8 +47,13 @@ export function patchVk980TotalPrice(source = '') {
   } else if (!js.includes(BUDGET_ZT_PATCH.slice(0, 40))) {
     throw new Error('vk980 budget zt patch did not apply');
   }
+  if (js.includes(RATING_ROW_964_PRICE_NEEDLE)) {
+    js = js.replace(RATING_ROW_964_PRICE_NEEDLE, RATING_ROW_964_PRICE_PATCH);
+  }
   if (js.includes(DETAIL_PRICE_FRAG)) {
     js = js.replaceAll(DETAIL_PRICE_FRAG, DETAIL_PRICE_PATCH);
+  }
+  if (js.includes(DETAIL_PRICE_VALUE_NEEDLE)) {
     js = js.replaceAll(DETAIL_PRICE_VALUE_NEEDLE, DETAIL_PRICE_VALUE_PATCH);
   }
   if (js.includes(PRICE_EDIT_NEEDLE)) {
