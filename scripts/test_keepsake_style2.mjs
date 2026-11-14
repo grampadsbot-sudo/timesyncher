@@ -32,6 +32,7 @@ import {
 } from '../src/vacation/keepsake-style2-handler.mjs';
 import keepsakeStyle2Handler from '../src/vacation/keepsake-style2-handler.mjs';
 import { patchStyleTwoToConfigRenderer, assertPatchedStyleTwo, assertStyleTwoPatchParses, STYLE2_USES_AE, STYLE2_USES_ZU } from '../src/vacation/trek-style2-bundle.mjs'; import { patchVk890Rebrand } from '../src/vacation/trek-vk-890-rebrand-patch.mjs';
+import { GET_SHARED_TRIP_PATCH } from '../src/vacation/trek-shared-trip-boot-fetch-patch.mjs';
 import { applyProductKeepsakeOverrides, keepsakeListBuckets, resolveThingCoords } from '../src/vacation/keepsake-product-overrides.mjs';
 import { KEEPSAKE_LIST_MINIMUMS } from '../src/vacation/keepsake-list-minimums.mjs';
 import { DEFAULT_FIRST_PASS_MINIMUMS } from '../scripts/vacation-public-research-worker.mjs';
@@ -591,7 +592,7 @@ const aeFixture = [
   'Mo=Array.from(new Map((Gt||[]).filter(Xi=>Xi&&Ds(Xi)).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}])).values())',
   'height:dn?900:300,marginBottom:12',
   'ha=G=>le[Qt(G)]||{},Sn=',
-  'getSharedTrip:e=>Rt.get(`/shared/${e}`,{params:{_ts:Date.now()},headers:{"Cache-Control":"no-cache"}}).then(t=>t.data)',
+  GET_SHARED_TRIP_PATCH,
   'lf.getSharedTrip(r).then(G=>{A(G),G!=null&&G.thingOverrides&&typeof G.thingOverrides=="object"?pe(G.thingOverrides):pe({}),me(!0),ge(!1)})',
   'checked:!!ha(Dt).happyHour,onChange:G=>Xa(Dt,"happyHour",G.target.checked)})," Happy hour"',
   'value:ha(Dt).happyHourDetails??"",onChange:G=>Xa(Dt,"happyHourDetails",G.target.value)',
@@ -731,7 +732,7 @@ assert.match(patchedAe, /tsPad\(Qn\)\.length===0/);
 assert.doesNotMatch(patchedAe, /tsFillOv=/);
 assert.doesNotMatch(patchedAe, /tsPf=/);
 assert.match(patchedAe, /ha=G=>le\[Qt\(G\)\]\|\|\{\}/);
-assert.match(patchedAe, /getSharedTrip:e=>Rt\.get\(`\/shared\/\$\{e\}`,\{params:\{_ts:Date\.now\(\)\},headers:\{"Cache-Control":"no-cache"\}\}\)\.then\(t=>t\.data\)/);
+assert.match(patchedAe, new RegExp(GET_SHARED_TRIP_PATCH.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
 assert.doesNotMatch(patchedAe, /G\.thingOverrides=ov;return G/);
 assert.doesNotMatch(patchedAe, /tsPf\.some\(row=>row\.happyHour===true/);
 assert.doesNotMatch(patchedAe, /typeof tsFillOv==="function"/);
@@ -909,7 +910,6 @@ assert.match(sharedApp, /data-ts-pic-popup-tip/);
 assert.match(sharedApp, /leaflet-popup-tip-container/);
 assert.match(sharedApp, /box-sizing: content-box !important/);
 
-assert.match(livePatched, /i==="flight"\?"✈️"/);
-assert.doesNotMatch(livePatched, /ai=Q=>gi\(Q\)\.icon\|\|Kl\(Q\)/);
+assert.match(livePatched, /i==="flight"\?"✈️"/); assert.doesNotMatch(livePatched, /ai=Q=>gi\(Q\)\.icon\|\|Kl\(Q\)/);
 
 console.log('keepsake style-2 tests passed');
