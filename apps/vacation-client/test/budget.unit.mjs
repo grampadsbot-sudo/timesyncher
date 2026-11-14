@@ -26,7 +26,7 @@ const hotelTrip = {
 };
 
 const hotelAmt = budgetLineAmount(hotelTrip.places[0], hotelTrip);
-assert.equal(hotelAmt.amount, 1556);
+assert.equal(hotelAmt.amount, 1867);
 assert.equal(hotelAmt.nightly, 389);
 
 const flightTrip = {
@@ -55,8 +55,8 @@ assert.equal(sourceRecordPricing.hasPrice, true);
 assert.equal(sourceRecordPricing.amount, 556);
 
 const model = buildBudgetModel(hotelTrip);
-assert.equal(model.buckets.find((b) => b.label === 'Hotel')?.planned, 1556);
-assert.equal(model.tripPlanned, 1556);
+assert.equal(model.buckets.find((b) => b.label === 'Hotel')?.planned, 1867);
+assert.equal(model.tripPlanned, 1867);
 
 const targetsTrip = {
   trip: { currency: 'USD' },
@@ -132,7 +132,7 @@ const partialRow = buildBudgetModel(partialAssignmentTrip).rows.find(
 assert.ok(partialRow, 'partial assignment place appears on budget');
 assert.equal(partialRow.name, 'Known hotel');
 assert.equal(partialRow.bucket, 'Hotel');
-assert.equal(partialRow.amount, 700);
+assert.equal(partialRow.amount, 840);
 assert.equal(partialRow.hasPrice, true);
 assert.equal(budgetBucketForPlace(placesForBudget(partialAssignmentTrip)[0], partialAssignmentTrip), 'Hotel');
 

@@ -1,49 +1,52 @@
-# vkfill-989 host receipt (cursor-ubuntu composer-2.5, invariant relaunch)
+# PR #985 / issue #980 — base merge + CI unit-tests (cursor-ubuntu, composer-2.5)
 
-**Start HEAD:** `36873572607725b1f3800aa0dcc6834f76a09314` (verified `git rev-parse HEAD`)  
-**Outcome:** `source-ready` for host publication (#989 / PR #991).  
-**CI target:** red `accept` (`itinerary-paint-budget` harness failure on `b4882713`; ref `tsv-dispatch/acceptance/reports/989-b488271/report.json`).
+**Start HEAD:** `df3a759891bad7568ca8b27d051af386e8d09c25` (verified `git rev-parse HEAD`)  
+**Outcome:** `source-ready` for host publication (merge commit + push on `vkfill/980-20261113111627`).
 
-**Base merge:** host merged `origin/vk` at `01521be4d13e309d417ff7ff8ccda3b2d27d234a` into start HEAD; conflicts resolved in `J/RECEIPT.md`, `scripts/offline-tests.txt` (both sides' offline entries retained).
+**Base merge:** host merged `origin/vk` at `995df4eeadeb21d28a592dfc99e4a3529205a193` into start HEAD; conflicts resolved in `J/RECEIPT.md`, `scripts/offline-tests.txt` (union: #980 `test_thing_travel_total_price.mjs` + vk #988/#989 acceptance offline entries).
 
-## Root cause (accept)
+**GBrain handoff:** `bot-admin/lanes/vk-pr-handoff/pr-985` — page not found on fetch; noted here per lane brief.
 
-Host acceptance runner invokes `scripts/test_acceptance_989_itinerary_load_latency.mjs` → `test_issue_989_shared_trip_load.mjs` (latency slice). Puppeteer launched with fallback `executablePath` `/usr/local/bin/google-chrome`, which is absent on the accept Ubuntu host (`Browser was not found at the configured executablePath`). The dossier and fetch-once assertions already passed on the same head.
+Rule: `bot-admin/decisions/vk-hotels-cars-list-total-price-20261113` — Thing Price and Budget use the same estimated hotel total (rate × nights × 1.2).
 
-## Fix (this round)
+## CI fix (prior rounds on branch; unchanged at merge)
 
-`scripts/test_issue_989_shared_trip_load.mjs` — align Chromium resolution with `scripts/test_acceptance_984_add_place_latency.mjs`: `CHROME_PATH || PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser'`. Latency medians unchanged (local: cold median 283ms, warm median 224ms).
+**Root cause:** Hotel/car budget sync uses `thingTravelTotalPrice` (**$480** = $100/night × 4 × 1.2) per ruling #76; BUD fixture had asserted **400** and trip scrape total **$500**.
 
-## Merge resolution (uncommitted — host commits + pushes)
+**Fix:** Align Maui hotel fixture expectations to **480** / **$580** trip planned (480+45+55), same as `scripts/test_728_budget_data.mjs`.
+
+## Merge resolution (uncommitted — host commits)
 
 | Path | Role |
 | --- | --- |
-| `scripts/offline-tests.txt` | Union: #988 `test_acceptance_988_no_summary_details_fallback.mjs` + #989 acceptance trio |
-| `J/RECEIPT.md` | PR receipt + base-merge note |
-| `scripts/test_issue_989_shared_trip_load.mjs` | Puppeteer `executablePath` fallback for accept harness (prior round) |
+| `scripts/offline-tests.txt` | Union offline manifest: PR `test_thing_travel_total_price.mjs` + vk acceptance 988/989 scripts |
+| `J/RECEIPT.md` | This receipt + base-merge note |
+| `J/PR_DESCRIPTION.md` | Restored #985 text + base-merge note (vk merge had overwrote with #991 copy) |
+| `public/assets/index-BKun7ofk.js` | vk base taken by host; rebake applied below |
 
-## Pre-DONE (start HEAD `36873572`, dirty merge tree)
+## Local checks (start HEAD `df3a7598`, dirty merge tree)
 
 | Check | Result |
 | --- | --- |
-| `cd apps/vacation-client && npm test` | pass (after root `npm ci`) |
-| `node scripts/rebake_served_trek_bundle.mjs` | pass sha256=cca904a6… |
-| `node scripts/test_offline_manifest.mjs` | pass (468 offline) |
-| `BASE=vk node scripts/check-code-ratchet.mjs` | pass (0 fail) |
-| `node scripts/check-no-comments.mjs` | pass |
-| `node scripts/test_acceptance_988_no_summary_details_fallback.mjs` | pass |
-| `node scripts/test_acceptance_989_shared_payload_omits_dossier.mjs` | pass |
-| `node scripts/test_acceptance_989_payload_fetch_once.mjs` | pass |
-| `node scripts/test_acceptance_989_itinerary_load_latency.mjs` | pass (coldMedian 264ms, warmMedian 269ms) |
+| `npm ci` (repo root) | exit 0 |
+| `node scripts/rebake_served_trek_bundle.mjs` | exit 0 sha256=`39bb37ac81e49a043d2af7f5cf828d6724cac4e50f4f7a52646c9ed662f7e3db` |
+| `cd apps/vacation-client && npm test` | exit 0 |
+| `node scripts/test_shared_trip_api_budget_lines.mjs` | exit 0 |
+| `node scripts/test_thing_travel_total_price.mjs` | exit 0 |
+| `node scripts/test_728_budget_data.mjs` | exit 0 |
+| `node scripts/test_offline_manifest.mjs` | exit 0 (470 offline) |
+| `node scripts/check-no-comments.mjs` | exit 0 |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | exit 0 (0 fail) |
+| `node scripts/test_acceptance_988_no_summary_details_fallback.mjs` | exit 0 (pin `22834db13…` after vk #988 essence-ladder merge; was `aa75c85a…` stale) — head `a19b9cdd5d1e165150a3a448fc4c44bfe2389c3d` |
 
-No commit, stage, push, merge, rebase or deploy in this lane (HOST PUBLICATION ONLY).
+No commit, stage, push, merge, rebase, or deploy in this lane (HOST PUBLICATION ONLY).
 
 ## Uncommitted paths (host stages)
 
-- `J/RECEIPT.md`, `J/PR_DESCRIPTION.md`, `scripts/offline-tests.txt` (conflicts resolved)
-- Merge staged: `scripts/test_acceptance_988_no_summary_details_fallback.mjs`, four `src/vacation/*` enrichment files
-- Prior round (if not already on tip): `scripts/test_issue_989_shared_trip_load.mjs` chromium path
+All merge-index changes plus conflict resolutions above and rebake on `public/assets/index-BKun7ofk.js`.
+
+**Do not stage (collateral):** `evidence/vacation-client-p2-*/*.png` updated by `apps/vacation-client` npm test harness (unless host intentionally refreshes evidence).
 
 ## Host next
 
-`git add J/RECEIPT.md J/PR_DESCRIPTION.md scripts/offline-tests.txt`; `git commit --no-edit` merge; push `vkfill/989-auto-242609ec`; wait CI `unit-tests` + `secrets` + `accept` + `gateb` green on new head (PR #991).
+Resolve receipt check table with post-run results; `git add` conflict resolutions; `git commit --no-edit` merge; push `vkfill/980-20261113111627` once; wait CI green on new head.

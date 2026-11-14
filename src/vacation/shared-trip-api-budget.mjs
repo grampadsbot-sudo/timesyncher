@@ -7,6 +7,7 @@ import { intId } from './intake-shared-trip.mjs';
 import { productThingCategory } from './keepsake-product-overrides.mjs';
 
 import { thingBudgetAmount, thingPeople, perPersonThing } from './thing-price.mjs';
+import { thingTravelTotalPrice } from './thing-travel-total-price.mjs';
 import { assignedPlaceIds } from './itinerary-minimums.mjs';
 import { provenanceBlocksSourcedPrice } from './shared-trip-live-app-fields.mjs';
 
@@ -168,6 +169,15 @@ export function syncSharedTripApiBudget(shared = {}) {
         ...(row.hasPrice ? { pricePerPerson: row.nightly } : {}),
         people: thingPeople(row.place, row.override, shared),
       };
+    }
+    if ((row.category === 'hotel' || row.category === 'car') && row.hasPrice) {
+      const pricing = thingTravelTotalPrice(row.place, { ...row.override, ...overrides[key] }, row.category, shared);
+      if (pricing.hasPrice && !pricing.estimated) {
+        overrides[key] = {
+          ...(overrides[key] || {}),
+          stayTotal: pricing.amount,
+        };
+      }
     }
   }
   if (!rows.length) {
