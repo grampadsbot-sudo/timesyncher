@@ -1,29 +1,30 @@
-Closes #988
+Closes #989
 
 ## Summary
 
-Removes four fill fallbacks that copied **Summary** into **Details** (or seeded both from the same text), per Craig pt3372u and the essence-ladder contract (#68). When ladder output for `longDetails`/`details` is missing, those fields stay empty for a later ladder fill instead of duplicating summary text.
+Merges `origin/vk` at `01521be4` into PR #991 and resolves conflicts. Branch retains **#989** acceptance fixes (shared-trip payload / fetch-once / itinerary load latency) plus **vk** **#988** essence-ladder fill changes (no summary→details fallbacks).
 
-## Changes
+## Conflict resolution
 
-- `mergeWebDetailIntoSearchPlace`: no `detail.summary` → `longDetails`.
-- `applyEnrichedDetailToTripThing`: thing `description` from `detail.longDetails` only.
-- `enrichTripThing`: `sourceRecord` no longer sets `summary` from category `description`.
-- Hotel branch in `applyLiveAppListRowFields`: no longer overwrites generic/planning `summary` with `hotelNarrative` already applied to `longDetails`.
+- `scripts/offline-tests.txt`: union of `test_acceptance_988_no_summary_details_fallback.mjs` and the three #989 acceptance scripts.
+- `J/RECEIPT.md`: PR receipt + base-merge note.
 
-## Tests
+## Checks (local, start HEAD `36873572`, merge tree)
 
 ```bash
+cd apps/vacation-client && npm test
+node scripts/rebake_served_trek_bundle.mjs
 node scripts/test_acceptance_988_no_summary_details_fallback.mjs
-node scripts/test_vk_hotel_detail_fill.mjs
-node scripts/test_trip_thing_logo_metadata.mjs
+node scripts/test_acceptance_989_shared_payload_omits_dossier.mjs
+node scripts/test_acceptance_989_payload_fetch_once.mjs
+node scripts/test_acceptance_989_itinerary_load_latency.mjs
 node scripts/test_offline_manifest.mjs
+node scripts/check-no-comments.mjs
 BASE=vk node scripts/check-code-ratchet.mjs
 ```
 
-All above passed locally except `check-no-comments.mjs` (needs `apps/vacation-client` TypeScript install on the host runner).
+All passed after root `npm ci` (468 offline manifest entries).
 
 ## Left alone (scope)
 
-- Thing-detail UI layout, NYC trip 99 / 8CQX data, baselines, CI workflows, Gate B capture config.
-- Other unrelated `summary`/`description` helpers outside the four named paths.
+Baselines, Gate B capture config, workflows, `vercel.json`, fixture NYC data. Full offline manifest suite not re-run serially in lane (host/CI).

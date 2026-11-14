@@ -111,7 +111,12 @@
           return;
         }
         const token = decodeURIComponent(sharedMatch[1]);
-        const response = await fetch(`/api/shared/${encodeURIComponent(token)}/`, { credentials: 'include' });
+        window.__TS_SHARED_BOOT_SLUG__ = token;
+        appendSharedTrekBundle();
+        const response = await fetch(`/api/shared/${encodeURIComponent(token)}/`, {
+          credentials: 'include',
+          cache: 'no-store',
+        });
         if (!response.ok) {
           showSharedBootError(await readSharedBootCustomerMessage(response));
           return;
@@ -121,7 +126,7 @@
           showSharedBootError('This itinerary is not available right now. Please open the vacation app and try again.');
           return;
         }
-        appendSharedTrekBundle();
+        window.__TS_SHARED_BOOT_TRIP__ = data;
       }()).catch(() => {
         showSharedBootError('This itinerary is not available right now. Please open the vacation app and try again.');
       });
