@@ -49,7 +49,11 @@ export function thingBudgetAmount(place = {}, override = {}, category = '', shar
       const nightly = cat === 'hotel' && total.estimated
         ? parseStoredRate(row.price ?? place.price)
         : null;
-      return { amount: total.amount, hasPrice: true, nightly };
+      let amount = total.amount;
+      if (cat === 'hotel' && total.estimated && nightly != null && positive(row.stayDays)) {
+        amount = Math.round(nightly * Math.round(row.stayDays));
+      }
+      return { amount, hasPrice: true, nightly };
     }
     return { amount: 0, hasPrice: false, nightly: null };
   }
