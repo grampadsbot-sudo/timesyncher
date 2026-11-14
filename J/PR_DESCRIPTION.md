@@ -1,35 +1,22 @@
-Closes #980
+Closes #969
 
-## Summary
+Craig-asked: 2026-11-12 11:35 AM PT, bot-admin/decisions/vk-edit-mode-20261112, with the 11:33 two-checkbox and 11:36 sparse-field amendments in bot-admin/decisions/vk-mockup-feedback-20261112.
 
-PR **#985** on `vkfill/980-20261113111627`: hotel/car list and budget totals use ruling #76 estimated totals (`thingTravelTotalPrice`). This round resolves host **base merge** of `origin/vk` at `995df4ee` into head `df3a7598` (dirty against `vk`).
+Update the existing TREK Thing panel to the approved view/edit section order. Visits support multiple days and times, independent statuses, add/remove controls and clocks without seconds. Story inclusion writes only includeInTripRecap; Next Time writes only nextTime. Sparse Things expose the same editable fields, and empty view sections disappear. Happy Hour is one text field; Reviews stay read-only with gold stars; Photos & videos uses bound media and the existing caption persistence. Keep rating/price in the header and show a checkmark beside Close during editing.
 
-## Base merge conflict resolution
+Host merged `origin/vk` at `71daee4f9d909836f02c47566ff910a3eadcb5ac` (2026-11-14); conflicts resolved keeping #969 detail v3 patches plus vk list total-price (#980), boot fetch (#989), and offline manifest union.
 
-- `scripts/offline-tests.txt`: union — keep `test_thing_travel_total_price.mjs` (#980) and vk `test_acceptance_988_*` / `test_acceptance_989_*` offline entries.
-- `J/RECEIPT.md`: PR receipt + merge note.
-- `public/assets/index-BKun7ofk.js`: vk version from merge, then `node scripts/rebake_served_trek_bundle.mjs`.
+Validation on the uncommitted candidate based on 6683cfc3e72156ca67d47f08f958d4bf75485185:
 
-## Prior product fix (branch)
+- node scripts/test_issue_959_owner_pencil_webkit.mjs: iPhone WebKit touch acceptance at 390 and 430, owner/viewer access, flag independence, repeated visits, removal, reload persistence, mixed media, and sparse Story/Happy Hour/Hours fill and clear. ACCEPTANCE_DIR writes acceptance/969.json; CAPTURE_DIR writes the five view/edit states at both widths.
+- node scripts/test_issue_951_thing_detail_pencil_price.mjs and node scripts/test_issue_964_detail_overall_rating_row.mjs: rating/price and edit price persistence checks.
+- npm run test:keepsake-style2 and npm run build: successful. The build used TIMESYNCHER_BUILD_SHA=6683cfc3e72156ca67d47f08f958d4bf75485185; this identifies the starting commit, not a published candidate.
+- node scripts/check-no-comments.mjs, node scripts/test_offline_manifest.mjs, BASE=vk node scripts/check-code-ratchet.mjs, and git diff --check: successful.
 
-- Budget/API fixtures: `scripts/test_shared_trip_api_budget_lines.mjs` aligned to **$480** hotel estimate and **$580** trip planned per `bot-admin/decisions/vk-hotels-cars-list-total-price-20261113`.
+The isolated worktree has no installed dependencies. Local commands used the host's existing packages read-only via the job dependency loader and NODE_PATH/PATH; no package or lockfile changed. All original #951 assertions remain intact; #964 now supplies the edit-state context and adds an edit-price assertion. No test gate or manifest was loosened.
 
-## Verification (local, start HEAD `df3a7598`, merge tree)
+Scope left alone: Flights/Hotels/Cars list dates, snapshot/fixture data, all references and gate configuration. The existing local snapshot has no separate Carbone Happy Hour/hours and has long review blurbs; these data gaps/text were not rewritten to match fictional mock content. Sparse fill tests use explicitly synthetic user notes only in the memory server. No live NYC trip write occurred.
 
-```bash
-npm ci
-node scripts/rebake_served_trek_bundle.mjs
-cd apps/vacation-client && npm test
-node scripts/test_shared_trip_api_budget_lines.mjs
-node scripts/test_thing_travel_total_price.mjs
-node scripts/test_728_budget_data.mjs
-node scripts/test_offline_manifest.mjs
-node scripts/check-no-comments.mjs
-BASE=vk node scripts/check-code-ratchet.mjs
-```
+Host publication only: source remains uncommitted. The host must create the single PR into vk and run CI on its immutable head. Local screenshots are advisory, not a CI, live build, or Gate B verdict. Hold certify.
 
-All above exit 0 except `test_acceptance_988_no_summary_details_fallback.mjs` (stale NYC payload hash pin on merged `vk` at `995df4ee`; documented in `J/RECEIPT.md`).
-
-## Left alone (scope)
-
-Baselines, Gate B capture config, workflows, `vercel.json`, fixture NYC data, unrelated vk product files beyond merge. Full serial `scripts/offline-tests.txt` suite deferred to host/CI.
+Lane/model: codex-ubuntu, gpt-6.1-sol only; one agent, no alternate model or subagent.

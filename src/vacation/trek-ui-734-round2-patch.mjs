@@ -39,6 +39,32 @@ const STORE_TAG_DROPDOWN_NEEDLE = STORE_CHIP_PATCH;
 const STORE_TAG_DROPDOWN_PATCH =
   '(ro(Dt)&&(Ce||vn(Dt).length))&&n.jsxs("label",{style:Hn,children:["Store tags / chips",Ce?n.jsxs("details",{"data-ts-tag-picker":"1",style:{marginTop:4},children:[n.jsx("summary",{style:{cursor:"pointer",fontSize:12,fontWeight:800,color:"#374151",listStyle:"none"},children:"Tags ▾"}),n.jsx("div",{"data-ts-tag-picker-options":"1",style:{display:"grid",gap:4,marginTop:6,maxHeight:180,overflowY:"auto",paddingRight:4},children:gt.map(G=>{const sel=vn(Dt).includes(G);return n.jsxs("label",{style:{display:"flex",alignItems:"center",gap:6,fontSize:11,cursor:"pointer"},children:[n.jsx("input",{type:"checkbox",readOnly:!0,checked:sel,onClick:()=>rn(Dt,G),style:{pointerEvents:"auto"}}),G]},G)})})]}):null,!Ce&&vn(Dt).length?n.jsx("div",{"data-ts-store-chips":"1",style:{display:"flex",gap:6,flexWrap:"wrap",marginTop:4},children:vn(Dt).map(G=>n.jsx("button",{type:"button",onClick:()=>rn(Dt,G),style:{border:"1px solid #e5e7eb",background:"#111827",color:"white",borderRadius:999,padding:"5px 8px",fontSize:10,fontWeight:800,cursor:"pointer"},children:G},G))}):null,Ce&&vn(Dt).length?n.jsx("div",{"data-ts-store-chips-selected":"1",style:{display:"flex",gap:6,flexWrap:"wrap",marginTop:4},children:vn(Dt).map(G=>n.jsx("span",{style:{border:"1px solid #111827",background:"#111827",color:"white",borderRadius:999,padding:"5px 8px",fontSize:10,fontWeight:800},children:G},G))}):null]})';
 
+function bundleHasDetailWebsite(js = '') {
+  return js.includes('data-ts-detail-info-box":"website"')
+    || /data-ts-detail-info-box['"]:\s*['"]website['"]/.test(js);
+}
+
+function bundleHasSummaryReadonly(js = '') {
+  return js.includes("'data-ts-detail-section': 'summary'")
+    || js.includes('data-ts-detail-summary-readonly":"1"')
+    || /data-ts-detail-summary-readonly['"]:\s*['"]1['"]/.test(js);
+}
+
+function bundleHasReviewsReadonly(js = '') {
+  return js.includes('data-ts-detail-reviews-readonly":"1"')
+    || /data-ts-detail-reviews-readonly['"]:\s*['"]1['"]/.test(js);
+}
+
+function bundleHasDetailReviews(js = '') {
+  return js.includes('data-ts-detail-reviews":"1"')
+    || /data-ts-detail-reviews['"]:\s*['"]1['"]/.test(js);
+}
+
+function bundleHasV3ViewerSummaryEditor(js = '') {
+  return js.includes("field('summary', 'Summary', true)")
+    && js.includes("field('longDetails', 'Details', true)");
+}
+
 export function patchUi734Round2(source = '') {
   let js = String(source || '');
   if (js.includes(EN_AREA_NEEDLE)) {
@@ -53,17 +79,17 @@ export function patchUi734Round2(source = '') {
   }
   if (js.includes(WEBSITE_INSERT_NEEDLE)) {
     js = js.replace(WEBSITE_INSERT_NEEDLE, WEBSITE_INSERT_PATCH);
-  } else if (!js.includes('data-ts-detail-info-box":"website"')) {
+  } else if (!bundleHasDetailWebsite(js)) {
     throw new Error('ui #734 round2 detail website/summary/reviews order patch did not apply');
   }
   if (js.includes(SUMMARY_EDITOR_NEEDLE)) {
     js = js.replace(SUMMARY_EDITOR_NEEDLE, SUMMARY_EDITOR_PATCH);
-  } else if (!js.includes('Ce?n.jsxs("label",{style:Hn,children:["Summary",n.jsx("textarea"')) {
+  } else if (!js.includes('Ce?n.jsxs("label",{style:Hn,children:["Summary",n.jsx("textarea"') && !bundleHasV3ViewerSummaryEditor(js)) {
     throw new Error('ui #734 round2 viewer-only summary editor patch did not apply');
   }
   if (js.includes(DETAILS_EDITOR_NEEDLE)) {
     js = js.replace(DETAILS_EDITOR_NEEDLE, DETAILS_EDITOR_PATCH);
-  } else if (!js.includes('Ce?n.jsxs("label",{style:Hn,children:["Details",n.jsx("textarea"')) {
+  } else if (!js.includes('Ce?n.jsxs("label",{style:Hn,children:["Details",n.jsx("textarea"') && !bundleHasV3ViewerSummaryEditor(js)) {
     throw new Error('ui #734 round2 viewer-only details editor patch did not apply');
   }
   if (js.includes(REST_TAG_DROPDOWN_NEEDLE)) {
@@ -74,13 +100,13 @@ export function patchUi734Round2(source = '') {
   if (js.includes(STORE_TAG_DROPDOWN_NEEDLE)) {
     js = js.replace(STORE_TAG_DROPDOWN_NEEDLE, STORE_TAG_DROPDOWN_PATCH);
   }
-  if (!js.includes('data-ts-detail-summary-readonly":"1"')) {
+  if (!bundleHasSummaryReadonly(js)) {
     throw new Error('ui #734 round2 summary readonly box missing');
   }
-  if (!js.includes('data-ts-detail-reviews-readonly":"1"')) {
+  if (!bundleHasReviewsReadonly(js)) {
     throw new Error('ui #734 round2 reviews readonly box missing');
   }
-  if (!js.includes('data-ts-detail-reviews":"1"')) {
+  if (!bundleHasDetailReviews(js)) {
     throw new Error('ui #734 round2 Gate B reviews marker missing');
   }
   return js;

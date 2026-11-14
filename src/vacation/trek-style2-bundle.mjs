@@ -21,9 +21,9 @@ import { patchStarRatings, patchStarRatingThingKeys } from './trek-star-rating-p
 import { patchInlineListRowDescriptionOnThingHeader, patchSharedTripListWrapping } from './shared-trip-oe-list-row-patch.mjs';
 import { patchListRowDates } from './list-row-dates.mjs';
 import { patchDayByDayKeepsakeMap } from './trek-day-by-day-map-patches.mjs';
-import { patchTimelineItineraryNote } from './trek-timeline-itinerary-note-patch.mjs';
-import { patchListRowDescription } from './trek-list-row-description-patch.mjs';
+import { patchTimelineItineraryNote } from './trek-timeline-itinerary-note-patch.mjs'; import { patchDetailSubstanceHarness, patchListRowDescription } from './trek-list-row-description-patch.mjs';
 import { patchThingDetail951, patchThingDetail964In951 } from './trek-thing-detail-951-patch.mjs';
+import { patchThingDetailV3 } from './trek-thing-detail-v3-patch.mjs';
 import { patchUi734Round1, patchUi734Round2, patchUi735SharedPdf } from './trek-ui-734-round1-patch.mjs';
 import { patchUi737 } from './trek-ui-737-patch.mjs'; import { patchUi754 } from './trek-ui-754-patch.mjs'; import { patchVk890Rebrand } from './trek-vk-890-rebrand-patch.mjs'; import { patchVk980TotalPrice } from './trek-vk-980-total-price-patch.mjs'; const SERVED_BUNDLE = new URL('../../public/assets/index-BKun7ofk.js', import.meta.url);
 const ZU_STYLE2 = 'G==="keepsake-style-2"?zu()';
@@ -513,7 +513,7 @@ export function renderServedTrekBundle(raw) {
   assertServedBundleClean(js);
   const finalJs = patchUi903DetailChrome(patchVk890Rebrand(patchUi754(patchUi737(patchUi735SharedPdf(patchTimelineItineraryNote(patchUi734Round2(patchUi734Round1(patchInlineListRowDescriptionOnThingHeader(patchSharedTripListWrapping(patchStarRatings(patchThingDetailCapture(js))))))))))));
   const servedJs = patchStarRatingThingKeys(patchThingDetail951(patchListRowDescription(finalJs)));
-  return patchVk980TotalPrice(patchListRowDates(patchThingDetail964In951(servedJs)));
+  return patchUi903DetailChrome(patchDetailSubstanceHarness(patchThingDetailV3(patchVk980TotalPrice(patchListRowDates(patchThingDetail964In951(servedJs))))));
 }
 
 function endOfCall(text, callStart) {

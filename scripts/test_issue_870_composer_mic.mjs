@@ -110,12 +110,17 @@ function buildHarness({ userAgent = 'Mozilla/5.0 (Macintosh)', getUserMediaImpl,
     }
   }
 
+  const windowMessageListeners = [];
   const sandbox = {
     console,
     setTimeout,
     clearTimeout,
     queueMicrotask,
     fetch: async () => ({ ok: true, json: async () => ({}) }),
+    addEventListener(type, handler) {
+      if (type === 'message') windowMessageListeners.push(handler);
+    },
+    removeEventListener() {},
     navigator: {
       userAgent,
       mediaDevices: {
@@ -128,6 +133,7 @@ function buildHarness({ userAgent = 'Mozilla/5.0 (Macintosh)', getUserMediaImpl,
     },
     document: {
       getElementById: (id) => nodes[id] || null,
+      querySelector: () => null,
     },
     window: {},
     SpeechRecognition: MockSpeechRecognition,

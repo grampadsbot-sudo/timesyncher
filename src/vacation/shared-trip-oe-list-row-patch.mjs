@@ -65,11 +65,11 @@ const FLIGHT_QO_AIRLINE_CELL_STYLE =
 const FLIGHT_QO_TIME_CHIP_STYLE =
   'whiteSpace:"nowrap",flexShrink:0,minWidth:"max-content",overflow:"visible",fontWeight:700';
 const FLIGHT_QO_INLINE_PATCH =
-  `Qo=({item:G})=>{const parts=eu(G);return n.jsxs("span",{"data-ts-flight-row-grid":"1",style:{display:"flex",alignItems:"flex-start",gap:6,minWidth:0,maxWidth:"100%",overflow:"hidden",width:"100%",flexWrap:"nowrap"},children:[n.jsx("span",{style:{${FLIGHT_QO_AIRLINE_CELL_STYLE}},children:n.jsx("strong",{style:{${FLIGHT_QO_AIRLINE_STRONG_STYLE}},children:parts[0]||""})}),n.jsx("span",{style:{whiteSpace:"nowrap",flexShrink:0,color:"#0f766e",fontWeight:900},children:parts[1]||""}),n.jsx("span",{"data-ts-flight-time":"1",style:{${FLIGHT_QO_TIME_CHIP_STYLE}},children:parts[2]||""}),n.jsx("span",{"data-ts-flight-time":"1",style:{${FLIGHT_QO_TIME_CHIP_STYLE}},children:parts[3]||""})]})}`;
+  `Qo=({item:G})=>{const parts=eu(G);return n.jsxs("span",{"data-ts-flight-row-grid":"1",style:{display:"flex",alignItems:"flex-start",gap:6,minWidth:0,maxWidth:"100%",overflow:"hidden",width:"100%",flexWrap:"nowrap"},children:[n.jsx("span",{style:{${FLIGHT_QO_AIRLINE_CELL_STYLE}},children:n.jsx("strong",{style:{${FLIGHT_QO_AIRLINE_STRONG_STYLE}},children:parts[0]||""})}),n.jsx("span",{"data-ts-flight-price":"1",style:{whiteSpace:"nowrap",flexShrink:0,color:"#0f766e",fontWeight:900},children:parts[1]||""}),n.jsx("span",{"data-ts-flight-time":"1",style:{${FLIGHT_QO_TIME_CHIP_STYLE}},children:parts[2]||""}),n.jsx("span",{"data-ts-flight-time":"1",style:{${FLIGHT_QO_TIME_CHIP_STYLE}},children:parts[3]||""})]})}`;
 const FLIGHT_QO_AIRLINE_STRONG_NEEDLE =
   'Qo=({item:G})=>{const parts=eu(G);return n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto auto auto",gap:8,width:"100%",alignItems:"center",minWidth:0},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,flexShrink:0},children:n.jsx("strong",{style:{lineHeight:1,display:"block",fontWeight:800},children:parts[0]||""})}),n.jsx("span",{style:{whiteSpace:"nowrap",flexShrink:0,color:"#0f766e",fontWeight:900},children:parts[1]||""})';
 const FLIGHT_QO_AIRLINE_STRONG_PATCH =
-  `Qo=({item:G})=>{const parts=eu(G);return n.jsxs("span",{style:{display:"flex",alignItems:"center",gap:6,minWidth:0,maxWidth:"100%",overflow:"hidden",width:"100%"},children:[n.jsx("span",{style:{${FLIGHT_QO_AIRLINE_CELL_STYLE}},children:n.jsx("strong",{style:{${FLIGHT_QO_AIRLINE_STRONG_STYLE}},children:parts[0]||""})}),n.jsx("span",{style:{whiteSpace:"nowrap",flexShrink:0,color:"#0f766e",fontWeight:900},children:parts[1]||""})`;
+  `Qo=({item:G})=>{const parts=eu(G);return n.jsxs("span",{style:{display:"flex",alignItems:"center",gap:6,minWidth:0,maxWidth:"100%",overflow:"hidden",width:"100%"},children:[n.jsx("span",{style:{${FLIGHT_QO_AIRLINE_CELL_STYLE}},children:n.jsx("strong",{style:{${FLIGHT_QO_AIRLINE_STRONG_STYLE}},children:parts[0]||""})}),n.jsx("span",{"data-ts-flight-price":"1",style:{whiteSpace:"nowrap",flexShrink:0,color:"#0f766e",fontWeight:900},children:parts[1]||""})`;
 const FLIGHT_QO_AIRLINE_ELLIPSIS_UPGRADE_NEEDLE =
   'overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,flex:"0 1 auto"},children:n.jsx("strong",{style:{lineHeight:1,display:"block",fontWeight:800},children:parts[0]||""})';
 const FLIGHT_QO_AIRLINE_ELLIPSIS_UPGRADE_PATCH =
@@ -195,6 +195,11 @@ function patchFlightQoAirlineNameFrame(js = '') {
   }
   if (js.includes('Qo=({item:G})=>{const parts=eu(G)')) {
     throw new Error('flight Qo airline strong name-frame patch did not apply');
+  }
+  const FLIGHT_QO_PRICE_SPAN_OLD = 'n.jsx("span",{style:{whiteSpace:"nowrap",flexShrink:0,color:"#0f766e",fontWeight:900},children:parts[1]||""})';
+  const FLIGHT_QO_PRICE_SPAN_NEW = 'n.jsx("span",{"data-ts-flight-price":"1",style:{whiteSpace:"nowrap",flexShrink:0,color:"#0f766e",fontWeight:900},children:parts[1]||""})';
+  if (js.includes(FLIGHT_QO_PRICE_SPAN_OLD)) {
+    js = js.replaceAll(FLIGHT_QO_PRICE_SPAN_OLD, FLIGHT_QO_PRICE_SPAN_NEW);
   }
   return js;
 }

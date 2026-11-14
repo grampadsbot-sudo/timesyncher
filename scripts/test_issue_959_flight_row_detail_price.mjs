@@ -79,10 +79,10 @@ assert.ok(rendered.indexOf('"data-ts-detail-header-stars":"1"', ratingRow) < pri
 const rowStart = rendered.lastIndexOf('(()=>{const tsHeadStars=', ratingRow);
 const rowEnd = rendered.indexOf('})()', priceField) + 4;
 const jsx = (type, props) => ({ type, props });
-const renderRow = new Function('n', 'Dt', 'ha', 'tsRenderStarRatingHtml', 'tsPrimaryPlaceStarRating', `return ${rendered.slice(rowStart, rowEnd)}`);
+const renderRow = new Function('n', 'Dt', 'ha', 'tsRenderStarRatingHtml', 'tsPrimaryPlaceStarRating', 'Ce', 'Sa', 'bi', 'Xa', `return ${rendered.slice(rowStart, rowEnd)}`);
 const textOf = (node) => (node == null || node === false ? '' : typeof node !== 'object' ? String(node) : Array.isArray(node) ? node.map(textOf).join('') : textOf(node.props?.children));
 for (const [price, label] of [[48, 'Price: $48'], ['$48', 'Price: $48'], [1250, 'Price: $1,250'], ['48.4', 'Price: $48']]) {
-  const row = renderRow({ jsx, jsxs: jsx }, {}, () => ({ price }), () => '<svg></svg>', () => 4);
+  const row = renderRow({ jsx, jsxs: jsx }, {}, () => ({ price }), () => '<svg></svg>', () => 4, false, false, () => 48, () => {});
   assert.equal(row.props['data-ts-detail-rating-row'], '1');
   assert.equal(row.props.style.display, 'flex');
   const [leftCluster, priceSpan] = row.props.children;
@@ -92,9 +92,9 @@ for (const [price, label] of [[48, 'Price: $48'], ['$48', 'Price: $48'], [1250, 
   assert.equal(priceSpan.props.style.whiteSpace, 'nowrap');
   assert.equal(textOf(priceSpan), label);
 }
-const noPrice = renderRow({ jsx, jsxs: jsx }, {}, () => ({}), () => '<svg></svg>', () => 4);
+const noPrice = renderRow({ jsx, jsxs: jsx }, {}, () => ({}), () => '<svg></svg>', () => 4, false, false, () => '', () => {});
 assert.equal(noPrice.props.children[1], null);
-assert.equal(renderRow({ jsx, jsxs: jsx }, {}, () => ({}), () => '', () => null), null);
+assert.equal(renderRow({ jsx, jsxs: jsx }, {}, () => ({}), () => '', () => null, false, false, () => '', () => {}), null);
 assert.doesNotMatch(rendered, /Price per person/);
 
 console.log('issue #959 flight prose, flight price row and detail price checks passed');

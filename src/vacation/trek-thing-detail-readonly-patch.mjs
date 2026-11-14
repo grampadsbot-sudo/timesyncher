@@ -18,7 +18,11 @@ export function patchThingDetailReadonlyBoxes(source = '') {
   if (js.includes(REV_BLOCK_NEEDLE)) {
     js = js.replace(REV_BLOCK_NEEDLE, '');
   }
-  if (js.includes('data-ts-detail-info-box":"address-hours"')) {
+  if (
+    js.includes('data-ts-detail-info-box":"address-hours"')
+    || js.includes("'data-ts-detail-info-box': 'address-hours'")
+    || js.includes("'data-ts-detail-info-box':'address-hours'")
+  ) {
     return js;
   }
   if (js.includes(FIELDSET_NEEDLE)) {

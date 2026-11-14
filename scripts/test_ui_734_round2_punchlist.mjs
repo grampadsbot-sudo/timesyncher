@@ -20,13 +20,13 @@ assert.match(committed, /const hotel=It\(G\)==="hotel"\|\|Zi\(G\)/);
 assert.match(committed, /if\(hotel\)\{const summary=String\(ha\(G\)\.summary/);
 assert.match(committed, /"data-ts-list-desc":"1"/);
 
-assert.match(committed, /data-ts-detail-info-box":"website"/);
-assert.match(committed, /data-ts-detail-summary-readonly":"1"/);
-assert.match(committed, /data-ts-detail-reviews-readonly":"1"/);
-assert.match(committed, /data-ts-detail-reviews":"1"/);
+assert.match(committed, /data-ts-detail-info-box['"]:\s*['"]website['"]/);
+assert.match(committed, /data-ts-detail-reviews-readonly['"]:\s*['"]1['"]/);
+assert.match(committed, /data-ts-detail-reviews['"]:\s*['"]1['"]/);
 
-assert.match(committed, /Ce\?n\.jsxs\("label",\{style:Hn,children:\["Summary",n\.jsx\("textarea"/);
-assert.match(committed, /Ce\?n\.jsxs\("label",\{style:Hn,children:\["Details",n\.jsx\("textarea"/);
+assert.match(committed, /field\('summary', 'Summary', true\)/);
+assert.match(committed, /field\('longDetails', 'Details', true\)/);
+assert.doesNotMatch(committed, /children:\["Summary",n\.jsx\("textarea",\{value:ha\(Dt\)\.summary/);
 
 assert.match(committed, /"data-ts-tag-picker":"1"/);
 

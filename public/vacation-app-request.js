@@ -1,3 +1,16 @@
+function installVacationSiteFullscreenBridge() {
+  if (window.__tsVacationSiteFullscreenBridge) return;
+  window.__tsVacationSiteFullscreenBridge = true;
+  window.addEventListener('message', (event) => {
+  const data = event.data;
+  if (!data || data.type !== 'tsv-site-fullscreen') return;
+  const app = document.querySelector('.app');
+  if (!app) return;
+  if (data.on) app.classList.add('site-fullscreen');
+  else app.classList.remove('site-fullscreen');
+  });
+}
+
 function reloadSiteIframeAfterItineraryEdit() {
   const iframe = document.querySelector('.site-pane iframe');
   if (!iframe?.src) return;
@@ -31,6 +44,7 @@ function installVacationChatItineraryEditHook() {
 }
 
 installVacationChatItineraryEditHook();
+installVacationSiteFullscreenBridge();
 
 window.tsVacationAppRequest = {
   AppRequestError: class AppRequestError extends Error {
