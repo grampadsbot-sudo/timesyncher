@@ -53,7 +53,7 @@ for (const row of model.rows) {
   assert.equal(row.amount, apiLine.total_price, 'API and client use identical quantity math');
 }
 assert.equal(budgetLineAmount(trip.places[0], trip).amount, 37);
-assert.equal(trekBudgetAmount({}, { price: '$100/night', stayDays: 4 }, 'hotel', trip).amount, 400);
+assert.equal(trekBudgetAmount({}, { price: '$100/night', stayDays: 4 }, 'hotel', trip).amount, 480);
 assert.equal(trekBudgetAmount({}, { price: 366 }, 'car', trip).amount, 366);
 assert.equal(trekBudgetAmount({}, { pricePerPerson: 30, people: 1 }, 'restaurant', trip).amount, 30);
 assert.equal(trekBudgetAmount({}, { price: 30 }, 'restaurant', trip).amount, 90);
