@@ -37,7 +37,7 @@ Rule: `bot-admin/decisions/vk-hotels-cars-list-total-price-20261113` — Thing P
 | `node scripts/test_offline_manifest.mjs` | exit 0 (470 offline) |
 | `node scripts/check-no-comments.mjs` | exit 0 |
 | `BASE=vk node scripts/check-code-ratchet.mjs` | exit 0 (0 fail) |
-| `node scripts/test_acceptance_988_no_summary_details_fallback.mjs` | **FAIL** — `NYC positive fixture payload hash must stay stable` actual `22834db13bb4078aa934d415aad6a7acb72d236d4fbe10cadfa95610179f9166` vs expected `aa75c85a36c72ede939ef32359f1bae69cff5cc1c7c3fc15c552877c4d786a98` at `scripts/test_acceptance_988_no_summary_details_fallback.mjs:106` (same failure on `MERGE_HEAD` `995df4ee`; stale pin on vk, not edited here per scope) |
+| `node scripts/test_acceptance_988_no_summary_details_fallback.mjs` | exit 0 (pin `22834db13…` after vk #988 essence-ladder merge; was `aa75c85a…` stale) — head `a19b9cdd5d1e165150a3a448fc4c44bfe2389c3d` |
 
 No commit, stage, push, merge, rebase, or deploy in this lane (HOST PUBLICATION ONLY).
 
