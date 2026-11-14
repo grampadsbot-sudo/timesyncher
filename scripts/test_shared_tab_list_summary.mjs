@@ -64,7 +64,7 @@ assert.doesNotMatch(bundle, /marginLeft:-8,marginRight:-8,width:"calc\(100% \+ 1
 assert.doesNotMatch(bundle, /data-day-itinerary-mount|data-trek-list/);
 assert.match(bundle, /"data-ts-list-row-name":"1",style:\{minWidth:0,maxWidth:"100%",flex:"1 1 auto",display:"inline-flex",alignItems:"center",lineHeight:1,whiteSpace:"normal",overflowWrap:"anywhere"\}/);
 assert.match(bundle, /"data-list-summary":"1","data-summary-src":"thing",style:\{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"visible",whiteSpace:"normal",overflowWrap:"anywhere"/);
-assert.match(bundle, /"data-ts-list-price":"1",style:\{whiteSpace:"nowrap",flexShrink:0,color:"#0f766e",fontWeight:900\},children:bn\(G\)\?eu\(G\)\[1\]:ie\(G\)\?ie\(G\)\+\(Zi\(G\)\?" \/ night":" total"\):""/);
+assert.match(bundle, /"data-ts-list-price":"1","data-ts-flight-price":"1",style:\{whiteSpace:"nowrap",flexShrink:0,color:"#0f766e",fontWeight:900\},children:bn\(G\)\?eu\(G\)\[1\]:ie\(G\)\?ie\(G\)\+\(Zi\(G\)\?" \/ night":" total"\):""/);
 assert.match(bundle, /"data-ts-travel-list-header":"1"/);
 
 const headerStart = bundle.indexOf('be=({item:G})=>');

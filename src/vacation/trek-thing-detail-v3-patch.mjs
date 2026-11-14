@@ -193,22 +193,6 @@ function detailBodyV3({ n, d, edit, days, selectedDays, scheduled, start, durati
     }
     return kids.length ? n.jsx('div', { style: { minWidth: 0 }, children: kids }) : null;
   })() : null;
-  const summaryBlock = (() => {
-    const sum = text(d.summary);
-    if (edit) return field('summary', 'Summary', true);
-    if (!sum) return null;
-    return n.jsxs('div', {
-      'data-ts-detail-summary-readonly': '1',
-      style: { border: '1px solid #e5e7eb', borderRadius: 10, padding: '10px 12px', marginBottom: 10, background: '#fff' },
-      children: [
-        n.jsx('div', {
-          style: { fontSize: 10, fontWeight: 900, letterSpacing: 1.2, color: '#0f766e', textTransform: 'uppercase', marginBottom: 6 },
-          children: 'Summary',
-        }),
-        n.jsx('p', { style: { margin: 0, fontSize: 13, lineHeight: 1.45, color: '#334155' }, children: sum }),
-      ],
-    });
-  })();
   return n.jsxs('div', {
     'data-ts-detail-v3': '1', 'data-ts-detail-mode': edit ? 'edit' : 'view', ...(edit ? { 'data-ts-detail-editing': '1' } : {}),
     style: { fontSize: 13, lineHeight: 1.45, color: '#1f2937', minWidth: 0 },
@@ -218,7 +202,7 @@ function detailBodyV3({ n, d, edit, days, selectedDays, scheduled, start, durati
     flag('includeInTripRecap', 'Include this story in the final keepsake'),
     flag('nextTime', 'Add to Next Time list'),
     edit ? happyHourBlock : null,
-    summaryBlock,
+    field('summary', 'Summary', true),
     reviews.length ? n.jsxs('section', { 'data-ts-detail-reviews': '1', 'data-ts-detail-section': 'reviews', 'data-ts-detail-reviews-readonly': '1', style: sectionStyle, children: [
       n.jsx('h3', { 'data-ts-detail-reviews-header': '1', 'data-ts-section-label': '1', style: headingStyle, children: 'REVIEWS' }),
       reviews.map(index => n.jsxs('div', { 'data-ts-detail-review': '1', style: { marginBottom: 8 }, children: [

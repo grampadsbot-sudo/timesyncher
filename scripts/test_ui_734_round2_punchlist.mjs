@@ -21,11 +21,10 @@ assert.match(committed, /if\(hotel\)\{const summary=String\(ha\(G\)\.summary/);
 assert.match(committed, /"data-ts-list-desc":"1"/);
 
 assert.match(committed, /data-ts-detail-info-box['"]:\s*['"]website['"]/);
-assert.match(committed, /data-ts-detail-summary-readonly['"]:\s*['"]1['"]/);
 assert.match(committed, /data-ts-detail-reviews-readonly['"]:\s*['"]1['"]/);
 assert.match(committed, /data-ts-detail-reviews['"]:\s*['"]1['"]/);
 
-assert.match(committed, /if \(edit\) return field\('summary', 'Summary', true\)/);
+assert.match(committed, /field\('summary', 'Summary', true\)/);
 assert.match(committed, /field\('longDetails', 'Details', true\)/);
 assert.doesNotMatch(committed, /children:\["Summary",n\.jsx\("textarea",\{value:ha\(Dt\)\.summary/);
 

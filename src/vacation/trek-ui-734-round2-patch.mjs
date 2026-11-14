@@ -45,7 +45,8 @@ function bundleHasDetailWebsite(js = '') {
 }
 
 function bundleHasSummaryReadonly(js = '') {
-  return js.includes('data-ts-detail-summary-readonly":"1"')
+  return js.includes("'data-ts-detail-section': 'summary'")
+    || js.includes('data-ts-detail-summary-readonly":"1"')
     || /data-ts-detail-summary-readonly['"]:\s*['"]1['"]/.test(js);
 }
 
@@ -60,7 +61,7 @@ function bundleHasDetailReviews(js = '') {
 }
 
 function bundleHasV3ViewerSummaryEditor(js = '') {
-  return /if \(edit\) return field\('summary', 'Summary', true\)/.test(js)
+  return js.includes("field('summary', 'Summary', true)")
     && js.includes("field('longDetails', 'Details', true)");
 }
 

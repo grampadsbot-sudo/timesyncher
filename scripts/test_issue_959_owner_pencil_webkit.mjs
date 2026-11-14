@@ -181,7 +181,8 @@ async function listRowPrice(page, frame, tab, priceSelector) {
     const name = li?.querySelector('[data-ts-list-row-name="1"] strong') || li?.querySelector('[data-ts-list-row-name="1"]');
     const price = selector
       ? li?.querySelector(selector)
-      : [...(li?.querySelectorAll('[data-ts-list-row-name="1"] span') || [])].find((el) => el.children.length === 0 && /^\$\d/.test((el.textContent || '').trim()));
+      : li?.querySelector('[data-ts-list-price="1"]')
+        || [...(li?.querySelectorAll('[data-ts-list-row-name="1"] span') || [])].find((el) => el.children.length === 0 && /^\$\d/.test((el.textContent || '').trim()));
     return { name: box(name), price: box(price), desc: (li?.querySelector('[data-ts-list-desc="1"]')?.textContent || '').trim() };
   }, { selector: priceSelector });
 }
@@ -289,7 +290,7 @@ async function checkV3(browser, devices, viewport, server) {
   assert.equal(savedFields[key].nextTime, true);
   assert.equal(savedFields[key].perDaySchedule[String(shared.days[1].id)].visits[1].status, 'confirmed');
   assert.equal(await body.locator('[data-ts-detail-visit]').count(), 3);
-  assert.equal(await body.locator('[data-ts-detail-field="happyHourDetails"] p').innerText(), 'Saved happy hour note');
+  assert.match(await body.locator('[data-ts-detail-field="happyHourDetails"]').first().innerText(), /Saved happy hour note/);
   await owner.page.reload({ waitUntil: 'domcontentloaded' });
   const reloadedFrame = await (await owner.page.waitForSelector('.site-pane iframe')).contentFrame();
   await reloadedFrame.waitForSelector('[data-ts-timeline-title]');
