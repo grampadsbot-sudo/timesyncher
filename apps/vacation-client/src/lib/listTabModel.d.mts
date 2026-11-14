@@ -8,8 +8,23 @@ export function formatUsd(amount: number, currency?: string): string;
 export function tabCategoryKey(place: SharedPlace, trip: SharedTripPayload): string;
 export function placesForCategoryTab(trip: SharedTripPayload, tab: string): SharedPlace[];
 export function placeName(place: SharedPlace): string;
-export function areaChipsForTab(places: SharedPlace[], trip: SharedTripPayload, tab: string): string[];
-export function typeChipsForTab(places: SharedPlace[], trip: SharedTripPayload, tab: string): string[];
+export function areaChipsForTab(
+  places: SharedPlace[],
+  trip: SharedTripPayload,
+  tab: string,
+  filters?: Record<string, unknown>,
+): string[];
+export function typeChipsForTab(
+  places: SharedPlace[],
+  trip: SharedTripPayload,
+  tab: string,
+  filters?: Record<string, unknown>,
+): string[];
+export function reconcileListFilters(
+  filters?: Record<string, unknown>,
+  areaChips?: string[],
+  typeChips?: string[],
+): { area: string; type: string };
 export function filterPlaces(
   places: SharedPlace[],
   trip: SharedTripPayload,

@@ -106,6 +106,8 @@ export function listRowDateRange({ category, thing = {}, trip = {}, days = [], d
 
 const LIST_ROW_LAYOUT_EFFECT = 'if(I.useEffect(()=>{var G;(G=P==null?void 0:P.trip)';
 const LIST_ROW_REVEAL_MARKER = 'I.useLayoutEffect(()=>{if(![\"flights\",\"hotels\",\"cars\"].includes(q))return;const reveal=()=>{const row=document.querySelector(\'li[data-ts-list-row=\"1\"] [data-ts-list-date-range],li[data-list-row=\"1\"] [data-ts-list-date-range]\')||document.querySelector(\"[data-ts-list-date-range]\");row&&row.scrollIntoView({block:\"center\",inline:\"nearest\"})};reveal();const list=document.querySelector(\'[data-shared-live-tab=\"\'+q+\'\"]\');if(q===\"cars\"&&list&&!list.querySelector(\"[data-ts-car-brands]\")){const observer=new MutationObserver(()=>{if(list.querySelector(\"[data-ts-car-brands]\")){observer.disconnect();requestAnimationFrame(()=>requestAnimationFrame(reveal))}});observer.observe(list,{childList:true,subtree:true});return()=>observer.disconnect()}},[q]);';
+const FILTER_CHIP_STALE_RESET_MARKER =
+  'I.useEffect(()=>{if(!["restaurants","stores","events"].includes(q))return;const Os=[...new Set(Cc.filter(G=>!G.__tsLiveFill&&(!ze.length||ze.includes(En(G)))).map(G=>Yd(G)).filter(Boolean))],Oa=Array.from(new Set((q==="events"?Cc.filter(G=>!G.__tsLiveFill&&(!vt.length||vt.includes(Yd(G)))):q==="restaurants"?Oc.filter(G=>!G.__tsLiveFill&&(!Te.length||Te.every(Re=>or(G).includes(Re)))):q==="stores"?Fs.filter(G=>!G.__tsLiveFill&&(!Je.length||Je.every(Re=>vn(G).includes(Re)))):tn).map(G=>En(G)).filter(Boolean))).sort(),ci=[...new Set(Oc.filter(Re=>!Re.__tsLiveFill&&(!ze.length||ze.includes(En(Re)))).flatMap(Re=>or(Re).map(zt=>String(zt||"").trim()).filter(Boolean)))],$n=[...new Set(Fs.filter(Re=>!Re.__tsLiveFill&&(!ze.length||ze.includes(En(Re)))).flatMap(Re=>vn(Re).map(zt=>String(zt||"").trim()).filter(Boolean)))];const za=ze.filter(Re=>Oa.includes(Re));za.length!==ze.length&&Le(za);const tp=Te.filter(Re=>ci.includes(Re));tp.length!==Te.length&&qt(tp);const jp=Je.filter(Re=>$n.includes(Re));jp.length!==Je.length&&Se(jp);const vp=vt.filter(Re=>Os.includes(Re));vp.length!==vt.length&&qe(vp);},[q,ze,Te,Je,vt]);';
 
 const LIST_ROW_RATING_UNCONDITIONAL =
   'n.jsx("span",{"data-ts-list-row-rating":"1",style:{display:"flex",flexDirection:"row",flexWrap:"nowrap",alignItems:"center",justifyContent:"flex-start",flexShrink:0},dangerouslySetInnerHTML:{__html:tsRowStars},role:tsRowStars?"img":void 0,"aria-label":tsRowStars?tsStarRatingAria(tsRowRating):void 0})';
@@ -118,9 +120,17 @@ function patchListRowRatingConditional(source = '') {
 }
 
 function patchListRowRevealLayout(source = '') {
-  if (source.includes(LIST_ROW_REVEAL_MARKER.slice(0, 48))) return source;
-  if (!source.includes(LIST_ROW_LAYOUT_EFFECT)) throw new Error('list dates layout effect anchor missing');
-  return source.replace(LIST_ROW_LAYOUT_EFFECT, `${LIST_ROW_REVEAL_MARKER}${LIST_ROW_LAYOUT_EFFECT}`);
+  let patched = source;
+  if (!patched.includes(LIST_ROW_REVEAL_MARKER.slice(0, 48))) {
+    if (!patched.includes(LIST_ROW_LAYOUT_EFFECT)) throw new Error('list dates layout effect anchor missing');
+    patched = patched.replace(LIST_ROW_LAYOUT_EFFECT, `${LIST_ROW_REVEAL_MARKER}${LIST_ROW_LAYOUT_EFFECT}`);
+  }
+  if (!patched.includes(FILTER_CHIP_STALE_RESET_MARKER.slice(0, 48))) {
+    const anchor = `${LIST_ROW_REVEAL_MARKER}if(I.useEffect(()=>{var G;(G=P==null?void 0:P.trip)`;
+    if (!patched.includes(anchor)) throw new Error('filter chip stale reset anchor missing');
+    patched = patched.replace(anchor, `${LIST_ROW_REVEAL_MARKER}${FILTER_CHIP_STALE_RESET_MARKER}if(I.useEffect(()=>{var G;(G=P==null?void 0:P.trip)`);
+  }
+  return patched;
 }
 
 export function patchListRowDates(source = '') {

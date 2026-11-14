@@ -7,6 +7,7 @@ import {
   emptyStateMessage,
   filterPlaces,
   placesForCategoryTab,
+  reconcileListFilters,
   sortPlaces,
   typeChipsForTab,
 } from '../lib/listTabModel.mjs';
@@ -32,21 +33,55 @@ export function CategoryTabScreen({
   onTimelineChange,
 }: Props) {
   const categoryPlaces = useMemo(() => placesForCategoryTab(trip, tab), [trip, tab]);
-  const areaChips = useMemo(() => areaChipsForTab(categoryPlaces, trip, tab), [categoryPlaces, trip, tab]);
-  const typeChips = useMemo(() => typeChipsForTab(categoryPlaces, trip, tab), [categoryPlaces, trip, tab]);
 
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [selectedArea, setSelectedArea] = useState('All areas');
   const [selectedType, setSelectedType] = useState('All types');
 
+  const {
+    areaChips,
+    typeChips,
+    effectiveArea,
+    effectiveType,
+  } = useMemo(() => {
+    const areaChipsDraft = areaChipsForTab(categoryPlaces, trip, tab, {
+      type: selectedType,
+    });
+    const typeChipsDraft = typeChipsForTab(categoryPlaces, trip, tab, {
+      area: selectedArea,
+    });
+    const reconciled = reconcileListFilters(
+      { area: selectedArea, type: selectedType },
+      areaChipsDraft,
+      typeChipsDraft,
+    );
+    const areaChips = areaChipsForTab(categoryPlaces, trip, tab, {
+      type: reconciled.type,
+    });
+    const typeChips = typeChipsForTab(categoryPlaces, trip, tab, {
+      area: reconciled.area,
+    });
+    const effective = reconcileListFilters(
+      reconciled,
+      areaChips,
+      typeChips,
+    );
+    return {
+      areaChips,
+      typeChips,
+      effectiveArea: effective.area,
+      effectiveType: effective.type,
+    };
+  }, [categoryPlaces, trip, tab, selectedArea, selectedType]);
+
   const filtered = useMemo(
     () =>
       filterPlaces(categoryPlaces, trip, tab, {
-        area: selectedArea,
-        type: selectedType,
+        area: effectiveArea,
+        type: effectiveType,
       }),
-    [categoryPlaces, trip, tab, selectedArea, selectedType],
+    [categoryPlaces, trip, tab, effectiveArea, effectiveType],
   );
 
   const rows = useMemo(
@@ -60,8 +95,8 @@ export function CategoryTabScreen({
   }, [tab, rows]);
 
   const filterActive =
-    (areaChips.length > 1 && selectedArea !== 'All areas') ||
-    (typeChips.length > 1 && selectedType !== 'All types');
+    (areaChips.length > 1 && effectiveArea !== 'All areas') ||
+    (typeChips.length > 1 && effectiveType !== 'All types');
 
   const emptyCopy = emptyStateMessage(tab, {
     categoryCount: categoryPlaces.length,
@@ -84,13 +119,13 @@ export function CategoryTabScreen({
     <section className="tsv-screen tsv-list-screen" data-shared-live-tab={tab}>
       <FilterChipRow
         chips={areaChips}
-        selected={selectedArea}
+        selected={effectiveArea}
         onSelect={setSelectedArea}
         label="Area filters"
       />
       <FilterChipRow
         chips={typeChips}
-        selected={selectedType}
+        selected={effectiveType}
         onSelect={setSelectedType}
         label="Type filters"
       />
