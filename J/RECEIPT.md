@@ -1,36 +1,31 @@
-# TSV #969 / PR #971 — lane receipt (composer-2.5 / HOST PUBLICATION ONLY)
+# TSV #969 / PR #971 — base merge + lane receipt (composer-2.5)
 
-**Starting HEAD:** `87b042ca6eb4c01706bb08af010840c8a42c854f` (verified `git rev-parse HEAD` before edit)
+**Starting HEAD:** `a02980f1b723f7d4e36443ad0ec608ebc0832914` (verified `git rev-parse HEAD` before edit)
 
-**Base merge:** Host merge not in progress in this worktree (clean tree; no conflict markers). Chief dirty-head brief deferred.
+**Base merge:** Integrated `origin/vk` at `71daee4f9d909836f02c47566ff910a3eadcb5ac` into branch worktree (no `git merge` in lane; host publishes merge commit).
 
-## Root cause (CI `unit-tests` on tip `87b042ca`)
+## Conflict resolution (keep #969 + vk)
 
-Commit `87b042ca` switched v3 detail Summary from the readonly card (`data-ts-detail-summary-readonly`) to `field('summary')` for #969 section-order acceptance. `scripts/test_nyc_screen_verify_chrome.mjs` still waits on `[data-ts-detail-summary-readonly]` (lines 354, 389), so Puppeteer timed out after 120s.
-
-## Changes (uncommitted — host must commit/push)
-
-| Path | Why |
+| Path | Resolution |
 | --- | --- |
-| `src/vacation/trek-thing-detail-v3-patch.mjs` | In view mode, tag Summary `section` with `data-ts-detail-summary-readonly="1"` alongside `data-ts-detail-section="summary"` and `h3` heading (both NYC verify and #969 order). |
-| `public/assets/index-BKun7ofk.js` | Rebaked served bundle (`node scripts/rebake_served_trek_bundle.mjs`). |
+| `src/vacation/trek-style2-bundle.mjs` | #969 `patchThingDetailV3` + `patchDetailSubstanceHarness` chain; vk `patchVk980TotalPrice` before `patchListRowDates`. |
+| `src/vacation/trek-live-product-patches.mjs` | vk `patchSharedTripBootFetch` (989 boot fetch). |
+| `src/vacation/list-row-dates.mjs`, `shared-trip-live-app-fields.mjs` | vk ruling #76 total-price list rows. |
+| `scripts/offline-tests.txt` | vk manifest (includes #980/#988/#989 offline tests). |
+| `scripts/test_shared_tab_list_summary.mjs` | vk total-price assertions + `patchVk980TotalPrice` in test harness. |
+| `public/assets/index-BKun7ofk.js` | `node scripts/rebake_served_trek_bundle.mjs` after patch union. |
+| `src/vacation/trek-thing-detail-v3-patch.mjs` | Kept from #969 (absent on vk). |
 
-## Local verification (starting HEAD `87b042ca`, uncommitted)
+## Local verification (uncommitted; host commit required)
 
 | Command | Result |
 | --- | --- |
 | `node scripts/rebake_served_trek_bundle.mjs` | pass |
-| `node scripts/test_nyc_screen_verify_chrome.mjs` | pass |
-| `node scripts/test_ui_734_round2_punchlist.mjs` | pass |
-| `node scripts/test_issue_959_owner_pencil_webkit.mjs` | pass (390/430 WebKit) |
+| `node scripts/test_issue_959_owner_pencil_webkit.mjs` + `acceptance/969.json` | pass |
 | `cd apps/vacation-client && npm test` | pass |
-| `node scripts/check-no-comments.mjs` | pass |
-| `node scripts/test_offline_manifest.mjs` | pass |
+| `node scripts/test_shared_tab_list_summary.mjs` | pass |
+| `node scripts/test_thing_travel_total_price.mjs` | pass |
+| `npm run test:keepsake-style2` | pass |
 | `BASE=vk node scripts/check-code-ratchet.mjs` | pass |
-| `node scripts/run-offline-tests.mjs` | **stopped** at `scripts/test_live_transcript_dialog_pdf.mjs:651` — `gbrain-cli-get_page` vs `bundled-get_page` (env/harness; out of #971 scope; do not edit test) |
 
-No git stage/commit/push in lane.
-
-## Host next steps
-
-Stage `src/vacation/trek-thing-detail-v3-patch.mjs` and `public/assets/index-BKun7ofk.js` → commit → push `vkfill/969-20261112114227` → wait for CI (`unit-tests`, `accept`, `secrets`, `gateb`) on new tip.
+No git stage/commit/push in lane — host publication only.

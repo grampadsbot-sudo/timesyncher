@@ -25,7 +25,7 @@ import { patchTimelineItineraryNote } from './trek-timeline-itinerary-note-patch
 import { patchThingDetail951, patchThingDetail964In951 } from './trek-thing-detail-951-patch.mjs';
 import { patchThingDetailV3 } from './trek-thing-detail-v3-patch.mjs';
 import { patchUi734Round1, patchUi734Round2, patchUi735SharedPdf } from './trek-ui-734-round1-patch.mjs';
-import { patchUi737 } from './trek-ui-737-patch.mjs'; import { patchUi754 } from './trek-ui-754-patch.mjs'; import { patchVk890Rebrand } from './trek-vk-890-rebrand-patch.mjs'; const SERVED_BUNDLE = new URL('../../public/assets/index-BKun7ofk.js', import.meta.url);
+import { patchUi737 } from './trek-ui-737-patch.mjs'; import { patchUi754 } from './trek-ui-754-patch.mjs'; import { patchVk890Rebrand } from './trek-vk-890-rebrand-patch.mjs'; import { patchVk980TotalPrice } from './trek-vk-980-total-price-patch.mjs'; const SERVED_BUNDLE = new URL('../../public/assets/index-BKun7ofk.js', import.meta.url);
 const ZU_STYLE2 = 'G==="keepsake-style-2"?zu()';
 const AE_STYLE2 = 'G==="keepsake-style-2"?Ae(!0)';
 export const STYLE2_USES_ZU = ZU_STYLE2; export const STYLE2_USES_AE = AE_STYLE2;
@@ -513,7 +513,7 @@ export function renderServedTrekBundle(raw) {
   assertServedBundleClean(js);
   const finalJs = patchUi903DetailChrome(patchVk890Rebrand(patchUi754(patchUi737(patchUi735SharedPdf(patchTimelineItineraryNote(patchUi734Round2(patchUi734Round1(patchInlineListRowDescriptionOnThingHeader(patchSharedTripListWrapping(patchStarRatings(patchThingDetailCapture(js))))))))))));
   const servedJs = patchStarRatingThingKeys(patchThingDetail951(patchListRowDescription(finalJs)));
-  return patchUi903DetailChrome(patchDetailSubstanceHarness(patchThingDetailV3(patchListRowDates(patchThingDetail964In951(servedJs)))));
+  return patchUi903DetailChrome(patchDetailSubstanceHarness(patchThingDetailV3(patchVk980TotalPrice(patchListRowDates(patchThingDetail964In951(servedJs))))));
 }
 
 function endOfCall(text, callStart) {

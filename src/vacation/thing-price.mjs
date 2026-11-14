@@ -1,3 +1,5 @@
+import { thingTravelTotalPrice } from './thing-travel-total-price.mjs';
+
 const PER_PERSON_CATEGORIES = new Set([
   'restaurant', 'store', 'event', 'family_event', 'tour', 'transport', 'music',
   'workout', 'artist', 'theatre', 'sightseeing', 'other', 'flight',
@@ -31,7 +33,26 @@ function stayDays(row) {
   return end > start ? Math.max(1, Math.round((end - start) / 86400000)) : 7;
 }
 
+function parseStoredRate(value) {
+  if (value === null || value === undefined || value === '') return null;
+  if (typeof value === 'number' && Number.isFinite(value) && value > 0) return value;
+  const match = String(value).trim().match(/\$?\s*([0-9][0-9,]*(?:\.\d+)?)/);
+  return match ? Number(match[1].replace(/,/g, '')) : null;
+}
+
 export function thingBudgetAmount(place = {}, override = {}, category = '', shared = {}) {
+  const cat = String(category).toLowerCase();
+  if (cat === 'hotel' || cat === 'car') {
+    const row = { ...place, ...override };
+    const total = thingTravelTotalPrice(place, override, cat, shared);
+    if (total.hasPrice) {
+      const nightly = cat === 'hotel' && total.estimated
+        ? parseStoredRate(row.price ?? place.price)
+        : null;
+      return { amount: total.amount, hasPrice: true, nightly };
+    }
+    return { amount: 0, hasPrice: false, nightly: null };
+  }
   const row = { ...place, ...override };
   const perPerson = perPersonThing(place, override, category);
   const explicit = row.pricePerPerson != null && row.pricePerPerson !== '' ? Number(row.pricePerPerson) : null;

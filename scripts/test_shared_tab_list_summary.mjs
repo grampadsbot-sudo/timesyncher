@@ -6,6 +6,7 @@ import { pickFlightListRowSummaryText, STORED_SUMMARY_LIST_ROW_PICK_BUNDLE } fro
 
 import { compareColumnRows, nextColumnSort, rowPriceAmount, LIST_SORT_PRESENTATION } from '../src/vacation/list-column-sort.mjs';
 import { finalizeServedSharedTripPayload } from '../src/vacation/shared-trip-served-page.mjs';
+import { patchVk980TotalPrice } from '../src/vacation/trek-vk-980-total-price-patch.mjs';
 import { buildNycPr225SharedTrip } from './fixtures/nyc-pr225-shared-trip.mjs';
 
 const payload = finalizeServedSharedTripPayload(buildNycPr225SharedTrip());
@@ -45,7 +46,7 @@ assert.equal(payload.thingOverrides[`place:${flightId}`]?.dayIds?.length, 1);
 assert.equal(payload.thingOverrides[`place:${hotelId}`]?.stayDays, 4);
 assert.ok((payload.thingOverrides[`place:${carId}`]?.perDaySchedule || {}));
 
-const bundle = readFileSync(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
+const bundle = patchVk980TotalPrice(readFileSync(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8'));
 assert.equal(LIST_SORT_PRESENTATION, 'pills');
 assert.match(bundle, /n\.jsx\(Wr,\{listKey:"flights"\}\)/);
 assert.match(bundle, /n\.jsx\(Wr,\{listKey:"hotels"\}\)/);
@@ -64,7 +65,7 @@ assert.doesNotMatch(bundle, /marginLeft:-8,marginRight:-8,width:"calc\(100% \+ 1
 assert.doesNotMatch(bundle, /data-day-itinerary-mount|data-trek-list/);
 assert.match(bundle, /"data-ts-list-row-name":"1",style:\{minWidth:0,maxWidth:"100%",flex:"1 1 auto",display:"inline-flex",alignItems:"center",lineHeight:1,whiteSpace:"normal",overflowWrap:"anywhere"\}/);
 assert.match(bundle, /"data-list-summary":"1","data-summary-src":"thing",style:\{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"visible",whiteSpace:"normal",overflowWrap:"anywhere"/);
-assert.match(bundle, /"data-ts-list-price":"1","data-ts-flight-price":"1",style:\{whiteSpace:"nowrap",flexShrink:0,color:"#0f766e",fontWeight:900\},children:bn\(G\)\?eu\(G\)\[1\]:ie\(G\)\?ie\(G\)\+\(Zi\(G\)\?" \/ night":" total"\):""/);
+assert.match(bundle, /"data-ts-list-price":"1"[\s\S]*\(Zi\(G\)\|\|Mi\(G\)\)\?tsThingTravelTotalLabel\(G,la,cn\)/);
 assert.match(bundle, /"data-ts-travel-list-header":"1"/);
 
 const headerStart = bundle.indexOf('be=({item:G})=>');
@@ -76,6 +77,12 @@ function renderedRow(place, expanded) {
     n: { jsx, jsxs: jsx },
     J: (p) => p.name,
     ie: (p) => p.price,
+    tsThingTravelTotalLabel: (p) => {
+      const rate = Number(String(p.price).replace(/[^\d.]/g, ''));
+      if (p.category === 'hotel') return `$${Math.round(rate * 7 * 1.2).toLocaleString('en-US')} est. total`;
+      return `$${rate} total`;
+    },
+    cn: [],
     uc: () => 'Car',
     Bs: String,
     mr: (p) => p.name,
@@ -124,7 +131,7 @@ for (const expanded of [false, true]) {
     assert.equal(descendants(emptyRow).find((v) => v.props['data-list-summary']), undefined);
   }
   for (const description of [undefined, '', summary, '  Stored\t description\n at 09:30  ', 'x'.repeat(4101)]) {
-    const row = renderedRow({ id: 44, category: 'hotel', name, summary, description, price: '$1,234' }, expanded);
+    const row = renderedRow({ id: 44, category: 'hotel', name, summary, description, price: 146.9 }, expanded);
     const nodes = descendants(row);
     const nameNode = nodes.find((v) => v.props['data-ts-list-row-name']);
     const summaryNode = nodes.find((v) => v.props['data-list-summary']);
@@ -136,7 +143,7 @@ for (const expanded of [false, true]) {
     assert.equal(summaryNode.props.style.whiteSpace, 'normal');
     assert.equal(nodes.find((v) => v.type === 'strong').props.children, name);
     const priceNode = nodes.find((v) => v.props['data-ts-list-price']);
-    assert.equal(priceNode.props.children, '$1,234 / night');
+    assert.equal(priceNode.props.children, '$1,234 est. total');
     assert.equal(priceNode.props.style.flexShrink, 0);
     assert.equal(priceNode.props.style.whiteSpace, 'nowrap');
   }

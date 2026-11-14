@@ -15,7 +15,7 @@ const EXPERIENCE_CATEGORIES = new Set([
   'family_event',
   'other',
 ]);
-import { isGenericDescription, isHotelPlanningNote } from './list-row-generic-description.mjs';
+import { isGenericDescription } from './list-row-generic-description.mjs';
 import { isPlaceholderLogoUrl, resolveThingLogoUrl } from './thing-logo-capture.mjs';
 import {
   applyFlightThingFields,
@@ -86,18 +86,12 @@ function rentalCompanyFromTitle(name = '') {
 function priceFromTextFields(place = {}, override = {}, source = null) {
   const meta = placeMetadata(place);
   const blobs = [
-    override.price,
-    override.longDetails,
-    override.description,
-    override.summary,
     place.notes,
     place.description,
-    place.longDetails,
     override.notes,
     source?.summary,
     source?.description,
     source?.details,
-    source?.longDetails,
     meta.reservationSummary,
     meta.reservation_summary,
     meta.pickSummary,
@@ -417,9 +411,6 @@ export function applyLiveAppListRowFields(shared = {}) {
         override.longDetails = hotelNarrative;
         if (!text(override.details)) override.details = hotelNarrative;
         if (isGenericDescription(override.description)) override.description = hotelNarrative;
-        if (isHotelPlanningNote(override.summary) || isGenericDescription(override.summary)) {
-          override.summary = hotelNarrative;
-        }
         if (!text(place.description) || isGenericDescription(place.description)) {
           place.description = hotelNarrative;
         }

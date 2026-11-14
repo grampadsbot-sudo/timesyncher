@@ -16,7 +16,7 @@ import { buildListLogoPatch } from './thing-logo-fallback-url.mjs';
 import { LIST_LOGO_NEEDLE, patchListLogoQrGuard } from './trek-list-logo-qr-patch.mjs';
 import { patchEventsEmptyListMessage, patchSharedTabCrossFilters } from './trek-shared-tab-cross-filter-patch.mjs';
 import { applyNrPicPopupPatches } from './trek-nr-pic-popup-patches.mjs';
-import { patchThingPriceReader } from './trek-thing-price-bundle-patch.mjs';
+import { patchSharedTripBootFetch } from './trek-shared-trip-boot-fetch-patch.mjs';
 export { LIST_LOGO_QR_GUARD_PATCH, patchListLogoQrGuard } from './trek-list-logo-qr-patch.mjs';
 export const LIST_LOGO_PATCH = buildListLogoPatch();
 const LIST_LOGO_PATCH_NEEDLE = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"");if(raw&&!/^data:image\\/svg\\+xml/i.test(raw))return raw;return ""}';
@@ -32,6 +32,7 @@ export function stripHotelBrandNameGuessing(source = '') {
 }
 const TRIP_MAP_SNIPPET = tripMapInitialViewBundleSnippet();
 const TRIP_MAP_INJECT_NEEDLE = 'function pze({places:e=[],dayPlaces:t=[]';
+
 const MAP_CENTER_PARIS_A = 'center:r=[48.8566,2.3522]';
 const MAP_CENTER_PARIS_B = 'center:z=[48.8566,2.3522]';
 
@@ -270,7 +271,7 @@ export function patchSharedTripHostnameForLocalHarness(js = '') {
 
 export function applyLiveProductPatches(patched = '', options = {}) {
   const served = options.served === true;
-  let js = patchThingPriceReader(stripHotelBrandNameGuessing(String(patched || '')), { served });
+  let js = patchSharedTripBootFetch(stripHotelBrandNameGuessing(String(patched || '')));
   if (js.includes(XA_STATIC_MAP_TILE_NEEDLE)) {
     js = js.replaceAll(XA_STATIC_MAP_TILE_NEEDLE, XA_STATIC_MAP_TILE_PATCH);
   }
@@ -492,8 +493,7 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
     throw new Error('served shared bundle must use original Wr Name/Price sort pills');
   }
   js = patchSharedTripOeListRows(js);
-  if (served && (!['hotels', 'cars', 'events'].every((tab) => js.includes(`data-shared-live-tab":"${tab}"`))
-    || !js.includes('"data-list-row":"1","data-has-logo":tsRowHasLogo'))) {
+  if (served && (!['hotels', 'cars', 'events'].every((tab) => js.includes(`data-shared-live-tab":"${tab}"`)) || !js.includes('"data-list-row":"1","data-has-logo":tsRowHasLogo'))) {
     throw new Error('served shared live tab panels or Gate B list row markers missing');
   }
   return js;

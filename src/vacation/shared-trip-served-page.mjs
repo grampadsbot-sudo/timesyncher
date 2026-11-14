@@ -1,5 +1,6 @@
 import { prepareSharedTripForLiveApp } from './shared-trip-live-tab-lists.mjs';
 import { repairExplicitLogoUrl } from './thing-logo-fallback-url.mjs';
+import { stripFillInternalsFromServedSharedTrip } from './shared-trip-fill-internal-strip.mjs';
 
 function repairServedLogoUrls(shared = {}) {
   const places = Array.isArray(shared.places)
@@ -16,5 +17,6 @@ function repairServedLogoUrls(shared = {}) {
 
 export function finalizeServedSharedTripPayload(shared = {}, options = {}) {
   void options;
-  return prepareSharedTripForLiveApp(repairServedLogoUrls(shared));
+  const prepared = prepareSharedTripForLiveApp(repairServedLogoUrls(shared));
+  return stripFillInternalsFromServedSharedTrip(prepared);
 }

@@ -6,7 +6,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import sharedTripHandler from '../src/vacation/shared-trip-handler.mjs';
-import { resetSharedUpstreamCacheForTests } from '../src/vacation/shared-trip-upstream-cache.mjs';
+import {
+  invalidateSharedUpstreamCacheForSlug,
+  resetSharedUpstreamCacheForTests,
+} from '../src/vacation/shared-trip-upstream-cache.mjs';
 import { buildNycCraigKimDaybydayTrip } from './fixtures/nyc-craig-kim-daybyday-trip.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
@@ -113,6 +116,7 @@ const appServer = createServer(async (req, res) => {
     const body = Buffer.from(await upstream.arrayBuffer());
     res.writeHead(upstream.status, { 'content-type': 'application/json', 'cache-control': 'no-store' });
     res.end(body);
+    if (upstream.ok) invalidateSharedUpstreamCacheForSlug(slug);
     return;
   }
   if (pathname.startsWith('/api/shared/') || pathname.startsWith('/api/shared-trip/')) {
@@ -135,7 +139,9 @@ const browser = await puppeteer.launch({
 
 async function confirmToListMs(probeName) {
   trekTrip = structuredClone(sharedRaw);
+  invalidateSharedUpstreamCacheForSlug(slug);
   const page = await browser.newPage();
+  await page.setCacheEnabled(false);
   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
   await page.goto(`${origin}/shared/${slug}/`, { waitUntil: 'networkidle2', timeout: 240000 });
   await page.waitForFunction(

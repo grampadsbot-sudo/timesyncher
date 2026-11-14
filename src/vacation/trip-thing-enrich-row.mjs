@@ -75,7 +75,7 @@ export function enrichTripThing(thing = {}) {
     ...(logoUrl ? { logoUrl } : {}),
     sourceRecord: {
       ...sourceRecord,
-      ...(description ? { summary: description, description } : {}),
+      ...(description ? { description } : {}),
       ...(price != null ? { price } : {}),
       ...(logoUrl ? { logoUrl } : {}),
     },
