@@ -40,6 +40,12 @@
     return rowCanonicalBrand(node).toLowerCase();
   }
 
+  function displayBrandLabel(brand) {
+    const b = String(brand || '').trim();
+    if (/^priceline express deal/i.test(b)) return 'Priceline Express Deal';
+    return b;
+  }
+
   function rowLogoSrc(node) {
     const fromRow = node.getAttribute('data-logo-src') || '';
     if (fromRow) return fromRow;
@@ -172,6 +178,19 @@
     }
   }
 
+  function hideCarRowRemoveButtons() {
+    if (!carsTabActive()) return;
+    for (const row of carRows()) {
+      for (const btn of row.querySelectorAll('button')) {
+        const label = String(btn.getAttribute('aria-label') || btn.textContent || '').replace(/\s+/g, ' ').trim();
+        if (!/^remove\b/i.test(label)) continue;
+        btn.style.display = 'none';
+        btn.setAttribute('aria-hidden', 'true');
+        btn.tabIndex = -1;
+      }
+    }
+  }
+
   function mount() {
     if (!document.body) return;
     if (!carsTabActive()) {
@@ -203,17 +222,17 @@
     }
 
     for (const [key, meta] of knownBrands) {
-      const brand = meta.label;
+      const brand = displayBrandLabel(meta.label);
       if (bar.querySelector(`[data-ts-brand-toggle="${CSS.escape(key)}"]`)) continue;
       const label = document.createElement('label');
       label.dataset.tsBrandToggle = key;
       label.style.cssText =
-        'display:inline-flex;align-items:center;gap:6px;border:1px solid #e5e7eb;border-radius:999px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;max-width:100%;box-sizing:border-box;';
+        'display:inline-flex;align-items:center;gap:8px;border:1px solid #e5e7eb;border-radius:999px;padding:8px 12px;min-height:44px;font-size:11px;font-weight:700;cursor:pointer;max-width:100%;box-sizing:border-box;touch-action:manipulation;';
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
       checkbox.checked = !hidden.has(key);
       checkbox.setAttribute('aria-label', `Show ${brand} vehicles`);
-      checkbox.style.cssText = 'margin:0;width:14px;height:14px;flex-shrink:0;';
+      checkbox.style.cssText = 'margin:0;width:18px;height:18px;min-width:18px;min-height:18px;flex-shrink:0;';
       label.appendChild(checkbox);
       const img = document.createElement('img');
       img.alt = '';
@@ -234,6 +253,7 @@
     }
 
     applyVisibility();
+    hideCarRowRemoveButtons();
   }
 
   function scheduleMount() {

@@ -14,7 +14,7 @@ const LR_V2_NEEDLE =
 
 const OE_ROW_VARS_NEEDLE = 'Pn=(Mi(G),Rn),Zn=';
 const OE_ROW_VARS_PATCH =
-  'Pn=(Mi(G),Rn),tsRowRating=tsPrimaryPlaceStarRating(ha(G)),tsRowStars=tsRenderStarRatingHtml(tsRowRating),Zn=';
+  'Pn=(Mi(G),Rn),tsRowRating=bn(G)||Mi(G)?null:tsPrimaryPlaceStarRating(ha(G)),tsRowStars=tsRenderStarRatingHtml(tsRowRating),Zn=';
 
 const OE_ROW_PREP_BROKEN_NEEDLE =
   'Xr=fo(G);const tsRowLogo=_l(G),tsRowHasLogo=tsRowLogo?"1":"0",tsRowRating=tsPrimaryPlaceStarRating(ha(G)),tsRowStars=tsRenderStarRatingHtml(tsRowRating);return Sa?';
