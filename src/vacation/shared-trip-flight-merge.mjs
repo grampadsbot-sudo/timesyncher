@@ -4,7 +4,7 @@ import {
   stripPipelineFlightStubPrefix,
 } from './flight-list-row-summary.mjs';
 import { isGenericDescription } from './list-row-generic-description.mjs';
-import { stripFlightOptionTitlePrefix } from './thing-title-normalize.mjs';
+import { formatFlightCardTitle } from './thing-title-normalize.mjs';
 
 function text(value) {
   return String(value || '').trim();
@@ -22,10 +22,6 @@ function copyIfBlank(target, key, ...values) {
   if (text(target[key])) return;
   const row = firstPresent(...values);
   if (row) target[key] = row;
-}
-
-function stripFlightOptionPrefix(value = '') {
-  return stripFlightOptionTitlePrefix(value);
 }
 
 export function syncAssignmentPlaceSnapshots(shared = {}) {
@@ -57,8 +53,18 @@ export function applyFlightThingFields(place, override, source) {
     ? { ...place.category, name: place.category.name || 'Flight' }
     : { name: 'Flight', icon: '✈️' };
   override.category = 'flight';
+  const flightBlob = firstPresent(
+    source?.summary,
+    source?.description,
+    place.description,
+    place.notes,
+  );
   const rawTitle = firstPresent(place.name, place.title, override.name, override.title);
-  const cleanedTitle = stripFlightOptionPrefix(rawTitle);
+  const cleanedTitle = formatFlightCardTitle(rawTitle, {
+    airline: source?.airline,
+    route: source?.route,
+    blob: flightBlob,
+  });
   if (cleanedTitle) {
     place.name = cleanedTitle;
     place.title = cleanedTitle;
@@ -66,12 +72,6 @@ export function applyFlightThingFields(place, override, source) {
     override.title = cleanedTitle;
   }
   copyIfBlank(override, 'fareDirection', source?.fareDirection, source?.tripType, source?.pricingType);
-  const flightBlob = firstPresent(
-    source?.summary,
-    source?.description,
-    place.description,
-    place.notes,
-  );
   let flightFields = flightFieldsFromBlob(flightBlob, '');
   if (!flightFields.departureTime) {
     flightFields = {
