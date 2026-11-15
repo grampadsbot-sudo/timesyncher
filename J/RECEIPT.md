@@ -46,3 +46,30 @@
 | `node scripts/check-no-comments.mjs` | pass |
 
 No git stage/commit/push in lane (host publication). DONE: `pass d7190f371054cd54cdf3f577d66c40e9ade6e05c` → `vkfill-982-20261114211315-job/vkfill-982-DONE`.
+
+---
+
+## Fix round 2 — `test_issue_964` harness (starting HEAD `24e3b11b4a7cff63e2bafc038bb0239c6317eaf6`, PR #993)
+
+**Cause:** vk982 detail-head patch added `bn(Dt)||Mi(Dt)` guard inside the extracted rating-row IIFE; `test_issue_964_detail_overall_rating_row.mjs` and `test_issue_959_flight_row_detail_price.mjs` sandboxes did not bind `bn` / `Mi`.
+
+| Path | Why |
+| --- | --- |
+| `scripts/test_issue_964_detail_overall_rating_row.mjs` | Pass `bn`/`Mi` into `new Function` params; stubs return false so rated-place row layout assertions stay valid |
+| `scripts/test_issue_959_flight_row_detail_price.mjs` | Same harness fix (shared extracted snippet) |
+
+| Command | Result |
+| --- | --- |
+| `node scripts/test_issue_964_detail_overall_rating_row.mjs` | pass |
+| `node scripts/test_issue_959_flight_row_detail_price.mjs` | pass |
+| `node scripts/test_vk982_car_list_no_ratings.mjs` | pass |
+| `node scripts/test_acceptance_982_car_brand_checkboxes.mjs` | pass |
+| `node scripts/test_evidence_secrets.mjs` + `node scripts/check-evidence-secrets.mjs` | pass |
+| `apps/vacation-client` typecheck + lint + test (CHROME_PATH playwright) | pass |
+| `node scripts/run-offline-tests.mjs` | **fail** `scripts/test_live_transcript_dialog_pdf.mjs:651` (`via` `gbrain-cli-get_page` vs expected `bundled-get_page`) — ubuntu lane has live `gbrain` CLI; not introduced by this diff; CI checkout has no gbrain |
+| `node scripts/check-code-ratchet.mjs` | pass |
+| `node scripts/check-no-comments.mjs` | pass |
+
+**Uncommitted paths for host:** `scripts/test_issue_964_detail_overall_rating_row.mjs`, `scripts/test_issue_959_flight_row_detail_price.mjs`, `J/RECEIPT.md` (+ vacation-client layout reruns may touch `evidence/vacation-client-*` PNGs; host should discard or commit per policy)
+
+No git stage/commit/push in lane (host publication).
