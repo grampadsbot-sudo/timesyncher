@@ -11,6 +11,18 @@ function detailBodyV3({ n, d, edit, days, selectedDays, scheduled, start, durati
   const headingStyle = { margin: '0 0 7px', fontSize: 10, fontWeight: 800, letterSpacing: 1, color: '#6b7280', textTransform: 'uppercase' };
   const inputStyle = { width: '100%', minWidth: 0, boxSizing: 'border-box', border: '1px solid #d1d5db', borderRadius: 6, padding: '8px 7px', font: 'inherit', color: '#111827', background: 'white' };
   const buttonStyle = { ...inputStyle, width: 'auto', cursor: 'pointer', fontSize: 11 };
+  const visitGridStyle = {
+    display: 'grid',
+    gridTemplateColumns: 'minmax(60px,max-content) minmax(0,1fr) minmax(0,0.75fr) minmax(0,1.15fr) 28px',
+    alignItems: 'end',
+    gap: 4,
+    marginBottom: 8,
+    width: '100%',
+    minWidth: 0,
+    maxWidth: '100%',
+    boxSizing: 'border-box',
+  };
+  const daySelectStyle = { ...inputStyle, padding: '10px 6px', fontSize: 10, marginTop: 3, minHeight: 44 };
   const fieldHeading = (key, label) => {
     if (key === 'itineraryNote') {
       return n.jsx('div', {
@@ -112,10 +124,11 @@ function detailBodyV3({ n, d, edit, days, selectedDays, scheduled, start, durati
         }, day.id);
       }),
     ] }) : null,
-    visits.map((visit, index) => edit ? n.jsxs('div', { 'data-ts-detail-visit': '1', style: { display: 'grid', gridTemplateColumns: 'minmax(0, .8fr) minmax(0, 1fr) minmax(0, .8fr) minmax(0, 1.6fr) 24px', alignItems: 'end', gap: 4, marginBottom: 8 }, children: [
-      n.jsxs('label', { style: { fontSize: 9, color: '#6b7280', minWidth: 0 }, children: ['Day', n.jsx('select', {
+    visits.map((visit, index) => edit ? n.jsxs('div', { 'data-ts-detail-visit': '1', style: visitGridStyle, children: [
+      n.jsxs('label', { style: { fontSize: 9, color: '#6b7280', minWidth: 0, display: 'grid', gap: 3 }, children: ['Day', n.jsx('select', {
+        'data-ts-detail-visit-day-select': '1',
         'aria-label': `Visit ${index + 1} Day`, value: visit.dayId, onChange: event => changeVisit(index, 'dayId', Number(event.target.value)),
-        style: { ...inputStyle, padding: '7px 0', fontSize: 10, marginTop: 3 }, children: days.map(day => n.jsx('option', { value: day.id, children: `Day ${day.day_number}` }, day.id)),
+        style: daySelectStyle, children: days.map(day => n.jsx('option', { value: day.id, children: `Day ${day.day_number}` }, day.id)),
       })] }),
       visitInput(index, 'startTime', 'Start', visit.startTime), visitInput(index, 'duration', 'Duration', visit.duration),
       n.jsxs('label', { style: { fontSize: 9, color: '#6b7280', minWidth: 0 }, children: ['Status', n.jsx('select', {
