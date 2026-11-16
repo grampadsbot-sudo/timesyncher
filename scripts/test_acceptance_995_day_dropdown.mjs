@@ -10,6 +10,10 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const fixtureDir = path.join(os.homedir(), 'tsv-dispatch/acceptance/fixtures/demo-nyc-99-snapshot-20261110');
+if (process.env.CI && !existsSync(path.join(fixtureDir, 'SOURCE.json'))) {
+  console.log('test_acceptance_995_day_dropdown: SKIP in CI (host-only fixture demo-nyc-99-snapshot-20261110 absent; host accept runs it)');
+  process.exit(0);
+}
 const source = JSON.parse(await readFile(path.join(fixtureDir, 'SOURCE.json'), 'utf8'));
 const shareToken = source.shared_token;
 const currentTripId = source.current_trip_id;
