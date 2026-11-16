@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import { existsSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
@@ -13,9 +12,7 @@ const root = fileURLToPath(new URL('..', import.meta.url));
 const require = createRequire(import.meta.url);
 const DEMO_SLUG = 'demo-acceptance-994-local';
 const FLIGHT_TITLE_RE = /^.+ [A-Z]{3} to [A-Z]{3}$/;
-const FIXTURE_ROOT =
-  process.env.TSV_ACCEPTANCE_FIXTURE_ROOT ||
-  path.resolve(root, '../../tsv-dispatch/acceptance/fixtures/demo-nyc-99-snapshot-20261110');
+const FIXTURE_FILE = path.join(root, 'scripts/fixtures/acceptance-994-copy-trip.json');
 
 function loadPuppeteer() {
   try {
@@ -35,11 +32,7 @@ function send(res, status, body, type) {
   res.end(buf);
 }
 
-if (process.env.CI && !existsSync(path.join(FIXTURE_ROOT, 'shared-trip.json'))) {
-  console.log('test_acceptance_994_flight_titles: SKIP in CI (host-only fixture demo-nyc-99-snapshot-20261110 absent; host accept runs it)');
-  process.exit(0);
-}
-const tripRaw = JSON.parse(await readFile(path.join(FIXTURE_ROOT, 'shared-trip.json'), 'utf8'));
+const tripRaw = JSON.parse(await readFile(FIXTURE_FILE, 'utf8'));
 const tripPayload = finalizeServedSharedTripPayload(tripRaw);
 
 const [html, js, css] = await Promise.all([

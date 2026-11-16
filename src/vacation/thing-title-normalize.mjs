@@ -12,7 +12,7 @@ function text(value) {
   return String(value ?? '').replace(/\s+/g, ' ').trim();
 }
 
-function stripFlightOptionTitlePrefix(value = '') {
+export function stripFlightOptionTitlePrefix(value = '') {
   return text(String(value).replace(FLIGHT_OPTION_PREFIX, ''));
 }
 
