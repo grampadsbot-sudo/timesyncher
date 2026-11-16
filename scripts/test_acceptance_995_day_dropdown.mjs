@@ -210,6 +210,9 @@ async function exerciseViewport(browser, server, viewport) {
     }));
     assert.fail(`${viewport.width}: edit mode did not open ${JSON.stringify(state)}`);
   }
+  await frame.evaluate(() => window.dispatchEvent(new Event('resize')));
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  assert.equal(await isEditing(), true, 'responsive layout must not close detail edit mode');
   const daySelect = '[data-ts-detail-v3] select[data-ts-detail-visit-day-select="1"]';
   const selectState = () => frame.evaluate(() => {
     const detail = document.querySelector('[data-ts-detail-v3]');
