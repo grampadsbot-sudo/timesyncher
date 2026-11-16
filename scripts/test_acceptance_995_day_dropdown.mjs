@@ -211,17 +211,48 @@ async function exerciseViewport(browser, server, viewport) {
     assert.fail(`${viewport.width}: edit mode did not open ${JSON.stringify(state)}`);
   }
   const daySelect = '[data-ts-detail-v3] select[data-ts-detail-visit-day-select="1"]';
+  const selectState = () => frame.evaluate(() => {
+    const detail = document.querySelector('[data-ts-detail-v3]');
+    const sel = detail?.querySelector('select[data-ts-detail-visit-day-select="1"]') || null;
+    return {
+      mode: detail?.getAttribute('data-ts-detail-mode') || null,
+      visits: detail?.querySelectorAll('[data-ts-detail-visit]').length || 0,
+      dayButtons: detail?.querySelectorAll('button[aria-label^="Day "]').length || 0,
+      hasSelect: Boolean(sel),
+      selected: sel?.options?.[sel.selectedIndex]?.textContent?.trim() || '',
+    };
+  }).catch((error) => ({ error: String(error?.message || error) }));
+  async function openEdit() {
+    await frame.evaluate(() => {
+      const button = document.querySelector('[data-ts-detail-edit="1"]');
+      if (button) button.click();
+    });
+    await frame.waitForSelector('[data-ts-detail-mode="edit"]', { timeout: 10000 });
+  }
   async function chooseVisitDay(dayId) {
+    let last = null;
     for (let attempt = 0; attempt < 3; attempt += 1) {
       if (!(await isEditing())) {
-        await frame.click('[data-ts-detail-edit="1"]');
-        await frame.waitForSelector('[data-ts-detail-mode="edit"]', { timeout: 10000 });
+        await openEdit();
       }
-      const handle = await frame.waitForSelector(daySelect, { timeout: 15000 });
+      const handle = await frame.waitForSelector(daySelect, { timeout: 8000 }).catch(() => null);
+      if (!handle) {
+        last = await selectState();
+        await frame.evaluate(() => {
+          document.querySelector('[data-ts-detail-close="1"]')?.click();
+        }).catch(() => {});
+        await frame.waitForSelector('[data-ts-detail-v3]', { hidden: true, timeout: 5000 }).catch(() => {});
+        await frame.evaluate(() => {
+          [...document.querySelectorAll('[data-ts-list-row-name="1"]')].find((el) => /Carbone/.test(el.textContent || ''))?.click();
+        });
+        await frame.waitForSelector('[data-ts-detail-edit="1"]', { timeout: 15000 });
+        await openEdit();
+        continue;
+      }
       try {
         await handle.select(String(dayId));
       } catch (error) {
-        if (attempt === 2) throw error;
+        last = { selectError: String(error?.message || error), ...(await selectState()) };
         continue;
       }
       const shown = await frame.evaluate(() => {
@@ -230,8 +261,9 @@ async function exerciseViewport(browser, server, viewport) {
         return sel.options[sel.selectedIndex]?.textContent?.trim() || '';
       });
       if (shown) return shown;
+      last = await selectState();
     }
-    assert.fail(`${viewport.width}: day select missing after choosing ${dayId}`);
+    assert.fail(`${viewport.width}: day select missing after choosing ${dayId} ${JSON.stringify(last)}`);
   }
   await chooseVisitDay(day1.id);
   let metrics = await measureDaySelects(frame);
