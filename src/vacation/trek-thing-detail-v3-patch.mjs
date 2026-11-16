@@ -197,7 +197,6 @@ function detailBodyV3({ n, d, edit, days, selectedDays, scheduled, start, durati
     }
     if (web) {
       const href = /^https?:\/\//i.test(web) ? web : 'https://' + web.replace(/^\/\//, '');
-      // Full URL stays visible; break opportunities only after URL delimiters / . ? & (no mid-word breaks).
       const label = [];
       String(web).split(/(?<=[\/.?&])/).forEach((part, i) => { if (i) label.push(n.jsx('wbr', {}, 'wbr' + i)); label.push(part); });
       kids.push(n.jsxs('a', {
