@@ -195,6 +195,14 @@ try {
     );
     assert.ok(cars.toggles.every((t) => !/suv|sedan|compact|midsize|full-size/i.test(t.label)), `car toggle labels are brands at ${tag}`);
     assert.ok(cars.toggles.every((t) => t.hasLogo && /^https?:\/\//.test(t.logoSrc)), `car brand logos at ${tag}`);
+    await page.waitForFunction(
+      (count) => {
+        const images = [...document.querySelectorAll('[data-ts-brand-toggle] img[src]')];
+        return images.length === count && images.every((img) => img.complete && img.naturalWidth > 0 && img.naturalHeight > 0);
+      },
+      { timeout: 20_000 },
+      expectedCarBrandKeys.length,
+    );
     const logoWidths = await page.evaluate(() =>
       [...document.querySelectorAll('[data-ts-brand-toggle] img[src]')].map((img) => ({
         brand: img.closest('[data-ts-brand-toggle]')?.dataset?.tsBrandToggle || '',
