@@ -189,8 +189,27 @@ async function exerciseViewport(browser, server, viewport) {
     [...document.querySelectorAll('[data-ts-list-row-name="1"]')].find((el) => /Carbone/.test(el.textContent || '')).click();
   });
   await frame.waitForSelector('[data-ts-detail-v3]', { timeout: 30000 });
-  await frame.click('[data-ts-detail-edit="1"]');
-  await frame.waitForSelector('[data-ts-detail-mode="edit"]', { timeout: 30000 });
+  await frame.waitForSelector('[data-ts-detail-edit="1"]', { timeout: 30000 });
+  let editing = false;
+  const isEditing = () => frame.evaluate(() => Boolean(document.querySelector('[data-ts-detail-mode="edit"]')));
+  for (let attempt = 0; attempt < 4 && !editing; attempt += 1) {
+    if (await isEditing()) {
+      editing = true;
+      break;
+    }
+    await frame.click('[data-ts-detail-edit="1"]');
+    editing = await frame
+      .waitForSelector('[data-ts-detail-mode="edit"]', { timeout: 10000 })
+      .then(() => true)
+      .catch(() => false);
+  }
+  if (!editing) {
+    const state = await frame.evaluate(() => ({
+      edit: document.querySelector('[data-ts-detail-edit="1"]')?.outerHTML?.slice(0, 300) || null,
+      mode: document.querySelector('[data-ts-detail-mode]')?.getAttribute('data-ts-detail-mode') || null,
+    }));
+    assert.fail(`${viewport.width}: edit mode did not open ${JSON.stringify(state)}`);
+  }
   const daySelect = '[data-ts-detail-v3] select[aria-label="Visit 1 Day"]';
   await frame.waitForSelector(daySelect, { timeout: 30000 });
   await frame.select(daySelect, String(day1.id));
