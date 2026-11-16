@@ -11,6 +11,18 @@ function detailBodyV3({ n, d, edit, days, selectedDays, scheduled, start, durati
   const headingStyle = { margin: '0 0 7px', fontSize: 10, fontWeight: 800, letterSpacing: 1, color: '#6b7280', textTransform: 'uppercase' };
   const inputStyle = { width: '100%', minWidth: 0, boxSizing: 'border-box', border: '1px solid #d1d5db', borderRadius: 6, padding: '8px 7px', font: 'inherit', color: '#111827', background: 'white' };
   const buttonStyle = { ...inputStyle, width: 'auto', cursor: 'pointer', fontSize: 11 };
+  const visitGridStyle = {
+    display: 'grid',
+    gridTemplateColumns: 'minmax(60px,max-content) minmax(0,1fr) minmax(0,0.75fr) minmax(0,1.15fr) 28px',
+    alignItems: 'end',
+    gap: 4,
+    marginBottom: 8,
+    width: '100%',
+    minWidth: 0,
+    maxWidth: '100%',
+    boxSizing: 'border-box',
+  };
+  const daySelectStyle = { ...inputStyle, padding: '10px 6px', fontSize: 10, marginTop: 3, minHeight: 44 };
   const fieldHeading = (key, label) => {
     if (key === 'itineraryNote') {
       return n.jsx('div', {
@@ -79,7 +91,12 @@ function detailBodyV3({ n, d, edit, days, selectedDays, scheduled, start, durati
       onChange: event => write(key, event.target.checked), style: { accentColor: '#111827' },
     }), label],
   }) : null;
-  const visits = scheduled ? selectedDays.flatMap(dayId => {
+  const scheduleIds = [...new Set([
+    ...selectedDays,
+    ...Object.keys(d.perDaySchedule || {}),
+  ].map(id => Number(id)).filter(id => Number.isFinite(id) && id))];
+  const showSchedule = scheduled || scheduleIds.length > 0;
+  const visits = showSchedule ? scheduleIds.flatMap(dayId => {
     const day = days.find(row => String(row.id) === String(dayId));
     if (!day) return [];
     const schedule = d.perDaySchedule?.[String(dayId)] || {};
@@ -112,10 +129,11 @@ function detailBodyV3({ n, d, edit, days, selectedDays, scheduled, start, durati
         }, day.id);
       }),
     ] }) : null,
-    visits.map((visit, index) => edit ? n.jsxs('div', { 'data-ts-detail-visit': '1', style: { display: 'grid', gridTemplateColumns: 'minmax(0, .8fr) minmax(0, 1fr) minmax(0, .8fr) minmax(0, 1.6fr) 24px', alignItems: 'end', gap: 4, marginBottom: 8 }, children: [
-      n.jsxs('label', { style: { fontSize: 9, color: '#6b7280', minWidth: 0 }, children: ['Day', n.jsx('select', {
+    visits.map((visit, index) => edit ? n.jsxs('div', { 'data-ts-detail-visit': '1', style: visitGridStyle, children: [
+      n.jsxs('label', { style: { fontSize: 9, color: '#6b7280', minWidth: 0, display: 'grid', gap: 3 }, children: ['Day', n.jsx('select', {
+        'data-ts-detail-visit-day-select': '1',
         'aria-label': `Visit ${index + 1} Day`, value: visit.dayId, onChange: event => changeVisit(index, 'dayId', Number(event.target.value)),
-        style: { ...inputStyle, padding: '7px 0', fontSize: 10, marginTop: 3 }, children: days.map(day => n.jsx('option', { value: day.id, children: `Day ${day.day_number}` }, day.id)),
+        style: daySelectStyle, children: days.map(day => n.jsx('option', { value: day.id, children: `Day ${day.day_number}` }, day.id)),
       })] }),
       visitInput(index, 'startTime', 'Start', visit.startTime), visitInput(index, 'duration', 'Duration', visit.duration),
       n.jsxs('label', { style: { fontSize: 9, color: '#6b7280', minWidth: 0 }, children: ['Status', n.jsx('select', {
@@ -310,6 +328,8 @@ export function patchThingDetailV3(source = '') {
   const extras = `${panel.slice(extrasStart, extrasEnd >= 0 ? extrasEnd : extrasStart)},${REVIEW_V3_EDIT_EXTRAS},${panel.slice(tagsStart, tagsEnd)},${HH_V3_EDIT_EXTRAS}`;
   panel = panel.slice(0, bodyStart) + `(${detailBodyV3.toString()})({n,d:ha(Dt),edit:Ce&&Sa,days:Qa,selectedDays:Yi(Dt),scheduled:Ds(Dt),start:Ji(Dt),duration:br(Dt),status:hs(Dt),write:(key,value)=>Xa(Dt,key,value),update:fn=>{if(Ce){ge(!0);pe(prev=>({...prev,[Qt(Dt)]:fn(prev[Qt(Dt)]||{})}))}},stars:tsRenderStarRatingHtml,media:fo(Dt),renderMedia:items=>n.jsx(Nr,{items,scopeKey:Qt(Dt)}),captionWrite:(id,caption)=>pi(Qt(Dt),id,caption),extras:Ce&&Sa&&n.jsxs("fieldset",{"data-shared-readonly":void 0,disabled:!1,style:{border:0,padding:0,margin:0,minInlineSize:0,opacity:1},children:[${areaEdit}${extras}]})})]})})`;
   panel = panel.replace('onClick:()=>Ne(null)', 'onClick:()=>{Kt(!1),Ne(null)}');
+  panel = panel.replaceAll('onClick:()=>Kt(!0)', 'onClick:e=>{e.stopPropagation();Kt(!0)}');
+  panel = panel.replaceAll('onClick:()=>Kt(!1)', 'onClick:e=>{e.stopPropagation();Kt(!1)}');
   panel = panel.replace('maxWidth:760,margin:"24px auto"', 'maxWidth:760,margin:"0 auto"');
   panel = panel.replace('children:[n.jsxs("div",{style:{display:"flex",flexDirection:"row",justifyContent:"space-between"', 'children:[Ce&&Sa?n.jsx("select",{"aria-label":"Type",value:It(Dt),onChange:e=>Xa(Dt,"category",e.target.value),style:{width:120,fontSize:11,padding:6,border:"1px solid #d1d5db",borderRadius:6},children:Fa.map(value=>n.jsx("option",{value,children:Jn(value)},value))}):n.jsx("div",{"data-ts-detail-category":"1",style:{fontSize:10,fontWeight:800,letterSpacing:1,color:"#6b7280",textTransform:"uppercase"},children:Jn(It(Dt))}),n.jsxs("div",{style:{display:"flex",flexDirection:"row",justifyContent:"space-between"');
   panel = panel.replace('}):null,n.jsx("button",{type:"button",className:"tsv-detail-close"', '}):Ce&&Sa?n.jsx("button",{"data-ts-detail-save":"1",type:"button","aria-label":"Save changes",onClick:()=>Kt(!1),style:{border:"1px solid #e5e7eb",background:"#f9fafb",borderRadius:999,width:34,height:34,cursor:"pointer",fontWeight:900},children:"✓"}):null,n.jsx("button",{type:"button",className:"tsv-detail-close"');

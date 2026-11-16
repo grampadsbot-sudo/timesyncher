@@ -54,6 +54,7 @@ export function patchUi737(source = '') {
     js = js.replace(FIELDSET_OPEN_NEEDLE, FIELDSET_OPEN_PATCH);
   } else if (
     !js.includes('Ce&&Sa&&n.jsxs("fieldset",{"data-shared-readonly":void 0') &&
+    !js.includes('Ce&&tsEd&&n.jsxs("fieldset",{"data-shared-readonly":void 0') &&
     !js.includes('Ce&&n.jsxs("fieldset",{"data-shared-readonly":void 0')
   ) {
     throw new Error('ui #737 view-only detail editor fieldset patch did not apply');
