@@ -15,8 +15,6 @@
   let finishMode = 'cancel';
   let pendingBlob = null;
   let speechTranscript = '';
-  let speechCommitted = '';
-  let speechRestartTimer = 0;
   let recognition = null;
   let recordingBar = null;
   let editPanel = null;
@@ -190,14 +188,7 @@
     meterRaf = requestAnimationFrame(tick);
   }
 
-  function clearSpeechRestartTimer() {
-    if (!speechRestartTimer) return;
-    clearTimeout(speechRestartTimer);
-    speechRestartTimer = 0;
-  }
-
   function stopSpeechCapture() {
-    clearSpeechRestartTimer();
     if (!recognition) return speechTranscript;
     try {
       recognition.stop();
@@ -208,86 +199,28 @@
     return speechTranscript;
   }
 
-  function appendSpeechResults(event) {
-    let interim = '';
-    const startAt = Number.isFinite(event?.resultIndex) ? event.resultIndex : 0;
-    for (let i = startAt; i < event.results.length; i += 1) {
-      const piece = event.results[i][0]?.transcript || '';
-      if (!piece) continue;
-      if (event.results[i].isFinal) {
-        speechCommitted = `${speechCommitted} ${piece}`.replace(/\s+/g, ' ').trim();
-        interim = '';
-      } else {
-        interim = piece;
-      }
-    }
-    speechTranscript = [speechCommitted, interim].filter(Boolean).join(' ').trim();
-  }
-
-  function queueSpeechRestart() {
-    if (speechRestartTimer) return;
-    speechRestartTimer = window.setTimeout(() => {
-      speechRestartTimer = 0;
-      if (recorder?.state !== 'recording') return;
-      startSpeechCapture({ preserve: true });
-    }, 50);
-  }
-
-  function handleSpeechFatalError() {
-    toast('Microphone access was blocked.', 'error');
-    finishMode = 'cancel';
-    if (recorder?.state === 'recording') {
-      try {
-        recorder.stop();
-      } catch (err) {
-        cleanupRecording({ resetMic: true });
-      }
-    } else {
-      cleanupRecording({ resetMic: true });
-    }
-  }
-
-  function startSpeechCapture({ preserve = false } = {}) {
+  function startSpeechCapture() {
+    speechTranscript = '';
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return;
-    clearSpeechRestartTimer();
-    if (!preserve) {
-      speechTranscript = '';
-      speechCommitted = '';
-    }
     recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.onresult = (event) => appendSpeechResults(event);
-    recognition.onerror = (event) => {
-      const code = String(event?.error || '');
-      if (recorder?.state !== 'recording') {
-        recognition = null;
-        return;
+    recognition.onresult = (event) => {
+      const parts = [];
+      for (let i = 0; i < event.results.length; i += 1) {
+        const piece = event.results[i][0]?.transcript || '';
+        if (piece) parts.push(piece);
       }
-      if (code === 'not-allowed' || code === 'service-not-allowed' || code === 'audio-capture') {
-        recognition = null;
-        handleSpeechFatalError();
-        return;
-      }
-      recognition = null;
-      if (code === 'no-speech' || code === 'aborted' || code === 'network' || code) {
-        queueSpeechRestart();
-      }
+      speechTranscript = parts.join(' ').trim();
     };
-    recognition.onend = () => {
-      if (recorder?.state !== 'recording') {
-        recognition = null;
-        return;
-      }
+    recognition.onerror = () => {
       recognition = null;
-      queueSpeechRestart();
     };
     try {
       recognition.start();
     } catch (err) {
       recognition = null;
-      if (recorder?.state === 'recording') queueSpeechRestart();
     }
   }
 
@@ -309,7 +242,6 @@
   }
 
   function cleanupRecording({ resetMic = false } = {}) {
-    clearSpeechRestartTimer();
     stopTimer();
     stopSpeechCapture();
     void teardownAudioGraph();
@@ -317,8 +249,6 @@
     recorder = null;
     chunks = [];
     startedAt = 0;
-    speechTranscript = '';
-    speechCommitted = '';
     finishMode = 'cancel';
     hideRecordingBar();
     if (resetMic) resetMicButton();
