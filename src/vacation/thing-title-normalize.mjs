@@ -8,12 +8,16 @@ const FLIGHT_ROUTE_PAIR_RE = /\b([A-Z]{3})\s*(?:[-–—→]|(?:\s+to\s+))\s*([A
 const FLIGHT_ROUTE_DASH_RE = /\b([A-Z]{3})-([A-Z]{3})\b/;
 const FLIGHT_ROUTE_BLOB_RE = /\bRoute:\s*([A-Z]{3})\s*[-–—]\s*([A-Z]{3})\b/i;
 
+function storedText(value) {
+  return String(value ?? '').trim();
+}
+
 function text(value) {
   return String(value ?? '').replace(/\s+/g, ' ').trim();
 }
 
 export function stripFlightOptionTitlePrefix(value = '') {
-  return text(String(value).replace(FLIGHT_OPTION_PREFIX, ''));
+  return storedText(String(value).replace(FLIGHT_OPTION_PREFIX, ''));
 }
 
 export function stripFlightScheduleFromTitle(value = '') {

@@ -153,6 +153,9 @@ try {
       assert.ok(card.right <= snap.innerWidth + 1, `title within viewport @ ${width}: ${card.title}`);
     }
     assert.ok(snap.scrollWidth <= snap.innerWidth + 1, `no horizontal overflow @ ${width}`);
+    if (process.env.REVIEW_SHOTS) {
+      await page.screenshot({ path: `${process.env.REVIEW_SHOTS}/994-${width}.png` });
+    }
     await page.close();
   }
 } finally {
