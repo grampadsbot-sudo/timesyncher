@@ -60,6 +60,13 @@ export function applyFlightThingFields(place, override, source) {
     place.notes,
   );
   const rawTitle = firstPresent(place.name, place.title, override.name, override.title);
+  let flightFields = flightFieldsFromBlob(flightBlob, rawTitle);
+  if (!flightFields.departureTime) {
+    flightFields = {
+      ...flightFields,
+      ...flightFieldsFromBlob(rawTitle, ''),
+    };
+  }
   const cleanedTitle = formatFlightCardTitle(rawTitle, {
     airline: source?.airline,
     route: source?.route,
@@ -72,13 +79,6 @@ export function applyFlightThingFields(place, override, source) {
     override.title = cleanedTitle;
   }
   copyIfBlank(override, 'fareDirection', source?.fareDirection, source?.tripType, source?.pricingType);
-  let flightFields = flightFieldsFromBlob(flightBlob, '');
-  if (!flightFields.departureTime) {
-    flightFields = {
-      ...flightFields,
-      ...flightFieldsFromBlob(firstPresent(place.name, place.title), ''),
-    };
-  }
   copyIfBlank(override, 'departureTime', source?.departureTime, source?.departTime, flightFields.departureTime);
   copyIfBlank(override, 'arrivalTime', source?.arrivalTime, source?.arriveTime, flightFields.arrivalTime);
   copyIfBlank(override, 'duration', source?.duration, flightFields.duration);
