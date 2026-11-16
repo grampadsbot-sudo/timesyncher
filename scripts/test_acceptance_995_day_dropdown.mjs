@@ -4,55 +4,31 @@ import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
-import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
-const fixtureDir = path.join(os.homedir(), 'tsv-dispatch/acceptance/fixtures/demo-nyc-99-snapshot-20261110');
-if (process.env.CI && !existsSync(path.join(fixtureDir, 'SOURCE.json'))) {
-  console.log('test_acceptance_995_day_dropdown: SKIP in CI (host-only fixture demo-nyc-99-snapshot-20261110 absent; host accept runs it)');
-  process.exit(0);
-}
-const source = JSON.parse(await readFile(path.join(fixtureDir, 'SOURCE.json'), 'utf8'));
-const shareToken = source.shared_token;
-const currentTripId = source.current_trip_id;
+const fixture = JSON.parse(await readFile(path.join(root, 'scripts/fixtures/acceptance-995-copy-trip.json'), 'utf8'));
+const shareToken = fixture.shareToken;
+const currentTripId = fixture.currentTripId;
 const ownerId = 'acceptance-owner-995';
 const require = createRequire(import.meta.url);
 
-function loadPlaywright() {
-  for (const candidate of [
-    'playwright',
-    path.join(root, 'node_modules/playwright'),
-    path.join(os.homedir(), 'tsv-dispatch/capture/node_modules/playwright'),
-  ]) {
-    try {
-      return require(candidate);
-    } catch {
-      continue;
-    }
+function loadPuppeteer() {
+  try {
+    return require('puppeteer-core');
+  } catch {
+    return require('/tmp/pptr/node_modules/puppeteer-core');
   }
-  throw new Error('playwright required for acceptance 995');
 }
 
-const { webkit, devices } = loadPlaywright();
+const puppeteer = loadPuppeteer();
 const VIEWPORTS = [{ width: 390, height: 844 }, { width: 430, height: 932 }];
 
-let shared = structuredClone(JSON.parse(await readFile(path.join(fixtureDir, 'shared-trip.json'), 'utf8')));
-const ownerRows = JSON.parse(await readFile(path.join(fixtureDir, 'owner-trips-live.json'), 'utf8'));
+const shared = structuredClone(fixture.shared);
+const ownerRows = fixture.ownerTrips;
 
-const maxDay = Math.max(...shared.days.map((d) => Number(d.day_number) || 0));
-for (let n = maxDay + 1; n <= 12; n += 1) {
-  shared.days.push({
-    id: 9_900_000 + n,
-    trip_id: shared.trip?.id ?? 99,
-    day_number: n,
-    date: `2026-07-${String(n).padStart(2, '0')}`,
-    notes: '',
-    title: '',
-  });
-}
-const carboneKey = 'place:610';
+const carboneKey = 'place:99610';
 const day1 = shared.days.find((d) => d.day_number === 1) || shared.days[0];
 const day10 = shared.days.find((d) => d.day_number === 10);
 assert.ok(day1 && day10, 'fixture needs Day 1 and Day 10');
@@ -109,7 +85,7 @@ async function startServer() {
     trips: [{
       id: currentTripId,
       customer_id: ownerId,
-      title: 'Craig / Kim NYC June 2026',
+      title: 'Acceptance 995 Copy Trip',
       metadata: { publicSlug: shareToken, sharedToken: shareToken },
     }],
   });
@@ -195,28 +171,29 @@ async function measureDaySelects(frame) {
 }
 
 async function exerciseViewport(browser, server, viewport) {
-  const context = await browser.newContext({
-    ...devices['iPhone 14 Pro Max'],
-    viewport,
-    screen: viewport,
-    deviceScaleFactor: 3,
-    isMobile: true,
-    hasTouch: true,
-  });
+  const context = await browser.createBrowserContext();
   const page = await context.newPage();
+  await page.setViewport({ ...viewport, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
   const entry = `${server.origin}/vacation-app.html?session=accept-session&tripId=${encodeURIComponent(currentTripId)}`;
   await page.goto(entry, { waitUntil: 'domcontentloaded', timeout: 120000 });
   await page.waitForSelector('#splitter', { timeout: 60000 });
   const frame = await (await page.waitForSelector('.site-pane iframe', { timeout: 60000 })).contentFrame();
   assert.ok(frame, 'iframe required');
   await frame.waitForSelector('[data-ts-tab="restaurants"]', { timeout: 60000 });
-  await frame.tap('[data-ts-tab="restaurants"]');
-  await frame.locator('[data-ts-list-row-name="1"]', { hasText: 'Carbone' }).first().tap();
+  await frame.click('[data-ts-tab="restaurants"]');
+  await frame.waitForFunction(
+    () => [...document.querySelectorAll('[data-ts-list-row-name="1"]')].some((el) => /Carbone/.test(el.textContent || '')),
+    { timeout: 60000 },
+  );
+  await frame.evaluate(() => {
+    [...document.querySelectorAll('[data-ts-list-row-name="1"]')].find((el) => /Carbone/.test(el.textContent || '')).click();
+  });
   await frame.waitForSelector('[data-ts-detail-v3]', { timeout: 30000 });
-  await frame.tap('[data-ts-detail-edit="1"]');
+  await frame.click('[data-ts-detail-edit="1"]');
   await frame.waitForSelector('[data-ts-detail-mode="edit"]', { timeout: 30000 });
-  const body = frame.locator('[data-ts-detail-v3]');
-  await body.getByLabel('Visit 1 Day').selectOption(String(day1.id));
+  const daySelect = '[data-ts-detail-v3] select[aria-label="Visit 1 Day"]';
+  await frame.waitForSelector(daySelect, { timeout: 30000 });
+  await frame.select(daySelect, String(day1.id));
   let metrics = await measureDaySelects(frame);
   assert.equal(metrics.overflow.length, 0, `${viewport.width}: horizontal overflow ${JSON.stringify(metrics.overflow)}`);
   assert.ok(metrics.selects.length >= 1, `${viewport.width}: visit day select required`);
@@ -225,17 +202,22 @@ async function exerciseViewport(browser, server, viewport) {
     assert.ok(row.height >= 44, `${viewport.width}: touch height ${row.label} h=${row.height}`);
     assert.match(row.selectedText || '', /^Day 1\b/, `${viewport.width}: Day 1 label`);
   }
-  await body.getByLabel('Visit 1 Day').selectOption(String(day10.id));
+  await frame.select(daySelect, String(day10.id));
   metrics = await measureDaySelects(frame);
   const daySel = metrics.selects.find((row) => row.label === 'Visit 1 Day');
   assert.ok(daySel?.fits, `${viewport.width}: Day 10+ clip sw=${daySel?.scrollWidth} cw=${daySel?.clientWidth}`);
   assert.match(daySel?.selectedText || '', /^Day 10\b/, `${viewport.width}: Day 10 label`);
   assert.equal(metrics.overflow.length, 0, `${viewport.width}: overflow after Day 10`);
+  console.log(`acceptance 995 @${viewport.width}: ${JSON.stringify(daySel)}`);
   await context.close();
 }
 
 const server = await startServer();
-const browser = await webkit.launch({ headless: true });
+const browser = await puppeteer.launch({
+  executablePath: process.env.CHROME_PATH || process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser',
+  headless: true,
+  args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
+});
 try {
   for (const viewport of VIEWPORTS) {
     await exerciseViewport(browser, server, viewport);
