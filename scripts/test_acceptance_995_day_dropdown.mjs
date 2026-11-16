@@ -210,9 +210,30 @@ async function exerciseViewport(browser, server, viewport) {
     }));
     assert.fail(`${viewport.width}: edit mode did not open ${JSON.stringify(state)}`);
   }
-  const daySelect = '[data-ts-detail-v3] select[aria-label="Visit 1 Day"]';
-  await frame.waitForSelector(daySelect, { timeout: 30000 });
-  await frame.select(daySelect, String(day1.id));
+  const daySelect = '[data-ts-detail-v3] select[data-ts-detail-visit-day-select="1"]';
+  async function chooseVisitDay(dayId) {
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      if (!(await isEditing())) {
+        await frame.click('[data-ts-detail-edit="1"]');
+        await frame.waitForSelector('[data-ts-detail-mode="edit"]', { timeout: 10000 });
+      }
+      const handle = await frame.waitForSelector(daySelect, { timeout: 15000 });
+      try {
+        await handle.select(String(dayId));
+      } catch (error) {
+        if (attempt === 2) throw error;
+        continue;
+      }
+      const shown = await frame.evaluate(() => {
+        const sel = document.querySelector('[data-ts-detail-v3] select[data-ts-detail-visit-day-select="1"]');
+        if (!sel) return '';
+        return sel.options[sel.selectedIndex]?.textContent?.trim() || '';
+      });
+      if (shown) return shown;
+    }
+    assert.fail(`${viewport.width}: day select missing after choosing ${dayId}`);
+  }
+  await chooseVisitDay(day1.id);
   let metrics = await measureDaySelects(frame);
   assert.equal(metrics.overflow.length, 0, `${viewport.width}: horizontal overflow ${JSON.stringify(metrics.overflow)}`);
   assert.ok(metrics.selects.length >= 1, `${viewport.width}: visit day select required`);
@@ -221,8 +242,14 @@ async function exerciseViewport(browser, server, viewport) {
     assert.ok(row.height >= 44, `${viewport.width}: touch height ${row.label} h=${row.height}`);
     assert.match(row.selectedText || '', /^Day 1\b/, `${viewport.width}: Day 1 label`);
   }
-  await frame.select(daySelect, String(day10.id));
+  if (process.env.REVIEW_SHOTS) {
+    await page.screenshot({ path: `${process.env.REVIEW_SHOTS}/995-${viewport.width}-day1.png` });
+  }
+  await chooseVisitDay(day10.id);
   metrics = await measureDaySelects(frame);
+  if (process.env.REVIEW_SHOTS) {
+    await page.screenshot({ path: `${process.env.REVIEW_SHOTS}/995-${viewport.width}-day10.png` });
+  }
   const daySel = metrics.selects.find((row) => row.label === 'Visit 1 Day');
   assert.ok(daySel?.fits, `${viewport.width}: Day 10+ clip sw=${daySel?.scrollWidth} cw=${daySel?.clientWidth}`);
   assert.match(daySel?.selectedText || '', /^Day 10\b/, `${viewport.width}: Day 10 label`);
