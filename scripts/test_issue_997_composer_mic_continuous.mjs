@@ -1,6 +1,3 @@
-// #997: the real composer mic (#voiceButton, bindVoice in public/vacation-app-request.js,
-// the file vacation-app.html loads) keeps recording past 10 s of silence until the user
-// taps the mic again (Stop) or Send, and keeps the text it already captured.
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
@@ -113,7 +110,6 @@ async function boot() {
 const isRecording = (nodes) => nodes.voiceButton.classList.contains('recording');
 const retryCopy = "Didn't catch that";
 
-// 1. Recording continues past 10 s of silence; captured text is kept; Stop ends it.
 {
   const { nodes, recognitions, advance, drain, state } = await boot();
   await nodes.voiceButton.click();
@@ -124,11 +120,9 @@ const retryCopy = "Didn't catch that";
   recognitions[0].say('book a hotel');
   assert.equal(nodes.messageText.value, 'book a hotel');
 
-  // iOS WebKit ends the session after ~8.5 s of silence (what Mini Me saw on main).
   await advance(8_500);
   recognitions[0].browserEnds('no-speech');
   await drain();
-  // Keep going through 12 s more of silence, with the browser cutting off again.
   for (let s = 0; s < 12; s += 1) {
     await advance(1_000);
     const live = recognitions[recognitions.length - 1];
@@ -148,7 +142,6 @@ const retryCopy = "Didn't catch that";
   live.say('near Central Park');
   assert.equal(nodes.messageText.value, 'book a hotel near Central Park');
 
-  // Tap the mic again = Stop.
   await nodes.voiceButton.click();
   await drain();
   assert.equal(live.stopCalls, 1);
@@ -161,7 +154,6 @@ const retryCopy = "Didn't catch that";
   assert.equal(recognitions.length, count, 'no restart after Stop');
 }
 
-// 2. Send stops recording and late results do not refill the cleared box.
 {
   const { nodes, recognitions, advance, drain } = await boot();
   await nodes.voiceButton.click();
@@ -180,7 +172,6 @@ const retryCopy = "Didn't catch that";
   assert.equal(recognitions.length, count, 'no restart after Send');
 }
 
-// 3. Text typed before tapping the mic is kept and dictation appends to it.
 {
   const { nodes, recognitions, drain, advance } = await boot();
   nodes.messageText.value = 'Day 2:';
@@ -193,7 +184,6 @@ const retryCopy = "Didn't catch that";
   assert.equal(nodes.messageText.value, 'Day 2: museum then lunch');
 }
 
-// 4. Mic blocked still stops with the blocked message.
 {
   const { nodes, recognitions, drain, advance } = await boot();
   await nodes.voiceButton.click();
@@ -205,7 +195,6 @@ const retryCopy = "Didn't catch that";
   assert.equal(recognitions.length, 1);
 }
 
-// 5. A service that dies instantly does not loop forever.
 {
   const { nodes, recognitions, drain, advance } = await boot();
   await nodes.voiceButton.click();

@@ -339,7 +339,6 @@ window.tsVacationAppChrome = {
 
     const attachRecognition = () => {
       const recognition = new SpeechRecognition();
-      // Composer mic stays on until the user taps the mic again (Stop) or Send (#997).
       recognition.continuous = true;
       recognition.interimResults = true;
       let fatal = false;
@@ -369,7 +368,6 @@ window.tsVacationAppChrome = {
           fatal = true;
           showStatus(code === 'audio-capture' ? retryMessage : micBlockedMessage());
         }
-        // no-speech / aborted / network: onend follows and listening restarts.
       };
       recognition.onend = () => {
         if (activeRecognition !== recognition) return;
@@ -377,7 +375,6 @@ window.tsVacationAppChrome = {
           finishRecording();
           return;
         }
-        // Browser ended the session (silence, iOS cut-off): keep the captured text and listen again.
         committedText = messageText ? String(messageText.value || '').trim() : committedText;
         const quick = !heard && Date.now() - startedAt < QUICK_END_MS;
         quickFailures = quick ? quickFailures + 1 : 0;
