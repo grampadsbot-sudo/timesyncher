@@ -95,8 +95,6 @@ function detailBodyV3({ n, d, edit, days, selectedDays, scheduled, start, durati
     ...selectedDays,
     ...Object.keys(d.perDaySchedule || {}),
   ].map(id => Number(id)).filter(id => Number.isFinite(id) && id))];
-  // A saved dayIds/perDaySchedule must show the Day select in edit mode even when the
-  // timeline flag was cleared. Dropping those rows left CI waiting on a select that never mounted.
   const showSchedule = scheduled || scheduleIds.length > 0;
   const visits = showSchedule ? scheduleIds.flatMap(dayId => {
     const day = days.find(row => String(row.id) === String(dayId));

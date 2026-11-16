@@ -238,10 +238,18 @@ async function exerciseViewport(browser, server, viewport) {
       const handle = await frame.waitForSelector(daySelect, { timeout: 8000 }).catch(() => null);
       if (!handle) {
         last = await selectState();
-        await frame.evaluate(() => {
-          document.querySelector('[data-ts-detail-close="1"]')?.click();
-        }).catch(() => {});
-        await frame.waitForSelector('[data-ts-detail-v3]', { hidden: true, timeout: 5000 }).catch(() => {});
+        try {
+          await frame.evaluate(() => {
+            document.querySelector('[data-ts-detail-close="1"]')?.click();
+          });
+        } catch (error) {
+          last = { closeError: String(error?.message || error), state: last };
+        }
+        try {
+          await frame.waitForSelector('[data-ts-detail-v3]', { hidden: true, timeout: 5000 });
+        } catch (error) {
+          last = { hideError: String(error?.message || error), state: last };
+        }
         await frame.evaluate(() => {
           [...document.querySelectorAll('[data-ts-list-row-name="1"]')].find((el) => /Carbone/.test(el.textContent || ''))?.click();
         });
