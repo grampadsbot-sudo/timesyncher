@@ -43,7 +43,7 @@ const renderRow = new Function(
   'tsRenderStarRatingHtml',
   'tsPrimaryPlaceStarRating',
   'Ce',
-  'Sa',
+  'tsEd',
   'bi',
   'Xa',
   'bn',
