@@ -18,8 +18,8 @@ assert.equal(committed, rendered, 'committed served bundle must match renderServ
 assert.match(rendered, /"data-ts-detail-title-wrap":"1"/);
 assert.match(rendered, /"data-ts-detail-edit":"1"/);
 assert.match(rendered, /"data-ts-detail-close":"1","aria-label":"Close"/);
-assert.match(rendered, /Ce&&!Sa\?n\.jsx\("button",\{"data-ts-detail-edit":"1"/);
-assert.match(rendered, /Ce&&Sa&&n\.jsxs\("fieldset",\{"data-shared-readonly":void 0/);
+assert.match(rendered, /Ce&&!tsEd\?n\.jsx\("button",\{"data-ts-detail-edit":"1"/);
+assert.match(rendered, /Ce&&tsEd&&n\.jsxs\("fieldset",\{"data-shared-readonly":void 0/);
 assert.match(rendered, /"data-ts-detail-field":"price"/);
 assert.match(rendered, /String\(d\.price/);
 assert.match(rendered, /data-ts-detail-field":"price".*Price:/);
