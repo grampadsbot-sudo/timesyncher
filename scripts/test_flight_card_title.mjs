@@ -6,6 +6,7 @@ import {
   formatFlightCardTitle,
   stripFlightScheduleFromTitle,
 } from '../src/vacation/thing-title-normalize.mjs';
+import { tripThingRow } from '../src/vacation/trip-things.mjs';
 import { applyFlightThingFields } from '../src/vacation/shared-trip-flight-merge.mjs';
 import { FLIGHT_CARD_TITLE_FN, patchVk994FlightTitles } from '../src/vacation/trek-vk-994-flight-title-patch.mjs';
 
@@ -34,6 +35,9 @@ const browserTitle = new Function(`${FLIGHT_CARD_TITLE_FN}; return tsFlightCardT
 for (const [raw, expected] of cases) {
   assert.equal(formatFlightCardTitle(raw), expected, raw);
   assert.equal(browserTitle(raw), expected, `bundle ${raw}`);
+  const generated = tripThingRow({ category: 'flight', title: raw });
+  assert.equal(generated.title, expected, `new flight row ${raw}`);
+  assertBalancedArrowTitle(generated.title, `new flight row ${raw}`);
   assertBalancedArrowTitle(formatFlightCardTitle(raw), `formatter ${raw}`);
   assertBalancedArrowTitle(browserTitle(raw), `bundle ${raw}`);
 }
