@@ -1,0 +1,674 @@
+{
+ "trip": {
+  "start_date": "2026-06-23",
+  "end_date": "2026-06-30",
+  "currency": "USD",
+  "id": 99400,
+  "title": "Acceptance 994 Copy Trip",
+  "description": "Neutral flight-title acceptance fixture"
+ },
+ "days": [
+  {
+   "day_number": 1,
+   "date": "2026-06-23",
+   "title": "Day 1",
+   "notes": null,
+   "id": 994000,
+   "trip_id": 99400
+  },
+  {
+   "day_number": 2,
+   "date": "2026-06-24",
+   "title": "Day 2",
+   "notes": null,
+   "id": 994001,
+   "trip_id": 99400
+  },
+  {
+   "day_number": 3,
+   "date": "2026-06-25",
+   "title": "Day 3",
+   "notes": null,
+   "id": 994002,
+   "trip_id": 99400
+  },
+  {
+   "day_number": 4,
+   "date": "2026-06-26",
+   "title": "Day 4",
+   "notes": null,
+   "id": 994003,
+   "trip_id": 99400
+  },
+  {
+   "day_number": 5,
+   "date": "2026-06-27",
+   "title": "Day 5",
+   "notes": null,
+   "id": 994004,
+   "trip_id": 99400
+  },
+  {
+   "day_number": 6,
+   "date": "2026-06-28",
+   "title": "Day 6",
+   "notes": null,
+   "id": 994005,
+   "trip_id": 99400
+  },
+  {
+   "day_number": 7,
+   "date": "2026-06-29",
+   "title": "Day 7",
+   "notes": null,
+   "id": 994006,
+   "trip_id": 99400
+  },
+  {
+   "day_number": 8,
+   "date": "2026-06-30",
+   "title": "Day 8",
+   "notes": null,
+   "id": 994007,
+   "trip_id": 99400
+  }
+ ],
+ "assignments": {
+  "994000": [
+   {
+    "id": 1301,
+    "day_id": 994000,
+    "order_index": 0,
+    "notes": "",
+    "place": {
+     "id": 99601,
+     "trip_id": 99400,
+     "name": "American Airlines LAS → JFK",
+     "description": "",
+     "lat": 36.084,
+     "lng": -115.1537,
+     "address": "Flight options / Bookings tab",
+     "category_id": 5,
+     "category_name": "Flight",
+     "category_icon": "✈️",
+     "category": {
+      "id": 5,
+      "name": "Flight",
+      "icon": "✈️"
+     },
+     "reservation_status": "considering",
+     "place_time": "12:37",
+     "website": "https://www.aa.com/booking/find-flights?fromAirport=LAS&toAirport=JFK&departDate=06%2F23%2F2026&returnDate=06%2F30%2F2026&tripType=roundTrip&adults=1",
+     "notes": "",
+     "source": "fixture-nyc",
+     "externalId": "Flight option: American LAS-JFK 2026-06-23 12:37-20:59",
+     "metadata": {
+      "externalId": "Flight option: American LAS-JFK 2026-06-23 12:37-20:59",
+      "sourceRecord": {
+       "ccabKey": "Flight option: American LAS-JFK 2026-06-23 12:37-20:59"
+      }
+     },
+     "price": 257,
+     "sourceRecord": {
+      "ccabKey": "Flight option: American LAS-JFK 2026-06-23 12:37-20:59"
+     },
+     "title": "American Airlines LAS → JFK"
+    },
+    "place_id": 99601
+   }
+  ],
+  "994007": [
+   {
+    "id": 1335,
+    "day_id": 994007,
+    "order_index": 1,
+    "notes": "",
+    "place": {
+     "id": 99635,
+     "trip_id": 99400,
+     "name": "American Airlines JFK → LAS",
+     "description": "",
+     "lat": 40.6413,
+     "lng": -73.7781,
+     "address": "Flight options / Bookings tab",
+     "category_id": 5,
+     "category_name": "Flight",
+     "category_icon": "✈️",
+     "category": {
+      "id": 5,
+      "name": "Flight",
+      "icon": "✈️"
+     },
+     "reservation_status": "considering",
+     "place_time": "18:00",
+     "website": "https://www.aa.com/booking/find-flights?fromAirport=LAS&toAirport=JFK&departDate=06%2F23%2F2026&returnDate=06%2F30%2F2026&tripType=roundTrip&adults=1",
+     "notes": "",
+     "source": "fixture-nyc",
+     "price": 257,
+     "title": "American Airlines JFK → LAS"
+    },
+    "place_id": 99635
+   }
+  ]
+ },
+ "dayNotes": {},
+ "places": [
+  {
+   "id": 99601,
+   "trip_id": 99400,
+   "name": "American Airlines LAS → JFK",
+   "description": "",
+   "lat": 36.084,
+   "lng": -115.1537,
+   "address": "Flight options / Bookings tab",
+   "category_id": 5,
+   "category_name": "Flight",
+   "category_icon": "✈️",
+   "category": {
+    "id": 5,
+    "name": "Flight",
+    "icon": "✈️"
+   },
+   "reservation_status": "considering",
+   "place_time": "12:37",
+   "website": "https://www.aa.com/booking/find-flights?fromAirport=LAS&toAirport=JFK&departDate=06%2F23%2F2026&returnDate=06%2F30%2F2026&tripType=roundTrip&adults=1",
+   "notes": "",
+   "source": "fixture-acceptance-994",
+   "externalId": "Flight option: American LAS-JFK 2026-06-23 12:37-20:59",
+   "metadata": {
+    "externalId": "Flight option: American LAS-JFK 2026-06-23 12:37-20:59",
+    "sourceRecord": {
+     "ccabKey": "Flight option: American LAS-JFK 2026-06-23 12:37-20:59"
+    }
+   },
+   "price": 257,
+   "sourceRecord": {
+    "ccabKey": "Flight option: American LAS-JFK 2026-06-23 12:37-20:59"
+   },
+   "title": "American Airlines LAS → JFK"
+  },
+  {
+   "id": 99635,
+   "trip_id": 99400,
+   "name": "American Airlines JFK → LAS",
+   "description": "",
+   "lat": 40.6413,
+   "lng": -73.7781,
+   "address": "Flight options / Bookings tab",
+   "category_id": 5,
+   "category_name": "Flight",
+   "category_icon": "✈️",
+   "category": {
+    "id": 5,
+    "name": "Flight",
+    "icon": "✈️"
+   },
+   "reservation_status": "considering",
+   "place_time": "18:00",
+   "website": "https://www.aa.com/booking/find-flights?fromAirport=LAS&toAirport=JFK&departDate=06%2F23%2F2026&returnDate=06%2F30%2F2026&tripType=roundTrip&adults=1",
+   "notes": "",
+   "source": "fixture-acceptance-994",
+   "price": 257,
+   "title": "American Airlines JFK → LAS"
+  },
+  {
+   "id": 99630,
+   "trip_id": 99400,
+   "name": "Southwest LAS → LGA",
+   "description": "",
+   "lat": 36.084,
+   "lng": -115.1537,
+   "address": "Flight options / Bookings tab",
+   "category_id": 5,
+   "category_name": "Flight",
+   "category_icon": "✈️",
+   "category": {
+    "id": 5,
+    "name": "Flight",
+    "icon": "✈️"
+   },
+   "reservation_status": "considering",
+   "place_time": "07:25",
+   "website": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
+   "notes": "",
+   "source": "fixture-acceptance-994",
+   "price": 164,
+   "title": "Southwest LAS → LGA"
+  },
+  {
+   "id": 99631,
+   "trip_id": 99400,
+   "name": "Southwest LAS → LGA",
+   "description": "",
+   "lat": 36.084,
+   "lng": -115.1537,
+   "address": "Flight options / Bookings tab",
+   "category_id": 5,
+   "category_name": "Flight",
+   "category_icon": "✈️",
+   "category": {
+    "id": 5,
+    "name": "Flight",
+    "icon": "✈️"
+   },
+   "reservation_status": "considering",
+   "place_time": "11:30",
+   "website": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
+   "notes": "",
+   "source": "fixture-acceptance-994",
+   "price": 194,
+   "title": "Southwest LAS → LGA"
+  },
+  {
+   "id": 99632,
+   "trip_id": 99400,
+   "name": "Southwest LAS → LGA",
+   "description": "",
+   "lat": 36.084,
+   "lng": -115.1537,
+   "address": "Flight options / Bookings tab",
+   "category_id": 5,
+   "category_name": "Flight",
+   "category_icon": "✈️",
+   "category": {
+    "id": 5,
+    "name": "Flight",
+    "icon": "✈️"
+   },
+   "reservation_status": "considering",
+   "place_time": "05:05",
+   "website": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
+   "notes": "",
+   "source": "fixture-acceptance-994",
+   "price": 239,
+   "title": "Southwest LAS → LGA"
+  },
+  {
+   "id": 99633,
+   "trip_id": 99400,
+   "name": "Southwest LAS → LGA",
+   "description": "",
+   "lat": 36.084,
+   "lng": -115.1537,
+   "address": "Flight options / Bookings tab",
+   "category_id": 5,
+   "category_name": "Flight",
+   "category_icon": "✈️",
+   "category": {
+    "id": 5,
+    "name": "Flight",
+    "icon": "✈️"
+   },
+   "reservation_status": "considering",
+   "place_time": "06:30",
+   "website": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
+   "notes": "",
+   "source": "fixture-acceptance-994",
+   "price": 239,
+   "title": "Southwest LAS → LGA"
+  },
+  {
+   "id": 99634,
+   "trip_id": 99400,
+   "name": "Business Select® upgrade (Southwest LAS → LGA)",
+   "description": "",
+   "lat": 36.084,
+   "lng": -115.1537,
+   "address": "Flight options / Bookings tab",
+   "category_id": 5,
+   "category_name": "Upgrade",
+   "category_icon": "✈️",
+   "category": {
+    "id": 5,
+    "name": "Upgrade",
+    "icon": "✈️"
+   },
+   "reservation_status": "considering",
+   "place_time": "06:50",
+   "website": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
+   "notes": "",
+   "source": "fixture-acceptance-994",
+   "price": 249,
+   "title": "Business Select® upgrade (Southwest LAS → LGA)"
+  },
+  {
+   "id": 99651,
+   "trip_id": 99400,
+   "name": "Delta LAS-JFK 2026-06-23 07:05-15:13",
+   "description": "",
+   "lat": 40.774,
+   "lng": -73.982,
+   "address": "Flight options / Bookings tab",
+   "category_id": 5,
+   "category_name": "Flight",
+   "category_icon": "✈️",
+   "category": {
+    "id": 5,
+    "name": "Flight",
+    "icon": "✈️"
+   },
+   "reservation_status": "considering",
+   "place_time": "11:00",
+   "website": "https://www.delta.com/flight-search/book-a-flight?cacheKeySuffix=1932f&tripType=ROUND_TRIP&originCity=LAS&destinationCity=JFK&departureDate=06%2F23%2F2026&returnDate=06%2F30%2F2026&paxCount=1",
+   "notes": "",
+   "source": "fixture-acceptance-994",
+   "price": 257,
+   "title": "Delta LAS-JFK 2026-06-23 07:05-15:13"
+  },
+  {
+   "id": 99652,
+   "trip_id": 99400,
+   "name": "JetBlue LAS-JFK 2026-06-23 23:59-08:04+1",
+   "description": "",
+   "lat": 40.774,
+   "lng": -73.982,
+   "address": "Flight options / Bookings tab",
+   "category_id": 5,
+   "category_name": "Flight",
+   "category_icon": "✈️",
+   "category": {
+    "id": 5,
+    "name": "Flight",
+    "icon": "✈️"
+   },
+   "reservation_status": "considering",
+   "place_time": "11:00",
+   "website": "https://www.jetblue.com/booking/flights?from=LAS&to=JFK&departure=2026-06-23&return=2026-06-30&adults=1",
+   "notes": "",
+   "source": "fixture-acceptance-994",
+   "price": 252,
+   "title": "JetBlue LAS-JFK 2026-06-23 23:59-08:04+1"
+  },
+  {
+   "id": 99658,
+   "trip_id": 99400,
+   "name": "United LAS-EWR 2026-06-23 07:00-15:00",
+   "description": "",
+   "lat": 40.774,
+   "lng": -73.982,
+   "address": "Flight options / Bookings tab",
+   "category_id": 5,
+   "category_name": "Flight",
+   "category_icon": "✈️",
+   "category": {
+    "id": 5,
+    "name": "Flight",
+    "icon": "✈️"
+   },
+   "reservation_status": "considering",
+   "place_time": "11:00",
+   "website": "https://www.united.com/en/us/fsr/choose-flights?f=LAS&t=EWR&d=2026-06-23&r=2026-06-30&tt=1&at=1",
+   "notes": "",
+   "source": "fixture-acceptance-994",
+   "price": 257,
+   "title": "United LAS-EWR 2026-06-23 07:00-15:00"
+  }
+ ],
+ "categories": [
+  {
+   "id": 1,
+   "name": "Hotel",
+   "icon": "🧳"
+  },
+  {
+   "id": 2,
+   "name": "Restaurant",
+   "icon": "🍽️"
+  },
+  {
+   "id": 3,
+   "name": "Attraction",
+   "icon": "🏛️"
+  },
+  {
+   "id": 4,
+   "name": "Store",
+   "icon": "🛍️"
+  },
+  {
+   "id": 5,
+   "name": "Flight",
+   "icon": "✈️"
+  },
+  {
+   "id": 6,
+   "name": "Car",
+   "icon": "🚗"
+  }
+ ],
+ "permissions": {
+  "share_map": true,
+  "share_bookings": true,
+  "share_packing": true,
+  "share_budget": true,
+  "share_collab": false
+ },
+ "media": [],
+ "reservations": [],
+ "accommodations": [],
+ "packing": [],
+ "budget": {},
+ "collab": {},
+ "thingOverrides": {
+  "place:99601": {
+   "category": "flight",
+   "title": "American Airlines LAS → JFK",
+   "address": "Flight options / Bookings tab",
+   "website": "https://www.aa.com/booking/find-flights?fromAirport=LAS&toAirport=JFK&departDate=06%2F23%2F2026&returnDate=06%2F30%2F2026&tripType=roundTrip&adults=1",
+   "summary": "American Airlines offers flights from Las Vegas to New York, and American Airlines LAS → JFK is the outbound flight into John F. Kennedy International Airport (JFK). Plan to arrive at least 2 hours before domestic flights, and check in online or in the American app first.",
+   "longDetails": "American Airlines LAS → JFK flies from Harry Reid International Airport (LAS), formerly McCarran, into John F. Kennedy International Airport (JFK), where American has Admiral's Club® lounges in its terminals. Download your boarding pass in the American app, or print it before you arrive.",
+   "itineraryNote": "The outbound into Kennedy; arrive early and, with status, relax in the Admiral's Club® lounges.",
+   "lat": 36.084,
+   "lng": -115.1537,
+   "price": 257,
+   "timeline": true,
+   "externalId": "Flight option: American LAS-JFK 2026-06-23 12:37-20:59",
+   "sourceRecord": {
+    "ccabKey": "Flight option: American LAS-JFK 2026-06-23 12:37-20:59"
+   },
+   "source": "fixture-nyc",
+   "url": "https://www.aa.com/booking/find-flights?fromAirport=LAS&toAirport=JFK&departDate=06%2F23%2F2026&returnDate=06%2F30%2F2026&tripType=roundTrip&adults=1",
+   "details": "Airline: American; Route: LAS-JFK; Stops: nonstop; Outbound: 2026-06-23 12:37-20:59; Return: 2026-06-30 18:00-20:59; Duration: 5h22m out / 5h59m return; Price: $257 Basic Economy / $367 Main Cabin; not booked.",
+   "name": "American Airlines LAS → JFK",
+   "pricePerPerson": 257,
+   "people": 2,
+   "ccabKey": "Flight option: American LAS-JFK 2026-06-23 12:37-20:59",
+   "description": "American Airlines LAS → JFK flies from Harry Reid International Airport (LAS), formerly McCarran, into John F. Kennedy International Airport (JFK), where American has Admiral's Club® lounges in its terminals. Download your boarding pass in the American app, or print it before you arrive.",
+   "xaiRatingsFetched": false
+  },
+  "place:99635": {
+   "category": "flight",
+   "title": "American Airlines JFK → LAS",
+   "address": "Flight options / Bookings tab",
+   "website": "https://www.aa.com/booking/find-flights?fromAirport=LAS&toAirport=JFK&departDate=06%2F23%2F2026&returnDate=06%2F30%2F2026&tripType=roundTrip&adults=1",
+   "summary": "On the return flight, American Airlines JFK → LAS, AAdvantage® members can earn miles on eligible American Airlines flights from New York back to Las Vegas. Seats at the front of the Main Cabin or in exit rows give more space, and full beverage service is offered.",
+   "longDetails": "The return row American Airlines JFK → LAS flies from John F. Kennedy International Airport (JFK), where American terminals have Admiral's Club® lounges, back to Harry Reid International Airport (LAS). AAdvantage® members can earn miles on eligible American Airlines flights. Miles can be used toward future travel, upgrades and other rewards. Enjoy beer, wine and spirits on flights with full beverage service. More space with seats at the front of the Main Cabin or in exit rows.",
+   "itineraryNote": "The trip home from Kennedy; AAdvantage® members can earn miles on eligible American Airlines flights.",
+   "lat": 40.6413,
+   "lng": -73.7781,
+   "price": 257,
+   "timeline": true,
+   "source": "fixture-nyc",
+   "url": "https://www.aa.com/booking/find-flights?fromAirport=LAS&toAirport=JFK&departDate=06%2F23%2F2026&returnDate=06%2F30%2F2026&tripType=roundTrip&adults=1",
+   "details": "Return leg of the American Airlines option from New York JFK back to Las Vegas (LAS), leaving 2026-06-30 at 18:00 and landing at 20:59, a nonstop 5h59m trip. It pairs with the 2026-06-23 outbound from Las Vegas to JFK on the same fare. Fare classes listed are $257 Basic Economy and $367 Main Cabin. Candidate only; not booked.",
+   "name": "American Airlines JFK → LAS",
+   "pricePerPerson": 257,
+   "people": 2,
+   "description": "The return row American Airlines JFK → LAS flies from John F. Kennedy International Airport (JFK), where American terminals have Admiral's Club® lounges, back to Harry Reid International Airport (LAS). AAdvantage® members can earn miles on eligible American Airlines flights. Miles can be used toward future travel, upgrades and other rewards. Enjoy beer, wine and spirits on flights with full beverage service. More space with seats at the front of the Main Cabin or in exit rows.",
+   "xaiRatingsFetched": false
+  },
+  "place:99630": {
+   "category": "flight",
+   "title": "Southwest LAS → LGA",
+   "address": "Flight options / Bookings tab",
+   "website": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
+   "summary": "Southwest LAS → LGA 07:25–16:35 covers Las Vegas (LAS) to New York LaGuardia (LGA), leaving mid-morning and arriving at 16:35 Eastern. The flight covers 2242 miles, a long morning in the air that still leaves the evening free in Manhattan.",
+   "longDetails": "Southwest LAS → LGA 07:25–16:35 is a mid-morning Southwest flight from Las Vegas to La Guardia Airport, leaving at 07:25 and landing at 16:35 Eastern, a trip of 2242 miles. With Southwest LAS → LGA 07:25–16:35 you skip the predawn alarm, and you still arrive in time for an evening in Manhattan. The fares Southwest shows on the route page carry a caveat: Fares listed are Basic, which are subject to additional terms and conditions.",
+   "itineraryNote": "A mid-morning departure into LaGuardia; land in time for dinner in the city.",
+   "lat": 36.084,
+   "lng": -115.1537,
+   "price": 164,
+   "timeline": false,
+   "departureTime": "07:25",
+   "arrivalTime": "16:35",
+   "airline": "Southwest",
+   "source": "fixture-nyc",
+   "url": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
+   "details": "Airline: Southwest; Route: LAS-LGA; Stops: 1 stop; Outbound: 2026-06-23 07:25-16:35; Return: None; Duration: 6h10m outbound; Price: Outbound from $164 Basic / $209 Choice / $289 Choice Preferred / $349 Choice Extra; Flight #2294; lowest/fastest outbound visible; return fare not captured yet; not booked.",
+   "name": "Southwest LAS → LGA",
+   "description": "Southwest LAS → LGA 07:25–16:35 is a mid-morning Southwest flight from Las Vegas to La Guardia Airport, leaving at 07:25 and landing at 16:35 Eastern, a trip of 2242 miles. With Southwest LAS → LGA 07:25–16:35 you skip the predawn alarm, and you still arrive in time for an evening in Manhattan. The fares Southwest shows on the route page carry a caveat: Fares listed are Basic, which are subject to additional terms and conditions.",
+   "xaiRatingsFetched": false
+  },
+  "place:99631": {
+   "category": "flight",
+   "title": "Southwest LAS → LGA",
+   "address": "Flight options / Bookings tab",
+   "website": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
+   "summary": "A late-morning departure makes Southwest LAS → LGA 11:30–22:25 the easy-going pick. The 22:25 Eastern arrival means a late night at LaGuardia, so a pre-booked car or taxi plan matters more than on the earlier departures.",
+   "longDetails": "Anyone who wants a slow Vegas morning can take Southwest LAS → LGA 11:30–22:25, boarding at 11:30. It lands at LaGuardia at 22:25 Eastern, when transit options thin out, though Southwest notes that you can rent a car at LaGuardia Airport. For baggage or booking questions, the Southwest Airlines® Help Center covers everything Southwest.",
+   "itineraryNote": "A lazy-morning flight that lands late; consider a rental car at LaGuardia.",
+   "lat": 36.084,
+   "lng": -115.1537,
+   "price": 194,
+   "timeline": false,
+   "departureTime": "11:30",
+   "arrivalTime": "22:25",
+   "airline": "Southwest",
+   "source": "fixture-nyc",
+   "url": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
+   "details": "Airline: Southwest; Route: LAS-LGA; Stops: 1 stop via DAL; Outbound: 2026-06-23 11:30-22:25; Return: None; Duration: 7h55m outbound; Price: Outbound from $194 Basic / $239 Choice / $319 Choice Preferred / $379 Choice Extra; Flights #2219/#107; cheaper later option; return fare not captured yet; not booked.",
+   "name": "Southwest LAS → LGA",
+   "description": "Anyone who wants a slow Vegas morning can take Southwest LAS → LGA 11:30–22:25, boarding at 11:30. It lands at LaGuardia at 22:25 Eastern, when transit options thin out, though Southwest notes that you can rent a car at LaGuardia Airport. For baggage or booking questions, the Southwest Airlines® Help Center covers everything Southwest.",
+   "xaiRatingsFetched": false
+  },
+  "place:99632": {
+   "category": "flight",
+   "title": "Southwest LAS → LGA",
+   "address": "Flight options / Bookings tab",
+   "website": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
+   "summary": "The earliest kept option, Southwest LAS → LGA 05:05–15:45, departs Las Vegas before dawn on a well-served route with 152 weekly Southwest flights from Las Vegas to LaGuardia. It covers 2,242 miles and lands mid-afternoon.",
+   "longDetails": "Wheels up at 05:05 and landing at 15:45 Eastern, this is the predawn choice of the Southwest options. Bags and seat extras may cost more, because additional fees and charges apply to optional products and services.",
+   "itineraryNote": "The predawn option; sleep on the plane and have the whole evening in New York.",
+   "lat": 36.084,
+   "lng": -115.1537,
+   "price": 239,
+   "timeline": false,
+   "departureTime": "05:05",
+   "arrivalTime": "15:45",
+   "airline": "Southwest",
+   "source": "fixture-nyc",
+   "url": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
+   "details": "Airline: Southwest; Route: LAS-LGA; Stops: 1 stop via HOU; Outbound: 2026-06-23 05:05-15:45; Return: None; Duration: 7h40m outbound; Price: Outbound from $239 Basic / $284 Choice / $364 Choice Preferred / $424 Choice Extra; Flights #2051/#2014; return fare not captured yet; not booked.",
+   "name": "Southwest LAS → LGA",
+   "description": "Wheels up at 05:05 and landing at 15:45 Eastern, this is the predawn choice of the Southwest options. Bags and seat extras may cost more, because additional fees and charges apply to optional products and services.",
+   "xaiRatingsFetched": false
+  },
+  "place:99633": {
+   "category": "flight",
+   "title": "Southwest LAS → LGA",
+   "address": "Flight options / Bookings tab",
+   "website": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
+   "summary": "Boarding position matters on an early start, and EarlyBird Check-in® is sold for Southwest LAS → LGA 06:30–16:55 into LaGuardia. It lands at LaGuardia at 16:55 Eastern after a flight of 2242 miles, ahead of the evening rush into Manhattan.",
+   "longDetails": "EarlyBird Check-in® is one of the extras Southwest sells, and it suits an early boarding such as Southwest LAS → LGA 06:30–16:55. That departure lifts off from Las Vegas at 06:30 and arrives at LaGuardia at 16:55 Eastern, just before the evening rush. Southwest's flight details put the trip at a single figure, Distance: 2242 miles. On travel day, the page also says: Check the status of your upcoming Southwest flight.",
+   "itineraryNote": "An early start; add EarlyBird Check-in® for a better boarding spot.",
+   "lat": 36.084,
+   "lng": -115.1537,
+   "price": 239,
+   "timeline": false,
+   "departureTime": "06:30",
+   "arrivalTime": "16:55",
+   "airline": "Southwest",
+   "source": "fixture-nyc",
+   "url": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
+   "details": "Airline: Southwest; Route: LAS-LGA; Stops: 1 stop via DEN; Outbound: 2026-06-23 06:30-16:55; Return: None; Duration: 7h25m outbound; Price: Outbound from $239 Basic / $284 Choice / $364 Choice Preferred / $424 Choice Extra; Flights #2223/#4441; return fare not captured yet; not booked.",
+   "name": "Southwest LAS → LGA",
+   "description": "EarlyBird Check-in® is one of the extras Southwest sells, and it suits an early boarding such as Southwest LAS → LGA 06:30–16:55. That departure lifts off from Las Vegas at 06:30 and arrives at LaGuardia at 16:55 Eastern, just before the evening rush. Southwest's flight details put the trip at a single figure, Distance: 2242 miles. On travel day, the page also says: Check the status of your upcoming Southwest flight.",
+   "xaiRatingsFetched": false
+  },
+  "place:99634": {
+   "category": "flight",
+   "title": "Business Select® upgrade (Southwest LAS → LGA)",
+   "address": "Flight options / Bookings tab",
+   "website": "https://www.southwest.com/",
+   "summary": "Travelers wanting more comfort can look at Upgrade to Business Select® on Southwest LAS → LGA 06:50–18:55, which lands at 18:55 Eastern. It flies Las Vegas (LAS) to New York LaGuardia (LGA) on the longest day of the kept Southwest options, departing 06:50.",
+   "longDetails": "Upgrade to Business Select® is the premium add-on to consider on a long travel day. Southwest LAS → LGA 06:50–18:55 departs at 06:50 and reaches LaGuardia only at 18:55 Eastern, the longest of the kept Southwest options on Las Vegas (LAS) to New York LaGuardia (LGA). Before heading to the airport, Southwest's page says to Check the status of your upcoming Southwest flight.",
+   "itineraryNote": "The longest travel day; consider Upgrade to Business Select® for comfort.",
+   "lat": 36.084,
+   "lng": -115.1537,
+   "price": 249,
+   "timeline": false,
+   "departureTime": "06:50",
+   "arrivalTime": "18:55",
+   "airline": "Southwest",
+   "source": "fixture-nyc",
+   "url": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip",
+   "details": "Airline: Southwest; Route: LAS-LGA; Stops: 1 stop via STL; Outbound: 2026-06-23 06:50-18:55; Return: None; Duration: 9h05m outbound; Price: Outbound from $249 Basic / $294 Choice / $374 Choice Preferred / $434 Choice Extra; Flights #2368/#4962; return fare not captured yet; not booked.",
+   "name": "Business Select® upgrade (Southwest LAS → LGA)",
+   "description": "Upgrade to Business Select® is the premium add-on to consider on a long travel day. Southwest LAS → LGA 06:50–18:55 departs at 06:50 and reaches LaGuardia only at 18:55 Eastern, the longest of the kept Southwest options on Las Vegas (LAS) to New York LaGuardia (LGA). Before heading to the airport, Southwest's page says to Check the status of your upcoming Southwest flight.",
+   "xaiRatingsFetched": false
+  },
+  "place:99651": {
+   "category": "flight",
+   "title": "Delta LAS-JFK 2026-06-23 07:05-15:13",
+   "address": "Flight options / Bookings tab",
+   "website": "https://www.delta.com/flight-search/book-a-flight?cacheKeySuffix=1932f&tripType=ROUND_TRIP&originCity=LAS&destinationCity=JFK&departureDate=06%2F23%2F2026&returnDate=06%2F30%2F2026&paxCount=1",
+   "summary": "FlightMapper lists Delta Air Lines DL 510 nonstop at 07:05 from Las Vegas, the departure behind Delta LAS-JFK 2026-06-23 07:05-15:13 into New York JFK. The route is a nonstop on an Airbus A321neo, and the 15:13 Eastern arrival leaves time to check in before dinner.",
+   "longDetails": "Delta's early-morning nonstop, Delta LAS-JFK 2026-06-23 07:05-15:13, runs from Las Vegas Harry Reid to New York JFK. FlightMapper lists it as Delta Air Lines DL 510 nonstop, flown on an Airbus A321neo (32Q), with about five hours and twelve minutes in the air. It is a domestic route departing from the Las Vegas Harry Reid airport (LAS) and arriving at New York John F. Kennedy airport (JFK). Taking Delta LAS-JFK 2026-06-23 07:05-15:13 puts you in New York by mid-afternoon, with time to reach the hotel before dinner.",
+   "itineraryNote": "An early Delta DL 510 nonstop; land by mid-afternoon.",
+   "lat": 40.774,
+   "lng": -73.982,
+   "price": 257,
+   "timeline": false,
+   "source": "fixture-nyc",
+   "departureTime": "07:05",
+   "arrivalTime": "15:13",
+   "url": "https://www.delta.com/flight-search/book-a-flight?cacheKeySuffix=1932f&tripType=ROUND_TRIP&originCity=LAS&destinationCity=JFK&departureDate=06%2F23%2F2026&returnDate=06%2F30%2F2026&paxCount=1",
+   "details": "Airline: Delta; Route: LAS-JFK; Stops: nonstop; Outbound: 2026-06-23 07:05-15:13; Return: 2026-06-30 11:30-14:02; Duration: 5h08m out / 5h32m return; Price: $257 Main Basic / $367 Main Classic; not booked.",
+   "name": "Delta LAS-JFK 2026-06-23 07:05-15:13",
+   "description": "Delta's early-morning nonstop, Delta LAS-JFK 2026-06-23 07:05-15:13, runs from Las Vegas Harry Reid to New York JFK. FlightMapper lists it as Delta Air Lines DL 510 nonstop, flown on an Airbus A321neo (32Q), with about five hours and twelve minutes in the air. It is a domestic route departing from the Las Vegas Harry Reid airport (LAS) and arriving at New York John F. Kennedy airport (JFK). Taking Delta LAS-JFK 2026-06-23 07:05-15:13 puts you in New York by mid-afternoon, with time to reach the hotel before dinner.",
+   "xaiRatingsFetched": false
+  },
+  "place:99652": {
+   "category": "flight",
+   "title": "JetBlue LAS-JFK 2026-06-23 23:59-08:04+1",
+   "address": "Flight options / Bookings tab",
+   "website": "https://www.jetblue.com/booking/flights?from=LAS&to=JFK&departure=2026-06-23&return=2026-06-30&adults=1",
+   "summary": "JetBlue's overnight JetBlue LAS-JFK 2026-06-23 23:59-08:04+1 is a red-eye, and FlightMapper notes for late JetBlue departures that the flight arrives 1 day after departure. The direct flight time runs between 4:44 and 5:15.",
+   "longDetails": "FlightMapper's JetBlue schedule for the red-eye JetBlue LAS-JFK 2026-06-23 23:59-08:04+1 covers JetBlue flights from Las Vegas Harry Reid (LAS) to New York John F. Kennedy (JFK). A domestic route departing from the Las Vegas Harry Reid airport (LAS) and arriving at New York John F. Kennedy airport (JFK). The flight arrives 1 day after departure. The flight distance is 2241 miles, or 3607 km. For direct flights, the flight time varies between 4:44 and 5:15.",
+   "itineraryNote": "The red-eye; sleep aboard and arrive for breakfast, since The flight arrives 1 day after departure.",
+   "lat": 40.774,
+   "lng": -73.982,
+   "price": 252,
+   "timeline": false,
+   "source": "fixture-nyc",
+   "departureTime": "23:59",
+   "arrivalTime": "08:04",
+   "url": "https://www.jetblue.com/booking/flights?from=LAS&to=JFK&departure=2026-06-23&return=2026-06-30&adults=1",
+   "details": "Airline: JetBlue; Route: LAS-JFK; Stops: nonstop; Outbound: 2026-06-23 23:59-08:04+1; Return: 2026-06-30 06:40-09:10; Duration: 5h05m out / 5h30m return; Price: $252 Blue Basic / $254 Economy Cabin; not booked.",
+   "name": "JetBlue LAS-JFK 2026-06-23 23:59-08:04+1",
+   "description": "FlightMapper's JetBlue schedule for the red-eye JetBlue LAS-JFK 2026-06-23 23:59-08:04+1 covers JetBlue flights from Las Vegas Harry Reid (LAS) to New York John F. Kennedy (JFK). A domestic route departing from the Las Vegas Harry Reid airport (LAS) and arriving at New York John F. Kennedy airport (JFK). The flight arrives 1 day after departure. The flight distance is 2241 miles, or 3607 km. For direct flights, the flight time varies between 4:44 and 5:15.",
+   "xaiRatingsFetched": false
+  },
+  "place:99658": {
+   "category": "flight",
+   "title": "United LAS-EWR 2026-06-23 07:00-15:00",
+   "address": "Flight options / Bookings tab",
+   "website": "https://www.united.com/en/us/fsr/choose-flights?f=LAS&t=EWR&d=2026-06-23&r=2026-06-30&tt=1&at=1",
+   "summary": "United's 07:00 Newark departure United LAS-EWR 2026-06-23 07:00-15:00 matches FlightMapper's United Airlines UA 394 Non-stop from Las Vegas Harry Reid to Newark Liberty. The 737-900 nonstop covers 2220 miles in about five hours.",
+   "longDetails": "FlightMapper lists United Airlines UA 394 as the nonstop Boeing 737-900 behind United LAS-EWR 2026-06-23 07:00-15:00, flying from Las Vegas Harry Reid (LAS) into Newark Liberty (EWR). The route covers about 2220 miles (3573 km), with block time usually between 4:38 and 5:08.",
+   "itineraryNote": "An early nonstop into Newark on United Airlines UA 394 Non-stop.",
+   "lat": 40.774,
+   "lng": -73.982,
+   "price": 257,
+   "timeline": false,
+   "source": "fixture-nyc",
+   "departureTime": "07:00",
+   "arrivalTime": "15:00",
+   "url": "https://www.united.com/en/us/fsr/choose-flights?f=LAS&t=EWR&d=2026-06-23&r=2026-06-30&tt=1&at=1",
+   "details": "Airline: United; Route: LAS-EWR; Stops: nonstop; Outbound: 2026-06-23 07:00-15:00; Return: 2026-06-30 14:40-17:08; Duration: 5h00m out / 5h28m return; Price: $257 Basic Economy / $367 Economy; not booked.",
+   "name": "United LAS-EWR 2026-06-23 07:00-15:00",
+   "description": "FlightMapper lists United Airlines UA 394 as the nonstop Boeing 737-900 behind United LAS-EWR 2026-06-23 07:00-15:00, flying from Las Vegas Harry Reid (LAS) into Newark Liberty (EWR). The route covers about 2220 miles (3573 km), with block time usually between 4:38 and 5:08.",
+   "xaiRatingsFetched": false
+  }
+ }
+}

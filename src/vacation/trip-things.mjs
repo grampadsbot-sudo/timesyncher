@@ -1,3 +1,4 @@
+import { formatFlightCardTitle } from './thing-title-normalize.mjs';
 import { assignTripSiteUrlWhenThingsPresent } from './trip-site-url-after-insert.mjs';
 import { loadTripSearchProgress, recordSearchProgressPlaces } from './search-progress.mjs';
 import { samePlace } from './place-search-same-place.mjs';
@@ -17,9 +18,16 @@ export function tripThingSource(thing) {
 }
 
 export function tripThingRow(thing) {
-  const title = Array.from(String(thing?.title || '').trim()).slice(0, 240).join('');
-  if (!title) return null;
+  const rawTitle = Array.from(String(thing?.title || '').trim()).slice(0, 240).join('');
+  if (!rawTitle) return null;
   const category = String(thing?.category || 'note').trim().slice(0, 80) || 'note';
+  const title = category.toLowerCase() === 'flight'
+    ? formatFlightCardTitle(rawTitle, {
+      airline: thing?.airline || thing?.metadata?.airline,
+      route: thing?.route || thing?.metadata?.route,
+      blob: thing?.description,
+    })
+    : rawTitle;
   const source = tripThingSource(thing);
   return {
     category,
