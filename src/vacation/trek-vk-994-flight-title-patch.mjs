@@ -10,7 +10,8 @@ export const FLIGHT_CARD_TITLE_FN =
   'if(hr)route={dep:hr[1].toUpperCase(),arr:hr[2].toUpperCase(),index:0}}' +
   'if(!route)return cleaned;var airline=route.index>0?t(cleaned.slice(0,route.index)):"";if(!airline&&hints.airline)airline=t(hints.airline);' +
   'if(!airline){var tk=cleaned.split(/\\s+/).filter(Boolean);var di=tk.findIndex(function(x){return x.toUpperCase().indexOf(route.dep)===0});if(di>0)airline=tk.slice(0,di).join(" ")}' +
-  'if(!airline)return cleaned;return airline+" "+route.dep+" to "+route.arr}';
+  'if(!airline)return cleaned;var open=(airline.match(/\\(/g)||[]).length-(airline.match(/\\)/g)||[]).length;' +
+  'return airline+" "+route.dep+" \\u2192 "+route.arr+(open>0?")".repeat(open):"")}';
 
 const TITLE_NEEDLE =
   'const Re=String((tsPl&&(tsPl.name||tsPl.title))||tsOv.name||G.name||"").trim();return Re},Fl=';

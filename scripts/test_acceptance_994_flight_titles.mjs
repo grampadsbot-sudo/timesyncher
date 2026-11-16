@@ -11,7 +11,7 @@ import { finalizeServedSharedTripPayload } from '../src/vacation/shared-trip-ser
 const root = fileURLToPath(new URL('..', import.meta.url));
 const require = createRequire(import.meta.url);
 const DEMO_SLUG = 'demo-acceptance-994-local';
-const FLIGHT_TITLE_RE = /^.+ [A-Z]{3} to [A-Z]{3}$/;
+const FLIGHT_TITLE_RE = /^.+ [A-Z]{3} → [A-Z]{3}\)*$/;
 const FIXTURE_FILE = path.join(root, 'scripts/fixtures/acceptance-994-copy-trip.json');
 
 function loadPuppeteer() {

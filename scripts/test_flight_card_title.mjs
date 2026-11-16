@@ -10,17 +10,32 @@ import { applyFlightThingFields } from '../src/vacation/shared-trip-flight-merge
 import { FLIGHT_CARD_TITLE_FN, patchVk994FlightTitles } from '../src/vacation/trek-vk-994-flight-title-patch.mjs';
 
 const cases = [
-  ['JetBlue LAS-JFK 2026-06-23 23:59-08:04+1', 'JetBlue LAS to JFK'],
-  ['Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13', 'Delta LAS to JFK'],
-  ['Southwest LAS-LGA 2026-06-23 05:05-15:45', 'Southwest LAS to LGA'],
-  ['American Airlines LAS → JFK', 'American Airlines LAS to JFK'],
-  ['United LAS-EWR 2026-06-23 07:00-15:00', 'United LAS to EWR'],
-  ['Coastal Air PDX to BOS', 'Coastal Air PDX to BOS'],
+  ['JetBlue LAS-JFK 2026-06-23 23:59-08:04+1', 'JetBlue LAS → JFK'],
+  ['Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13', 'Delta LAS → JFK'],
+  ['Southwest LAS-LGA 2026-06-23 05:05-15:45', 'Southwest LAS → LGA'],
+  ['American Airlines LAS → JFK', 'American Airlines LAS → JFK'],
+  ['United LAS-EWR 2026-06-23 07:00-15:00', 'United LAS → EWR'],
+  ['Coastal Air PDX to BOS', 'Coastal Air PDX → BOS'],
+  ['Business Select® upgrade (Southwest LAS-LGA 2026-06-23 05:05-15:45)', 'Business Select® upgrade (Southwest LAS → LGA)'],
+  ['Business Select® upgrade (Southwest LAS to LGA', 'Business Select® upgrade (Southwest LAS → LGA)'],
 ];
+function assertBalancedArrowTitle(title, label) {
+  let depth = 0;
+  for (const ch of title) {
+    if (ch === '(') depth += 1;
+    if (ch === ')') depth -= 1;
+    assert.ok(depth >= 0, `unbalanced ")" in ${label}: ${title}`);
+  }
+  assert.equal(depth, 0, `unclosed "(" in ${label}: ${title}`);
+  assert.match(title, /\b[A-Z]{3} → [A-Z]{3}\b/, `route arrow in ${label}: ${title}`);
+  assert.doesNotMatch(title, /\b[A-Z]{3} to [A-Z]{3}\b/, `no "to" separator in ${label}: ${title}`);
+}
 const browserTitle = new Function(`${FLIGHT_CARD_TITLE_FN}; return tsFlightCardTitle;`)();
 for (const [raw, expected] of cases) {
   assert.equal(formatFlightCardTitle(raw), expected, raw);
   assert.equal(browserTitle(raw), expected, `bundle ${raw}`);
+  assertBalancedArrowTitle(formatFlightCardTitle(raw), `formatter ${raw}`);
+  assertBalancedArrowTitle(browserTitle(raw), `bundle ${raw}`);
 }
 assert.equal(browserTitle('JetBlue 2026-06-23', { route: 'LAS-JFK' }), formatFlightCardTitle('JetBlue 2026-06-23', { route: 'LAS-JFK' }));
 assert.equal(browserTitle('Nonstop', { airline: 'Delta', blob: 'Route: LAS-JFK;' }), formatFlightCardTitle('Nonstop', { airline: 'Delta', blob: 'Route: LAS-JFK;' }));

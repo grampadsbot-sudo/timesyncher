@@ -67,7 +67,8 @@ export function formatFlightCardTitle(value = '', hints = {}) {
     if (depIdx > 0) airline = tokens.slice(0, depIdx).join(' ');
   }
   if (!airline) return cleaned;
-  return `${airline} ${route.dep} to ${route.arr}`;
+  const unclosed = (airline.match(/\(/g) || []).length - (airline.match(/\)/g) || []).length;
+  return `${airline} ${route.dep} → ${route.arr}${unclosed > 0 ? ')'.repeat(unclosed) : ''}`;
 }
 
 export function stripPipelineItineraryStub(value = '') {
