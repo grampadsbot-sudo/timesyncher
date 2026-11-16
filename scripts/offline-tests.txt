@@ -31,6 +31,7 @@ scripts/test_acceptance_988_no_summary_details_fallback.mjs
 scripts/test_acceptance_989_itinerary_load_latency.mjs
 scripts/test_acceptance_989_payload_fetch_once.mjs
 scripts/test_acceptance_989_shared_payload_omits_dossier.mjs
+scripts/test_acceptance_994_flight_titles.mjs
 scripts/test_thing_travel_total_price.mjs
 scripts/test_place_search_reply_no_internal_ids.mjs
 scripts/test_in_turn_citable_places.mjs
@@ -208,6 +209,7 @@ scripts/test_shared_trip_live_tab_logos.mjs
 scripts/test_gate_b_live_tab_logo_rows.mjs
 scripts/test_gate_b_product_row_fields.mjs
 scripts/test_finalize_served_payload_idempotent.mjs
+scripts/test_flight_card_title.mjs
 scripts/test_gate_b_live_replay_display_facts.mjs
 scripts/test_list_row_description_substance.mjs
 scripts/test_load_dossiers_by_keys_parallel.mjs

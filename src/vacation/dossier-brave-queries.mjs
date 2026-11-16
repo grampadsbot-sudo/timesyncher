@@ -1,3 +1,5 @@
+import { formatFlightCardTitle } from './thing-title-normalize.mjs';
+
 function text(value) {
   return String(value || '').replace(/\s+/g, ' ').trim();
 }
@@ -24,7 +26,13 @@ function categoryOf(place = {}) {
 
 export function dossierThingTitle(place = {}) {
   const title = text(place.title || place.name);
-  return categoryOf(place) === 'flight' ? title.replace(/^Flight option:\s*/i, '') : title;
+  if (categoryOf(place) !== 'flight') return title;
+  const record = place.sourceRecord && typeof place.sourceRecord === 'object' ? place.sourceRecord : {};
+  return formatFlightCardTitle(title, {
+    airline: place.airline || record.airline,
+    route: place.route || record.route,
+    blob: [record.summary, record.description, place.description, place.summary].filter(Boolean).join('; '),
+  });
 }
 
 export function isBarOrRestaurant(place = {}) {
