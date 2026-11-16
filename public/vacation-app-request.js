@@ -305,8 +305,21 @@ window.tsVacationAppChrome = {
       }, 250);
     };
 
+    const joinText = (a, b) => [String(a || '').trim(), String(b || '').trim()].filter(Boolean).join(' ');
+    let committedText = '';
+    let stopRequested = false;
+    let discardResults = false;
+    let restartTimer = null;
+    let quickFailures = 0;
+    const RESTART_DELAY_MS = 150;
+    const QUICK_END_MS = 1000;
+    const MAX_QUICK_FAILURES = 5;
+
     const finishRecording = () => {
       recording = false;
+      stopRequested = false;
+      if (restartTimer) clearTimeout(restartTimer);
+      restartTimer = null;
       getState().voiceMode = false;
       voiceButton.classList.remove('recording');
       stopTimer();
@@ -322,46 +335,100 @@ window.tsVacationAppChrome = {
       return mediaStream;
     };
 
+    const fatalErrors = new Set(['not-allowed', 'service-not-allowed', 'audio-capture']);
+
     const attachRecognition = () => {
       const recognition = new SpeechRecognition();
-      recognition.continuous = false;
+      // Composer mic stays on until the user taps the mic again (Stop) or Send (#997).
+      recognition.continuous = true;
       recognition.interimResults = true;
+      let fatal = false;
+      let heard = false;
+      let startedAt = Date.now();
       recognition.onstart = () => {
+        startedAt = Date.now();
         recording = true;
         getState().voiceMode = true;
         voiceButton.classList.add('recording');
-        startTimer();
-      };
-      recognition.onend = () => {
-        finishRecording();
+        if (!recordingStartedAt) startTimer();
       };
       recognition.onresult = (event) => {
+        if (discardResults || activeRecognition !== recognition) return;
         const text = Array.from(event.results).map((result) => result[0]?.transcript || '').join(' ').trim();
         if (text) {
-          messageText.value = text;
+          heard = true;
+          quickFailures = 0;
+          if (messageText) messageText.value = joinText(committedText, text);
           getState().voiceArmed = true;
           showStatus('');
         }
       };
       recognition.onerror = (event) => {
         const code = String(event.error || '');
-        if (code === 'not-allowed' || code === 'service-not-allowed') {
-          showStatus(micBlockedMessage());
-        } else if (code === 'no-speech' || code === 'aborted' || code === 'audio-capture' || code === 'network') {
-          showStatus(retryMessage);
-        } else if (code) {
-          showStatus(retryMessage);
+        if (fatalErrors.has(code)) {
+          fatal = true;
+          showStatus(code === 'audio-capture' ? retryMessage : micBlockedMessage());
         }
-        recording = false;
-        getState().voiceMode = false;
-        voiceButton.classList.remove('recording');
-        stopTimer();
+        // no-speech / aborted / network: onend follows and listening restarts.
+      };
+      recognition.onend = () => {
+        if (activeRecognition !== recognition) return;
+        if (fatal || stopRequested || !recording) {
+          finishRecording();
+          return;
+        }
+        // Browser ended the session (silence, iOS cut-off): keep the captured text and listen again.
+        committedText = messageText ? String(messageText.value || '').trim() : committedText;
+        const quick = !heard && Date.now() - startedAt < QUICK_END_MS;
+        quickFailures = quick ? quickFailures + 1 : 0;
+        if (quickFailures > MAX_QUICK_FAILURES) {
+          showStatus(retryMessage);
+          finishRecording();
+          return;
+        }
+        restartTimer = setTimeout(() => {
+          restartTimer = null;
+          if (!recording || stopRequested) {
+            finishRecording();
+            return;
+          }
+          activeRecognition = attachRecognition();
+          try {
+            activeRecognition.start();
+          } catch (error) {
+            void error;
+            showStatus(retryMessage);
+            finishRecording();
+          }
+        }, RESTART_DELAY_MS);
       };
       return recognition;
     };
 
+    const stopRecording = ({ discard = false } = {}) => {
+      if (!recording) return;
+      stopRequested = true;
+      if (discard) discardResults = true;
+      if (restartTimer || !activeRecognition) {
+        finishRecording();
+        return;
+      }
+      try {
+        activeRecognition.stop();
+      } catch (error) {
+        void error;
+        finishRecording();
+      }
+    };
+
+    const composerForm = messageText?.form || messageText?.closest?.('form') || null;
+    composerForm?.addEventListener?.('submit', () => stopRecording({ discard: true }), true);
+
     voiceButton.addEventListener('click', async () => {
-      if (recording) return;
+      if (recording) {
+        stopRecording();
+        return;
+      }
       try {
         await ensureMediaStream();
       } catch (error) {
@@ -373,10 +440,17 @@ window.tsVacationAppChrome = {
         showStatus(unsupportedMessage);
         return;
       }
+      committedText = messageText ? String(messageText.value || '').trim() : '';
+      stopRequested = false;
+      discardResults = false;
+      quickFailures = 0;
+      recording = true;
       activeRecognition = attachRecognition();
       try {
         activeRecognition.start();
       } catch (error) {
+        recording = false;
+        activeRecognition = null;
         const name = String(error?.name || '');
         const message = String(error?.message || '');
         if (name === 'NotAllowedError' || message.includes('not-allowed')) {

@@ -108,6 +108,11 @@ function buildHarness({ userAgent = 'Mozilla/5.0 (Macintosh)', getUserMediaImpl,
     end() {
       queueMicrotask(() => this.onend?.({}));
     }
+
+    stop() {
+      this.stopCalls = (this.stopCalls || 0) + 1;
+      queueMicrotask(() => this.onend?.({}));
+    }
   }
 
   const windowMessageListeners = [];
@@ -181,12 +186,13 @@ const retryCopy = "Didn't catch that — tap the mic and try again.";
   const { sandbox, nodes, recognitionLog, getGetUserMediaCalls } = buildHarness({});
   await loadBindVoice(sandbox);
   for (let i = 0; i < 3; i += 1) {
+    nodes.messageText.value = '';
     await nodes.voiceButton.click();
     await microtaskDrain();
     assert.equal(recognitionLog.length, i + 1, `recognition instance ${i + 1}`);
     assert.equal(nodes.voiceButton.classList.contains('recording'), true);
     recognitionLog[i].emitResult(`take ${i + 1}`);
-    recognitionLog[i].end();
+    await nodes.voiceButton.click();
     await microtaskDrain();
     assert.equal(nodes.messageText.value, `take ${i + 1}`);
     assert.equal(nodes.voiceButton.classList.contains('recording'), false);
@@ -203,7 +209,7 @@ const retryCopy = "Didn't catch that — tap the mic and try again.";
   assert.equal(nodes.voiceElapsed.textContent, '0:00');
   timers.advance(1000);
   assert.equal(nodes.voiceElapsed.textContent, '0:01');
-  recognitionLog[0].end();
+  await nodes.voiceButton.click();
   await microtaskDrain();
   assert.equal(nodes.voiceElapsed.hidden, true);
   timers.clear();
@@ -243,9 +249,11 @@ const retryCopy = "Didn't catch that — tap the mic and try again.";
   await nodes.voiceButton.click();
   await microtaskDrain();
   recognitionLog[0].emitError('no-speech');
-  assert.equal(nodes.composerStatus.textContent, retryCopy);
-  recognitionLog[0].end();
+  assert.notEqual(nodes.composerStatus.textContent, retryCopy);
+  assert.equal(nodes.voiceButton.classList.contains('recording'), true);
+  await nodes.voiceButton.click();
   await microtaskDrain();
+  assert.equal(nodes.voiceButton.classList.contains('recording'), false);
 }
 
 {
