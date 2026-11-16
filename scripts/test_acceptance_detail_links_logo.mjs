@@ -165,16 +165,8 @@ async function openThing(frame, tab, name) {
 }
 
 const bundle = await readFile(path.join(root, 'public/assets/index-BKun7ofk.js'), 'utf8');
-const chipStart = bundle.indexOf('String(ha(Dt).logoUrl||ha(Dt).iconUrl||Dt.logoUrl||"").trim()?n.jsx');
-const chipEnd = bundle.indexOf(':null,Ce&&tsEd?', chipStart);
-assert.ok(chipStart >= 0 && chipEnd > chipStart, 'actual detail header logo expression');
-const renderChip = new Function('n', 'ha', 'Dt', 'dc', 'return ' + bundle.slice(chipStart, chipEnd + 5));
-const jsx = (type, props) => ({ type, props });
-for (const data of [{}, { logoUrl: '' }, { logoUrl: '   ' }]) {
-  assert.equal(renderChip({ jsx }, () => data, {}, () => null), null);
-}
-assert.equal(renderChip({ jsx }, () => ({ logoUrl: '/brand.png' }), {}, () => null).props['data-ts-detail-logo-chip'], '1');
-assert.equal(renderChip({ jsx }, () => ({}), { logoUrl: '/brand.png' }, () => null).props['data-ts-detail-logo-chip'], '1');
+assert.ok(!bundle.includes('String(ha(Dt).logoUrl||ha(Dt).iconUrl||Dt.logoUrl||"").trim()?n.jsx'), 'logo chip is never dropped');
+assert.ok(bundle.includes('children:[n.jsx("span",{"data-ts-detail-logo-chip":"1",style:{display:"inline-flex",flexShrink:0,lineHeight:0},children:n.jsx(dc,{item:Dt,size:34})}),'), 'chip always renders dc (logo, favicon, type icon fallback)');
 const server = await startServer();
 const browser = await puppeteer.launch({
   executablePath: process.env.CHROME_PATH || '/usr/bin/chromium-browser',
@@ -198,6 +190,7 @@ try {
       const panel = document.querySelector('[data-ts-detail-overlay]');
       return {
         chips: panel.querySelectorAll('[data-ts-detail-logo-chip]').length,
+        chipFilled: (() => { const c = panel.querySelector('[data-ts-detail-logo-chip]'); const r = c && c.getBoundingClientRect(); return Boolean(c && c.firstElementChild && r.width >= 30 && r.height >= 30); })(),
         name: panel.querySelector('[data-ts-detail-name]').textContent.trim(),
         edit: Boolean(panel.querySelector('[data-ts-detail-edit]')),
         close: Boolean(panel.querySelector('[data-ts-detail-close]')),
@@ -205,7 +198,8 @@ try {
     });
     assert.equal(missingLogo.name, 'Carbone');
     assert.ok(missingLogo.edit && missingLogo.close, 'existing detail controls stay present');
-    assert.equal(missingLogo.chips, 0, 'no empty logo chip');
+    assert.equal(missingLogo.chips, 1, 'logo chip never dropped');
+    assert.ok(missingLogo.chipFilled, 'chip shows favicon or type icon, never empty');
     if (process.env.REVIEW_SHOTS) await page.screenshot({ path: process.env.REVIEW_SHOTS + '/detail-carbone-' + viewport.width + '.png' });
     await frame.click('[data-ts-detail-close]');
     console.log('opening flight');
@@ -217,6 +211,8 @@ try {
       return {
         href: a.href, title: a.title, text: a.textContent.trim(),
         scrollWidth: a.scrollWidth, clientWidth: a.clientWidth,
+        wbr: a.querySelectorAll('wbr').length,
+        wordBreak: getComputedStyle(a).wordBreak, overflowWrap: getComputedStyle(a).overflowWrap,
         fits: r.left >= 0 && r.right <= window.innerWidth,
         header: panel.querySelector('[data-ts-detail-name]').textContent.trim(),
         chips: panel.querySelectorAll('[data-ts-detail-logo-chip]').length,
@@ -225,7 +221,9 @@ try {
     assert.equal(link.href, southwestUrl, 'full URL destination stays unchanged');
     {
       assert.equal(link.title, southwestUrl, 'full URL remains available on hover');
-      assert.equal(link.text, 'Website: www.southwest.com', 'long URL uses readable host label');
+      assert.equal(link.text, 'Website: ' + southwestUrl, 'full URL stays the shown text');
+      assert.ok(link.wbr > 0 && link.wordBreak === 'normal' && link.overflowWrap === 'normal', 'breaks only at URL delimiters, no mid-word breaks');
+      assert.equal(link.chips, 1, 'flight keeps its logo chip');
       assert.ok(link.fits && link.scrollWidth <= link.clientWidth + 1, 'link fits at phone width');
     }
     assert.match(link.header, /Southwest LAS → LGA/);

@@ -197,23 +197,17 @@ function detailBodyV3({ n, d, edit, days, selectedDays, scheduled, start, durati
     }
     if (web) {
       const href = /^https?:\/\//i.test(web) ? web : 'https://' + web.replace(/^\/\//, '');
-      let label = web;
-      if (web.length > 60) {
-        try {
-          const host = new URL(href).hostname;
-          label = host.length <= 48 ? host : 'Visit website';
-        } catch {
-          label = 'Visit website';
-        }
-      }
+      // Full URL stays visible; break opportunities only after URL delimiters / . ? & (no mid-word breaks).
+      const label = [];
+      String(web).split(/(?<=[\/.?&])/).forEach((part, i) => { if (i) label.push(n.jsx('wbr', {}, 'wbr' + i)); label.push(part); });
       kids.push(n.jsxs('a', {
         'data-ts-detail-info-box': 'website',
         href,
         target: '_blank',
         rel: 'noreferrer',
-        style: { ...infoBoxStyle, background: '#eff6ff', color: '#1d4ed8' },
+        style: { ...infoBoxStyle, background: '#eff6ff', color: '#1d4ed8', maxWidth: '100%', boxSizing: 'border-box', overflowWrap: 'normal', wordBreak: 'normal' },
         title: web,
-        children: [n.jsx('strong', { children: 'Website:' }), ' ', label],
+        children: [n.jsx('strong', { children: 'Website:' }), ' ', ...label],
       }));
     }
     if (showHH) {
