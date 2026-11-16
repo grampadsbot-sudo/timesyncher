@@ -207,4 +207,22 @@ const retryCopy = "Didn't catch that";
   assert.ok(recognitions.length <= 8, `bounded restarts (${recognitions.length})`);
 }
 
+{
+  const { nodes, recognitions, drain, advance } = await boot();
+  await nodes.voiceButton.click();
+  await drain();
+  for (let i = 0; i < 24; i += 1) {
+    recognitions[recognitions.length - 1].browserEnds(i % 2 ? 'no-speech' : undefined);
+    await advance(500);
+  }
+  assert.equal(isRecording(nodes), true, 'empty composer stays recording past 10s of repeated silent endings');
+  assert.equal(nodes.voiceElapsed.textContent, '0:12');
+  assert.equal(nodes.messageText.value, '');
+  assert.ok(recognitions.length > 20, 'silent restarts do not exhaust the network-error budget');
+  assert.ok(!String(nodes.composerStatus.textContent).includes(retryCopy));
+  await nodes.voiceButton.click();
+  await drain();
+  assert.equal(isRecording(nodes), false);
+}
+
 console.log('test_issue_997_composer_mic_continuous: ok');

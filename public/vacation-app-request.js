@@ -343,6 +343,7 @@ window.tsVacationAppChrome = {
       recognition.interimResults = true;
       let fatal = false;
       let heard = false;
+      let networkError = false;
       let startedAt = Date.now();
       recognition.onstart = () => {
         startedAt = Date.now();
@@ -364,6 +365,7 @@ window.tsVacationAppChrome = {
       };
       recognition.onerror = (event) => {
         const code = String(event.error || '');
+        networkError = code === 'network';
         if (fatalErrors.has(code)) {
           fatal = true;
           showStatus(code === 'audio-capture' ? retryMessage : micBlockedMessage());
@@ -376,7 +378,7 @@ window.tsVacationAppChrome = {
           return;
         }
         committedText = messageText ? String(messageText.value || '').trim() : committedText;
-        const quick = !heard && Date.now() - startedAt < QUICK_END_MS;
+        const quick = networkError && !heard && Date.now() - startedAt < QUICK_END_MS;
         quickFailures = quick ? quickFailures + 1 : 0;
         if (quickFailures > MAX_QUICK_FAILURES) {
           showStatus(retryMessage);
