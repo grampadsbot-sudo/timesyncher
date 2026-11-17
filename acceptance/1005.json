@@ -1,0 +1,73 @@
+{
+  "repo": "grampadsbot-sudo/timesyncher",
+  "viewports": [
+    {
+      "name": "iphone-390",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "name": "iphone-430",
+      "width": 430,
+      "height": 932
+    }
+  ],
+  "touch": true,
+  "trip_fixture": "demo-nyc-99-snapshot-20261110",
+  "fixture_variants": [
+    {
+      "name": "local-snapshot-only",
+      "owner_trips": "owner-trips-live.json"
+    }
+  ],
+  "role": "editor",
+  "entry": "/vacation-app.html",
+  "steps": [],
+  "issue": 1005,
+  "source": "dr eggbot 2026-11-16",
+  "note": "PR/issue #1005 only. Official accept of the Day-by-Day photo popover on iPhone and of video tiles returning to itinerary rows. After tapping the expand (size-toggle) button at 390px with real touch emulation, the popover stays fully inside the viewport and all three buttons stay visible and tappable; a touch-scroll gesture that starts outside the popover does not dismiss it. A Thing with a video shows a video tile in its Day-by-Day row; tapping it opens an inline <video controls playsinline> inside the viewport, and a scroll does not dismiss it. Copy/throwaway trips only; never write NYC 8CQX / trip 99. The #1002 detail-links-logo, #951 pencil/price, and #737 viewer-area unit scripts are included here because run_acceptance.mjs does not auto-include them, and they are the existing detail/day-by-day tests that acceptance/1002.json runs. Acceptance item 10: Thing detail and itinerary video actually plays on iPhone; the media route supports Range/206 with the correct Content-Type. Acceptance item 11: The Thing detail header never shows a photo or video. The header holds only the logo, the full-width title (wrapping by word, never letter-columns), and the edit/close controls, with rating and price beneath, as before. No photo or video ever renders in the header. All photos and videos render only in the Photos & videos section, with video as an inline playsinline player.",
+  "assertions": [
+    {
+      "id": "photo-popover-touch-390",
+      "type": "unit_script",
+      "script": "scripts/test_acceptance_1005_photo_popover_touch.mjs",
+      "timeout_ms": 180000,
+      "note": "Copy-trip only, and the copy trip must include a video. Real touch emulation (not mouse) at 390px: after tapping expand, the popover stays fully inside the viewport, all three buttons remain visible and tappable, and a touch-scroll that starts outside the popover does not dismiss it. Also asserts acceptance items 6-7: a video tile appears in the Day-by-Day row; tapping it opens an inline <video> inside the viewport; a touch-scroll does not dismiss it. Also asserts item 10: the inline <video> actually plays (not a failed src / crossed-out play icon); the media route must answer Range with 206 and the correct Content-Type. Also asserts item 11 at 390 and 430: no photo or video in the Thing detail header; the header holds only the logo, the full-width title (wrapping by word, never letter-columns), and the edit/close controls, with rating and price beneath; all photos and videos render only in the Photos & videos section, with video as an inline playsinline player."
+    },
+    {
+      "id": "detail-links-logo",
+      "type": "unit_script",
+      "script": "scripts/test_acceptance_detail_links_logo.mjs",
+      "timeout_ms": 180000,
+      "note": "Existing #1002 Thing detail short host labels + logo chips regression on this head."
+    },
+    {
+      "id": "detail-951-pencil-price",
+      "type": "unit_script",
+      "script": "scripts/test_issue_951_thing_detail_pencil_price.mjs",
+      "timeout_ms": 180000,
+      "note": "Existing #951 Thing detail pencil + price regression on this head."
+    },
+    {
+      "id": "detail-737-viewer-area",
+      "type": "unit_script",
+      "script": "scripts/test_ui_737_viewer_detail_area.mjs",
+      "timeout_ms": 180000,
+      "note": "Existing #737 viewer detail + area chip regression on this head."
+    },
+    {
+      "id": "bind-thing-media-range-206",
+      "type": "unit_script",
+      "script": "scripts/test_bind_thing_media_cache.mjs",
+      "timeout_ms": 60000,
+      "note": "Acceptance item 10: the media route honors Range and returns 206 with the correct Content-Type (video/mp4). Origin must set Accept-Ranges: bytes; a Range: bytes=0-1 request must not return 200 with the full body. HEAD must not 405."
+    },
+    {
+      "id": "detail-header-no-media",
+      "type": "unit_script",
+      "script": "scripts/test_acceptance_1005_photo_popover_touch.mjs",
+      "timeout_ms": 180000,
+      "note": "Acceptance item 11 at 390 and 430: The Thing detail header never shows a photo or video. The header holds only the logo, the full-width title (wrapping by word, never letter-columns), and the edit/close controls, with rating and price beneath, as before. No photo or video ever renders in the header. All photos and videos render only in the Photos & videos section, with video as an inline playsinline player. Copy/throwaway trips only."
+    }
+  ]
+}

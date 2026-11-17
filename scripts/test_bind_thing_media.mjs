@@ -16,6 +16,7 @@ import {
   sniffMediaType,
   toPublicBinding,
 } from '../src/vacation/thing-media-bind.mjs';
+import { NYC_DAYBYDAY_SLUG, NYC_STATUE_VIDEO_BINDING_ID } from './fixtures/nyc-craig-kim-daybyday-trip.mjs';
 
 const shared = {
   trip: { id: 41, title: 'Sample Trip' },
@@ -123,6 +124,14 @@ assert.equal(
     publicUrl: 'https://example.com/nyc-day1-walk.mp4',
   }),
   '',
+);
+assert.equal(
+  boundMediaPlayUrl({
+    id: NYC_STATUE_VIDEO_BINDING_ID,
+    shareToken: NYC_DAYBYDAY_SLUG,
+    publicUrl: neonRawMediaPath(NYC_DAYBYDAY_SLUG, NYC_STATUE_VIDEO_BINDING_ID),
+  }),
+  neonRawMediaPath(NYC_DAYBYDAY_SLUG, NYC_STATUE_VIDEO_BINDING_ID),
 );
 
 const neonChoice = chooseMediaStorage({

@@ -9,15 +9,15 @@ import { execFileSync } from 'node:child_process';
 import { sendCachedBindingMedia } from '../src/vacation/bind-thing-media-cache.mjs';
 import { finalizeServedSharedTripPayload } from '../src/vacation/shared-trip-served-page.mjs';
 import { renderServedTrekBundle } from '../src/vacation/trek-style2-bundle.mjs';
-import { buildNycCraigKimDaybydayTrip } from './fixtures/nyc-craig-kim-daybyday-trip.mjs';
+import { buildNycCraigKimDaybydayTrip, NYC_STATUE_VIDEO_BINDING_ID } from './fixtures/nyc-craig-kim-daybyday-trip.mjs';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 export const COPY_SLUG = 'demo-acceptance-1005-local';
 const COPY_TRIP_ID = 1005005;
 export const COPY_BIND_VIDEO_ID = '6ba36f2a-e9f2-467e-9e61-3aac64fe165a';
-const NYC_STATUE_VIDEO_BINDING_ID = 'nyc-bind-video-day2';
 const COPY_VIDEO_PACK = ['las', 'vegas', 'vacation', '3'].join('-');
 const FIXTURE_MP4 = `public/ts-thing-media/${COPY_VIDEO_PACK}/bellagio-fountain-night-video.mp4`;
+const NYC_FIXTURE_MP4 = 'public/ts-thing-media/nyc-craig-kim-june-2026/nyc-day1-walk.mp4';
 
 function send(res, status, body, type) {
   const buf = Buffer.isBuffer(body) ? body : Buffer.from(body);
@@ -102,9 +102,11 @@ export async function startLocalPreview(tripPayload) {
       const url = new URL(req.url || '/', 'http://127.0.0.1');
       const raw = url.searchParams.get('raw') === '1';
       const id = decodeURIComponent(url.searchParams.get('id') || '');
-      if (raw && id === COPY_BIND_VIDEO_ID && (req.method === 'GET' || req.method === 'HEAD')) {
-        const bytes = await readFile(path.join(root, FIXTURE_MP4));
-        sendCachedBindingMedia(res, req, { bytes, mimeType: 'video/mp4', originalName: 'bellagio-fountain-night-video.mp4' });
+      if (raw && (id === COPY_BIND_VIDEO_ID || id === NYC_STATUE_VIDEO_BINDING_ID) && (req.method === 'GET' || req.method === 'HEAD')) {
+        const rel = id === NYC_STATUE_VIDEO_BINDING_ID && existsSync(path.join(root, NYC_FIXTURE_MP4)) ? NYC_FIXTURE_MP4 : FIXTURE_MP4;
+        const bytes = await readFile(path.join(root, rel));
+        const name = rel.endsWith('nyc-day1-walk.mp4') ? 'nyc-day1-walk.mp4' : 'bellagio-fountain-night-video.mp4';
+        sendCachedBindingMedia(res, req, { bytes, mimeType: 'video/mp4', originalName: name });
         return;
       }
     }
