@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path';
 
 import { hasDatabase, sql } from './db.mjs';
 import {
+  bindingIdIsUuid,
   newBindingId,
   sniffMediaType,
   toPublicBinding,
@@ -228,7 +229,9 @@ function bytesFromNeon(value) {
 }
 
 export async function getBindingMedia(shareToken, id, env = process.env) {
-  if (!hasDatabase(env) || !shareToken || !id) return null;
+  if (!shareToken || !id) return null;
+  if (!bindingIdIsUuid(id)) return null;
+  if (!hasDatabase(env)) return null;
   const db = sql(env);
   await ensureNeonSchema(db);
   const rows = await db`

@@ -11,7 +11,7 @@ import { applyLiveAppListRowFields } from '../src/vacation/shared-trip-live-app-
 import { buildNycCraigKimDaybydayTripPositiveV1 } from './fixtures/nyc-craig-kim-daybyday-positive-v1.mjs';
 import { gateBNycFixturePayloadSha256 } from './lib/gate-b-nyc-fixture-contract.mjs';
 
-const NYC_PAYLOAD_SHA256 = '22834db13bb4078aa934d415aad6a7acb72d236d4fbe10cadfa95610179f9166';
+const NYC_PAYLOAD_SHA256 = '355d6dd4e40122d4a9e907c442e55224d20f43b4a54ca0fa792dfc3c55cb39bf';
 
 const summaryOnly = 'Essence ladder summary only — compact tagline for the place.';
 

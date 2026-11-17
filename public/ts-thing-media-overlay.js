@@ -34,30 +34,69 @@
     }
   }
 
-  function detailHost() {
-    const named = document.querySelector('[data-ts-detail-name]');
-    if (named) return named.closest('[role="dialog"]') || named.closest('div,section,aside') || named.parentElement;
-    return [...document.querySelectorAll('[data-ts-thing-header], [role="dialog"], dialog')].at(-1) || null;
+  function detailPhotosSection() {
+    return document.querySelector('[data-ts-detail-photos="1"]');
+  }
+
+  function openThingName() {
+    const el = document.querySelector('[data-ts-detail-name]');
+    const raw = el && (el.value != null ? el.value : el.textContent);
+    return String(raw || '').replace(/\s+/g, ' ').trim();
+  }
+
+  function nameMatches(thingName, openName) {
+    const a = String(thingName || '').replace(/\s+/g, ' ').trim();
+    const b = String(openName || '').replace(/\s+/g, ' ').trim();
+    if (!a || !b) return false;
+    return b.includes(a) || a.includes(b);
+  }
+
+  function mediaAlreadyInSection(section, url) {
+    if (!section || !url) return false;
+    const want = absUrl(url);
+    const wantPath = (() => {
+      try {
+        return new URL(want).pathname + new URL(want).search;
+      } catch {
+        return want;
+      }
+    })();
+    return [...section.querySelectorAll('video,img')].some((el) => {
+      const src = el.currentSrc || el.getAttribute('src') || '';
+      if (!src) return false;
+      if (src === want) return true;
+      try {
+        const p = new URL(src, location.origin).pathname + new URL(src, location.origin).search;
+        return p === wantPath;
+      } catch {
+        return src.includes(wantPath);
+      }
+    });
   }
 
   function injectThingPhotos(bindings) {
     const decorate = () => {
-      const host = detailHost();
-      if (!host) return;
+      const section = detailPhotosSection();
+      const openName = openThingName();
+      if (!section || !openName) return;
+      const grid =
+        section.querySelector('[style*="grid"]') ||
+        section.querySelector('div') ||
+        section;
       for (const row of bindings) {
         const name = String(row.thingName || '').trim();
-        if (!name || document.getElementById(`ts-bound-${row.id}`)) continue;
-        if (!host.textContent || !host.textContent.includes(name)) continue;
+        if (!name || !nameMatches(name, openName)) continue;
+        if (document.getElementById(`ts-bound-${row.id}`)) continue;
+        const url = absUrl(row.publicUrl);
+        if (mediaAlreadyInSection(section, url)) continue;
         const wrap = document.createElement('div');
         wrap.id = `ts-bound-${row.id}`;
-        wrap.style.cssText = 'margin:12px 0 16px';
-        const url = absUrl(row.publicUrl);
+        wrap.style.cssText = 'min-width:0';
         const isVideo = String(row.mimeType || '').startsWith('video/') || row.mediaKind === 'video';
         wrap.innerHTML = isVideo
-          ? `<video src="${esc(url)}" controls style="max-width:100%;border-radius:12px"></video>`
-          : `<img src="${esc(url)}" alt="${esc(row.caption || row.thingName || '')}" style="max-width:100%;border-radius:12px">`;
-        const title = [...host.querySelectorAll('input,h1,h2,h3,div')].find((node) => (node.value || node.textContent || '').includes(name));
-        (title?.parentElement || host).insertBefore(wrap, title ? title.nextSibling : host.firstChild);
+          ? `<video src="${esc(url)}" controls playsinline style="display:block;width:100%;max-height:190px;border-radius:8px;background:#20252c"></video>`
+          : `<img src="${esc(url)}" alt="${esc(row.caption || row.thingName || '')}" style="display:block;width:100%;border-radius:12px">`;
+        grid.appendChild(wrap);
       }
     };
     decorate();

@@ -192,7 +192,12 @@ export function mergeBindingsIntoShared(shared = {}, bindings = []) {
   for (const raw of bindings) {
     const binding = toPublicBinding(raw);
     if (!binding.thingId || !binding.publicUrl) continue;
-    const playUrl = boundMediaPlayUrl(binding);
+    let playUrl = boundMediaPlayUrl(binding);
+    if (!playUrl && PLACEHOLDER_MEDIA_HOST_RE.test(String(binding.publicUrl || ''))) {
+      const shareToken = String(binding.shareToken || binding.share_token || '').trim();
+      const id = String(binding.id || '').trim();
+      if (shareToken && id) playUrl = neonRawMediaPath(shareToken, id);
+    }
     if (playUrl && (isVideoBinding(binding) || PLACEHOLDER_MEDIA_HOST_RE.test(binding.publicUrl))) {
       binding.publicUrl = playUrl;
     }
@@ -350,6 +355,11 @@ export function neonRawMediaPath(shareToken, bindingId) {
 }
 
 const PLACEHOLDER_MEDIA_HOST_RE = /example\.com/i;
+const BINDING_UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export function bindingIdIsUuid(id = '') {
+  return BINDING_UUID_RE.test(String(id || '').trim());
+}
 
 export function boundMediaPlayUrl(row = {}) {
   const candidates = [row.publicUrl, row.public_url, row.url]
@@ -359,12 +369,19 @@ export function boundMediaPlayUrl(row = {}) {
   if (direct) return direct;
   const shareToken = String(row.shareToken || row.share_token || '').trim();
   const id = String(row.id || '').trim();
-  if (shareToken && id) return neonRawMediaPath(shareToken, id);
+  if (!shareToken || !id) return '';
+  const storedPublic = String(row.publicUrl || row.public_url || '').trim();
+  if (storedPublic && PLACEHOLDER_MEDIA_HOST_RE.test(storedPublic) && !bindingIdIsUuid(id)) return '';
+  if (bindingIdIsUuid(id)) return neonRawMediaPath(shareToken, id);
+  const urlOnly = String(row.url || '').trim();
+  if (urlOnly && PLACEHOLDER_MEDIA_HOST_RE.test(urlOnly) && !storedPublic) {
+    return neonRawMediaPath(shareToken, id);
+  }
   return '';
 }
 
 export function boundMediaPlayUrlBundleInject() {
-  return 'tsBoundMediaPlayUrl=gr=>{const u=[gr.publicUrl,gr.public_url,gr.url].map(v=>String(v||"").trim()).find(v=>v&&!/example\\.com/i.test(v));if(u)return u;const t=String(gr.shareToken||gr.share_token||"").trim(),id=String(gr.id||"").trim();return t&&id?"/api/bind-thing-media?shareToken="+encodeURIComponent(t)+"&id="+encodeURIComponent(id)+"&raw=1":""}';
+  return 'tsBoundMediaPlayUrl=gr=>{const u=[gr.publicUrl,gr.public_url,gr.url].map(v=>String(v||"").trim()).find(v=>v&&!/example\\.com/i.test(v));if(u)return u;const t=String(gr.shareToken||gr.share_token||"").trim(),id=String(gr.id||"").trim();if(!t||!id)return "";const pub=String(gr.publicUrl||gr.public_url||"").trim(),uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;if(pub&&/example\\.com/i.test(pub)&&!uuid.test(id))return "";if(uuid.test(id))return "/api/bind-thing-media?shareToken="+encodeURIComponent(t)+"&id="+encodeURIComponent(id)+"&raw=1";const urlOnly=String(gr.url||"").trim();if(urlOnly&&/example\\.com/i.test(urlOnly)&&!pub)return "/api/bind-thing-media?shareToken="+encodeURIComponent(t)+"&id="+encodeURIComponent(id)+"&raw=1";return ""}';
 }
 
 export function chooseMediaStorage({

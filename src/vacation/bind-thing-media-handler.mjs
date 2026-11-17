@@ -279,7 +279,7 @@ export default async function handler(req, res) {
   }
   const url = new URL(req.url || '/', 'https://timesyncher.com');
   try {
-    if (req.method === 'GET') {
+    if (req.method === 'GET' || req.method === 'HEAD') {
       const shareToken = cleanText(url.searchParams.get('shareToken') || url.searchParams.get('token'), 180);
       const id = cleanText(url.searchParams.get('id'), 80);
       const raw = url.searchParams.get('raw') === '1' || url.searchParams.get('raw') === 'true';
@@ -288,8 +288,11 @@ export default async function handler(req, res) {
         if (!media) {
           return sendJson(res, 404, { ok: false, error: 'Bound media bytes were not found.' });
         }
-        sendCachedBindingMedia(res, req, media);
+        sendCachedBindingMedia(res, req, media, { headOnly: req.method === 'HEAD' });
         return;
+      }
+      if (req.method === 'HEAD') {
+        return sendJson(res, 405, { ok: false, error: 'Use GET or POST.' });
       }
       if (!shareToken) {
         return sendJson(res, 200, { ok: true, ...opsHelp(originFromReq(req)) });

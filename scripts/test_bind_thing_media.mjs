@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 
 import { requireMediaBindAuth, stagingMediaBindHost } from '../src/vacation/auth.mjs';
 import {
+  boundMediaPlayUrl,
   chooseMediaStorage,
   mergeBindingsIntoShared,
   isKeepsakeJunkMedia,
@@ -15,6 +16,7 @@ import {
   sniffMediaType,
   toPublicBinding,
 } from '../src/vacation/thing-media-bind.mjs';
+import { NYC_DAYBYDAY_SLUG, NYC_STATUE_VIDEO_BINDING_ID } from './fixtures/nyc-craig-kim-daybyday-trip.mjs';
 
 const shared = {
   trip: { id: 41, title: 'Sample Trip' },
@@ -115,6 +117,23 @@ assert.match(vercel, /keepsakePdf/);
 assert.match(vercel, /\/api\/pdf\/shared/);
 
 const pngBytes = proofPngBuffer({ label: 'neon' });
+assert.equal(
+  boundMediaPlayUrl({
+    id: 'nyc-bind-video-day2',
+    shareToken: 'copy-trip',
+    publicUrl: 'https://example.com/nyc-day1-walk.mp4',
+  }),
+  '',
+);
+assert.equal(
+  boundMediaPlayUrl({
+    id: NYC_STATUE_VIDEO_BINDING_ID,
+    shareToken: NYC_DAYBYDAY_SLUG,
+    publicUrl: neonRawMediaPath(NYC_DAYBYDAY_SLUG, NYC_STATUE_VIDEO_BINDING_ID),
+  }),
+  neonRawMediaPath(NYC_DAYBYDAY_SLUG, NYC_STATUE_VIDEO_BINDING_ID),
+);
+
 const neonChoice = chooseMediaStorage({
   bytes: pngBytes,
   sourceUrl: '',
