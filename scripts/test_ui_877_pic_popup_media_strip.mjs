@@ -23,6 +23,7 @@ assert.match(viewer, /tsPicFsImg/);
 assert.match(viewer, /object-fit:contain/);
 assert.match(viewer, /tsPicPopupClose/);
 assert.match(viewer, /tsPicResizeHandle/);
+assert.doesNotMatch(viewer, /tsPicSizeToggle/);
 assert.match(viewer, /touchmove/);
 
 const sharedHtml = await readFile(new URL('../shared-app.html', import.meta.url), 'utf8');

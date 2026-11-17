@@ -83,24 +83,12 @@ try {
 
     let audit = await page.evaluate(popupAuditScript);
     assert.ok(audit.open, `popover should open at ${viewport.width}`);
-
-    const sizeBtn = await page.evaluate(() => {
-      const btn = document.querySelector('[data-ts-1005-probe="1"] [data-ts-pic-size-toggle="1"]');
-      const r = btn?.getBoundingClientRect();
-      return r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : null;
-    });
-    assert.ok(sizeBtn, 'size toggle missing');
-    await page.touchscreen.tap(sizeBtn.x, sizeBtn.y);
-    await sleep(400);
-
-    audit = await page.evaluate(popupAuditScript);
-    assert.ok(audit.inView, `expanded popover in viewport at ${viewport.width}: ${JSON.stringify(audit)}`);
-    assert.ok(audit.buttons.every((b) => b.found && b.tappable), `buttons tappable after expand at ${viewport.width}`);
-
-    await page.touchscreen.tap(sizeBtn.x, sizeBtn.y);
-    await sleep(300);
-    const afterShrink = await page.evaluate(() => document.querySelector('[data-ts-1005-probe="1"] [data-ts-pic-popup="1"]')?.getBoundingClientRect().width || 0);
-    assert.ok(afterShrink < audit.rect.width - 20, 'second expand tap returns toward base width');
+    assert.ok(
+      await page.evaluate(() => !document.querySelector('[data-ts-1005-probe="1"] [data-ts-pic-size-toggle="1"]')),
+      `size toggle must be absent at ${viewport.width}`,
+    );
+    assert.ok(audit.inView, `popover in viewport at ${viewport.width}: ${JSON.stringify(audit)}`);
+    assert.ok(audit.buttons.every((b) => b.found && b.tappable), `buttons tappable at ${viewport.width}`);
 
     const scrollStart = await page.evaluate(() => {
       const r = document.querySelector('[data-ts-1005-probe="1"] [data-ts-pic-popup="1"]')?.getBoundingClientRect();

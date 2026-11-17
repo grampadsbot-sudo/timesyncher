@@ -189,7 +189,7 @@ export function popupAuditScript() {
   if (!popup) return { open: false };
   const rect = popup.getBoundingClientRect();
   const inView = rect.left >= margin && rect.top >= margin && rect.right <= vw - margin && rect.bottom <= window.innerHeight - margin;
-  const buttons = ['[data-ts-pic-popup-close="1"]', '[data-ts-pic-size-toggle="1"]', '[data-ts-pic-fs-btn="1"]'].map((sel) => {
+  const buttons = ['[data-ts-pic-popup-close="1"]', '[data-ts-pic-fs-btn="1"]'].map((sel) => {
     const btn = popup.querySelector(sel);
     if (!btn) return { sel, found: false };
     const r = btn.getBoundingClientRect();
