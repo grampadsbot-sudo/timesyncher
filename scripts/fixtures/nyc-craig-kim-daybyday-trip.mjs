@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-import { mergeBindingsIntoShared } from '../../src/vacation/thing-media-bind.mjs';
+import { mergeBindingsIntoShared, neonRawMediaPath } from '../../src/vacation/thing-media-bind.mjs';
 import { finalizeServedSharedTripPayload } from '../../src/vacation/shared-trip-served-page.mjs';
 import { bindPr336GateBCanonicalIdentity } from './pr336-vk-search-trip-sources.mjs';
 import { enrichSearchPlace } from '../../src/vacation/trip-thing-enrichment.mjs';
@@ -28,7 +28,7 @@ const VK_SEARCH_SNAPSHOT_COPY_ROW_ID_SET = new Set(VK_SEARCH_SNAPSHOT_COPY_ROW_I
 
 export const STORED_SUMMARY_FIELD = 'thingOverrides[place:<placeId>].summary';
 const MEDIA_PREFIX = '/ts-thing-media/nyc-craig-kim-june-2026';
-const VIDEO_URL = 'https://example.com/nyc-day1-walk.mp4';
+const NYC_STATUE_VIDEO_BINDING_ID = '9eb35aed-32ce-4fb2-b8f4-c3a4cbb9b32c';
 
 const SUMMARIES = {
   601: 'Nonstop afternoon arrival; lands with time to reach the hotel before dinner.',
@@ -627,14 +627,14 @@ function buildPayload() {
       publicUrl: `${MEDIA_PREFIX}/lincoln-center-photo.jpg`,
     });
     bindings.push({
-      id: 'nyc-bind-video-day2',
+      id: NYC_STATUE_VIDEO_BINDING_ID,
       shareToken: NYC_DAYBYDAY_SLUG,
       thingId: tour.id,
       thingName: tour.name,
       mediaKind: 'video',
       mimeType: 'video/mp4',
       originalName: 'nyc-day1-walk.mp4',
-      publicUrl: VIDEO_URL,
+      publicUrl: neonRawMediaPath(NYC_DAYBYDAY_SLUG, NYC_STATUE_VIDEO_BINDING_ID),
     });
   }
   const timelineIds = rows.filter((row) => !row.listOnly).map((row) => row.id);

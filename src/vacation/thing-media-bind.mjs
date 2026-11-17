@@ -192,7 +192,7 @@ export function mergeBindingsIntoShared(shared = {}, bindings = []) {
   for (const raw of bindings) {
     const binding = toPublicBinding(raw);
     if (!binding.thingId || !binding.publicUrl) continue;
-    const playUrl = servedBindingPlayUrl(binding);
+    const playUrl = boundMediaPlayUrl(binding);
     if (playUrl && (isVideoBinding(binding) || PLACEHOLDER_MEDIA_HOST_RE.test(binding.publicUrl))) {
       binding.publicUrl = playUrl;
     }
@@ -365,16 +365,6 @@ export function boundMediaPlayUrl(row = {}) {
   const shareToken = String(row.shareToken || row.share_token || '').trim();
   const id = String(row.id || '').trim();
   if (shareToken && id && bindingIdIsUuid(id)) return neonRawMediaPath(shareToken, id);
-  return '';
-}
-
-function servedBindingPlayUrl(binding = {}) {
-  const direct = boundMediaPlayUrl(binding);
-  if (direct) return direct;
-  if (!isVideoBinding(binding) && !PLACEHOLDER_MEDIA_HOST_RE.test(binding.publicUrl || '')) return '';
-  const shareToken = String(binding.shareToken || binding.share_token || '').trim();
-  const id = String(binding.id || '').trim();
-  if (shareToken && id) return neonRawMediaPath(shareToken, id);
   return '';
 }
 
