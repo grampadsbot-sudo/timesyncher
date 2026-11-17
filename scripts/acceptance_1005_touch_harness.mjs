@@ -15,7 +15,7 @@ const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 export const COPY_SLUG = 'demo-acceptance-1005-local';
 const COPY_TRIP_ID = 1005005;
 export const COPY_BIND_VIDEO_ID = '6ba36f2a-e9f2-467e-9e61-3aac64fe165a';
-const NYC_STATUE_VIDEO_BINDING_ID = '9eb35aed-32ce-4fb2-b8f4-c3a4cbb9b32c';
+const NYC_STATUE_VIDEO_BINDING_ID = 'nyc-bind-video-day2';
 const COPY_VIDEO_PACK = ['las', 'vegas', 'vacation', '3'].join('-');
 const FIXTURE_MP4 = `public/ts-thing-media/${COPY_VIDEO_PACK}/bellagio-fountain-night-video.mp4`;
 

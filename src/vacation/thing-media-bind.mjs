@@ -192,7 +192,12 @@ export function mergeBindingsIntoShared(shared = {}, bindings = []) {
   for (const raw of bindings) {
     const binding = toPublicBinding(raw);
     if (!binding.thingId || !binding.publicUrl) continue;
-    const playUrl = boundMediaPlayUrl(binding);
+    let playUrl = boundMediaPlayUrl(binding);
+    if (!playUrl && PLACEHOLDER_MEDIA_HOST_RE.test(String(binding.publicUrl || ''))) {
+      const shareToken = String(binding.shareToken || binding.share_token || '').trim();
+      const id = String(binding.id || '').trim();
+      if (shareToken && id) playUrl = neonRawMediaPath(shareToken, id);
+    }
     if (playUrl && (isVideoBinding(binding) || PLACEHOLDER_MEDIA_HOST_RE.test(binding.publicUrl))) {
       binding.publicUrl = playUrl;
     }
