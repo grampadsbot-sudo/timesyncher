@@ -68,7 +68,9 @@ function servedBundleJs() {
   return js;
 }
 
-export async function startLocalPreview(tripPayload) {
+export async function startLocalPreview(tripPayload, previewOptions = {}) {
+  const canEdit = previewOptions.canEdit === true;
+  const thingFieldPuts = previewOptions.thingFieldPuts || null;
   const [html, css] = await Promise.all([
     readFile(path.join(root, 'shared-app.html'), 'utf8'),
     readFile(path.join(root, 'public/assets/index-CbEHlMj6.css'), 'utf8'),
@@ -113,7 +115,15 @@ export async function startLocalPreview(tripPayload) {
     if (publicJs.includes(pathname)) {
       return send(res, 200, await readFile(path.join(root, 'public', pathname.slice(1)), 'utf8'), 'text/javascript; charset=utf-8');
     }
-    if (pathname.endsWith('/edit-access')) return send(res, 200, '{"canEdit":false}', 'application/json; charset=utf-8');
+    if (pathname.endsWith('/edit-access')) return send(res, 200, JSON.stringify({ canEdit }), 'application/json; charset=utf-8');
+    const thingFieldsMatch = pathname.match(/^\/api\/shared\/([^/]+)\/thing-fields$/);
+    if (thingFieldsMatch && req.method === 'PUT' && decodeURIComponent(thingFieldsMatch[1]) === COPY_SLUG) {
+      let body = '';
+      for await (const chunk of req) body += chunk;
+      const parsed = JSON.parse(body || '{}');
+      if (thingFieldPuts) thingFieldPuts.push(parsed);
+      return send(res, 200, '{"ok":true}', 'application/json; charset=utf-8');
+    }
     if (pathname.startsWith('/icons/') || pathname.endsWith('.png') || pathname.endsWith('.ico')) {
       const assetPath = path.join(root, 'public', pathname.replace(/^\//, ''));
       if (existsSync(assetPath)) return send(res, 200, await readFile(assetPath), 'image/png');
