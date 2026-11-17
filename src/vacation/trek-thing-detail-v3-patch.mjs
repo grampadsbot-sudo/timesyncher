@@ -159,18 +159,11 @@ function detailBodyV3({ n, d, edit, days, selectedDays, scheduled, start, durati
       label,
       n.jsx('div', {
         'data-ts-detail-rating-stars': '1',
+        'data-ts-detail-rating-readonly': '1',
         style: { display: 'flex', alignItems: 'center', minHeight: 28 },
         dangerouslySetInnerHTML: { __html: starHtml },
         role: 'img',
         'aria-label': typeof tsStarRatingAria === 'function' ? tsStarRatingAria(rv) : '',
-      }),
-      n.jsx('input', {
-        value: String(rv ?? ''),
-        onChange: event => write(key, event.target.value),
-        placeholder: '',
-        style: { ...inputStyle, position: 'absolute', opacity: 0, width: 1, height: 1, padding: 0, border: 0 },
-        tabIndex: -1,
-        'aria-hidden': 'true',
       }),
     ] }, key);
   }).filter(Boolean) }) : null;
@@ -256,7 +249,7 @@ function detailBodyV3({ n, d, edit, days, selectedDays, scheduled, start, durati
 }
 
 const REVIEW_V3_EDIT_EXTRAS =
-  '[1,2,3,4].filter(G=>String(Ps(Dt,G)||"").trim()).map(G=>n.jsxs("label",{style:Hn,children:["Review ",G,n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"120px minmax(0, 1fr)",gap:8,alignItems:"center"},children:[n.jsx("input",{value:No(Dt,`review${G}Rating`),onChange:Re=>Xa(Dt,`review${G}Rating`,Re.target.value),placeholder:"Star rating",style:De}),n.jsx("textarea",{value:Ps(Dt,G),onChange:Re=>Xa(Dt,`review${G}`,Re.target.value),style:ur})]})]},G))';
+  '[1,2,3,4].filter(G=>String(Ps(Dt,G)||"").trim()).map(G=>n.jsxs("label",{style:Hn,children:["Review ",G,n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"120px minmax(0, 1fr)",gap:8,alignItems:"center"},children:[n.jsx("div",{"data-ts-review-stars":"1","data-ts-detail-review-rating-readonly":"1",style:{display:"flex",alignItems:"center",minHeight:36},dangerouslySetInnerHTML:{__html:tsRenderStarRatingHtml(No(Dt,`review${G}Rating`))},role:"img","aria-label":tsStarRatingAria(No(Dt,`review${G}Rating`))}),n.jsx("textarea",{value:Ps(Dt,G),onChange:Re=>Xa(Dt,`review${G}`,Re.target.value),style:ur})]})]},G))';
 
 const HH_V3_EDIT_EXTRAS =
   '(zi(Dt)||It(Dt)==="bar")&&n.jsxs("label",{style:{...Hn,flexDirection:"row",alignItems:"center",gap:8,textTransform:"none",fontSize:12,paddingBottom:8},children:[n.jsx("input",{type:"checkbox",checked:!!(ha(Dt).happyHour||tsPf.some(row=>row.happyHour===true&&row.match.test(String(Dt.name||Dt.title||"")))),onChange:G=>Xa(Dt,"happyHour",G.target.checked)})," Happy hour"]}),(zi(Dt)||It(Dt)==="bar")&&(Ce||((()=>{const raw=String(ha(Dt).happyHourDetails||"").replace(/\\s+/g," ").trim();return !!raw&&raw!=="false"&&!/^no happy hour\\b/i.test(raw)})()))&&n.jsxs("label",{style:Hn,children:["Happy hour details",n.jsx("textarea",{value:String(ha(Dt).happyHourDetails||""),onChange:G=>Xa(Dt,"happyHourDetails",G.target.value),placeholder:"Recent/current happy-hour offer, menu items, discount, days/times, caveats, and source note",style:{...ur,minHeight:84},disabled:!Ce})]})';

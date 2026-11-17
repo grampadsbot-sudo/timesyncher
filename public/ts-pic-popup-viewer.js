@@ -10,7 +10,27 @@
   ].join('');
 
   const BTN_BASE =
-    'display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;border-radius:10px;border:1px solid #d1d5db;background:#fff;color:#111827;font-size:16px;font-weight:600;line-height:1;cursor:pointer;padding:0 10px;box-shadow:0 1px 2px rgba(15,23,42,0.08)';
+    'display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;border-radius:10px;border:1px solid #d1d5db;background:#fff;color:#111827;font-size:16px;font-weight:600;line-height:1;cursor:pointer;padding:0 10px;box-shadow:0 1px 2px rgba(15,23,42,0.08);touch-action:manipulation;-webkit-tap-highlight-color:transparent';
+
+  function wireTapButton(btn, handler) {
+    let lastTouchAt = 0;
+    btn.addEventListener(
+      'touchend',
+      (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        lastTouchAt = Date.now();
+        handler(e);
+      },
+      { passive: false },
+    );
+    btn.addEventListener('click', (e) => {
+      if (Date.now() - lastTouchAt < 500) return;
+      e.stopPropagation();
+      e.preventDefault();
+      handler(e);
+    });
+  }
 
   const FS_EXPAND_SVG =
     '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M16 21h5v-5M8 21H3v-5"/></svg>';
@@ -254,7 +274,10 @@
   function enhance(popup) {
     if (popup.dataset.tsPicViewerReady === '1') return;
     if (!popup.dataset.tsPicBaseWidth) {
-      popup.dataset.tsPicBaseWidth = popup.style.width || '248px';
+      const measured = popup.getBoundingClientRect().width;
+      const declared = parseStylePx(popup.style.width, 248);
+      const basePx = measured > 0 && measured < 300 ? Math.round(measured) : declared > 0 && declared < 300 ? Math.round(declared) : 248;
+      popup.dataset.tsPicBaseWidth = `${basePx}px`;
     }
     const stage = mediaStage(popup);
     if (!stage) return;
@@ -275,9 +298,7 @@
     closeBtn.setAttribute('aria-label', 'Close photo viewer');
     closeBtn.innerHTML = FS_CLOSE_SVG;
     closeBtn.style.cssText = BTN_BASE;
-    closeBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      e.preventDefault();
+    wireTapButton(closeBtn, () => {
       exitFullscreen(popup);
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     });
@@ -288,9 +309,7 @@
     fsBtn.setAttribute('aria-label', 'Full screen');
     fsBtn.innerHTML = FS_EXPAND_SVG;
     fsBtn.style.cssText = BTN_BASE;
-    fsBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      e.preventDefault();
+    wireTapButton(fsBtn, () => {
       if (window.__tsPicFsActive) exitFullscreen(popup);
       else enterFullscreen(popup, stage);
     });
@@ -302,14 +321,13 @@
     sizeBtn.textContent = '⇲';
     sizeBtn.style.cssText = BTN_BASE;
     let enlarged = false;
-    sizeBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      e.preventDefault();
+    const toggleSize = () => {
       enlarged = !enlarged;
       popup.dataset.tsPicEnlarged = enlarged ? '1' : '0';
       popup.style.width = enlarged ? `${enlargedWidthPx()}px` : popup.dataset.tsPicBaseWidth || '248px';
       scheduleClamp(popup);
-    });
+    };
+    wireTapButton(sizeBtn, toggleSize);
 
     bar.appendChild(closeBtn);
     bar.appendChild(sizeBtn);

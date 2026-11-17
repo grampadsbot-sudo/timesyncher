@@ -31,13 +31,13 @@ const DETAIL_RATING_GRID_NEEDLE =
   '[["googleRating","Google rating"],["yelpRating","Yelp rating"],["thirdPartyRating","Other rating"]].map(([k,label])=>n.jsxs("label",{style:Hn,children:[label,n.jsx("input",{value:No(Dt,k),onChange:G=>Xa(Dt,k,G.target.value),placeholder:"",style:De})]},k))';
 
 const DETAIL_RATING_GRID_PATCH =
-  '[["googleRating","Google rating"],["yelpRating","Yelp rating"],["thirdPartyRating","Other rating"]].map(([k,label])=>{const rv=No(Dt,k),stars=tsRenderStarRatingHtml(rv);if(!stars)return null;return n.jsxs("label",{style:Hn,children:[label,n.jsx("div",{"data-ts-detail-rating-stars":"1",style:{display:"flex",alignItems:"center",minHeight:28},dangerouslySetInnerHTML:{__html:stars},role:"img","aria-label":tsStarRatingAria(rv)}),n.jsx("input",{value:rv,onChange:G=>Xa(Dt,k,G.target.value),placeholder:"",style:{...De,position:"absolute",opacity:0,width:1,height:1,padding:0,border:0,pointerEvents:Ce?"auto":"none"},tabIndex:Ce?0:-1,"aria-hidden":Ce?void 0:"true"})]},k)}).filter(Boolean)';
+  '[["googleRating","Google rating"],["yelpRating","Yelp rating"],["thirdPartyRating","Other rating"]].map(([k,label])=>{const rv=No(Dt,k),stars=tsRenderStarRatingHtml(rv);if(!stars)return null;return n.jsxs("label",{style:Hn,children:[label,n.jsx("div",{"data-ts-detail-rating-stars":"1","data-ts-detail-rating-readonly":"1",style:{display:"flex",alignItems:"center",minHeight:28},dangerouslySetInnerHTML:{__html:stars},role:"img","aria-label":tsStarRatingAria(rv)})]},k)}).filter(Boolean)';
 
 const REVIEW_INPUT_NEEDLE =
   'children:[n.jsx("input",{value:No(Dt,`review${G}Rating`),onChange:Re=>Xa(Dt,`review${G}Rating`,Re.target.value),placeholder:"Star rating",style:De}),n.jsx("textarea"';
 
 const REVIEW_INPUT_PATCH =
-  'children:[n.jsx("div",{"data-ts-review-stars":"1",style:{display:"flex",alignItems:"center",minHeight:36},dangerouslySetInnerHTML:{__html:tsRenderStarRatingHtml(No(Dt,`review${G}Rating`))},role:"img","aria-label":tsStarRatingAria(No(Dt,`review${G}Rating`))}),n.jsx("input",{value:No(Dt,`review${G}Rating`),onChange:Re=>Xa(Dt,`review${G}Rating`,Re.target.value),placeholder:"Star rating",style:{...De,position:"absolute",opacity:0,width:1,height:1,padding:0,border:0,pointerEvents:Ce?"auto":"none"},tabIndex:Ce?0:-1,"aria-hidden":Ce?void 0:"true"}),n.jsx("textarea"';
+  'children:[n.jsx("div",{"data-ts-review-stars":"1","data-ts-detail-review-rating-readonly":"1",style:{display:"flex",alignItems:"center",minHeight:36},dangerouslySetInnerHTML:{__html:tsRenderStarRatingHtml(No(Dt,`review${G}Rating`))},role:"img","aria-label":tsStarRatingAria(No(Dt,`review${G}Rating`))}),n.jsx("textarea"';
 
 const DETAIL_HEADER_NEEDLE =
   'n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"34px minmax(0, 1fr)",gap:10,alignItems:"center",marginTop:6},children:[n.jsx(dc,{item:Dt,size:34}),n.jsx("input",{"aria-label":"Detail name",disabled:!Ce,value:mr(Dt),onChange:G=>kd(Dt,G.target.value),style:{...De,fontSize:18,width:"100%",background:Ce?"white":"#f9fafb",color:"#111827"}})]})';
