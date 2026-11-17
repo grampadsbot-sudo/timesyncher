@@ -7,6 +7,8 @@
     '[data-ts-pic-fs-overlay="1"] [data-ts-pic-fs-stage="1"]{flex:1 1 auto;min-height:0;width:100%;display:flex;align-items:center;justify-content:center;box-sizing:border-box}',
     '[data-ts-pic-fs-overlay="1"] [data-ts-pic-fs-img="1"]{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;transform-origin:center center;will-change:transform;touch-action:none}',
     '[data-ts-pic-fs-caption="1"]{pointer-events:none}',
+    '[data-ts-pic-popup="1"]:not([data-ts-pic-fs-active="1"]) [data-ts-pic-stage="1"] img,[data-ts-pic-popup="1"]:not([data-ts-pic-fs-active="1"]) img:not([data-ts-pic-fs-img]){object-fit:contain!important;max-width:100%;width:auto!important;height:auto!important;max-height:min(220px,calc(100vh - 200px));display:block}',
+    '[data-ts-pic-popup="1"]:not([data-ts-pic-fs-active="1"]) [data-ts-pic-stage="1"]{overflow:visible!important;height:auto!important;max-height:none!important}',
   ].join('');
 
   const BTN_BASE =
@@ -39,10 +41,6 @@
 
   let fsEscapeHandler = null;
   const VIEW_MARGIN = 8;
-
-  function enlargedWidthPx() {
-    return Math.min(420, Math.round(window.innerWidth * 0.92));
-  }
 
   function parseStylePx(value, fallback = 0) {
     const n = parseFloat(String(value || '').replace(/px$/, ''));
@@ -286,7 +284,15 @@
     stage.dataset.tsPicStage = '1';
     stage.style.touchAction = 'pan-x pan-y pinch-zoom';
     const img = stage.querySelector('img');
-    if (img) wirePinch(img);
+    if (img) {
+      img.style.objectFit = 'contain';
+      img.style.width = 'auto';
+      img.style.height = 'auto';
+      img.style.maxWidth = '100%';
+      img.style.maxHeight = '220px';
+      img.style.display = 'block';
+      wirePinch(img);
+    }
 
     const bar = document.createElement('div');
     bar.dataset.tsPicViewerBar = '1';
@@ -314,23 +320,7 @@
       else enterFullscreen(popup, stage);
     });
 
-    const sizeBtn = document.createElement('button');
-    sizeBtn.type = 'button';
-    sizeBtn.dataset.tsPicSizeToggle = '1';
-    sizeBtn.setAttribute('aria-label', 'Toggle viewer size');
-    sizeBtn.textContent = '⇲';
-    sizeBtn.style.cssText = BTN_BASE;
-    let enlarged = false;
-    const toggleSize = () => {
-      enlarged = !enlarged;
-      popup.dataset.tsPicEnlarged = enlarged ? '1' : '0';
-      popup.style.width = enlarged ? `${enlargedWidthPx()}px` : popup.dataset.tsPicBaseWidth || '248px';
-      scheduleClamp(popup);
-    };
-    wireTapButton(sizeBtn, toggleSize);
-
     bar.appendChild(closeBtn);
-    bar.appendChild(sizeBtn);
     bar.appendChild(fsBtn);
     popup.insertBefore(bar, popup.firstChild);
 

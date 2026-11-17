@@ -195,12 +195,9 @@ try {
       const sized = await page.evaluate(() => {
         const popup = document.querySelector('li[data-ts-877-probe="1"] [data-ts-pic-popup="1"]');
         const btn = popup?.querySelector('[data-ts-pic-size-toggle="1"]');
-        const before = popup?.getBoundingClientRect().width || 0;
-        btn?.click();
-        const after = popup?.getBoundingClientRect().width || 0;
-        return { before, after };
+        return { sizeToggleAbsent: !btn };
       });
-      assert.ok(sized.after > sized.before + 40, `size toggle enlarges viewer at ${w}`);
+      assert.ok(sized.sizeToggleAbsent, `size toggle must be absent at ${w} (#1010)`);
     }
 
     if (w === 390) {

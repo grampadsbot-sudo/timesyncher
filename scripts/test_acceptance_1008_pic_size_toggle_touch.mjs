@@ -37,13 +37,14 @@ const popupProbeAudit = `(() => {
   if (!popup) return { open: false };
   const rect = popup.getBoundingClientRect();
   const inView = rect.left >= margin && rect.top >= margin && rect.right <= vw - margin && rect.bottom <= window.innerHeight - margin;
-  const buttons = ['[data-ts-pic-popup-close="1"]', '[data-ts-pic-size-toggle="1"]', '[data-ts-pic-fs-btn="1"]'].map((sel) => {
+  const buttons = ['[data-ts-pic-popup-close="1"]', '[data-ts-pic-fs-btn="1"]'].map((sel) => {
     const btn = popup.querySelector(sel);
     if (!btn) return { sel, found: false };
     const r = btn.getBoundingClientRect();
     return { sel, found: true, tappable: r.width >= 40 && r.height >= 40 && r.left >= margin && r.right <= vw - margin && r.top >= margin };
   });
-  return { open: true, inView, rect: { width: rect.width }, buttons, vw };
+  const sizeToggle = popup.querySelector('[data-ts-pic-size-toggle="1"]');
+  return { open: true, inView, rect: { width: rect.width }, buttons, sizeToggleAbsent: !sizeToggle, vw };
 })()`;
 
 try {
@@ -85,28 +86,25 @@ try {
 
   let audit = await page.evaluate(popupProbeAudit);
   assert.ok(audit.open, 'photo popover should open at 390px');
-  assert.ok(audit.buttons.find((b) => b.sel.includes('size-toggle'))?.found, 'size toggle present');
+  assert.ok(audit.sizeToggleAbsent, 'size toggle must be absent (#1010)');
+  assert.ok(audit.buttons.length === 2 && audit.buttons.every((b) => b.found), 'exactly close and fullscreen controls');
+  assert.ok(audit.inView, `popover in viewport: ${JSON.stringify(audit)}`);
+  assert.ok(audit.buttons.every((b) => b.tappable), 'controls tappable');
 
-  const sizeTap = await page.evaluate(() => {
-    const btn = document.querySelector('[data-ts-1008-probe="1"] [data-ts-pic-size-toggle="1"]');
+  const fsTap = await page.evaluate(() => {
+    const btn = document.querySelector('[data-ts-1008-probe="1"] [data-ts-pic-fs-btn="1"]');
     const r = btn?.getBoundingClientRect();
     return r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : null;
   });
-  assert.ok(sizeTap, 'size toggle coords');
-  const widthBefore = audit.rect.width;
-  await page.touchscreen.tap(sizeTap.x, sizeTap.y);
-  await sleep(400);
-  audit = await page.evaluate(popupProbeAudit);
-  assert.ok(Math.abs(audit.rect.width - widthBefore) > 20, `touch size-toggle changes width: ${widthBefore} -> ${audit.rect.width}`);
-  assert.ok(audit.inView, `popover in viewport: ${JSON.stringify(audit)}`);
-  assert.ok(audit.buttons.every((b) => b.found && b.tappable), 'controls tappable after resize');
-
-  await page.touchscreen.tap(sizeTap.x, sizeTap.y);
-  await sleep(300);
-  const afterShrink = await page.evaluate(
-    () => document.querySelector('[data-ts-1008-probe="1"] [data-ts-pic-popup="1"]')?.getBoundingClientRect().width || 0,
+  assert.ok(fsTap, 'fullscreen toggle coords');
+  await page.touchscreen.tap(fsTap.x, fsTap.y);
+  await sleep(500);
+  assert.ok(
+    await page.evaluate(() => Boolean(document.querySelector('[data-ts-pic-fs-overlay="1"]'))),
+    'fullscreen overlay opens',
   );
-  assert.ok(afterShrink < audit.rect.width - 20, 'second touch shrinks popover');
+  await page.evaluate(() => document.querySelector('[data-ts-pic-fs-exit="1"]')?.click());
+  await sleep(400);
 
   const scrollStart = await page.evaluate(() => {
     const r = document.querySelector('[data-ts-1008-probe="1"] [data-ts-pic-popup="1"]')?.getBoundingClientRect();

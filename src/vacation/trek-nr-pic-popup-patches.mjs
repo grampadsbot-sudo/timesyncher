@@ -26,6 +26,13 @@ const NR_POPUP_VIDEO_NEEDLE =
 const NR_POPUP_VIDEO_PATCH =
   'gr.kind==="video"?n.jsx("video",{src:gr.url,poster:gr.thumbnailUrl!==gr.url?gr.thumbnailUrl:void 0,controls:!0,playsInline:!0,preload:"metadata",style:{width:"100%",height:"100%",objectFit:"cover"}})';
 
+const NR_POPUP_MEDIA_STAGE_NEEDLE =
+  'n.jsx("div",{style:{height:146,borderRadius:10,overflow:"hidden",background:"#0f172a",display:"flex",alignItems:"center",justifyContent:"center"},children:gr.kind==="video"?n.jsx("video",{src:gr.url,poster:gr.thumbnailUrl!==gr.url?gr.thumbnailUrl:void 0,muted:!0,preload:"metadata",style:{width:"100%",height:"100%",objectFit:"cover"}}):n.jsx("img",{src:gr.url,alt:"",style:{width:"100%",height:"100%",objectFit:"cover"}})}';
+const NR_POPUP_MEDIA_STAGE_NEEDLE_SERVED =
+  'n.jsx("div",{style:{height:146,borderRadius:10,overflow:"hidden",background:"#0f172a",display:"flex",alignItems:"center",justifyContent:"center"},children:gr.kind==="video"?n.jsx("video",{src:gr.url,poster:gr.thumbnailUrl!==gr.url?gr.thumbnailUrl:void 0,controls:!0,playsInline:!0,preload:"metadata",style:{width:"100%",height:"100%",objectFit:"cover"}}):n.jsx("img",{src:gr.url,alt:"",style:{width:"100%",height:"100%",objectFit:"cover"}})}';
+const NR_POPUP_MEDIA_STAGE_PATCH =
+  'n.jsx("div",{"data-ts-pic-stage":"1",style:{width:"100%",borderRadius:10,overflow:"visible",background:"#0f172a",display:"flex",alignItems:"center",justifyContent:"center"},children:gr.kind==="video"?n.jsx("video",{src:gr.url,poster:gr.thumbnailUrl!==gr.url?gr.thumbnailUrl:void 0,controls:!0,playsInline:!0,preload:"metadata",style:{width:"100%",height:"auto",maxHeight:200,objectFit:"contain",display:"block"}}):n.jsx("img",{src:gr.url,alt:"",style:{width:"auto",height:"auto",maxWidth:"100%",maxHeight:200,objectFit:"contain",display:"block"}})}';
+
 const NR_ESCAPE_NEEDLE = 'const onKey=wn=>{wn.key==="Escape"&&tsNrClose()};';
 const NR_ESCAPE_PATCH =
   'const onKey=wn=>{if(wn.key!=="Escape")return;if(window.__tsPicFsActive||document.fullscreenElement||document.querySelector(\'[data-ts-pic-fs-overlay="1"]\'))return;tsNrClose()};';
@@ -61,6 +68,11 @@ export function applyNrPicPopupPatches(js, { served } = {}) {
   if (out.includes(NR_THUMB_HREF_NEEDLE)) out = out.replace(NR_THUMB_HREF_NEEDLE, NR_THUMB_HREF_PATCH);
   else if (served && !out.includes('gr.kind==="video"&&!zt?gr.url')) {
     throw new Error('Nr video thumb href patch did not apply');
+  }
+  if (out.includes(NR_POPUP_MEDIA_STAGE_NEEDLE)) out = out.replace(NR_POPUP_MEDIA_STAGE_NEEDLE, NR_POPUP_MEDIA_STAGE_PATCH);
+  else if (out.includes(NR_POPUP_MEDIA_STAGE_NEEDLE_SERVED)) out = out.replace(NR_POPUP_MEDIA_STAGE_NEEDLE_SERVED, NR_POPUP_MEDIA_STAGE_PATCH);
+  else if (served && out.includes('height:146,borderRadius:10,overflow:"hidden"') && out.includes('data-ts-pic-popup":"1"')) {
+    throw new Error('Nr pic-popup media stage contain patch did not apply');
   }
   if (out.includes(NR_POPUP_VIDEO_NEEDLE)) out = out.replace(NR_POPUP_VIDEO_NEEDLE, NR_POPUP_VIDEO_PATCH);
   else if (served && !out.includes('controls:!0,playsInline:!0,preload:"metadata"')) {
