@@ -197,13 +197,16 @@ function detailBodyV3({ n, d, edit, days, selectedDays, scheduled, start, durati
     }
     if (web) {
       const href = /^https?:\/\//i.test(web) ? web : 'https://' + web.replace(/^\/\//, '');
+      let label = web;
+      try { label = new URL(href).hostname || web; } catch { label = web; }
       kids.push(n.jsxs('a', {
         'data-ts-detail-info-box': 'website',
         href,
         target: '_blank',
         rel: 'noreferrer',
-        style: { ...infoBoxStyle, background: '#eff6ff', color: '#1d4ed8' },
-        children: [n.jsx('strong', { children: 'Website:' }), ' ', web],
+        style: { ...infoBoxStyle, background: '#eff6ff', color: '#1d4ed8', maxWidth: '100%', boxSizing: 'border-box', overflowWrap: 'normal', wordBreak: 'normal' },
+        title: web,
+        children: [n.jsx('strong', { children: 'Website:' }), ' ', label],
       }));
     }
     if (showHH) {

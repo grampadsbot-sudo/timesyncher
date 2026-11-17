@@ -479,3 +479,4 @@ scripts/test_vkprloop_drift_921.mjs
 scripts/test_vkprloop_drift_915.mjs
 
 scripts/test_no_blocking_pixel_ci.mjs
+scripts/test_acceptance_detail_links_logo.mjs

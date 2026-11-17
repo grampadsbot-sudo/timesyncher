@@ -111,3 +111,5 @@ Live TREK button labels for the same panel (not extra options): **TimeSyncher Va
 | Nav chrome (TREK bundle) | Open/Close navigation; Move up/down | `navigation.md` |
 
 Not found on shared vacation-3 header in this dump: media toggle, QR toggle. Voice note **is** live on travel shared HTML (`voice-note.md`).
+
+Thing detail website links show the full URL and wrap only after URL delimiters (/ . ? &), never mid-word. The detail header logo chip always renders: record logo, then site favicon, then the type icon. Copy-trip verification at 390/430: scripts/test_acceptance_detail_links_logo.mjs.
