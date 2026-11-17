@@ -266,6 +266,7 @@
   function enterFullscreen(popup, stage) {
     const img = stage?.querySelector('img,video');
     if (!img) return;
+    if (img.style && img.style.transform) img.style.transform = '';
     mountFsOverlay(popup, stage, img);
   }
 
@@ -282,6 +283,8 @@
     popup.dataset.tsPicViewerReady = '1';
     scheduleClamp(popup);
     stage.dataset.tsPicStage = '1';
+    stage.style.position = 'relative';
+    stage.style.zIndex = '1';
     stage.style.touchAction = 'pan-x pan-y pinch-zoom';
     const img = stage.querySelector('img');
     if (img) {
@@ -296,7 +299,8 @@
 
     const bar = document.createElement('div');
     bar.dataset.tsPicViewerBar = '1';
-    bar.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;justify-content:flex-end;align-items:center';
+    bar.style.cssText =
+      'display:flex;gap:8px;margin-bottom:8px;justify-content:flex-end;align-items:center;position:relative;z-index:3';
 
     const closeBtn = document.createElement('button');
     closeBtn.type = 'button';
