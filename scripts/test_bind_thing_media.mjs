@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 
 import { requireMediaBindAuth, stagingMediaBindHost } from '../src/vacation/auth.mjs';
 import {
+  boundMediaPlayUrl,
   chooseMediaStorage,
   mergeBindingsIntoShared,
   isKeepsakeJunkMedia,
@@ -115,6 +116,15 @@ assert.match(vercel, /keepsakePdf/);
 assert.match(vercel, /\/api\/pdf\/shared/);
 
 const pngBytes = proofPngBuffer({ label: 'neon' });
+assert.equal(
+  boundMediaPlayUrl({
+    id: 'nyc-bind-video-day2',
+    shareToken: 'copy-trip',
+    publicUrl: 'https://example.com/nyc-day1-walk.mp4',
+  }),
+  '',
+);
+
 const neonChoice = chooseMediaStorage({
   bytes: pngBytes,
   sourceUrl: '',

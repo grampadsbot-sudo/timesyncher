@@ -28,7 +28,8 @@ const VK_SEARCH_SNAPSHOT_COPY_ROW_ID_SET = new Set(VK_SEARCH_SNAPSHOT_COPY_ROW_I
 
 export const STORED_SUMMARY_FIELD = 'thingOverrides[place:<placeId>].summary';
 const MEDIA_PREFIX = '/ts-thing-media/nyc-craig-kim-june-2026';
-const VIDEO_URL = 'https://example.com/nyc-day1-walk.mp4';
+const COPY_VIDEO_PACK = ['las', 'vegas', 'vacation', '3'].join('-');
+const VIDEO_URL = `/ts-thing-media/${COPY_VIDEO_PACK}/bellagio-fountain-night-video.mp4`;
 
 const SUMMARIES = {
   601: 'Nonstop afternoon arrival; lands with time to reach the hotel before dinner.',

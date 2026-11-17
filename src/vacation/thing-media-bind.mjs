@@ -350,6 +350,11 @@ export function neonRawMediaPath(shareToken, bindingId) {
 }
 
 const PLACEHOLDER_MEDIA_HOST_RE = /example\.com/i;
+const BINDING_UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export function bindingIdIsUuid(id = '') {
+  return BINDING_UUID_RE.test(String(id || '').trim());
+}
 
 export function boundMediaPlayUrl(row = {}) {
   const candidates = [row.publicUrl, row.public_url, row.url]
@@ -359,12 +364,12 @@ export function boundMediaPlayUrl(row = {}) {
   if (direct) return direct;
   const shareToken = String(row.shareToken || row.share_token || '').trim();
   const id = String(row.id || '').trim();
-  if (shareToken && id) return neonRawMediaPath(shareToken, id);
+  if (shareToken && id && bindingIdIsUuid(id)) return neonRawMediaPath(shareToken, id);
   return '';
 }
 
 export function boundMediaPlayUrlBundleInject() {
-  return 'tsBoundMediaPlayUrl=gr=>{const u=[gr.publicUrl,gr.public_url,gr.url].map(v=>String(v||"").trim()).find(v=>v&&!/example\\.com/i.test(v));if(u)return u;const t=String(gr.shareToken||gr.share_token||"").trim(),id=String(gr.id||"").trim();return t&&id?"/api/bind-thing-media?shareToken="+encodeURIComponent(t)+"&id="+encodeURIComponent(id)+"&raw=1":""}';
+  return 'tsBoundMediaPlayUrl=gr=>{const u=[gr.publicUrl,gr.public_url,gr.url].map(v=>String(v||"").trim()).find(v=>v&&!/example\\.com/i.test(v));if(u)return u;const t=String(gr.shareToken||gr.share_token||"").trim(),id=String(gr.id||"").trim();if(!t||!id||!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id))return "";return "/api/bind-thing-media?shareToken="+encodeURIComponent(t)+"&id="+encodeURIComponent(id)+"&raw=1"}';
 }
 
 export function chooseMediaStorage({

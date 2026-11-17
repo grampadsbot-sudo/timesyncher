@@ -4,6 +4,7 @@ import crypto from 'node:crypto';
 import {
   IMMUTABLE_MEDIA_CACHE_CONTROL,
   ifNoneMatchSatisfied,
+  parseByteRange,
   sendCachedBindingMedia,
   strongContentEtag,
 } from '../src/vacation/bind-thing-media-cache.mjs';
@@ -71,6 +72,39 @@ for (const status of [404, 500]) {
   sendJson(res, status, { ok: false, error: 'test' });
   assert.equal(res.headers['cache-control'], 'no-store');
   assert.notEqual(res.headers['cache-control'], IMMUTABLE_MEDIA_CACHE_CONTROL);
+}
+
+assert.deepEqual(parseByteRange('bytes=0-1', 100), { start: 0, end: 1 });
+assert.deepEqual(parseByteRange('bytes=10-', 100), { start: 10, end: 99 });
+assert.deepEqual(parseByteRange('bytes=-4', 100), { start: 96, end: 99 });
+
+{
+  const res = mockRes();
+  const req = { method: 'GET', headers: { range: 'bytes=0-1' } };
+  const out = sendCachedBindingMedia(res, req, {
+    bytes,
+    mimeType: 'video/mp4',
+    originalName: 'clip.mp4',
+  });
+  assert.equal(out.statusCode, 206);
+  assert.equal(res.statusCode, 206);
+  assert.equal(res.headers['accept-ranges'], 'bytes');
+  assert.equal(res.headers['content-type'], 'video/mp4');
+  assert.equal(res.headers['content-range'], `bytes 0-1/${bytes.length}`);
+  assert.equal(res.body.length, 2);
+}
+
+{
+  const res = mockRes();
+  const req = { method: 'HEAD', headers: {} };
+  const out = sendCachedBindingMedia(res, req, {
+    bytes,
+    mimeType: 'video/mp4',
+    originalName: 'clip.mp4',
+  }, { headOnly: true });
+  assert.equal(out.statusCode, 200);
+  assert.equal(res.headers['content-length'], String(bytes.length));
+  assert.equal(res.body, '');
 }
 
 console.log('bind-thing-media cache tests passed');
