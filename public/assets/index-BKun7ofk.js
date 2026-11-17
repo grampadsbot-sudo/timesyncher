@@ -12505,7 +12505,6 @@ $2`)})})}const PLe=[{icon:b2,label:"Bold",action:{type:"wrap",before:"**",after:
     }
     if (web) {
       const href = /^https?:\/\//i.test(web) ? web : 'https://' + web.replace(/^\/\//, '');
-      // Full URL stays visible; break opportunities only after URL delimiters / . ? & (no mid-word breaks).
       const label = [];
       String(web).split(/(?<=[\/.?&])/).forEach((part, i) => { if (i) label.push(n.jsx('wbr', {}, 'wbr' + i)); label.push(part); });
       kids.push(n.jsxs('a', {
