@@ -221,8 +221,8 @@ try {
     assert.equal(link.href, southwestUrl, 'full URL destination stays unchanged');
     {
       assert.equal(link.title, southwestUrl, 'full URL remains available on hover');
-      assert.equal(link.text, 'Website: ' + southwestUrl, 'full URL stays the shown text');
-      assert.ok(link.wbr > 0 && link.wordBreak === 'normal' && link.overflowWrap === 'normal', 'breaks only at URL delimiters, no mid-word breaks');
+      assert.equal(link.text, 'Website: www.southwest.com', 'short host label is the shown text');
+      assert.ok(link.wbr === 0 && link.wordBreak === 'normal' && link.overflowWrap === 'normal', 'no mid-word breaks');
       assert.equal(link.chips, 1, 'flight keeps its logo chip');
       assert.ok(link.fits && link.scrollWidth <= link.clientWidth + 1, 'link fits at phone width');
     }

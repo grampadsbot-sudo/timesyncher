@@ -197,8 +197,8 @@ function detailBodyV3({ n, d, edit, days, selectedDays, scheduled, start, durati
     }
     if (web) {
       const href = /^https?:\/\//i.test(web) ? web : 'https://' + web.replace(/^\/\//, '');
-      const label = [];
-      String(web).split(/(?<=[\/.?&])/).forEach((part, i) => { if (i) label.push(n.jsx('wbr', {}, 'wbr' + i)); label.push(part); });
+      let label = web;
+      try { label = new URL(href).hostname || web; } catch { label = web; }
       kids.push(n.jsxs('a', {
         'data-ts-detail-info-box': 'website',
         href,
@@ -206,7 +206,7 @@ function detailBodyV3({ n, d, edit, days, selectedDays, scheduled, start, durati
         rel: 'noreferrer',
         style: { ...infoBoxStyle, background: '#eff6ff', color: '#1d4ed8', maxWidth: '100%', boxSizing: 'border-box', overflowWrap: 'normal', wordBreak: 'normal' },
         title: web,
-        children: [n.jsx('strong', { children: 'Website:' }), ' ', ...label],
+        children: [n.jsx('strong', { children: 'Website:' }), ' ', label],
       }));
     }
     if (showHH) {
