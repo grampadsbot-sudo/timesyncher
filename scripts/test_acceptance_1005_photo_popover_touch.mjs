@@ -40,13 +40,43 @@ function send(res, status, body, type) {
   res.end(buf);
 }
 
+function patchCopyTripVideoBindings(payload) {
+  const copyVideoUrl = `/ts-thing-media/${COPY_VIDEO_PACK}/bellagio-fountain-night-video.mp4`;
+  const isVideoRow = (row) =>
+    String(row?.mediaKind || row?.kind || '').toLowerCase() === 'video'
+    || /\.mp4$/i.test(String(row?.originalName || row?.filename || ''));
+  const patchRow = (row) => {
+    if (!row || !isVideoRow(row)) return row;
+    const thingId = Number(row.place_id ?? row.thingId);
+    if (thingId !== 604) return row;
+    return {
+      ...row,
+      id: COPY_BIND_VIDEO_ID,
+      shareToken: COPY_SLUG,
+      share_token: COPY_SLUG,
+      publicUrl: copyVideoUrl,
+      public_url: copyVideoUrl,
+      url: copyVideoUrl,
+      thumbnail_url: copyVideoUrl,
+    };
+  };
+  payload.media = (payload.media || []).map(patchRow);
+  for (const place of payload.places || []) {
+    if (Number(place.id) !== 604) continue;
+    if (Array.isArray(place.bound_media)) place.bound_media = place.bound_media.map(patchRow);
+    if (Array.isArray(place.media)) place.media = place.media.map(patchRow);
+    if (Array.isArray(place.videos)) place.videos = place.videos.map(patchRow);
+  }
+  return payload;
+}
+
 function cloneCopyTripPayload() {
   const payload = structuredClone(buildNycCraigKimDaybydayTrip());
   payload.trip.id = COPY_TRIP_ID;
   for (const day of payload.days || []) {
     day.trip_id = COPY_TRIP_ID;
   }
-  return finalizeServedSharedTripPayload(payload);
+  return finalizeServedSharedTripPayload(patchCopyTripVideoBindings(payload));
 }
 
 function servedBundleJs() {
