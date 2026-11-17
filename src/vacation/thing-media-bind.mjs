@@ -350,6 +350,7 @@ export function neonRawMediaPath(shareToken, bindingId) {
 }
 
 const PLACEHOLDER_MEDIA_HOST_RE = /example\.com/i;
+const HARNESS_BINDING_ID_RE = /^nyc-bind-/i;
 const BINDING_UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function bindingIdIsUuid(id = '') {
@@ -364,8 +365,8 @@ export function boundMediaPlayUrl(row = {}) {
   if (direct) return direct;
   const shareToken = String(row.shareToken || row.share_token || '').trim();
   const id = String(row.id || '').trim();
-  if (shareToken && id && bindingIdIsUuid(id)) return neonRawMediaPath(shareToken, id);
-  return '';
+  if (!shareToken || !id || HARNESS_BINDING_ID_RE.test(id)) return '';
+  return neonRawMediaPath(shareToken, id);
 }
 
 function servedBindingPlayUrl(binding = {}) {
