@@ -20,7 +20,6 @@ import {
   mergeSavedTripGapFields,
 } from './gap-ask-reply-context.mjs';
 import { loadSavedTripRecord } from './live-app-saved-trip-record.mjs';
-
 export { loadSavedTripRecord } from './live-app-saved-trip-record.mjs';
 import { activeCollaboratorsFromParty, replyActionClaimReason, replyClaimContextFromIntent } from './reply-action-claim.mjs';
 import { enrichDraftingTripContext } from './reply-trip-context-facts.mjs';
@@ -35,12 +34,13 @@ import {
 } from './provider-result-context.mjs';
 import { liveReplyCommerceGate } from './collaborator-app-seat.mjs';
 import { savedTripWithOwnerPlan } from './reply-plan-entitlement.mjs';
+import { applyStoredTurnRoute, sumModelCost, sumTurnCost } from './turn-cost.mjs';
+import { routeVkBotMcpReply } from './vk-bot-mcp-reply.mjs';
 export const LIVE_TRANSCRIPT_CAPTURE = 'live-vacation-app';
 export const LIVE_REPLY_PRODUCER = 'vacation-app-reply-rules';
 export const LIVE_OPENER_PRODUCER = 'vacation-app-onboarding-opener';
 export const FIXED_OPENER_REASON = 'fixed_onboarding_opener';
 export const LIVE_DISPATCHER = 'product-gbrain-dispatch';
-
 export function tripIsReturning(trip) {
   if (!trip || typeof trip !== 'object') return false;
   const meta = trip.metadata && typeof trip.metadata === 'object' ? trip.metadata : {};
@@ -50,7 +50,6 @@ export function tripIsReturning(trip) {
   if (/^intake-/i.test(slug) || /\/shared\/intake-/i.test(url)) return false;
   return Boolean(url.trim() || slug.trim());
 }
-
 export function onboardingOpenerFacts({ returning = false, tripTitle = '' } = {}) {
   const title = String(tripTitle || '').trim();
   return {
@@ -65,7 +64,6 @@ export function onboardingOpenerFacts({ returning = false, tripTitle = '' } = {}
 export function customerModality(body) {
   return body?.voiceMode ? 'voice' : 'text';
 }
-
 export function targetPersonFromSession(session) {
   const first = String(session?.first_name || session?.firstName || '').trim();
   if (first) return first.split(/\s+/)[0];
@@ -223,13 +221,13 @@ export function liveTurnRecord({
     record.model = model
       ? {
         called: Boolean(model.called),
-        via: model.via || null,
-        responseModel: model.responseModel || null,
+        via: model.via || null, backend: model.backend || null,
+        responseModel: model.responseModel || null, cost: model.cost || model.log?.cost || null,
         modelTier: model.modelTier ?? null,
         genLatencyMs: record.genLatencyMs,
       }
       : null;
-    record.qualityLine = formatQualityLine(record.quality);
+    record.qualityLine = formatQualityLine(record.quality); applyStoredTurnRoute(record, model);
     record.heldRewriteLine = heldRewriteLine(record);
     record.rewriteCredit = rewriteCreditLabel(record.rewriteModel || record.quality?.rewriteModel, record.rewriterChange || record.quality?.rewriterChange);
   }
@@ -1443,7 +1441,9 @@ function mergeSavedTurn(saved, priorTurns, customerTurn, session, extraction = {
     ...mergeSavedTripGapFields(saved),
   };
 }
-export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, placeResults = [], placeSearchTurn = false, webResearchTurn = false, env = process.env, seatDollars: suppliedSeatDollars = null, intake = false, wantedThings = [], roster = null, rosterError = null, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, savedStart = '', savedEnd = '', loadOwnerPlan = null, loadSavedTripRecordFn = loadSavedTripRecord, turnActionResults = null, placeSearchReplyFacts = null } = {}) {
+export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, placeResults = [], placeSearchTurn = false, webResearchTurn = false, env = process.env, seatDollars: suppliedSeatDollars = null, intake = false, wantedThings = [], roster = null, rosterError = null, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, savedStart = '', savedEnd = '', loadOwnerPlan = null, loadSavedTripRecordFn = loadSavedTripRecord, turnActionResults = null,   placeSearchReplyFacts = null } = {}) {
+  const vkBotReply = await routeVkBotMcpReply({ customerTurn, session, priorTurns, tripTitle, env });
+  if (vkBotReply) return vkBotReply;
   const rules = await loadVacationAppReplyRules(env);
   const history = Array.isArray(priorTurns) ? priorTurns : [];
   const memory = memoryTurns(history);
@@ -1584,7 +1584,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   let reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
   if (rewriteBreaksUpsell(reply, upsell, customerTurn, intent)) {
     const nudge = commerce.collaboratorSeat ? `${customerTurn}\n\nAnswer the travel question only. Stay on itinerary and dates; omit billing and product access topics.` : customerAsksPrice(customerTurn, intent) ? `${customerTurn}\n\nAnswer with who pays: ${planLine || 'the dollar amount for each person and who pays'}. Do not add a second collaborator welcome.` : `${customerTurn}\n\nDo not welcome collaborators. Do not mention price or access. Answer the day only.`;
-    model = await callTieredModel(modelArgs(nudge, 'forbidden'));
+    model = sumModelCost(model, await callTieredModel(modelArgs(nudge, 'forbidden')));
     reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
   }
   if (model && typeof model === 'object') model.genLatencyMs = Math.max(0, Date.now() - genStarted);
@@ -1646,7 +1646,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     savedTrip: savedTripLog,
     interimReply: { text: null, model: null, ms: null },
     latencyMs: { draft: draftLatencyMs, rewrite: null, jevDraft: draftQualityMs, jevRewrite: null, total: draftLatencyMs + draftQualityMs },
-    flagged: false,
+    flagged: false, cost: model?.cost || null,
   };
   if (!quality?.judged) {
     const unjudged = {
@@ -1850,7 +1850,7 @@ async function interimFromTierOne({ rules, customerTurn, destination, env, facts
   const factBlocked = draftFactErrors(text, facts).some((error) => /claimed as saved|account holder is|not on the trip/.test(error));
   if (!text || !judge || isTemplateInterim(text, customerTurn, judge) || !interimCanShip(text, customerTurn, facts, judge) || factBlocked || model?.responseModel !== INTERIM_MODEL) text = '';
   const elapsed = Date.now() - started;
-  return { text: text || null, model: text ? INTERIM_MODEL : null, ms: text ? Math.max(elapsed, 1) : null, judge: text ? judge : null };
+  return { text: text || null, model: text ? INTERIM_MODEL : null, ms: text ? Math.max(elapsed, 1) : null, judge: text ? judge : null, cost: model?.cost || null };
 }
 
 function stampShippedReply({ reply, quality, draftModel, log, draft }) {
@@ -2142,7 +2142,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
       total: Number(pending.draftLatencyMs || 0) + draftQualityMs + Math.max(rewriteMs + rewriteQualityMs, Number(interimReply?.ms || 0)),
     },
     flagged: choice.flagged === true && choice.held !== true,
-    held: choice.held === true,
+    held: choice.held === true, cost: sumTurnCost(pending?.model?.cost, model?.cost, interimReply?.cost),
   };
   const quality = {
     ...shippedQuality,
@@ -2255,7 +2255,7 @@ export function liveTranscriptFromRows({ session, rows }) {
       modelLatency: live.modelLatency || null,
       flagged: live.flagged === true,
       held: live.held === true,
-      model: live.model || null,
+      model: live.model || null, backend: live.backend || live.model?.backend || null, cost: live.cost || live.model?.cost || null,
       rules: live.rules || null,
     };
   });

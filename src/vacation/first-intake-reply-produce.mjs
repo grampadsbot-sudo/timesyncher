@@ -1,4 +1,5 @@
 import { callTieredModel, INTERIM_MODEL, jevPrecall } from '../../scripts/vacation-app-reply-rules.mjs';
+import { sumModelCost } from './turn-cost.mjs';
 
 const FIRST_INTAKE_REPLY_TIMEOUT_MS = 8000;
 import { appTextBanned, loadSavedTripRecord } from './live-app-turn.mjs';
@@ -91,7 +92,7 @@ export async function produceFirstIntakeReply({
   let block = '';
   for (let attempt = 0; attempt < 2 && !reply; attempt += 1) {
     const genStarted = Date.now();
-    model = await callTieredModel({
+    model = sumModelCost(model, await callTieredModel({
       rules,
       jev,
       customerTurn,
@@ -108,7 +109,7 @@ export async function produceFirstIntakeReply({
       tier1CompactReasoning: true,
       timeoutMs: FIRST_INTAKE_REPLY_TIMEOUT_MS,
       systemExtra: prompt,
-    });
+    }));
     if (model && typeof model === 'object') model.genLatencyMs = Math.max(0, Date.now() - genStarted);
     reply = model?.called && model.text ? String(model.text).trim() : '';
     block = intakeReplyBlock(reply, appTextBanned, facts, ids);

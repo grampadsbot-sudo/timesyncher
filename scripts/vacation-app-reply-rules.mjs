@@ -1,3 +1,4 @@
+import { openRouterListedPrices, openRouterReplyCost } from '../src/vacation/turn-cost.mjs';
 import { planFactsForReply } from '../src/vacation/reply-plan-entitlement.mjs';
 import { modelVisibleTripContext, namedSearchAreaAwayFromLodgingReplyLine } from '../src/vacation/provider-result-context.mjs';
 import { gapAskReplyPromptTripRaw, perFactGapAskRuleLines } from '../src/vacation/gap-ask-reply-context.mjs';
@@ -926,6 +927,7 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
       signal: AbortSignal.timeout(timeoutMs > 0 ? timeoutMs : TIERED_REPLY_TIMEOUT_MS),
     });
     const body = await response.json().catch(() => ({}));
+    const cost = await openRouterReplyCost(body, responseModel, (id) => openRouterListedPrices(id, `${new URL(OPENROUTER_CHAT_COMPLETIONS_URL).origin}/api/v1/models`, appOpenRouterKey(env)));
     if (!response.ok || body.ok === false) {
       return {
         called: false,
@@ -933,18 +935,19 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
         modelTier,
         responseModel,
         reason: text(body.error?.message || body.error || `tiered model HTTP ${response.status}`, 300),
+        cost,
       };
     }
     const answer = chatReplyText(body.choices?.[0]?.message?.content) || text(body.answer || body.reply || body.text, 3500);
-    if (!answer) return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: 'tiered model returned an empty reply' };
+    if (!answer) return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: 'tiered model returned an empty reply', cost };
     const returned = text(body.model || responseModel, 120);
     if (!openRouterReturnedModelMatches(responseModel, returned) || !isBakeoffModelId(responseModel)) {
-      return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: 'model_not_in_bakeoff_map' };
+      return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: 'model_not_in_bakeoff_map', cost };
     }
     const visible = splitBeat(answer);
-    if (!visible.text) return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: 'tiered model returned an empty reply' };
-    return { called: true, via: 'openrouter-chat', modelTier, responseModel, text: visible.text, beats: visible.beats, maxTokens: 900, genLatencyMs: Math.max(0, Date.now() - genStarted) };
+    if (!visible.text) return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: 'tiered model returned an empty reply', cost };
+    return { called: true, via: 'openrouter-chat', modelTier, responseModel, text: visible.text, beats: visible.beats, maxTokens: 900, genLatencyMs: Math.max(0, Date.now() - genStarted), cost, backend: 'openrouter' };
   } catch (error) {
-    return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: text(error?.message || error, 300) };
+    return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: text(error?.message || error, 300), cost: null };
   }
 }

@@ -1,3 +1,4 @@
+import { sumModelCost } from './turn-cost.mjs';
 import { rewriteBlockedActionClaim } from './reply-action-claim-rewrite.mjs';
 import { replyActionClaimReason } from './reply-action-claim.mjs';
 import { blockVacationAppReplyIdCitation } from './reply-id-citation.mjs';
@@ -38,7 +39,7 @@ export function createBoundedRewriteClaim({
       postgenTimeoutMs,
       () => ({ reply: null, reason: 'rewrite_timeout', model: null }),
     );
-    if (recovered.model) produced.model = recovered.model;
+    if (recovered.model) produced.model = sumModelCost(produced.model, recovered.model);
     if (!recovered.reply || recovered.reason) return '';
     return String(recovered.reply).trim();
   };

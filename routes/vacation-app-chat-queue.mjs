@@ -17,6 +17,7 @@ import { failedInTurnSearchTurn, replyStageMillis, turnStageTimings } from '../s
 import { persistVacationAppCustomerTurn } from '../src/vacation/vacation-app-queue-persist.mjs';
 import { prepareChatItineraryEditForQueueTurn } from '../src/vacation/chat-itinerary-edit.mjs';
 import { producedDemoLockedChatEditReply } from '../src/vacation/chat-itinerary-edit-day.mjs';
+import { replyActionClaimReason } from '../src/vacation/reply-action-claim.mjs';
 import { createBoundedReplyShipGate, createBoundedRewriteClaim } from '../src/vacation/vacation-app-chat-postgen.mjs';
 export async function queueVacationAppTurn(db, session, trip, body, hooks, intake = {}) {
   const env = process.env;
@@ -433,13 +434,17 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
       error: null,
     };
   }
+  const vkBotTurn = produced?.model?.backend === 'vk_bot_mcp' || produced?.model?.via === 'vk_bot_mcp';
   if (!produced.reply) {
     const draft = String(produced.blockedDraft || '').trim();
-    if (draft && (produced.reason === 'reply_action_claim_blocked' || replyActionClaimReason(draft, turnActionResults, replyClaimContext))) {
+    if (!vkBotTurn && draft && (produced.reason === 'reply_action_claim_blocked' || replyActionClaimReason(draft, turnActionResults, replyClaimContext))) {
       produced.reply = await rewriteClaim(draft);
       if (produced.reply) produced.reason = null;
     }
-  } else {
+  } else if (vkBotTurn && replyActionClaimReason(produced.reply, turnActionResults, replyClaimContext)) {
+    produced.reply = null;
+    produced.reason = 'vk_bot_mcp_claim_blocked';
+  } else if (!vkBotTurn) {
     produced.reply = await rewriteClaim(produced.reply);
   }
   if (!produced.reply) {
