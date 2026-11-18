@@ -56,18 +56,24 @@ export function renderOnboardingWelcome(input = {}, deps = {}) {
 }
 
 export function cannedWelcomeLiveTurn({ text, at, latencyMs = null, sessionE2eMs = null } = {}) {
+  void latencyMs;
+  void sessionE2eMs;
   return {
     turnIndex: 1,
     role: 'app',
     modality: 'text',
     text: String(text || ''),
     at: at || null,
-    latencyMs,
-    sessionE2eMs,
+    latencyMs: null,
+    sessionE2eMs: null,
+    jevScoreDraft: null,
     jevLatencyMs: null,
     tier: null,
     modelId: null,
     generationMs: null,
+    replyProducer: 'vacation-app-onboarding-opener',
+    fixedOpener: true,
+    invented: false,
     jev: { jevRan: false, reason: 'fixed_onboarding_opener' },
   };
 }

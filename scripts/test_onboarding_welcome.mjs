@@ -101,6 +101,11 @@ try {
     latencyMs: 1,
     sessionE2eMs: 1,
   });
+  assert.equal(live.latencyMs, null);
+  assert.equal(live.sessionE2eMs, null);
+  assert.equal(live.jevScoreDraft, null);
+  assert.equal(live.replyProducer, 'vacation-app-onboarding-opener');
+  assert.equal(live.fixedOpener, true);
   assert.equal(live.jevLatencyMs, null);
   assert.equal(live.tier, null);
   assert.equal(live.modelId, null);
@@ -189,6 +194,10 @@ try {
   assert.equal(stored[0].welcomeAudience, 'owner');
   assert.equal(stored[0].welcomeFor, 'owner');
   assert.equal(stored[0].liveTranscript.text, owner.text);
+  assert.equal(stored[0].liveTranscript.latencyMs, null);
+  assert.equal(stored[0].liveTranscript.sessionE2eMs, null);
+  assert.equal(stored[0].liveTranscript.replyProducer, 'vacation-app-onboarding-opener');
+  assert.equal(stored[0].liveTranscript.fixedOpener, true);
   assert.equal(stored[0].liveTranscript.jevLatencyMs, null);
   assert.equal(stored[0].liveTranscript.generationMs, null);
   assert.deepEqual(stored[0].liveTranscript.jev, { jevRan: false, reason: 'fixed_onboarding_opener' });

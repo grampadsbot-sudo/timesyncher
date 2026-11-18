@@ -1,0 +1,15 @@
+{
+  "repo": "grampadsbot-sudo/timesyncher",
+  "issue": 1026,
+  "source": "live Dialog PDF refusal on the canned onboarding welcome",
+  "note": "A real new customer stores the canned onboarding welcome as the first vacation-app turn. That turn must be the fixed opener the Dialog renderer already accepts: replyProducer vacation-app-onboarding-opener, fixedOpener true, and null latencyMs, sessionE2eMs, and jevScoreDraft. Do not loosen the renderer. An app turn that is not that opener must still come from vacation-app-reply-rules. Do not change the terms text customers see.",
+  "assertions": [
+    {
+      "id": "opener-stamp-passes-dialog",
+      "type": "unit_script",
+      "script": "scripts/test_onboarding_welcome_dialog_opener.mjs",
+      "timeout_ms": 60000,
+      "note": "The stamped canned welcome is turn 1 and passes assertLiveTranscript. The same welcome without replyProducer vacation-app-onboarding-opener still refuses with: turn 1 app text did not come from vacation-app-reply-rules."
+    }
+  ]
+}
