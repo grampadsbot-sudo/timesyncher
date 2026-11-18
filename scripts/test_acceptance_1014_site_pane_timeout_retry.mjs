@@ -18,6 +18,7 @@ const slug = `accept1014-${Date.now().toString(36)}`;
 const session = 'accept1014-session';
 const PW_PREFIX = '/tmp/pw';
 const PW_BROWSERS_PATH = '/tmp/pw-browsers';
+const PW_PLAYWRIGHT_VERSION = '1.65.0';
 
 function loadPuppeteer() {
   try {
@@ -37,13 +38,14 @@ function tryRequirePlaywright(candidate) {
 
 function bootstrapPlaywrightForCi() {
   const bundled = path.join(PW_PREFIX, 'node_modules/playwright');
+  const pkgInstall = spawnSync('npm', ['install', '--prefix', PW_PREFIX, `playwright@${PW_PLAYWRIGHT_VERSION}`], {
+    stdio: 'inherit',
+  });
+  if (pkgInstall.status !== 0) {
+    throw new Error(`playwright npm install failed (status ${pkgInstall.status ?? 'null'})`);
+  }
   if (!existsSync(bundled)) {
-    const pkgInstall = spawnSync('npm', ['install', '--prefix', PW_PREFIX, 'playwright@1.52.0'], {
-      stdio: 'inherit',
-    });
-    if (pkgInstall.status !== 0) {
-      throw new Error(`playwright npm install failed (status ${pkgInstall.status ?? 'null'})`);
-    }
+    throw new Error(`playwright missing after install at ${bundled}`);
   }
   process.env.PLAYWRIGHT_BROWSERS_PATH = PW_BROWSERS_PATH;
   const browserInstall = spawnSync(
