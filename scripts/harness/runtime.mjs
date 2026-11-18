@@ -1,4 +1,4 @@
-import { secretValues, stagingOrigin } from './env.mjs';
+import { preflightHarnessEnv, secretValues, stagingOrigin } from './env.mjs';
 import { loadBannedHosts, guardedFetch } from './fetch-guard.mjs';
 import { provisionThrowaway } from './live-provision.mjs';
 import { playCustomerTurns } from './live-play.mjs';
@@ -15,26 +15,28 @@ function appEndpoint(origin, token, tripId) {
 }
 
 export function liveOptions(env = process.env) {
+  const ready = preflightHarnessEnv(env);
   const bannedHosts = loadBannedHosts();
   const fetchImpl = guardedFetch(globalThis.fetch.bind(globalThis), bannedHosts);
-  const origin = stagingOrigin(env);
+  const origin = stagingOrigin(ready);
   return {
-    env,
+    env: ready,
     origin,
     bannedHosts,
     fetchImpl,
     secrets: secretValues(env),
     async play(story, options) {
       const { sql } = await import('../../src/vacation/db.mjs');
-      const db = sql(env);
-      const created = await provisionThrowaway(db, story, { tag: options.tag, runId: options.runId, env });
-      const secrets = secretValues(env, [created.token]);
+      const db = sql(ready);
+      const created = await provisionThrowaway(db, story, { tag: options.tag, runId: options.runId, env: ready });
+      const secrets = secretValues(ready, [created.token]);
       const played = await playCustomerTurns(story, {
         origin,
         token: created.token,
         tripId: created.tripId,
         fetchImpl,
         hosts: bannedHosts,
+        waitMs: 20000,
       });
       const base = {
         ...played,
@@ -56,19 +58,37 @@ export function liveOptions(env = process.env) {
         steps: [],
       };
       if (played.reason) return base;
+      const tripId = played.tripId || created.tripId;
+      const shareToken = played.shareToken || created.shareToken;
       const steps = await runSteps(story, async () => {
-        const response = await fetchImpl(appEndpoint(origin, created.token, created.tripId), {
+        const response = await fetchImpl(appEndpoint(origin, created.token, tripId), {
           method: 'POST',
           headers: { accept: 'application/json', 'content-type': 'application/json' },
-          body: JSON.stringify({ action: 'record-party', tripId: created.tripId, party: story.party }),
+          body: JSON.stringify({ action: 'record-party', tripId, party: story.party }),
         });
         if (response.status >= 400) throw new Error('collaborator step failed');
       });
       const dialog = await renderDialog({ token: created.token, outDir: options.outDir, secrets });
-      const attachment = await attachMedia({ origin, shareToken: created.shareToken, story, fetchImpl, env });
+      if (!played.itineraryCount) {
+        const video = await writeVideoCheck({ origin, attachment: { ok: false, detail: 'no-thing-after-chat', bindings: [] }, fetchImpl, outDir: options.outDir });
+        return {
+          ...base,
+          steps,
+          transcript: dialog.transcript,
+          pdfText: dialog.pdfText,
+          dialogOk: dialog.ok === true,
+          dialogDetail: dialog.detail,
+          dialogRefused: dialog.ok !== true,
+          videoExists: true,
+          videoPass: false,
+          videoDetail: video.detail,
+          reason: 'no-thing-after-chat',
+        };
+      }
+      const attachment = await attachMedia({ origin, shareToken, story, fetchImpl, env: ready });
       const video = await writeVideoCheck({ origin, attachment, fetchImpl, outDir: options.outDir });
-      const keepsake = await fetchKeepsake({ origin, shareToken: created.shareToken, fetchImpl, outDir: options.outDir });
-      const screens = await captureScreens({ origin, shareToken: created.shareToken, sessionToken: created.token, outDir: options.outDir });
+      const keepsake = await fetchKeepsake({ origin, shareToken, fetchImpl, outDir: options.outDir });
+      const screens = await captureScreens({ origin, shareToken, sessionToken: created.token, outDir: options.outDir });
       return {
         ...base,
         steps,
@@ -91,7 +111,7 @@ export function liveOptions(env = process.env) {
     },
     async cleanup(tag) {
       const { sql } = await import('../../src/vacation/db.mjs');
-      return deleteTaggedRows(sql(env), tag);
+      return deleteTaggedRows(sql(ready), tag);
     },
   };
 }

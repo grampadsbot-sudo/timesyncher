@@ -1,5 +1,7 @@
 import { spawnSync } from 'node:child_process';
+import { createRequire } from 'node:module';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromeHits } from './chrome.mjs';
@@ -116,15 +118,34 @@ export async function writeVideoCheck({ origin, attachment, fetchImpl, outDir })
   return payload;
 }
 
-export async function fetchKeepsake({ origin, shareToken, fetchImpl, outDir }) {
-  const response = await fetchImpl(new URL(`/api/pdf/shared/${encodeURIComponent(shareToken)}/report/keepsake.pdf`, origin));
+export function keepsakeDecision({ status, contentType, bytes, redirected }) {
+  const head = Buffer.isBuffer(bytes) ? bytes.subarray(0, 5).toString() : '';
+  const pdf = head.startsWith('%PDF');
+  if (status === 200 && pdf && !redirected) return { ok: true, detail: 'pdf' };
+  const kind = pdf ? 'pdf' : (String(contentType || 'unknown').split(';')[0] || 'unknown');
+  const redirectNote = redirected ? ', redirect' : '';
+  return { ok: false, detail: `keepsake response was not a PDF (http ${status}, content-type ${kind}${redirectNote})` };
+}
+
+async function readKeptResponse(response) {
   const bytes = Buffer.from(await response.arrayBuffer());
+  return {
+    status: response.status,
+    contentType: response.headers?.get?.('content-type') || '',
+    bytes,
+    redirected: response.redirected === true || response.status === 302 || response.status === 301,
+  };
+}
+
+export async function fetchKeepsake({ origin, shareToken, fetchImpl, outDir }) {
   const file = path.join(outDir, 'keepsake.pdf');
-  if (response.status === 200 && bytes.subarray(0, 4).toString() === '%PDF') {
-    fs.writeFileSync(file, bytes);
-    return { ok: true, file };
-  }
-  return { ok: false, file, detail: `keepsake http ${response.status}` };
+  const pdfUrl = new URL(`/api/pdf/shared/${encodeURIComponent(shareToken)}/report/complete-list.pdf`, origin);
+  const response = await fetchImpl(pdfUrl, { redirect: 'manual', headers: { accept: 'application/pdf' } });
+  const read = await readKeptResponse(response);
+  const decision = keepsakeDecision(read);
+  if (!decision.ok) return { ok: false, file, detail: decision.detail };
+  fs.writeFileSync(file, read.bytes);
+  return { ok: true, file, detail: decision.detail };
 }
 
 const ENGINES = ['webkit', 'chromium'];
@@ -139,26 +160,54 @@ function surfaceUrl(origin, shareToken, sessionToken, surface) {
   return app.href;
 }
 
-async function loadPlaywright() {
-  try {
-    return await import('playwright');
-  } catch (error) {
-    return { missing: error?.code || 'playwright-missing' };
+export function playwrightSearchPaths(home = os.homedir()) {
+  return [
+    'playwright',
+    'playwright-core',
+    path.join(home, 'tsv-dispatch/capture/node_modules/playwright'),
+    path.join(home, 'tsv-dispatch/capture/node_modules/playwright-core'),
+    path.join(home, '.npm/_npx/e41f203b7505f1fb/node_modules/playwright'),
+  ];
+}
+
+export function resolvePlaywright(paths = playwrightSearchPaths(), load = defaultPlaywrightLoad()) {
+  const tried = [];
+  for (const candidate of paths) {
+    tried.push(candidate);
+    const loaded = load(candidate);
+    if (loaded?.webkit && loaded?.chromium) return { module: loaded, from: candidate, tried };
   }
+  return {
+    missing: `playwright-missing; npm install playwright in ${path.join(os.homedir(), 'tsv-dispatch/capture')}. Tried: ${tried.join(', ')}`,
+    tried,
+  };
+}
+
+function defaultPlaywrightLoad() {
+  const require = createRequire(import.meta.url);
+  return (candidate) => {
+    if (candidate.includes('node_modules') && !fs.existsSync(path.join(candidate, 'package.json'))) return null;
+    try {
+      return require(candidate);
+    } catch (error) {
+      if (error?.code === 'MODULE_NOT_FOUND' || error?.code === 'ERR_MODULE_NOT_FOUND') return null;
+      throw error;
+    }
+  };
 }
 
 export async function captureScreens({ origin, shareToken, sessionToken, outDir }) {
   const dir = path.join(outDir, 'screens');
   fs.mkdirSync(dir, { recursive: true });
-  const playwright = await loadPlaywright();
-  if (playwright.missing) return { ok: false, files: [], texts: [], error: 'playwright-missing' };
+  const playwright = resolvePlaywright();
+  if (playwright.missing) return { ok: false, files: [], texts: [], error: playwright.missing };
   const files = [];
   const texts = [];
   const ua = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
   for (const engine of ENGINES) {
     let browser;
     try {
-      browser = await playwright[engine].launch();
+      browser = await playwright.module[engine].launch();
       for (const width of WIDTHS) {
         const context = await browser.newContext({ viewport: { width, height: 844 }, isMobile: true, hasTouch: true, userAgent: ua });
         const page = await context.newPage();
