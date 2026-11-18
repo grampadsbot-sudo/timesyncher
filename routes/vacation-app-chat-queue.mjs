@@ -5,6 +5,7 @@ import { customerModality, jevStamp, liveTurnRecord, firstMarkedIntake, produceL
 import { produceNoTripStarterReply } from '../src/vacation/no-trip-starter-reply.mjs';
 import { loadVacationAppReplyRules } from '../scripts/vacation-app-reply-rules.mjs';
 import { applyLiveAppReplyFailureToPayload, persistVacationAppOutboundReply, storeReplyFailure, stampCustomerLivePayload } from '../src/vacation/reply-ship.mjs';
+import { logBlockedReplyReasons } from '../src/vacation/blocked-turn-payload.mjs';
 import { tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
 import { tripIntakeJobKind } from '../src/vacation/vacation-from-chat-intake.mjs';
 import { intakeExtractedThings, intakeThingsForPersistence, runVacationAppInTurnSearch } from '../src/vacation/chat-place-search.mjs';
@@ -449,6 +450,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
   }
   if (!produced.reply) {
     const failure = applyLiveAppReplyFailureToPayload(payload, customerLive, produced);
+    logBlockedReplyReasons(produced.blockedReasons);
     await storeReplyFailure(db, turnRows[0].id, payload);
     return { ...base, ok: false, status: failure.failureStatus, error: failure.replyFailure, invented: failure.invented };
   }

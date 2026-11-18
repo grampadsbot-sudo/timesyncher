@@ -89,9 +89,13 @@ export async function produceFirstIntakeReply({
   const prompt = `${firstIntakeReplyInstruction(modelFacts)}\n\nIntake facts: ${JSON.stringify(modelFacts)}`;
   let model = null;
   let reply = '';
-  let block = '';
+  let blockedReasons = [];
+  let refusal = '';
   for (let attempt = 0; attempt < 2 && !reply; attempt += 1) {
     const genStarted = Date.now();
+    const feedback = refusal
+      ? `\n\nThe previous draft was refused: ${refusal}. Write a new reply that fixes that refusal. Do not mention the refusal.`
+      : '';
     model = sumModelCost(model, await callTieredModel({
       rules,
       jev,
@@ -108,17 +112,21 @@ export async function produceFirstIntakeReply({
       forceModel: INTERIM_MODEL,
       tier1CompactReasoning: true,
       timeoutMs: FIRST_INTAKE_REPLY_TIMEOUT_MS,
-      systemExtra: prompt,
+      systemExtra: `${prompt}${feedback}`,
     }));
     if (model && typeof model === 'object') model.genLatencyMs = Math.max(0, Date.now() - genStarted);
     reply = model?.called && model.text ? String(model.text).trim() : '';
-    block = intakeReplyBlock(reply, appTextBanned, facts, ids);
-    if (block) reply = '';
+    const nextReasons = reply ? intakeReplyBlockReasons(reply, appTextBanned, facts, ids) : [];
+    if (nextReasons.length) {
+      blockedReasons = nextReasons;
+      refusal = nextReasons.join('; ');
+      reply = '';
+    }
   }
   if (!reply) {
     const visible = model?.called && model.text ? String(model.text).trim() : '';
-    const blockedReasons = visible ? intakeReplyBlockReasons(visible, appTextBanned, facts, ids) : [];
     const fallbackReason = model?.reason || 'first intake reply model returned no reply';
+    const reasons = blockedReasons.length ? blockedReasons : (visible ? [fallbackReason] : [fallbackReason]);
     return {
       reply: null,
       rules,
@@ -127,7 +135,7 @@ export async function produceFirstIntakeReply({
       customerInput,
       reason: (visible && intakeReplyBlock(visible, appTextBanned, facts, ids)) || fallbackReason,
       blockedDraft: visible || '',
-      blockedReasons: blockedReasons.length ? blockedReasons : (visible ? [fallbackReason] : [fallbackReason]),
+      blockedReasons: reasons,
     };
   }
   const replyClaimContext = replyClaimContextFromIntent({

@@ -1,6 +1,6 @@
 import { failReplyPlanEntitlement, loadTripOwnerReplyPlan } from './reply-plan-entitlement.mjs';
 import { isCollaboratorAppSeat } from './collaborator-app-seat.mjs';
-import { intakeReplyBlock, intakeReplyBlockReasons } from './first-intake-gate.mjs';
+import { intakeFactsGrounded, intakeReplyBlock, intakeReplyBlockReasons } from './first-intake-gate.mjs';
 import {
   applyCustomerInputToFirstIntakeFacts,
   firstIntakeLodgingCustomerInput,
@@ -117,7 +117,16 @@ export const FIRST_INTAKE_GAP_INSTRUCTION = [
   'Then nudge them to send a voice note.',
   'Do not offer to add collaborators. Do not pitch a plan.',
   'Use only customer_said and the other intake facts. Do not invent a place, a date, a lodging, a plan, or a name.',
-  FIRST_INTAKE_STRUCTURED_QUESTION_RULE,
+  'Ask two or three short questions covering the missing place, the dates, and who is coming. Do not ask fewer than two or more than three.',
+  FIRST_INTAKE_TONE,
+].join('\n');
+
+const FIRST_INTAKE_GROUNDED_GAP_INSTRUCTION = [
+  'You are writing the first reply after the customer already named a place, dates, or who is coming in the Vacay Keepsake vacation app. Write it in your own words from the intake facts. Do not copy this instruction back.',
+  'Reflect only the place, dates, and people already in the intake facts. Do not ask again for a fact they already gave.',
+  'Do not offer to add collaborators. Do not pitch a plan.',
+  'Use only customer_said and the other intake facts. Do not invent a place, a date, a lodging, a plan, a weekday, or a name.',
+  'End with exactly one question about the first gap in gaps. Never ask a second question.',
   FIRST_INTAKE_TONE,
 ].join('\n');
 
@@ -414,6 +423,7 @@ export function firstIntakeReplyInstruction(facts = {}) {
   if (facts.shape === 'question') {
     return `${FIRST_INTAKE_QUESTION_INSTRUCTION}\n${FIRST_INTAKE_STRUCTURED_QUESTION_RULE}${tail}`;
   }
+  if (facts.shape === 'gaps' && intakeFactsGrounded(facts)) return `${FIRST_INTAKE_GROUNDED_GAP_INSTRUCTION}${tail}`;
   return `${FIRST_INTAKE_GAP_INSTRUCTION}${tail}`;
 }
 
