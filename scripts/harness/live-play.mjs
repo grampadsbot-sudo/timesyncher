@@ -5,7 +5,7 @@ function appUrl(origin, token, tripId) {
   const url = new URL('/api/vacation-itinerary', origin);
   url.searchParams.set('app', '1');
   url.searchParams.set('session', token);
-  url.searchParams.set('tripId', tripId);
+  if (tripId) url.searchParams.set('tripId', tripId);
   return url;
 }
 
@@ -18,7 +18,48 @@ async function readJson(response) {
   }
 }
 
-export async function playCustomerTurns(story, { origin, token, tripId, fetchImpl, hosts }) {
+export function buildTurnPayload(turn, tripId) {
+  const payload = { tripId, text: turn.text };
+  if (turn.modality === 'voice') {
+    payload.voiceMode = true;
+    payload.browserTranscription = true;
+    if (turn.voice_fixture) payload.voiceFixture = turn.voice_fixture;
+  }
+  return payload;
+}
+
+export function turnFailure(status, body) {
+  const billing = classifyAppFailure(status, body);
+  if (billing) return billing;
+  if (status === 404) return 'session-not-found';
+  const code = String(body?.code || '').trim();
+  if (code) return code;
+  if (body?.eula && body.eula.accepted === false) return 'eula_not_accepted';
+  if (body?.ok === false || status >= 400) return 'turn-not-stored';
+  return '';
+}
+
+function replyText(body) {
+  return String(body?.reply || '').trim();
+}
+
+function storedTurns(body) {
+  return Array.isArray(body?.turns) ? body.turns.length : 0;
+}
+
+function itineraryCount(body) {
+  return Array.isArray(body?.itinerary) ? body.itinerary.length : 0;
+}
+
+function tripFields(body) {
+  const trip = body?.trip && typeof body.trip === 'object' ? body.trip : {};
+  return {
+    tripId: String(trip.id || body?.tripId || ''),
+    shareToken: String(trip.shareToken || trip.publicSlug || ''),
+  };
+}
+
+export async function playCustomerTurns(story, { origin, token, tripId, fetchImpl, hosts, waitMs = 0 }) {
   const allowed = new URL(origin).origin;
   const send = async (url, body) => {
     const href = String(url);
@@ -35,22 +76,73 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
   const versionUrl = new URL('/api/version', allowed);
   const start = await send(versionUrl);
   const liveShaStart = String(start.body?.sha || '');
-  const endpoint = appUrl(allowed, token, tripId);
-  await send(endpoint);
+  const finish = async (reason, extra) => {
+    const end = await send(versionUrl);
+    return {
+      reason,
+      waveStop: reason === 'payment-required' || reason === 'credit-exhausted',
+      timings: extra.timings || [],
+      liveShaStart,
+      liveShaEnd: String(end.body?.sha || ''),
+      storedTurns: extra.storedTurns || 0,
+      itineraryCount: extra.itineraryCount || 0,
+      tripId: extra.tripId || tripId || '',
+      shareToken: extra.shareToken || '',
+      detail: extra.detail || reason,
+    };
+  };
+  let endpoint = appUrl(allowed, token, tripId);
+  const opened = await send(endpoint);
+  const openedFailure = turnFailure(opened.status, opened.body);
+  if (openedFailure) return finish(openedFailure, { detail: opened.body?.error || openedFailure });
+  let seen = storedTurns(opened.body);
+  let currentTrip = tripFields(opened.body).tripId || tripId || '';
+  let shareToken = tripFields(opened.body).shareToken;
+  let items = itineraryCount(opened.body);
   const timings = [];
   for (let index = 0; index < story.turns.length; index += 1) {
     const turn = story.turns[index];
-    const payload = { tripId, text: turn.text, modality: turn.modality };
-    if (turn.modality === 'voice') payload.voiceFixture = turn.voice_fixture;
-    const draft = await send(endpoint, payload);
-    const final = draft.body?.status === 'interim' ? await send(endpoint, { action: 'finish-rewrite', tripId }) : draft;
-    const reason = classifyAppFailure(final.status, final.body) || classifyAppFailure(draft.status, draft.body);
+    endpoint = appUrl(allowed, token, currentTrip);
+    const draft = await send(endpoint, buildTurnPayload(turn, currentTrip));
+    const final = draft.body?.status === 'interim' ? await send(endpoint, { action: 'finish-rewrite', tripId: currentTrip }) : draft;
+    const failure = turnFailure(final.status, final.body) || turnFailure(draft.status, draft.body);
     timings.push({ n: index + 1, wall_ms: draft.wall_ms + (final === draft ? 0 : final.wall_ms), http_status: final.status });
-    if (reason) {
-      const end = await send(versionUrl);
-      return { reason, waveStop: true, timings, liveShaStart, liveShaEnd: String(end.body?.sha || '') };
+    if (failure) return finish(failure, { timings, storedTurns: seen, itineraryCount: items, tripId: currentTrip, shareToken, detail: final.body?.error || draft.body?.error || failure });
+    let reply = replyText(final.body) || replyText(draft.body);
+    const nextTrip = tripFields(final.body).tripId || tripFields(draft.body).tripId;
+    if (nextTrip) currentTrip = nextTrip;
+    shareToken = tripFields(final.body).shareToken || tripFields(draft.body).shareToken || shareToken;
+    if (!reply && waitMs > 0) {
+      const deadline = Date.now() + waitMs;
+      while (!reply && Date.now() < deadline) {
+        await new Promise((resolve) => { setTimeout(resolve, 250); });
+        const history = await send(appUrl(allowed, token, currentTrip));
+        reply = replyText(history.body);
+        if (storedTurns(history.body) > seen) reply = reply || 'stored';
+        items = Math.max(items, itineraryCount(history.body));
+      }
     }
+    const history = await send(appUrl(allowed, token, currentTrip));
+    const count = storedTurns(history.body);
+    items = Math.max(items, itineraryCount(history.body));
+    shareToken = tripFields(history.body).shareToken || shareToken;
+    if (tripFields(history.body).tripId) currentTrip = tripFields(history.body).tripId;
+    if (!reply || (Array.isArray(history.body?.turns) && count <= seen)) {
+      return finish('reply-not-stored', { timings, storedTurns: count, itineraryCount: items, tripId: currentTrip, shareToken, detail: 'scripted line produced no stored reply' });
+    }
+    seen = Array.isArray(history.body?.turns) ? count : seen + 1;
   }
   const end = await send(versionUrl);
-  return { reason: '', waveStop: false, timings, liveShaStart, liveShaEnd: String(end.body?.sha || '') };
+  return {
+    reason: '',
+    waveStop: false,
+    timings,
+    liveShaStart,
+    liveShaEnd: String(end.body?.sha || ''),
+    storedTurns: seen,
+    itineraryCount: items,
+    tripId: currentTrip,
+    shareToken,
+    detail: '',
+  };
 }

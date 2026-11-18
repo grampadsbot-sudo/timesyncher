@@ -2,6 +2,15 @@ import { randomBytes } from 'node:crypto';
 import { assertThrowaway } from './protected.mjs';
 import { deleteTaggedRows } from './cleanup.mjs';
 
+export function singlePlanEntitlement(meta, tripId) {
+  return {
+    plan: 'single',
+    status: 'active',
+    trip_id: tripId,
+    metadata: { ...meta, product: 'timesyncher_vacation_single' },
+  };
+}
+
 function dialogParty(story) {
   return {
     primary: { name: story.customer.name, role: 'Owner' },
@@ -47,9 +56,10 @@ async function insertThrowaway(db, story, { tag, runId, env, meta, email }) {
   const { assignTripSiteUrl } = await import('../../src/vacation/trip-assign-site-url.mjs');
   const site = await assignTripSiteUrl(db, tripId, env);
   assertThrowaway({ tripId, shareToken: site.publicSlug });
+  const purchase = singlePlanEntitlement(meta, tripId);
   const entitlements = await db`
     insert into entitlements (customer_id, trip_id, plan, status, metadata)
-    values (${customerId}, ${tripId}, 'single', 'active', ${meta})
+    values (${customerId}, ${purchase.trip_id}, ${purchase.plan}, ${purchase.status}, ${purchase.metadata})
     returning id
   `;
   const orders = await db`
