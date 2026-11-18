@@ -48,16 +48,29 @@ function bootstrapPlaywrightForCi() {
     throw new Error(`playwright missing after install at ${bundled}`);
   }
   process.env.PLAYWRIGHT_BROWSERS_PATH = PW_BROWSERS_PATH;
+  const installEnv = { ...process.env, PLAYWRIGHT_BROWSERS_PATH: PW_BROWSERS_PATH };
   const browserInstall = spawnSync(
     'npx',
-    ['--prefix', PW_PREFIX, 'playwright', 'install', 'webkit'],
-    {
-      stdio: 'inherit',
-      env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: PW_BROWSERS_PATH },
-    },
+    ['--prefix', PW_PREFIX, 'playwright', 'install', '--with-deps', 'webkit'],
+    { stdio: 'inherit', env: installEnv },
   );
   if (browserInstall.status !== 0) {
-    throw new Error(`playwright webkit install failed (status ${browserInstall.status ?? 'null'})`);
+    const depsOnly = spawnSync(
+      'sudo',
+      ['-n', 'npx', '--prefix', PW_PREFIX, 'playwright', 'install-deps', 'webkit'],
+      { stdio: 'inherit', env: installEnv },
+    );
+    const browserOnly = spawnSync(
+      'npx',
+      ['--prefix', PW_PREFIX, 'playwright', 'install', 'webkit'],
+      { stdio: 'inherit', env: installEnv },
+    );
+    if (browserInstall.status !== 0 && (depsOnly.status !== 0 || browserOnly.status !== 0)) {
+      throw new Error(
+        `playwright webkit install failed (with-deps=${browserInstall.status ?? 'null'}, `
+        + `install-deps=${depsOnly.status ?? 'null'}, webkit=${browserOnly.status ?? 'null'})`,
+      );
+    }
   }
   return require(bundled);
 }
