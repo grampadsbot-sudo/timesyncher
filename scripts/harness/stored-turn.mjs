@@ -47,9 +47,14 @@ export function confirmStoredTurns(transcript, pdfText, replyBackend) {
       stored_backend: backend,
       jev_score: score,
       wall_ms: null,
+      ruled: generated,
       cost_state: cost.state,
       cost_amount: cost.amount,
       cost_unit: cost.unit,
+      estimate_state: cost.estimate_state || '',
+      estimate_amount: cost.estimate_amount ?? null,
+      estimate_unit: cost.estimate_unit || '',
+      estimate_label: cost.estimate_label || '',
       gap: gap.join(','),
     });
     gaps.push(...gap);

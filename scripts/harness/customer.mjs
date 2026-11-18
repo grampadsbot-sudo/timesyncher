@@ -8,7 +8,12 @@ import { confirmStoredTurns } from './stored-turn.mjs';
 
 function mergeWall(rows, timings) {
   const byN = new Map((timings || []).map((row) => [row.n, row.wall_ms]));
-  return rows.map((row) => (byN.has(row.n) ? { ...row, wall_ms: byN.get(row.n) } : row));
+  let ruled = 0;
+  return rows.map((row) => {
+    if (!row.ruled) return row;
+    ruled += 1;
+    return byN.has(ruled) ? { ...row, wall_ms: byN.get(ruled) } : row;
+  });
 }
 
 function artifactChecks(played) {
@@ -37,6 +42,10 @@ function blankTurn(index, replyBackend) {
     cost_state: 'not-run',
     cost_amount: null,
     cost_unit: '',
+    estimate_state: '',
+    estimate_amount: null,
+    estimate_unit: '',
+    estimate_label: '',
     gap: '',
   };
 }
@@ -75,6 +84,7 @@ export async function runCustomer(story, options) {
       turns = mergeWall(confirmed.rows, played.timings);
       gaps = [...confirmed.gaps];
       steps = played.steps || [];
+      if (played.dialogRefused) gaps = [...new Set([...gaps, 'dialog-renderer-refused'])];
       if (played.dialogRefused && !reason) reason = 'dialog-renderer-refused';
       checks = artifactChecks(played);
       if (reason === 'payment-required' || reason === 'credit-exhausted') {

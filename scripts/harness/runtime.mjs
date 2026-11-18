@@ -15,6 +15,10 @@ function appEndpoint(origin, token, tripId) {
   return url;
 }
 
+export function chatLeftNoThing(played) {
+  return !Number(played?.itineraryCount);
+}
+
 export function liveOptions(env = process.env) {
   const ready = preflightHarnessEnv(env);
   const bannedHosts = loadBannedHosts();
@@ -109,7 +113,7 @@ export function liveOptions(env = process.env) {
         if (response.status >= 400) throw new Error('collaborator step failed');
       });
       const dialog = await renderDialog({ token: created.token, outDir: options.outDir, secrets });
-      if (!played.itineraryCount) {
+      if (chatLeftNoThing(played)) {
         const video = await writeVideoCheck({ origin, attachment: { ok: false, detail: 'no-thing-after-chat', bindings: [] }, fetchImpl, outDir: options.outDir });
         return {
           ...base,

@@ -4,8 +4,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { classifyAppFailure } from './harness/backends.mjs';
-import { compareBackends, formatCostAmount, percentile } from './harness/comparison.mjs';
-import { readStoredCost, rollupCost } from './harness/cost.mjs';
+import { compareBackends, formatCostAmount, formatEstimateDollars, percentile } from './harness/comparison.mjs';
+import { readStoredCost, rollupCost, VK_BOT_USAGE_DOLLARS_PER_PERCENT } from './harness/cost.mjs';
 import { buildScorecard } from './harness/scorecard.mjs';
 import { confirmStoredTurns } from './harness/stored-turn.mjs';
 import { runWave } from './harness/wave.mjs';
@@ -29,8 +29,31 @@ assert.equal(readStoredCost({ total_tokens: 1000 }, 'openrouter').gap, 'stored-c
 assert.equal(readStoredCost({ generationCost: 'unmeasured' }, 'openrouter').state, 'unmeasured');
 assert.equal(readStoredCost({ generationCost: 1.25 }, 'openrouter').amount, 1.25);
 assert.equal(readStoredCost({ botTokens: 40 }, 'vk_bot_mcp').unit, 'tokens');
-assert.equal(readStoredCost({ usagePercentDelta: 1.5 }, 'vk_bot_mcp').unit, 'percent');
-assert.equal(readStoredCost({}, 'vk_bot_mcp').gap, 'stored-cost-missing');
+const percentCost = readStoredCost({ usagePercentDelta: 1.5 }, 'vk_bot_mcp');
+assert.equal(percentCost.unit, 'percent');
+assert.equal(percentCost.amount, 1.5);
+assert.equal(VK_BOT_USAGE_DOLLARS_PER_PERCENT, 2);
+assert.equal(percentCost.estimate_amount, 3);
+assert.equal(percentCost.estimate_label, 'estimate');
+assert.equal(percentCost.estimate_unit, 'usd');
+const tokenCost = readStoredCost({ botTokens: 40 }, 'vk_bot_mcp');
+assert.equal(tokenCost.unit, 'tokens');
+assert.equal(tokenCost.estimate_state, 'unmeasured');
+assert.equal(tokenCost.estimate_amount, null);
+const missingBot = readStoredCost({}, 'vk_bot_mcp');
+assert.equal(missingBot.gap, 'stored-cost-missing');
+assert.equal(missingBot.estimate_amount, null);
+assert.equal(readStoredCost({ usagePercentDelta: 'unmeasured' }, 'vk_bot_mcp').state, 'unmeasured');
+assert.equal(readStoredCost({ usagePercentDelta: 'unmeasured' }, 'vk_bot_mcp').estimate_amount, null);
+const botRollup = rollupCost([
+  { role: 'app', cost_state: 'measured', cost_amount: 1, cost_unit: 'percent', gap: '', estimate_state: 'estimate', estimate_amount: 2 },
+  { role: 'app', cost_state: 'measured', cost_amount: 0.5, cost_unit: 'percent', gap: '', estimate_state: 'estimate', estimate_amount: 1 },
+]);
+assert.equal(botRollup.per_customer, 1.5);
+assert.equal(botRollup.unit, 'percent');
+assert.equal(botRollup.estimate_per_customer, 3);
+assert.equal(botRollup.estimate_label, 'estimate');
+assert.equal(readStoredCost({ generationCost: 1.25 }, 'openrouter').estimate_amount, undefined);
 const costSource = fs.readFileSync(new URL('./harness/cost.mjs', import.meta.url), 'utf8');
 assert.equal(costSource.includes('insert '), false);
 assert.equal(costSource.includes('update '), false);
@@ -90,6 +113,31 @@ assert.equal(comparison[0].cost_per_customer, 0.03);
 assert.equal(comparison[0].cost_per_100, 3);
 assert.equal(comparison[1].cost_unit, 'tokens');
 assert.equal(comparison[1].cost_per_100, 1000);
+assert.equal(comparison[0].estimated_dollars_per_customer, null);
+assert.equal(comparison[0].estimated_dollars_state, 'not-run');
+assert.equal(comparison[1].estimated_dollars_state, 'unmeasured');
+assert.equal(comparison[1].estimated_dollars_per_customer, null);
+const pricedBot = {
+  story_id: 'bot-percent',
+  reply_backend: 'vk_bot_mcp',
+  verdict: 'PASS',
+  reason: '',
+  checks: [],
+  turns: [{ role: 'app', wall_ms: 80, jev_score: 4, cost_state: 'measured' }],
+  cost: { state: 'measured', amount: 1.5, unit: 'percent', gap: '', per_customer: 1.5, estimate_state: 'estimate', estimate_amount: 3, estimate_per_customer: 3, estimate_unit: 'usd', estimate_label: 'estimate' },
+};
+const sided = compareBackends([card('a', 'openrouter', 0.02), pricedBot]);
+assert.equal(sided[0].cost_per_customer, 0.02);
+assert.equal(sided[0].cost_unit, 'usd');
+assert.equal(sided[0].cost_per_100, 2);
+assert.equal(sided[1].usage_percent_per_customer, 1.5);
+assert.equal(sided[1].usage_percent_per_100, 150);
+assert.equal(sided[1].estimated_dollars_per_customer, 3);
+assert.equal(sided[1].estimated_dollars_per_100, 300);
+assert.equal(sided[1].estimated_dollars_label, 'estimate');
+assert.equal(formatEstimateDollars(sided[1].estimated_dollars_per_customer, sided[1].estimated_dollars_state), '$3.0000 estimate');
+assert.equal(formatEstimateDollars(null, 'unmeasured'), 'unmeasured');
+assert.notEqual(sided[0].cost_per_customer, sided[1].estimated_dollars_per_customer);
 assert.equal(formatCostAmount(null, 'usd', 'unmeasured', ''), 'unmeasured');
 assert.equal(percentile([10, 30], 50), 10);
 assert.equal(percentile([10, 20, 40], 95), 40);

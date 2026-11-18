@@ -13,7 +13,19 @@ function mean(values) {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
+function usagePercentCells(cost) {
+  if (cost.cost_unit !== 'percent' || !Number.isFinite(cost.cost_per_customer)) {
+    return { usage_percent_per_customer: null, usage_percent_per_100: null };
+  }
+  return { usage_percent_per_customer: cost.cost_per_customer, usage_percent_per_100: cost.cost_per_100 };
+}
+
 function costCells(rows) {
+  const base = costBase(rows);
+  return { ...base, ...estimateCells(rows), ...usagePercentCells(base) };
+}
+
+function costBase(rows) {
   const missing = rows.filter((row) => row.cost?.state === 'missing' || row.cost?.gap);
   const unmeasured = rows.filter((row) => row.cost?.state === 'unmeasured' || row.cost?.state === 'mixed');
   const measured = rows.filter((row) => row.cost?.state === 'measured' && Number.isFinite(row.cost.amount));
@@ -38,6 +50,25 @@ function costCells(rows) {
   }
   const perCustomer = mean(measured.map((row) => row.cost.amount));
   return { cost_per_customer: perCustomer, cost_per_100: perCustomer * 100, cost_unit: units[0] || '', cost_state: 'measured', cost_gap: '' };
+}
+
+function estimateCells(rows) {
+  const bot = rows.some((row) => row.reply_backend === 'vk_bot_mcp');
+  const estimated = rows.filter((row) => row.cost?.estimate_state === 'estimate' && Number.isFinite(Number(row.cost.estimate_per_customer ?? row.cost.estimate_amount)));
+  const withheld = rows.filter((row) => row.cost && row.cost.estimate_state && row.cost.estimate_state !== 'estimate');
+  if (!bot && !estimated.length) {
+    return { estimated_dollars_per_customer: null, estimated_dollars_per_100: null, estimated_dollars_label: '', estimated_dollars_state: 'not-run' };
+  }
+  if (!estimated.length || withheld.length) {
+    return { estimated_dollars_per_customer: null, estimated_dollars_per_100: null, estimated_dollars_label: 'estimate', estimated_dollars_state: 'unmeasured' };
+  }
+  const perCustomer = mean(estimated.map((row) => Number(row.cost.estimate_per_customer ?? row.cost.estimate_amount)));
+  return {
+    estimated_dollars_per_customer: perCustomer,
+    estimated_dollars_per_100: perCustomer * 100,
+    estimated_dollars_label: 'estimate',
+    estimated_dollars_state: 'estimate',
+  };
 }
 
 export function compareBackends(cards) {
@@ -123,10 +154,16 @@ export function formatCostAmount(amount, unit, state, gap) {
   return `${amount} ${unit || 'usage'}`;
 }
 
+export function formatEstimateDollars(amount, state) {
+  if (state === 'not-run') return 'n/a';
+  if (state !== 'estimate' || !Number.isFinite(amount)) return 'unmeasured';
+  return `$${amount.toFixed(4)} estimate`;
+}
+
 export function comparisonMarkdown(rows) {
-  const header = '| backend | stories | passes | failures | failure rate | refusals | refusal rate | quality mean | speed p50 ms | speed p95 ms | cost / customer | cost / 100 |';
-  const rule = '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |';
-  const body = rows.map((row) => `| ${row.backend} | ${row.stories} | ${row.passes} | ${row.failures} | ${rate(row.failure_rate)} | ${row.refusals} | ${rate(row.refusal_rate)} | ${num(row.quality_mean)} | ${num(row.speed_p50)} | ${num(row.speed_p95)} | ${formatCostAmount(row.cost_per_customer, row.cost_unit, row.cost_state, row.cost_gap)} | ${formatCostAmount(row.cost_per_100, row.cost_unit, row.cost_state, row.cost_gap)} |`);
+  const header = '| backend | stories | passes | failures | failure rate | refusals | refusal rate | quality mean | speed p50 ms | speed p95 ms | cost / customer | cost / 100 | usage % / customer | usage % / 100 | estimated $ / customer | estimated $ / 100 |';
+  const rule = '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |';
+  const body = rows.map((row) => `| ${row.backend} | ${row.stories} | ${row.passes} | ${row.failures} | ${rate(row.failure_rate)} | ${row.refusals} | ${rate(row.refusal_rate)} | ${num(row.quality_mean)} | ${num(row.speed_p50)} | ${num(row.speed_p95)} | ${formatCostAmount(row.cost_per_customer, row.cost_unit, row.cost_state, row.cost_gap)} | ${formatCostAmount(row.cost_per_100, row.cost_unit, row.cost_state, row.cost_gap)} | ${formatCostAmount(row.usage_percent_per_customer, 'percent', row.usage_percent_per_customer == null ? 'not-run' : 'measured', '')} | ${formatCostAmount(row.usage_percent_per_100, 'percent', row.usage_percent_per_100 == null ? 'not-run' : 'measured', '')} | ${formatEstimateDollars(row.estimated_dollars_per_customer, row.estimated_dollars_state)} | ${formatEstimateDollars(row.estimated_dollars_per_100, row.estimated_dollars_state)} |`);
   return [header, rule, ...body].join('\n');
 }
 
@@ -135,7 +172,9 @@ export function storyMarkdown(cards) {
   const rule = '| --- | --- | --- | --- | --- | --- |';
   const body = cards.map((card) => {
     const artifacts = (card.checks || []).filter((check) => check.artifact).map((check) => check.artifact).join('<br>');
-    const cost = formatCostAmount(card.cost?.per_customer, card.cost?.unit, card.cost?.state, card.cost?.gap);
+    const raw = formatCostAmount(card.cost?.per_customer, card.cost?.unit, card.cost?.state, card.cost?.gap);
+    const estimate = card.cost?.estimate_label ? ` (${formatEstimateDollars(card.cost.estimate_per_customer, card.cost.estimate_state)})` : '';
+    const cost = `${raw}${estimate}`;
     return `| ${card.story_id} | ${card.reply_backend} | ${card.verdict} | ${card.reason || ''} | ${cost} | ${artifacts} |`;
   });
   return [header, rule, ...body].join('\n');
