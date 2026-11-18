@@ -43,6 +43,10 @@ assert.equal(telemetry.modelId, tiers[3]);
 assert.equal(telemetry.generationMs, 480);
 
 const welcome = cannedWelcomeLiveTurn({ text: 'Welcome, Ada!', latencyMs: 1, sessionE2eMs: 1 });
+assert.equal(welcome.latencyMs, null);
+assert.equal(welcome.sessionE2eMs, null);
+assert.equal(welcome.replyProducer, 'vacation-app-onboarding-opener');
+assert.equal(welcome.fixedOpener, true);
 assert.equal(welcome.jevLatencyMs, null);
 assert.equal(welcome.generationMs, null);
 assert.deepEqual(welcome.jev, { jevRan: false, reason: 'fixed_onboarding_opener' });
