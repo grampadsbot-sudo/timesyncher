@@ -10,6 +10,16 @@ function questionCount(reply) {
   return (String(reply || '').match(/\?/g) || []).length;
 }
 
+export function intakeFactsGrounded(facts = {}) {
+  return Boolean(
+    facts.where
+    || facts.when
+    || facts.start
+    || facts.nights != null
+    || (Array.isArray(facts.who) && facts.who.length),
+  );
+}
+
 function escapeRegExp(value) {
   return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -64,10 +74,22 @@ export function intakeReplyBlockReasons(reply, banned = appTextBanned, facts = {
   const names = [...(facts?.who || []), ...(facts?.collaborators || []), facts?.customer_name].filter(Boolean);
   if (shortenedName(text, names)) reasons.push('first_intake_shortened_name');
   const questions = questionCount(text);
-  if (facts?.shape === 'gaps') {
+  if (facts?.shape === 'gaps' && !intakeFactsGrounded(facts)) {
     if (questions < 2 || questions > 3) reasons.push('first_intake_question_count_gaps');
   } else if (facts?.shape !== 'no-trip' && questions !== 1) reasons.push('first_intake_question_count');
   return reasons;
+}
+
+export function groundedSingleQuestionDraft(reply, facts = {}, ids = [], banned = appTextBanned) {
+  if (!intakeFactsGrounded(facts)) return '';
+  const raw = String(reply || '').trim();
+  const mark = raw.indexOf('?');
+  if (mark < 0) return '';
+  const trimmed = raw.slice(0, mark + 1).trim();
+  if (!trimmed || trimmed === raw) return '';
+  const reasons = intakeReplyBlockReasons(trimmed, banned, facts, ids);
+  if (reasons.length) return '';
+  return trimmed;
 }
 
 export function intakeReplyBlock(reply, banned = appTextBanned, facts = {}, ids = []) {

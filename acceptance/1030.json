@@ -1,0 +1,15 @@
+{
+  "repo": "grampadsbot-sudo/timesyncher",
+  "issue": 1030,
+  "source": "dry-run-20261118-2232-openrouter first_intake_reply_flagged",
+  "note": "An ordinary first message that names a place and a date range must not return HTTP 502 first_intake_reply_flagged. The Hilo line, a date range, a place-only line, and a party-size line each produce a stored app turn from vacation-app-reply-rules with a model stamp. A draft that invents a weekday or says someone already has access stays blocked. blockedReasons are server-side only.",
+  "assertions": [
+    {
+      "id": "ordinary-first-intake-ships",
+      "type": "unit_script",
+      "script": "scripts/test_acceptance_1030_first_intake_ordinary.mjs",
+      "timeout_ms": 60000,
+      "note": "Exact harness turn-1 line plus date-range, place-only, and party-size lines ship a stamped app turn. A seeded bad draft is still blocked. The client payload does not include blockedDraft or blockedReasons."
+    }
+  ]
+}
