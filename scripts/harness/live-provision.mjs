@@ -85,21 +85,8 @@ async function insertThrowaway(db, story, { tag, runId, env, meta, email }) {
     display_name: story.customer.name,
     first_name: story.customer.name.split(/\s+/)[0],
   };
-  const { ensureVacationEulaSession, eulaSessionIdForOnboarding } = await import('../../src/vacation/onboarding.mjs');
-  const { createPersistentStoreFromEnv } = await import('../../src/onboarding/eula-persistent-store.mjs');
-  const { acceptEulaPersistent } = await import('../../src/onboarding/eula-persistent-core.mjs');
-  const eula = await ensureVacationEulaSession(sessionRow, {
-    contact: { email, displayName: story.customer.name, firstName: sessionRow.first_name },
-    env,
-  });
+  const { eulaSessionIdForOnboarding } = await import('../../src/vacation/onboarding.mjs');
   const eulaSessionId = eulaSessionIdForOnboarding(sessionRow);
-  if (eula?.status !== 'accepted') {
-    await acceptEulaPersistent(createPersistentStoreFromEnv(env), eulaSessionId, {
-      acceptedByName: story.customer.name,
-      checkboxConfirmed: true,
-      userAgent: 'vk-customer-harness',
-    });
-  }
   await db`
     update onboarding_sessions
     set metadata = coalesce(metadata, '{}'::jsonb) || ${{ eulaSessionId }}
