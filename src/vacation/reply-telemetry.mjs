@@ -5,6 +5,9 @@ export function appReplyTelemetry(record = {}) {
     jevLatencyMs: Number.isFinite(jevLatency) ? jevLatency : null,
     tier: record.tier ?? record.modelTier ?? null,
     modelId: record.modelId || record.responseModel || null,
+    backend: record.backend || record.model?.backend || null,
+    costStatus: record.cost?.status || null,
+    costDollars: record.cost?.status === 'measured' ? record.cost.dollars : null,
     generationMs: Number.isFinite(generation) ? generation : null,
   };
 }

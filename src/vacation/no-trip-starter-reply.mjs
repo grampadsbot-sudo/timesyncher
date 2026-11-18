@@ -1,4 +1,6 @@
 import { callTieredModel, jevPrecall } from '../../scripts/vacation-app-reply-rules.mjs';
+import { sumModelCost } from './turn-cost.mjs';
+import { routeVkBotMcpReply } from './vk-bot-mcp-reply.mjs';
 import { appTextBanned } from './live-app-turn.mjs';
 import { assertCustomerReplyShippable } from './reply-id-citation.mjs';
 import { failReplyPlanEntitlement, loadSessionOwnerReplyPlan } from './reply-plan-entitlement.mjs';
@@ -75,6 +77,8 @@ export async function produceNoTripStarterReply({
   loadOwnerPlan = loadSessionOwnerReplyPlan,
   turnActionResults = null,
 } = {}) {
+  const vkBotReply = await routeVkBotMcpReply({ customerTurn, session, priorTurns: [], tripTitle: '', env });
+  if (vkBotReply) return vkBotReply;
   if (!rules?.ok) {
     return { reply: null, rules, jev: null, model: null, reason: rules?.error || 'reply_rules_unloaded' };
   }
@@ -99,7 +103,7 @@ export async function produceNoTripStarterReply({
   let block = '';
   for (let attempt = 0; attempt < 2 && !reply; attempt += 1) {
     const genStarted = Date.now();
-    model = await callTieredModel({
+    model = sumModelCost(model, await callTieredModel({
       rules,
       jev,
       customerTurn,
@@ -113,7 +117,7 @@ export async function produceNoTripStarterReply({
       replyFacts: facts,
       env,
       systemExtra: prompt,
-    });
+    }));
     if (model && typeof model === 'object') model.genLatencyMs = Math.max(0, Date.now() - genStarted);
     reply = model?.called && model.text ? String(model.text).trim() : '';
     block = noTripReplyBlock(reply, appTextBanned, facts);

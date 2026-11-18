@@ -67,6 +67,7 @@ export async function loadSavedTripRecord(session, env = process.env) {
       }),
       party: meta.dialogParty && typeof meta.dialogParty === 'object' ? meta.dialogParty : null,
       rule: meta.intakeRule || '',
+      replyBackend: typeof meta.replyBackend === 'string' ? meta.replyBackend : '',
       planOwned: meta.planOwned === true || meta.unlimitedPlanOwned === true,
       ...savedTripGapFields(meta),
     };
@@ -77,7 +78,21 @@ export async function loadSavedTripRecord(session, env = process.env) {
       ...record.things.filter((thing) => !sharedTitles.has(String(thing.title || '').trim().toLowerCase())),
     ];
     return record;
-  } catch {
-    return null;
+  } catch (error) {
+    return error ? null : null;
+  }
+}
+
+export async function loadTripReplyBackend(session, env = process.env) {
+  const tripId = session?.trip_id || session?.tripId;
+  if (!tripId || !env?.DATABASE_URL) return '';
+  try {
+    const { sql } = await import('./db.mjs');
+    const db = sql(env);
+    const trips = await db`select metadata from trips where id = ${tripId} limit 1`;
+    const meta = trips[0]?.metadata && typeof trips[0].metadata === 'object' ? trips[0].metadata : {};
+    return typeof meta.replyBackend === 'string' ? meta.replyBackend : '';
+  } catch (error) {
+    return error ? '' : '';
   }
 }
