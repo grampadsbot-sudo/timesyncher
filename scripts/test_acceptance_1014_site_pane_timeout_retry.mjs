@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { createServer } from 'node:http';
+import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -14,6 +16,8 @@ const RTT_MS = 800;
 const THROUGHPUT_BPS = (400 * 1000) / 8;
 const slug = `accept1014-${Date.now().toString(36)}`;
 const session = 'accept1014-session';
+const PW_PREFIX = '/tmp/pw';
+const PW_BROWSERS_PATH = '/tmp/pw-browsers';
 
 function loadPuppeteer() {
   try {
@@ -23,22 +27,53 @@ function loadPuppeteer() {
   }
 }
 
+function tryRequirePlaywright(candidate) {
+  try {
+    return require(candidate);
+  } catch {
+    return null;
+  }
+}
+
+function bootstrapPlaywrightForCi() {
+  const bundled = path.join(PW_PREFIX, 'node_modules/playwright');
+  if (!existsSync(bundled)) {
+    const pkgInstall = spawnSync('npm', ['install', '--prefix', PW_PREFIX, 'playwright@1.52.0'], {
+      stdio: 'inherit',
+    });
+    if (pkgInstall.status !== 0) {
+      throw new Error(`playwright npm install failed (status ${pkgInstall.status ?? 'null'})`);
+    }
+  }
+  process.env.PLAYWRIGHT_BROWSERS_PATH = PW_BROWSERS_PATH;
+  const browserInstall = spawnSync(
+    'npx',
+    ['--prefix', PW_PREFIX, 'playwright', 'install', 'webkit'],
+    {
+      stdio: 'inherit',
+      env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: PW_BROWSERS_PATH },
+    },
+  );
+  if (browserInstall.status !== 0) {
+    throw new Error(`playwright webkit install failed (status ${browserInstall.status ?? 'null'})`);
+  }
+  return require(bundled);
+}
+
 function loadPlaywright() {
   const candidates = [
     'playwright',
     'playwright-core',
     path.join(root, 'node_modules/playwright'),
+    path.join(PW_PREFIX, 'node_modules/playwright'),
     path.join(os.homedir(), 'tsv-dispatch/capture/node_modules/playwright'),
     path.join(os.homedir(), '.npm/_npx/e41f203b7505f1fb/node_modules/playwright'),
   ];
   for (const candidate of candidates) {
-    try {
-      return require(candidate);
-    } catch {
-      continue;
-    }
+    const mod = tryRequirePlaywright(candidate);
+    if (mod) return mod;
   }
-  throw new Error('Playwright required for site-pane timeout WebKit proof');
+  return bootstrapPlaywrightForCi();
 }
 
 async function pacePlaywrightRoute(route, slowEmbedHolds, slug) {
