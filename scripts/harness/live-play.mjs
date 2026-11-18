@@ -1,5 +1,6 @@
 import { classifyAppFailure } from './backends.mjs';
 import { hostIsBanned } from './fetch-guard.mjs';
+import { redactExchangeBody } from './redact.mjs';
 
 function appUrl(origin, token, tripId, method) {
   const url = new URL('/api/vacation-itinerary', origin);
@@ -90,7 +91,7 @@ function tripFields(body) {
   };
 }
 
-export async function playCustomerTurns(story, { origin, token, tripId, fetchImpl, hosts, waitMs = 0 }) {
+export async function playCustomerTurns(story, { origin, token, tripId, fetchImpl, hosts, waitMs = 0, secrets = [] }) {
   const allowed = new URL(origin).origin;
   const send = async (url, body) => {
     const href = String(url);
@@ -120,6 +121,7 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
       tripId: extra.tripId || tripId || '',
       shareToken: extra.shareToken || '',
       detail: extra.detail || reason,
+      exchange: extra.exchange || null,
     };
   };
   let endpoint = appUrl(allowed, token, tripId, 'GET');
@@ -134,12 +136,32 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
   const timings = [];
   for (let index = 0; index < story.turns.length; index += 1) {
     const turn = story.turns[index];
+    const turnStarted = Date.now();
+    const timeline = [];
+    const note = (kind, sent) => {
+      timeline.push({
+        kind,
+        offset_ms: Math.max(0, Date.now() - turnStarted),
+        status: sent.status,
+        wall_ms: sent.wall_ms,
+        body: redactExchangeBody(sent.body, secrets),
+      });
+    };
     endpoint = appUrl(allowed, token, currentTrip, 'POST');
     const draft = await send(endpoint, buildTurnPayload(turn, currentTrip));
+    note('post', draft);
     const final = draft.body?.status === 'interim' ? await send(endpoint, { action: 'finish-rewrite', tripId: currentTrip }) : draft;
+    if (final !== draft) note('finish-rewrite', final);
     const failure = turnFailure(final.status, final.body) || turnFailure(draft.status, draft.body);
     timings.push({ n: index + 1, wall_ms: draft.wall_ms + (final === draft ? 0 : final.wall_ms), http_status: final.status });
-    if (failure) return finish(failure, { timings, storedTurns: seen, itineraryCount: items, tripId: currentTrip, shareToken, detail: final.body?.error || draft.body?.error || failure });
+    const failedBody = final.body?.ok === false || final.status >= 400 ? final.body : draft.body;
+    const exchange = {
+      post_status: (final.body?.ok === false || final.status >= 400 ? final : draft).status,
+      body: redactExchangeBody(failedBody, secrets),
+      polls: timeline.filter((entry) => entry.kind === 'poll'),
+      timeline,
+    };
+    if (failure) return finish(failure, { timings, storedTurns: seen, itineraryCount: items, tripId: currentTrip, shareToken, detail: final.body?.error || draft.body?.error || failure, exchange: failure === 'turn-not-stored' ? exchange : null });
     let reply = replyText(final.body) || replyText(draft.body);
     const stamp = replyModelStamp(final.body?.reply ? final.body : draft.body);
     const nextTrip = tripFields(final.body).tripId || tripFields(draft.body).tripId;
@@ -150,6 +172,7 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
       while (!reply && Date.now() < deadline) {
         await new Promise((resolve) => { setTimeout(resolve, 250); });
         const history = await send(appUrl(allowed, token, currentTrip, 'GET'));
+        note('poll', history);
         reply = replyText(history.body);
         const polled = ruledReplyCount(history.body);
         if ((polled == null ? storedTurns(history.body) : polled) > seen) reply = reply || 'stored';
@@ -182,5 +205,6 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
     tripId: currentTrip,
     shareToken,
     detail: '',
+    exchange: null,
   };
 }

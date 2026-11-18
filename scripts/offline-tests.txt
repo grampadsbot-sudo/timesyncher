@@ -498,3 +498,4 @@ scripts/test_vk_customer_harness_dry_run_failures.mjs
 scripts/test_vk_customer_harness_eula_accept.mjs
 scripts/test_vk_customer_harness_reply_path.mjs
 scripts/test_onboarding_welcome_dialog_opener.mjs
+scripts/test_vk_customer_harness_turn_http.mjs
