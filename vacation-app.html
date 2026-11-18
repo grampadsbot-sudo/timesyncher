@@ -183,6 +183,29 @@
       background: #dce2ea;
       position: relative;
     }
+    .site-pane-retry-control {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      border: 0;
+      background: #dce2ea;
+      color: var(--ink);
+      font: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.35;
+      padding: 16px;
+      text-align: center;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .site-pane-retry-active iframe {
+      visibility: hidden;
+    }
     .fullscreen-button {
       position: absolute;
       z-index: 3;
@@ -661,6 +684,7 @@
         });
       }
       if (document.getElementById('splitter')) window.tsVacationAppChrome.bindSplitter();
+      window.tsVacationAppChrome.bindSitePaneLoadWatch();
       window.tsVacationAppChrome.bindFullScreen();
       const attachButton = document.getElementById('attachButton');
       const messageText = document.getElementById('messageText');

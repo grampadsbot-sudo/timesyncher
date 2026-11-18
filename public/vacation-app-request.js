@@ -610,4 +610,97 @@ window.tsVacationAppChrome = {
     overlay.addEventListener('touchend', onTouchEnd, passiveTouch);
     overlay.addEventListener('touchcancel', onTouchEnd, passiveTouch);
   },
+  bindSitePaneLoadWatch() {
+    const pane = document.querySelector('.site-pane');
+    const iframe = pane?.querySelector('iframe');
+    if (!pane || !iframe || pane.querySelector('.site-pane-retry-control')) return;
+    const retryLabel = 'Still loading\u2026 Tap to retry';
+    const timeoutMs = 15000;
+    let timer = null;
+    let generation = 0;
+    const clearWatchTimer = () => {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+    };
+    const hideRetry = () => {
+      pane.classList.remove('site-pane-retry-active');
+      pane.querySelector('.site-pane-retry-control')?.remove();
+    };
+    const showRetry = () => {
+      if (embedFrameLoaded()) return;
+      if (pane.querySelector('.site-pane-retry-control')) return;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'site-pane-retry-control';
+      button.setAttribute('data-site-pane-retry', '1');
+      button.setAttribute('aria-live', 'polite');
+      button.textContent = retryLabel;
+      button.addEventListener('click', () => reloadSite());
+      pane.classList.add('site-pane-retry-active');
+      pane.appendChild(button);
+    };
+    const embedFrameLoaded = () => {
+      const frame = pane.querySelector('iframe');
+      if (!frame) return false;
+      try {
+        const href = String(frame.contentWindow?.location?.href || '');
+        return frame.contentDocument?.readyState === 'complete'
+          && href
+          && !href.startsWith('about:')
+          && href.includes('/shared/');
+      } catch {
+        return false;
+      }
+    };
+    const armTimeout = (gen) => {
+      clearWatchTimer();
+      timer = setTimeout(() => {
+        if (gen !== generation) return;
+        if (embedFrameLoaded()) return;
+        showRetry();
+      }, timeoutMs);
+    };
+    const reloadSite = () => {
+      hideRetry();
+      generation += 1;
+      const gen = generation;
+      clearWatchTimer();
+      try {
+        const url = new URL(iframe.src, window.location.href);
+        url.searchParams.set('tsSiteRetry', String(Date.now()));
+        iframe.src = url.href;
+      } catch {
+        void 0;
+      }
+      armTimeout(gen);
+    };
+    const stopReadyPoll = () => {
+      const id = Number(pane.dataset.tsSitePanePoll || 0);
+      if (id) clearInterval(id);
+      pane.dataset.tsSitePanePoll = '';
+    };
+    const markEmbedLoaded = () => {
+      stopReadyPoll();
+      clearWatchTimer();
+      hideRetry();
+    };
+    const startReadyPoll = () => {
+      stopReadyPoll();
+      const id = setInterval(() => {
+        if (embedFrameLoaded()) markEmbedLoaded();
+      }, 250);
+      pane.dataset.tsSitePanePoll = String(id);
+    };
+    iframe.addEventListener('load', () => {
+      if (embedFrameLoaded()) markEmbedLoaded();
+    });
+    if (embedFrameLoaded()) {
+      markEmbedLoaded();
+      return;
+    }
+    startReadyPoll();
+    armTimeout(generation);
+  },
 };
