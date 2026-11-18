@@ -87,6 +87,47 @@ assert.match(written, /reply_unavailable/);
 assert.match(written, /The operation was aborted/);
 fs.rmSync(dir, { recursive: true, force: true });
 
+const flaggedBody = {
+  ok: false,
+  status: 'reply_unavailable',
+  error: 'first_intake_reply_flagged',
+  modelId: null,
+  responseModel: null,
+};
+const flagged = await playCustomerTurns(story, {
+  origin,
+  token: sessionToken,
+  tripId,
+  hosts: [],
+  waitMs: 0,
+  secrets: [sessionToken],
+  fetchImpl: async (url, init) => {
+    const parsed = new URL(String(url));
+    if (parsed.pathname === '/api/version') return { status: 200, text: async () => JSON.stringify({ sha: 'abc123' }) };
+    if (init?.method === 'POST') return { status: 502, text: async () => JSON.stringify(flaggedBody) };
+    return {
+      status: 200,
+      text: async () => JSON.stringify({ ok: true, eula: { accepted: true }, turns: [], itinerary: [], trip: { id: tripId } }),
+    };
+  },
+});
+assert.equal(turnFailure(502, flaggedBody), 'first-intake-reply-flagged');
+assert.equal(flagged.reason, 'first-intake-reply-flagged');
+assert.equal(flagged.exchange.post_status, 502);
+assert.equal(flagged.exchange.body.error, 'first_intake_reply_flagged');
+assert.equal(turnFailure(502, { ok: false, error: 'The operation was aborted.' }), 'turn-not-stored');
+const flaggedDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-intake-flag-'));
+const flaggedCard = await runCustomer(story, {
+  runId: 'r2',
+  outDir: flaggedDir,
+  secrets: [sessionToken],
+  cleanup: async () => ({ deleted: {}, remaining: 0 }),
+  play: async () => flagged,
+});
+assert.equal(flaggedCard.reason, 'first-intake-reply-flagged');
+assert.equal(flaggedCard.turn_http.body.error, 'first_intake_reply_flagged');
+fs.rmSync(flaggedDir, { recursive: true, force: true });
+
 const renderer = fs.readFileSync(new URL('./live-transcript-dialog-pdf.mjs', import.meta.url), 'utf8');
 assert.match(renderer, /app text did not come from \$\{LIVE_REPLY_PRODUCER\}/);
 
