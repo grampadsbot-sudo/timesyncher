@@ -22,7 +22,7 @@ const fetchImpl = guardedFetch(async (url) => {
   calls.push(String(url));
   const parsed = new URL(String(url));
   if (parsed.pathname === '/api/version') return { status: 200, text: async () => JSON.stringify({ sha: 'abc123' }) };
-  return { status: 201, text: async () => JSON.stringify({ ok: true, status: 'replied', reply: 'The harbor walk stays light.' }) };
+  return { status: 201, text: async () => JSON.stringify({ ok: true, status: 'replied', reply: 'The harbor walk stays light.', modelId: 'anthropic/claude-haiku-5.5', responseModel: 'anthropic/claude-haiku-5.5' }) };
 }, hosts);
 const story = JSON.parse(fs.readFileSync(new URL('./fixtures/harness/story-dry-run.json', import.meta.url), 'utf8'));
 story.reply_backend = 'openrouter';

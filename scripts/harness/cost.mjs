@@ -1,3 +1,5 @@
+export const VK_BOT_USAGE_DOLLARS_PER_PERCENT = 2;
+
 function firstNumber(...values) {
   for (const value of values) {
     if (value == null || value === '') continue;
@@ -21,6 +23,8 @@ function bagUnmeasured(bag) {
     || isUnmeasured(bag.cost_state)
     || isUnmeasured(bag.botUsage)
     || isUnmeasured(bag.usageState)
+    || isUnmeasured(bag.usagePercentDelta)
+    || isUnmeasured(bag.usage_percent_delta)
     || bag.costMeasured === false;
 }
 
@@ -45,6 +49,24 @@ function mcpUsage(bag) {
   return null;
 }
 
+function percentEstimate(amount) {
+  return {
+    estimate_state: 'estimate',
+    estimate_amount: amount * VK_BOT_USAGE_DOLLARS_PER_PERCENT,
+    estimate_unit: 'usd',
+    estimate_label: 'estimate',
+  };
+}
+
+function unmeasuredEstimate() {
+  return {
+    estimate_state: 'unmeasured',
+    estimate_amount: null,
+    estimate_unit: 'usd',
+    estimate_label: 'estimate',
+  };
+}
+
 function bagsOf(turn) {
   return [turn, turn?.usage, turn?.model, turn?.model?.usage].filter((bag) => bag && typeof bag === 'object');
 }
@@ -52,16 +74,20 @@ function bagsOf(turn) {
 export function readStoredCost(turn, backend) {
   const bags = bagsOf(turn);
   if (bags.some(bagUnmeasured)) {
-    return { state: 'unmeasured', amount: null, unit: backend === 'openrouter' ? 'usd' : '', gap: '' };
+    const unmeasured = { state: 'unmeasured', amount: null, unit: backend === 'openrouter' ? 'usd' : '', gap: '' };
+    return backend === 'vk_bot_mcp' ? { ...unmeasured, ...unmeasuredEstimate() } : unmeasured;
   }
   if (backend === 'vk_bot_mcp') {
     for (const bag of bags) {
       const usage = mcpUsage(bag);
       if (!usage) continue;
-      if (usage.mismatch) return { state: 'missing', amount: null, unit: '', gap: 'stored-cost-unit-mismatch' };
-      return { state: 'measured', amount: usage.amount, unit: usage.unit, gap: '' };
+      if (usage.mismatch) return { state: 'missing', amount: null, unit: '', gap: 'stored-cost-unit-mismatch', ...unmeasuredEstimate() };
+      if (usage.unit === 'percent') {
+        return { state: 'measured', amount: usage.amount, unit: 'percent', gap: '', ...percentEstimate(usage.amount) };
+      }
+      return { state: 'measured', amount: usage.amount, unit: usage.unit, gap: '', ...unmeasuredEstimate() };
     }
-    return { state: 'missing', amount: null, unit: '', gap: 'stored-cost-missing' };
+    return { state: 'missing', amount: null, unit: '', gap: 'stored-cost-missing', ...unmeasuredEstimate() };
   }
   for (const bag of bags) {
     const amount = dollars(bag);
@@ -72,19 +98,43 @@ export function readStoredCost(turn, backend) {
 
 export function rollupCost(rows) {
   const generated = (rows || []).filter((row) => row.role === 'app' && row.cost_state && row.cost_state !== 'not-run');
-  if (!generated.length) return { state: 'not-run', amount: null, unit: '', gap: '', per_customer: null };
+  const estimate = estimateRollup(generated);
+  if (!generated.length) return { state: 'not-run', amount: null, unit: '', gap: '', per_customer: null, ...estimate };
   if (generated.some((row) => row.cost_state === 'missing' || String(row.gap || '').includes('stored-cost-missing') || String(row.gap || '').includes('stored-cost-unit-mismatch'))) {
     const gap = generated.some((row) => String(row.gap || '').includes('stored-cost-unit-mismatch')) ? 'stored-cost-unit-mismatch' : 'stored-cost-missing';
-    return { state: 'missing', amount: null, unit: '', gap, per_customer: null };
+    return { state: 'missing', amount: null, unit: '', gap, per_customer: null, ...estimate };
   }
   const units = [...new Set(generated.map((row) => row.cost_unit).filter(Boolean))];
-  if (units.length > 1) return { state: 'missing', amount: null, unit: '', gap: 'stored-cost-unit-mismatch', per_customer: null };
+  if (units.length > 1) return { state: 'missing', amount: null, unit: '', gap: 'stored-cost-unit-mismatch', per_customer: null, ...estimate };
   if (generated.every((row) => row.cost_state === 'unmeasured')) {
-    return { state: 'unmeasured', amount: null, unit: units[0] || 'usd', gap: '', per_customer: null };
+    return { state: 'unmeasured', amount: null, unit: units[0] || 'usd', gap: '', per_customer: null, ...estimate };
   }
   if (generated.some((row) => row.cost_state === 'unmeasured')) {
-    return { state: 'mixed', amount: null, unit: units[0] || '', gap: '', per_customer: null };
+    return { state: 'mixed', amount: null, unit: units[0] || '', gap: '', per_customer: null, ...estimate };
   }
   const amount = generated.reduce((sum, row) => sum + Number(row.cost_amount || 0), 0);
-  return { state: 'measured', amount, unit: units[0] || '', gap: '', per_customer: amount };
+  return { state: 'measured', amount, unit: units[0] || '', gap: '', per_customer: amount, ...estimate };
+}
+
+function estimateRollup(rows) {
+  const generated = (rows || []).filter((row) => row.estimate_state);
+  if (!generated.length) return {};
+  const estimated = generated.filter((row) => row.estimate_state === 'estimate' && Number.isFinite(Number(row.estimate_amount)));
+  if (estimated.length && estimated.length === generated.length) {
+    const amount = estimated.reduce((sum, row) => sum + Number(row.estimate_amount), 0);
+    return {
+      estimate_state: 'estimate',
+      estimate_amount: amount,
+      estimate_unit: 'usd',
+      estimate_label: 'estimate',
+      estimate_per_customer: amount,
+    };
+  }
+  return {
+    estimate_state: 'unmeasured',
+    estimate_amount: null,
+    estimate_unit: 'usd',
+    estimate_label: 'estimate',
+    estimate_per_customer: null,
+  };
 }

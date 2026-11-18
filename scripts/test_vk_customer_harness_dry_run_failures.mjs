@@ -63,7 +63,10 @@ assert.match(noReply.detail, /no stored reply/);
 const voice = buildTurnPayload(story.turns[1], '11111111-2222-4333-8444-555555555555');
 assert.equal(voice.voiceMode, true);
 assert.equal(voice.browserTranscription, true);
-assert.equal(buildTurnPayload(story.turns[0], '11111111-2222-4333-8444-555555555555').voiceMode, undefined);
+const textTurn = buildTurnPayload(story.turns[0], '11111111-2222-4333-8444-555555555555');
+assert.equal(textTurn.voiceMode, false);
+assert.equal(textTurn.browserTranscription, false);
+assert.deepEqual(textTurn.attachments, []);
 
 const html = keepsakeDecision({ status: 200, contentType: 'text/html; charset=utf-8', bytes: Buffer.from('<html>keepsake</html>'), redirected: true });
 assert.equal(html.ok, false);
