@@ -23,6 +23,7 @@ const RANK = [
   'stored-cost-missing',
   'stored-cost-unit-mismatch',
   'dialog-renderer-refused',
+  'first-intake-reply-flagged',
 ];
 
 const WAVE_STOP = new Set(['payment-required', 'credit-exhausted', 'backend-not-available']);

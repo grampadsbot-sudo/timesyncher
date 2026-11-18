@@ -66,6 +66,7 @@ export function turnFailure(status, body) {
   if (status === 404) return 'session-not-found';
   const code = String(body?.code || '').trim();
   if (code) return code;
+  if (String(body?.error || '').trim() === 'first_intake_reply_flagged') return 'first-intake-reply-flagged';
   if (body?.eula && body.eula.accepted === false) return 'eula_not_accepted';
   if (body?.ok === false || status >= 400) return 'turn-not-stored';
   return '';
@@ -161,7 +162,7 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
       polls: timeline.filter((entry) => entry.kind === 'poll'),
       timeline,
     };
-    if (failure) return finish(failure, { timings, storedTurns: seen, itineraryCount: items, tripId: currentTrip, shareToken, detail: final.body?.error || draft.body?.error || failure, exchange: failure === 'turn-not-stored' ? exchange : null });
+    if (failure) return finish(failure, { timings, storedTurns: seen, itineraryCount: items, tripId: currentTrip, shareToken, detail: final.body?.error || draft.body?.error || failure, exchange: failure === 'turn-not-stored' || failure === 'first-intake-reply-flagged' ? exchange : null });
     let reply = replyText(final.body) || replyText(draft.body);
     const stamp = replyModelStamp(final.body?.reply ? final.body : draft.body);
     const nextTrip = tripFields(final.body).tripId || tripFields(draft.body).tripId;
