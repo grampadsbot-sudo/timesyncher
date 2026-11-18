@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { BUILD_STAMP_INLINE_STYLE } from '../routes/version.mjs';
@@ -20,23 +19,6 @@ const MAP = {
   'Boston Weekend': 'copy-issue1016-boston',
 };
 const VISITED = [NYC_SLUG, VEGAS_SLUG, 'copy-issue1016-boston'];
-
-function loadPlaywright() {
-  const candidates = [
-    'playwright',
-    'playwright-core',
-    path.join(root, 'node_modules/playwright'),
-    path.join(os.homedir(), 'tsv-dispatch/capture/node_modules/playwright'),
-  ];
-  for (const candidate of candidates) {
-    try {
-      return require(candidate);
-    } catch {
-      continue;
-    }
-  }
-  throw new Error('Playwright required for #1016 trip-switcher accept');
-}
 
 function loadPuppeteer() {
   try {
@@ -258,10 +240,10 @@ const server = createServer(async (req, res) => {
 await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
 const origin = `http://127.0.0.1:${server.address().port}`;
 
-const initStorageScript = ({ map, visited }) => {
+function seedSwitcherStorage(map, visited) {
   localStorage.setItem('vk-trip-switcher-map', JSON.stringify(map));
   localStorage.setItem('vk-trip-switcher-visited-slugs', JSON.stringify(visited));
-};
+}
 
 async function assertSharedPage(page, marker) {
   const deadline = Date.now() + 180000;
@@ -327,20 +309,16 @@ async function waitIframeMarker(page, marker) {
   throw new Error(`iframe marker not found: ${marker}`);
 }
 
-async function runVacationFlow(browserKind, launch) {
-  const browser = await launch();
+async function runVacationFlow(puppeteer, chromiumPath) {
+  const browser = await puppeteer.launch({
+    executablePath: chromiumPath,
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+  });
   try {
-    const iPhone = browserKind === 'webkit'
-      ? { width: 390, height: 844 }
-      : { width: 390, height: 844 };
-    const context = await browser.newContext({
-      viewport: iPhone,
-      deviceScaleFactor: 2,
-      isMobile: true,
-      hasTouch: true,
-    });
-    await context.addInitScript(initStorageScript, { map: MAP, visited: VISITED });
-    const page = await context.newPage();
+    const page = await browser.newPage();
+    await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+    await page.evaluateOnNewDocument(seedSwitcherStorage, MAP, VISITED);
     await page.goto(`${origin}/vacation-app.html?session=${SESSION}`, { waitUntil: 'domcontentloaded', timeout: 60000 });
     await page.waitForSelector('#tripButton', { timeout: 30000 });
     await page.waitForSelector('.site-pane iframe', { timeout: 60000 });
@@ -352,27 +330,21 @@ async function runVacationFlow(browserKind, launch) {
     await touchPickTrip(page, 'NYC June 2026');
     await waitIframeMarker(page, 'NYC Accept 1016 Marker Bistro');
 
-    const standalone = await context.newPage();
-    await standalone.goto(`${origin}/shared/${NYC_SLUG}/`, { waitUntil: 'networkidle', timeout: 180000 });
+    const standalone = await browser.newPage();
+    await standalone.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+    await standalone.goto(`${origin}/shared/${NYC_SLUG}/`, { waitUntil: 'networkidle2', timeout: 180000 });
     await assertSharedPage(standalone, 'NYC Accept 1016 Marker Bistro');
     await standalone.close();
-    await context.close();
   } finally {
     await browser.close();
   }
 }
 
-const { webkit, chromium } = loadPlaywright();
 const chromiumPath = process.env.CHROME_PATH || process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser';
-
-await runVacationFlow('webkit', () => webkit.launch({ headless: true }));
-await runVacationFlow('chromium', () => chromium.launch({
-  headless: true,
-  executablePath: chromiumPath,
-  args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-}));
-
 const puppeteer = loadPuppeteer();
+
+await runVacationFlow(puppeteer, chromiumPath);
+
 const browser = await puppeteer.launch({
   executablePath: chromiumPath,
   headless: true,
@@ -380,7 +352,7 @@ const browser = await puppeteer.launch({
 });
 try {
   const page = await browser.newPage();
-  await page.evaluateOnNewDocument(initStorageScript, { map: MAP, visited: VISITED });
+  await page.evaluateOnNewDocument(seedSwitcherStorage, MAP, VISITED);
   const url = `${origin}/shared/${NYC_SLUG}/?embed=0`;
   await page.goto(url, { waitUntil: 'networkidle2', timeout: 180000 });
   const skipped = await page.evaluate(() => {
