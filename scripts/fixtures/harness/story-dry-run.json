@@ -1,0 +1,30 @@
+{
+  "story_id": "dry-run",
+  "customer": { "name": "Avery Hale", "email_alias": "avery-dry-run" },
+  "party": {
+    "collaborators": [{ "name": "Jordan Hale", "payer": "owner" }],
+    "kids": [{ "name": "Sam Hale", "age": 8 }],
+    "viewers": [{ "name": "Riley Hale" }],
+    "editors": [{ "name": "Quinn Hale" }]
+  },
+  "destination": "Hilo",
+  "dates": { "start": "2027-03-04", "end": "2027-03-08" },
+  "turns": [
+    {
+      "speaker": "Avery Hale",
+      "modality": "text",
+      "text": "We are planning a short Hilo stay from March 4 to March 8 2027. Keep the days light."
+    },
+    {
+      "speaker": "Avery Hale",
+      "modality": "voice",
+      "text": "Add a quiet morning walk and keep the afternoon open.",
+      "voice_fixture": "scripts/fixtures/harness/media/voice-note.txt"
+    }
+  ],
+  "steps": ["onboarding", "chat", "voice", "media", "collaborator"],
+  "media": [
+    { "kind": "photo", "fixture": "scripts/fixtures/harness/media/photo.png", "attach_to": "day" },
+    { "kind": "video", "fixture": "scripts/fixtures/harness/media/clip.mp4", "attach_to": "thing" }
+  ]
+}

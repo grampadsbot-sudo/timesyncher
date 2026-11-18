@@ -1,0 +1,90 @@
+function firstNumber(...values) {
+  for (const value of values) {
+    if (value == null || value === '') continue;
+    if (typeof value === 'string' && !/^-?\d+(\.\d+)?$/.test(value.trim())) continue;
+    const amount = Number(value);
+    if (Number.isFinite(amount)) return amount;
+  }
+  return null;
+}
+
+function isUnmeasured(value) {
+  return String(value || '').trim().toLowerCase() === 'unmeasured';
+}
+
+function bagUnmeasured(bag) {
+  if (!bag || typeof bag !== 'object') return false;
+  return isUnmeasured(bag.cost)
+    || isUnmeasured(bag.generationCost)
+    || isUnmeasured(bag.generation_cost)
+    || isUnmeasured(bag.costState)
+    || isUnmeasured(bag.cost_state)
+    || isUnmeasured(bag.botUsage)
+    || isUnmeasured(bag.usageState)
+    || bag.costMeasured === false;
+}
+
+function dollars(bag) {
+  const direct = firstNumber(bag.generationCost, bag.generation_cost, bag.costUsd, bag.cost_usd);
+  if (direct != null) return direct;
+  if (typeof bag.cost === 'number' && Number.isFinite(bag.cost)) return bag.cost;
+  const tokens = firstNumber(bag.total_tokens, bag.totalTokens);
+  const perToken = firstNumber(bag.listed_price_per_token, bag.usd_per_token);
+  if (tokens != null && perToken != null) return tokens * perToken;
+  const perMillion = firstNumber(bag.listed_price_per_million, bag.usd_per_million);
+  if (tokens != null && perMillion != null) return (tokens * perMillion) / 1000000;
+  return null;
+}
+
+function mcpUsage(bag) {
+  const tokens = firstNumber(bag.bot_tokens, bag.botTokens, bag.total_tokens, bag.totalTokens, bag.tokens);
+  const percent = firstNumber(bag.usage_percent_delta, bag.usagePercentDelta, bag.percent_delta);
+  if (tokens != null && percent != null) return { mismatch: true };
+  if (tokens != null) return { amount: tokens, unit: 'tokens' };
+  if (percent != null) return { amount: percent, unit: 'percent' };
+  return null;
+}
+
+function bagsOf(turn) {
+  return [turn, turn?.usage, turn?.model, turn?.model?.usage].filter((bag) => bag && typeof bag === 'object');
+}
+
+export function readStoredCost(turn, backend) {
+  const bags = bagsOf(turn);
+  if (bags.some(bagUnmeasured)) {
+    return { state: 'unmeasured', amount: null, unit: backend === 'openrouter' ? 'usd' : '', gap: '' };
+  }
+  if (backend === 'vk_bot_mcp') {
+    for (const bag of bags) {
+      const usage = mcpUsage(bag);
+      if (!usage) continue;
+      if (usage.mismatch) return { state: 'missing', amount: null, unit: '', gap: 'stored-cost-unit-mismatch' };
+      return { state: 'measured', amount: usage.amount, unit: usage.unit, gap: '' };
+    }
+    return { state: 'missing', amount: null, unit: '', gap: 'stored-cost-missing' };
+  }
+  for (const bag of bags) {
+    const amount = dollars(bag);
+    if (amount != null) return { state: 'measured', amount, unit: 'usd', gap: '' };
+  }
+  return { state: 'missing', amount: null, unit: '', gap: 'stored-cost-missing' };
+}
+
+export function rollupCost(rows) {
+  const generated = (rows || []).filter((row) => row.role === 'app' && row.cost_state && row.cost_state !== 'not-run');
+  if (!generated.length) return { state: 'not-run', amount: null, unit: '', gap: '', per_customer: null };
+  if (generated.some((row) => row.cost_state === 'missing' || String(row.gap || '').includes('stored-cost-missing') || String(row.gap || '').includes('stored-cost-unit-mismatch'))) {
+    const gap = generated.some((row) => String(row.gap || '').includes('stored-cost-unit-mismatch')) ? 'stored-cost-unit-mismatch' : 'stored-cost-missing';
+    return { state: 'missing', amount: null, unit: '', gap, per_customer: null };
+  }
+  const units = [...new Set(generated.map((row) => row.cost_unit).filter(Boolean))];
+  if (units.length > 1) return { state: 'missing', amount: null, unit: '', gap: 'stored-cost-unit-mismatch', per_customer: null };
+  if (generated.every((row) => row.cost_state === 'unmeasured')) {
+    return { state: 'unmeasured', amount: null, unit: units[0] || 'usd', gap: '', per_customer: null };
+  }
+  if (generated.some((row) => row.cost_state === 'unmeasured')) {
+    return { state: 'mixed', amount: null, unit: units[0] || '', gap: '', per_customer: null };
+  }
+  const amount = generated.reduce((sum, row) => sum + Number(row.cost_amount || 0), 0);
+  return { state: 'measured', amount, unit: units[0] || '', gap: '', per_customer: amount };
+}
