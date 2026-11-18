@@ -5,10 +5,13 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
+import os from 'node:os';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const require = createRequire(import.meta.url);
 const RETRY_LABEL = 'Still loading\u2026 Tap to retry';
+const RTT_MS = 800;
+const THROUGHPUT_BPS = (400 * 1000) / 8;
 const slug = `accept1014-${Date.now().toString(36)}`;
 const session = 'accept1014-session';
 
@@ -17,6 +20,51 @@ function loadPuppeteer() {
     return require('puppeteer-core');
   } catch {
     return require('/tmp/pptr/node_modules/puppeteer-core');
+  }
+}
+
+function loadPlaywright() {
+  const candidates = [
+    'playwright',
+    'playwright-core',
+    path.join(root, 'node_modules/playwright'),
+    path.join(os.homedir(), 'tsv-dispatch/capture/node_modules/playwright'),
+    path.join(os.homedir(), '.npm/_npx/e41f203b7505f1fb/node_modules/playwright'),
+  ];
+  for (const candidate of candidates) {
+    try {
+      return require(candidate);
+    } catch {
+      continue;
+    }
+  }
+  throw new Error('Playwright required for site-pane timeout WebKit proof');
+}
+
+async function pacePlaywrightRoute(route, slowEmbedHolds, slug) {
+  const url = route.request().url();
+  await new Promise((resolve) => setTimeout(resolve, RTT_MS));
+  const blocked = slowEmbedHolds > 0
+    && url.includes(`/shared/${slug}/`)
+    && !url.includes('tsSiteRetry=');
+  if (blocked) {
+    await route.abort();
+    return;
+  }
+  try {
+    const response = await route.fetch();
+    const body = await response.body();
+    const transferMs = Math.ceil((body.length / THROUGHPUT_BPS) * 1000);
+    if (transferMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, transferMs));
+    }
+    await route.fulfill({
+      status: response.status(),
+      headers: response.headers(),
+      body,
+    });
+  } catch {
+    await route.continue();
   }
 }
 
@@ -181,9 +229,9 @@ async function applyIphoneThrottle(page) {
   await client.send('Network.enable');
   await client.send('Network.emulateNetworkConditions', {
     offline: false,
-    latency: 800,
-    downloadThroughput: (400 * 1000) / 8,
-    uploadThroughput: (400 * 1000) / 8,
+    latency: RTT_MS,
+    downloadThroughput: THROUGHPUT_BPS,
+    uploadThroughput: THROUGHPUT_BPS,
   });
 }
 
@@ -258,7 +306,71 @@ try {
 } finally {
   releaseSlowEmbed();
   await browser.close();
+}
+
+const { webkit, devices } = loadPlaywright();
+const iPhone = devices['iPhone 13'] || devices['iPhone 12'];
+const webkitBrowser = await webkit.launch({ headless: true });
+let webkitSlowHolds = 0;
+try {
+  const slowContext = await webkitBrowser.newContext({
+    ...iPhone,
+    locale: 'en-US',
+  });
+  await slowContext.route('**/*', (route) => pacePlaywrightRoute(route, webkitSlowHolds, slug));
+  const slowPage = await slowContext.newPage();
+  webkitSlowHolds = 1;
+  const webkitSlowStart = Date.now();
+  await slowPage.goto(`${origin}/vacation-app.html?session=${session}`, { waitUntil: 'domcontentloaded', timeout: 120000 });
+  await slowPage.waitForSelector('.site-pane iframe', { timeout: 30000 });
+  await slowPage.waitForSelector('[data-site-pane-retry="1"]', { timeout: 35000 });
+  const webkitElapsed = Date.now() - webkitSlowStart;
+  assert.ok(webkitElapsed >= 14000, `webkit retry should appear after ~15s, elapsed=${webkitElapsed}`);
+  const webkitRetryText = await slowPage.locator('[data-site-pane-retry="1"]').innerText();
+  assert.equal(webkitRetryText.trim(), RETRY_LABEL);
+  webkitSlowHolds = 0;
+  await slowPage.locator('[data-site-pane-retry="1"]').tap();
+  await slowPage.waitForFunction(
+    () => {
+      const frame = document.querySelector('.site-pane iframe');
+      return Boolean(frame?.contentDocument?.body);
+    },
+    undefined,
+    { timeout: 60000 },
+  );
+  const webkitRecovered = await slowPage.evaluate(() => {
+    const retry = document.querySelector('[data-site-pane-retry="1"]');
+    const frame = document.querySelector('.site-pane iframe');
+    return { retryHidden: !retry, hasFrameBody: Boolean(frame?.contentDocument?.body) };
+  });
+  assert.ok(webkitRecovered.retryHidden, 'webkit: retry control should hide after a successful reload');
+  assert.ok(webkitRecovered.hasFrameBody, 'webkit: iframe should recover after tap-to-retry');
+  await slowContext.close();
+
+  const fastContext = await webkitBrowser.newContext({
+    ...iPhone,
+    locale: 'en-US',
+  });
+  const fastPage = await fastContext.newPage();
+  await fastPage.goto(`${origin}/vacation-app.html?session=${session}`, { waitUntil: 'networkidle', timeout: 120000 });
+  await fastPage.waitForSelector('.site-pane iframe', { timeout: 30000 });
+  await fastPage.waitForFunction(
+    () => (document.querySelector('.site-pane iframe')?.contentDocument?.body?.innerText || '').includes('accept1014-embed-ready'),
+    undefined,
+    { timeout: 60000 },
+  );
+  await fastPage.waitForTimeout(16000);
+  const webkitFastState = await fastPage.evaluate(() => ({
+    retry: Boolean(document.querySelector('[data-site-pane-retry="1"]')),
+    iframe: Boolean(document.querySelector('.site-pane iframe')),
+  }));
+  assert.equal(webkitFastState.retry, false, 'webkit unthrottled load must not show retry state');
+  assert.equal(webkitFastState.iframe, true, 'webkit site pane iframe must remain on normal load');
+  await fastContext.close();
+} finally {
+  webkitSlowHolds = 0;
+  await webkitBrowser.close();
   await new Promise((resolve) => server.close(resolve));
 }
 
-console.log('test_acceptance_1014_site_pane_timeout_retry: ok');
+console.log('test_acceptance_1014_site_pane_timeout_retry: ok (chromium + webkit)');
