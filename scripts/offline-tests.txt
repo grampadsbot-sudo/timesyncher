@@ -494,3 +494,4 @@ scripts/test_vk_customer_harness_no_openrouter.mjs
 scripts/test_vk_customer_harness_cleanup_guard.mjs
 scripts/test_acceptance_1020_harness_dry_run.mjs
 scripts/test_vk_customer_harness_dry_run_failures.mjs
+scripts/test_vk_customer_harness_eula_accept.mjs

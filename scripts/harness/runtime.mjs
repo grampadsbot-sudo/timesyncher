@@ -1,5 +1,6 @@
 import { preflightHarnessEnv, secretValues, stagingOrigin } from './env.mjs';
 import { loadBannedHosts, guardedFetch } from './fetch-guard.mjs';
+import { acceptAndConfirmEula } from './eula-accept.mjs';
 import { provisionThrowaway } from './live-provision.mjs';
 import { playCustomerTurns } from './live-play.mjs';
 import { attachMedia, captureScreens, fetchKeepsake, renderDialog, runSteps, writeVideoCheck } from './live-outputs.mjs';
@@ -30,6 +31,45 @@ export function liveOptions(env = process.env) {
       const db = sql(ready);
       const created = await provisionThrowaway(db, story, { tag: options.tag, runId: options.runId, env: ready });
       const secrets = secretValues(ready, [created.token]);
+      try {
+        await acceptAndConfirmEula({
+          origin,
+          token: created.token,
+          tripId: created.tripId,
+          acceptedByName: story.customer.name,
+          fetchImpl,
+        });
+      } catch (error) {
+        if (error?.code !== 'eula_not_accepted') throw error;
+        return {
+          reason: 'eula_not_accepted',
+          waveStop: false,
+          timings: [],
+          liveShaStart: '',
+          liveShaEnd: '',
+          storedTurns: 0,
+          itineraryCount: 0,
+          tripId: created.tripId,
+          shareToken: created.shareToken,
+          detail: 'eula.accepted was not true after accept',
+          sessionRef: shortHash(created.token),
+          transcript: null,
+          pdfText: '',
+          dialogOk: false,
+          dialogDetail: 'eula_not_accepted',
+          dialogRefused: false,
+          keepsakeOk: false,
+          keepsakeDetail: '',
+          screensOk: false,
+          screensDetail: '',
+          videoExists: false,
+          videoPass: false,
+          videoDetail: '',
+          chromeOk: false,
+          chromeDetail: '',
+          steps: [],
+        };
+      }
       const played = await playCustomerTurns(story, {
         origin,
         token: created.token,
