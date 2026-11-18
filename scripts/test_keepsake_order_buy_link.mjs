@@ -63,7 +63,13 @@ function deliveredFrame(platform, responseHeader) {
 async function keepsakeOrderSendsSameOriginAndOtherPathsStayDeny() {
   const vercel = JSON.parse(await readFile(new URL('../vercel.json', import.meta.url), 'utf8'));
   const defaultFrame = 'DENY';
-  assert.deepEqual(vercel.headers.map((rule) => [rule.source, rule.headers.find((header) => header.key === 'X-Frame-Options')?.value]), [['/(.*)', defaultFrame]]);
+  const frameRules = vercel.headers
+    .map((rule) => [rule.source, rule.headers.find((header) => header.key === 'X-Frame-Options')?.value])
+    .filter(([, value]) => value !== undefined);
+  assert.deepEqual(frameRules, [['/(.*)', defaultFrame]]);
+  const assetRule = vercel.headers.find((rule) => rule.source === '/assets/(.*)');
+  assert.ok(assetRule, 'vercel.json keeps the hashed /assets/(.*) header rule');
+  assert.equal(assetRule.headers.find((header) => header.key === 'X-Frame-Options'), undefined);
   assert.equal(JSON.stringify(vercel).includes('SAMEORIGIN'), false);
 
   const order = mockRes();
