@@ -81,6 +81,7 @@ export function liveOptions(env = process.env) {
         fetchImpl,
         hosts: bannedHosts,
         waitMs: 20000,
+        secrets,
       });
       const base = {
         ...played,

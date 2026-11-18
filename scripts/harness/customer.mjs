@@ -155,6 +155,7 @@ export async function runCustomer(story, options) {
     gaps,
     reason,
     session_ref: played?.sessionRef || '',
+    ...(reason === 'turn-not-stored' ? { turn_http: played?.exchange || null } : {}),
   });
   fs.writeFileSync(path.join(options.outDir, 'scorecard.json'), `${JSON.stringify(card, null, 2)}\n`);
   if (keep) process.stdout.write(`${cleanup.command}\n`);

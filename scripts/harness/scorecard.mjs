@@ -77,6 +77,7 @@ export function buildScorecard(input) {
     cost: input.cost || { state: 'not-run', amount: null, unit: '', gap: '', per_customer: null },
     cleanup: input.cleanup || { deleted: {}, remaining: null },
     session_ref: input.session_ref || '',
+    ...(Object.prototype.hasOwnProperty.call(input, 'turn_http') ? { turn_http: input.turn_http } : {}),
     reason: verdict === 'PASS' ? '' : reason,
     wave_stop: verdict === 'FAIL' && WAVE_STOP.has(reason),
     verdict,
