@@ -80,6 +80,18 @@ export function intakeReplyBlockReasons(reply, banned = appTextBanned, facts = {
   return reasons;
 }
 
+export function groundedSingleQuestionDraft(reply, facts = {}, ids = [], banned = appTextBanned) {
+  if (!intakeFactsGrounded(facts)) return '';
+  const raw = String(reply || '').trim();
+  const mark = raw.indexOf('?');
+  if (mark < 0) return '';
+  const trimmed = raw.slice(0, mark + 1).trim();
+  if (!trimmed || trimmed === raw) return '';
+  const reasons = intakeReplyBlockReasons(trimmed, banned, facts, ids);
+  if (reasons.length) return '';
+  return trimmed;
+}
+
 export function intakeReplyBlock(reply, banned = appTextBanned, facts = {}, ids = []) {
   const reasons = intakeReplyBlockReasons(reply, banned, facts, ids);
   if (!reasons.length) return '';

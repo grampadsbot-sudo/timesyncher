@@ -20,6 +20,7 @@ import {
   hiddenIds,
   intakeCustomerName,
   intakeFactText,
+  groundedSingleQuestionDraft,
   intakeReplyBlock,
   intakeReplyBlockReasons,
   isoDay,
@@ -119,8 +120,15 @@ export async function produceFirstIntakeReply({
     const nextReasons = reply ? intakeReplyBlockReasons(reply, appTextBanned, facts, ids) : [];
     if (nextReasons.length) {
       blockedReasons = nextReasons;
-      refusal = nextReasons.join('; ');
-      reply = '';
+      const onlyQuestionCount = nextReasons.length === 1 && nextReasons[0] === 'first_intake_question_count';
+      const trimmed = attempt === 1 && onlyQuestionCount ? groundedSingleQuestionDraft(reply, facts, ids) : '';
+      if (trimmed) {
+        reply = trimmed;
+        blockedReasons = [];
+      } else {
+        refusal = nextReasons.join('; ');
+        reply = '';
+      }
     }
   }
   if (!reply) {

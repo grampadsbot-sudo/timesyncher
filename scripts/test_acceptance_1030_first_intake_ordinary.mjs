@@ -142,6 +142,47 @@ assert.equal(recovered.reply, hiloDraft);
 assert.equal(recovered.reason, null);
 stamped(recovered.reply);
 
+const neutral = 'We are planning Harbor Ridge Week in Neutral Bay from October 7 to October 9, 2026.';
+const twoQuestions = 'Who is traveling with you? Do you already have lodging booked for the week?';
+chat = 0;
+systems.length = 0;
+drafts.length = 0;
+drafts.push(twoQuestions, twoQuestions);
+const neutralReply = await produceFirstIntakeReply({
+  customerTurn: neutral,
+  session: { first_name: 'Buyer' },
+  env: { OPENROUTER_API_KEY: 'test-key' },
+  rules: { ok: true },
+  extractedDestination: 'Neutral Bay',
+  savedStart: '2026-10-07',
+  savedEnd: '2026-10-09',
+});
+assert.equal(chat, 2);
+assert.notEqual(systems[0], systems[1]);
+assert.equal(systems[0].includes('first_intake_question_count'), false);
+assert.match(systems[1], /first_intake_question_count/);
+assert.equal(neutralReply.reply, 'Who is traveling with you?');
+assert.equal((neutralReply.reply.match(/\?/g) || []).length, 1);
+assert.equal(neutralReply.reason, null);
+stamped(neutralReply.reply);
+
+chat = 0;
+systems.length = 0;
+drafts.length = 0;
+drafts.push('See you Monday. Who is traveling with you? Do you already have lodging booked?', 'See you Monday. Who is traveling with you? Do you already have lodging booked?');
+const stillBad = await produceFirstIntakeReply({
+  customerTurn: neutral,
+  session: { first_name: 'Buyer' },
+  env: { OPENROUTER_API_KEY: 'test-key' },
+  rules: { ok: true },
+  extractedDestination: 'Neutral Bay',
+  savedStart: '2026-10-07',
+  savedEnd: '2026-10-09',
+});
+assert.equal(stillBad.reply, null);
+assert.equal(stillBad.reason, 'first_intake_reply_flagged');
+assert.ok(stillBad.blockedReasons.includes('first_intake_weekday_not_allowed:Monday'));
+
 chat = 0;
 systems.length = 0;
 drafts.length = 0;

@@ -7,7 +7,7 @@ import {
 } from './first-intake-customer-input.mjs';
 
 export { produceFirstIntakeReply } from './first-intake-reply-produce.mjs';
-export { firstIntakeReplyLeak, intakeReplyBlock, intakeReplyBlockReasons } from './first-intake-gate.mjs';
+export { firstIntakeReplyLeak, groundedSingleQuestionDraft, intakeFactsGrounded, intakeReplyBlock, intakeReplyBlockReasons } from './first-intake-gate.mjs';
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
