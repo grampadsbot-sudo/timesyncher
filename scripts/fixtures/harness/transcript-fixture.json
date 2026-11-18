@@ -1,0 +1,59 @@
+{
+  "live": true,
+  "capture": "live-vacation-app",
+  "deployBanner": "live 0123456789abcdef0123456789abcdef01234567 https://vacation-staging.timesyncher.com",
+  "sessionToken": null,
+  "targetPerson": "Avery",
+  "turns": [
+    {
+      "turnIndex": 1,
+      "role": "customer",
+      "modality": "text",
+      "text": "Harbor morning plan for Avery",
+      "at": "2026-09-25T21:00:00.000Z",
+      "latencyMs": 12,
+      "sessionE2eMs": 12,
+      "jev": { "jevRan": true, "modelTier": 2, "routeType": "general", "extraContext": { "routeType": "general" } }
+    },
+    {
+      "turnIndex": 2,
+      "role": "app",
+      "modality": "text",
+      "text": "Start with the harbor walk, then keep the afternoon open.",
+      "at": "2026-09-25T21:00:03.000Z",
+      "latencyMs": 2800,
+      "sessionE2eMs": 3000,
+      "jev": {
+        "jevRan": true,
+        "modelTier": 2,
+        "routeType": "general",
+        "extraContext": { "routeType": "general" },
+        "responseModel": "anthropic/claude-haiku-5.5",
+        "jevLatencyMs": 400,
+        "jevBeforeModel": true
+      },
+      "replyProducer": "vacation-app-reply-rules",
+      "invented": false,
+      "modelId": "anthropic/claude-haiku-5.5",
+      "beats": ["harbor morning plan"],
+      "jevLatencyMs": 400,
+      "genLatencyMs": 2400,
+      "maxTokens": 900,
+      "jevBeforeModel": true,
+      "quality": {
+        "judged": true,
+        "score": 4,
+        "comment": "Harbor morning is answered cleanly, a 4 carried by afternoon open.",
+        "rewritten": false,
+        "model": "typesafe/jev-1.13",
+        "judgeMs": 400
+      },
+      "shippedModel": "anthropic/claude-haiku-5.5",
+      "draftModel": "anthropic/claude-haiku-5.5",
+      "jevScoreDraft": 4,
+      "jevNote": "Harbor morning is answered cleanly, a 4 carried by afternoon open.",
+      "flagged": false,
+      "modelLatency": { "draft": 2400, "rewrite": null, "total": 2400 }
+    }
+  ]
+}

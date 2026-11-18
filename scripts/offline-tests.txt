@@ -488,3 +488,8 @@ scripts/test_acceptance_detail_links_logo.mjs
 scripts/test_ci_notify.mjs
 scripts/test_issue_1016_trip_switcher_observer.mjs
 scripts/test_acceptance_1016_trip_switcher_no_freeze.mjs
+scripts/test_vk_customer_harness_schema.mjs
+scripts/test_vk_customer_harness_scorecard_fail_closed.mjs
+scripts/test_vk_customer_harness_no_openrouter.mjs
+scripts/test_vk_customer_harness_cleanup_guard.mjs
+scripts/test_acceptance_1020_harness_dry_run.mjs
