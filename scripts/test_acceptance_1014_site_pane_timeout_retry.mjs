@@ -65,7 +65,7 @@ function bootstrapPlaywrightForCi() {
       ['--prefix', PW_PREFIX, 'playwright', 'install', 'webkit'],
       { stdio: 'inherit', env: installEnv },
     );
-    if (browserInstall.status !== 0 && (depsOnly.status !== 0 || browserOnly.status !== 0)) {
+    if (browserOnly.status !== 0) {
       throw new Error(
         `playwright webkit install failed (with-deps=${browserInstall.status ?? 'null'}, `
         + `install-deps=${depsOnly.status ?? 'null'}, webkit=${browserOnly.status ?? 'null'})`,
@@ -76,6 +76,9 @@ function bootstrapPlaywrightForCi() {
 }
 
 function loadPlaywright() {
+  if (existsSync(PW_BROWSERS_PATH)) {
+    process.env.PLAYWRIGHT_BROWSERS_PATH = PW_BROWSERS_PATH;
+  }
   const candidates = [
     'playwright',
     'playwright-core',
