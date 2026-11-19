@@ -75,7 +75,10 @@ const card = await runCustomer(story, {
   play: async () => played,
 });
 assert.equal(card.reason, 'turn-not-stored');
-assert.equal(card.turns.length, 0);
+assert.equal(card.turns.length, 1);
+assert.equal(card.turns[0].app_status, 'reply_unavailable');
+assert.equal(card.turns[0].app_error, 'The operation was aborted.');
+assert.equal(card.turns[0].stored_model, '');
 assert.equal(card.cost.state, 'not-run');
 assert.equal(card.turn_http.post_status, 502);
 assert.equal(card.turn_http.body.error, 'The operation was aborted.');

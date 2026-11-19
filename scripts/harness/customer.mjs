@@ -5,6 +5,7 @@ import { assertThrowaway, cleanupCommand, harnessTag } from './protected.mjs';
 import { redactText } from './redact.mjs';
 import { buildScorecard } from './scorecard.mjs';
 import { confirmStoredTurns } from './stored-turn.mjs';
+import { noteUnstoredRows } from './unstored-turn.mjs';
 
 function mergeWall(rows, timings) {
   const byN = new Map((timings || []).map((row) => [row.n, row.wall_ms]));
@@ -26,7 +27,7 @@ function artifactChecks(played) {
     { id: 'video-check', pass: played.videoExists === true, detail: played.videoDetail || '', artifact: 'video-check.json' },
     { id: 'video-check-pass', pass: played.videoPass === true, detail: played.videoDetail || '', artifact: 'video-check.json' },
     { id: 'dialog-renderer-ok', pass: played.dialogOk === true, detail: played.dialogDetail || '', artifact: 'dialog.pdf' },
-    { id: 'no-stub-chrome', pass: played.chromeOk === true, detail: played.chromeDetail || 'clean', artifact: 'screens/' },
+    { id: 'no-stub-chrome', pass: played.chromeOk === true, detail: played.chromeOk === true ? (played.chromeDetail || 'clean') : (played.chromeDetail || 'not-clean'), artifact: 'screens/' },
     { id: 'build-sha', pass: sameSha, detail: sameSha ? 'same' : 'build sha changed or missing', artifact: '' },
   ];
 }
@@ -82,7 +83,7 @@ export async function runCustomer(story, options) {
       const snapshot = JSON.stringify(played.transcript || null);
       const confirmed = played.transcript ? confirmStoredTurns(played.transcript, played.pdfText || '', replyBackend) : { rows: [], gaps: [] };
       if (JSON.stringify(played.transcript || null) !== snapshot) throw new Error('refused: transcript was patched');
-      turns = mergeWall(confirmed.rows, played.timings);
+      turns = noteUnstoredRows(mergeWall(confirmed.rows, played.timings), played);
       gaps = [...confirmed.gaps];
       steps = played.steps || [];
       if (played.dialogRefused) gaps = [...new Set([...gaps, 'dialog-renderer-refused'])];

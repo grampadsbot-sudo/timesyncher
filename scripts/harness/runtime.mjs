@@ -136,7 +136,23 @@ export function liveOptions(env = process.env) {
       };
       const storedTranscript = await storedLiveTranscript(db, created.token);
       writeRedactedLiveTranscript(options.outDir, storedTranscript, secrets);
-      if (played.reason) return { ...base, transcript: storedTranscript };
+      if (played.reason) {
+        const { stampUnstoredExchange } = await import('./unstored-turn.mjs');
+        const stamped = stampUnstoredExchange(storedTranscript, played.exchange) || storedTranscript;
+        if (stamped) {
+          await renderDialog({
+            token: created.token,
+            outDir: options.outDir,
+            secrets,
+            buildSha: played.liveShaStart,
+            origin,
+            fetchImpl,
+            replyBackend: story.reply_backend,
+            loadTranscript: async () => stamped,
+          });
+        }
+        return { ...base, transcript: stamped };
+      }
       const tripId = played.tripId || created.tripId;
       const shareToken = played.shareToken || created.shareToken;
       const steps = await runSteps(story, async () => {

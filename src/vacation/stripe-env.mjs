@@ -42,3 +42,44 @@ export function stripePublishableKey(env = process.env) {
   const key = env.STRIPE_PUBLISHABLE_KEY || env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '';
   return validateStripeKey({ key, kind: 'publishable', env });
 }
+
+export function harnessCheckoutRequest(req) {
+  return String(req?.headers?.['x-timesyncher-harness-checkout'] || '').trim() === '1';
+}
+
+function harnessStripeEnv(env) {
+  return { ...env, STRIPE_MODE: 'test', TIMESYNCHER_STRIPE_MODE: 'test' };
+}
+
+export function harnessStripePublishableKey(env = process.env) {
+  return validateStripeKey({ key: env.STRIPE_TEST_PUBLISHABLE_KEY || '', kind: 'publishable', env: harnessStripeEnv(env) });
+}
+
+export function harnessStripeSecretKey(env = process.env) {
+  return validateStripeKey({ key: env.STRIPE_TEST_SECRET_KEY || '', kind: 'secret', env: harnessStripeEnv(env) });
+}
+
+export function harnessTestPriceEnv(env = process.env) {
+  const next = { ...env };
+  const map = [
+    ['TIMESYNCHER_TEST_BASE_PRICE_CENTS', 'TIMESYNCHER_BASE_PRICE_CENTS'],
+    ['TIMESYNCHER_TEST_ORDER_BUMP_PRICE_CENTS', 'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS'],
+    ['TIMESYNCHER_TEST_COLLABORATOR_SINGLE_PRICE_CENTS', 'TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS'],
+    ['TIMESYNCHER_TEST_MEDIA_PRICE_CENTS', 'TIMESYNCHER_MEDIA_PRICE_CENTS'],
+  ];
+  for (const [from, to] of map) {
+    if (String(env[from] || '').trim()) next[to] = env[from];
+  }
+  return next;
+}
+
+export function harnessTestPriceId(env, name) {
+  const key = `TIMESYNCHER_TEST_${name}`;
+  const value = String(env?.[key] || '').trim();
+  if (!value) {
+    const error = new Error(`Stripe test price is not configured yet: ${key}`);
+    error.statusCode = 503;
+    throw error;
+  }
+  return value;
+}

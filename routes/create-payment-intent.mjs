@@ -1,7 +1,7 @@
 import Stripe from 'stripe';
 import { requireIntakeAuth } from '../src/vacation/auth.mjs';
 import { sql } from '../src/vacation/db.mjs';
-import { stripeSecretKey } from '../src/vacation/stripe-env.mjs';
+import { harnessCheckoutRequest, harnessStripeSecretKey, harnessTestPriceId, stripeSecretKey } from '../src/vacation/stripe-env.mjs';
 import { collaboratorStripe, createCollaboratorCheckout } from '../src/vacation/collaborator-checkout.mjs';
 import { ownerMediaMetadata, recordOwnerMediaPurchase, requireOwnerMediaAddOns, selectedMediaAddOn } from '../src/vacation/media-checkout.mjs';
 import {
@@ -598,15 +598,27 @@ export default async function handler(req, res) {
       return checkoutCouponHandler(replay, res);
     }
 
+    const harness = harnessCheckoutRequest(req);
     let stripeConfig;
     try {
-      stripeConfig = stripeSecretKey(process.env);
+      stripeConfig = harness ? harnessStripeSecretKey(process.env) : stripeSecretKey(process.env);
     } catch (error) {
       return send(res, 503, { ok: false, error: error.message || 'Stripe secret key is not configured yet.' });
     }
-    if (!SINGLE_PRICE_ID || !UNLIMITED_PRICE_ID) return send(res, 503, { ok: false, error: 'Stripe subscription price IDs are not configured yet.' });
+    let singlePriceId = SINGLE_PRICE_ID;
+    let unlimitedPriceId = UNLIMITED_PRICE_ID;
+    if (harness) {
+      try {
+        singlePriceId = harnessTestPriceId(process.env, 'SINGLE_PRICE_ID');
+        unlimitedPriceId = harnessTestPriceId(process.env, 'UNLIMITED_PRICE_ID');
+      } catch (error) {
+        return send(res, 503, { ok: false, error: error.message });
+      }
+    }
+    if (!singlePriceId || !unlimitedPriceId) return send(res, 503, { ok: false, error: 'Stripe subscription price IDs are not configured yet.' });
 
     const customer = requireCustomer(body);
+    if (harness && !customer.email.endsWith('@harness.invalid')) return send(res, 403, { ok: false, error: 'harness checkout is only for a harness customer' });
     const orderBump = Boolean(body.orderBump);
     const photoMemories = Boolean(body.photoMemories || body.media);
     const mediaPriceId = process.env.TIMESYNCHER_MEDIA_PRICE_ID || '';
@@ -638,8 +650,8 @@ export default async function handler(req, res) {
     };
     const stripeCustomer = await findOrCreateStripeCustomer(stripe, customer, orderMetadata);
     const subscriptionItems = [
-      { price: SINGLE_PRICE_ID },
-      ...(orderBump ? [{ price: UNLIMITED_PRICE_ID }] : []),
+      { price: singlePriceId },
+      ...(orderBump ? [{ price: unlimitedPriceId }] : []),
       ...(photoMemories ? [{ price: mediaPriceId }] : []),
     ];
 
