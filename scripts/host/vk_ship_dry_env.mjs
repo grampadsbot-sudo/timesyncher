@@ -1,4 +1,5 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import path from 'node:path';
 
@@ -81,17 +82,59 @@ export function applyMissingScorecard(round, text) {
   return detail;
 }
 
-export function markEnvBlocked(dryRun, sha, runId) {
+export function markEnvBlocked(dryRun, sha, runId, reason = 'blocked: env') {
   return {
     ...dryRun,
     ran: false,
     blockedEnv: true,
     sha: sha || '',
     id: runId || '',
-    reason: 'blocked: env',
+    reason,
     verdict: '',
     outputsPass: false,
   };
+}
+
+export const NPM_STAMP_NAME = 'ship-repo-npm-ci.sha256';
+export const APP_DB_MODULE = '@neondatabase/serverless';
+
+export function lockHash(text) {
+  return createHash('sha256').update(String(text || '')).digest('hex');
+}
+
+export function depsNeedInstall({ hasNodeModules, lockHash: hash, savedHash }) {
+  return !hasNodeModules || !savedHash || savedHash !== hash;
+}
+
+export function missingModule(repo, name, exists) {
+  const pkg = path.join(repo, 'node_modules', ...String(name || '').split('/'), 'package.json');
+  return exists(pkg) ? '' : (name || APP_DB_MODULE);
+}
+
+export function ensureShipRepoDeps({
+  repo,
+  stateDir,
+  readFile = (file) => readFileSync(file, 'utf8'),
+  writeFile = (file, text) => { mkdirSync(path.dirname(file), { recursive: true }); writeFileSync(file, text); },
+  exists = existsSync,
+  spawn,
+  moduleName = APP_DB_MODULE,
+} = {}) {
+  const module = moduleName || APP_DB_MODULE;
+  let lockText = '';
+  try { lockText = readFile(path.join(repo, 'package-lock.json')); } catch { return `blocked: env ${module}`; }
+  const hash = lockHash(lockText);
+  const stampPath = path.join(stateDir, NPM_STAMP_NAME);
+  let saved = '';
+  try { saved = String(readFile(stampPath) || '').trim(); } catch { saved = ''; }
+  const hasNodeModules = exists(path.join(repo, 'node_modules'));
+  if (depsNeedInstall({ hasNodeModules, lockHash: hash, savedHash: saved })) {
+    const result = spawn ? spawn('npm', ['ci', '--no-audit', '--no-fund'], { cwd: repo }) : { status: 1 };
+    if (!result || result.status !== 0) return `blocked: env ${module}`;
+    writeFile(stampPath, `${hash}\n`);
+  }
+  const missing = missingModule(repo, module, exists);
+  return missing ? `blocked: env ${missing}` : '';
 }
 
 function joinRoot(root, rel) {

@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { applyMissingScorecard, dryRunId, harnessEnvSkipped, loadStagingDatabaseUrl, markEnvBlocked } from './vk_ship_dry_env.mjs';
+import { applyMissingScorecard, dryRunId, ensureShipRepoDeps, harnessEnvSkipped, loadStagingDatabaseUrl, markEnvBlocked } from './vk_ship_dry_env.mjs';
 import {
   BOOTSTRAP_PULLS,
   applyDryRunCard,
@@ -173,7 +173,6 @@ function readState() {
 function acceptanceDir() {
   return path.join(root, 'acceptance');
 }
-
 function acceptanceFiles() {
   const dir = acceptanceDir();
   if (!fs.existsSync(dir)) return {};
@@ -217,8 +216,9 @@ function runPy(file, args) {
   const result = spawnSync('python3', [bin, ...args], { encoding: 'utf8', env: process.env });
   if (result.status !== 0) throw new Error(scrub(runPyFailure(file, result.status, result.stderr), secrets).slice(0, 240));
 }
-
 async function runHarness(round, runId, sha) {
+  const block = ensureShipRepoDeps({ repo: repoDir(), stateDir: path.join(root, 'state'), spawn: (cmd, args, opts) => spawnSync(cmd, args, { ...opts, encoding: 'utf8' }) });
+  if (block) { round.errors.push(block); round.dryRun = markEnvBlocked(round.dryRun, sha, runId, block); return; }
   const loaded = await loadStagingDatabaseUrl({ roots: [root, process.env.TSV_REPO || '', repoDir(), path.join(root, 'ship-repo')], env: process.env });
   const hit = blockedTarget(storyText()) || blockedTarget(loaded.url);
   if (hit || !loaded.url) {
@@ -399,7 +399,7 @@ function publish(round, state, stamp) {
   const next = {
     ...state,
     lastDrySha: dryRunRecorded(round.dryRun) ? round.dryRun.sha : state.lastDrySha,
-    reason: round.dryRun?.blockedEnv ? 'blocked: env' : (dryRunRecorded(round.dryRun) ? round.dryRun.reason : state.reason),
+    reason: round.dryRun?.blockedEnv ? (round.dryRun.reason || 'blocked: env') : (dryRunRecorded(round.dryRun) ? round.dryRun.reason : state.reason),
     error: round.errors.join('|'),
     errorHash: errorStateHash(round.errors, round.heads),
     rebase: { ...(state.rebase || {}), ...Object.fromEntries(round.needsRebase.map((row) => [String(row.pr), row.file])) },
