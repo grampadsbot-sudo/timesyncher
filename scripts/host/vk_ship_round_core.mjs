@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -6,6 +7,8 @@ const REQUIRED_LABELS = ['project:tsv', 'base:vk', 'craig-asked'];
 const OFFLINE_TESTS = 'scripts/offline-tests.txt';
 const OUTPUT_IDS = ['dialog-pdf', 'keepsake-pdf', 'screens', 'video-check', 'scorecard'];
 const OK = new Set(['success', 'pass']);
+const UI_EXT = new Set(['css', 'scss', 'sass', 'less', 'html', 'htm', 'jsx', 'tsx', 'vue', 'svelte', 'svg', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'ico']);
+const UI_ROOT = ['apps/', 'src/', 'public/', 'baselines/'];
 
 function rulesFile() {
   const fromRepo = process.env.TSV_REPO
@@ -19,8 +22,8 @@ const rules = JSON.parse(readFileSync(rulesFile(), 'utf8'));
 
 export const BOOTSTRAP_PULLS = [
   { pr: 1042, issue: 1041, sha: '' },
-  { pr: 1040, issue: 1039, sha: 'b5237f05c60a0651ad27533d4ccd4bffb7dd2dc6' },
-  { pr: 1044, issue: 1043, sha: 'a3d2981a783a569ccb20fb7d9ae03e877fca68d7' },
+  { pr: 1040, issue: 1039, sha: 'd816927d5423266d320f72d2116cea44edcfbbae' },
+  { pr: 1044, issue: 1043, sha: '6512f9bd099a9b31b17f0ebce44d92bd2f52c129' },
 ];
 
 export function bootstrapDryText() {
@@ -33,7 +36,7 @@ export function bootstrapDryText() {
     lines.push('merge');
   }
   lines.push('batch-deploy python3 tsv_dispatch.py --batch-deploy');
-  lines.push('live-accept python3 live_accept.py');
+  lines.push('live-accept python3 live_accept.py run');
   lines.push('dry-run once on the new live sha');
   return lines.join('\n');
 }
@@ -51,7 +54,7 @@ export function scrub(text, secrets = []) {
 }
 
 function acceptanceFromBody(body) {
-  const match = String(body || '').match(/```acceptance\s*\n([\s\S]*?)```/i);
+  const match = String(body || '').match(/```acceptance[^\n]*\n([\s\S]*?)```/i);
   if (!match) return null;
   try {
     const parsed = JSON.parse(match[1]);
@@ -59,6 +62,28 @@ function acceptanceFromBody(body) {
   } catch {
     return { invalid: true };
   }
+}
+
+export function errorStateHash(errors, heads) {
+  const body = JSON.stringify({
+    errors: [...new Set(errors || [])].sort(),
+    heads: [...new Set(heads || [])].filter(Boolean).sort(),
+  });
+  return createHash('sha256').update(body).digest('hex');
+}
+
+export function runPyFailure(file, status, stderr) {
+  const lines = String(stderr || '').split('\n').map((line) => line.trim()).filter(Boolean);
+  const last = lines.length ? lines[lines.length - 1] : '';
+  const code = status === null || status === undefined ? 1 : status;
+  return last ? `${file} exit ${code}: ${last}` : `${file} exit ${code}`;
+}
+
+export function crontabHasActive(current, marker) {
+  return String(current || '').split('\n').some((line) => {
+    const trimmed = line.trim();
+    return Boolean(trimmed) && !trimmed.startsWith('#') && trimmed.includes(marker);
+  });
 }
 
 function labelGap(have) {
@@ -71,6 +96,39 @@ function eligiblePull(pull) {
   if (!REQUIRED_LABELS.every((label) => labels.has(label))) return false;
   const spec = acceptanceFromBody(pull.body);
   return Boolean(spec) && spec.invalid !== true && Number(pull.issue) > 0;
+}
+
+export function pathIsUi(file) {
+  const rel = String(file || '').replace(/^\.\//, '').toLowerCase();
+  if (!rel) return true;
+  const base = rel.slice(rel.lastIndexOf('/') + 1);
+  const dot = base.lastIndexOf('.');
+  const ext = dot >= 0 ? base.slice(dot + 1) : '';
+  if (UI_EXT.has(ext)) return true;
+  return UI_ROOT.some((prefix) => rel.startsWith(prefix) || rel.includes(`/${prefix}`));
+}
+
+export function gatebSkipDescription(sha) {
+  return `Gate B SKIPPED_BACKEND_ONLY on ${String(sha || '').slice(0, 7)} (no UI files)`;
+}
+
+function ciReady(report, sha) {
+  const checks = (report?.checks || []).filter((row) => !row.sha || row.sha === sha);
+  for (const name of ['secrets', 'unit-tests']) {
+    const rows = checks.filter((row) => row.name === name);
+    if (!rows.length || rows.some((row) => !OK.has(row.conclusion))) return false;
+  }
+  return true;
+}
+
+export function gatebSkipAction(pull, report) {
+  if (!pull?.head || !Array.isArray(pull.files) || !pull.files.length) return null;
+  if (pull.files.some((file) => pathIsUi(file))) return null;
+  if (!ciReady(report, pull.head)) return null;
+  const gate = (report?.statuses || []).filter((row) => (!row.sha || row.sha === pull.head) && row.context === 'gateb');
+  if (gate.some((row) => row.state === 'failure' || row.state === 'error')) return null;
+  if (gate.length && gate.every((row) => OK.has(row.state))) return null;
+  return { type: 'gateb-skip', pr: pull.number, sha: pull.head, description: gatebSkipDescription(pull.head) };
 }
 
 function headIsGreen(report, sha) {
@@ -129,8 +187,8 @@ export function doorbellReasons(round, previous = {}) {
   if (dry?.ran && dry.verdict === 'PASS' && dry.outputsPass) reasons.push('dry-run-pass');
   if (dry?.ran && dry.verdict !== 'PASS' && dry.reason && dry.reason !== previous.reason) reasons.push('new-failure');
   if ((round.needsRebase || []).some((row) => !previous.rebase?.[String(row.pr)])) reasons.push('needs-rebase');
-  const error = (round.errors || []).join('|');
-  if (error && error !== (previous.error || '')) reasons.push('error');
+  const hash = errorStateHash(round.errors, round.heads);
+  if ((round.errors || []).length && hash !== (previous.errorHash || '')) reasons.push('error');
   return reasons;
 }
 
@@ -162,16 +220,18 @@ export function planPull(pull, world, pinSha = '') {
   const actions = [];
   const errors = [];
   const needsRebase = [];
-  const spec = acceptanceFromBody(pull.body);
   const issue = Number(pull.issue) || 0;
   if (!issue) {
     errors.push(`missing-issue:${pull.number}`);
     return { actions, errors, needsRebase };
   }
-  if (spec?.invalid) {
+  const fromBody = acceptanceFromBody(pull.body);
+  const fromFile = world.acceptanceSpecs?.[String(issue)];
+  if (fromBody?.invalid || fromFile?.invalid) {
     errors.push(`acceptance-invalid:${issue}`);
     return { actions, errors, needsRebase };
   }
+  const spec = fromBody || fromFile;
   if (!spec) {
     errors.push(`acceptance-missing:${issue}`);
     return { actions, errors, needsRebase };
@@ -191,7 +251,12 @@ export function planPull(pull, world, pinSha = '') {
   const report = world.checksBySha?.[pull.head] || { checks: [], statuses: [] };
   const current = pull.headNow || pull.head;
   if (current !== pull.head) return { actions, errors, needsRebase };
-  if (!headIsGreen(report, pull.head)) return { actions, errors, needsRebase };
+  const skip = gatebSkipAction(pull, report);
+  const judged = skip
+    ? { ...report, statuses: [...(report.statuses || []), { context: 'gateb', state: 'success', sha: pull.head }] }
+    : report;
+  if (skip) actions.push(skip);
+  if (!headIsGreen(judged, pull.head)) return { actions, errors, needsRebase };
   if (!alreadyAccepted(report, pull.head)) {
     const count = Array.isArray(spec.assertions) ? spec.assertions.length : 1;
     actions.push({
@@ -215,6 +280,19 @@ function appendDeployOrDry(actions, world, errors) {
     actions.push({ type: 'dry-run-after-deploy' });
     return blankDry('');
   }
+  const tipLive = world.tipLive || {};
+  if (tipLive.tip && tipLive.tip === tipLive.live && state.lastDrySha !== tipLive.live) {
+    actions.push({ type: 'live-accept' });
+    const dryRun = blankDry(tipLive.live);
+    const hit = protectedTarget(world.storyText || '') || protectedTarget(world.databaseUrl || '');
+    if (hit) {
+      errors.push(hit);
+      return dryRun;
+    }
+    dryRun.id = world.runId || `dry-run-${tipLive.live.slice(0, 7)}-openrouter`;
+    actions.push({ type: 'dry-run-after-deploy', sha: tipLive.live, runId: dryRun.id });
+    return dryRun;
+  }
   const sha = dryRunSha(world.tipLive, state);
   const dryRun = blankDry(sha || world.tipLive?.live || '');
   if (!sha) return dryRun;
@@ -237,6 +315,7 @@ function roundFrom(world, actions, errors, needsRebase, dryRun) {
     pr: action.pr,
   }));
   const round = {
+    heads: (world.pulls || []).map((pull) => pull.head).filter(Boolean),
     merges: actions.filter((action) => action.type === 'merge').map((action) => action.pr),
     tip: world.tipLive?.tip || '',
     live: world.tipLive?.live || '',
@@ -261,6 +340,7 @@ export function planBootstrap(world) {
       errors.push(`missing-pr:${item.pr}`);
       continue;
     }
+    if (pull.merged === true || pull.state === 'MERGED') continue;
     const part = planPull({ ...pull, issue: pull.issue || item.issue }, world, item.sha);
     actions.push(...part.actions);
     errors.push(...part.errors);
@@ -302,11 +382,12 @@ export function formatDry(actions) {
     }
     if (action.type === 'add-labels') lines.push(`add-labels ${(action.labels || []).join(' ')}`);
     if (action.type === 'write-acceptance') lines.push(`register acceptance/${action.issue}.json`);
+    if (action.type === 'gateb-skip') lines.push(`gateb-skip ${action.sha}`);
     if (action.type === 'accept') lines.push(`accept ${action.sha}`);
     if (action.type === 'merge') lines.push('merge');
     if (action.type === 'needs-rebase') lines.push(`needs-rebase ${action.file}`);
     if (action.type === 'batch-deploy') lines.push('batch-deploy python3 tsv_dispatch.py --batch-deploy');
-    if (action.type === 'live-accept') lines.push('live-accept python3 live_accept.py');
+    if (action.type === 'live-accept') lines.push('live-accept python3 live_accept.py run');
     if (action.type === 'dry-run') lines.push(`dry-run ${action.sha}`);
     if (action.type === 'dry-run-after-deploy') lines.push('dry-run once on the new live sha');
   }
