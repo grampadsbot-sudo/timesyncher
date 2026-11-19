@@ -217,4 +217,52 @@ try {
   rmSync(dir, { recursive: true, force: true });
 }
 
+const expiredDir = mkdtempSync(path.join(tmpdir(), 'video-bind-fallback-'));
+process.env.DATABASE_URL = 'postgres://fixture@127.0.0.1/fixture';
+delete process.env.NEON_DATABASE_URL;
+process.env.TIMESYNCHER_TRAVEL_BASE_URL = 'https://trek.example';
+process.env.TIMESYNCHER_THING_MEDIA_INDEX = path.join(expiredDir, 'media-index.json');
+delete process.env.TIMESYNCHER_MEDIA_BIND_TOKEN;
+delete process.env.TIMESYNCHER_ADMIN_TOKEN;
+delete process.env.TIMESYNCHER_WORKER_TOKEN;
+globalThis.fetch = async (url) => {
+  const href = String(url);
+  if (href.startsWith('https://trek.example/')) {
+    return { ok: false, status: 404, json: async () => ({ error: 'Invalid or expired link' }) };
+  }
+  return { ok: true, status: 200, json: async () => ({ trip: { id: 41 }, places: [{ id: 14, name: 'Harbor walk', category_name: 'Activity' }] }) };
+};
+useVacationDatabase(async () => []);
+try {
+  const raw = Buffer.from(JSON.stringify({
+    shareToken: 'sample-trip',
+    thingName: 'Harbor walk',
+    thingId: 14,
+    fileName: 'clip.mp4',
+    fileBase64: clip.toString('base64'),
+    caption: 'video',
+  }));
+  const req = {
+    method: 'POST',
+    url: '/api/bind-thing-media',
+    headers: { 'content-type': 'application/json', host: 'vacation-staging.timesyncher.com', 'x-forwarded-proto': 'https' },
+    async *[Symbol.asyncIterator]() { yield raw; },
+  };
+  const res = { statusCode: 0, headers: {}, body: '', setHeader(name, value) { this.headers[name] = value; }, end(text) { this.body = String(text || ''); } };
+  await handler(req, res);
+  const parsed = JSON.parse(res.body);
+  assert.equal(res.statusCode, 200, res.body);
+  assert.equal(parsed.ok, true);
+  assert.match(parsed.binding.publicUrl, /\/api\/bind-thing-media\?/);
+  assert.equal(res.body.includes('Invalid or expired link'), false);
+} finally {
+  useVacationDatabase(null);
+  globalThis.fetch = origFetch;
+  for (const [key, value] of Object.entries(savedEnv)) {
+    if (value == null) delete process.env[key];
+    else process.env[key] = value;
+  }
+  rmSync(expiredDir, { recursive: true, force: true });
+}
+
 console.log('test_acceptance_1041_dry_run_scorecard: ok');
