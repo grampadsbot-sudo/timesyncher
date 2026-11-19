@@ -1,4 +1,4 @@
-import { repairExplicitLogoUrl } from './thing-logo-fallback-url.mjs';
+import { repairExplicitLogoUrl, repairServedBoundaryLogoUrl } from './thing-logo-fallback-url.mjs';
 import { timelineIcon, timelineCategoryIcon, thingLogoUrl } from './timeline-icons.mjs';
 
 export const NAMED_THING_LOGOS = {
@@ -226,7 +226,7 @@ export function resolveThingLogoUrl(thing = {}, override = {}) {
 export function resolveThingLogoDisplayUrl(thing = {}, override = {}) {
   const logo = resolveThingLogoUrl(thing, override);
   if (!logo) return '';
-  return repairExplicitLogoUrl(logo, pageUrlForLogo(thing, override));
+  return repairServedBoundaryLogoUrl(logo, pageUrlForLogo(thing, override));
 }
 
 export function applyCapturedLogos(shared = {}) {

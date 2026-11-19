@@ -4,7 +4,12 @@ import fs from 'node:fs';
 
 import { auditScheduledThingLogos, visibleLogoDomCheckSource } from '../src/vacation/shared-trip-logo-audit.mjs';
 import { resolveThingLogoDisplayUrl } from '../src/vacation/thing-logo-capture.mjs';
-import { logoFallbackChain, repairExplicitLogoUrl } from '../src/vacation/thing-logo-fallback-url.mjs';
+import {
+  declaredIconFetchLooksBroken,
+  logoFallbackChain,
+  repairExplicitLogoUrl,
+  repairServedBoundaryLogoUrl,
+} from '../src/vacation/thing-logo-fallback-url.mjs';
 import { liveAcceptScheduledLogoAudit } from '../apps/vacation-client/src/lib/liveAcceptLogoAudit.mjs';
 import { runVisibleSharedLogoCheck } from './lib/shared-trip-visible-logo-check.mjs';
 import { runGateBVisibleLogoCheck } from './ops/gateb/restore-check-visible-logos.mjs';
@@ -17,13 +22,35 @@ assert.match(
   /duckduckgo\.com\/ip3\/delta\.com\.ico/,
 );
 assert.ok(logoFallbackChain('https://www.macys.com/favicon.ico', 'https://www.macys.com/').length >= 2);
+const gstaticCarmines = /t2\.gstatic\.com\/faviconV2.*carminesnyc/i;
+const gstaticJohns = /t2\.gstatic\.com\/faviconV2.*johnsofbleecker/i;
+assert.match(
+  repairServedBoundaryLogoUrl('https://icons.duckduckgo.com/ip3/carminesnyc.com.ico'),
+  gstaticCarmines,
+  'carmines duckduckgo ip3 must not stay on 404 host',
+);
+assert.match(
+  repairServedBoundaryLogoUrl('https://icons.duckduckgo.com/ip3/johnsofbleecker.com.ico'),
+  gstaticJohns,
+  'johns duckduckgo ip3 must not stay on 404 host',
+);
 assert.match(
   resolveThingLogoDisplayUrl(
     { id: 685, logoUrl: 'https://www.carminesnyc.com/favicon.ico', website: 'https://www.carminesnyc.com/' },
     { logoUrl: 'https://www.carminesnyc.com/favicon.ico' },
   ),
-  /duckduckgo\.com\/ip3\/carminesnyc\.com\.ico/,
+  gstaticCarmines,
 );
+assert.equal(declaredIconFetchLooksBroken(404, 'image/x-icon', 0), true);
+
+for (const [id, broken] of [
+  [682, 'https://icons.duckduckgo.com/ip3/johnsofbleecker.com.ico'],
+  [685, 'https://icons.duckduckgo.com/ip3/carminesnyc.com.ico'],
+]) {
+  const repaired = repairServedBoundaryLogoUrl(broken);
+  assert.doesNotMatch(repaired, /duckduckgo\.com\/ip3\/(johnsofbleecker|carminesnyc)\.com\.ico/, `place ${id} repair still duckduckgo 404`);
+  assert.match(repaired, /t2\.gstatic\.com\/faviconV2/, `place ${id} must map to gstatic`);
+}
 
 const audit = auditScheduledThingLogos(fixture);
 const brokenIds = [604, 613, 616, 622, 623, 648, 649, 651, 658, 670];
