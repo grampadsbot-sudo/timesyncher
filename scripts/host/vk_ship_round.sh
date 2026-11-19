@@ -1,8 +1,22 @@
 #!/bin/bash
 set -euo pipefail
+SHIP_ROUND_VERSION=2
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT="${TSV_DISPATCH_ROOT:-$HOME/tsv-dispatch}"
 SHIP="${TSV_SHIP_REPO:-$ROOT/ship-repo}"
+version_of() {
+  local file="$1" line
+  line=$(grep -E '^SHIP_ROUND_VERSION=[0-9]+$' "$file" 2>/dev/null | head -1 || true)
+  line="${line#SHIP_ROUND_VERSION=}"
+  if [ -z "$line" ]; then
+    printf '%s\n' 0
+    return 0
+  fi
+  printf '%s\n' "$line"
+}
+vk_copy_current() {
+  [ "$2" -ge "$1" ]
+}
 preflight() {
   missing=""
   if ! python3 -c 'import os,sys
@@ -26,6 +40,9 @@ sys.exit(0 if gh.tok else 2)' >/dev/null 2>&1; then
   fi
   return 0
 }
+if [ "${SHIP_ROUND_LIB:-}" = 1 ]; then
+  return 0 2>/dev/null || exit 0
+fi
 helper_path() {
   if [ -f "$HERE/vk_ship_github.py" ]; then
     printf '%s\n' "$HERE/vk_ship_github.py"
@@ -74,10 +91,12 @@ if [ "${TSV_SHIP_FETCHED:-}" != "1" ]; then
   git -C "$SHIP" reset --hard origin/vk
   export TSV_SHIP_FETCHED=1
   fresh="$SHIP/scripts/host/vk_ship_round.sh"
-  if [ -f "$fresh" ] && [ "$fresh" != "$HERE/vk_ship_round.sh" ]; then
+  installed_version="$(version_of "$HERE/vk_ship_round.sh")"
+  fresh_version="$(version_of "$fresh")"
+  if [ -f "$fresh" ] && [ "$fresh" != "$HERE/vk_ship_round.sh" ] && vk_copy_current "$installed_version" "$fresh_version"; then
     exec "$fresh" "$@"
   fi
-  if [ ! -f "$fresh" ]; then
+  if [ ! -f "$fresh" ] || ! vk_copy_current "$installed_version" "$fresh_version"; then
     export TSV_SHIP_BOOTSTRAP=1
     exec node "$ROOT/bootstrap/vk_ship_round.mjs" "$@"
   fi

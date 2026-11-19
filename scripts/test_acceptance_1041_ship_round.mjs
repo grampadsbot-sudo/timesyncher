@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { BOOTSTRAP_PULLS, applyDryRunCard, bootstrapDryText, crontabHasActive, doorbellReasons, errorStateHash, planBootstrap, planCycle, planPull, runPyFailure, scrub } from './host/vk_ship_round_core.mjs';
+import { BOOTSTRAP_PULLS, applyDryRunCard, bootstrapDryText, crontabHasActive, doorbellReasons, errorStateHash, gatebSkipAction, gatebSkipDescription, pathIsUi, planBootstrap, planCycle, planPull, runPyFailure, scrub } from './host/vk_ship_round_core.mjs';
 
 const protectedRules = JSON.parse(readFileSync(new URL('./fixtures/harness/protected-targets.json', import.meta.url), 'utf8'));
 
@@ -263,6 +263,9 @@ assert.match(launcher, /refusing remote url with credentials/);
 assert.match(launcher, /credential\.helper=!python3 \$\{HELPER\} credential/);
 assert.match(launcher, /preflight: missing/);
 assert.doesNotMatch(launcher, /gh api|gh repo|gh auth|GH_TOKEN@/);
+assert.match(launcher, /^SHIP_ROUND_VERSION=2$/m);
+assert.match(launcher, /vk_copy_current "\$installed_version" "\$fresh_version"/);
+assert.match(launcher, /exec node "\$ROOT\/bootstrap\/vk_ship_round\.mjs"/);
 assert.doesNotMatch(roundJs, /spawnSync\('gh'/);
 assert.match(roundJs, /api\('PUT', `\/repos\/\$\{REPO\}\/pulls\/\$\{action\.pr\}\/merge`/);
 const acceptedRunPy = {
@@ -404,5 +407,69 @@ const sameHash = errorStateHash(sameErrors.errors, sameErrors.heads);
 assert.equal(doorbellReasons(sameErrors, {}).includes('error'), true);
 assert.equal(doorbellReasons(sameErrors, { errorHash: sameHash }).includes('error'), false);
 assert.equal(doorbellReasons({ ...sameErrors, heads: ['other-head'] }, { errorHash: sameHash }).includes('error'), true);
+
+assert.equal(pathIsUi('scripts/host/vk_ship_round.mjs'), false);
+assert.equal(pathIsUi('acceptance/1041.json'), false);
+assert.equal(pathIsUi('src/vacation/live-app-turn.mjs'), true);
+assert.equal(pathIsUi('apps/vacation-client/index.html'), true);
+assert.equal(pathIsUi('scripts/host/view.css'), true);
+assert.equal(gatebSkipDescription('d25a331be674'), 'Gate B SKIPPED_BACKEND_ONLY on d25a331 (no UI files)');
+const noUiReport = {
+  checks: [
+    { name: 'secrets', conclusion: 'success', sha: 'abc' },
+    { name: 'unit-tests', conclusion: 'success', sha: 'abc' },
+  ],
+  statuses: [],
+};
+const noUi = { ...pull, files: ['scripts/host/vk_ship_round.mjs', 'acceptance/1041.json'] };
+const skippedGate = planPull(noUi, { acceptanceFiles: { 1100: true }, checksBySha: { abc: noUiReport }, state: {} }, '');
+assert.equal(skippedGate.actions.some((action) => action.type === 'gateb-skip' && action.description === gatebSkipDescription('abc')), true);
+assert.equal(skippedGate.actions.some((action) => action.type === 'accept'), true);
+const uiPull = { ...noUi, files: ['scripts/host/vk_ship_round.mjs', 'src/vacation/live-app-turn.mjs'] };
+const uiPlanned = planPull(uiPull, { acceptanceFiles: { 1100: true }, checksBySha: { abc: noUiReport }, state: {} }, '');
+assert.equal(uiPlanned.actions.some((action) => action.type === 'gateb-skip'), false);
+assert.equal(uiPlanned.actions.some((action) => action.type === 'accept'), false);
+const failedGate = planPull(noUi, {
+  acceptanceFiles: { 1100: true },
+  checksBySha: { abc: { ...noUiReport, statuses: [{ context: 'gateb', state: 'failure', sha: 'abc' }] } },
+  state: {},
+}, '');
+assert.equal(failedGate.actions.some((action) => action.type === 'gateb-skip'), false);
+assert.equal(failedGate.actions.some((action) => action.type === 'accept'), false);
+assert.equal(gatebSkipAction({ ...noUi, files: [] }, noUiReport), null);
+const caughtUp = planCycle({
+  pulls: [],
+  checksBySha: {},
+  acceptanceFiles: {},
+  tipLive: { tip: '9bea8cc2', live: '9bea8cc2', liveAccept: '' },
+  state: {},
+  storyText: '{"destination":"Hilo"}',
+  databaseUrl: '',
+});
+assert.deepEqual(caughtUp.actions.map((action) => action.type), ['live-accept', 'dry-run-after-deploy']);
+assert.equal(caughtUp.actions.some((action) => action.type === 'batch-deploy'), false);
+const mergedBoot = planBootstrap({
+  pulls: BOOTSTRAP_PULLS.map((item) => bootPull(item, 'merged-head', { merged: true, state: 'MERGED' })),
+  checksBySha: {},
+  acceptanceFiles: {},
+  tipLive: { tip: '9bea8cc2', live: '9bea8cc2', liveAccept: '' },
+  state: {},
+});
+assert.equal(mergedBoot.round.errors.length, 0);
+assert.equal(mergedBoot.actions.some((action) => action.type === 'merge'), false);
+assert.equal(mergedBoot.actions.some((action) => action.type === 'batch-deploy'), false);
+assert.equal(mergedBoot.actions.some((action) => action.type === 'live-accept'), true);
+const version = spawnSync('bash', ['-c', [
+  'set -euo pipefail',
+  'export SHIP_ROUND_LIB=1',
+  'source scripts/host/vk_ship_round.sh',
+  'test "$(version_of scripts/host/vk_ship_round.sh)" = 2',
+  'test "$(version_of /dev/null)" = 0',
+  'vk_copy_current 2 2',
+  'vk_copy_current 2 3',
+  'if vk_copy_current 2 1; then exit 1; fi',
+  'if vk_copy_current 2 0; then exit 1; fi',
+].join('\n')], { cwd: repoRoot, encoding: 'utf8' });
+assert.equal(version.status, 0, version.stderr);
 
 console.log('test_acceptance_1041_ship_round: ok');

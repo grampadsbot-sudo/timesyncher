@@ -96,7 +96,18 @@ function shapePull(full) {
     mergeableState: dirty || conflict.files.length ? 'dirty' : 'clean',
     conflictFiles: conflict.files,
     conflictDeletions: conflict.deletions,
+    files: filesFor(full.number),
   };
+}
+
+function filesFor(number) {
+  const files = [];
+  for (let page = 1; page < 21; page += 1) {
+    const list = [].concat(api('GET', `/repos/${REPO}/pulls/${number}/files?per_page=100&page=${page}`) || []);
+    files.push(...list.map((row) => row.filename).filter(Boolean));
+    if (list.length < 100) return files;
+  }
+  return null;
 }
 
 function loadOne(number) {
@@ -222,6 +233,12 @@ async function perform(action, round) {
     if (!fs.existsSync(file)) fs.writeFileSync(file, `${JSON.stringify(action.spec, null, 2)}\n`);
     return true;
   }
+  if (action.type === 'gateb-skip') {
+    const gate = (api('GET', `/repos/${REPO}/commits/${action.sha}/status`).statuses || []).filter((row) => row.context === 'gateb');
+    if (gate.some((row) => row.state === 'failure' || row.state === 'error')) return false;
+    if (!gate.length || !gate.every((row) => row.state === 'success')) api('POST', `/repos/${REPO}/statuses/${action.sha}`, { state: 'success', context: 'gateb', description: action.description });
+    return true;
+  }
   if (action.type === 'accept') {
     const fresh = api('GET', `/repos/${REPO}/pulls/${action.pr}`);
     if ((fresh.head?.sha || fresh.headRefOid) !== action.sha) return false;
@@ -295,6 +312,7 @@ async function runBootstrap(stamp) {
       fetchVk();
       const pull = loadOne(item.pr);
       pull.issue = pull.issue || item.issue;
+      if (pull.merged || pull.state === 'MERGED') continue;
       if (pull.head) round.heads.push(pull.head);
       const world = worldNow(`dry-run-${stamp}-openrouter`);
       world.checksBySha = { [pull.head]: checksFor(pull.head) };
@@ -313,15 +331,13 @@ async function runBootstrap(stamp) {
       round.errors.push(scrub(error.message, secrets));
     }
   }
-  if (merged) {
-    for (const action of [
-      { type: 'batch-deploy' },
-      { type: 'live-accept' },
-      { type: 'dry-run-after-deploy', runId: `dry-run-${stamp}-openrouter` },
-    ]) {
-      try { await perform(action, round); }
-      catch (error) { round.errors.push(scrub(error.message, secrets)); }
-    }
+  const live = tipLive();
+  const runId = `dry-run-${stamp}-openrouter`;
+  const caughtUp = live.tip && live.tip === live.live && readState().lastDrySha !== live.live;
+  const tail = merged ? ['batch-deploy', 'live-accept', 'dry-run-after-deploy'] : (caughtUp ? ['live-accept', 'dry-run-after-deploy'] : []);
+  for (const type of tail) {
+    try { await perform({ type, runId }, round); }
+    catch (error) { round.errors.push(scrub(error.message, secrets)); }
   }
   return round;
 }
@@ -462,21 +478,12 @@ async function runGeneral(pulls, stamp) {
       round.errors.push(scrub(error.message, secrets));
     }
   }
-  if (merged) {
-    for (const action of [
-      { type: 'batch-deploy' },
-      { type: 'live-accept' },
-      { type: 'dry-run-after-deploy', runId: `dry-run-${stamp}-openrouter` },
-    ]) {
-      try { await perform(action, round); }
-      catch (error) { round.errors.push(scrub(error.message, secrets)); }
-    }
-  } else {
-    for (const action of planned.actions) {
-      if (action.type !== 'dry-run') continue;
-      try { await perform(action, round); }
-      catch (error) { round.errors.push(scrub(error.message, secrets)); }
-    }
+  const tail = merged
+    ? [{ type: 'batch-deploy' }, { type: 'live-accept' }, { type: 'dry-run-after-deploy', runId: `dry-run-${stamp}-openrouter` }]
+    : planned.actions.filter((action) => action.type === 'dry-run' || action.type === 'live-accept' || action.type === 'dry-run-after-deploy');
+  for (const action of tail) {
+    try { await perform(action, round); }
+    catch (error) { round.errors.push(scrub(error.message, secrets)); }
   }
   return round;
 }
