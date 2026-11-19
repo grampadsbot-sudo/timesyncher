@@ -92,6 +92,31 @@ assert.deepEqual(
   }, { TIMESYNCHER_MEDIA_BIND_TOKEN: 'secret' }),
   { mode: 'token' },
 );
+const anyTokenEnv = {
+  TIMESYNCHER_MEDIA_BIND_TOKEN: 'media-secret',
+  TIMESYNCHER_ADMIN_TOKEN: 'admin-secret',
+  TIMESYNCHER_WORKER_TOKEN: 'worker-secret',
+};
+assert.deepEqual(
+  requireMediaBindAuth({ headers: { host: 'timesyncher.com', 'x-timesyncher-admin-token': 'admin-secret' } }, anyTokenEnv),
+  { mode: 'token' },
+);
+assert.deepEqual(
+  requireMediaBindAuth({ headers: { host: 'timesyncher.com', 'x-timesyncher-worker-token': 'worker-secret' } }, anyTokenEnv),
+  { mode: 'token' },
+);
+assert.deepEqual(
+  requireMediaBindAuth({ headers: { host: 'timesyncher.com', 'x-timesyncher-media-bind-token': 'media-secret' } }, anyTokenEnv),
+  { mode: 'token' },
+);
+assert.throws(
+  () => requireMediaBindAuth({ headers: { host: 'timesyncher.com', 'x-timesyncher-admin-token': 'other-secret' } }, anyTokenEnv),
+  /Unauthorized media bind request/,
+);
+assert.deepEqual(
+  requireMediaBindAuth({ headers: { host: 'vacation-staging.timesyncher.com', 'x-timesyncher-worker-token': 'worker-secret' } }, { TIMESYNCHER_ADMIN_TOKEN: 'admin-secret', TIMESYNCHER_WORKER_TOKEN: 'worker-secret' }),
+  { mode: 'token' },
+);
 
 const api = await readFile(new URL('../src/vacation/bind-thing-media-handler.mjs', import.meta.url), 'utf8');
 assert.match(api, /\/api\/bind-thing-media/);

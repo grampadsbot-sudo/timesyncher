@@ -242,8 +242,8 @@ export function liveTurnRecord({
   }
   return record;
 }
-
 const UNLIMITED_PATTERN = /unlimited vacations for the whole year/i;
+export const POST_INTAKE_COLLAB_COPY = 'I am building the itinerary from what you told me. View access lets family and friends see the days. Edit access lets them add notes after you approve an email invite. Welcome them onto this vacation as collaborators. The household plan is unlimited vacations for the whole year.';
 const COLLAB_WELCOME = /welcome\b[^.\n]{0,180}\bcollaborat|\bcollaborat\w*[^.\n]{0,180}(?:add notes|help shape the days|whole household|whole family|unlimited vacations)/i;
 
 export function customerTurnText(turn) {
