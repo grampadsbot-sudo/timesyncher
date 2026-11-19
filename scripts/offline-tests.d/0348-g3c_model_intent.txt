@@ -1,0 +1,1 @@
+scripts/test_g3c_model_intent.mjs

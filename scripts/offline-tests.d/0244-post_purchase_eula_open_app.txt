@@ -1,0 +1,1 @@
+scripts/test_post_purchase_eula_open_app.mjs

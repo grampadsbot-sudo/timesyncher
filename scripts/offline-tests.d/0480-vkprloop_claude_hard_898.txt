@@ -1,0 +1,1 @@
+scripts/test_vkprloop_claude_hard_898.mjs

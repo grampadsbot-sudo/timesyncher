@@ -1,0 +1,1 @@
+scripts/test_lodging_anchored_reply_area_gate.mjs

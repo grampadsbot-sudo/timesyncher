@@ -1,0 +1,15 @@
+{
+  "repo": "grampadsbot-sudo/timesyncher",
+  "issue": 1039,
+  "source": "dry-run-20261119-0055-openrouter no-thing-after-chat",
+  "note": "The scripted line Add a quiet morning walk is saved as an activity. Vague classifier names stay dropped. A line that does not add anything does not create a Thing. The harness still fails when the itinerary is empty.",
+  "assertions": [
+    {
+      "id": "named-activity-saved",
+      "type": "unit_script",
+      "script": "scripts/test_acceptance_1039_named_activity.mjs",
+      "timeout_ms": 60000,
+      "note": "quiet morning walk is kept. museum morning, taco spots, and mid-range options are still dropped. The empty-itinerary check remains."
+    }
+  ]
+}

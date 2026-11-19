@@ -1,0 +1,1 @@
+scripts/test_apply_dossier_ratings_copy.mjs

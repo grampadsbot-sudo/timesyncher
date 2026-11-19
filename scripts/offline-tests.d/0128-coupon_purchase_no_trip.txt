@@ -1,0 +1,1 @@
+scripts/test_coupon_purchase_no_trip.mjs

@@ -1,0 +1,1 @@
+scripts/test_vacation_collaborator_accept_e2e.mjs

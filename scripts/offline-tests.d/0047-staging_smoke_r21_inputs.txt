@@ -1,0 +1,1 @@
+scripts/test_staging_smoke_r21_inputs.mjs

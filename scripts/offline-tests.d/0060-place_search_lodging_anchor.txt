@@ -1,0 +1,1 @@
+scripts/test_place_search_lodging_anchor.mjs

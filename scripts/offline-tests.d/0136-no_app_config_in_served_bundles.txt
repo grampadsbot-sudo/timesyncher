@@ -1,0 +1,1 @@
+scripts/test_no_app_config_in_served_bundles.mjs

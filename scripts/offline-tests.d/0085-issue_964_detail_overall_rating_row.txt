@@ -1,0 +1,1 @@
+scripts/test_issue_964_detail_overall_rating_row.mjs

@@ -1,0 +1,1 @@
+scripts/test_trip_metadata_jsonb_sql.mjs

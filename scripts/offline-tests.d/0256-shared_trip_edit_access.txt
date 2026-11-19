@@ -1,0 +1,1 @@
+scripts/test_shared_trip_edit_access.mjs

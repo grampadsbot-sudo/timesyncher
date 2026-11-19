@@ -1,0 +1,1 @@
+scripts/test_collaborator_web_access_redirect.mjs

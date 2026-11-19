@@ -1,0 +1,1 @@
+scripts/test_acceptance_988_no_summary_details_fallback.mjs

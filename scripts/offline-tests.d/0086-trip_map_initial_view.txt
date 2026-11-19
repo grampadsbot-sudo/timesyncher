@@ -1,0 +1,1 @@
+scripts/test_trip_map_initial_view.mjs

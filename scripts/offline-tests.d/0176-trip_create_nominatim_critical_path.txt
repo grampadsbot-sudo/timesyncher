@@ -1,0 +1,1 @@
+scripts/test_trip_create_nominatim_critical_path.mjs

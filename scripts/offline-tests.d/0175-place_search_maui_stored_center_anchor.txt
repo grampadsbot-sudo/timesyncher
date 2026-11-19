@@ -1,0 +1,1 @@
+scripts/test_place_search_maui_stored_center_anchor.mjs

@@ -1,0 +1,1 @@
+scripts/test_gate_b_capture_pre_data_check.mjs

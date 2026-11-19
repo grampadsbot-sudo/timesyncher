@@ -1,0 +1,1 @@
+scripts/test_acceptance_box_align_judge.mjs

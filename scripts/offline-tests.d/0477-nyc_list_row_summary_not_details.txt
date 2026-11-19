@@ -1,0 +1,1 @@
+scripts/test_nyc_list_row_summary_not_details.mjs

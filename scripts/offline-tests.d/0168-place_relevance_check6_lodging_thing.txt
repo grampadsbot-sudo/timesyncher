@@ -1,0 +1,1 @@
+scripts/test_place_relevance_check6_lodging_thing.mjs

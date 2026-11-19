@@ -1,0 +1,1 @@
+scripts/test_vk982_car_list_no_ratings.mjs

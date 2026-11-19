@@ -55,7 +55,7 @@ import {
 import { persistIntakeLodgingLookupOnCustomerTurn, persistIntakeLodgingThings } from '../src/vacation/intake-lodging-thing.mjs';
 import { intakeItineraryExistingThings } from '../src/vacation/intake-itinerary-existing-things.mjs';
 import {
-  intakeActivityThings,
+  intakeActivityThings, namedCustomerActivities,
   intakeLodgingWanted,
   mergeWantedThings,
   resolveIntakePlace,
@@ -612,7 +612,7 @@ async function loadTripThings(db, tripId) {
 }
 
 async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch, customerTurnId = null, wantedThings = [] } = {}) {
-  const planned = intakeActivityThings(extracted);
+  const planned = namedCustomerActivities(text, intakeActivityThings(extracted));
   const lodgingWanted = intakeLodgingWanted(extracted, wantedThings);
   const priorRows = await db`select title, destination, metadata from trips where id = ${tripId} limit 1`;
   const existing = await db`select count(*)::int as n from trip_things where trip_id = ${tripId}`;
@@ -763,7 +763,7 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
       await persistIntakeLodgingLookupOnCustomerTurn(db, customerTurnId, lodgingLookups);
     }
   }
-  const wanted = intakeActivityThings(extracted);
+  const wanted = namedCustomerActivities(text, intakeActivityThings(extracted));
   if (!current.length && !wanted.length) return current;
   if (!String(text || '').trim() && !wanted.length) return current;
   const tripRows = await db`

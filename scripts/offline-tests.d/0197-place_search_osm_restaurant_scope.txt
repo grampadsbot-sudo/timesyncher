@@ -1,0 +1,1 @@
+scripts/test_place_search_osm_restaurant_scope.mjs
