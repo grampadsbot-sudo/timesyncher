@@ -1,14 +1,18 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { isHarnessTag } from './harness/protected.mjs';
 import { doorbellReasons, dryRunRecorded } from './host/vk_ship_round_core.mjs';
 import {
   DATABASE_ENV_ID,
   PULLED_ENV_FILES,
+  applyMissingScorecard,
   databaseUrlFromFiles,
   databaseUrlFromText,
   defaultVercelTokenFile,
+  dryRunId,
   harnessEnvSkipped,
+  harnessFailureMessage,
   loadStagingDatabaseUrl,
   markEnvBlocked,
 } from './host/vk_ship_dry_env.mjs';
@@ -101,4 +105,15 @@ assert.equal(absent.url, '');
 assert.equal(absent.source, '');
 assert.equal(missed, 0);
 assert.equal(defaultVercelTokenFile('/home/ubishere9995').endsWith('/.config/tsv-deploy/vercel-token'), true);
+const id = dryRunId(new Date('2026-11-19T15:00:02.738Z'));
+assert.equal(id, 'dry-run-20261119-1500-openrouter');
+assert.equal(isHarnessTag(`harness:${id}:dry-run`), true);
+assert.equal(isHarnessTag('harness:dry-run-2026-11-19T15-00-02-738Z-openrouter:dry-run'), false);
+const stderr = 'file:///home/ubishere9995/tsv-dispatch/ship-repo/scripts/harness/protected.mjs:11\nError: refused: harness tag is invalid\n    at harnessTag (file:///home/ubishere9995/tsv-dispatch/ship-repo/scripts/harness/protected.mjs:11:11)\n';
+assert.equal(harnessFailureMessage(stderr), 'refused: harness tag is invalid');
+const failedRound = { errors: [], dryRun: { ran: true, verdict: '', reason: '', outputsPass: false } };
+applyMissingScorecard(failedRound, stderr);
+assert.deepEqual(failedRound.errors, ['refused: harness tag is invalid']);
+assert.equal(failedRound.dryRun.verdict, 'FAIL');
+assert.equal(failedRound.dryRun.reason, 'refused: harness tag is invalid');
 console.log('test_acceptance_1041_ship_round_env: ok');

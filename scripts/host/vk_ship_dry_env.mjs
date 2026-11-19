@@ -60,6 +60,27 @@ export function harnessEnvSkipped(text) {
   return blob.includes('SKIP harness:') || blob.includes('host env absent');
 }
 
+export function dryRunId(date = new Date()) {
+  const compact = date.toISOString().slice(0, 16).replace(/[-:T]/g, '').toLowerCase();
+  return `dry-run-${compact.slice(0, 8)}-${compact.slice(8)}-openrouter`;
+}
+
+export function harnessFailureMessage(text) {
+  const lines = String(text || '').split('\n').map((line) => line.trim()).filter(Boolean);
+  const named = lines.find((line) => line.startsWith('Error:') || line.startsWith('refused:'));
+  const detail = named ? named.replace(/^Error:\s*/, '') : (lines[0] || 'dry-run-missing-scorecard');
+  return detail.slice(0, 240);
+}
+
+export function applyMissingScorecard(round, text) {
+  const detail = harnessFailureMessage(text);
+  round.errors.push(detail);
+  round.dryRun.verdict = 'FAIL';
+  round.dryRun.reason = detail;
+  round.dryRun.outputsPass = false;
+  return detail;
+}
+
 export function markEnvBlocked(dryRun, sha, runId) {
   return {
     ...dryRun,
