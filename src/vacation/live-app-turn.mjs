@@ -26,6 +26,7 @@ import { enrichDraftingTripContext } from './reply-trip-context-facts.mjs';
 import { pushPlanAndStyleDraftErrors } from './reply-draft-fact-extra.mjs';
 import { payerLineFromDollars, priceAnswered } from './seat-price.mjs';
 import { produceFirstIntakeReply } from './first-intake-reply.mjs';
+import { claimBlockedReply, heldJudgedDraft, requireReplyQuality, unjudgedReply } from './reply-quality-gate.mjs';
 import { buildLiveAppRewritePending } from './chat-place-search.mjs';
 import { inTurnPlaceLiveReplyHooks, placeSearchTieredReplyTimeoutMs } from './in-turn-place-reply-fallback.mjs';
 import {
@@ -1443,7 +1444,7 @@ function mergeSavedTurn(saved, priorTurns, customerTurn, session, extraction = {
 }
 export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, placeResults = [], placeSearchTurn = false, webResearchTurn = false, env = process.env, seatDollars: suppliedSeatDollars = null, intake = false, wantedThings = [], roster = null, rosterError = null, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, savedStart = '', savedEnd = '', loadOwnerPlan = null, loadSavedTripRecordFn = loadSavedTripRecord, turnActionResults = null,   placeSearchReplyFacts = null } = {}) {
   const vkBotReply = await routeVkBotMcpReply({ customerTurn, session, priorTurns, tripTitle, env });
-  if (vkBotReply) return vkBotReply;
+  if (vkBotReply) return requireReplyQuality(vkBotReply, { customerTurn, env });
   const rules = await loadVacationAppReplyRules(env);
   const history = Array.isArray(priorTurns) ? priorTurns : [];
   const memory = memoryTurns(history);
@@ -1649,21 +1650,23 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     flagged: false, cost: model?.cost || null,
   };
   if (!quality?.judged) {
-    const unjudged = {
+    return unjudgedReply({
       rules,
       jev,
-      model: {
-        ...(model || {}),
-        quality: quality || { judged: false },
-        log: { ...baseLog, draftText: originalDraft, flagged: false, rewriteFailReason: quality?.reason || 'quality_not_judged' },
-      },
-      quality: quality || { judged: false },
-      log: { ...baseLog, draftText: originalDraft, flagged: false, rewriteFailReason: quality?.reason || 'quality_not_judged' },
-      reason: quality?.reason || 'quality_not_judged',
-    };
-    const unjudgedReply = shipInTurnDraft(originalDraft, unjudged);
-    if (unjudgedReply?.status) return unjudgedReply;
-    return { reply: unjudgedReply, ...unjudged };
+      model,
+      quality,
+      log: baseLog,
+      draft: originalDraft,
+    });
+  }
+  const claimReason = replyActionClaimReason(originalDraft, turnActionResults, replyClaimContextFromIntent(intent));
+  if (claimReason) {
+    return claimBlockedReply({
+      rules,
+      jev, model, quality,
+      draft: originalDraft,
+      claimReason,
+    });
   }
   const needsRewrite = mustRewriteQuality(quality);
   if (!needsRewrite) {
@@ -1743,18 +1746,15 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
       reason: null,
     };
   }
-  const shippedDraft = String(pending.draft || '').trim();
-  if (shippedDraft && !enforceInTurnPlaces) {
-    return {
-      reply: shippedDraft,
-      rules,
-      jev,
-      model: finished.model,
-      quality: finished.quality,
-      log: finished.log,
-      reason: finished.reason,
-    };
-  }
+  const heldDraft = heldJudgedDraft({
+    shippedDraft: String(pending.draft || '').trim(),
+    enforceInTurnPlaces,
+    finished,
+    pending,
+    rules,
+    jev,
+  });
+  if (heldDraft) return heldDraft;
   if (!String(interimReply.text || '').trim()) {
     const recovered = placeHooks.recoverRewriteDeadEnd({ finished, pending, inTurnProviderResults, failureBase: { rules, jev } });
     return recovered ?? {

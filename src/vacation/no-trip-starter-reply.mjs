@@ -1,4 +1,5 @@
 import { callTieredModel, jevPrecall } from '../../scripts/vacation-app-reply-rules.mjs';
+import { requireReplyQuality } from './reply-quality-gate.mjs';
 import { sumModelCost } from './turn-cost.mjs';
 import { routeVkBotMcpReply } from './vk-bot-mcp-reply.mjs';
 import { appTextBanned } from './live-app-turn.mjs';
@@ -78,7 +79,7 @@ export async function produceNoTripStarterReply({
   turnActionResults = null,
 } = {}) {
   const vkBotReply = await routeVkBotMcpReply({ customerTurn, session, priorTurns: [], tripTitle: '', env });
-  if (vkBotReply) return vkBotReply;
+  if (vkBotReply) return requireReplyQuality(vkBotReply, { customerTurn, env });
   if (!rules?.ok) {
     return { reply: null, rules, jev: null, model: null, reason: rules?.error || 'reply_rules_unloaded' };
   }
@@ -150,5 +151,5 @@ export async function produceNoTripStarterReply({
       blockedReasons: [String(error.reason || 'reply_action_claim_blocked')],
     };
   }
-  return { reply, rules, jev, model, reason: null };
+  return requireReplyQuality({ reply, rules, jev, model, reason: null }, { customerTurn, env });
 }

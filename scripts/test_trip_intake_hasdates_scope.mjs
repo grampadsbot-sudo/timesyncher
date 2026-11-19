@@ -163,6 +163,9 @@ function classifyFetchMock({ extraction, intakeScore = 0.12 } = {}) {
       if (questions.trip_intake) {
         return { ok: true, json: async () => ({ answers: { trip_intake: { noul: intakeScore } } }) };
       }
+      if (questions.overall_quality) {
+        return { ok: true, json: async () => ({ ok: true, answers: { overall_quality: { score: 4 }, disposition: { choice: 'keep' }, fix_focus: { choice: 'keep' } } }) };
+      }
       return {
         ok: true,
         json: async () => ({

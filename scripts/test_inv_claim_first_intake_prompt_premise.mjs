@@ -22,7 +22,12 @@ const originalFetch = globalThis.fetch;
 globalThis.fetch = async (url, init) => {
   const target = String(url);
   const body = init?.body ? JSON.parse(init.body) : {};
-  if (target.includes('/api/alpha/decisions')) return jevOk();
+  if (target.includes('/api/alpha/decisions')) {
+    if (body.questions?.overall_quality) {
+      return { ok: true, json: async () => ({ ok: true, answers: { overall_quality: { score: 4 }, disposition: { choice: 'keep' }, fix_focus: { choice: 'keep' } } }) };
+    }
+    return jevOk();
+  }
   if (target.includes('/chat/completions')) {
     calls.push(body);
     return {

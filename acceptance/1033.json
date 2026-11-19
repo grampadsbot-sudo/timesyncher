@@ -1,0 +1,15 @@
+{
+  "repo": "grampadsbot-sudo/timesyncher",
+  "issue": 1033,
+  "source": "dry-run-20261118-2355-openrouter dialog-renderer-refused quality_not_judged turn 3 judgeMs 0",
+  "note": "Every stored non-opener app reply must carry quality.judged true. A failed quality judge, including a timeout or HTTP error, fails closed with a reason and is not stored. The Dialog renderer still refuses an app turn whose quality.judged is not true.",
+  "assertions": [
+    {
+      "id": "judged-app-turns",
+      "type": "unit_script",
+      "script": "scripts/test_acceptance_1033_quality_judged.mjs",
+      "timeout_ms": 60000,
+      "note": "A throwaway first-intake turn and a later app turn each store quality.judged true with a reply-rules producer and a model stamp. A judge HTTP failure returns no reply and a reason. The renderer still checks quality.judged."
+    }
+  ]
+}

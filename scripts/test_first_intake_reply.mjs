@@ -235,11 +235,25 @@ function jevOk(score = 0) {
   };
 }
 
+function decisionsResponse(init, score = 0) {
+  const body = init?.body ? JSON.parse(init.body) : {};
+  if (body.questions?.overall_quality) {
+    return {
+      ok: true,
+      json: async () => ({
+        ok: true,
+        answers: { overall_quality: { score: 4 }, disposition: { choice: 'keep' }, fix_focus: { choice: 'keep' } },
+      }),
+    };
+  }
+  return jevOk(score);
+}
+
 const chatCalls = [];
 globalThis.fetch = async (url, init) => {
   const target = String(url);
   const body = init?.body ? JSON.parse(init.body) : {};
-  if (target.includes('/api/alpha/decisions')) return jevOk();
+  if (target.includes('/api/alpha/decisions')) return decisionsResponse(init);
   if (target.includes('/chat/completions')) {
     chatCalls.push(body);
     const system = body.messages?.find((message) => message.role === 'system')?.content || '';
@@ -310,7 +324,7 @@ try {
   globalThis.fetch = async (url, init) => {
     const target = String(url);
     const body = init?.body ? JSON.parse(init.body) : {};
-    if (target.includes('/api/alpha/decisions')) return jevOk();
+    if (target.includes('/api/alpha/decisions')) return decisionsResponse(init);
     if (target.includes('/chat/completions')) {
       chatCalls.push(body);
       const system = body.messages?.find((message) => message.role === 'system')?.content || '';
@@ -353,7 +367,7 @@ try {
   globalThis.fetch = async (url, init) => {
     const target = String(url);
     const body = init?.body ? JSON.parse(init.body) : {};
-    if (target.includes('/api/alpha/decisions')) return jevOk();
+    if (target.includes('/api/alpha/decisions')) return decisionsResponse(init);
     if (target.includes('/chat/completions')) {
       chatCalls.push(body);
       const system = body.messages?.find((message) => message.role === 'system')?.content || '';
@@ -393,7 +407,7 @@ try {
   globalThis.fetch = async (url, init) => {
     const target = String(url);
     const body = init?.body ? JSON.parse(init.body) : {};
-    if (target.includes('/api/alpha/decisions')) return jevOk();
+    if (target.includes('/api/alpha/decisions')) return decisionsResponse(init);
     if (target.includes('/chat/completions')) {
       chatCalls.push(body);
       return {
@@ -416,7 +430,7 @@ try {
   globalThis.fetch = async (url, init) => {
     const target = String(url);
     const body = init?.body ? JSON.parse(init.body) : {};
-    if (target.includes('/api/alpha/decisions')) return jevOk(2);
+    if (target.includes('/api/alpha/decisions')) return decisionsResponse(init, 2);
     if (target.includes('/chat/completions')) {
       chatCalls.push(body);
       assert.equal(body.model, INTERIM_MODEL);
@@ -461,7 +475,7 @@ try {
   globalThis.fetch = async (url, init) => {
     const target = String(url);
     const body = init?.body ? JSON.parse(init.body) : {};
-    if (target.includes('/api/alpha/decisions')) return jevOk();
+    if (target.includes('/api/alpha/decisions')) return decisionsResponse(init);
     if (target.includes('/chat/completions')) {
       chatCalls.push(body);
       return { ok: false, status: 503, json: async () => ({ error: { message: 'model down' } }) };
