@@ -1,5 +1,5 @@
-import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { createHash, randomBytes } from 'node:crypto';
+import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import path from 'node:path';
 
@@ -220,4 +220,67 @@ export async function loadStagingDatabaseUrl({
   const project = String(env.VERCEL_PROJECT_ID || '').trim() || dispatch.project;
   const url = await fetchDatabaseUrl(token, team, project, fetchImpl);
   return url ? { url, source: 'vercel-database-url' } : { url: '', source: '' };
+}
+
+function vercelQuery(team) {
+  const params = new URLSearchParams();
+  if (team) params.set('teamId', team);
+  const query = params.toString();
+  return query ? `?${query}` : '';
+}
+
+async function upsertSensitiveEnv({ token, team, projectId, key, value, fetchImpl }) {
+  const query = vercelQuery(team);
+  const headers = { Authorization: `Bearer ${token}`, 'content-type': 'application/json' };
+  const listUrl = `https://api.vercel.com/v9/projects/${encodeURIComponent(projectId)}/env${query}`;
+  const list = await fetchImpl(listUrl, { headers, redirect: 'error' });
+  if (!list?.ok) return { ok: false, status: Number(list?.status) || 0 };
+  const payload = await list.json();
+  const rows = Array.isArray(payload?.envs) ? payload.envs : (Array.isArray(payload) ? payload : []);
+  const found = rows.find((row) => row?.key === key);
+  const body = JSON.stringify({ key, value, type: 'sensitive', target: ['production', 'preview'] });
+  const url = found?.id
+    ? `https://api.vercel.com/v9/projects/${encodeURIComponent(projectId)}/env/${encodeURIComponent(found.id)}${query}`
+    : `https://api.vercel.com/v10/projects/${encodeURIComponent(projectId)}/env${query}`;
+  const saved = await fetchImpl(url, { method: found?.id ? 'PATCH' : 'POST', headers, body, redirect: 'error' });
+  return { ok: Boolean(saved?.ok), status: Number(saved?.status) || 0 };
+}
+
+export async function provisionMediaBindToken({
+  env = {},
+  roots = [],
+  tokenFile = defaultMediaBindTokenFile(),
+  vercelTokenFile = defaultVercelTokenFile(),
+  readFile = (file) => readFileSync(file, 'utf8'),
+  writeFile = (file, text, options) => writeFileSync(file, text, options),
+  exists = existsSync,
+  mkdir = (dir) => mkdirSync(dir, { recursive: true }),
+  chmod = (file, mode) => chmodSync(file, mode),
+  random = () => randomBytes(32),
+  fetchImpl = fetch,
+  project = PROJECT,
+} = {}) {
+  const current = readHostVercelToken(tokenFile, readFile, exists);
+  if (current) return { provisioned: false, block: '' };
+  const vercelToken = String(env.VERCEL_TOKEN || '').trim() || readHostVercelToken(vercelTokenFile, readFile, exists);
+  if (!vercelToken) return { provisioned: false, block: `blocked: env VERCEL_TOKEN missing at ${vercelTokenFile}` };
+  const dispatch = dispatchConstants(roots, readFile);
+  const team = String(env.VERCEL_ORG_ID || env.VERCEL_TEAM_ID || '').trim() || dispatch.team;
+  const projectId = String(env.VERCEL_PROJECT_ID || '').trim() || dispatch.project || project;
+  const value = Buffer.from(random()).toString('base64url');
+  let upserted = { ok: false, status: 0 };
+  try {
+    upserted = await upsertSensitiveEnv({ token: vercelToken, team, projectId, key: MEDIA_BIND_ENV, value, fetchImpl });
+  } catch {
+    upserted = { ok: false, status: 0 };
+  }
+  if (!upserted.ok) return { provisioned: false, block: `blocked: env ${MEDIA_BIND_ENV} upsert http ${upserted.status}` };
+  try {
+    mkdir(path.dirname(tokenFile));
+    writeFile(tokenFile, `${value}\n`, { mode: 0o600 });
+    chmod(tokenFile, 0o600);
+  } catch {
+    return { provisioned: false, block: `blocked: env ${MEDIA_BIND_ENV} file write failed at ${tokenFile}` };
+  }
+  return { provisioned: true, block: '' };
 }

@@ -63,14 +63,18 @@ export function stagingMediaBindHost(host = '', env = process.env) {
 }
 
 export function requireMediaBindAuth(req, env = process.env) {
-  const expected = env.TIMESYNCHER_MEDIA_BIND_TOKEN || env.TIMESYNCHER_ADMIN_TOKEN || env.TIMESYNCHER_WORKER_TOKEN || '';
+  const expected = [env.TIMESYNCHER_MEDIA_BIND_TOKEN, env.TIMESYNCHER_ADMIN_TOKEN, env.TIMESYNCHER_WORKER_TOKEN].map((value) => String(value || '').trim()).filter(Boolean);
   const actual = bearerToken(req)
     || headerValue(req, 'x-timesyncher-media-bind-token')
     || headerValue(req, 'x-timesyncher-admin-token')
     || headerValue(req, 'x-timesyncher-worker-token')
     || '';
-  if (expected) {
-    if (actual !== expected) throw Object.assign(new Error('Unauthorized media bind request.'), { statusCode: 401 });
+  if (expected.length) {
+    let matched = false;
+    for (const token of expected) {
+      if (equalSecret(actual, token)) matched = true;
+    }
+    if (!matched) throw Object.assign(new Error('Unauthorized media bind request.'), { statusCode: 401 });
     return { mode: 'token' };
   }
   if (stagingMediaBindHost(requestHost(req), env)) return { mode: 'staging-open' };

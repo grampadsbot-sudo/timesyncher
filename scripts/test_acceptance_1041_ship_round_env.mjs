@@ -21,6 +21,7 @@ import {
   defaultMediaBindTokenFile,
   loadHostMediaBindToken,
   loadStagingDatabaseUrl,
+  provisionMediaBindToken,
   lockHash,
   markEnvBlocked,
   missingModule,
@@ -202,4 +203,77 @@ assert.match(roundJs, /TIMESYNCHER_MEDIA_BIND_TOKEN: media\.token/);
 assert.match(roundJs, /loadHostMediaBindToken/);
 const mediaBlocked = markEnvBlocked({ ran: true }, 'sha', 'run', missingMedia.block);
 assert.equal(dryRunRecorded(mediaBlocked), false);
+const generated = Buffer.from('provision-fixture-token-value');
+const generatedToken = generated.toString('base64url');
+const vercelToken = 'vt_fixture';
+const mediaPath = '/fixture/config/media-bind-token';
+const vercelPath = '/fixture/config/vercel-token';
+const hostFiles = { [vercelPath]: `${vercelToken}\n` };
+const writes = [];
+const modes = [];
+const calls = [];
+const provisioned = await provisionMediaBindToken({
+  env: { VERCEL_TEAM_ID: 'team_fixture', VERCEL_PROJECT_ID: 'timesyncher-vacation-staging' },
+  roots: [],
+  tokenFile: mediaPath,
+  vercelTokenFile: vercelPath,
+  exists: (file) => hostFiles[file] != null,
+  readFile: (file) => hostFiles[file],
+  mkdir: () => {},
+  writeFile: (file, text, options) => { writes.push({ file, text, mode: options?.mode }); hostFiles[file] = text; },
+  chmod: (file, mode) => { modes.push({ file, mode }); },
+  random: () => generated,
+  fetchImpl: async (url, options) => {
+    calls.push({ url: String(url), method: options.method || 'GET', body: options.body || '', authorization: options.headers?.Authorization || '' });
+    if (!options.method || options.method === 'GET') return { ok: true, status: 200, json: async () => ({ envs: [] }) };
+    return { ok: true, status: 201, json: async () => ({}) };
+  },
+});
+assert.equal(provisioned.provisioned, true);
+assert.equal(provisioned.block, '');
+assert.equal(provisioned.block.includes(generatedToken), false);
+assert.equal(calls.every((call) => !String(call.url).includes(generatedToken)), true);
+assert.equal(calls[0].method, 'GET');
+assert.equal(calls[0].url.includes('timesyncher-vacation-staging'), true);
+assert.equal(calls[0].url.includes('teamId=team_fixture'), true);
+assert.equal(calls[0].authorization, `Bearer ${vercelToken}`);
+assert.equal(calls[1].method, 'POST');
+const created = JSON.parse(calls[1].body);
+assert.equal(created.key, MEDIA_BIND_ENV);
+assert.equal(created.type, 'sensitive');
+assert.deepEqual(created.target, ['production', 'preview']);
+assert.equal(created.value, generatedToken);
+assert.equal(writes[0].mode, 0o600);
+assert.equal(modes[0].mode, 0o600);
+assert.equal(writes[0].text.includes(generatedToken), true);
+const again = await provisionMediaBindToken({
+  env: { VERCEL_TEAM_ID: 'team_fixture' },
+  tokenFile: mediaPath,
+  vercelTokenFile: vercelPath,
+  exists: (file) => hostFiles[file] != null,
+  readFile: (file) => hostFiles[file],
+  fetchImpl: async () => { throw new Error('should not call vercel'); },
+  random: () => { throw new Error('should not generate'); },
+});
+assert.equal(again.provisioned, false);
+assert.equal(again.block, '');
+const failed = await provisionMediaBindToken({
+  env: { VERCEL_TEAM_ID: 'team_fixture', VERCEL_PROJECT_ID: 'timesyncher-vacation-staging' },
+  tokenFile: '/fixture/missing-media',
+  vercelTokenFile: vercelPath,
+  exists: (file) => file === vercelPath,
+  readFile: (file) => hostFiles[file],
+  writeFile: () => { throw new Error('should not write'); },
+  random: () => generated,
+  fetchImpl: async (url, options) => {
+    if (!options.method || options.method === 'GET') return { ok: true, status: 200, json: async () => ({ envs: [{ id: 'env_existing', key: MEDIA_BIND_ENV }] }) };
+    assert.equal(options.method, 'PATCH');
+    assert.equal(String(url).includes('env_existing'), true);
+    return { ok: false, status: 403, json: async () => ({}) };
+  },
+});
+assert.equal(failed.provisioned, false);
+assert.equal(failed.block, `blocked: env ${MEDIA_BIND_ENV} upsert http 403`);
+assert.equal(failed.block.includes(generatedToken), false);
+assert.match(roundJs, /provisionMediaBindToken/);
 console.log('test_acceptance_1041_ship_round_env: ok');

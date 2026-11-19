@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { applyMissingScorecard, dryRunId, ensureShipRepoDeps, harnessEnvSkipped, loadHostMediaBindToken, loadStagingDatabaseUrl, markEnvBlocked } from './vk_ship_dry_env.mjs';
+import { applyMissingScorecard, dryRunId, ensureShipRepoDeps, harnessEnvSkipped, loadHostMediaBindToken, loadStagingDatabaseUrl, markEnvBlocked, provisionMediaBindToken } from './vk_ship_dry_env.mjs';
 import {
   BOOTSTRAP_PULLS,
   applyDryRunCard,
@@ -57,8 +57,7 @@ function titleIssue(title) {
 }
 
 function bodyIssue(body) {
-  const match = String(body || '').match(/Fixes #(\d+)/);
-  return match ? Number(match[1]) : null;
+  const match = String(body || '').match(/Fixes #(\d+)/); return match ? Number(match[1]) : null;
 }
 
 function conflictOf(sha) {
@@ -272,6 +271,7 @@ async function perform(action, round) {
     return true;
   }
   if (action.type === 'batch-deploy') {
+    const provision = await provisionMediaBindToken({ roots: [root, process.env.TSV_REPO || '', repoDir(), path.join(root, 'ship-repo')], env: process.env }); if (provision.block) throw new Error(scrub(provision.block, secrets));
     runPy('tsv_dispatch.py', ['--batch-deploy']);
     return true;
   }
