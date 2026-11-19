@@ -24,7 +24,7 @@ function artifactChecks(played) {
     { id: 'keepsake-pdf', pass: played.keepsakeOk === true, detail: played.keepsakeDetail || '', artifact: 'keepsake.pdf' },
     { id: 'screens', pass: played.screensOk === true, detail: played.screensDetail || '', artifact: 'screens/' },
     { id: 'onboarding-screens-in-pdf', pass: played.onboardingPdfOk === true, detail: played.onboardingPdfDetail || 'missing', artifact: 'customer.pdf' },
-    { id: 'video-check', pass: played.videoExists === true, detail: played.videoDetail || '', artifact: 'video-check.json' },
+    { id: 'video-check', pass: played.videoExists === true && !String(played.videoDetail || '').startsWith('video-missing'), detail: played.videoDetail || '', artifact: 'video-check.json' },
     { id: 'video-check-pass', pass: played.videoPass === true, detail: played.videoDetail || '', artifact: 'video-check.json' },
     { id: 'dialog-renderer-ok', pass: played.dialogOk === true, detail: played.dialogDetail || '', artifact: 'dialog.pdf' },
     { id: 'no-stub-chrome', pass: played.chromeOk === true, detail: played.chromeOk === true ? (played.chromeDetail || 'clean') : (played.chromeDetail || 'not-clean'), artifact: 'screens/' },

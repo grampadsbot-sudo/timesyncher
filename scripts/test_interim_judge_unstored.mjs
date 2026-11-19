@@ -191,19 +191,68 @@ assert.throws(
   () => stripePublishableKey(checkoutEnv({ ...process.env, STRIPE_PUBLISHABLE_KEY: liveKey }, 'vacation-staging.timesyncher.com')),
   /does not match STRIPE_MODE=test/,
 );
-await showPaymentStep({
-  waitForResponse: async () => ({ url: () => '/api/create-payment-intent', json: async () => ({ livemode: false }) }),
-  async click() {},
-  async waitForSelector() {},
-});
-await assert.rejects(
-  () => showPaymentStep({
-    waitForResponse: async () => ({ url: () => '/api/create-payment-intent', json: async () => ({ livemode: true }) }),
+function checkoutPage(livemode) {
+  const config = {
+    url: () => 'https://vacation-staging.timesyncher.com/api/checkout-config',
+    ok: () => true,
+    json: async () => ({ ok: true, publishableKey: `pk_test_${'a'.repeat(20)}`, mode: 'test' }),
+  };
+  const pay = {
+    url: () => 'https://vacation-staging.timesyncher.com/api/create-payment-intent',
+    json: async () => ({ ok: true, livemode }),
+  };
+  return {
+    waitForResponse(predicate) {
+      if (predicate(config)) return Promise.resolve(config);
+      if (predicate(pay)) return Promise.resolve(pay);
+      return new Promise(() => {});
+    },
     async click() {},
     async waitForSelector() {},
+  };
+}
+await showPaymentStep(checkoutPage(false));
+await assert.rejects(() => showPaymentStep(checkoutPage(true)), /stripe is not test mode/);
+await assert.rejects(() => showPaymentStep({
+  waitForResponse(predicate) {
+    const config = {
+      url: () => 'https://vacation-staging.timesyncher.com/api/checkout-config',
+      ok: () => false,
+      json: async () => ({ ok: false, error: 'Stripe publishable key does not match STRIPE_MODE=test.' }),
+    };
+    if (predicate(config)) return Promise.resolve(config);
+    return new Promise(() => {});
+  },
+  async click() {},
+  async waitForSelector() { throw new Error('should not wait for the payment iframe'); },
+}), /stripe is not test mode/);
+const videoCard = await runCustomer({
+  story_id: 'dry-run',
+  reply_backend: 'openrouter',
+  customer: { name: 'Avery Hale', email_alias: 'avery' },
+  turns: [],
+}, {
+  runId: 'r-video',
+  outDir: fs.mkdtempSync(path.join(os.tmpdir(), 'video-row-')),
+  cleanup: async () => ({ deleted: {}, remaining: 0 }),
+  play: async () => ({
+    reason: '',
+    transcript: { turns: [] },
+    pdfText: '',
+    dialogOk: true,
+    chromeOk: true,
+    videoExists: true,
+    videoPass: false,
+    videoDetail: 'video-missing: http 404 Invalid or expired link',
+    timings: [],
+    liveShaStart: drive,
+    liveShaEnd: drive,
   }),
-  /stripe is not test mode/,
-);
+});
+const videoRow = videoCard.checks.find((check) => check.id === 'video-check');
+assert.equal(videoRow.pass, false);
+assert.match(videoRow.detail, /video-missing/);
+assert.equal(videoCard.checks.find((check) => check.id === 'video-check-pass').pass, false);
 const screen = fs.readFileSync(new URL('./harness/onboarding-capture.mjs', import.meta.url), 'utf8');
 assert.match(screen, /checkout-payment: stripe is not test mode/);
 assert.match(screen, /livemode !== false/);
