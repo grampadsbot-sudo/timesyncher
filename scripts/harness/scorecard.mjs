@@ -2,6 +2,7 @@ const REQUIRED_CHECK_IDS = [
   'dialog-pdf',
   'keepsake-pdf',
   'screens',
+  'onboarding-screens-in-pdf',
   'video-check',
   'scorecard',
   'build-sha',

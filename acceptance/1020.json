@@ -1,0 +1,15 @@
+{
+  "repo": "grampadsbot-sudo/timesyncher",
+  "issue": 1020,
+  "source": "customer pdf must open on the pre-onboarding and onboarding screens",
+  "note": "The customer PDF opens with homepage, checkout contact, checkout payment in Stripe test mode, order-success for a real throwaway session, the purchase email when the product has one, app entry, the terms gate from a UI click, welcome, and the first talk screen. Each is WebKit at 390 and 430. A missing, blank, or API-accepted terms shot fails closed. A product with no purchase email names that gap and does not invent a stub. Craig's NYC demo, trip 99, and trip d0463815 are refused. Later in-app screens follow this section.",
+  "assertions": [
+    {
+      "id": "onboarding-screens-in-pdf",
+      "type": "unit_script",
+      "script": "scripts/test_acceptance_1020_onboarding_screens.mjs",
+      "timeout_ms": 60000,
+      "note": "Eighteen onboarding shots open customer.pdf before later in-app screens. A missing shot, a blank shot, a terms shot that was not a UI click, a missing email surface, and a protected target fail closed."
+    }
+  ]
+}
