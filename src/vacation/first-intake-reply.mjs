@@ -1,3 +1,4 @@
+import { POST_INTAKE_COLLAB_COPY } from '../../scripts/vacation-app-reply-rules.mjs';
 import { failReplyPlanEntitlement, loadTripOwnerReplyPlan } from './reply-plan-entitlement.mjs';
 import { isCollaboratorAppSeat } from './collaborator-app-seat.mjs';
 import { intakeFactsGrounded, intakeReplyBlock, intakeReplyBlockReasons } from './first-intake-gate.mjs';
@@ -139,8 +140,6 @@ export const FIRST_INTAKE_QUESTION_INSTRUCTION = [
   'End with exactly one question. Never ask a second question.',
   FIRST_INTAKE_TONE,
 ].join('\n');
-
-const POST_INTAKE_COLLAB_COPY = 'I am building the itinerary from what you told me. View access lets family and friends see the days. Edit access lets them add notes after you approve an email invite. Welcome them onto this vacation as collaborators. The household plan is unlimited vacations for the whole year.';
 
 export function postIntakeCollabCopyMissing(text) {
   const value = String(text || '');
