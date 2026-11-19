@@ -1,0 +1,15 @@
+{
+  "repo": "grampadsbot-sudo/timesyncher",
+  "issue": 1043,
+  "source": "dry-run-20261119-0251-openrouter shipped model is not a bake-off tier",
+  "note": "dialog-runners/tier_models.json approves anthropic/claude-haiku-5.5 for tiers 1-4. A stored app reply that used that model also stores it as shippedModel. A model outside the map is not stamped. The Dialog renderer still refuses a shipped model that is not in the map.",
+  "assertions": [
+    {
+      "id": "shipped-bakeoff-model",
+      "type": "unit_script",
+      "script": "scripts/test_acceptance_1043_shipped_tier.mjs",
+      "timeout_ms": 60000,
+      "note": "Blank shippedModel is filled from the approved response model. An outside model stays unstamped. The renderer check remains."
+    }
+  ]
+}
