@@ -5,6 +5,7 @@ import { provisionThrowaway } from './live-provision.mjs';
 import { playCustomerTurns } from './live-play.mjs';
 import { attachMedia, captureScreens, fetchKeepsake, renderDialog, runSteps, writeVideoCheck } from './live-outputs.mjs';
 import { shortHash } from './redact.mjs';
+import { transcriptForScorecard, writeRedactedLiveTranscript } from './redacted-transcript.mjs';
 import { deleteTaggedRows } from './cleanup.mjs';
 
 function appEndpoint(origin, token, tripId) {
@@ -17,6 +18,16 @@ function appEndpoint(origin, token, tripId) {
 
 export function chatLeftNoThing(played) {
   return !Number(played?.itineraryCount);
+}
+
+async function storedLiveTranscript(db, token) {
+  const { loadLiveTranscriptByToken } = await import('../../src/vacation/live-app-turn.mjs');
+  try {
+    return await loadLiveTranscriptByToken(db, token);
+  } catch (error) {
+    if (error?.code === 'LIVE_TRANSCRIPT_MISSING') return null;
+    throw error;
+  }
 }
 
 export function liveOptions(env = process.env) {
@@ -102,7 +113,9 @@ export function liveOptions(env = process.env) {
         chromeDetail: '',
         steps: [],
       };
-      if (played.reason) return base;
+      const storedTranscript = await storedLiveTranscript(db, created.token);
+      writeRedactedLiveTranscript(options.outDir, storedTranscript, secrets);
+      if (played.reason) return { ...base, transcript: storedTranscript };
       const tripId = played.tripId || created.tripId;
       const shareToken = played.shareToken || created.shareToken;
       const steps = await runSteps(story, async () => {
@@ -114,12 +127,13 @@ export function liveOptions(env = process.env) {
         if (response.status >= 400) throw new Error('collaborator step failed');
       });
       const dialog = await renderDialog({ token: created.token, outDir: options.outDir, secrets });
+      const transcript = transcriptForScorecard(dialog.transcript, storedTranscript);
       if (chatLeftNoThing(played)) {
         const video = await writeVideoCheck({ origin, attachment: { ok: false, detail: 'no-thing-after-chat', bindings: [] }, fetchImpl, outDir: options.outDir });
         return {
           ...base,
           steps,
-          transcript: dialog.transcript,
+          transcript,
           pdfText: dialog.pdfText,
           dialogOk: dialog.ok === true,
           dialogDetail: dialog.detail,
@@ -137,7 +151,7 @@ export function liveOptions(env = process.env) {
       return {
         ...base,
         steps,
-        transcript: dialog.transcript,
+        transcript,
         pdfText: dialog.pdfText,
         dialogOk: dialog.ok === true,
         dialogDetail: dialog.detail,

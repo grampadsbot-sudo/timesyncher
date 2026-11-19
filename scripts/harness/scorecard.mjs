@@ -22,6 +22,7 @@ const RANK = [
   'stored-jev-score-missing',
   'stored-cost-missing',
   'stored-cost-unit-mismatch',
+  'no-thing-after-chat',
   'dialog-renderer-refused',
   'first-intake-reply-flagged',
 ];

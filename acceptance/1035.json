@@ -1,0 +1,15 @@
+{
+  "repo": "grampadsbot-sudo/timesyncher",
+  "issue": 1035,
+  "source": "dry-run-20261118-2355-openrouter dialog-renderer-refused left scorecard turns empty",
+  "note": "Before cleanup, the harness saves a redacted live transcript in the run directory. The scorecard turns array is filled from the stored transcript when the Dialog renderer refuses. no-thing-after-chat stays its own reported reason. The renderer still requires quality.judged true.",
+  "assertions": [
+    {
+      "id": "redacted-transcript-and-turns",
+      "type": "unit_script",
+      "script": "scripts/test_acceptance_1035_redacted_transcript.mjs",
+      "timeout_ms": 60000,
+      "note": "A refused Dialog still yields scorecard turns. A chat with no itinerary item reports no-thing-after-chat. The saved file has turn index, producer, model, judged, and timings, and no token, share link, or URL."
+    }
+  ]
+}
