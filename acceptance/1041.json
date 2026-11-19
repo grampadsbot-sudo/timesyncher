@@ -40,6 +40,13 @@
       "note": "An unusable interim judge is retried and does not drop an already judged reply. A turn that is still not stored records INTERIM_JUDGE_UNUSABLE and the model. Staging checkout uses test mode on the sanctioned Stripe env and the same prices. The harness reads checkout-config before the payment intent and refuses unless the created session has livemode false. A failed chrome check does not say clean."
     },
     {
+      "id": "interim-reply-persisted",
+      "type": "unit_script",
+      "script": "scripts/test_interim_reply_persisted.mjs",
+      "timeout_ms": 60000,
+      "note": "A rewrite turn whose interim call has a measured cost stores the interim text, the interim model, the judge, and the elapsed time. A template interim is still refused."
+    },
+    {
       "id": "video-bind-fallback",
       "type": "unit_script",
       "script": "scripts/test_acceptance_1041_dry_run_scorecard.mjs",
