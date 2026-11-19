@@ -70,6 +70,12 @@ function responseUrl(response) {
   return String(response?.url?.() || '');
 }
 
+export function checkoutPaymentIsTestMode({ configOk = false, config = {}, pay = {} } = {}) {
+  const key = String(config?.publishableKey || '');
+  if (!configOk || config?.ok !== true || !key.startsWith('pk_test_')) return false;
+  return pay?.livemode === false;
+}
+
 export async function showPaymentStep(page) {
   const waits = typeof page.waitForResponse === 'function';
   const configWait = waits
@@ -82,12 +88,13 @@ export async function showPaymentStep(page) {
   const configResponse = configWait ? await configWait : null;
   const config = configResponse && typeof configResponse.json === 'function' ? await configResponse.json().catch(() => ({})) : {};
   const configOk = configResponse ? (typeof configResponse.ok === 'function' ? configResponse.ok() : configResponse.status < 400) : false;
-  if (!configOk || config.ok !== true || !String(config.publishableKey || '').startsWith('pk_test_')) {
+  const payResponse = configOk && config.ok === true && String(config.publishableKey || '').startsWith('pk_test_') && payWait
+    ? await payWait
+    : null;
+  const pay = payResponse && typeof payResponse.json === 'function' ? await payResponse.json().catch(() => ({})) : {};
+  if (!checkoutPaymentIsTestMode({ configOk, config, pay })) {
     throw new Error('checkout-payment: stripe is not test mode');
   }
-  const payResponse = payWait ? await payWait : null;
-  const pay = payResponse && typeof payResponse.json === 'function' ? await payResponse.json().catch(() => ({})) : {};
-  if (pay?.livemode !== false) throw new Error('checkout-payment: stripe is not test mode');
   await page.waitForSelector('#paymentElement iframe', { timeout: 25000 });
 }
 
