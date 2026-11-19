@@ -76,6 +76,8 @@ export function harnessFailureMessage(text) {
 export function applyMissingScorecard(round, text) {
   const detail = harnessFailureMessage(text);
   round.errors.push(detail);
+  round.dryRun.ran = false;
+  round.dryRun.blockedEnv = true;
   round.dryRun.verdict = 'FAIL';
   round.dryRun.reason = detail;
   round.dryRun.outputsPass = false;

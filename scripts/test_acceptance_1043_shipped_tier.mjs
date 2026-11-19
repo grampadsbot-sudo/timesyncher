@@ -25,6 +25,7 @@ const stored = liveTurnRecord({
 });
 assert.equal(stored.modelId, approved);
 assert.equal(stored.shippedModel, approved);
+assert.equal(stored.draftModel, approved);
 assert.equal(isBakeoffModelId(stored.shippedModel), true);
 
 const outside = 'qwen/qwen3-max';
@@ -46,6 +47,7 @@ const unstamped = liveTurnRecord({
   },
 });
 assert.equal(isBakeoffModelId(unstamped.shippedModel || ''), false);
+assert.equal(unstamped.draftModel, null);
 
 const renderer = fs.readFileSync(new URL('./live-transcript-dialog-pdf.mjs', import.meta.url), 'utf8');
 assert.match(renderer, /shipped model is not a bake-off tier/);
