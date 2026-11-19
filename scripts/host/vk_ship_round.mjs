@@ -13,6 +13,7 @@ import {
   formatDry,
   planCycle,
   planPull,
+  runPyFailure,
   scrub,
 } from './vk_ship_round_core.mjs';
 
@@ -190,7 +191,7 @@ function runPy(file, args) {
   const override = file === 'tsv_dispatch.py' ? process.env.TSV_DISPATCH_BIN : process.env.TSV_LIVE_ACCEPT_BIN;
   const bin = override || path.join(root, file);
   const result = spawnSync('python3', [bin, ...args], { encoding: 'utf8', env: process.env });
-  if (result.status !== 0) throw new Error(scrub(result.stderr || result.stdout || file, secrets).split('\n')[0].slice(0, 240));
+  if (result.status !== 0) throw new Error(scrub(runPyFailure(file, result.status, result.stderr), secrets).slice(0, 240));
 }
 
 function runHarness(round, runId, sha) {
@@ -244,7 +245,7 @@ async function perform(action, round) {
     return true;
   }
   if (action.type === 'live-accept') {
-    runPy('live_accept.py', []);
+    runPy('live_accept.py', ['run']);
     const live = tipLive();
     round.tip = live.tip;
     round.live = live.live;

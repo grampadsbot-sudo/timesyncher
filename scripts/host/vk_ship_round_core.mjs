@@ -34,7 +34,7 @@ export function bootstrapDryText() {
     lines.push('merge');
   }
   lines.push('batch-deploy python3 tsv_dispatch.py --batch-deploy');
-  lines.push('live-accept python3 live_accept.py');
+  lines.push('live-accept python3 live_accept.py run');
   lines.push('dry-run once on the new live sha');
   return lines.join('\n');
 }
@@ -68,6 +68,13 @@ export function errorStateHash(errors, heads) {
     heads: [...new Set(heads || [])].filter(Boolean).sort(),
   });
   return createHash('sha256').update(body).digest('hex');
+}
+
+export function runPyFailure(file, status, stderr) {
+  const lines = String(stderr || '').split('\n').map((line) => line.trim()).filter(Boolean);
+  const last = lines.length ? lines[lines.length - 1] : '';
+  const code = status === null || status === undefined ? 1 : status;
+  return last ? `${file} exit ${code}: ${last}` : `${file} exit ${code}`;
 }
 
 export function crontabHasActive(current, marker) {
@@ -325,7 +332,7 @@ export function formatDry(actions) {
     if (action.type === 'merge') lines.push('merge');
     if (action.type === 'needs-rebase') lines.push(`needs-rebase ${action.file}`);
     if (action.type === 'batch-deploy') lines.push('batch-deploy python3 tsv_dispatch.py --batch-deploy');
-    if (action.type === 'live-accept') lines.push('live-accept python3 live_accept.py');
+    if (action.type === 'live-accept') lines.push('live-accept python3 live_accept.py run');
     if (action.type === 'dry-run') lines.push(`dry-run ${action.sha}`);
     if (action.type === 'dry-run-after-deploy') lines.push('dry-run once on the new live sha');
   }

@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { BOOTSTRAP_PULLS, applyDryRunCard, bootstrapDryText, crontabHasActive, doorbellReasons, errorStateHash, planBootstrap, planCycle, planPull, scrub } from './host/vk_ship_round_core.mjs';
+import { BOOTSTRAP_PULLS, applyDryRunCard, bootstrapDryText, crontabHasActive, doorbellReasons, errorStateHash, planBootstrap, planCycle, planPull, runPyFailure, scrub } from './host/vk_ship_round_core.mjs';
 
 const protectedRules = JSON.parse(readFileSync(new URL('./fixtures/harness/protected-targets.json', import.meta.url), 'utf8'));
 
@@ -265,6 +265,26 @@ assert.match(launcher, /preflight: missing/);
 assert.doesNotMatch(launcher, /gh api|gh repo|gh auth|GH_TOKEN@/);
 assert.doesNotMatch(roundJs, /spawnSync\('gh'/);
 assert.match(roundJs, /api\('PUT', `\/repos\/\$\{REPO\}\/pulls\/\$\{action\.pr\}\/merge`/);
+const acceptedRunPy = {
+  'live_accept.py': [['run']],
+  'tsv_dispatch.py': [['--batch-deploy']],
+};
+const runPyCalls = [...roundJs.matchAll(/runPy\(\s*'([^']+)'\s*,\s*(\[[\s\S]*?\])\s*\)/g)];
+assert.ok(runPyCalls.length > 0);
+for (const call of runPyCalls) {
+  const file = call[1];
+  const args = JSON.parse(call[2].replace(/'/g, '"'));
+  const allowed = acceptedRunPy[file];
+  assert.ok(allowed, `runPy file ${file} is not live_accept.py or tsv_dispatch.py`);
+  assert.ok(allowed.some((row) => JSON.stringify(row) === JSON.stringify(args)), `${file} ${JSON.stringify(args)} is not an accepted subcommand`);
+}
+const docstring = 'Live-staging acceptance checker (Craig 6:06 PM PT 10/21 ...)\nmore stdout';
+assert.equal(runPyFailure('live_accept.py', 2, ''), 'live_accept.py exit 2');
+assert.equal(runPyFailure('live_accept.py', 2, 'first\n\nlast stderr line\n'), 'live_accept.py exit 2: last stderr line');
+assert.equal(runPyFailure('live_accept.py', 2, '').includes(docstring.trim()), false);
+const runPySrc = roundJs.slice(roundJs.indexOf('function runPy'), roundJs.indexOf('function runHarness'));
+assert.equal(runPySrc.includes('result.stdout'), false);
+assert.match(runPySrc, /runPyFailure\(file, result\.status, result\.stderr\)/);
 
 const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 const tmp = mkdtempSync(`${tmpdir()}/vk-ship-dry-`);
