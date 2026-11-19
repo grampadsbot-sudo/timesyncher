@@ -1,0 +1,15 @@
+{
+  "repo": "grampadsbot-sudo/timesyncher",
+  "issue": 1037,
+  "source": "dry-run-20261119-0055-openrouter stored-cost-missing",
+  "note": "A model app reply stores cost from the OpenRouter usage response. The scorecard reads cost.dollars and sums dollars per customer and per 100. A generated reply with no stored cost still fails closed. An explicit unmeasured cost is not invented.",
+  "assertions": [
+    {
+      "id": "reply-cost-sum",
+      "type": "unit_script",
+      "script": "scripts/test_acceptance_1037_reply_cost.mjs",
+      "timeout_ms": 60000,
+      "note": "Two measured cost objects sum to per-customer and per-100 dollars. A reply with no cost stays stored-cost-missing. Unmeasured stays unmeasured."
+    }
+  ]
+}

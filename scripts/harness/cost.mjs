@@ -14,9 +14,14 @@ function isUnmeasured(value) {
   return String(value || '').trim().toLowerCase() === 'unmeasured';
 }
 
+function storedCost(bag) {
+  return bag?.cost && typeof bag.cost === 'object' ? bag.cost : null;
+}
+
 function bagUnmeasured(bag) {
   if (!bag || typeof bag !== 'object') return false;
   return isUnmeasured(bag.cost)
+    || isUnmeasured(storedCost(bag)?.status)
     || isUnmeasured(bag.generationCost)
     || isUnmeasured(bag.generation_cost)
     || isUnmeasured(bag.costState)
@@ -29,7 +34,8 @@ function bagUnmeasured(bag) {
 }
 
 function dollars(bag) {
-  const direct = firstNumber(bag.generationCost, bag.generation_cost, bag.costUsd, bag.cost_usd);
+  const nested = storedCost(bag);
+  const direct = firstNumber(bag.generationCost, bag.generation_cost, bag.costUsd, bag.cost_usd, bag.dollars, nested?.dollars, nested?.generationCost);
   if (direct != null) return direct;
   if (typeof bag.cost === 'number' && Number.isFinite(bag.cost)) return bag.cost;
   const tokens = firstNumber(bag.total_tokens, bag.totalTokens);
@@ -99,21 +105,21 @@ export function readStoredCost(turn, backend) {
 export function rollupCost(rows) {
   const generated = (rows || []).filter((row) => row.role === 'app' && row.cost_state && row.cost_state !== 'not-run');
   const estimate = estimateRollup(generated);
-  if (!generated.length) return { state: 'not-run', amount: null, unit: '', gap: '', per_customer: null, ...estimate };
+  if (!generated.length) return { state: 'not-run', amount: null, unit: '', gap: '', per_customer: null, per_100: null, ...estimate };
   if (generated.some((row) => row.cost_state === 'missing' || String(row.gap || '').includes('stored-cost-missing') || String(row.gap || '').includes('stored-cost-unit-mismatch'))) {
     const gap = generated.some((row) => String(row.gap || '').includes('stored-cost-unit-mismatch')) ? 'stored-cost-unit-mismatch' : 'stored-cost-missing';
-    return { state: 'missing', amount: null, unit: '', gap, per_customer: null, ...estimate };
+    return { state: 'missing', amount: null, unit: '', gap, per_customer: null, per_100: null, ...estimate };
   }
   const units = [...new Set(generated.map((row) => row.cost_unit).filter(Boolean))];
-  if (units.length > 1) return { state: 'missing', amount: null, unit: '', gap: 'stored-cost-unit-mismatch', per_customer: null, ...estimate };
+  if (units.length > 1) return { state: 'missing', amount: null, unit: '', gap: 'stored-cost-unit-mismatch', per_customer: null, per_100: null, ...estimate };
   if (generated.every((row) => row.cost_state === 'unmeasured')) {
-    return { state: 'unmeasured', amount: null, unit: units[0] || 'usd', gap: '', per_customer: null, ...estimate };
+    return { state: 'unmeasured', amount: null, unit: units[0] || 'usd', gap: '', per_customer: null, per_100: null, ...estimate };
   }
   if (generated.some((row) => row.cost_state === 'unmeasured')) {
-    return { state: 'mixed', amount: null, unit: units[0] || '', gap: '', per_customer: null, ...estimate };
+    return { state: 'mixed', amount: null, unit: units[0] || '', gap: '', per_customer: null, per_100: null, ...estimate };
   }
   const amount = generated.reduce((sum, row) => sum + Number(row.cost_amount || 0), 0);
-  return { state: 'measured', amount, unit: units[0] || '', gap: '', per_customer: amount, ...estimate };
+  return { state: 'measured', amount, unit: units[0] || '', gap: '', per_customer: amount, per_100: amount * 100, ...estimate };
 }
 
 function estimateRollup(rows) {
