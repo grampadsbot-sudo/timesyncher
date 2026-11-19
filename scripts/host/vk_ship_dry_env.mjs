@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import path from 'node:path';
 
@@ -283,4 +283,40 @@ export async function provisionMediaBindToken({
     return { provisioned: false, block: `blocked: env ${MEDIA_BIND_ENV} file write failed at ${tokenFile}` };
   }
   return { provisioned: true, block: '' };
+}
+
+function defaultMediaBindDeployStamp(home = homedir()) {
+  return path.join(home, '.config', 'tsv-deploy', 'media-bind-needs-deploy');
+}
+
+export async function ensureMediaBindDeployed({
+  env = {},
+  roots = [],
+  deploy,
+  stampFile = defaultMediaBindDeployStamp(),
+  tokenFile = defaultMediaBindTokenFile(),
+  vercelTokenFile = defaultVercelTokenFile(),
+  exists = existsSync,
+  readFile = (file) => readFileSync(file, 'utf8'),
+  writeFile = (file, text, options) => writeFileSync(file, text, options),
+  remove = (file) => rmSync(file, { force: true }),
+  mkdir = (dir) => mkdirSync(dir, { recursive: true }),
+  chmod = (file, mode) => chmodSync(file, mode),
+  random = () => randomBytes(32),
+  fetchImpl = fetch,
+} = {}) {
+  const provision = await provisionMediaBindToken({ env, roots, tokenFile, vercelTokenFile, readFile, writeFile, exists, mkdir, chmod, random, fetchImpl });
+  if (provision.block) return { provisioned: false, deployed: false, token: '', block: provision.block };
+  if (provision.provisioned) {
+    mkdir(path.dirname(stampFile));
+    writeFile(stampFile, '1\n', { mode: 0o600 });
+  }
+  let deployed = false;
+  if (exists(stampFile)) {
+    await deploy();
+    remove(stampFile);
+    deployed = true;
+  }
+  const media = loadHostMediaBindToken({ env, tokenFile, readFile, exists });
+  return { provisioned: provision.provisioned, deployed, token: media.token, block: media.block };
 }

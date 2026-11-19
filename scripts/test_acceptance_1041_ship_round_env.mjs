@@ -22,6 +22,7 @@ import {
   loadHostMediaBindToken,
   loadStagingDatabaseUrl,
   provisionMediaBindToken,
+  ensureMediaBindDeployed,
   lockHash,
   markEnvBlocked,
   missingModule,
@@ -199,8 +200,9 @@ assert.equal(missingMedia.token, '');
 assert.match(missingMedia.block, new RegExp(`blocked: env ${MEDIA_BIND_ENV} missing at ${mediaFile}`));
 assert.equal(missingMedia.block.includes(mediaToken), false);
 assert.equal(defaultMediaBindTokenFile('/home/ubishere9995').endsWith('/.config/tsv-deploy/media-bind-token'), true);
-assert.match(roundJs, /TIMESYNCHER_MEDIA_BIND_TOKEN: media\.token/);
-assert.match(roundJs, /loadHostMediaBindToken/);
+assert.match(roundJs, /TIMESYNCHER_MEDIA_BIND_TOKEN: ready\.token/);
+assert.match(roundJs, /ensureMediaBindDeployed/);
+assert.match(roundJs.slice(roundJs.indexOf('async function runHarness')), /ensureMediaBindDeployed/);
 const mediaBlocked = markEnvBlocked({ ran: true }, 'sha', 'run', missingMedia.block);
 assert.equal(dryRunRecorded(mediaBlocked), false);
 const generated = Buffer.from('provision-fixture-token-value');
@@ -275,5 +277,71 @@ const failed = await provisionMediaBindToken({
 assert.equal(failed.provisioned, false);
 assert.equal(failed.block, `blocked: env ${MEDIA_BIND_ENV} upsert http 403`);
 assert.equal(failed.block.includes(generatedToken), false);
-assert.match(roundJs, /provisionMediaBindToken/);
+assert.match(roundJs, /ensureMediaBindDeployed/);
+const stamp = '/fixture/config/media-bind-needs-deploy';
+const bound = '/fixture/config/round-media-bind-token';
+const boundFiles = { [vercelPath]: `${vercelToken}\n` };
+const deployErrors = [];
+try {
+  await ensureMediaBindDeployed({
+    env: { VERCEL_TEAM_ID: 'team_fixture', VERCEL_PROJECT_ID: 'timesyncher-vacation-staging' },
+    roots: [],
+    stampFile: stamp,
+    tokenFile: bound,
+    vercelTokenFile: vercelPath,
+    exists: (file) => boundFiles[file] != null,
+    readFile: (file) => boundFiles[file],
+    writeFile: (file, text) => { boundFiles[file] = text; },
+    remove: (file) => { delete boundFiles[file]; },
+    mkdir: () => {},
+    chmod: () => {},
+    random: () => generated,
+    fetchImpl: async (url, options) => {
+      if (!options?.method || options.method === 'GET') return { ok: true, status: 200, json: async () => ({ envs: [] }) };
+      return { ok: true, status: 201, json: async () => ({}) };
+    },
+    deploy: async () => { deployErrors.push('deploy'); throw new Error('deploy failed'); },
+  });
+  assert.fail('deploy failure should surface');
+} catch (error) {
+  assert.equal(error.message, 'deploy failed');
+}
+assert.deepEqual(deployErrors, ['deploy']);
+assert.equal(boundFiles[stamp], '1\n');
+assert.equal(String(boundFiles[stamp]).includes(generatedToken), false);
+assert.equal(String(boundFiles[bound]).includes(generatedToken), true);
+const retried = [];
+const second = await ensureMediaBindDeployed({
+  env: {},
+  stampFile: stamp,
+  tokenFile: bound,
+  vercelTokenFile: vercelPath,
+  exists: (file) => boundFiles[file] != null,
+  readFile: (file) => boundFiles[file],
+  writeFile: () => { throw new Error('should not write'); },
+  remove: (file) => { delete boundFiles[file]; },
+  random: () => { throw new Error('should not generate'); },
+  fetchImpl: async () => { throw new Error('should not call vercel'); },
+  deploy: async () => { retried.push('deploy'); },
+});
+assert.deepEqual(retried, ['deploy']);
+assert.equal(second.deployed, true);
+assert.equal(second.token, generatedToken);
+assert.equal(second.block, '');
+assert.equal(boundFiles[stamp], undefined);
+const third = await ensureMediaBindDeployed({
+  env: {},
+  stampFile: stamp,
+  tokenFile: bound,
+  vercelTokenFile: vercelPath,
+  exists: (file) => boundFiles[file] != null,
+  readFile: (file) => boundFiles[file],
+  remove: () => { throw new Error('should not remove'); },
+  random: () => { throw new Error('should not generate'); },
+  fetchImpl: async () => { throw new Error('should not call vercel'); },
+  deploy: async () => { throw new Error('should not deploy'); },
+});
+assert.equal(third.deployed, false);
+assert.equal(third.provisioned, false);
+assert.equal(third.token, generatedToken);
 console.log('test_acceptance_1041_ship_round_env: ok');
