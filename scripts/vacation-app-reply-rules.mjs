@@ -850,7 +850,6 @@ export async function jevChooseRewrite({ customerTurn, draft, options, env = pro
 }
 
 export const INTERIM_MODEL = OPENROUTER_TIER_CHAT_MODELS[1];
-export const POST_INTAKE_COLLAB_COPY = 'I am building the itinerary from what you told me. View access lets family and friends see the days. Edit access lets them add notes after you approve an email invite. Welcome them onto this vacation as collaborators. The household plan is unlimited vacations for the whole year.';
 export const TIERED_REPLY_TIMEOUT_MS = 20000;
 
 export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = null, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null, tier1CompactReasoning = false }) {

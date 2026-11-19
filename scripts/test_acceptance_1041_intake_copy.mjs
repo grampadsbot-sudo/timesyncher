@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { ensurePostIntakeCollabCopy, postIntakeCollabCopyMissing } from '../src/vacation/first-intake-reply.mjs';
+import { ensurePostIntakeCollabCopy, postIntakeCollabCopyMissing } from '../src/vacation/post-intake-collab-copy.mjs';
 
 const renderer = readFileSync(new URL('./live-transcript-dialog-pdf.mjs', import.meta.url), 'utf8');
 assert.match(renderer, /post_intake_itinerary_collab_upsell/);

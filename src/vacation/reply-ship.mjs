@@ -1,4 +1,4 @@
-import { ensurePostIntakeCollabCopy } from './first-intake-reply.mjs';
+import { ensurePostIntakeCollabCopy } from './post-intake-collab-copy.mjs';
 import { syncFirstIntakeCustomerInputOnTurn } from './first-intake-customer-input.mjs';
 import { transcriptCustomerId } from './collaborator-app-seat.mjs';
 

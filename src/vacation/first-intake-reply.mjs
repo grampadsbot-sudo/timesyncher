@@ -1,4 +1,3 @@
-import { POST_INTAKE_COLLAB_COPY } from '../../scripts/vacation-app-reply-rules.mjs';
 import { failReplyPlanEntitlement, loadTripOwnerReplyPlan } from './reply-plan-entitlement.mjs';
 import { isCollaboratorAppSeat } from './collaborator-app-seat.mjs';
 import { intakeFactsGrounded, intakeReplyBlock, intakeReplyBlockReasons } from './first-intake-gate.mjs';
@@ -140,23 +139,6 @@ export const FIRST_INTAKE_QUESTION_INSTRUCTION = [
   'End with exactly one question. Never ask a second question.',
   FIRST_INTAKE_TONE,
 ].join('\n');
-
-export function postIntakeCollabCopyMissing(text) {
-  const value = String(text || '');
-  return !/build(?:ing)? (?:the|your) itinerary/i.test(value)
-    || /you also have unlimited/i.test(value)
-    || !/\bview access\b/i.test(value)
-    || !/\bedit access\b/i.test(value)
-    || !/email invite/i.test(value)
-    || !/unlimited vacations for the whole year/i.test(value);
-}
-
-export function ensurePostIntakeCollabCopy(text) {
-  let value = String(text || '').trim().replace(/\byou also have unlimited\b/gi, 'the plan includes');
-  if (!value) return value;
-  if (!postIntakeCollabCopyMissing(value)) return value;
-  return `${value} ${POST_INTAKE_COLLAB_COPY}`;
-}
 
 export function intakeFactText(value, max = 240) {
   const text = String(value || '').replace(/\s+/g, ' ').trim();
