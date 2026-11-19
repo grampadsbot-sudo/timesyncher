@@ -503,3 +503,4 @@ scripts/test_acceptance_1035_redacted_transcript.mjs
 scripts/test_acceptance_1030_first_intake_ordinary.mjs
 scripts/test_acceptance_1037_reply_cost.mjs
 scripts/test_acceptance_1033_quality_judged.mjs
+scripts/test_acceptance_1041_ship_round.mjs

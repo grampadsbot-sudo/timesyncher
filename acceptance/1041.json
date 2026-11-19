@@ -1,0 +1,15 @@
+{
+  "repo": "grampadsbot-sudo/timesyncher",
+  "issue": 1041,
+  "source": "host ship round without Grok Bot",
+  "note": "Dry mode prints the cycle and writes nothing. A green exact head is accepted once. A stale head is not. A PR dirty only because both sides appended scripts/offline-tests.txt is marked needs-rebase and is not patched. The same live SHA does not get a second dry run. Cleanup remaining other than 0 fails. The doorbell stays silent when the failure reason repeats.",
+  "assertions": [
+    {
+      "id": "ship-round-dry",
+      "type": "unit_script",
+      "script": "scripts/test_acceptance_1041_ship_round.mjs",
+      "timeout_ms": 60000,
+      "note": "Accept, stale head, rebase, one dry run per SHA, cleanup, and doorbell rules."
+    }
+  ]
+}
