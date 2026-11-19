@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { BOOTSTRAP_PULLS, applyDryRunCard, bootstrapDryText, doorbellReasons, planBootstrap, planCycle, scrub } from './host/vk_ship_round_core.mjs';
 
@@ -245,17 +246,21 @@ assert.equal(dirtyBoot.actions.some((action) => action.pr === 1042 && action.typ
 
 const install = readFileSync(new URL('./host/install_vk_ship_round.sh', import.meta.url), 'utf8');
 const launcher = readFileSync(new URL('./host/vk_ship_round.sh', import.meta.url), 'utf8');
-assert.match(install, /refs\/pull\/1042\/head/);
+const roundJs = readFileSync(new URL('./host/vk_ship_round.mjs', import.meta.url), 'utf8');
+assert.match(install, /from tsv_common import GH/);
 assert.match(install, /crontab\.bak/);
 assert.match(install, /grep -F/);
 assert.match(install, /\$\{ROOT\}\/bin\/vk_ship_round\.sh/);
 assert.match(install, /exec "\$ROOT\/bin\/vk_ship_round\.sh"/);
-assert.doesNotMatch(install, /x-access-token|GH_TOKEN@/);
-assert.match(launcher, /gh repo clone grampadsbot-sudo\/timesyncher "\$SHIP"/);
+assert.match(install, /preflight: missing/);
+assert.doesNotMatch(install, /gh api|gh repo|GH_TOKEN@/);
 assert.match(launcher, /https:\/\/github.com\/grampadsbot-sudo\/timesyncher\.git/);
 assert.match(launcher, /reset --hard origin\/vk/);
 assert.match(launcher, /refusing remote url with credentials/);
-assert.doesNotMatch(launcher, /x-access-token|\$\{GH_TOKEN\}@/);
+assert.match(launcher, /credential\.helper=!python3 \$\{HELPER\} credential/);
+assert.match(launcher, /preflight: missing/);
+assert.doesNotMatch(launcher, /gh api|gh repo|gh auth|GH_TOKEN@/);
+assert.doesNotMatch(roundJs, /spawnSync\('gh'/);
 
 const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 const tmp = mkdtempSync(`${tmpdir()}/vk-ship-dry-`);
@@ -271,5 +276,66 @@ assert.equal(shell.status, 0, shell.stderr);
 assert.equal(shell.stdout, `${bootstrapDryText()}\n`);
 assert.equal(existsSync(tmp) && readdirSync(tmp).length === 0, true);
 rmSync(tmp, { recursive: true, force: true });
+
+const preflightRoot = mkdtempSync(`${tmpdir()}/vk-ship-preflight-`);
+const preflightEnv = {
+  ...process.env,
+  TSV_DISPATCH_ROOT: preflightRoot,
+  HOME: preflightRoot,
+  GH_TOKEN_FILE: join(preflightRoot, 'missing-token'),
+};
+delete preflightEnv.GH_TOKEN;
+delete preflightEnv.TSV_DISPATCH_BIN;
+const preflight = spawnSync('bash', ['scripts/host/vk_ship_round.sh', '--preflight'], { cwd: repoRoot, encoding: 'utf8', env: preflightEnv });
+assert.notEqual(preflight.status, 0);
+assert.match(preflight.stderr, /^preflight: missing GitHub auth batch_deploy\n$/);
+assert.equal(preflight.stdout, '');
+const host = join(preflightRoot, 'host');
+mkdirSync(host);
+writeFileSync(join(host, 'tsv_common.py'), [
+  'import os',
+  'GH_TOKEN_FILE = os.environ.get("GH_TOKEN_FILE") or ""',
+  'def read_secret(path, sudo_user=None):',
+  '    return open(path).read().strip()',
+  'class GH:',
+  '    def __init__(self, token=None):',
+  '        self.tok = read_secret(GH_TOKEN_FILE) if GH_TOKEN_FILE else ""',
+  '    def req(self, method, path, data=None, ok404=False, raw=False, accept="", timeout=60):',
+  '        if raw:',
+  '            return b"raw-file"',
+  '        return {"method": method, "path": path, "data": data}',
+  '',
+].join('\n'));
+writeFileSync(join(host, 'tsv_dispatch.py'), 'print("--batch-deploy")\n');
+const tokenPath = join(preflightRoot, 'token');
+const tokenValue = 'ship-round-test-token';
+writeFileSync(tokenPath, `${tokenValue}\n`);
+const ready = spawnSync('bash', ['scripts/host/vk_ship_round.sh', '--preflight'], {
+  cwd: repoRoot,
+  encoding: 'utf8',
+  env: { ...preflightEnv, TSV_DISPATCH_ROOT: host, GH_TOKEN_FILE: tokenPath },
+});
+assert.equal(ready.status, 0, ready.stderr);
+assert.equal(ready.stdout, '');
+assert.equal(ready.stderr.includes(tokenValue), false);
+const helper = spawnSync('python3', ['scripts/host/vk_ship_github.py', 'GET', '/repos/grampadsbot-sudo/timesyncher/pulls/1042'], {
+  cwd: repoRoot,
+  encoding: 'utf8',
+  env: { ...preflightEnv, TSV_DISPATCH_ROOT: host, GH_TOKEN_FILE: tokenPath },
+  input: '',
+});
+assert.equal(helper.status, 0, helper.stderr);
+assert.equal(helper.stdout.includes(tokenValue), false);
+assert.equal(helper.stderr.includes(tokenValue), false);
+assert.equal(JSON.parse(helper.stdout).path, '/repos/grampadsbot-sudo/timesyncher/pulls/1042');
+const raw = spawnSync('python3', ['scripts/host/vk_ship_github.py', 'RAW', '/repos/grampadsbot-sudo/timesyncher/contents/scripts/host/install_vk_ship_round.sh?ref=abc'], {
+  cwd: repoRoot,
+  encoding: 'utf8',
+  env: { ...preflightEnv, TSV_DISPATCH_ROOT: host, GH_TOKEN_FILE: tokenPath },
+});
+assert.equal(raw.status, 0, raw.stderr);
+assert.equal(raw.stdout, 'raw-file');
+assert.equal(raw.stdout.includes(tokenValue), false);
+rmSync(preflightRoot, { recursive: true, force: true });
 
 console.log('test_acceptance_1041_ship_round: ok');

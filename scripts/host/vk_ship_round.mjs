@@ -28,26 +28,30 @@ function log(line) {
   process.stdout.write(`${scrub(line, secrets)}\n`);
 }
 
-function gh(args, input) {
-  const result = spawnSync('gh', args, {
-    cwd: repoDir(),
+const REPO = 'grampadsbot-sudo/timesyncher';
+
+function api(method, apiPath, data) {
+  const helper = fileURLToPath(new URL('./vk_ship_github.py', import.meta.url));
+  const result = spawnSync('python3', [helper, method, apiPath], {
     encoding: 'utf8',
-    input,
+    input: data === undefined ? undefined : JSON.stringify(data),
     env: process.env,
   });
   if (result.status !== 0) {
-    const detail = scrub(`${result.stderr || result.stdout || 'gh failed'}`, secrets);
+    const detail = scrub(`${result.stderr || result.stdout || 'github failed'}`, secrets);
     throw new Error(detail.split('\n')[0].slice(0, 240));
   }
-  return result.stdout;
-}
-
-function ghJson(args) {
-  return JSON.parse(gh(args));
+  if (!result.stdout) return {};
+  return JSON.parse(result.stdout);
 }
 
 function titleIssue(title) {
   const match = String(title || '').match(/^#(\d+)\b/);
+  return match ? Number(match[1]) : null;
+}
+
+function bodyIssue(body) {
+  const match = String(body || '').match(/Fixes #(\d+)/);
   return match ? Number(match[1]) : null;
 }
 
@@ -69,39 +73,42 @@ function conflictOf(sha) {
 }
 
 function shapePull(full) {
-  const issue = full.closingIssuesReferences?.[0]?.number || titleIssue(full.title);
+  const sha = full.head?.sha || full.headRefOid;
+  const issue = full.closingIssuesReferences?.[0]?.number || titleIssue(full.title) || bodyIssue(full.body);
   const issueLabels = issue
-    ? ghJson(['issue', 'view', String(issue), '--repo', 'grampadsbot-sudo/timesyncher', '--json', 'labels']).labels.map((label) => label.name)
+    ? (api('GET', `/repos/${REPO}/issues/${issue}`).labels || []).map((label) => label.name)
     : [];
-  const conflict = conflictOf(full.headRefOid);
+  const conflict = conflictOf(sha);
+  const state = String(full.state || 'OPEN').toUpperCase();
+  const dirty = full.mergeable === 'CONFLICTING' || full.mergeable_state === 'dirty' || full.mergeable === false;
   return {
     number: full.number,
-    head: full.headRefOid,
-    headNow: full.headRefOid,
+    head: sha,
+    headNow: sha,
     issue,
     body: full.body || '',
     prLabels: (full.labels || []).map((label) => label.name),
     issueLabels,
-    state: full.state || 'OPEN',
-    merged: full.state === 'MERGED',
-    mergeableState: full.mergeable === 'CONFLICTING' ? 'dirty' : (conflict.files.length ? 'dirty' : 'clean'),
+    state,
+    merged: full.merged === true || state === 'MERGED',
+    mergeableState: dirty || conflict.files.length ? 'dirty' : 'clean',
     conflictFiles: conflict.files,
     conflictDeletions: conflict.deletions,
   };
 }
 
 function loadOne(number) {
-  const full = ghJson(['pr', 'view', String(number), '--repo', 'grampadsbot-sudo/timesyncher', '--json', 'number,headRefOid,body,labels,title,closingIssuesReferences,mergeable,state']);
-  return shapePull(full);
+  return shapePull(api('GET', `/repos/${REPO}/pulls/${number}`));
 }
 
 function loadPulls() {
-  const listed = ghJson(['pr', 'list', '--repo', 'grampadsbot-sudo/timesyncher', '--state', 'open', '--limit', '50', '--json', 'number']);
-  return listed.map((pull) => loadOne(pull.number));
+  const listed = api('GET', `/repos/${REPO}/pulls?state=open&per_page=50`);
+  return (Array.isArray(listed) ? listed : []).map((pull) => loadOne(pull.number));
 }
 
 function fetchVk() {
-  const result = spawnSync('git', ['-C', repoDir(), '-c', 'credential.helper=!gh auth git-credential', 'fetch', 'origin', 'vk'], {
+  const helper = fileURLToPath(new URL('./vk_ship_github.py', import.meta.url));
+  const result = spawnSync('git', ['-C', repoDir(), '-c', `credential.helper=!python3 ${helper} credential`, 'fetch', 'origin', 'vk'], {
     encoding: 'utf8',
     env: process.env,
   });
@@ -109,8 +116,8 @@ function fetchVk() {
 }
 
 function checksFor(sha) {
-  const runs = ghJson(['api', `repos/grampadsbot-sudo/timesyncher/commits/${sha}/check-runs?per_page=100`]);
-  const status = ghJson(['api', `repos/grampadsbot-sudo/timesyncher/commits/${sha}/status`]);
+  const runs = api('GET', `/repos/${REPO}/commits/${sha}/check-runs?per_page=100`);
+  const status = api('GET', `/repos/${REPO}/commits/${sha}/status`);
   return {
     checks: (runs.check_runs || []).map((row) => ({ name: row.name, conclusion: row.conclusion || row.status, sha })),
     statuses: (status.statuses || []).map((row) => ({ context: row.context, state: row.state, sha })),
@@ -183,7 +190,7 @@ function runHarness(round, runId, sha) {
 
 async function perform(action, round) {
   if (action.type === 'add-labels') {
-    gh(['issue', 'edit', String(action.issue), '--repo', 'grampadsbot-sudo/timesyncher', '--add-label', action.labels.join(',')]);
+    api('POST', `/repos/${REPO}/issues/${action.issue}/labels`, { labels: action.labels });
     return true;
   }
   if (action.type === 'write-acceptance') {
@@ -192,20 +199,21 @@ async function perform(action, round) {
     return true;
   }
   if (action.type === 'accept') {
-    const fresh = ghJson(['pr', 'view', String(action.pr), '--repo', 'grampadsbot-sudo/timesyncher', '--json', 'headRefOid']);
-    if (fresh.headRefOid !== action.sha) return false;
-    gh(['api', `repos/grampadsbot-sudo/timesyncher/statuses/${action.sha}`, '-f', 'state=success', '-f', 'context=accept', '-f', `description=${action.description}`]);
+    const fresh = api('GET', `/repos/${REPO}/pulls/${action.pr}`);
+    if ((fresh.head?.sha || fresh.headRefOid) !== action.sha) return false;
+    api('POST', `/repos/${REPO}/statuses/${action.sha}`, { state: 'success', context: 'accept', description: action.description });
     return true;
   }
   if (action.type === 'needs-rebase') {
-    gh(['pr', 'edit', String(action.pr), '--repo', 'grampadsbot-sudo/timesyncher', '--add-label', 'needs-rebase']);
-    gh(['pr', 'comment', String(action.pr), '--repo', 'grampadsbot-sudo/timesyncher', '--body', `needs rebase: ${action.file}`]);
+    api('POST', `/repos/${REPO}/issues/${action.pr}/labels`, { labels: ['needs-rebase'] });
+    api('POST', `/repos/${REPO}/issues/${action.pr}/comments`, { body: `needs rebase: ${action.file}` });
     return true;
   }
   if (action.type === 'merge') {
-    const fresh = ghJson(['pr', 'view', String(action.pr), '--repo', 'grampadsbot-sudo/timesyncher', '--json', 'headRefOid,state']);
-    if (fresh.headRefOid !== action.sha || fresh.state !== 'OPEN') return false;
-    gh(['pr', 'merge', String(action.pr), '--repo', 'grampadsbot-sudo/timesyncher', '--merge']);
+    const fresh = api('GET', `/repos/${REPO}/pulls/${action.pr}`);
+    const state = String(fresh.state || '').toUpperCase();
+    if ((fresh.head?.sha || fresh.headRefOid) !== action.sha || state !== 'OPEN') return false;
+    api('POST', `/repos/${REPO}/pulls/${action.pr}/merge`, { merge_method: 'merge' });
     return true;
   }
   if (action.type === 'batch-deploy') {
@@ -294,8 +302,8 @@ async function runBootstrap(stamp) {
 
 function pullOpen(number) {
   try {
-    const view = ghJson(['pr', 'view', String(number), '--repo', 'grampadsbot-sudo/timesyncher', '--json', 'state']);
-    return view.state === 'OPEN';
+    const view = api('GET', `/repos/${REPO}/pulls/${number}`);
+    return String(view.state || '').toLowerCase() === 'open';
   } catch {
     return true;
   }
@@ -339,7 +347,7 @@ function publish(round, state, stamp) {
   fs.writeFileSync(paths.latest, body);
   fs.writeFileSync(paths.archived, body);
   const track = process.env.TSV_SHIP_TRACK_ISSUE || state.trackIssue;
-  if (track) gh(['issue', 'comment', String(track), '--repo', 'grampadsbot-sudo/timesyncher', '--body', body]);
+  if (track) api('POST', `/repos/${REPO}/issues/${track}/comments`, { body });
   const next = {
     ...state,
     lastDrySha: round.dryRun.ran ? round.dryRun.sha : state.lastDrySha,
