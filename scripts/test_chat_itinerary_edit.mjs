@@ -160,7 +160,9 @@ assert.deepEqual(shareSlugEditGuardDecision(lockedFixtureSlug), { ok: false, rea
 const fakeAllow = { allowlist: [demoSlug, 'copy-slug-test'], demoLocked: [] };
 assert.equal(shareSlugEditGuardDecision(demoSlug, fakeAllow).ok, true);
 assert.equal(shareSlugEditGuardDecision('copy-slug-test', fakeAllow).ok, true);
-assert.equal(shareSlugEditGuardDecision('not-listed', fakeAllow).ok, false);
+assert.equal(shareSlugEditGuardDecision('not-listed', fakeAllow).ok, true);
+assert.equal(shareSlugEditGuardDecision('fresh-harness-slug').reason, 'fresh_trip');
+assert.equal(shareSlugEditGuardDecision('fresh-harness-slug', { allowlist: [], demoLocked: ['fresh-harness-slug'] }).ok, false);
 
 const payload = miniPayload();
 const resolved = resolvePlaceByQuery(payload, 'Carbone');

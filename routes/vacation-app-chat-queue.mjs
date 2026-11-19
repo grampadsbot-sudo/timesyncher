@@ -21,6 +21,7 @@ import { prepareChatItineraryEditForQueueTurn } from '../src/vacation/chat-itine
 import { producedDemoLockedChatEditReply } from '../src/vacation/chat-itinerary-edit-day.mjs';
 import { replyActionClaimReason } from '../src/vacation/reply-action-claim.mjs';
 import { createBoundedReplyShipGate, createBoundedRewriteClaim } from '../src/vacation/vacation-app-chat-postgen.mjs';
+import { sessionReplyBackend } from '../src/vacation/vk-bot-mcp-reply.mjs';
 export async function queueVacationAppTurn(db, session, trip, body, hooks, intake = {}) {
   const env = process.env;
   const tripId = trip?.id ?? null;
@@ -483,6 +484,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     recordCustomerThingNotes: hooks.recordCustomerThingNotes,
     publishIntakeShare: hooks.publishIntakeShare,
     vacationAppTripSummary: hooks.vacationAppTripSummary,
+    replyBackend: sessionReplyBackend(session),
   });
   if (itineraryEditResult?.client) {
     return { ...shipped, itineraryEdit: itineraryEditResult.client };

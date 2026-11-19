@@ -30,8 +30,6 @@ export function shareSlugEditGuardDecision(slug, config = null) {
   if (cfg.demoLocked.includes(token)) {
     return { ok: false, reason: 'demo_locked' };
   }
-  if (!cfg.allowlist.includes(token)) {
-    return { ok: false, reason: 'not_allowlisted' };
-  }
-  return { ok: true, reason: null };
+  if (cfg.allowlist.includes(token)) return { ok: true, reason: null };
+  return { ok: true, reason: 'fresh_trip' };
 }

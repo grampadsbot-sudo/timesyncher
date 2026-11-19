@@ -297,7 +297,8 @@ function appTimingLines(turn) {
   const gen = Number(turn.genLatencyMs ?? turn.model?.genLatencyMs);
   const tier = turn.jev?.modelTier;
   const model = turn.modelId || turn.model?.responseModel || turn.jev?.responseModel || 'unknown';
-  return [`timing: gen=${gen}ms · tier=${tier} · model=${model}`];
+  const backend = String(turn.backend || turn.model?.backend || '').trim();
+  return [`timing: gen=${gen}ms · tier=${tier} · model=${model}${backend ? ` · backend=${backend}` : ''}`];
 }
 
 function modelIdOf(turn) {
@@ -406,7 +407,7 @@ function packPages(doc, shape) {
     'no_gpt5mini: True',
     'source=live-app (not sim)',
     `tiers used: ${tiersUsed}`,
-    `models used: ${modelsUsed}`,
+    `models used: ${modelsUsed}; backends: ${[...new Set((doc.turns || []).filter((turn) => turn.role === 'app').map((turn) => String(turn.backend || turn.model?.backend || '').trim()).filter(Boolean))].sort().join(', ') || 'none'}`,
     '',
     'SPEED',
     'gen-only is model generation time. It is not the time the customer waited.',
@@ -451,7 +452,7 @@ function packPages(doc, shape) {
     `pack_id: ${shape.pack_id}`,
     `turns: ${summary.turnCount}`,
     `tiers used: ${tiersUsed}`,
-    `models used: ${modelsUsed}`,
+    `models used: ${modelsUsed}; backends: ${[...new Set((doc.turns || []).filter((turn) => turn.role === 'app').map((turn) => String(turn.backend || turn.model?.backend || '').trim()).filter(Boolean))].sort().join(', ') || 'none'}`,
     'session: withheld',
     `HEAD: ${shape.head}`,
     `dpl: ${shape.dpl}`,
@@ -504,10 +505,10 @@ function pdfEscape(value) {
   return pdfAscii(value).replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)').replace(/·/g, '\\267');
 }
 
-export function formatLiveTimingLine({ gen, model, tier, jevMs, maxTokens }) {
-  const line = `timing: jev=${jevMs}ms gen=${gen}ms model=${model} tier=${tier} max_tokens=${maxTokens}`;
+export function formatLiveTimingLine({ gen, model, tier, jevMs, maxTokens, backend = '' }) {
+  const line = `timing: jev=${jevMs}ms gen=${gen}ms model=${model} tier=${tier} max_tokens=${maxTokens}${(backend === 'openrouter' || backend === 'vk_bot_mcp') ? ` backend=${backend}` : ''}`;
   if (/zev/i.test(line)) throw new Error('refused: timing line contained zev');
-  if (!/^timing: jev=\d+ms gen=\d+ms model=\S+ tier=[1-4] max_tokens=\d+$/.test(line)) {
+  if (!/^timing: jev=\d+ms gen=\d+ms model=\S+ tier=[1-4] max_tokens=\d+( backend=(openrouter|vk_bot_mcp))?$/.test(line)) {
     throw new Error('refused: timing line is not jev first then model');
   }
   return line;
@@ -619,7 +620,7 @@ export function liveV7Pack(doc, shape) {
     turns_line: `turns=${shape.summary.turnCount} (customer ${shape.summary.customerTurns} / app ${shape.summary.appTurns}) · session wall time ${wall}ms`,
     cover_fit: [
       `tiers used: ${(shape.tiersUsed || []).join(', ') || 'none'}`,
-      `models used: ${(shape.modelsUsed || []).join(', ') || 'none'}`,
+      `models used: ${(shape.modelsUsed || []).join(', ') || 'none'}; backends: ${[...new Set((doc.turns || []).filter((turn) => turn.role === 'app').map((turn) => String(turn.backend || turn.model?.backend || '').trim()).filter(Boolean))].sort().join(', ') || 'none'}`,
       ...[1, 2, 3, 4].map((tier) => `T${tier} ${map[tier]}`),
     ],
     headline: `Live app capture. Jev judged every generated reply on the labeled scale (raw + 1), the 1-5 criterion legend. The mean is that labeled scale. v6 3.913 is a different scale. Session wall time is ${wall}ms. The timing table median is gen-only. Real per-turn latency, including both Jev calls on a rewrite, is the last row.`,
@@ -684,7 +685,7 @@ export function liveV7Pack(doc, shape) {
           model,
           tier: turn.jev.modelTier,
           jevMs,
-          maxTokens,
+          maxTokens, backend: String(turn.backend || turn.model?.backend || '').trim(),
         }) : '',
       };
     }),

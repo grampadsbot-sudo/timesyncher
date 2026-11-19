@@ -8,7 +8,7 @@ import { chromeHits } from './chrome.mjs';
 import { nonEmpty, scrubFile } from './files.mjs';
 import { boundMediaPlayUrl } from '../../src/vacation/thing-media-bind.mjs';
 import { redactText } from './redact.mjs';
-import { resolveDriveSha, stampMissingDriveSha } from './drive-build.mjs';
+import { resolveDriveSha, stampMissingDriveSha, stampRunReplyBackend } from './drive-build.mjs';
 import { loadHostMediaBindToken } from '../host/vk_ship_dry_env.mjs';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
@@ -27,7 +27,7 @@ function transcriptFromJsonl(file) {
   return { ...header, turns: header.turns || turns };
 }
 
-export async function renderDialog({ token, outDir, secrets, buildSha = '', origin = '', fetchImpl, loadTranscript, spawnImpl = spawnSync } = {}) {
+export async function renderDialog({ token, outDir, secrets, buildSha = '', origin = '', fetchImpl, loadTranscript, replyBackend = '', spawnImpl = spawnSync } = {}) {
   const out = path.join(outDir, 'dialog.pdf');
   const jsonl = path.join(outDir, 'live-transcript.jsonl');
   const timing = path.join(outDir, 'timing.json');
@@ -46,7 +46,7 @@ export async function renderDialog({ token, outDir, secrets, buildSha = '', orig
     return { ok: false, detail: redactText(error?.message || error, secrets), transcript: null, pdfText: '', refusals: [], out };
   }
   fs.mkdirSync(outDir, { recursive: true });
-  fs.writeFileSync(transcriptFile, JSON.stringify(stampMissingDriveSha(doc, sha)));
+  fs.writeFileSync(transcriptFile, JSON.stringify(stampRunReplyBackend(stampMissingDriveSha(doc, sha), replyBackend)));
   const result = spawnImpl(process.execPath, [
     path.join(root, 'scripts/live-transcript-dialog-pdf.mjs'),
     '--transcript', transcriptFile,

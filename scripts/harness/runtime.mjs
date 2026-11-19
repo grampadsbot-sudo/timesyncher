@@ -147,7 +147,7 @@ export function liveOptions(env = process.env) {
         });
         if (response.status >= 400) throw new Error('collaborator step failed');
       });
-      const dialog = await renderDialog({ token: created.token, outDir: options.outDir, secrets, buildSha: played.liveShaStart, origin, fetchImpl });
+      const dialog = await renderDialog({ token: created.token, outDir: options.outDir, secrets, buildSha: played.liveShaStart, origin, fetchImpl, replyBackend: story.reply_backend });
       const transcript = transcriptForScorecard(dialog.transcript, storedTranscript);
       if (chatLeftNoThing(played)) {
         const video = await writeVideoCheck({ origin, attachment: { ok: false, detail: 'no-thing-after-chat', bindings: [] }, fetchImpl, outDir: options.outDir });
