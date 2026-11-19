@@ -476,7 +476,7 @@ function packPages(doc, shape) {
         if (value) transcript.push(`beat: ${value}`);
       }
     }
-    transcript.push(...wrapLines(turn.text, 88));
+    transcript.push(...wrapLines(turn.role === 'customer' && turn.appError ? `${turn.text}\napp status: ${turn.appStatus || 'reply_unavailable'} error: ${turn.appError} model: ${turn.customerModel || 'none'}` : turn.text, 88));
     if (turn.role === 'app') transcript.push(...appTimingLines(turn));
     transcript.push('');
   }

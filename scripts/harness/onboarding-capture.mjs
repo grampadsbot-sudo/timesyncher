@@ -204,6 +204,7 @@ export async function captureOnboardingPdf({ origin, outDir, customer, runId, pa
         isMobile: true,
         hasTouch: true,
         userAgent: IPHONE,
+        extraHTTPHeaders: { 'x-timesyncher-harness-checkout': '1' },
       });
       const page = await context.newPage();
       return {

@@ -405,7 +405,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     if (String(interimDraft || '').trim() && !interimText) {
       const failure = applyLiveAppReplyFailureToPayload(payload, customerLive, produced);
       await storeReplyFailure(db, turnRows[0].id, payload);
-      return { ...base, ok: false, status: failure.failureStatus, error: failure.replyFailure, invented: failure.invented };
+      return { ...base, ok: false, status: failure.failureStatus, error: failure.replyFailure, invented: failure.invented, modelId: produced?.model?.responseModel || null, responseModel: produced?.model?.responseModel || null };
     }
     if (produced.interimReply) produced.interimReply.text = interimText;
     const interimBlocked = await blockReplyShipGate(interimText);
@@ -456,7 +456,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     const failure = applyLiveAppReplyFailureToPayload(payload, customerLive, produced);
     logBlockedReplyReasons(produced.blockedReasons);
     await storeReplyFailure(db, turnRows[0].id, payload);
-    return { ...base, ok: false, status: failure.failureStatus, error: failure.replyFailure, invented: failure.invented };
+    return { ...base, ok: false, status: failure.failureStatus, error: failure.replyFailure, invented: failure.invented, modelId: produced?.model?.responseModel || null, responseModel: produced?.model?.responseModel || null };
   }
 
   const citationBlocked = await blockReplyShipGate(produced.reply);

@@ -6,7 +6,7 @@ import {
   jevPrecall,
   jevQualityRewrite,
   JEV_QUALITY_MODEL,
-  loadVacationAppReplyRules, openRouterChatVisibleText, openRouterTemperatureSpread,
+  loadVacationAppReplyRules,
 } from '../../scripts/vacation-app-reply-rules.mjs';
 import { DESTINATION_ASK, resolveTripDestination } from './trip-destination.mjs';
 import { activityCommits, customerIntent, emptyIntent } from './customer-intent.mjs';
@@ -37,6 +37,58 @@ import { liveReplyCommerceGate } from './collaborator-app-seat.mjs';
 import { savedTripWithOwnerPlan } from './reply-plan-entitlement.mjs';
 import { applyStoredTurnRoute, sumModelCost, sumTurnCost } from './turn-cost.mjs';
 import { routeVkBotMcpReply } from './vk-bot-mcp-reply.mjs';
+import { judgedInterimOrNull, readInterimJudge } from './interim-judge.mjs';
+export { judgeInterimReply } from './interim-judge.mjs';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export const LIVE_TRANSCRIPT_CAPTURE = 'live-vacation-app';
 export const LIVE_REPLY_PRODUCER = 'vacation-app-reply-rules';
 export const LIVE_OPENER_PRODUCER = 'vacation-app-onboarding-opener';
@@ -1088,58 +1140,6 @@ function rewriteAttempted(turn) {
     || Boolean(String(turn?.rewriteText || '').trim());
 }
 
-function readInterimJudge(result) {
-  if (!result || result.judged !== true || typeof result.template !== 'boolean') return null;
-  return { judged: true, template: result.template === true, canShip: result.canShip === true && result.template !== true };
-}
-
-function interimJudgeError(code) {
-  const error = new Error(code);
-  error.code = code;
-  return error;
-}
-
-export async function judgeInterimReply({ text, customerTurn, facts = {}, env = process.env, judge = null, fetchImpl = null } = {}) {
-  const value = String(text || '').trim();
-  if (!value) return { judged: true, template: true, canShip: false, reason: 'empty' };
-  if (typeof judge === 'function') {
-    const verdict = await judge({ text: value, customerTurn, facts });
-    const parsed = readInterimJudge(verdict?.judged === true ? verdict : { ...verdict, judged: true });
-    if (!parsed) throw interimJudgeError('INTERIM_JUDGE_UNUSABLE');
-    return { ...parsed, reason: '' };
-  }
-  const key = String(env?.TIMESYNCHER_JEV_CLASSIFY_TOKEN || env?.TIMESYNCHER_OPENROUTER_API_KEY || env?.OPENROUTER_API_KEY || '').trim();
-  if (!key) throw interimJudgeError('INTERIM_JUDGE_CREDENTIALS_MISSING');
-  const response = await (fetchImpl || fetch)('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json', accept: 'application/json' },
-    body: JSON.stringify({
-      model: INTERIM_MODEL,
-      ...openRouterTemperatureSpread(INTERIM_MODEL, 0),
-      max_tokens: 80,
-      messages: [
-        { role: 'system', content: 'Return only JSON {"template":boolean,"canShip":boolean}. template means a stock acknowledgement or a reply that misses the customer. canShip means it answers this turn. Do not write a reply.' },
-        { role: 'user', content: JSON.stringify({ customer: String(customerTurn || '').slice(0, 4000), reply: value.slice(0, 2000) }) },
-      ],
-    }),
-    signal: AbortSignal.timeout(8000),
-  });
-  const body = typeof response?.json === 'function' ? await response.json().catch(() => ({})) : {};
-  if (!response?.ok) throw interimJudgeError('INTERIM_JUDGE_HTTP');
-  let parsed = null;
-  try {
-    const raw = openRouterChatVisibleText(body?.choices?.[0]?.message?.content);
-    const start = raw.indexOf('{');
-    const end = raw.lastIndexOf('}');
-    const json = start >= 0 && end > start ? JSON.parse(raw.slice(start, end + 1)) : null;
-    parsed = readInterimJudge(json && typeof json.template === 'boolean' && typeof json.canShip === 'boolean' ? { ...json, judged: true } : null);
-  } catch {
-    parsed = null;
-  }
-  if (!parsed) throw interimJudgeError('INTERIM_JUDGE_UNUSABLE');
-  return { ...parsed, reason: '' };
-}
-
 export function isTemplateInterim(text, _customerTurn, judgeResult) {
   const value = String(text || '').trim();
   if (!value) return true;
@@ -1688,7 +1688,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const interimPromise = interimFromTierOne({ rules, customerTurn, destination, env, facts: tripFacts, seat, intake: intake === true, intent }).then((interim) => {
     interim.ms = String(interim.text || '').trim() ? Math.max(Number(interim.ms) || 0, Date.now() - interimStarted) : null;
     return interim;
-  });
+  }).catch(() => ({ text: null, model: null, ms: null, judge: null }));
   const pending = buildLiveAppRewritePending({
     customerTurn,
     originalDraft,
@@ -1845,7 +1845,7 @@ async function interimFromTierOne({ rules, customerTurn, destination, env, facts
   const model = await call();
   let text = String(model?.text || '').trim();
   const judge = text && model?.responseModel === INTERIM_MODEL
-    ? await judgeInterimReply({ text, customerTurn, facts, env })
+    ? await judgedInterimOrNull({ text, customerTurn, facts, env })
     : null;
   const factBlocked = draftFactErrors(text, facts).some((error) => /claimed as saved|account holder is|not on the trip/.test(error));
   if (!text || !judge || isTemplateInterim(text, customerTurn, judge) || !interimCanShip(text, customerTurn, facts, judge) || factBlocked || model?.responseModel !== INTERIM_MODEL) text = '';
