@@ -1,0 +1,1 @@
+scripts/test_place_search_partial_provider_error.mjs

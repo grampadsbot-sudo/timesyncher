@@ -1,0 +1,1 @@
+scripts/test_bot_primary_store_reverify.mjs

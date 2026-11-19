@@ -1,0 +1,1 @@
+scripts/test_deploy_required_env.mjs

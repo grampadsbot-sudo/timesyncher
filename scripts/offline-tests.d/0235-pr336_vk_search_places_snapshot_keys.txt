@@ -1,0 +1,1 @@
+scripts/test_pr336_vk_search_places_snapshot_keys.mjs

@@ -1,0 +1,1 @@
+scripts/test_vk_contract_meaningful_summary.mjs

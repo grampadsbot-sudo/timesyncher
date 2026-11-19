@@ -1,0 +1,1 @@
+scripts/test_shepherd_staging_smoke_bind_thing_media_seed.mjs

@@ -1,0 +1,1 @@
+scripts/test_check_harness_protected_offline.mjs

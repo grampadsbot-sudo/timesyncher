@@ -1,0 +1,1 @@
+scripts/test_trip_site_no_hotel_brand_list.mjs

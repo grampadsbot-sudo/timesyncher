@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
+import { cpSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -13,9 +13,11 @@ assert.equal(ok.status, 0, ok.stderr || ok.stdout);
 const dir = mkdtempSync(join(tmpdir(), 'harness-protected-'));
 try {
   writeFileSync(join(dir, 'harness-protected-offline.txt'), readFileSync(join(root, 'scripts/harness-protected-offline.txt'), 'utf8'));
-  let offline = readFileSync(join(root, 'scripts/offline-tests.txt'), 'utf8');
-  offline = offline.replace('scripts/test_passb_scorecard_harness_687.mjs\n', '');
-  writeFileSync(join(dir, 'offline-tests.txt'), offline);
+  const offlineDir = join(dir, 'offline-tests.d');
+  cpSync(join(root, 'scripts/offline-tests.d'), offlineDir, { recursive: true });
+  const drop = readdirSync(offlineDir).find((name) => readFileSync(join(offlineDir, name), 'utf8').includes('scripts/test_passb_scorecard_harness_687.mjs'));
+  assert.ok(drop, 'protected scorecard entry has a file');
+  rmSync(join(offlineDir, drop));
   const fail = spawnSync('node', [join(root, 'scripts/check-harness-protected-offline.mjs')], {
     cwd: root,
     encoding: 'utf8',

@@ -1,0 +1,1 @@
+scripts/test_vk_search_census_claim_not_auto_supported.mjs

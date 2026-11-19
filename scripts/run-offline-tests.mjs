@@ -1,16 +1,15 @@
-import { readFile } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { readOfflineTestList } from './lib/offline-test-list.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
-const text = await readFile(new URL('./offline-tests.txt', import.meta.url), 'utf8');
-const tests = text
-  .split('\n')
-  .map((line) => line.trim())
-  .filter((line) => line && !line.startsWith('#'));
+const dir = fileURLToPath(new URL('./offline-tests.d/', import.meta.url));
 
-if (!tests.length) {
-  console.error('scripts/offline-tests.txt has no tests');
+let tests;
+try {
+  tests = readOfflineTestList(dir);
+} catch (error) {
+  console.error(error.message);
   process.exit(1);
 }
 

@@ -1,0 +1,1 @@
+scripts/test_ui_471_apple_row_name_frame.mjs

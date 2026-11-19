@@ -1,0 +1,1 @@
+scripts/test_hertz_brave_car_persist_shared_e2e.mjs

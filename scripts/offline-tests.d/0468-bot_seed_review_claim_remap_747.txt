@@ -1,0 +1,1 @@
+scripts/test_bot_seed_review_claim_remap_747.mjs

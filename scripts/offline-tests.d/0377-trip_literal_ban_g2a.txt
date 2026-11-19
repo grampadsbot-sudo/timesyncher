@@ -1,0 +1,1 @@
+scripts/test_trip_literal_ban_g2a.mjs

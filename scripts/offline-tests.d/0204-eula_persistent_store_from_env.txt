@@ -1,0 +1,1 @@
+scripts/test_eula_persistent_store_from_env.mjs

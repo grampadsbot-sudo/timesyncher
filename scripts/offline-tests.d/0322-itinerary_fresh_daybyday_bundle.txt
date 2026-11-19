@@ -1,0 +1,1 @@
+scripts/test_itinerary_fresh_daybyday_bundle.mjs

@@ -1,0 +1,1 @@
+scripts/test_collaborator_welcome_a1_a2.mjs

@@ -1,0 +1,1 @@
+scripts/test_vk_hotel_description_backfill.mjs

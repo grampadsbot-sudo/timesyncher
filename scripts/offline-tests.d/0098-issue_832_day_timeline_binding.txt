@@ -1,0 +1,1 @@
+scripts/test_issue_832_day_timeline_binding.mjs

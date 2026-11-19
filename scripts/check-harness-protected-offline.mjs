@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { readOfflineTestList } from './lib/offline-test-list.mjs';
 
 const scriptsDir = process.env.HARNESS_PROTECTED_SCRIPTS_DIR
   || fileURLToPath(new URL('./', import.meta.url));
 const repoRoot = process.env.HARNESS_PROTECTED_REPO_ROOT
   || fileURLToPath(new URL('..', import.meta.url));
 const listPath = `${scriptsDir}/harness-protected-offline.txt`;
-const offlinePath = `${scriptsDir}/offline-tests.txt`;
+const offlineDir = `${scriptsDir}/offline-tests.d`;
 const scorecardRun = `${scriptsDir}/passb-scorecard-run.mjs`;
 
 function lines(text) {
@@ -15,13 +16,18 @@ function lines(text) {
 }
 
 const protectedPaths = lines(readFileSync(listPath, 'utf8'));
-const offline = new Set(lines(readFileSync(offlinePath, 'utf8')));
 const failures = [];
+let offline = new Set();
+try {
+  offline = new Set(readOfflineTestList(offlineDir));
+} catch (error) {
+  failures.push(error.message);
+}
 
 for (const file of protectedPaths) {
   const abs = `${repoRoot}/${file.replace(/^scripts\//, 'scripts/')}`;
   if (!existsSync(abs)) failures.push(`missing protected file: ${file}`);
-  if (!offline.has(file)) failures.push(`protected test not in offline-tests.txt: ${file}`);
+  if (!offline.has(file)) failures.push(`protected test not in offline-tests.d: ${file}`);
 }
 
 if (!existsSync(scorecardRun)) failures.push('missing scripts/passb-scorecard-run.mjs');

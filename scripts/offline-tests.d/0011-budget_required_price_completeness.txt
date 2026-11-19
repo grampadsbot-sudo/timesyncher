@@ -1,0 +1,1 @@
+scripts/test_budget_required_price_completeness.mjs

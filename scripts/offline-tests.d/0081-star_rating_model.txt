@@ -1,0 +1,1 @@
+scripts/test_star_rating_model.mjs

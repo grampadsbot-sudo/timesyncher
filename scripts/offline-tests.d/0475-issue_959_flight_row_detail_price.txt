@@ -1,0 +1,1 @@
+scripts/test_issue_959_flight_row_detail_price.mjs

@@ -1,0 +1,1 @@
+scripts/test_shepherd_visual_preflight_wiring.mjs

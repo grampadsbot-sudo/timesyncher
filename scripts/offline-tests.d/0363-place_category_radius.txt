@@ -1,0 +1,1 @@
+scripts/test_place_category_radius.mjs

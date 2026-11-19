@@ -1,0 +1,1 @@
+scripts/test_gate_b_product_row_fields.mjs

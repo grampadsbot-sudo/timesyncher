@@ -1,0 +1,1 @@
+scripts/test_acceptance_1010_pic_popover_no_crop.mjs

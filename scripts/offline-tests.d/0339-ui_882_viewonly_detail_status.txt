@@ -1,0 +1,1 @@
+scripts/test_ui_882_viewonly_detail_status.mjs

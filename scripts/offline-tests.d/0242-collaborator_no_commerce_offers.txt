@@ -1,0 +1,1 @@
+scripts/test_collaborator_no_commerce_offers.mjs

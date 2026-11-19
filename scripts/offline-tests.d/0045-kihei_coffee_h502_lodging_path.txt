@@ -1,0 +1,1 @@
+scripts/test_kihei_coffee_h502_lodging_path.mjs

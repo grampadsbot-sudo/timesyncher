@@ -1,0 +1,1 @@
+scripts/test_shared_category_tab_icon_center_bundle.mjs

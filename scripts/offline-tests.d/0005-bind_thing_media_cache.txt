@@ -1,0 +1,1 @@
+scripts/test_bind_thing_media_cache.mjs
