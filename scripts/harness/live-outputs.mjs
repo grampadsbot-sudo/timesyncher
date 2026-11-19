@@ -6,6 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromeHits } from './chrome.mjs';
 import { nonEmpty, scrubFile } from './files.mjs';
+import { boundMediaPlayUrl } from '../../src/vacation/thing-media-bind.mjs';
 import { redactText } from './redact.mjs';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
@@ -92,15 +93,38 @@ export async function attachMedia({ origin, shareToken, story, fetchImpl, env })
     const body = await response.json();
     bindings.push({ kind: item.kind, status: response.status, body });
   }
-  return { ok: bindings.every((row) => row.status >= 200 && row.status < 300 && row.body?.ok !== false), detail: '', bindings };
+  const video = bindings.find((row) => row.kind === 'video');
+  const detail = video && !videoPlayTarget(video) ? videoBindProblem(video) : '';
+  return { ok: bindings.every((row) => row.status >= 200 && row.status < 300 && row.body?.ok !== false), detail, bindings };
+}
+
+function videoBody(video) {
+  return video?.body && typeof video.body === 'object' ? video.body : {};
+}
+
+function videoBinding(video) {
+  const body = videoBody(video);
+  return body.binding && typeof body.binding === 'object' ? body.binding : {};
+}
+
+function videoPlayTarget(video) {
+  return boundMediaPlayUrl(videoBinding(video));
+}
+
+function videoBindProblem(video) {
+  const status = Number(video?.status || 0);
+  const error = String(videoBody(video).error || videoBody(video).message || '').trim();
+  return `http ${status || 0} ${error || 'binding has no publicUrl'}`;
 }
 
 export async function writeVideoCheck({ origin, attachment, fetchImpl, outDir }) {
   const video = (attachment.bindings || []).find((row) => row.kind === 'video');
-  const target = video?.body?.binding?.publicUrl || '';
+  const target = videoPlayTarget(video);
   const file = path.join(outDir, 'video-check.json');
   if (!target) {
-    const payload = { pass: false, detail: attachment.detail || 'video-missing', contentType: '', status: 0 };
+    const base = String(attachment.detail || '').trim();
+    const detail = video ? `video-missing: ${videoBindProblem(video)}` : (base || 'video-missing: binding has no publicUrl');
+    const payload = { pass: false, detail, contentType: '', status: Number(video?.status || 0) };
     fs.writeFileSync(file, `${JSON.stringify(payload, null, 2)}\n`);
     return payload;
   }
