@@ -86,9 +86,6 @@ export { judgeInterimReply } from './interim-judge.mjs';
 
 
 
-
-
-
 export const LIVE_TRANSCRIPT_CAPTURE = 'live-vacation-app';
 export const LIVE_REPLY_PRODUCER = 'vacation-app-reply-rules';
 export const LIVE_OPENER_PRODUCER = 'vacation-app-onboarding-opener';
@@ -1843,14 +1840,17 @@ async function interimFromTierOne({ rules, customerTurn, destination, env, facts
     systemExtra,
   });
   const model = await call();
-  let text = String(model?.text || '').trim();
-  const judge = text && model?.responseModel === INTERIM_MODEL
-    ? await judgedInterimOrNull({ text, customerTurn, facts, env })
-    : null;
-  const factBlocked = draftFactErrors(text, facts).some((error) => /claimed as saved|account holder is|not on the trip/.test(error));
-  if (!text || !judge || isTemplateInterim(text, customerTurn, judge) || !interimCanShip(text, customerTurn, facts, judge) || factBlocked || model?.responseModel !== INTERIM_MODEL) text = '';
+  const generated = String(model?.text || '').trim();
+  const matched = Boolean(generated) && model?.responseModel === INTERIM_MODEL;
+  const judge = matched ? await judgedInterimOrNull({ text: generated, customerTurn, facts, env }) : null;
+  const template = !matched || isTemplateInterim(generated, customerTurn, judge);
+  const text = template ? '' : generated;
+  const blocked = draftFactErrors(generated, facts).some((error) => /claimed as saved|account holder is|not on the trip/.test(error));
   const elapsed = Date.now() - started;
-  return { text: text || null, model: text ? INTERIM_MODEL : null, ms: text ? Math.max(elapsed, 1) : null, judge: text ? judge : null, cost: model?.cost || null };
+  const hold = Boolean(text) && !blocked && interimCanShip(text, customerTurn, facts, judge);
+  return {
+    text: text || null, model: text ? INTERIM_MODEL : null, ms: text ? Math.max(elapsed, 1) : null, judge: text ? judge : null, cost: model?.cost || null, hold,
+  };
 }
 
 function stampShippedReply({ reply, quality, draftModel, log, draft }) {
@@ -1992,7 +1992,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
   const rewriteQualityMs = rewriteCanShip ? Math.max(0, Date.now() - rewriteQualityStarted) : 0;
   const interimReply = interimPromise ? await interimPromise : (pending?.interimReply || { text: null, model: null, ms: null });
   if (pending) pending.interimReply = interimReply;
-  const holdingText = interimCanShip(interimReply?.text, pending?.intake === true ? { text: pending?.customerTurn, intake: true } : pending?.customerTurn, facts, interimReply?.judge)
+  const holdingText = interimReply?.hold !== false && interimCanShip(interimReply?.text, pending?.intake === true ? { text: pending?.customerTurn, intake: true } : pending?.customerTurn, facts, interimReply?.judge)
     ? String(interimReply.text).trim()
     : '';
   let choice = shipChoice({
