@@ -1,3 +1,4 @@
+import { ensurePostIntakeCollabCopy } from './first-intake-reply.mjs';
 import { syncFirstIntakeCustomerInputOnTurn } from './first-intake-customer-input.mjs';
 import { transcriptCustomerId } from './collaborator-app-seat.mjs';
 
@@ -114,6 +115,7 @@ export async function persistVacationAppOutboundReply({
       error: String(produced?.quality?.reason || produced?.reason || 'quality_not_judged'),
     };
   }
+  if (firstIntake && produced?.reply) produced.reply = ensurePostIntakeCollabCopy(produced.reply);
   const priorApp = await outboundAppReplyForRequest(db, requestId);
   if (priorApp?.id) {
     await markWorkerJobLiveHandled(db, jobId);

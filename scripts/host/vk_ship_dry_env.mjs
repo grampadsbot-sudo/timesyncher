@@ -16,6 +16,25 @@ export function defaultVercelTokenFile(home = homedir()) {
   return path.join(home, '.config', 'tsv-deploy', 'vercel-token');
 }
 
+export const MEDIA_BIND_ENV = 'TIMESYNCHER_MEDIA_BIND_TOKEN';
+
+export function defaultMediaBindTokenFile(home = homedir()) {
+  return path.join(home, '.config', 'tsv-deploy', 'media-bind-token');
+}
+
+export function loadHostMediaBindToken({
+  env = {},
+  tokenFile = defaultMediaBindTokenFile(),
+  readFile = (file) => readFileSync(file, 'utf8'),
+  exists = existsSync,
+} = {}) {
+  const fromEnv = String(env[MEDIA_BIND_ENV] || '').trim();
+  if (fromEnv) return { token: fromEnv, source: 'env', block: '' };
+  const token = readHostVercelToken(tokenFile, readFile, exists);
+  if (token) return { token, source: 'file', block: '' };
+  return { token: '', source: '', block: `blocked: env ${MEDIA_BIND_ENV} missing at ${tokenFile}` };
+}
+
 function readHostVercelToken(file, readFile, exists) {
   if (!file || !exists(file)) return '';
   try { return String(readFile(file) || '').trim(); } catch { return ''; }

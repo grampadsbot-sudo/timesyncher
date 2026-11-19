@@ -140,6 +140,25 @@ export const FIRST_INTAKE_QUESTION_INSTRUCTION = [
   FIRST_INTAKE_TONE,
 ].join('\n');
 
+const POST_INTAKE_COLLAB_COPY = 'I am building the itinerary from what you told me. View access lets family and friends see the days. Edit access lets them add notes after you approve an email invite. Welcome them onto this vacation as collaborators. The household plan is unlimited vacations for the whole year.';
+
+export function postIntakeCollabCopyMissing(text) {
+  const value = String(text || '');
+  return !/build(?:ing)? (?:the|your) itinerary/i.test(value)
+    || /you also have unlimited/i.test(value)
+    || !/\bview access\b/i.test(value)
+    || !/\bedit access\b/i.test(value)
+    || !/email invite/i.test(value)
+    || !/unlimited vacations for the whole year/i.test(value);
+}
+
+export function ensurePostIntakeCollabCopy(text) {
+  let value = String(text || '').trim().replace(/\byou also have unlimited\b/gi, 'the plan includes');
+  if (!value) return value;
+  if (!postIntakeCollabCopyMissing(value)) return value;
+  return `${value} ${POST_INTAKE_COLLAB_COPY}`;
+}
+
 export function intakeFactText(value, max = 240) {
   const text = String(value || '').replace(/\s+/g, ' ').trim();
   return text ? text.slice(0, max) : '';

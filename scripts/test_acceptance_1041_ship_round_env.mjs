@@ -17,6 +17,9 @@ import {
   ensureShipRepoDeps,
   harnessEnvSkipped,
   harnessFailureMessage,
+  MEDIA_BIND_ENV,
+  defaultMediaBindTokenFile,
+  loadHostMediaBindToken,
   loadStagingDatabaseUrl,
   lockHash,
   markEnvBlocked,
@@ -164,4 +167,39 @@ const blockedRun = markEnvBlocked({ ran: true }, 'sha', 'run', blockedDeps);
 assert.equal(dryRunRecorded(blockedRun), false);
 assert.equal(doorbellReasons({ dryRun: blockedRun, needsRebase: [], errors: [blockedDeps] }, {}).includes('blocked: env'), true);
 assert.equal(doorbellReasons({ dryRun: blockedRun, needsRebase: [], errors: [blockedDeps] }, {}).includes('new-failure'), false);
+const mediaFile = '/fixture/media-bind-token';
+const mediaToken = 'mb_fixture_token';
+let mediaReads = 0;
+const fromMediaFile = loadHostMediaBindToken({
+  env: {},
+  tokenFile: mediaFile,
+  exists: (file) => file === mediaFile,
+  readFile: (file) => { mediaReads += 1; assert.equal(file, mediaFile); return `${mediaToken}\n`; },
+});
+assert.equal(fromMediaFile.token, mediaToken);
+assert.equal(fromMediaFile.source, 'file');
+assert.equal(fromMediaFile.block, '');
+assert.equal(fromMediaFile.block.includes(mediaToken), false);
+const fromMediaEnv = loadHostMediaBindToken({
+  env: { [MEDIA_BIND_ENV]: mediaToken },
+  tokenFile: mediaFile,
+  exists: () => { throw new Error('file should not be read'); },
+  readFile: () => { throw new Error('file should not be read'); },
+});
+assert.equal(fromMediaEnv.source, 'env');
+assert.equal(fromMediaEnv.token, mediaToken);
+const missingMedia = loadHostMediaBindToken({
+  env: {},
+  tokenFile: mediaFile,
+  exists: () => false,
+  readFile: () => { throw new Error('missing'); },
+});
+assert.equal(missingMedia.token, '');
+assert.match(missingMedia.block, new RegExp(`blocked: env ${MEDIA_BIND_ENV} missing at ${mediaFile}`));
+assert.equal(missingMedia.block.includes(mediaToken), false);
+assert.equal(defaultMediaBindTokenFile('/home/ubishere9995').endsWith('/.config/tsv-deploy/media-bind-token'), true);
+assert.match(roundJs, /TIMESYNCHER_MEDIA_BIND_TOKEN: media\.token/);
+assert.match(roundJs, /loadHostMediaBindToken/);
+const mediaBlocked = markEnvBlocked({ ran: true }, 'sha', 'run', missingMedia.block);
+assert.equal(dryRunRecorded(mediaBlocked), false);
 console.log('test_acceptance_1041_ship_round_env: ok');
