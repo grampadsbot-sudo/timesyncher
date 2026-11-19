@@ -37,7 +37,14 @@
       "type": "unit_script",
       "script": "scripts/test_interim_judge_unstored.mjs",
       "timeout_ms": 60000,
-      "note": "An unusable interim judge is retried and does not drop an already judged reply. A turn that is still not stored records INTERIM_JUDGE_UNUSABLE and the model. Staging checkout uses test mode on the sanctioned Stripe env and the same prices. The harness refuses unless the created session has livemode false. A failed chrome check does not say clean."
+      "note": "An unusable interim judge is retried and does not drop an already judged reply. A turn that is still not stored records INTERIM_JUDGE_UNUSABLE and the model. Staging checkout uses test mode on the sanctioned Stripe env and the same prices. The harness reads checkout-config before the payment intent and refuses unless the created session has livemode false. A failed chrome check does not say clean."
+    },
+    {
+      "id": "video-bind-fallback",
+      "type": "unit_script",
+      "script": "scripts/test_acceptance_1041_dry_run_scorecard.mjs",
+      "timeout_ms": 60000,
+      "note": "A trek shared link that is invalid or expired falls back to the local trip so the video is stored. A video-missing detail fails the video-check row."
     }
   ]
 }

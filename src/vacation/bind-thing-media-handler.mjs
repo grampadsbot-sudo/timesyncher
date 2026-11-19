@@ -77,14 +77,27 @@ function opsHelp(host = 'https://<this-preview>') {
   };
 }
 
-async function fetchShared(shareToken) {
-  const url = `${trekPublic()}/api/shared/${encodeURIComponent(shareToken)}/?_=${Date.now()}`;
+async function readShared(url) {
   const response = await fetch(url, { headers: { accept: 'application/json' } });
   const json = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw Object.assign(new Error(json.error || `Shared trip ${response.status}`), { statusCode: response.status });
+  return { ok: response.ok, status: response.status, json };
+}
+
+async function fetchShared(shareToken, fallbackOrigin = '') {
+  const trekUrl = `${trekPublic()}/api/shared/${encodeURIComponent(shareToken)}/?_=${Date.now()}`;
+  let trekError = null;
+  try {
+    const trek = await readShared(trekUrl);
+    if (trek.ok) return trek.json;
+    trekError = Object.assign(new Error(trek.json.error || `Shared trip ${trek.status}`), { statusCode: trek.status });
+  } catch (error) {
+    trekError = error?.statusCode ? error : Object.assign(new Error(String(error?.message || error)), { statusCode: 502 });
   }
-  return json;
+  const origin = String(fallbackOrigin || '').replace(/\/+$/, '');
+  if (!origin) throw trekError;
+  const local = await readShared(`${origin}/api/shared/${encodeURIComponent(shareToken)}/`);
+  if (!local.ok) throw trekError;
+  return local.json;
 }
 
 function originFromReq(req) {
@@ -181,7 +194,7 @@ async function handleBind(req, res) {
   const shareToken = cleanText(input.shareToken, 180);
   if (!shareToken) throw Object.assign(new Error('shareToken is required.'), { statusCode: 400 });
 
-  const shared = await fetchShared(shareToken);
+  const shared = await fetchShared(shareToken, originFromReq(req));
   const thing = resolveThingFromShared(shared, {
     thingId: input.thingId,
     thingName: input.thingName,
