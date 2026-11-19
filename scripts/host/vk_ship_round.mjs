@@ -11,10 +11,13 @@ import {
   doorbellReasons,
   errorStateHash,
   formatDry,
+  needsLiveDryRun,
   planCycle,
   planPull,
   runPyFailure,
   scrub,
+  stampRound,
+  tipLiveRecord,
 } from './vk_ship_round_core.mjs';
 
 const dry = process.argv.includes('--dry');
@@ -137,17 +140,29 @@ function checksFor(sha) {
   };
 }
 
-function tipLive() {
+let tipCache = null;
+function readTipFile() {
   const file = process.env.TSV_TIP_LIVE_FILE || path.join(root, 'state', 'tip-live.json');
   if (!fs.existsSync(file)) return { tip: '', live: '', liveAccept: '' };
-  const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
-  return { tip: parsed.tip || '', live: parsed.live || '', liveAccept: parsed.live_accept || parsed.liveAccept || '' };
+  try {
+    const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
+    return { tip: parsed.tip || '', live: parsed.live || '', liveAccept: parsed.live_accept || parsed.liveAccept || '' };
+  } catch {
+    return { tip: '', live: '', liveAccept: '' };
+  }
 }
-
+function tipLive() {
+  if (tipCache) return tipCache;
+  const saved = readTipFile();
+  const out = (cmd, args) => { const result = spawnSync(cmd, args, { encoding: 'utf8' }); return result.status === 0 ? result.stdout : ''; };
+  const tip = process.env.TSV_TIP_SHA || out('git', ['-C', repoDir(), 'rev-parse', 'origin/vk']) || out('git', ['-C', repoDir(), 'rev-parse', 'HEAD']);
+  const live = process.env.TSV_LIVE_SHA || out('python3', ['-c', 'import json,urllib.request\ntry:\n print(json.load(urllib.request.urlopen("https://vacation-staging.timesyncher.com/api/version", timeout=8)).get("sha") or "")\nexcept Exception:\n print("")']);
+  tipCache = tipLiveRecord(saved, tip, live);
+  return tipCache;
+}
 function statePath() {
   return path.join(root, 'state', 'vk-ship-round-state.json');
 }
-
 function readState() {
   const file = statePath();
   if (!fs.existsSync(file)) return { rebase: {} };
@@ -262,12 +277,11 @@ async function perform(action, round) {
     return true;
   }
   if (action.type === 'live-accept') {
-    runPy('live_accept.py', ['run']);
-    const live = tipLive();
-    round.tip = live.tip;
-    round.live = live.live;
-    round.tip_eq_live = Boolean(live.tip && live.tip === live.live);
-    round.live_accept = live.liveAccept;
+    try { runPy('live_accept.py', ['run']); }
+    catch (error) { round.live_accept = 'fail'; throw error; }
+    tipCache = null;
+    stampRound(round, tipLive());
+    if (!round.live_accept && round.tip_eq_live) round.live_accept = 'pass';
     return true;
   }
   if (action.type === 'dry-run') {
@@ -276,12 +290,8 @@ async function perform(action, round) {
   }
   if (action.type === 'dry-run-after-deploy') {
     const live = tipLive();
-    round.tip = live.tip;
-    round.live = live.live;
-    round.tip_eq_live = Boolean(live.tip && live.tip === live.live);
-    round.live_accept = live.liveAccept;
-    if (!live.tip || live.tip !== live.live || live.liveAccept !== 'pass') return false;
-    if (readState().lastDrySha === live.live) return false;
+    stampRound(round, live);
+    if (!needsLiveDryRun(live, readState(), action.force === true)) return false;
     runHarness(round, action.runId, live.live);
     return true;
   }
@@ -289,19 +299,8 @@ async function perform(action, round) {
 }
 
 function blankRound() {
-  return {
-    merges: [],
-    tip: tipLive().tip,
-    live: tipLive().live,
-    tip_eq_live: false,
-    live_accept: tipLive().liveAccept,
-    dryRun: { ran: false, sha: '', id: '', verdict: '', reason: '', turns: [], outputs: {}, outputsPass: false, per_customer: null, per_100: null, cleanup_remaining: null },
-    needsRebase: [],
-    accepts: [],
-    errors: [],
-    heads: [],
-    doorbell: [],
-  };
+  const round = { merges: [], tip: '', live: '', tip_eq_live: false, live_accept: '', dryRun: { ran: false, sha: '', id: '', verdict: '', reason: '', turns: [], outputs: {}, outputsPass: false, per_customer: null, per_100: null, cleanup_remaining: null }, needsRebase: [], accepts: [], errors: [], heads: [], doorbell: [] };
+  return stampRound(round, tipLive());
 }
 
 async function runBootstrap(stamp) {
@@ -333,10 +332,12 @@ async function runBootstrap(stamp) {
   }
   const live = tipLive();
   const runId = `dry-run-${stamp}-openrouter`;
-  const caughtUp = live.tip && live.tip === live.live && readState().lastDrySha !== live.live;
-  const tail = merged ? ['batch-deploy', 'live-accept', 'dry-run-after-deploy'] : (caughtUp ? ['live-accept', 'dry-run-after-deploy'] : []);
-  for (const type of tail) {
-    try { await perform({ type, runId }, round); }
+  const caughtUp = needsLiveDryRun(live, readState(), false);
+  const tail = merged
+    ? [{ type: 'batch-deploy' }, { type: 'live-accept' }, { type: 'dry-run-after-deploy', runId, force: true }]
+    : (caughtUp ? [{ type: 'live-accept' }, { type: 'dry-run-after-deploy', runId }] : []);
+  for (const action of tail) {
+    try { await perform(action, round); }
     catch (error) { round.errors.push(scrub(error.message, secrets)); }
   }
   return round;
@@ -381,7 +382,12 @@ async function ring(reasons, detail) {
   return response.status;
 }
 
+function ringDetail(round) {
+  if (round.dryRun?.ran) return `verdict ${round.dryRun.verdict || 'FAIL'}`;
+  return round.errors[0] || round.dryRun?.reason || (round.needsRebase || []).map((row) => row.file).join(',');
+}
 function publish(round, state, stamp) {
+  stampRound(round, tipLive());
   round.doorbell = doorbellReasons(round, state);
   const result = { at: new Date().toISOString(), ...round, doorbell: round.doorbell.length ? round.doorbell.join(',') : 'silent' };
   const paths = resultPaths(stamp);
@@ -432,7 +438,7 @@ async function main() {
     round.errors.push(scrub(error.message, secrets));
     const reasons = publish(round, state, stamp);
     if (reasons.length) {
-      try { await ring(reasons, round.errors[0] || ''); }
+      try { await ring(reasons, ringDetail(round)); }
       catch (ringError) { log(scrub(ringError.message, secrets)); }
     }
     return;
@@ -444,7 +450,7 @@ async function main() {
     : await runGeneral(pulls, stamp);
   const reasons = publish(round, state, stamp);
   if (reasons.length) {
-    try { await ring(reasons, round.errors[0] || round.dryRun.reason || round.needsRebase.map((row) => row.file).join(',')); }
+    try { await ring(reasons, ringDetail(round)); }
     catch (error) { log(scrub(error.message, secrets)); }
   }
 }
@@ -479,7 +485,7 @@ async function runGeneral(pulls, stamp) {
     }
   }
   const tail = merged
-    ? [{ type: 'batch-deploy' }, { type: 'live-accept' }, { type: 'dry-run-after-deploy', runId: `dry-run-${stamp}-openrouter` }]
+    ? [{ type: 'batch-deploy' }, { type: 'live-accept' }, { type: 'dry-run-after-deploy', runId: `dry-run-${stamp}-openrouter`, force: true }]
     : planned.actions.filter((action) => action.type === 'dry-run' || action.type === 'live-accept' || action.type === 'dry-run-after-deploy');
   for (const action of tail) {
     try { await perform(action, round); }

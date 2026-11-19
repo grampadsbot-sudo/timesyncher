@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { BOOTSTRAP_PULLS, applyDryRunCard, bootstrapDryText, crontabHasActive, doorbellReasons, errorStateHash, gatebSkipAction, gatebSkipDescription, pathIsUi, planBootstrap, planCycle, planPull, runPyFailure, scrub } from './host/vk_ship_round_core.mjs';
+import { BOOTSTRAP_PULLS, applyDryRunCard, bootstrapDryText, crontabHasActive, doorbellReasons, errorStateHash, gatebSkipAction, gatebSkipDescription, needsLiveDryRun, pathIsUi, planBootstrap, planCycle, planPull, runPyFailure, scrub, tipLiveRecord } from './host/vk_ship_round_core.mjs';
 
 const protectedRules = JSON.parse(readFileSync(new URL('./fixtures/harness/protected-targets.json', import.meta.url), 'utf8'));
 
@@ -471,5 +471,27 @@ const version = spawnSync('bash', ['-c', [
   'if vk_copy_current 2 0; then exit 1; fi',
 ].join('\n')], { cwd: repoRoot, encoding: 'utf8' });
 assert.equal(version.status, 0, version.stderr);
+const seen = 'a'.repeat(40);
+const idle = planCycle({
+  pulls: [],
+  checksBySha: {},
+  acceptanceFiles: {},
+  tipLive: { tip: seen, live: seen, liveAccept: '' },
+  state: { lastDrySha: seen },
+  storyText: '{"destination":"Hilo"}',
+  databaseUrl: '',
+});
+assert.equal(idle.actions.some((action) => action.type === 'live-accept'), false);
+assert.equal(idle.actions.some((action) => action.type === 'dry-run-after-deploy'), false);
+assert.equal(idle.round.tip, seen);
+assert.equal(idle.round.live, seen);
+assert.equal(idle.round.tip_eq_live, true);
+assert.equal(needsLiveDryRun({ tip: seen, live: seen }, { lastDrySha: seen }, false), false);
+assert.equal(needsLiveDryRun({ tip: seen, live: seen }, { lastDrySha: seen }, true), true);
+assert.equal(needsLiveDryRun({ tip: seen, live: 'b'.repeat(40) }, {}, false), false);
+assert.equal(tipLiveRecord({ tip: '', live: '', liveAccept: '' }, 'A'.repeat(40), seen).tip, seen);
+assert.equal(roundJs.includes("live.liveAccept !== 'pass'"), false);
+assert.match(roundJs, /api\/version/);
+assert.match(roundJs, /rev-parse', 'origin\/vk'/);
 
 console.log('test_acceptance_1041_ship_round: ok');
