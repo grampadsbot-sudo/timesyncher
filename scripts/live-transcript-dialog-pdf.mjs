@@ -664,9 +664,8 @@ export function liveV7Pack(doc, shape) {
       const beat = Array.isArray(turn.beats) && turn.beats.length ? turn.beats.join(',') : (generatedTurn ? 'live' : 'open');
       const model = modelIdOf(turn);
       const meta = [`n=${turn.turnIndex}`, `beat=${beat}`];
-      if (generatedTurn) {
-        meta.push(`model=${model}`, `tier=${turn.jev.modelTier}`);
-      }
+      if (generatedTurn) meta.push(`model=${model}`, `tier=${turn.jev.modelTier}`);
+      else if (app && (turn.fixedOpener === true || turn.replyProducer === LIVE_OPENER_PRODUCER)) meta.push('model=non-model greeting');
       const gen = Number(turn.genLatencyMs ?? turn.model?.genLatencyMs);
       const jevMs = Number(turn.jevLatencyMs ?? turn.jev?.jevLatencyMs);
       const maxTokens = Number(turn.maxTokens ?? turn.model?.maxTokens ?? 900);

@@ -7,11 +7,20 @@ import { useVacationDatabase } from '../src/vacation/db.mjs';
 import { liveTurnRecord } from '../src/vacation/live-app-turn.mjs';
 import handler from '../src/vacation/bind-thing-media-handler.mjs';
 import { sniffMediaType } from '../src/vacation/thing-media-bind.mjs';
-import { assertLiveTranscript, extractPdfText, renderLiveTranscriptPdf } from './live-transcript-dialog-pdf.mjs';
+import { assertLiveTranscript, assessPackShape, extractPdfText, liveV7Pack, renderLiveTranscriptPdf } from './live-transcript-dialog-pdf.mjs';
+import { bakeoffTierModels, isBakeoffModelId } from './vacation-app-reply-rules.mjs';
+import { confirmStoredTurns } from './harness/stored-turn.mjs';
 import { writeVideoCheck } from './harness/live-outputs.mjs';
 
 const renderer = readFileSync(new URL('./live-transcript-dialog-pdf.mjs', import.meta.url), 'utf8');
+const rules = readFileSync(new URL('./vacation-app-reply-rules.mjs', import.meta.url), 'utf8');
 assert.match(renderer, /draftModel is outside the bake-off map/);
+assert.equal(renderer.includes('anthropic/claude-haiku-5.5'), false);
+assert.match(rules, /const BAKEOFF_MODEL_IDS = new Set\(Object\.values\(OPENROUTER_TIER_CHAT_MODELS\)\)/);
+assert.equal(rules.includes('new Set(Object.values(BAKEOFF_TIER_MODELS))'), false);
+assert.equal(isBakeoffModelId('anthropic/claude-haiku-5.5'), true);
+assert.equal(isBakeoffModelId('qwen/qwen3-max'), false);
+assert.equal(bakeoffTierModels()[1], 'anthropic/claude-haiku-5.5');
 const model = 'anthropic/claude-haiku-5.5';
 const app = liveTurnRecord({
   turnIndex: 3,
@@ -73,6 +82,43 @@ const doc = {
   ],
 };
 assertLiveTranscript(doc);
+assert.throws(() => assertLiveTranscript({
+  ...doc,
+  turns: doc.turns.map((turn) => (turn.role === 'app' ? { ...turn, draftModel: 'qwen/qwen3-max' } : turn)),
+}), /draftModel is outside the bake-off map/);
+const opener = liveTurnRecord({
+  turnIndex: 1,
+  role: 'app',
+  modality: 'text',
+  text: 'Where are you headed?',
+  at: '2026-09-25T20:59:00.000Z',
+  latencyMs: null,
+  sessionE2eMs: null,
+  replyProducer: 'vacation-app-onboarding-opener',
+  jev: { jevRan: false, reason: 'fixed_onboarding_opener' },
+});
+assert.equal(opener.fixedOpener, true);
+assert.equal(opener.modelId, null);
+const withOpener = {
+  ...doc,
+  turns: [
+    opener,
+    { ...doc.turns[0], turnIndex: 2 },
+    { ...app, turnIndex: 3 },
+  ],
+};
+assertLiveTranscript(withOpener);
+const packed = liveV7Pack(withOpener, assessPackShape(withOpener, { trip: 'Harbor' }));
+assert.match(packed.turns[0].meta, /model=non-model greeting/);
+assert.match(packed.turns[2].meta, /model=anthropic\/claude-haiku-5\.5/);
+assert.match(packed.turns[2].timing, /model=anthropic\/claude-haiku-5\.5/);
+const openerRow = confirmStoredTurns(withOpener, packed.turns[2].timing, 'openrouter').rows[0];
+assert.equal(openerRow.stored_model, 'non-model greeting');
+assert.equal(openerRow.cost_amount, null);
+const openerPdf = extractPdfText(renderLiveTranscriptPdf(withOpener));
+assert.match(openerPdf, /non-model greeting/);
+assert.match(openerPdf, /timing: jev=/);
+assert.match(openerPdf, /model=anthropic\/claude-haiku-5\.5/);
 const pdf = renderLiveTranscriptPdf(doc);
 assert.equal(Buffer.isBuffer(pdf), true);
 assert.equal(pdf.subarray(0, 5).toString(), '%PDF-');

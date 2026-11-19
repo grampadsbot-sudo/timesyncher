@@ -26,7 +26,6 @@ const BAKEOFF_TIER_MODELS = {
   3: 'anthropic/claude-haiku-5.5',
   4: 'anthropic/claude-haiku-5.5',
 };
-const BAKEOFF_MODEL_IDS = new Set(Object.values(BAKEOFF_TIER_MODELS));
 const BANNED_GPT_MINI = /gpt-.*mini/i;
 const TIER_MODELS_FILE = path.join(path.dirname(fileURLToPath(import.meta.url)), '../dialog-runners/tier_models.json');
 
@@ -59,6 +58,7 @@ function loadBakeoffMap() {
 }
 
 const OPENROUTER_TIER_CHAT_MODELS = loadBakeoffMap();
+const BAKEOFF_MODEL_IDS = new Set(Object.values(OPENROUTER_TIER_CHAT_MODELS));
 
 export function isBakeoffModelId(modelId) {
   const model = text(modelId, 120);
@@ -849,7 +849,7 @@ export async function jevChooseRewrite({ customerTurn, draft, options, env = pro
   }
 }
 
-export const INTERIM_MODEL = BAKEOFF_TIER_MODELS[1];
+export const INTERIM_MODEL = OPENROUTER_TIER_CHAT_MODELS[1];
 export const TIERED_REPLY_TIMEOUT_MS = 20000;
 
 export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = null, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null, tier1CompactReasoning = false }) {

@@ -1,7 +1,10 @@
 import { readStoredCost } from './cost.mjs';
 
 function storedModelId(turn) {
-  return String(turn?.modelId || turn?.model?.responseModel || turn?.jev?.responseModel || '').trim();
+  const model = String(turn?.modelId || turn?.model?.responseModel || turn?.jev?.responseModel || '').trim();
+  if (model) return model;
+  if (turn?.role === 'app' && turn?.jev?.jevRan !== true && (turn.fixedOpener === true || turn.replyProducer === 'vacation-app-onboarding-opener')) return 'non-model greeting';
+  return '';
 }
 
 function storedBackend(turn) {
