@@ -4,6 +4,7 @@ import { acceptAndConfirmEula } from './eula-accept.mjs';
 import { provisionThrowaway } from './live-provision.mjs';
 import { playCustomerTurns } from './live-play.mjs';
 import { attachMedia, captureScreens, fetchKeepsake, renderDialog, runSteps, writeVideoCheck } from './live-outputs.mjs';
+import { captureOnboardingPdf, rebuildCustomerPdf } from './onboarding-capture.mjs';
 import { shortHash } from './redact.mjs';
 import { transcriptForScorecard, writeRedactedLiveTranscript } from './redacted-transcript.mjs';
 import { deleteTaggedRows } from './cleanup.mjs';
@@ -46,6 +47,24 @@ export function liveOptions(env = process.env) {
       const db = sql(ready);
       const created = await provisionThrowaway(db, story, { tag: options.tag, runId: options.runId, env: ready });
       const secrets = secretValues(ready, [created.token]);
+      let onboard = { ok: false, detail: 'missing' };
+      try {
+        onboard = await captureOnboardingPdf({
+          origin,
+          outDir: options.outDir,
+          runId: options.runId,
+          customer: {
+            name: story.customer.name,
+            email: `harness+${options.runId}+${story.customer.email_alias}@harness.invalid`,
+          },
+        });
+      } catch (error) {
+        onboard = { ok: false, detail: String(error?.message || error).replace(/session=[^&\s]+/gi, 'session=[redacted]').slice(0, 240) };
+      }
+      const onboardingFields = () => ({
+        onboardingPdfOk: onboard.ok === true,
+        onboardingPdfDetail: onboard.detail || 'missing',
+      });
       try {
         await acceptAndConfirmEula({
           origin,
@@ -83,6 +102,7 @@ export function liveOptions(env = process.env) {
           chromeOk: false,
           chromeDetail: '',
           steps: [],
+          ...onboardingFields(),
         };
       }
       const played = await playCustomerTurns(story, {
@@ -112,6 +132,7 @@ export function liveOptions(env = process.env) {
         chromeOk: false,
         chromeDetail: '',
         steps: [],
+        ...onboardingFields(),
       };
       const storedTranscript = await storedLiveTranscript(db, created.token);
       writeRedactedLiveTranscript(options.outDir, storedTranscript, secrets);
@@ -142,12 +163,18 @@ export function liveOptions(env = process.env) {
           videoPass: false,
           videoDetail: video.detail,
           reason: 'no-thing-after-chat',
+          ...onboardingFields(),
         };
       }
       const attachment = await attachMedia({ origin, shareToken, story, fetchImpl, env: ready });
       const video = await writeVideoCheck({ origin, attachment, fetchImpl, outDir: options.outDir });
       const keepsake = await fetchKeepsake({ origin, shareToken, fetchImpl, outDir: options.outDir });
       const screens = await captureScreens({ origin, shareToken, sessionToken: created.token, outDir: options.outDir });
+      try {
+        onboard = await rebuildCustomerPdf(onboard, screens.files || []);
+      } catch (error) {
+        onboard = { ...onboard, ok: false, detail: String(error?.message || error).slice(0, 240) };
+      }
       return {
         ...base,
         steps,
@@ -166,6 +193,7 @@ export function liveOptions(env = process.env) {
         videoDetail: video.detail || '',
         chromeOk: screens.ok === true && !(screens.hits || []).length,
         chromeDetail: (screens.hits || []).join(','),
+        ...onboardingFields(),
       };
     },
     async cleanup(tag) {

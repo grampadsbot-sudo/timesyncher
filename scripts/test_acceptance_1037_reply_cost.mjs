@@ -74,6 +74,8 @@ const card = await runCustomer(story, {
     chromeOk: true,
     steps: [],
     itineraryCount: 1,
+    onboardingPdfOk: true,
+    onboardingPdfDetail: '18 screens',
   }),
 });
 assert.equal(card.reason, '');

@@ -1,0 +1,1 @@
+scripts/test_acceptance_1020_onboarding_screens.mjs
