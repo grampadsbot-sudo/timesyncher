@@ -192,7 +192,7 @@ export function liveTurnRecord({
       record.rewriteModel = log.rewriteModel || record.rewriteModel || null;
       if (log.rewriteText) record.rewriteText = String(log.rewriteText);
       if (log.draftText && record.quality) record.quality.draft = String(log.draftText);
-      record.shippedModel = log.shippedModel || record.shippedModel || null;
+      record.shippedModel = [log.shippedModel, record.shippedModel, model.responseModel].find((id) => isBakeoffModelId(id)) || null;
       record.jevScoreDraft = scored(log.jevScoreDraft);
       record.jevScoreRewrite = scored(log.jevScoreRewrite);
       record.jevScoreRaw = rawScore(log.jevScoreRaw);
