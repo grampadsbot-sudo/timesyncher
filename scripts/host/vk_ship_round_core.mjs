@@ -165,6 +165,36 @@ function outputsPass(card) {
   return OUTPUT_IDS.every((id) => checks.some((row) => row.id === id && row.pass === true));
 }
 
+function sha40(value) {
+  const sha = String(value || '').trim().toLowerCase();
+  return /^[0-9a-f]{40}$/.test(sha) ? sha : '';
+}
+
+export function tipLiveRecord(saved, tip, live) {
+  const base = saved || {};
+  return {
+    tip: sha40(tip) || sha40(base.tip),
+    live: sha40(live) || sha40(base.live),
+    liveAccept: base.liveAccept || '',
+  };
+}
+
+export function needsLiveDryRun(record, state, force) {
+  if (!record?.live || record.tip !== record.live) return false;
+  if (force) return true;
+  return state?.lastDrySha !== record.live;
+}
+
+export function stampRound(round, live) {
+  const tip = live?.tip || round.tip || '';
+  const sha = live?.live || round.live || '';
+  round.tip = tip;
+  round.live = sha;
+  round.tip_eq_live = Boolean(tip && tip === sha);
+  if (live?.liveAccept) round.live_accept = live.liveAccept;
+  return round;
+}
+
 export function blockedTarget(text) {
   return protectedTarget(text);
 }
@@ -281,7 +311,7 @@ function appendDeployOrDry(actions, world, errors) {
     return blankDry('');
   }
   const tipLive = world.tipLive || {};
-  if (tipLive.tip && tipLive.tip === tipLive.live && state.lastDrySha !== tipLive.live) {
+  if (needsLiveDryRun(tipLive, state, false)) {
     actions.push({ type: 'live-accept' });
     const dryRun = blankDry(tipLive.live);
     const hit = protectedTarget(world.storyText || '') || protectedTarget(world.databaseUrl || '');
