@@ -19,8 +19,8 @@ const rules = JSON.parse(readFileSync(rulesFile(), 'utf8'));
 
 export const BOOTSTRAP_PULLS = [
   { pr: 1042, issue: 1041, sha: '' },
-  { pr: 1040, issue: 1039, sha: 'b5237f05c60a0651ad27533d4ccd4bffb7dd2dc6' },
-  { pr: 1044, issue: 1043, sha: 'a3d2981a783a569ccb20fb7d9ae03e877fca68d7' },
+  { pr: 1040, issue: 1039, sha: 'd816927d5423266d320f72d2116cea44edcfbbae' },
+  { pr: 1044, issue: 1043, sha: '6512f9bd099a9b31b17f0ebce44d92bd2f52c129' },
 ];
 
 export function bootstrapDryText() {

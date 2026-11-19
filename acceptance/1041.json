@@ -2,7 +2,7 @@
   "repo": "grampadsbot-sudo/timesyncher",
   "issue": 1041,
   "source": "host ship round without Grok Bot",
-  "note": "Dry mode prints the bootstrap plan and writes nothing. The host clone is $TSV_DISPATCH_ROOT/ship-repo. Each round fetches origin/vk, hard-checks it out, and re-execs that copy. The first round ships 1042, then 1040 at b5237f05, then 1044 at a3d2981a: labels, acceptance file, accept on that exact green head, and merge when the PR is clean. Deploy is python3 tsv_dispatch.py --batch-deploy and python3 live_accept.py. A stale head is not accepted. A PR dirty only because both sides appended scripts/offline-tests.txt is marked needs-rebase and is not patched. The same live SHA does not get a second dry run. Cleanup remaining other than 0 fails. The doorbell stays silent when the failure reason repeats.",
+  "note": "Dry mode prints the bootstrap plan and writes nothing. The host clone is $TSV_DISPATCH_ROOT/ship-repo. Each round fetches origin/vk, hard-checks it out, and re-execs that copy. The first round ships 1042, then 1040 at d816927d, then 1044 at 6512f9bd: labels, acceptance file, accept on that exact green head, and merge when the PR is clean. Deploy is python3 tsv_dispatch.py --batch-deploy and python3 live_accept.py. A stale head is not accepted. A PR dirty only because both sides appended scripts/offline-tests.txt is marked needs-rebase and is not patched. The same live SHA does not get a second dry run. Cleanup remaining other than 0 fails. The doorbell stays silent when the failure reason repeats.",
   "assertions": [
     {
       "id": "ship-round-dry",
