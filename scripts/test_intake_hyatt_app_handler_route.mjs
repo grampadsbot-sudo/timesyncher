@@ -191,10 +191,28 @@ async function runHyattHandlerRouteTest() {
     }
 
     assert.ok(hyatt.status >= 200 && hyatt.status < 300, `Hyatt lodging turn failed: ${hyatt.status} ${JSON.stringify(hyatt.body)}`);
+    assert.equal(hyatt.body.ok, true, JSON.stringify(hyatt.body));
+    assert.ok(String(hyatt.body.reply || '').trim().length > 0, JSON.stringify(hyatt.body));
     assert.ok(hyatt.body?.title || state.trip.title, 'trip title should remain set after Hyatt turn');
     const hotels = state.tripThings.filter((row) => row.category === 'hotel');
     assert.ok(hotels.length >= 1, `expected hotel thing, got ${JSON.stringify(state.tripThings)}`);
     assert.equal(state.welcomeTurns.length, 1, 'Hyatt turn must not insert a second owner welcome');
+    const storedApp = [...state.transcriptTurns].reverse().find((row) => row.payload?.liveTranscript?.replyProducer === 'vacation-app-reply-rules');
+    assert.equal(storedApp?.payload?.liveTranscript?.quality?.judged, true);
+
+    const scoredFetch = globalThis.fetch;
+    globalThis.fetch = async (url, options) => {
+      const href = String(url);
+      const raw = options?.body ? JSON.parse(String(options.body)) : {};
+      if (href.includes('decisions') && raw.questions?.overall_quality) {
+        return { ok: true, json: async () => ({ ok: true, answers: { model_tier: { score: 0 }, route_type: { choice: 'general' } } }) };
+      }
+      return scoredFetch(url, options);
+    };
+    const missing = await postApp(state, handler, sessionToken, { tripId: state.tripId, text: 'Add a quiet morning at the Hyatt Regency Maui.' });
+    assert.equal(missing.status, 502);
+    assert.equal(missing.body.error, 'quality_score_missing');
+    assert.equal(missing.body.reply, null);
     return { ok: true };
   } finally {
     globalThis.fetch = originalFetch;
