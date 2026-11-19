@@ -188,6 +188,10 @@ try {
     const href = String(url);
     const body = init?.body ? JSON.parse(String(init.body)) : {};
     if (href.includes('/decisions')) {
+      const questions = body?.questions || body?.input?.questions || {};
+      if (questions.overall_quality) {
+        return { ok: true, json: async () => ({ ok: true, answers: { overall_quality: { score: 4 }, disposition: { choice: 'keep' }, fix_focus: { choice: 'keep' } } }) };
+      }
       return {
         ok: true,
         json: async () => ({

@@ -6,6 +6,7 @@ import { produceNoTripStarterReply } from '../src/vacation/no-trip-starter-reply
 import { loadVacationAppReplyRules } from '../scripts/vacation-app-reply-rules.mjs';
 import { applyLiveAppReplyFailureToPayload, persistVacationAppOutboundReply, storeReplyFailure, stampCustomerLivePayload } from '../src/vacation/reply-ship.mjs';
 import { logBlockedReplyReasons } from '../src/vacation/blocked-turn-payload.mjs';
+import { applyReplyQuality } from '../src/vacation/reply-quality-gate.mjs';
 import { tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
 import { tripIntakeJobKind } from '../src/vacation/vacation-from-chat-intake.mjs';
 import { intakeExtractedThings, intakeThingsForPersistence, runVacationAppInTurnSearch } from '../src/vacation/chat-place-search.mjs';
@@ -436,6 +437,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     };
   }
   const vkBotTurn = produced?.model?.backend === 'vk_bot_mcp' || produced?.model?.via === 'vk_bot_mcp';
+  const claimedFrom = produced.reply;
   if (!produced.reply) {
     const draft = String(produced.blockedDraft || '').trim();
     if (!vkBotTurn && draft && (produced.reason === 'reply_action_claim_blocked' || replyActionClaimReason(draft, turnActionResults, replyClaimContext))) {
@@ -448,6 +450,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
   } else if (!vkBotTurn) {
     produced.reply = await rewriteClaim(produced.reply);
   }
+  await applyReplyQuality(produced, { customerTurn: requestText, env, previousReply: claimedFrom });
   if (!produced.reply) {
     const failure = applyLiveAppReplyFailureToPayload(payload, customerLive, produced);
     logBlockedReplyReasons(produced.blockedReasons);

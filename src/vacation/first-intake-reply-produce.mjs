@@ -1,4 +1,4 @@
-import { callTieredModel, INTERIM_MODEL, jevPrecall } from '../../scripts/vacation-app-reply-rules.mjs';
+import { callTieredModel, INTERIM_MODEL, jevPrecall, jevQualityRewrite } from '../../scripts/vacation-app-reply-rules.mjs';
 import { sumModelCost } from './turn-cost.mjs';
 
 const FIRST_INTAKE_REPLY_TIMEOUT_MS = 8000;
@@ -168,5 +168,37 @@ export async function produceFirstIntakeReply({
       blockedReasons: [String(error.reason || reason)],
     };
   }
-  return { reply, rules, jev, model, customerInput, reason: null };
+  const judgeStarted = Date.now();
+  const quality = await jevQualityRewrite({ customerTurn, draft: reply, env });
+  const judgeMs = Math.max(0, Date.now() - judgeStarted);
+  if (quality?.judged !== true) {
+    const reason = quality?.reason || 'quality_not_judged';
+    return {
+      reply: null,
+      rules,
+      jev,
+      model,
+      customerInput,
+      quality: quality || { judged: false, reason },
+      reason,
+      blockedReasons: [reason],
+    };
+  }
+  quality.judgeMs = judgeMs;
+  if (model && typeof model === 'object') {
+    model.quality = quality;
+    const latency = model.log?.latencyMs && typeof model.log.latencyMs === 'object' ? model.log.latencyMs : {};
+    model.log = {
+      ...(model.log || {}),
+      jevScoreDraft: quality.score,
+      latencyMs: {
+        ...latency,
+        draft: Number.isFinite(Number(model.genLatencyMs)) ? Number(model.genLatencyMs) : (latency.draft ?? null),
+        jevDraft: judgeMs,
+        jevRewrite: latency.jevRewrite ?? null,
+        total: (Number(latency.draft) || Number(model.genLatencyMs) || 0) + judgeMs,
+      },
+    };
+  }
+  return { reply, rules, jev, model, quality, customerInput, reason: null };
 }

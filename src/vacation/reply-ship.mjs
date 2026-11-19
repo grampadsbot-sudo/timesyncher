@@ -102,6 +102,18 @@ export async function persistVacationAppOutboundReply({
   publishIntakeShare,
   vacationAppTripSummary,
 }) {
+  const judgedQuality = produced?.model?.quality?.judged === true
+    ? produced.model.quality
+    : (produced?.quality?.judged === true ? produced.quality : null);
+  if (!judgedQuality) {
+    return {
+      ...base,
+      ok: false,
+      status: 'reply_unavailable',
+      reply: null,
+      error: String(produced?.quality?.reason || produced?.reason || 'quality_not_judged'),
+    };
+  }
   const priorApp = await outboundAppReplyForRequest(db, requestId);
   if (priorApp?.id) {
     await markWorkerJobLiveHandled(db, jobId);
@@ -116,7 +128,7 @@ export async function persistVacationAppOutboundReply({
     latencyMs: exchangeLatency,
     sessionE2eMs,
     jev: produced.jev,
-    model: produced.model,
+    model: produced.model?.quality?.judged === true ? produced.model : { ...(produced.model || {}), quality: judgedQuality },
     rules: produced.rules,
   });
   logVacationAppReplyTelemetry(appLive);
@@ -216,6 +228,12 @@ export async function commitShippedRewrite(db, session, pending, finished, { rec
     }
     finished = { ...finished, reply: recovered.reply, model: recovered.model || finished.model };
   }
+  const judgedQuality = finished?.model?.quality?.judged === true
+    ? finished.model.quality
+    : (finished?.quality?.judged === true ? finished.quality : null);
+  if (!judgedQuality) {
+    return { ok: false, status: 'reply_unavailable', reply: null, error: String(finished?.quality?.reason || finished?.reason || 'quality_not_judged') };
+  }
   const wallMs = Math.max(1, Date.now() - (Number(pending.wallStarted) || Date.now()));
   const appLive = liveTurnRecord({
     turnIndex: Number(pending.customerTurnIndex) + 1,
@@ -226,7 +244,7 @@ export async function commitShippedRewrite(db, session, pending, finished, { rec
     latencyMs: wallMs,
     sessionE2eMs: Math.max(1, Date.now() - (Number(pending.sessionStartedMs) || Date.now())),
     jev: finished.jev,
-    model: finished.model,
+    model: finished.model?.quality?.judged === true ? finished.model : { ...(finished.model || {}), quality: judgedQuality },
     rules: finished.rules,
     speakerName: pending.speakerName || null,
   });

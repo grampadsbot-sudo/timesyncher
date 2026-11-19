@@ -115,6 +115,9 @@ globalThis.fetch = async (url, init) => {
   const target = String(url);
   const body = init?.body ? JSON.parse(init.body) : {};
   if (target.includes('/api/alpha/decisions')) {
+    if (body.questions?.overall_quality) {
+      return { ok: true, json: async () => ({ ok: true, answers: { overall_quality: { score: 4 }, disposition: { choice: 'keep' }, fix_focus: { choice: 'keep' } } }) };
+    }
     return { ok: true, json: async () => ({ ok: true, answers: { model_tier: { score: 1 }, route_type: { choice: 'general' } } }) };
   }
   if (target.includes('/chat/completions')) {
@@ -140,6 +143,7 @@ assert.match(systems[1], /first_intake_weekday_not_allowed:Wednesday/);
 assert.equal(systems[1].includes('test-key'), false);
 assert.equal(recovered.reply, hiloDraft);
 assert.equal(recovered.reason, null);
+assert.equal(recovered.quality.judged, true);
 stamped(recovered.reply);
 
 const neutral = 'We are planning Harbor Ridge Week in Neutral Bay from October 7 to October 9, 2026.';
@@ -164,6 +168,7 @@ assert.match(systems[1], /first_intake_question_count/);
 assert.equal(neutralReply.reply, 'Who is traveling with you?');
 assert.equal((neutralReply.reply.match(/\?/g) || []).length, 1);
 assert.equal(neutralReply.reason, null);
+assert.equal(neutralReply.quality.judged, true);
 stamped(neutralReply.reply);
 
 chat = 0;

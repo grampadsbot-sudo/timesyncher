@@ -93,7 +93,7 @@ async function runCase(rewriteText) {
     if (target.includes('/api/alpha/decisions')) {
       const questions = body.questions || {};
       if (questions.trip_intake) return jsonResponse({ ok: true, answers: { trip_intake: { noul: 0.95 } } });
-      if (questions.overall_quality) return jsonResponse({ ok: true, answers: {} });
+      if (questions.overall_quality) return jsonResponse({ ok: true, answers: { overall_quality: { score: 4 }, disposition: { choice: 'keep' }, fix_focus: { choice: 'keep' } } });
       if (questions.model_tier) {
         return jsonResponse({
           ok: true,

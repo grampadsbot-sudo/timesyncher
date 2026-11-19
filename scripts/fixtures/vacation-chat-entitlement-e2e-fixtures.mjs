@@ -300,6 +300,9 @@ export function intakeFetchMock({ title, destination, hasDates, intake = true })
       if (questions.relevance) {
         return { ok: true, json: async () => ({ answers: { relevance: { choice: 5 } } }) };
       }
+      if (questions.overall_quality) {
+        return { ok: true, json: async () => ({ ok: true, answers: { overall_quality: { score: 4 }, disposition: { choice: 'keep' }, fix_focus: { choice: 'keep' } } }) };
+      }
       return {
         ok: true,
         json: async () => ({
@@ -398,6 +401,9 @@ export function providerFetchMock(state, env, originalFetch, intakeOptions = {
       }
       if (questions.relevance) {
         return { ok: true, json: async () => ({ answers: { relevance: { choice: 5 } } }) };
+      }
+      if (questions.overall_quality) {
+        return { ok: true, json: async () => ({ ok: true, answers: { overall_quality: { score: 4 }, disposition: { choice: 'keep' }, fix_focus: { choice: 'keep' } } }) };
       }
       return {
         ok: true,
