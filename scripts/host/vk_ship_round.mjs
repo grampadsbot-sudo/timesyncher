@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { harnessEnvSkipped, loadStagingDatabaseUrl, markEnvBlocked } from './vk_ship_dry_env.mjs';
+import { applyMissingScorecard, dryRunId, harnessEnvSkipped, loadStagingDatabaseUrl, markEnvBlocked } from './vk_ship_dry_env.mjs';
 import {
   BOOTSTRAP_PULLS,
   applyDryRunCard,
@@ -233,7 +233,7 @@ async function runHarness(round, runId, sha) {
   if (harnessEnvSkipped(output)) { round.dryRun = markEnvBlocked(round.dryRun, sha, runId); return; }
   const cardPath = path.join(out, runId, 'dry-run', 'scorecard.json');
   round.dryRun = { ...round.dryRun, ran: true, blockedEnv: false, sha, id: runId };
-  if (!fs.existsSync(cardPath)) round.errors.push(scrub(run.stderr || 'dry-run-missing-scorecard', secrets).split('\n')[0].slice(0, 240));
+  if (!fs.existsSync(cardPath)) applyMissingScorecard(round, scrub(output, secrets));
   else applyDryRunCard(round, JSON.parse(fs.readFileSync(cardPath, 'utf8')));
 }
 
@@ -312,7 +312,7 @@ async function runBootstrap(stamp) {
       pull.issue = pull.issue || item.issue;
       if (pull.merged || pull.state === 'MERGED') continue;
       if (pull.head) round.heads.push(pull.head);
-      const world = worldNow(`dry-run-${stamp}-openrouter`);
+      const world = worldNow(`${stamp}`);
       world.checksBySha = { [pull.head]: checksFor(pull.head) };
       const part = planPull(pull, world, item.sha);
       round.errors.push(...part.errors);
@@ -330,7 +330,7 @@ async function runBootstrap(stamp) {
     }
   }
   const live = tipLive();
-  const runId = `dry-run-${stamp}-openrouter`;
+  const runId = `${stamp}`;
   const caughtUp = needsLiveDryRun(live, readState(), false);
   const tail = merged
     ? [{ type: 'batch-deploy' }, { type: 'live-accept' }, { type: 'dry-run-after-deploy', runId, force: true }]
@@ -414,7 +414,7 @@ async function main() {
     log(bootstrapDryText());
     return;
   }
-  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const stamp = dryRunId();
   if (dry) {
     let pulls = [];
     try { if (process.env.GH_TOKEN) pulls = loadPulls(); }
@@ -424,7 +424,7 @@ async function main() {
       try { checksBySha[pull.head] = checksFor(pull.head); }
       catch { checksBySha[pull.head] = { checks: [], statuses: [] }; }
     }
-    const planned = planCycle({ pulls, checksBySha, ...worldNow(`dry-run-${stamp}-openrouter`) });
+    const planned = planCycle({ pulls, checksBySha, ...worldNow(`${stamp}`) });
     log(formatDry(planned.actions) || 'would stay silent');
     return;
   }
@@ -464,7 +464,7 @@ async function runGeneral(pulls, stamp) {
   const planned = planCycle({
     pulls,
     checksBySha,
-    ...worldNow(`dry-run-${stamp}-openrouter`),
+    ...worldNow(`${stamp}`),
   });
   const round = planned.round;
   round.merges = [];
@@ -485,7 +485,7 @@ async function runGeneral(pulls, stamp) {
     }
   }
   const tail = merged
-    ? [{ type: 'batch-deploy' }, { type: 'live-accept' }, { type: 'dry-run-after-deploy', runId: `dry-run-${stamp}-openrouter`, force: true }]
+    ? [{ type: 'batch-deploy' }, { type: 'live-accept' }, { type: 'dry-run-after-deploy', runId: `${stamp}`, force: true }]
     : planned.actions.filter((action) => action.type === 'dry-run' || action.type === 'live-accept' || action.type === 'dry-run-after-deploy');
   for (const action of tail) {
     try { await perform(action, round); }
