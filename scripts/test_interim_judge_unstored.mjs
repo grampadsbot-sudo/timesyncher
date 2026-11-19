@@ -4,7 +4,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { judgeInterimReply, judgedInterimOrNull } from '../src/vacation/interim-judge.mjs';
-import { harnessStripePublishableKey } from '../src/vacation/stripe-env.mjs';
+import { checkoutEnv, stripePublishableKey } from '../src/vacation/stripe-env.mjs';
+import { showPaymentStep } from './harness/onboarding-capture.mjs';
 import checkoutConfig from '../routes/checkout-config.mjs';
 import { noteUnstoredRows, stampUnstoredExchange, unstoredTurnNote } from './harness/unstored-turn.mjs';
 import { renderDialog } from './harness/live-outputs.mjs';
@@ -147,11 +148,10 @@ const saved = {
   TIMESYNCHER_CHECKOUT_CURRENCY: process.env.TIMESYNCHER_CHECKOUT_CURRENCY,
 };
 const testKey = `pk_test_${'a'.repeat(40)}`;
+const liveKey = `pk_live_${'b'.repeat(40)}`;
 process.env.STRIPE_MODE = 'live';
-process.env.STRIPE_PUBLISHABLE_KEY = `pk_live_${'b'.repeat(40)}`;
+process.env.STRIPE_PUBLISHABLE_KEY = testKey;
 process.env.ALLOW_LIVE_STRIPE = 'true';
-process.env.STRIPE_TEST_PUBLISHABLE_KEY = testKey;
-process.env.TIMESYNCHER_TEST_BASE_PRICE_CENTS = '2500';
 process.env.TIMESYNCHER_BASE_PRICE_CENTS = '9900';
 process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS = '100';
 process.env.TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS = '100';
@@ -169,22 +169,44 @@ function response() {
     end(body) { this.body = body; },
   };
 }
-const harnessRes = response();
-await checkoutConfig({ method: 'GET', headers: { 'x-timesyncher-harness-checkout': '1' } }, harnessRes);
-const harnessBody = JSON.parse(harnessRes.body);
-assert.equal(harnessRes.statusCode, 200);
-assert.equal(harnessBody.publishableKey.startsWith('pk_test_'), true);
-assert.equal(harnessBody.mode, 'test');
-assert.equal(harnessBody.products.single.amount, 2500);
-const liveRes = response();
-await checkoutConfig({ method: 'GET', headers: {} }, liveRes);
-const liveBody = JSON.parse(liveRes.body);
-assert.equal(liveBody.publishableKey.startsWith('pk_live_'), true);
-assert.equal(liveBody.products.single.amount, 9900);
-assert.equal(harnessStripePublishableKey(process.env).mode, 'test');
+const stagingRes = response();
+await checkoutConfig({ method: 'GET', headers: { host: 'vacation-staging.timesyncher.com' } }, stagingRes);
+const stagingBody = JSON.parse(stagingRes.body);
+assert.equal(stagingRes.statusCode, 200);
+assert.equal(stagingBody.publishableKey, testKey);
+assert.equal(stagingBody.mode, 'test');
+assert.equal(stagingBody.products.single.amount, 9900);
+process.env.STRIPE_PUBLISHABLE_KEY = liveKey;
+const refused = response();
+await checkoutConfig({ method: 'GET', headers: { host: 'vacation-staging.timesyncher.com' } }, refused);
+assert.equal(refused.statusCode, 503);
+assert.equal(refused.body.includes(liveKey), false);
+const prodRes = response();
+await checkoutConfig({ method: 'GET', headers: { host: 'vacation.timesyncher.com' } }, prodRes);
+const prodBody = JSON.parse(prodRes.body);
+assert.equal(prodBody.publishableKey, liveKey);
+assert.equal(prodBody.mode, 'live');
+assert.equal(prodBody.products.single.amount, 9900);
+assert.throws(
+  () => stripePublishableKey(checkoutEnv({ ...process.env, STRIPE_PUBLISHABLE_KEY: liveKey }, 'vacation-staging.timesyncher.com')),
+  /does not match STRIPE_MODE=test/,
+);
+await showPaymentStep({
+  waitForResponse: async () => ({ url: () => '/api/create-payment-intent', json: async () => ({ livemode: false }) }),
+  async click() {},
+  async waitForSelector() {},
+});
+await assert.rejects(
+  () => showPaymentStep({
+    waitForResponse: async () => ({ url: () => '/api/create-payment-intent', json: async () => ({ livemode: true }) }),
+    async click() {},
+    async waitForSelector() {},
+  }),
+  /stripe is not test mode/,
+);
 const screen = fs.readFileSync(new URL('./harness/onboarding-capture.mjs', import.meta.url), 'utf8');
 assert.match(screen, /checkout-payment: stripe is not test mode/);
-assert.match(screen, /x-timesyncher-harness-checkout/);
+assert.match(screen, /livemode !== false/);
 for (const [key, value] of Object.entries(saved)) {
   if (value == null) delete process.env[key];
   else process.env[key] = value;

@@ -67,13 +67,13 @@ function fillMissing(shots, width, id, gap) {
 }
 
 export async function showPaymentStep(page) {
-  const test = await page.evaluate(async () => {
-    const response = await fetch('/api/checkout-config');
-    const data = await response.json().catch(() => ({}));
-    return data.ok === true && String(data.publishableKey || '').startsWith('pk_test_');
-  });
-  if (!test) throw new Error('checkout-payment: stripe is not test mode');
+  const wait = typeof page.waitForResponse === 'function'
+    ? page.waitForResponse((response) => String(response.url?.() || '').includes('/api/create-payment-intent'), { timeout: 25000 })
+    : null;
   await page.click('#continueBtn');
+  const response = wait ? await wait : null;
+  const data = response && typeof response.json === 'function' ? await response.json().catch(() => ({})) : {};
+  if (data?.livemode !== false) throw new Error('checkout-payment: stripe is not test mode');
   await page.waitForSelector('#paymentElement iframe', { timeout: 25000 });
 }
 
