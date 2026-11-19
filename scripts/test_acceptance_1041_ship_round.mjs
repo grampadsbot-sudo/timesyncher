@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { applyDryRunCard, doorbellReasons, planCycle, scrub } from './host/vk_ship_round_core.mjs';
+import { spawnSync } from 'node:child_process';
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { fileURLToPath } from 'node:url';
+import { BOOTSTRAP_PULLS, applyDryRunCard, bootstrapDryText, doorbellReasons, planBootstrap, planCycle, scrub } from './host/vk_ship_round_core.mjs';
 
 const protectedRules = JSON.parse(readFileSync(new URL('./fixtures/harness/protected-targets.json', import.meta.url), 'utf8'));
 
@@ -39,9 +42,9 @@ const planned = planCycle({
   storyText: '{"destination":"Hilo"}',
   databaseUrl: '',
 });
-assert.deepEqual(planned.actions.map((action) => action.type), ['add-labels', 'write-acceptance', 'accept', 'dry-run']);
+assert.deepEqual(planned.actions.map((action) => action.type), ['add-labels', 'write-acceptance', 'accept', 'merge', 'batch-deploy', 'live-accept', 'dry-run-after-deploy']);
 assert.deepEqual(planned.actions[0].labels, ['craig-asked']);
-assert.equal(planned.actions[3].sha, 'live1');
+assert.equal(planned.actions[2].sha, 'abc');
 
 const stale = planCycle({
   pulls: [{ ...pull, headNow: 'def' }],
@@ -70,6 +73,7 @@ const accepted = planCycle({
   state: { lastDrySha: 'live1' },
 });
 assert.equal(accepted.actions.some((action) => action.type === 'accept'), false);
+assert.equal(accepted.actions.some((action) => action.type === 'merge'), true);
 assert.equal(accepted.actions.some((action) => action.type === 'dry-run'), false);
 
 const dirty = planCycle({
@@ -165,5 +169,107 @@ assert.equal(messy.dryRun.outputsPass, false);
 
 assert.equal(scrub('Bearer secret-token postgres://user:pass@host/db', ['secret-token']).includes('secret-token'), false);
 assert.equal(scrub('Bearer secret-token postgres://user:pass@host/db', ['secret-token']).includes('postgres://'), false);
+
+function greenFor(sha) {
+  return {
+    checks: [
+      { name: 'secrets', conclusion: 'success', sha },
+      { name: 'unit-tests', conclusion: 'pass', sha },
+    ],
+    statuses: [{ context: 'gateb', state: 'success', sha }],
+  };
+}
+
+function bootPull(item, sha, extra = {}) {
+  return {
+    number: item.pr,
+    head: sha,
+    headNow: sha,
+    issue: item.issue,
+    body,
+    prLabels: ['project:tsv', 'base:vk', 'craig-asked'],
+    issueLabels: ['project:tsv', 'base:vk', 'craig-asked'],
+    mergeableState: 'clean',
+    conflictFiles: [],
+    conflictDeletions: {},
+    state: 'OPEN',
+    ...extra,
+  };
+}
+
+const bootHeads = Object.fromEntries(BOOTSTRAP_PULLS.map((item) => [item.pr, item.sha || `head-${item.pr}`]));
+const bootPulls = BOOTSTRAP_PULLS.map((item) => bootPull(item, bootHeads[item.pr]));
+const boot = planBootstrap({
+  pulls: bootPulls,
+  checksBySha: Object.fromEntries(BOOTSTRAP_PULLS.map((item) => [bootHeads[item.pr], greenFor(bootHeads[item.pr])])),
+  acceptanceFiles: {},
+  tipLive: { tip: '', live: '', liveAccept: '' },
+  state: {},
+});
+assert.deepEqual(boot.actions.map((action) => action.type), [
+  'write-acceptance', 'accept', 'merge',
+  'write-acceptance', 'accept', 'merge',
+  'write-acceptance', 'accept', 'merge',
+  'batch-deploy', 'live-accept', 'dry-run-after-deploy',
+]);
+assert.equal(boot.actions.find((action) => action.pr === 1040 && action.type === 'accept').sha, BOOTSTRAP_PULLS[1].sha);
+assert.equal(boot.actions.find((action) => action.pr === 1044 && action.type === 'accept').sha, BOOTSTRAP_PULLS[2].sha);
+assert.equal(boot.actions.filter((action) => action.type === 'merge').map((action) => action.pr).join(','), '1042,1040,1044');
+
+const movedPulls = BOOTSTRAP_PULLS.map((item) => bootPull(item, item.pr === 1040 ? 'other-head' : bootHeads[item.pr]));
+const moved = planBootstrap({
+  pulls: movedPulls,
+  checksBySha: Object.fromEntries(movedPulls.map((pull) => [pull.head, greenFor(pull.head)])),
+  acceptanceFiles: { 1041: true, 1039: true, 1043: true },
+  tipLive: {},
+  state: {},
+});
+assert.equal(moved.round.errors.includes('head-moved:1040'), true);
+assert.equal(moved.actions.some((action) => action.pr === 1040 && action.type === 'merge'), false);
+assert.equal(moved.actions.some((action) => action.pr === 1042 && action.type === 'merge'), true);
+
+const dirtyBoot = planBootstrap({
+  pulls: BOOTSTRAP_PULLS.map((item) => bootPull(item, bootHeads[item.pr], item.pr === 1044 ? {
+    mergeableState: 'dirty',
+    conflictFiles: ['scripts/offline-tests.txt'],
+    conflictDeletions: { 'scripts/offline-tests.txt': 0 },
+  } : {})),
+  checksBySha: Object.fromEntries(BOOTSTRAP_PULLS.map((item) => [bootHeads[item.pr], greenFor(bootHeads[item.pr])])),
+  acceptanceFiles: { 1041: true, 1039: true, 1043: true },
+  tipLive: {},
+  state: {},
+});
+assert.equal(dirtyBoot.actions.some((action) => action.pr === 1044 && action.type === 'needs-rebase'), true);
+assert.equal(dirtyBoot.actions.some((action) => action.pr === 1044 && action.type === 'merge'), false);
+assert.equal(dirtyBoot.actions.some((action) => action.pr === 1042 && action.type === 'merge'), true);
+
+const install = readFileSync(new URL('./host/install_vk_ship_round.sh', import.meta.url), 'utf8');
+const launcher = readFileSync(new URL('./host/vk_ship_round.sh', import.meta.url), 'utf8');
+assert.match(install, /refs\/pull\/1042\/head/);
+assert.match(install, /crontab\.bak/);
+assert.match(install, /grep -F/);
+assert.match(install, /\$\{ROOT\}\/bin\/vk_ship_round\.sh/);
+assert.match(install, /exec "\$ROOT\/bin\/vk_ship_round\.sh"/);
+assert.doesNotMatch(install, /x-access-token|GH_TOKEN@/);
+assert.match(launcher, /gh repo clone grampadsbot-sudo\/timesyncher "\$SHIP"/);
+assert.match(launcher, /https:\/\/github.com\/grampadsbot-sudo\/timesyncher\.git/);
+assert.match(launcher, /reset --hard origin\/vk/);
+assert.match(launcher, /refusing remote url with credentials/);
+assert.doesNotMatch(launcher, /x-access-token|\$\{GH_TOKEN\}@/);
+
+const repoRoot = fileURLToPath(new URL('..', import.meta.url));
+const tmp = mkdtempSync(`${tmpdir()}/vk-ship-dry-`);
+const env = { ...process.env, TSV_DISPATCH_ROOT: tmp, TSV_SHIP_BOOTSTRAP: '1', HOME: tmp };
+delete env.GH_TOKEN;
+delete env.GITHUB_TOKEN;
+delete env.GH_ENTERPRISE_TOKEN;
+const ran = spawnSync(process.execPath, ['scripts/host/vk_ship_round.mjs', '--dry'], { cwd: repoRoot, encoding: 'utf8', env });
+assert.equal(ran.status, 0, ran.stderr);
+assert.equal(ran.stdout, `${bootstrapDryText()}\n`);
+const shell = spawnSync('bash', ['scripts/host/vk_ship_round.sh', '--dry'], { cwd: repoRoot, encoding: 'utf8', env });
+assert.equal(shell.status, 0, shell.stderr);
+assert.equal(shell.stdout, `${bootstrapDryText()}\n`);
+assert.equal(existsSync(tmp) && readdirSync(tmp).length === 0, true);
+rmSync(tmp, { recursive: true, force: true });
 
 console.log('test_acceptance_1041_ship_round: ok');

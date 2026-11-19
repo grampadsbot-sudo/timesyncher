@@ -1,10 +1,42 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 const REQUIRED_LABELS = ['project:tsv', 'base:vk', 'craig-asked'];
 const OFFLINE_TESTS = 'scripts/offline-tests.txt';
 const OUTPUT_IDS = ['dialog-pdf', 'keepsake-pdf', 'screens', 'video-check', 'scorecard'];
 const OK = new Set(['success', 'pass']);
 
-const rules = JSON.parse(readFileSync(new URL('../fixtures/harness/protected-targets.json', import.meta.url), 'utf8'));
+function rulesFile() {
+  const fromRepo = process.env.TSV_REPO
+    ? path.join(process.env.TSV_REPO, 'scripts/fixtures/harness/protected-targets.json')
+    : '';
+  if (fromRepo && existsSync(fromRepo)) return fromRepo;
+  return fileURLToPath(new URL('../fixtures/harness/protected-targets.json', import.meta.url));
+}
+
+const rules = JSON.parse(readFileSync(rulesFile(), 'utf8'));
+
+export const BOOTSTRAP_PULLS = [
+  { pr: 1042, issue: 1041, sha: '' },
+  { pr: 1040, issue: 1039, sha: 'b5237f05c60a0651ad27533d4ccd4bffb7dd2dc6' },
+  { pr: 1044, issue: 1043, sha: 'a3d2981a783a569ccb20fb7d9ae03e877fca68d7' },
+];
+
+export function bootstrapDryText() {
+  const lines = [];
+  for (const item of BOOTSTRAP_PULLS) {
+    lines.push(`pr ${item.pr} issue ${item.issue}`);
+    lines.push(`register acceptance/${item.issue}.json`);
+    lines.push('add-labels project:tsv base:vk craig-asked');
+    lines.push(item.sha ? `accept ${item.sha}` : 'accept exact green head');
+    lines.push('merge');
+  }
+  lines.push('batch-deploy python3 tsv_dispatch.py --batch-deploy');
+  lines.push('live-accept python3 live_accept.py');
+  lines.push('dry-run once on the new live sha');
+  return lines.join('\n');
+}
 
 export function scrub(text, secrets = []) {
   let out = String(text ?? '');
@@ -75,6 +107,10 @@ function outputsPass(card) {
   return OUTPUT_IDS.every((id) => checks.some((row) => row.id === id && row.pass === true));
 }
 
+export function blockedTarget(text) {
+  return protectedTarget(text);
+}
+
 function protectedTarget(text) {
   const blob = String(text || '');
   for (const prefix of rules.tripIdPrefixes || []) {
@@ -98,58 +134,110 @@ export function doorbellReasons(round, previous = {}) {
   return reasons;
 }
 
-export function planCycle(world) {
+function canMerge(pull) {
+  if (pull.merged === true || pull.state === 'MERGED') return false;
+  if (pull.mergeableState === 'dirty') return false;
+  if ((pull.conflictFiles || []).length) return false;
+  return true;
+}
+
+function blankDry(sha) {
+  return {
+    ran: false,
+    sha: sha || '',
+    id: '',
+    verdict: '',
+    reason: '',
+    turns: [],
+    outputs: {},
+    outputsPass: false,
+    per_customer: null,
+    per_100: null,
+    cleanup_remaining: null,
+  };
+}
+
+export function planPull(pull, world, pinSha = '') {
   const state = world.state || {};
   const actions = [];
   const errors = [];
-  const accepts = [];
   const needsRebase = [];
-  for (const pull of world.pulls || []) {
-    const spec = acceptanceFromBody(pull.body);
-    const labeled = REQUIRED_LABELS.every((label) => new Set([...(pull.prLabels || []), ...(pull.issueLabels || [])]).has(label));
-    if (labeled && spec?.invalid) {
-      errors.push(`acceptance-invalid:${pull.issue || pull.number}`);
-      continue;
-    }
-    if (!eligiblePull(pull)) continue;
-    const missing = labelGap(pull.issueLabels);
-    if (missing.length) actions.push({ type: 'add-labels', issue: pull.issue, labels: missing });
-    if (!world.acceptanceFiles?.[String(pull.issue)]) {
-      const spec = acceptanceFromBody(pull.body);
-      if (spec?.invalid) errors.push(`acceptance-invalid:${pull.issue}`);
-      else actions.push({ type: 'write-acceptance', issue: pull.issue, spec });
-    }
-    const file = rebaseFile(pull);
-    if (file && !state.rebase?.[String(pull.number)]) {
-      needsRebase.push({ pr: pull.number, file });
-      actions.push({ type: 'needs-rebase', pr: pull.number, file });
-    }
-    const report = world.checksBySha?.[pull.head] || { checks: [], statuses: [] };
-    const current = pull.headNow || pull.head;
-    if (current !== pull.head) continue;
-    if (!headIsGreen(report, pull.head) || alreadyAccepted(report, pull.head)) continue;
-    const count = Array.isArray(spec?.assertions) ? spec.assertions.length : 1;
-    accepts.push({ issue: pull.issue, sha: pull.head, pr: pull.number });
+  const spec = acceptanceFromBody(pull.body);
+  const issue = Number(pull.issue) || 0;
+  if (!issue) {
+    errors.push(`missing-issue:${pull.number}`);
+    return { actions, errors, needsRebase };
+  }
+  if (spec?.invalid) {
+    errors.push(`acceptance-invalid:${issue}`);
+    return { actions, errors, needsRebase };
+  }
+  if (!spec) {
+    errors.push(`acceptance-missing:${issue}`);
+    return { actions, errors, needsRebase };
+  }
+  const missing = labelGap(pull.issueLabels);
+  if (missing.length) actions.push({ type: 'add-labels', issue, pr: pull.number, labels: missing });
+  if (!world.acceptanceFiles?.[String(issue)]) actions.push({ type: 'write-acceptance', issue, pr: pull.number, spec });
+  if (pinSha && pull.head !== pinSha) {
+    errors.push(`head-moved:${pull.number}`);
+    return { actions, errors, needsRebase };
+  }
+  const file = rebaseFile(pull);
+  if (file && !state.rebase?.[String(pull.number)]) {
+    needsRebase.push({ pr: pull.number, file });
+    actions.push({ type: 'needs-rebase', pr: pull.number, issue, file });
+  }
+  const report = world.checksBySha?.[pull.head] || { checks: [], statuses: [] };
+  const current = pull.headNow || pull.head;
+  if (current !== pull.head) return { actions, errors, needsRebase };
+  if (!headIsGreen(report, pull.head)) return { actions, errors, needsRebase };
+  if (!alreadyAccepted(report, pull.head)) {
+    const count = Array.isArray(spec.assertions) ? spec.assertions.length : 1;
     actions.push({
       type: 'accept',
       pr: pull.number,
-      issue: pull.issue,
+      issue,
       sha: pull.head,
-      description: `#${pull.issue}: ${count}/${count} PASS`,
+      description: `#${issue}: ${count}/${count} PASS`,
     });
   }
-  const sha = dryRunSha(world.tipLive, state);
-  let dryRun = { ran: false, sha: sha || world.tipLive?.live || '', id: '', verdict: '', reason: '', turns: [], outputs: {}, outputsPass: false, per_customer: null, per_100: null, cleanup_remaining: null };
-  if (sha) {
-    const hit = protectedTarget(world.storyText || '') || protectedTarget(world.databaseUrl || '');
-    if (hit) errors.push(hit);
-    else {
-      dryRun = { ...dryRun, ran: true, id: world.runId || `dry-run-${sha.slice(0, 7)}-openrouter` };
-      actions.push({ type: 'dry-run', sha, runId: dryRun.id });
-    }
+  if (canMerge(pull)) actions.push({ type: 'merge', pr: pull.number, issue, sha: pull.head });
+  return { actions, errors, needsRebase };
+}
+
+function appendDeployOrDry(actions, world, errors) {
+  const state = world.state || {};
+  const merges = actions.filter((action) => action.type === 'merge');
+  if (merges.length) {
+    actions.push({ type: 'batch-deploy' });
+    actions.push({ type: 'live-accept' });
+    actions.push({ type: 'dry-run-after-deploy' });
+    return blankDry('');
   }
+  const sha = dryRunSha(world.tipLive, state);
+  const dryRun = blankDry(sha || world.tipLive?.live || '');
+  if (!sha) return dryRun;
+  const hit = protectedTarget(world.storyText || '') || protectedTarget(world.databaseUrl || '');
+  if (hit) {
+    errors.push(hit);
+    return dryRun;
+  }
+  dryRun.ran = true;
+  dryRun.id = world.runId || `dry-run-${sha.slice(0, 7)}-openrouter`;
+  actions.push({ type: 'dry-run', sha, runId: dryRun.id });
+  return dryRun;
+}
+
+function roundFrom(world, actions, errors, needsRebase, dryRun) {
+  const state = world.state || {};
+  const accepts = actions.filter((action) => action.type === 'accept').map((action) => ({
+    issue: action.issue,
+    sha: action.sha,
+    pr: action.pr,
+  }));
   const round = {
-    merges: world.merges || [],
+    merges: actions.filter((action) => action.type === 'merge').map((action) => action.pr),
     tip: world.tipLive?.tip || '',
     live: world.tipLive?.live || '',
     tip_eq_live: Boolean(world.tipLive && world.tipLive.tip && world.tipLive.tip === world.tipLive.live),
@@ -161,6 +249,68 @@ export function planCycle(world) {
   };
   round.doorbell = doorbellReasons(round, state);
   return { actions, round };
+}
+
+export function planBootstrap(world) {
+  const actions = [];
+  const errors = [];
+  const needsRebase = [];
+  for (const item of BOOTSTRAP_PULLS) {
+    const pull = (world.pulls || []).find((row) => row.number === item.pr);
+    if (!pull) {
+      errors.push(`missing-pr:${item.pr}`);
+      continue;
+    }
+    const part = planPull({ ...pull, issue: pull.issue || item.issue }, world, item.sha);
+    actions.push(...part.actions);
+    errors.push(...part.errors);
+    needsRebase.push(...part.needsRebase);
+  }
+  const dryRun = appendDeployOrDry(actions, world, errors);
+  return roundFrom(world, actions, errors, needsRebase, dryRun);
+}
+
+export function planCycle(world) {
+  const actions = [];
+  const errors = [];
+  const needsRebase = [];
+  for (const pull of world.pulls || []) {
+    const spec = acceptanceFromBody(pull.body);
+    const labeled = REQUIRED_LABELS.every((label) => new Set([...(pull.prLabels || []), ...(pull.issueLabels || [])]).has(label));
+    if (labeled && spec?.invalid) {
+      errors.push(`acceptance-invalid:${pull.issue || pull.number}`);
+      continue;
+    }
+    if (!eligiblePull(pull)) continue;
+    const part = planPull(pull, world, '');
+    actions.push(...part.actions);
+    errors.push(...part.errors);
+    needsRebase.push(...part.needsRebase);
+  }
+  const dryRun = appendDeployOrDry(actions, world, errors);
+  return roundFrom(world, actions, errors, needsRebase, dryRun);
+}
+
+export function formatDry(actions) {
+  const lines = [];
+  let current = '';
+  for (const action of actions) {
+    const key = action.pr || action.issue || '';
+    if (key && key !== current && (action.type === 'add-labels' || action.type === 'write-acceptance' || action.type === 'accept' || action.type === 'merge' || action.type === 'needs-rebase')) {
+      current = key;
+      lines.push(`pr ${action.pr || ''} issue ${action.issue || ''}`.trim());
+    }
+    if (action.type === 'add-labels') lines.push(`add-labels ${(action.labels || []).join(' ')}`);
+    if (action.type === 'write-acceptance') lines.push(`register acceptance/${action.issue}.json`);
+    if (action.type === 'accept') lines.push(`accept ${action.sha}`);
+    if (action.type === 'merge') lines.push('merge');
+    if (action.type === 'needs-rebase') lines.push(`needs-rebase ${action.file}`);
+    if (action.type === 'batch-deploy') lines.push('batch-deploy python3 tsv_dispatch.py --batch-deploy');
+    if (action.type === 'live-accept') lines.push('live-accept python3 live_accept.py');
+    if (action.type === 'dry-run') lines.push(`dry-run ${action.sha}`);
+    if (action.type === 'dry-run-after-deploy') lines.push('dry-run once on the new live sha');
+  }
+  return lines.join('\n');
 }
 
 export function applyDryRunCard(round, card) {
