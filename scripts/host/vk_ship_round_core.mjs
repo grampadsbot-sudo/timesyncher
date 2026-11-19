@@ -211,11 +211,16 @@ function protectedTarget(text) {
   return '';
 }
 
+export function dryRunRecorded(dryRun) {
+  return Boolean(dryRun?.ran) && dryRun?.blockedEnv !== true;
+}
+
 export function doorbellReasons(round, previous = {}) {
   const reasons = [];
   const dry = round.dryRun;
-  if (dry?.ran && dry.verdict === 'PASS' && dry.outputsPass) reasons.push('dry-run-pass');
-  if (dry?.ran && dry.verdict !== 'PASS' && dry.reason && dry.reason !== previous.reason) reasons.push('new-failure');
+  if (dry?.blockedEnv && dry.reason !== (previous.reason || '')) reasons.push('blocked: env');
+  if (dry?.ran && !dry.blockedEnv && dry.verdict === 'PASS' && dry.outputsPass) reasons.push('dry-run-pass');
+  if (dry?.ran && !dry.blockedEnv && dry.verdict !== 'PASS' && dry.reason && dry.reason !== previous.reason) reasons.push('new-failure');
   if ((round.needsRebase || []).some((row) => !previous.rebase?.[String(row.pr)])) reasons.push('needs-rebase');
   const hash = errorStateHash(round.errors, round.heads);
   if ((round.errors || []).length && hash !== (previous.errorHash || '')) reasons.push('error');

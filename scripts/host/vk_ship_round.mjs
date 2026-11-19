@@ -3,12 +3,14 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { harnessEnvSkipped, loadStagingDatabaseUrl, markEnvBlocked } from './vk_ship_dry_env.mjs';
 import {
   BOOTSTRAP_PULLS,
   applyDryRunCard,
   blockedTarget,
   bootstrapDryText,
   doorbellReasons,
+  dryRunRecorded,
   errorStateHash,
   formatDry,
   needsLiveDryRun,
@@ -168,7 +170,6 @@ function readState() {
   if (!fs.existsSync(file)) return { rebase: {} };
   return JSON.parse(fs.readFileSync(file, 'utf8'));
 }
-
 function acceptanceDir() {
   return path.join(root, 'acceptance');
 }
@@ -178,7 +179,6 @@ function acceptanceFiles() {
   if (!fs.existsSync(dir)) return {};
   return Object.fromEntries(fs.readdirSync(dir).filter((name) => name.endsWith('.json')).map((name) => [name.replace(/\.json$/, ''), true]));
 }
-
 function acceptanceSpecs() {
   const dir = acceptanceDir();
   const specs = {};
@@ -195,12 +195,10 @@ function acceptanceSpecs() {
   }
   return specs;
 }
-
 function storyText() {
   const file = path.join(repoDir(), 'scripts/fixtures/harness/story-dry-run.json');
   return fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
 }
-
 function worldNow(runId) {
   return {
     acceptanceFiles: acceptanceFiles(),
@@ -220,20 +218,21 @@ function runPy(file, args) {
   if (result.status !== 0) throw new Error(scrub(runPyFailure(file, result.status, result.stderr), secrets).slice(0, 240));
 }
 
-function runHarness(round, runId, sha) {
-  const hit = blockedTarget(storyText()) || blockedTarget(process.env.DATABASE_URL || process.env.NEON_DATABASE_URL || '');
-  if (hit) {
-    round.errors.push(hit);
+async function runHarness(round, runId, sha) {
+  const loaded = await loadStagingDatabaseUrl({ roots: [root, process.env.TSV_REPO || '', repoDir(), path.join(root, 'ship-repo')], env: process.env });
+  const hit = blockedTarget(storyText()) || blockedTarget(loaded.url);
+  if (hit || !loaded.url) {
+    if (hit) round.errors.push(hit);
+    else round.dryRun = markEnvBlocked(round.dryRun, sha, runId);
     return;
   }
+  if (loaded.url.length > 6) secrets.push(loaded.url);
   const out = path.join(root, 'harness-runs');
-  const run = spawnSync('node', ['scripts/vk-customer-harness.mjs', '--story', 'scripts/fixtures/harness/story-dry-run.json', '--run-id', runId, '--out-root', out], {
-    cwd: repoDir(),
-    encoding: 'utf8',
-    env: process.env,
-  });
+  const run = spawnSync('node', ['scripts/vk-customer-harness.mjs', '--story', 'scripts/fixtures/harness/story-dry-run.json', '--run-id', runId, '--out-root', out], { cwd: repoDir(), encoding: 'utf8', env: { ...process.env, DATABASE_URL: loaded.url, NEON_DATABASE_URL: loaded.url, HARNESS_LIVE: '1' } });
+  const output = scrub(`${run.stderr || ''}\n${run.stdout || ''}`, secrets);
+  if (harnessEnvSkipped(output)) { round.dryRun = markEnvBlocked(round.dryRun, sha, runId); return; }
   const cardPath = path.join(out, runId, 'dry-run', 'scorecard.json');
-  round.dryRun = { ...round.dryRun, ran: true, sha, id: runId };
+  round.dryRun = { ...round.dryRun, ran: true, blockedEnv: false, sha, id: runId };
   if (!fs.existsSync(cardPath)) round.errors.push(scrub(run.stderr || 'dry-run-missing-scorecard', secrets).split('\n')[0].slice(0, 240));
   else applyDryRunCard(round, JSON.parse(fs.readFileSync(cardPath, 'utf8')));
 }
@@ -285,14 +284,14 @@ async function perform(action, round) {
     return true;
   }
   if (action.type === 'dry-run') {
-    runHarness(round, action.runId, action.sha);
+    await runHarness(round, action.runId, action.sha);
     return true;
   }
   if (action.type === 'dry-run-after-deploy') {
     const live = tipLive();
     stampRound(round, live);
     if (!needsLiveDryRun(live, readState(), action.force === true)) return false;
-    runHarness(round, action.runId, live.live);
+    await runHarness(round, action.runId, live.live);
     return true;
   }
   return false;
@@ -383,6 +382,7 @@ async function ring(reasons, detail) {
 }
 
 function ringDetail(round) {
+  if (round.dryRun?.blockedEnv) return 'blocked: env';
   if (round.dryRun?.ran) return `verdict ${round.dryRun.verdict || 'FAIL'}`;
   return round.errors[0] || round.dryRun?.reason || (round.needsRebase || []).map((row) => row.file).join(',');
 }
@@ -398,8 +398,8 @@ function publish(round, state, stamp) {
   if (track) api('POST', `/repos/${REPO}/issues/${track}/comments`, { body });
   const next = {
     ...state,
-    lastDrySha: round.dryRun.ran ? round.dryRun.sha : state.lastDrySha,
-    reason: round.dryRun.ran ? round.dryRun.reason : state.reason,
+    lastDrySha: dryRunRecorded(round.dryRun) ? round.dryRun.sha : state.lastDrySha,
+    reason: round.dryRun?.blockedEnv ? 'blocked: env' : (dryRunRecorded(round.dryRun) ? round.dryRun.reason : state.reason),
     error: round.errors.join('|'),
     errorHash: errorStateHash(round.errors, round.heads),
     rebase: { ...(state.rebase || {}), ...Object.fromEntries(round.needsRebase.map((row) => [String(row.pr), row.file])) },
