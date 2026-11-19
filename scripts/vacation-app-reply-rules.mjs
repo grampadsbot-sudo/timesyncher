@@ -912,6 +912,7 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
       },
       body: JSON.stringify({
         model: responseModel,
+        usage: { include: true },
         ...openRouterTemperatureSpread(responseModel, 0.55),
         max_tokens: openRouterTierRequestMaxTokens(tier1CompactReasoning ? 1 : modelTier, 900),
         ...openRouterProviderSpread(modelTier),
