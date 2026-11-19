@@ -13,6 +13,7 @@ import { assertCustomerReplyShippable } from './reply-id-citation.mjs';
 import { replyClaimContextFromIntent } from './reply-action-claim.mjs';
 import { rewriteBlockedActionClaim } from './reply-action-claim-rewrite.mjs';
 import { savedThingFieldsForTurn } from './turn-saved-thing-ids.mjs';
+import { sessionReplyBackend } from './vk-bot-mcp-reply.mjs';
 
 export async function outboundAppReplyForRequest(db, requestId) {
   const id = String(requestId || '').trim();
@@ -101,7 +102,7 @@ export async function persistVacationAppOutboundReply({
   customerTurnId = null,
   recordCustomerThingNotes,
   publishIntakeShare,
-  vacationAppTripSummary,
+  vacationAppTripSummary, replyBackend = '',
 }) {
   const judgedQuality = produced?.model?.quality?.judged === true
     ? produced.model.quality
@@ -131,7 +132,7 @@ export async function persistVacationAppOutboundReply({
     sessionE2eMs,
     jev: produced.jev,
     model: produced.model?.quality?.judged === true ? produced.model : { ...(produced.model || {}), quality: judgedQuality },
-    rules: produced.rules,
+    rules: produced.rules, backend: replyBackend,
   });
   logVacationAppReplyTelemetry(appLive);
   await db`
@@ -247,7 +248,7 @@ export async function commitShippedRewrite(db, session, pending, finished, { rec
     sessionE2eMs: Math.max(1, Date.now() - (Number(pending.sessionStartedMs) || Date.now())),
     jev: finished.jev,
     model: finished.model?.quality?.judged === true ? finished.model : { ...(finished.model || {}), quality: judgedQuality },
-    rules: finished.rules,
+    rules: finished.rules, backend: sessionReplyBackend(session),
     speakerName: pending.speakerName || null,
   });
   logVacationAppReplyTelemetry(appLive);

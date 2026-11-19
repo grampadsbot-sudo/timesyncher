@@ -26,7 +26,8 @@ export async function provisionThrowaway(db, story, { tag, runId, env }) {
   const email = `harness+${runId}+${story.customer.email_alias}@harness.invalid`.toLowerCase();
   assertThrowaway({ email, displayName: story.customer.name });
   await deleteTaggedRows(db, tag);
-  const meta = { harnessTag: tag, harnessRunId: runId, harnessStoryId: story.story_id };
+  const replyBackend = story.reply_backend === 'openrouter' || story.reply_backend === 'vk_bot_mcp' ? story.reply_backend : '';
+  const meta = { harnessTag: tag, harnessRunId: runId, harnessStoryId: story.story_id, ...(replyBackend ? { replyBackend } : {}) };
   try {
   return await insertThrowaway(db, story, { tag, runId, env, meta, email });
   } catch (error) {

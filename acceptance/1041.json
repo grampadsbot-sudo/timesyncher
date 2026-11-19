@@ -24,6 +24,13 @@
       "script": "scripts/test_acceptance_1041_drive_sha.mjs",
       "timeout_ms": 60000,
       "note": "The harness stamps the version sha onto turns that have none. The renderer still refuses a missing or mismatched sha. The post-intake closer matches the renderer check. The provisioned media-bind token is accepted and a missing token is 401."
+    },
+    {
+      "id": "dialog-pdf-backend",
+      "type": "unit_script",
+      "script": "scripts/test_dialog_pdf_backend.mjs",
+      "timeout_ms": 60000,
+      "note": "Every generated app turn is stamped with the run reply backend and that backend is rendered on the turn and in the models-used header. A PDF that omits it still fails dialog-pdf-backend-not-shown. A fresh trip slug can be edited. The demo-locked slug stays locked."
     }
   ]
 }
