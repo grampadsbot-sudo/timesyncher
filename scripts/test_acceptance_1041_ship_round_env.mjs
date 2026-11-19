@@ -6,15 +6,21 @@ import { doorbellReasons, dryRunRecorded } from './host/vk_ship_round_core.mjs';
 import {
   DATABASE_ENV_ID,
   PULLED_ENV_FILES,
+  APP_DB_MODULE,
+  NPM_STAMP_NAME,
   applyMissingScorecard,
   databaseUrlFromFiles,
   databaseUrlFromText,
   defaultVercelTokenFile,
+  depsNeedInstall,
   dryRunId,
+  ensureShipRepoDeps,
   harnessEnvSkipped,
   harnessFailureMessage,
   loadStagingDatabaseUrl,
+  lockHash,
   markEnvBlocked,
+  missingModule,
 } from './host/vk_ship_dry_env.mjs';
 
 const url = 'postgres://dry-env-fixture@127.0.0.1/dry_env';
@@ -116,4 +122,40 @@ applyMissingScorecard(failedRound, stderr);
 assert.deepEqual(failedRound.errors, ['refused: harness tag is invalid']);
 assert.equal(failedRound.dryRun.verdict, 'FAIL');
 assert.equal(failedRound.dryRun.reason, 'refused: harness tag is invalid');
+const lock = '{"name":"timesyncher"}\n';
+const repoFiles = { '/repo/package-lock.json': lock };
+const readRepo = (file) => { if (repoFiles[file] == null) throw new Error('missing'); return repoFiles[file]; };
+const writeRepo = (file, text) => { repoFiles[file] = text; };
+const repoExists = (file) => repoFiles[file] != null;
+let spawns = 0;
+const spawn = (cmd, args, opts) => {
+  spawns += 1;
+  assert.equal(cmd, 'npm');
+  assert.deepEqual(args, ['ci', '--no-audit', '--no-fund']);
+  assert.equal(opts.cwd, '/repo');
+  repoFiles['/repo/node_modules'] = 'dir';
+  repoFiles[`/repo/node_modules/${APP_DB_MODULE}/package.json`] = '{}';
+  return { status: 0 };
+};
+assert.equal(ensureShipRepoDeps({ repo: '/repo', stateDir: '/state', readFile: readRepo, writeFile: writeRepo, exists: repoExists, spawn }), '');
+assert.equal(spawns, 1);
+assert.equal(String(repoFiles[`/state/${NPM_STAMP_NAME}`]).trim(), lockHash(lock));
+assert.equal(ensureShipRepoDeps({ repo: '/repo', stateDir: '/state', readFile: readRepo, writeFile: writeRepo, exists: repoExists, spawn }), '');
+assert.equal(spawns, 1);
+repoFiles['/repo/package-lock.json'] = `${lock}\n`;
+assert.equal(depsNeedInstall({ hasNodeModules: true, lockHash: lockHash(repoFiles['/repo/package-lock.json']), savedHash: lockHash(lock) }), true);
+delete repoFiles[`/repo/node_modules/${APP_DB_MODULE}/package.json`];
+assert.equal(missingModule('/repo', APP_DB_MODULE, repoExists), APP_DB_MODULE);
+const blockedDeps = ensureShipRepoDeps({
+  repo: '/repo',
+  stateDir: '/state',
+  readFile: readRepo,
+  writeFile: writeRepo,
+  spawn: () => ({ status: 1 }),
+});
+assert.equal(blockedDeps, `blocked: env ${APP_DB_MODULE}`);
+const blockedRun = markEnvBlocked({ ran: true }, 'sha', 'run', blockedDeps);
+assert.equal(dryRunRecorded(blockedRun), false);
+assert.equal(doorbellReasons({ dryRun: blockedRun, needsRebase: [], errors: [blockedDeps] }, {}).includes('blocked: env'), true);
+assert.equal(doorbellReasons({ dryRun: blockedRun, needsRebase: [], errors: [blockedDeps] }, {}).includes('new-failure'), false);
 console.log('test_acceptance_1041_ship_round_env: ok');
