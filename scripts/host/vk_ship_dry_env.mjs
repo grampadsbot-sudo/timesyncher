@@ -1,4 +1,6 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { homedir } from 'node:os';
+import path from 'node:path';
 
 export const PULLED_ENV_FILES = [
   '.env.production.local',
@@ -8,6 +10,32 @@ export const PULLED_ENV_FILES = [
 
 export const DATABASE_ENV_ID = '1aaOv6d2efkLmXJA';
 const PROJECT = 'timesyncher-vacation-staging';
+
+export function defaultVercelTokenFile(home = homedir()) {
+  return path.join(home, '.config', 'tsv-deploy', 'vercel-token');
+}
+
+function readHostVercelToken(file, readFile, exists) {
+  if (!file || !exists(file)) return '';
+  try { return String(readFile(file) || '').trim(); } catch { return ''; }
+}
+
+function pythonStringConstant(text, name) {
+  const match = String(text || '').match(new RegExp(`^${name}\\s*=\\s*(['"])(.*?)\\1`, 'm'));
+  return match ? match[2].trim() : '';
+}
+
+function dispatchConstants(roots, readFile) {
+  for (const root of roots || []) {
+    if (!root) continue;
+    let text = '';
+    try { text = readFile(joinRoot(root, 'tsv_dispatch.py')); } catch { text = ''; }
+    const team = pythonStringConstant(text, 'VERCEL_TEAM_ID');
+    const project = pythonStringConstant(text, 'STAGING_PROJECT_ID');
+    if (team || project) return { team, project };
+  }
+  return { team: '', project: '' };
+}
 
 function envAssignment(text, key) {
   for (const line of String(text || '').split('\n')) {
@@ -66,11 +94,11 @@ function teamFromText(text) {
   try { return JSON.parse(text).orgId || ''; } catch { return ''; }
 }
 
-async function fetchDatabaseUrl(token, team, fetchImpl) {
+async function fetchDatabaseUrl(token, team, project, fetchImpl) {
   const params = new URLSearchParams({ decrypt: 'true' });
   if (team) params.set('teamId', team);
   const response = await fetchImpl(
-    `https://api.vercel.com/v1/projects/${PROJECT}/env/${DATABASE_ENV_ID}?${params}`,
+    `https://api.vercel.com/v1/projects/${project || PROJECT}/env/${DATABASE_ENV_ID}?${params}`,
     { headers: { Authorization: `Bearer ${token}` }, redirect: 'error' },
   );
   if (!response?.ok) return '';
@@ -80,14 +108,23 @@ async function fetchDatabaseUrl(token, team, fetchImpl) {
   return /^postgres(ql)?:\/\//i.test(value) ? value : '';
 }
 
-export async function loadStagingDatabaseUrl({ roots, env = {}, readFile = (file) => readFileSync(file, 'utf8'), fetchImpl = fetch } = {}) {
+export async function loadStagingDatabaseUrl({
+  roots,
+  env = {},
+  readFile = (file) => readFileSync(file, 'utf8'),
+  fetchImpl = fetch,
+  tokenFile = defaultVercelTokenFile(),
+  tokenFileExists = existsSync,
+} = {}) {
   const existing = String(env.DATABASE_URL || env.NEON_DATABASE_URL || '').trim();
   if (/^postgres(ql)?:\/\//i.test(existing)) return { url: existing, source: 'env' };
   const fileHit = databaseUrlFromFiles(roots, readFile);
   if (fileHit.url) return fileHit;
-  const token = String(env.VERCEL_TOKEN || '').trim();
+  let token = String(env.VERCEL_TOKEN || '').trim();
+  if (!token) token = readHostVercelToken(tokenFile, readFile, tokenFileExists);
   if (!token) return { url: '', source: '' };
-  let team = String(env.VERCEL_ORG_ID || env.VERCEL_TEAM_ID || '').trim();
+  const dispatch = dispatchConstants(roots, readFile);
+  let team = String(env.VERCEL_ORG_ID || env.VERCEL_TEAM_ID || '').trim() || dispatch.team;
   if (!team) {
     for (const root of roots || []) {
       if (!root) continue;
@@ -95,6 +132,7 @@ export async function loadStagingDatabaseUrl({ roots, env = {}, readFile = (file
       if (team) break;
     }
   }
-  const url = await fetchDatabaseUrl(token, team, fetchImpl);
+  const project = String(env.VERCEL_PROJECT_ID || '').trim() || dispatch.project;
+  const url = await fetchDatabaseUrl(token, team, project, fetchImpl);
   return url ? { url, source: 'vercel-database-url' } : { url: '', source: '' };
 }

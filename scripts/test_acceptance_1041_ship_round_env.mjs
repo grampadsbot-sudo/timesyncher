@@ -7,6 +7,7 @@ import {
   PULLED_ENV_FILES,
   databaseUrlFromFiles,
   databaseUrlFromText,
+  defaultVercelTokenFile,
   harnessEnvSkipped,
   loadStagingDatabaseUrl,
   markEnvBlocked,
@@ -57,4 +58,47 @@ assert.deepEqual(PULLED_ENV_FILES, ['.env.production.local', '.vercel/.env.produ
 const roundJs = readFileSync(new URL('./host/vk_ship_round.mjs', import.meta.url), 'utf8');
 assert.match(roundJs, /HARNESS_LIVE: '1'/);
 assert.equal(roundJs.includes('process.env.HARNESS_LIVE'), false);
+const tokenFile = '/fixture/vercel-token';
+const fileToken = 'vt_file_fixture';
+const dispatchPy = 'VERCEL_TEAM_ID = "team_from_dispatch"\nSTAGING_PROJECT_ID = "prj_from_dispatch"\n';
+const tokenReads = {
+  [tokenFile]: `${fileToken}\n`,
+  '/dispatch/tsv_dispatch.py': dispatchPy,
+};
+let fileHeader = '';
+let fileUrl = '';
+const fromFile = await loadStagingDatabaseUrl({
+  roots: ['/dispatch'],
+  env: {},
+  tokenFile,
+  tokenFileExists: (file) => file === tokenFile,
+  readFile: (file) => {
+    if (!tokenReads[file]) throw new Error('missing');
+    return tokenReads[file];
+  },
+  fetchImpl: async (requestUrl, init) => {
+    fileUrl = String(requestUrl);
+    fileHeader = init.headers.Authorization;
+    return { ok: true, json: async () => ({ key: 'DATABASE_URL', value: url }) };
+  },
+});
+assert.equal(fromFile.url, url);
+assert.equal(fromFile.source, 'vercel-database-url');
+assert.equal(fileHeader, `Bearer ${fileToken}`);
+assert.equal(fileUrl.includes('teamId=team_from_dispatch'), true);
+assert.equal(fileUrl.includes('prj_from_dispatch'), true);
+assert.equal(fileUrl.includes(DATABASE_ENV_ID), true);
+let missed = 0;
+const absent = await loadStagingDatabaseUrl({
+  roots: ['/dispatch'],
+  env: {},
+  tokenFile,
+  tokenFileExists: () => false,
+  readFile: () => { throw new Error('missing'); },
+  fetchImpl: async () => { missed += 1; return { ok: false }; },
+});
+assert.equal(absent.url, '');
+assert.equal(absent.source, '');
+assert.equal(missed, 0);
+assert.equal(defaultVercelTokenFile('/home/ubishere9995').endsWith('/.config/tsv-deploy/vercel-token'), true);
 console.log('test_acceptance_1041_ship_round_env: ok');
