@@ -40,12 +40,16 @@ const BUNDLE_LIST_LOGO_REPAIRS = new Map([
   ['https://www.latraviatapizzeria.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/latraviatapizzany.com.ico'],
   ['https://www.cilantrorestaurant.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/cilantrorestaurant.com.ico'],
   ['https://www.hertz.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/hertz.com.ico'],
-  ['https://www.carminesnyc.com/favicon.ico', 'https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.carminesnyc.com&size=64'],
+  ['https://www.carminesnyc.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/carminesnyc.com.ico'],
+  ['https://www.marriott.com/favicon.ico', 'https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.marriott.com&size=64'],
+]);
+
+const SERVE_BOUNDARY_LOGO_REPAIRS = new Map([
   ['https://icons.duckduckgo.com/ip3/carminesnyc.com.ico', 'https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.carminesnyc.com&size=64'],
   ['https://icons.duckduckgo.com/ip3/johnsofbleecker.com.ico', 'https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.johnsofbleecker.com&size=64'],
+  ['https://www.carminesnyc.com/favicon.ico', 'https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.carminesnyc.com&size=64'],
   ['https://www.johnsofbleecker.com/favicon.ico', 'https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.johnsofbleecker.com&size=64'],
   ['https://www.johnsofbleeckerstreet.com/favicon.ico', 'https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.johnsofbleecker.com&size=64'],
-  ['https://www.marriott.com/favicon.ico', 'https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.marriott.com&size=64'],
 ]);
 
 const EXPLICIT_LOGO_REPAIRS = new Map([
@@ -77,7 +81,8 @@ export function buildDeclaredLogoRepairFn() {
 }
 
 export function buildListLogoPatch() {
-  const mapJson = JSON.stringify(Object.fromEntries(BUNDLE_LIST_LOGO_REPAIRS));
+  const merged = new Map([...BUNDLE_LIST_LOGO_REPAIRS, ...SERVE_BOUNDARY_LOGO_REPAIRS]);
+  const mapJson = JSON.stringify(Object.fromEntries(merged));
   return `_l=G=>{const tsLR=${mapJson};const tsPick=s=>{const v=String(s||"").trim();return v&&tsLR[v]?tsLR[v]:v;};const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"").trim();if(raw&&!/^data:image\\/svg\\+xml/i.test(raw)&&!(/\\/ts-thing-media\\//i.test(raw)&&!/\\/ts-thing-logos\\//i.test(raw)))return tsPick(raw);const pg=String(Re.url||Re.website||Re.sourceUrl||G.url||G.website||"").trim();if(pg){try{const u=new URL(pg);if(u.protocol==="http:"||u.protocol==="https:")return tsPick(u.origin+"/favicon.ico")}catch(e){}}return ""}`;
 }
 
@@ -89,8 +94,14 @@ export function repairExplicitLogoUrl(logoUrl, pageUrl = '') {
   return src;
 }
 
+export function repairServedBoundaryLogoUrl(logoUrl, pageUrl = '') {
+  const explicit = repairExplicitLogoUrl(logoUrl, pageUrl);
+  const serve = SERVE_BOUNDARY_LOGO_REPAIRS.get(explicit) || SERVE_BOUNDARY_LOGO_REPAIRS.get(text(logoUrl));
+  return serve || explicit;
+}
+
 export function logoFallbackChain(logoUrl, pageUrl = '') {
-  const primary = repairExplicitLogoUrl(logoUrl, pageUrl);
+  const primary = repairServedBoundaryLogoUrl(logoUrl, pageUrl);
   const chain = [];
   if (primary) chain.push(primary);
   const duck = duckDuckGoIp3LogoUrl(pageUrl || primary);

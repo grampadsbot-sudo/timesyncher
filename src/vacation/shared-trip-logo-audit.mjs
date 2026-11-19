@@ -1,6 +1,6 @@
 import { productThingCategory } from './keepsake-product-overrides.mjs';
 import { resolveThingLogoUrl } from './thing-logo-capture.mjs';
-import { repairExplicitLogoUrl } from './thing-logo-fallback-url.mjs';
+import { repairServedBoundaryLogoUrl } from './thing-logo-fallback-url.mjs';
 
 function text(value) {
   return String(value || '').trim();
@@ -19,7 +19,7 @@ function pageUrl(place = {}, override = {}) {
 
 function scheduledLogoUrlForPlace(place = {}, override = {}) {
   const logoUrl = resolveThingLogoUrl(place, override) || text(override.logoUrl || place.logoUrl);
-  return repairExplicitLogoUrl(logoUrl, pageUrl(place, override));
+  return repairServedBoundaryLogoUrl(logoUrl, pageUrl(place, override));
 }
 
 export function auditScheduledThingLogos(shared = {}) {

@@ -4,7 +4,12 @@ import fs from 'node:fs';
 
 import { auditScheduledThingLogos, visibleLogoDomCheckSource } from '../src/vacation/shared-trip-logo-audit.mjs';
 import { resolveThingLogoDisplayUrl } from '../src/vacation/thing-logo-capture.mjs';
-import { declaredIconFetchLooksBroken, logoFallbackChain, repairExplicitLogoUrl } from '../src/vacation/thing-logo-fallback-url.mjs';
+import {
+  declaredIconFetchLooksBroken,
+  logoFallbackChain,
+  repairExplicitLogoUrl,
+  repairServedBoundaryLogoUrl,
+} from '../src/vacation/thing-logo-fallback-url.mjs';
 import { liveAcceptScheduledLogoAudit } from '../apps/vacation-client/src/lib/liveAcceptLogoAudit.mjs';
 import { runVisibleSharedLogoCheck } from './lib/shared-trip-visible-logo-check.mjs';
 import { runGateBVisibleLogoCheck } from './ops/gateb/restore-check-visible-logos.mjs';
@@ -20,12 +25,12 @@ assert.ok(logoFallbackChain('https://www.macys.com/favicon.ico', 'https://www.ma
 const gstaticCarmines = /t2\.gstatic\.com\/faviconV2.*carminesnyc/i;
 const gstaticJohns = /t2\.gstatic\.com\/faviconV2.*johnsofbleecker/i;
 assert.match(
-  repairExplicitLogoUrl('https://icons.duckduckgo.com/ip3/carminesnyc.com.ico'),
+  repairServedBoundaryLogoUrl('https://icons.duckduckgo.com/ip3/carminesnyc.com.ico'),
   gstaticCarmines,
   'carmines duckduckgo ip3 must not stay on 404 host',
 );
 assert.match(
-  repairExplicitLogoUrl('https://icons.duckduckgo.com/ip3/johnsofbleecker.com.ico'),
+  repairServedBoundaryLogoUrl('https://icons.duckduckgo.com/ip3/johnsofbleecker.com.ico'),
   gstaticJohns,
   'johns duckduckgo ip3 must not stay on 404 host',
 );
@@ -42,7 +47,7 @@ for (const [id, broken] of [
   [682, 'https://icons.duckduckgo.com/ip3/johnsofbleecker.com.ico'],
   [685, 'https://icons.duckduckgo.com/ip3/carminesnyc.com.ico'],
 ]) {
-  const repaired = repairExplicitLogoUrl(broken);
+  const repaired = repairServedBoundaryLogoUrl(broken);
   assert.doesNotMatch(repaired, /duckduckgo\.com\/ip3\/(johnsofbleecker|carminesnyc)\.com\.ico/, `place ${id} repair still duckduckgo 404`);
   assert.match(repaired, /t2\.gstatic\.com\/faviconV2/, `place ${id} must map to gstatic`);
 }
