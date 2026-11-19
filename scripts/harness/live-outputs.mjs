@@ -8,6 +8,8 @@ import { chromeHits } from './chrome.mjs';
 import { nonEmpty, scrubFile } from './files.mjs';
 import { boundMediaPlayUrl } from '../../src/vacation/thing-media-bind.mjs';
 import { redactText } from './redact.mjs';
+import { resolveDriveSha, stampMissingDriveSha } from './drive-build.mjs';
+import { loadHostMediaBindToken } from '../host/vk_ship_dry_env.mjs';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
 
@@ -25,20 +27,35 @@ function transcriptFromJsonl(file) {
   return { ...header, turns: header.turns || turns };
 }
 
-export async function renderDialog({ token, outDir, secrets }) {
+export async function renderDialog({ token, outDir, secrets, buildSha = '', origin = '', fetchImpl, loadTranscript, spawnImpl = spawnSync } = {}) {
   const out = path.join(outDir, 'dialog.pdf');
   const jsonl = path.join(outDir, 'live-transcript.jsonl');
   const timing = path.join(outDir, 'timing.json');
   const state = path.join(outDir, 'qa-input.json');
-  const result = spawnSync(process.execPath, [
+  const transcriptFile = path.join(outDir, 'dialog-transcript.json');
+  const sha = await resolveDriveSha(buildSha, origin, fetchImpl);
+  let doc;
+  try {
+    if (loadTranscript) doc = await loadTranscript(token);
+    else {
+      const { sql } = await import('../../src/vacation/db.mjs');
+      const { loadLiveTranscriptByToken } = await import('../../src/vacation/live-app-turn.mjs');
+      doc = await loadLiveTranscriptByToken(sql(process.env), token);
+    }
+  } catch (error) {
+    return { ok: false, detail: redactText(error?.message || error, secrets), transcript: null, pdfText: '', refusals: [], out };
+  }
+  fs.mkdirSync(outDir, { recursive: true });
+  fs.writeFileSync(transcriptFile, JSON.stringify(stampMissingDriveSha(doc, sha)));
+  const result = spawnImpl(process.execPath, [
     path.join(root, 'scripts/live-transcript-dialog-pdf.mjs'),
-    '--session', token,
+    '--transcript', transcriptFile,
     '--out', out,
     '--jsonlOut', jsonl,
     '--timing', timing,
     '--state', state,
   ], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
-  for (const file of [jsonl, timing, state]) scrubFile(file, secrets);
+  for (const file of [transcriptFile, jsonl, timing, state]) scrubFile(file, secrets);
   const detail = redactText(`${result.stdout || ''}\n${result.stderr || ''}`, secrets).trim();
   if (result.status !== 0) {
     return { ok: false, detail: detail || 'dialog renderer refused', transcript: transcriptFromJsonl(jsonl), pdfText: '', out };
@@ -63,7 +80,8 @@ export async function renderDialog({ token, outDir, secrets }) {
 
 function mediaHeaders(env) {
   const headers = { accept: 'application/json', 'content-type': 'application/json' };
-  const token = env.TIMESYNCHER_MEDIA_BIND_TOKEN || env.TIMESYNCHER_ADMIN_TOKEN || env.TIMESYNCHER_WORKER_TOKEN || '';
+  let token = env.TIMESYNCHER_MEDIA_BIND_TOKEN || env.TIMESYNCHER_ADMIN_TOKEN || env.TIMESYNCHER_WORKER_TOKEN || '';
+  if (!token && String(env.HARNESS_LIVE || '') === '1') token = loadHostMediaBindToken({ env }).token;
   if (token) headers['x-timesyncher-media-bind-token'] = token;
   return headers;
 }

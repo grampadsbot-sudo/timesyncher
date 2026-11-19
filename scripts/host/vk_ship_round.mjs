@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { applyMissingScorecard, dryRunId, ensureShipRepoDeps, harnessEnvSkipped, loadHostMediaBindToken, loadStagingDatabaseUrl, markEnvBlocked, provisionMediaBindToken } from './vk_ship_dry_env.mjs';
+import { applyMissingScorecard, dryRunId, ensureMediaBindDeployed, ensureShipRepoDeps, harnessEnvSkipped, loadStagingDatabaseUrl, markEnvBlocked } from './vk_ship_dry_env.mjs';
 import {
   BOOTSTRAP_PULLS,
   applyDryRunCard,
@@ -217,17 +217,18 @@ function runPy(file, args) {
 async function runHarness(round, runId, sha) {
   const block = ensureShipRepoDeps({ repo: repoDir(), stateDir: path.join(root, 'state'), spawn: (cmd, args, opts) => spawnSync(cmd, args, { ...opts, encoding: 'utf8' }) });
   if (block) { round.errors.push(block); round.dryRun = markEnvBlocked(round.dryRun, sha, runId, block); return; }
-  const loaded = await loadStagingDatabaseUrl({ roots: [root, process.env.TSV_REPO || '', repoDir(), path.join(root, 'ship-repo')], env: process.env });
-  const media = loadHostMediaBindToken({ env: process.env });
+  const roots = [root, process.env.TSV_REPO || '', repoDir(), path.join(root, 'ship-repo')];
+  const ready = await ensureMediaBindDeployed({ env: process.env, roots, deploy: () => runPy('tsv_dispatch.py', ['--batch-deploy']) });
+  const loaded = await loadStagingDatabaseUrl({ roots, env: process.env });
   const hit = blockedTarget(storyText()) || blockedTarget(loaded.url);
-  if (hit || !loaded.url || media.block) {
+  if (hit || !loaded.url || ready.block) {
     if (hit) round.errors.push(hit);
-    else round.dryRun = markEnvBlocked(round.dryRun, sha, runId, loaded.url ? media.block : 'blocked: env');
+    else round.dryRun = markEnvBlocked(round.dryRun, sha, runId, loaded.url ? ready.block : 'blocked: env');
     return;
   }
-  if (loaded.url.length > 6) secrets.push(loaded.url); if (media.token) secrets.push(media.token);
+  if (loaded.url.length > 6) secrets.push(loaded.url); if (ready.token) secrets.push(ready.token);
   const out = path.join(root, 'harness-runs');
-  const run = spawnSync('node', ['scripts/vk-customer-harness.mjs', '--story', 'scripts/fixtures/harness/story-dry-run.json', '--run-id', runId, '--out-root', out], { cwd: repoDir(), encoding: 'utf8', env: { ...process.env, DATABASE_URL: loaded.url, NEON_DATABASE_URL: loaded.url, TIMESYNCHER_MEDIA_BIND_TOKEN: media.token, HARNESS_LIVE: '1' } });
+  const run = spawnSync('node', ['scripts/vk-customer-harness.mjs', '--story', 'scripts/fixtures/harness/story-dry-run.json', '--run-id', runId, '--out-root', out], { cwd: repoDir(), encoding: 'utf8', env: { ...process.env, DATABASE_URL: loaded.url, NEON_DATABASE_URL: loaded.url, TIMESYNCHER_MEDIA_BIND_TOKEN: ready.token, HARNESS_LIVE: '1' } });
   const output = scrub(`${run.stderr || ''}\n${run.stdout || ''}`, secrets);
   if (harnessEnvSkipped(output)) { round.dryRun = markEnvBlocked(round.dryRun, sha, runId); return; }
   const cardPath = path.join(out, runId, 'dry-run', 'scorecard.json');
@@ -271,8 +272,7 @@ async function perform(action, round) {
     return true;
   }
   if (action.type === 'batch-deploy') {
-    const provision = await provisionMediaBindToken({ roots: [root, process.env.TSV_REPO || '', repoDir(), path.join(root, 'ship-repo')], env: process.env }); if (provision.block) throw new Error(scrub(provision.block, secrets));
-    runPy('tsv_dispatch.py', ['--batch-deploy']);
+    const ready = await ensureMediaBindDeployed({ env: process.env, roots: [root, process.env.TSV_REPO || '', repoDir(), path.join(root, 'ship-repo')], deploy: () => runPy('tsv_dispatch.py', ['--batch-deploy']) }); if (ready.block) throw new Error(scrub(ready.block, secrets)); if (ready.token) secrets.push(ready.token); if (!ready.deployed) runPy('tsv_dispatch.py', ['--batch-deploy']);
     return true;
   }
   if (action.type === 'live-accept') {
