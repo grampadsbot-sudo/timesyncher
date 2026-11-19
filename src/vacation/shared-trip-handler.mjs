@@ -12,7 +12,7 @@ import { applyCapturedLogos } from './thing-logo-capture.mjs';
 import { applyTripMetadataBudgetTargets } from './shared-trip-api-budget.mjs';
 import { applyStoredDossiersToSharedTrip } from './shared-trip-dossier-overlay.mjs';
 import { scheduleMissingEvidenceCapturesForTrip } from './thing-evidence-capture-trigger.mjs';
-import { finalizeServedSharedTripPayload } from './shared-trip-served-page.mjs';
+import { finalizeServedSharedTripPayload, projectServedBoundaryLogosForHttp } from './shared-trip-served-page.mjs';
 import { sharedTripEditAccessFromRequest } from './web-access.mjs';
 
 let sharedTripDatabase = null;
@@ -196,7 +196,12 @@ async function readUpstreamSharedResponse(shareToken, req) {
 }
 
 function sendSharedTripPayload(res, status, payload) {
-  return sendSharedTripJson(res, status, payload);
+  return sendSharedTripJson(res, status, projectServedBoundaryLogosForHttp(payload));
+}
+
+function sharedTripPayloadForHttp(payload) {
+  if (!payload) return payload;
+  return projectServedBoundaryLogosForHttp(payload);
 }
 
 function sendUpstreamSharedResponse(res, upstream) {
@@ -251,15 +256,15 @@ async function respondSharedTripGet(req, res, shareToken) {
 
 export async function loadSharedTripPayload(shareToken, req = null) {
   const local = await intakeSharedResponse(shareToken);
-  if (local) return local;
+  if (local) return sharedTripPayloadForHttp(local);
   if (String(shareToken || '').startsWith('intake-')) return null;
   const offline = await offlineApprovedSharedResponse(shareToken);
-  if (offline) return offline;
+  if (offline) return sharedTripPayloadForHttp(offline);
   if (cleanText(process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL) && req) {
     const upstream = await readUpstreamSharedResponse(shareToken, req);
     if (upstream.status === 200 && sharedPayloadHasPlaces(upstream.json)) {
       const withDossiers = await applyStoredDossiersToSharedTrip(upstream.json, { env: process.env });
-      return finalizeServedSharedTripPayload(withDossiers);
+      return sharedTripPayloadForHttp(finalizeServedSharedTripPayload(withDossiers));
     }
   }
   return null;
