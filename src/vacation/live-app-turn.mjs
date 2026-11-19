@@ -1649,9 +1649,25 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     latencyMs: { draft: draftLatencyMs, rewrite: null, jevDraft: draftQualityMs, jevRewrite: null, total: draftLatencyMs + draftQualityMs },
     flagged: false, cost: model?.cost || null,
   };
-  if (!quality?.judged) return unjudgedReply({ rules, jev, model, quality, log: baseLog, draft: originalDraft });
+  if (!quality?.judged) {
+    return unjudgedReply({
+      rules,
+      jev,
+      model,
+      quality,
+      log: baseLog,
+      draft: originalDraft,
+    });
+  }
   const claimReason = replyActionClaimReason(originalDraft, turnActionResults, replyClaimContextFromIntent(intent));
-  if (claimReason) return claimBlockedReply({ rules, jev, model, quality, draft: originalDraft, claimReason });
+  if (claimReason) {
+    return claimBlockedReply({
+      rules,
+      jev, model, quality,
+      draft: originalDraft,
+      claimReason,
+    });
+  }
   const needsRewrite = mustRewriteQuality(quality);
   if (!needsRewrite) {
     const shippedReplyText = shipInTurnDraft(originalDraft, { rules, jev });
