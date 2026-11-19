@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { BOOTSTRAP_PULLS, applyDryRunCard, bootstrapDryText, doorbellReasons, planBootstrap, planCycle, scrub } from './host/vk_ship_round_core.mjs';
+import { BOOTSTRAP_PULLS, applyDryRunCard, bootstrapDryText, crontabHasActive, doorbellReasons, errorStateHash, planBootstrap, planCycle, planPull, scrub } from './host/vk_ship_round_core.mjs';
 
 const protectedRules = JSON.parse(readFileSync(new URL('./fixtures/harness/protected-targets.json', import.meta.url), 'utf8'));
 
@@ -250,6 +250,9 @@ const roundJs = readFileSync(new URL('./host/vk_ship_round.mjs', import.meta.url
 assert.match(install, /from tsv_common import GH/);
 assert.match(install, /crontab\.bak/);
 assert.match(install, /grep -F/);
+assert.ok(install.includes("grep -v '^[[:space:]]*#'"));
+assert.equal(crontabHasActive('# */10 * * * * /tsv-dispatch/bin/vk_ship_round.sh\n', 'vk_ship_round.sh'), false);
+assert.equal(crontabHasActive('*/10 * * * * /tsv-dispatch/bin/vk_ship_round.sh\n', 'vk_ship_round.sh'), true);
 assert.match(install, /\$\{ROOT\}\/bin\/vk_ship_round\.sh/);
 assert.match(install, /exec "\$ROOT\/bin\/vk_ship_round\.sh"/);
 assert.match(install, /preflight: missing/);
@@ -261,6 +264,7 @@ assert.match(launcher, /credential\.helper=!python3 \$\{HELPER\} credential/);
 assert.match(launcher, /preflight: missing/);
 assert.doesNotMatch(launcher, /gh api|gh repo|gh auth|GH_TOKEN@/);
 assert.doesNotMatch(roundJs, /spawnSync\('gh'/);
+assert.match(roundJs, /api\('PUT', `\/repos\/\$\{REPO\}\/pulls\/\$\{action\.pr\}\/merge`/);
 
 const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 const tmp = mkdtempSync(`${tmpdir()}/vk-ship-dry-`);
@@ -337,5 +341,48 @@ assert.equal(raw.status, 0, raw.stderr);
 assert.equal(raw.stdout, 'raw-file');
 assert.equal(raw.stdout.includes(tokenValue), false);
 rmSync(preflightRoot, { recursive: true, force: true });
+
+const hostOnly = planPull({
+  number: 1040,
+  head: BOOTSTRAP_PULLS[1].sha,
+  headNow: BOOTSTRAP_PULLS[1].sha,
+  issue: 1039,
+  body: 'no acceptance fence',
+  prLabels: ['project:tsv', 'base:vk', 'craig-asked'],
+  issueLabels: ['project:tsv', 'base:vk', 'craig-asked'],
+  mergeableState: 'clean',
+  conflictFiles: [],
+  conflictDeletions: {},
+  state: 'OPEN',
+}, {
+  acceptanceFiles: { 1039: true },
+  acceptanceSpecs: { 1039: { issue: 1039, assertions: [{ id: 'named' }] } },
+  checksBySha: { [BOOTSTRAP_PULLS[1].sha]: greenFor(BOOTSTRAP_PULLS[1].sha) },
+  state: {},
+}, BOOTSTRAP_PULLS[1].sha);
+assert.equal(hostOnly.errors.includes('acceptance-missing:1039'), false);
+assert.equal(hostOnly.actions.some((action) => action.type === 'accept' && action.sha === BOOTSTRAP_PULLS[1].sha), true);
+assert.equal(hostOnly.actions.some((action) => action.type === 'write-acceptance'), false);
+
+const noSpec = planPull({
+  number: 1040,
+  head: BOOTSTRAP_PULLS[1].sha,
+  headNow: BOOTSTRAP_PULLS[1].sha,
+  issue: 1039,
+  body: '',
+  issueLabels: [],
+  prLabels: [],
+  mergeableState: 'clean',
+  conflictFiles: [],
+  conflictDeletions: {},
+  state: 'OPEN',
+}, { acceptanceFiles: {}, acceptanceSpecs: {}, checksBySha: {}, state: {} }, '');
+assert.equal(noSpec.errors.includes('acceptance-missing:1039'), true);
+
+const sameErrors = { dryRun: { ran: false }, needsRebase: [], errors: ['acceptance-missing:1039', 'merge-404'], heads: [BOOTSTRAP_PULLS[1].sha] };
+const sameHash = errorStateHash(sameErrors.errors, sameErrors.heads);
+assert.equal(doorbellReasons(sameErrors, {}).includes('error'), true);
+assert.equal(doorbellReasons(sameErrors, { errorHash: sameHash }).includes('error'), false);
+assert.equal(doorbellReasons({ ...sameErrors, heads: ['other-head'] }, { errorHash: sameHash }).includes('error'), true);
 
 console.log('test_acceptance_1041_ship_round: ok');

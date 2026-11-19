@@ -33,7 +33,7 @@ install -d -m 775 "$ROOT/acceptance" "$ROOT/state" "$ROOT/logs" "$ROOT/harness-r
 current="$(crontab -l 2>/dev/null || true)"
 printf '%s\n' "$current" > "$ROOT/state/crontab.bak"
 line="*/10 * * * * TSV_SHIP_TRACK_ISSUE=1041 ${ROOT}/bin/vk_ship_round.sh >> ${ROOT}/logs/vk-ship-round.log 2>&1"
-if ! printf '%s\n' "$current" | grep -F "${ROOT}/bin/vk_ship_round.sh" >/dev/null; then
+if ! printf '%s\n' "$current" | grep -F "${ROOT}/bin/vk_ship_round.sh" | grep -v '^[[:space:]]*#' >/dev/null; then
   if [ -n "$current" ]; then
     printf '%s\n%s\n' "$current" "$line" | crontab -
   else

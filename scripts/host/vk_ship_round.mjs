@@ -9,6 +9,7 @@ import {
   blockedTarget,
   bootstrapDryText,
   doorbellReasons,
+  errorStateHash,
   formatDry,
   planCycle,
   planPull,
@@ -141,10 +142,31 @@ function readState() {
   return JSON.parse(fs.readFileSync(file, 'utf8'));
 }
 
+function acceptanceDir() {
+  return path.join(root, 'acceptance');
+}
+
 function acceptanceFiles() {
-  const dir = path.join(root, 'acceptance');
+  const dir = acceptanceDir();
   if (!fs.existsSync(dir)) return {};
   return Object.fromEntries(fs.readdirSync(dir).filter((name) => name.endsWith('.json')).map((name) => [name.replace(/\.json$/, ''), true]));
+}
+
+function acceptanceSpecs() {
+  const dir = acceptanceDir();
+  const specs = {};
+  if (!fs.existsSync(dir)) return specs;
+  for (const name of fs.readdirSync(dir)) {
+    if (!name.endsWith('.json')) continue;
+    const issue = name.replace(/\.json$/, '');
+    try {
+      const parsed = JSON.parse(fs.readFileSync(path.join(dir, name), 'utf8'));
+      specs[issue] = parsed && typeof parsed === 'object' ? parsed : { invalid: true };
+    } catch {
+      specs[issue] = { invalid: true };
+    }
+  }
+  return specs;
 }
 
 function storyText() {
@@ -155,6 +177,7 @@ function storyText() {
 function worldNow(runId) {
   return {
     acceptanceFiles: acceptanceFiles(),
+    acceptanceSpecs: acceptanceSpecs(),
     tipLive: tipLive(),
     state: readState(),
     storyText: storyText(),
@@ -213,7 +236,7 @@ async function perform(action, round) {
     const fresh = api('GET', `/repos/${REPO}/pulls/${action.pr}`);
     const state = String(fresh.state || '').toUpperCase();
     if ((fresh.head?.sha || fresh.headRefOid) !== action.sha || state !== 'OPEN') return false;
-    api('POST', `/repos/${REPO}/pulls/${action.pr}/merge`, { merge_method: 'merge' });
+    api('PUT', `/repos/${REPO}/pulls/${action.pr}/merge`, { merge_method: 'merge' });
     return true;
   }
   if (action.type === 'batch-deploy') {
@@ -258,6 +281,7 @@ function blankRound() {
     needsRebase: [],
     accepts: [],
     errors: [],
+    heads: [],
     doorbell: [],
   };
 }
@@ -270,6 +294,7 @@ async function runBootstrap(stamp) {
       fetchVk();
       const pull = loadOne(item.pr);
       pull.issue = pull.issue || item.issue;
+      if (pull.head) round.heads.push(pull.head);
       const world = worldNow(`dry-run-${stamp}-openrouter`);
       world.checksBySha = { [pull.head]: checksFor(pull.head) };
       const part = planPull(pull, world, item.sha);
@@ -353,6 +378,7 @@ function publish(round, state, stamp) {
     lastDrySha: round.dryRun.ran ? round.dryRun.sha : state.lastDrySha,
     reason: round.dryRun.ran ? round.dryRun.reason : state.reason,
     error: round.errors.join('|'),
+    errorHash: errorStateHash(round.errors, round.heads),
     rebase: { ...(state.rebase || {}), ...Object.fromEntries(round.needsRebase.map((row) => [String(row.pr), row.file])) },
     bootstrapDone: state.bootstrapDone || round.merges.includes(1042),
   };

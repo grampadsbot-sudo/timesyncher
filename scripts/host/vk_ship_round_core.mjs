@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -51,7 +52,7 @@ export function scrub(text, secrets = []) {
 }
 
 function acceptanceFromBody(body) {
-  const match = String(body || '').match(/```acceptance\s*\n([\s\S]*?)```/i);
+  const match = String(body || '').match(/```acceptance[^\n]*\n([\s\S]*?)```/i);
   if (!match) return null;
   try {
     const parsed = JSON.parse(match[1]);
@@ -59,6 +60,21 @@ function acceptanceFromBody(body) {
   } catch {
     return { invalid: true };
   }
+}
+
+export function errorStateHash(errors, heads) {
+  const body = JSON.stringify({
+    errors: [...new Set(errors || [])].sort(),
+    heads: [...new Set(heads || [])].filter(Boolean).sort(),
+  });
+  return createHash('sha256').update(body).digest('hex');
+}
+
+export function crontabHasActive(current, marker) {
+  return String(current || '').split('\n').some((line) => {
+    const trimmed = line.trim();
+    return Boolean(trimmed) && !trimmed.startsWith('#') && trimmed.includes(marker);
+  });
 }
 
 function labelGap(have) {
@@ -129,8 +145,8 @@ export function doorbellReasons(round, previous = {}) {
   if (dry?.ran && dry.verdict === 'PASS' && dry.outputsPass) reasons.push('dry-run-pass');
   if (dry?.ran && dry.verdict !== 'PASS' && dry.reason && dry.reason !== previous.reason) reasons.push('new-failure');
   if ((round.needsRebase || []).some((row) => !previous.rebase?.[String(row.pr)])) reasons.push('needs-rebase');
-  const error = (round.errors || []).join('|');
-  if (error && error !== (previous.error || '')) reasons.push('error');
+  const hash = errorStateHash(round.errors, round.heads);
+  if ((round.errors || []).length && hash !== (previous.errorHash || '')) reasons.push('error');
   return reasons;
 }
 
@@ -162,16 +178,18 @@ export function planPull(pull, world, pinSha = '') {
   const actions = [];
   const errors = [];
   const needsRebase = [];
-  const spec = acceptanceFromBody(pull.body);
   const issue = Number(pull.issue) || 0;
   if (!issue) {
     errors.push(`missing-issue:${pull.number}`);
     return { actions, errors, needsRebase };
   }
-  if (spec?.invalid) {
+  const fromBody = acceptanceFromBody(pull.body);
+  const fromFile = world.acceptanceSpecs?.[String(issue)];
+  if (fromBody?.invalid || fromFile?.invalid) {
     errors.push(`acceptance-invalid:${issue}`);
     return { actions, errors, needsRebase };
   }
+  const spec = fromBody || fromFile;
   if (!spec) {
     errors.push(`acceptance-missing:${issue}`);
     return { actions, errors, needsRebase };
@@ -237,6 +255,7 @@ function roundFrom(world, actions, errors, needsRebase, dryRun) {
     pr: action.pr,
   }));
   const round = {
+    heads: (world.pulls || []).map((pull) => pull.head).filter(Boolean),
     merges: actions.filter((action) => action.type === 'merge').map((action) => action.pr),
     tip: world.tipLive?.tip || '',
     live: world.tipLive?.live || '',
