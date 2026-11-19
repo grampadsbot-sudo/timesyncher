@@ -40,7 +40,11 @@ const BUNDLE_LIST_LOGO_REPAIRS = new Map([
   ['https://www.latraviatapizzeria.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/latraviatapizzany.com.ico'],
   ['https://www.cilantrorestaurant.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/cilantrorestaurant.com.ico'],
   ['https://www.hertz.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/hertz.com.ico'],
-  ['https://www.carminesnyc.com/favicon.ico', 'https://icons.duckduckgo.com/ip3/carminesnyc.com.ico'],
+  ['https://www.carminesnyc.com/favicon.ico', 'https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.carminesnyc.com&size=64'],
+  ['https://icons.duckduckgo.com/ip3/carminesnyc.com.ico', 'https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.carminesnyc.com&size=64'],
+  ['https://icons.duckduckgo.com/ip3/johnsofbleecker.com.ico', 'https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.johnsofbleecker.com&size=64'],
+  ['https://www.johnsofbleecker.com/favicon.ico', 'https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.johnsofbleecker.com&size=64'],
+  ['https://www.johnsofbleeckerstreet.com/favicon.ico', 'https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.johnsofbleecker.com&size=64'],
   ['https://www.marriott.com/favicon.ico', 'https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.marriott.com&size=64'],
 ]);
 
