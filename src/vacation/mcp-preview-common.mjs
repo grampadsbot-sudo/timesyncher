@@ -90,7 +90,7 @@ function normalizeLocation(raw) {
   return out;
 }
 
-export function normalizeDraftLandingItem(defaultCategory, rawItem, { forceUnscheduled = false, currency = 'usd' } = {}) {
+export function normalizeDraftLandingItem(defaultCategory, rawItem, { forceUnscheduled = false, currency = 'usd', source = 'mcp_import' } = {}) {
   const title = cleanPreviewText(rawItem?.title, 240);
   if (!title) return null;
   const category = cleanPreviewText(rawItem?.category || defaultCategory, 60) || defaultCategory;
@@ -103,6 +103,7 @@ export function normalizeDraftLandingItem(defaultCategory, rawItem, { forceUnsch
     ref: cleanPreviewText(rawItem?.ref, 120) || null,
     category,
     title,
+    source: cleanPreviewText(rawItem?.source, 80) || source,
     description: cleanPreviewText(rawItem?.description || rawItem?.body || '', 4000) || null,
     scheduled: !unscheduled,
     day_date: dayDate,
@@ -247,6 +248,7 @@ function itemLandingShape(item, attachedMedia = []) {
     ref: item.ref || null,
     category: item.category,
     title: item.title,
+    source: cleanPreviewText(item.source, 80) || 'mcp_import',
     description: item.description || null,
     scheduled: Boolean(item.scheduled),
     day_date: item.scheduled ? (item.day_date || null) : null,

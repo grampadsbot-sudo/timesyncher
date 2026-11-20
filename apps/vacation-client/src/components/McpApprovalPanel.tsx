@@ -316,7 +316,7 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
 
                       {previewView.unscheduledThings.length > 0 ? (
                         <div className="tsv-mcp-block" data-ts-mcp-preview-unscheduled="1">
-                          <h4>Unscheduled long-list Things ({previewView.unscheduledThings.length})</h4>
+                          <h4>Unscheduled long-list items ({previewView.unscheduledThings.length})</h4>
                           <ul>
                             {previewView.unscheduledThings.map((item, idx) => (
                               <li key={`${item.ref || item.id || idx}`}>

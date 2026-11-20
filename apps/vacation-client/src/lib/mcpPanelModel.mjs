@@ -102,7 +102,7 @@ export function previewSummaryBullets(changeSet) {
     ['stores', 'Stores'],
     ['things_to_do', 'Activities'],
     ['notes', 'Notes'],
-    ['unscheduled_things', 'Unscheduled long-list Things'],
+    ['unscheduled_things', 'Unscheduled long-list items'],
     ['media', 'Photos & videos'],
   ];
   for (const [key, label] of sectionLabels) {

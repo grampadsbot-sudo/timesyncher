@@ -14,7 +14,7 @@ export const MCP_TOOLS = [
   },
   {
     name: 'start_import',
-    description: 'Creates or updates a draft vacation in staging tables (including optional unscheduled long-list Things) and returns draft_id. Nothing is published or visible in the live vacation list until approved in the app.',
+    description: 'Creates or updates a draft vacation in staging tables (including optional unscheduled long-list items) and returns draft_id. Nothing is published or visible in the live vacation list until approved in the app.',
     inputSchema: {
       type: 'object',
       required: ['vacation'],
@@ -66,7 +66,7 @@ export const MCP_TOOLS = [
   },
   {
     name: 'preview_import',
-    description: 'Returns the exact landing preview of a staged draft vacation or edit change set: each day and scheduled item, unscheduled long-list Things, every photo/video with item/day attachment and EXIF time/GPS match, file sizes, total bytes, missing details, conflicts, and preview_hash.',
+    description: 'Returns the exact landing preview of a staged draft vacation or edit change set: each day and scheduled item, unscheduled long-list items, every photo/video with item/day attachment and EXIF time/GPS match, file sizes, total bytes, missing details, conflicts, and preview_hash.',
     inputSchema: {
       type: 'object',
       required: ['draft_id'],
@@ -94,7 +94,7 @@ export const MCP_TOOLS = [
   },
   {
     name: 'read_vacation',
-    description: 'Reads the current live itinerary and long-list Things of the vacation your AI access token is scoped to, returning stable item ids for targeted edits.',
+    description: 'Reads the current live itinerary and long-list items of the vacation your AI access token is scoped to, returning stable item ids for targeted edits.',
     inputSchema: {
       type: 'object',
       additionalProperties: false,
@@ -105,7 +105,7 @@ export const MCP_TOOLS = [
   },
   {
     name: 'update_vacation',
-    description: 'Stages targeted edits to specific items by id (add scheduled or unscheduled long-list Things, change or remove items, update day fields, or attach uploaded media). Pass dry_run=true to preview the exact landing payload and preview_hash without staging. Never wholesale overwrites the vacation. Requires in-app approval before going live.',
+    description: 'Stages targeted edits to specific items by id (add scheduled or unscheduled long-list items, change or remove items, update day fields, or attach uploaded media). Pass dry_run=true to preview the exact landing payload and preview_hash without staging. Never wholesale overwrites the vacation. Requires in-app approval before going live.',
     inputSchema: {
       type: 'object',
       required: ['operations'],
@@ -136,7 +136,7 @@ export const MCP_TOOLS = [
               caption: { type: 'string', description: 'Optional caption for attach_media.' },
               item: {
                 type: 'object',
-                description: 'New item fields for add_item. Omit day_date and starts_at or set unscheduled=true to save as an unscheduled long-list Thing.',
+                description: 'New item fields for add_item. Omit day_date and starts_at or set unscheduled=true to save as an unscheduled long-list item.',
                 properties: {
                   ref: { type: 'string' },
                   category: {

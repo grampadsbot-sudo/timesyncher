@@ -53,6 +53,7 @@ export type McpPreviewLandingItem = {
   ref?: string | null;
   category?: string;
   title?: string;
+  source?: string;
   description?: string | null;
   scheduled?: boolean;
   day_date?: string | null;

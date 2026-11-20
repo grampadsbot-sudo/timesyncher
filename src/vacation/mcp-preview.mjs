@@ -84,7 +84,7 @@ export function buildDraftImportPreview({
   checkDuplicateAndRange('Restaurant', restaurants);
   checkDuplicateAndRange('Store', stores);
   checkDuplicateAndRange('Activity', thingsToDo);
-  checkDuplicateAndRange('Thing', explicitUnscheduled);
+  checkDuplicateAndRange('Saved item', explicitUnscheduled);
 
   if (applyMode === 'populate_scoped' && existingTrip) {
     const existingNames = new Set(previewList(existingThings).map((row) => cleanPreviewText(row.title, 180).toLowerCase()));
@@ -161,7 +161,7 @@ export function buildDraftImportPreview({
     total_bytes: totalBytes,
   };
 
-  const unscheduledNote = unscheduledThings.length ? `, ${unscheduledThings.length} unscheduled long-list Thing(s)` : '';
+  const unscheduledNote = unscheduledThings.length ? `, ${unscheduledThings.length} unscheduled long-list item(s)` : '';
   const summaryText = `Ready to ${applyMode === 'populate_scoped' ? 'update' : 'create'} vacation "${vacationBlock.title}" with ${counts.days} day(s), ${scheduledItems.length} scheduled item(s)${unscheduledNote}, and ${counts.media} media file(s).`;
 
   const hashPayload = {
@@ -204,6 +204,7 @@ function existingThingToLanding(row) {
     ref: cleanPreviewText(meta.draftRef, 120) || String(row.id),
     category: cleanPreviewText(row.category, 60) || 'note',
     title: cleanPreviewText(row.title, 240),
+    source: cleanPreviewText(meta.source, 80) || 'vacation_record',
     description: cleanPreviewText(row.description, 4000) || null,
     scheduled,
     day_date: scheduled ? dayDate : null,
@@ -268,6 +269,7 @@ export function buildTargetedEditPreview({
     if (op.op === 'add_item') {
       const normalized = normalizeDraftLandingItem(op.item?.category || 'note', op.item || {}, {
         currency: workingVacation.currency,
+        source: 'mcp_update',
       });
       if (normalized) {
         workingItems.push(normalized);
