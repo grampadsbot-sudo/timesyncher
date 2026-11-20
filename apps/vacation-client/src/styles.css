@@ -1796,3 +1796,206 @@ html[data-ts-keepsake] #root {
     text-align: center;
   }
 }
+
+.tsv-mcp-sheet {
+  max-width: 720px;
+}
+
+.tsv-mcp-tabs {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.tsv-mcp-tabs .tsv-header-btn.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+
+.tsv-mcp-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tsv-mcp-alert {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tsv-mcp-alert-error {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.tsv-mcp-alert-ok {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.tsv-mcp-split {
+  display: grid;
+  grid-template-columns: minmax(180px, 230px) minmax(0, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 600px) {
+  .tsv-mcp-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tsv-mcp-list,
+.tsv-mcp-token-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tsv-mcp-list-item {
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  cursor: pointer;
+}
+
+.tsv-mcp-list-item.is-selected {
+  border-color: var(--accent);
+  background: #f8fafc;
+}
+
+.tsv-mcp-item-title {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tsv-mcp-item-meta {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.tsv-mcp-item-summary {
+  font-size: 11px;
+  color: var(--text);
+}
+
+.tsv-mcp-preview {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--card);
+}
+
+.tsv-mcp-subheading {
+  margin: 0 0 4px;
+  font-size: 14px;
+}
+
+.tsv-mcp-status-line,
+.tsv-mcp-summary,
+.tsv-mcp-endpoint {
+  margin: 0 0 8px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.tsv-mcp-block {
+  margin: 10px 0;
+  font-size: 12px;
+}
+
+.tsv-mcp-block h4 {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tsv-mcp-block ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.tsv-mcp-block-warn {
+  color: #92400e;
+}
+
+.tsv-mcp-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.tsv-mcp-btn-approve {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+
+.tsv-mcp-btn-decline {
+  border-color: #dc2626;
+  color: #991b1b;
+}
+
+.tsv-mcp-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: flex-end;
+  margin-bottom: 12px;
+}
+
+.tsv-mcp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.tsv-mcp-field input,
+.tsv-mcp-field select {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 12px;
+  color: var(--text);
+  background: var(--card);
+}
+
+.tsv-mcp-token-reveal {
+  border: 1px solid var(--border);
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.tsv-mcp-token-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+  background: var(--card);
+}

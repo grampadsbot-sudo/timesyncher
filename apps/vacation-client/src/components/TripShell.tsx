@@ -17,6 +17,7 @@ type Props = {
   onTabChange: (tab: TabId) => void;
   onSectionVisibilityChange: (key: 'flights' | 'hotels' | 'cars', visible: boolean) => void;
   onActiveTabHidden: () => void;
+  onOpenMcpPanel?: (mode: 'approvals' | 'tokens') => void;
   children: ReactNode;
 };
 
@@ -32,6 +33,7 @@ export function TripShell({
   onTabChange,
   onSectionVisibilityChange,
   onActiveTabHidden,
+  onOpenMcpPanel,
   children,
 }: Props) {
   return (
@@ -49,6 +51,7 @@ export function TripShell({
           activeTab={activeTab}
           onSectionVisibilityChange={onSectionVisibilityChange}
           onActiveTabHidden={onActiveTabHidden}
+          onOpenMcpPanel={onOpenMcpPanel}
         />
       </header>
       <TabNav active={activeTab} trip={trip} permissions={permissions} onChange={onTabChange} />
