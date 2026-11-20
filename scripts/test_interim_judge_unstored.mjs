@@ -255,7 +255,7 @@ assert.match(videoRow.detail, /video-missing/);
 assert.equal(videoCard.checks.find((check) => check.id === 'video-check-pass').pass, false);
 const screen = fs.readFileSync(new URL('./harness/onboarding-capture.mjs', import.meta.url), 'utf8');
 assert.match(screen, /checkout-payment: stripe is not test mode/);
-assert.match(screen, /livemode !== false/);
+assert.match(screen, /livemode === false/);
 for (const [key, value] of Object.entries(saved)) {
   if (value == null) delete process.env[key];
   else process.env[key] = value;
