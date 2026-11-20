@@ -2,6 +2,9 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import apiHandler from '../api/[...route].mjs';
 import { setVacationMcpClock, useVacationMcpDatabase } from '../routes/vacation-mcp.mjs';
+import sharedTripHandler, { useSharedTripDatabase } from '../src/vacation/shared-trip-handler.mjs';
+import { webAccessCookieName } from '../src/vacation/web-access.mjs';
+import { vacationAppCollaboratorWebAccessCookie } from '../src/vacation/vacation-app-owner-web-access.mjs';
 import {
   VACATION_IMPORT_EXAMPLE,
   VACATION_IMPORT_FORMAT_SCHEMA,
@@ -375,6 +378,89 @@ async function test_A9_copy_rules_no_trip_travel_si() {
   }
 }
 
+async function test_B2_B8_collaborator_and_security() {
+  const db = createMcpTestDb();
+  useVacationMcpDatabase(db);
+  useSharedTripDatabase(db);
+  let nowMs = Date.parse('2026-07-10T18:00:00.000Z');
+  setVacationMcpClock(() => new Date(nowMs));
+
+  const tripA = db.seedVacation({ title: 'Carmel Getaway', destination: 'Carmel-by-the-Sea, CA', startDate: '2026-07-03', endDate: '2026-07-05' });
+  const tripB = db.seedVacation({ title: 'Other Vacation', destination: 'Bend, OR', startDate: '2026-08-01', endDate: '2026-08-03' });
+  db.seedEditorSession({ tripId: tripA.id, ownerCustomerId: tripA.customer_id, email: 'owner@example.com', role: 'owner', sessionToken: 'sess-b2-owner', shareSlug: tripA.metadata.publicSlug });
+  db.seedEditorSession({ tripId: tripA.id, ownerCustomerId: tripA.customer_id, email: 'collab@example.com', role: 'web_editor', sessionToken: 'sess-b2-collab', shareSlug: tripA.metadata.publicSlug });
+  db.seedEditorSession({ tripId: tripB.id, ownerCustomerId: tripB.customer_id, email: 'outsider@example.com', role: 'owner', sessionToken: 'sess-b2-other', shareSlug: tripB.metadata.publicSlug });
+
+  const collabDb = async (strings) => {
+    const q = strings.join(' ').toLowerCase();
+    if (q.includes('from vacation_collaborators')) return [{ id: 'c-1', email: 'collab@example.com', display_name: 'Sam' }];
+    if (q.includes('from trips')) return [{ id: tripA.id, customer_id: tripA.customer_id, metadata: tripA.metadata }];
+    if (q.includes('insert into vacation_web_access_grants')) return [{ id: 'g-1', role: 'web_editor', status: 'accepted' }];
+    return [];
+  };
+  const cookieEnv = { TIMESYNCHER_TRAVEL_BASE_URL: 'https://vacation-staging.timesyncher.com' };
+  const collabCookie = await vacationAppCollaboratorWebAccessCookie(collabDb, { headers: {} }, {
+    session: { customer_id: 'collab-cust-1', email: 'collab@example.com', token: 'collab-tok-1' },
+    seat: { ownerCustomerId: tripA.customer_id, ownerTripId: tripA.id, displayName: 'Sam', inviteId: 'inv-1' },
+    tripId: tripA.id,
+    env: cookieEnv,
+  });
+  assert.ok(collabCookie && collabCookie.includes(`${webAccessCookieName()}=`));
+  assert.equal(await vacationAppCollaboratorWebAccessCookie(async () => [], { headers: {} }, {
+    session: { customer_id: 'stranger-1', email: 'stranger@example.com', token: 'stranger-tok-1' },
+    seat: { ownerCustomerId: tripA.customer_id, ownerTripId: tripA.id, inviteId: 'inv-bad' },
+    tripId: tripA.id,
+    env: cookieEnv,
+  }), '');
+
+  const editAccessCollab = await invokeRoute(sharedTripHandler, { method: 'GET', url: `/api/shared/${tripA.metadata.publicSlug}/edit-access`, headers: { 'x-timesyncher-web-access-token': 'sess-b2-collab' } });
+  assert.equal(editAccessCollab.statusCode, 200);
+  assert.equal(editAccessCollab.json.canEdit, true);
+  assert.equal((await invokeRoute(sharedTripHandler, { method: 'GET', url: `/api/shared/${tripA.metadata.publicSlug}/edit-access` })).json.canEdit, false);
+
+  assert.equal((await invokeRoute(apiHandler, { method: 'GET', url: `/api/mcp/tokens?shareToken=${tripA.metadata.publicSlug}`, headers: { 'x-timesyncher-web-access-token': 'sess-b2-collab' } })).statusCode, 200);
+  const collabCreate = await invokeRoute(apiHandler, { method: 'POST', url: '/api/mcp/tokens', headers: { 'content-type': 'application/json', 'x-timesyncher-web-access-token': 'sess-b2-collab' }, body: { shareToken: tripA.metadata.publicSlug, label: 'Collab AI', role: 'collaborator' } });
+  assert.equal(collabCreate.statusCode, 201);
+  assert.ok(collabCreate.json.record.expiresAt, 'AI token must have an expiry');
+  const collabAiToken = collabCreate.json.token;
+  assert.equal((await invokeRoute(apiHandler, { method: 'GET', url: `/api/mcp/tokens?shareToken=${tripA.metadata.publicSlug}`, headers: { 'x-timesyncher-web-access-token': 'sess-b2-other' } })).statusCode, 403);
+  assert.equal((await invokeRoute(apiHandler, { method: 'GET', url: `/api/mcp/tokens?shareToken=${tripA.metadata.publicSlug}` })).statusCode, 401);
+
+  const { token: otherAiToken } = await createTokenViaApp(db, { trip: tripB, editorSession: 'sess-b2-other', role: 'owner' });
+  const draftId = (await mcpRpc('tools/call', { name: 'start_import', arguments: VACATION_IMPORT_EXAMPLE }, collabAiToken)).json.result.structuredContent.draft_id;
+  const slot = (await mcpRpc('tools/call', { name: 'upload_media', arguments: { action: 'request_upload', draft_id: draftId, files: [{ filename: 'private.jpg', mime_type: 'image/jpeg' }] } }, collabAiToken)).json.result.structuredContent.uploads[0];
+  const putUrl = new URL(slot.upload_url);
+  assert.equal((await invokeRoute(apiHandler, { method: 'PUT', url: putUrl.pathname + putUrl.search, headers: { 'content-type': 'image/jpeg' }, body: buildPlainJpeg() })).statusCode, 200);
+
+  assert.equal((await invokeRoute(apiHandler, { method: 'GET', url: `/api/mcp/media/${slot.media_id}` })).statusCode, 401);
+  assert.equal((await invokeRoute(apiHandler, { method: 'GET', url: `/api/mcp/media/${slot.media_id}`, headers: { authorization: `Bearer ${otherAiToken}` } })).statusCode, 403);
+  assert.equal((await invokeRoute(apiHandler, { method: 'GET', url: `/api/mcp/media/${slot.media_id}`, headers: { 'x-timesyncher-web-access-token': 'sess-b2-other' } })).statusCode, 403);
+  const authByAi = await invokeRoute(apiHandler, { method: 'GET', url: `/api/mcp/media/${slot.media_id}`, headers: { authorization: `Bearer ${collabAiToken}` } });
+  assert.equal(authByAi.statusCode, 200);
+  assert.match(String(authByAi.headers['cache-control'] || ''), /private/i);
+  assert.equal((await invokeRoute(apiHandler, { method: 'GET', url: `/api/mcp/media/${slot.media_id}`, headers: { 'x-timesyncher-web-access-token': 'sess-b2-collab' } })).statusCode, 200);
+
+  const previewHash = (await mcpRpc('tools/call', { name: 'preview_import', arguments: { draft_id: draftId } }, collabAiToken)).json.result.structuredContent.preview_hash;
+  const badCommit = await mcpRpc('tools/call', { name: 'commit_import', arguments: { draft_id: draftId, preview_hash: '0'.repeat(64) } }, collabAiToken);
+  assert.equal(badCommit.statusCode, 409);
+  assert.equal(badCommit.json.error.data.expected_preview_hash, undefined);
+  assert.equal(JSON.stringify(badCommit.json).includes(previewHash), false);
+
+  assert.equal((await mcpRpc('tools/call', { name: 'commit_import', arguments: { draft_id: draftId, preview_hash: previewHash } }, collabAiToken)).statusCode, 200);
+  const badApprove = await invokeRoute(apiHandler, { method: 'POST', url: `/api/mcp/changes/${draftId}/approve`, headers: { 'content-type': 'application/json', 'x-timesyncher-web-access-token': 'sess-b2-collab' }, body: { shareToken: tripA.metadata.publicSlug, preview_hash: 'f'.repeat(64) } });
+  assert.equal(badApprove.statusCode, 409);
+  assert.equal(JSON.stringify(badApprove.json).includes(previewHash), false);
+  assert.equal((await invokeRoute(apiHandler, { method: 'POST', url: `/api/mcp/changes/${draftId}/approve`, headers: { 'content-type': 'application/json', 'x-timesyncher-web-access-token': 'sess-b2-collab' }, body: { shareToken: tripA.metadata.publicSlug, preview_hash: previewHash } })).statusCode, 200);
+
+  nowMs += 31 * 86400 * 1000;
+  const expiredCall = await mcpRpc('tools/call', { name: 'read_vacation', arguments: {} }, collabAiToken);
+  assert.equal(expiredCall.statusCode, 401);
+  assert.equal(expiredCall.json.error.data.code, 'mcp_token_expired');
+
+  useSharedTripDatabase(null);
+  setVacationMcpClock(null);
+}
+
 await test_A1_list_tools_and_describe_import_format();
 await test_A2_draft_import_staged_until_approve();
 await test_A3_decline_leaves_live_unchanged();
@@ -384,5 +470,6 @@ await test_A6_targeted_update_vacation_byte_identical_untouched_rows();
 await test_A7_exif_timezone_day_assignment_and_usage_bytes();
 await test_A8_signed_upload_url_no_mcp_bytes_and_expiry();
 await test_A9_copy_rules_no_trip_travel_si();
+await test_B2_B8_collaborator_and_security();
 useVacationMcpDatabase(null);
-console.log('vacation mcp acceptance tests A1-A9 passed');
+console.log('vacation mcp acceptance tests A1-A9 + B2/B8 passed');

@@ -1,9 +1,11 @@
+import crypto from 'node:crypto';
 import { cleanText } from './http.mjs';
-import { intakeShareSlug, intId } from './intake-shared-trip.mjs';
+import { intakeShareSlug, intId, tripIsoDay } from './intake-shared-trip.mjs';
+import { inferVacationTimeZone } from './mcp-exif.mjs';
+import { neonRawMediaPath } from './thing-media-bind.mjs';
 
 export function isoDateOnly(value) {
-  const match = String(value || '').match(/^(\d{4}-\d{2}-\d{2})/);
-  return match ? match[1] : '';
+  return tripIsoDay(value);
 }
 
 export function asObject(value) {
@@ -53,7 +55,11 @@ export async function publishMediaRow(db, {
   const effectiveDayDate = isoDateOnly(dayDate || mediaRow.assigned_day_date) || null;
   const effectiveDayNumber = dayNumber ?? mediaRow.assigned_day_number ?? null;
   const bucket = linkedThingId ? 'thing' : (effectiveDayDate ? 'day' : String(mediaRow.assignment_bucket || 'unassigned'));
-  const publicUrl = cleanText(mediaRow.public_url, 600) || `/api/mcp/media/${encodeURIComponent(String(mediaRow.id))}`;
+  const bindingId = crypto.randomUUID();
+  const storedUrl = cleanText(mediaRow.public_url, 600);
+  const publicUrl = (!storedUrl || storedUrl.startsWith('/api/mcp/media/') || mediaRow.storage_provider === 'neon')
+    ? neonRawMediaPath(shareSlug, bindingId)
+    : storedUrl;
   const meta = {
     source: 'mcp_import',
     mcpMediaId: String(mediaRow.id),
@@ -67,11 +73,11 @@ export async function publishMediaRow(db, {
   };
   await db`
     insert into thing_media_bindings (
-      share_token, trek_trip_id, trek_place_id, day_number, thing_name, caption,
+      id, share_token, trek_trip_id, trek_place_id, day_number, thing_name, caption,
       media_kind, mime_type, original_name, file_size_bytes, public_url,
       storage_provider, storage_pathname, trek_apply_status, metadata, file_bytes
     ) values (
-      ${shareSlug}, ${intId(tripId)}, ${intId(linkedThingId || tripId)},
+      ${bindingId}, ${shareSlug}, ${intId(tripId)}, ${intId(linkedThingId || tripId)},
       ${effectiveDayNumber}, ${linkedThingTitle || null}, ${effectiveCaption},
       ${String(mediaRow.media_kind || 'photo')}, ${String(mediaRow.mime_type || 'application/octet-stream')},
       ${String(mediaRow.filename || 'media')}, ${Number(mediaRow.actual_bytes || 0)},
@@ -199,14 +205,27 @@ export async function readLiveVacationDocument(db, tripId) {
     };
   });
 
+  const inferredDates = [
+    ...days.map((d) => isoDateOnly(d.date)),
+    ...items.map((item) => isoDateOnly(item.day_date || item.starts_at)),
+  ].filter(Boolean).sort();
+  const resolvedStartDate = isoDateOnly(trip.start_date) || inferredDates[0] || null;
+  const resolvedEndDate = isoDateOnly(trip.end_date) || inferredDates[inferredDates.length - 1] || resolvedStartDate || null;
+  const resolvedTimeZone = inferVacationTimeZone({
+    timezone: cleanText(meta.timezone || meta.timeZone || meta.ianaTimezone, 80),
+    timezoneExplicit: meta.timezoneExplicit === true,
+    destination: cleanText(trip.destination || trip.title, 180),
+    points: items.map((item) => item.location).filter(Boolean),
+  });
+
   return {
     vacation: {
       id: String(trip.id),
       title: String(trip.title || ''),
       destination: String(trip.destination || ''),
-      start_date: isoDateOnly(trip.start_date) || null,
-      end_date: isoDateOnly(trip.end_date) || null,
-      timezone: String(meta.timezone || 'UTC'),
+      start_date: resolvedStartDate,
+      end_date: resolvedEndDate,
+      timezone: resolvedTimeZone,
       currency: String(meta.currency || 'usd'),
       summary: String(meta.summary || ''),
       status: String(trip.status || 'active'),

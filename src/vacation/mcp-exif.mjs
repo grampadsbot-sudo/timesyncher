@@ -3,7 +3,9 @@ const TAG_EXIF_IFD = 0x8769;
 const TAG_GPS_IFD = 0x8825;
 const TAG_DATE_TIME_ORIGINAL = 0x9003;
 const TAG_DATE_TIME_DIGITIZED = 0x9004;
+const TAG_OFFSET_TIME = 0x9010;
 const TAG_OFFSET_TIME_ORIGINAL = 0x9011;
+const TAG_OFFSET_TIME_DIGITIZED = 0x9012;
 const TAG_GPS_LAT_REF = 0x0001;
 const TAG_GPS_LAT = 0x0002;
 const TAG_GPS_LNG_REF = 0x0003;
@@ -104,13 +106,18 @@ export function extractExifFromBuffer(buffer) {
   let dateTimeOriginal = '';
   let dateTimeDigitized = '';
   let offsetText = '';
+  let offsetFallback = '';
   if (exifIfdOffset > 0) {
     for (const entry of parseIfdEntries(buffer, tiffStart, exifIfdOffset, littleEndian)) {
       if (entry.tag === TAG_DATE_TIME_ORIGINAL) dateTimeOriginal = readAscii(buffer, tiffStart, entry.entryOffset, entry.count, littleEndian);
       if (entry.tag === TAG_DATE_TIME_DIGITIZED) dateTimeDigitized = readAscii(buffer, tiffStart, entry.entryOffset, entry.count, littleEndian);
       if (entry.tag === TAG_OFFSET_TIME_ORIGINAL) offsetText = readAscii(buffer, tiffStart, entry.entryOffset, entry.count, littleEndian);
+      if ((entry.tag === TAG_OFFSET_TIME || entry.tag === TAG_OFFSET_TIME_DIGITIZED) && !offsetFallback) {
+        offsetFallback = readAscii(buffer, tiffStart, entry.entryOffset, entry.count, littleEndian);
+      }
     }
   }
+  const effectiveOffset = offsetText || offsetFallback || '';
   let latRef = '';
   let lngRef = '';
   let latDms = [];
@@ -126,12 +133,12 @@ export function extractExifFromBuffer(buffer) {
   const capturedAtRaw = dateTimeOriginal || dateTimeDigitized || dateTime || null;
   const lat = dmsToDecimal(latDms, latRef);
   const lng = dmsToDecimal(lngDms, lngRef);
-  const capturedAtIso = normalizeExifTimestamp(capturedAtRaw, offsetText || null);
+  const capturedAtIso = normalizeExifTimestamp(capturedAtRaw, effectiveOffset || null);
   const hasExif = Boolean(capturedAtRaw || (lat !== null && lng !== null));
   return {
     hasExif,
     capturedAtRaw,
-    offsetText: offsetText || null,
+    offsetText: effectiveOffset || null,
     capturedAtIso,
     lat,
     lng,
@@ -139,6 +146,9 @@ export function extractExifFromBuffer(buffer) {
 }
 
 export function normalizeExifTimestamp(rawValue, offsetText = null) {
+  if (rawValue instanceof Date) {
+    return Number.isNaN(rawValue.getTime()) ? null : rawValue.toISOString();
+  }
   const raw = String(rawValue || '').trim();
   if (!raw) return null;
   const exifMatch = raw.match(/^(\d{4}):(\d{2}):(\d{2})[ T](\d{2}):(\d{2}):(\d{2})(.*)$/);
@@ -156,7 +166,7 @@ export function normalizeExifTimestamp(rawValue, offsetText = null) {
   }
   const parsed = new Date(raw);
   if (!Number.isNaN(parsed.getTime())) {
-    if (/(?:Z|[+-]\d{2}:?\d{2})$/i.test(raw)) return parsed.toISOString();
+    if (/(?:Z|[+-]\d{2}:?\d{2})$/i.test(raw) || /\bGMT[+-]\d{4}\b/.test(raw)) return parsed.toISOString();
     const isoMatch = raw.match(/^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2})/);
     if (isoMatch) return `${isoMatch[1]}T${isoMatch[2]}`;
   }
@@ -228,4 +238,116 @@ export function resolveMediaDayAssignment({
     dayNumber: null,
     localCaptureDate: localDate,
   };
+}
+
+const DESTINATION_TZ_RULES = [
+  [/\b(?:honolulu|maui|kauai|oahu|kona|hawaii|hi)\b/i, 'Pacific/Honolulu'],
+  [/\b(?:anchorage|juneau|fairbanks|alaska|ak)\b/i, 'America/Anchorage'],
+  [/\b(?:carmel|monterey|big sur|san francisco|los angeles|san diego|napa|sonoma|santa barbara|palm springs|tahoe|yosemite|california|ca|seattle|portland|astoria|bend|oregon|or|washington|wa|reno|nevada|nv|vancouver|victoria|british columbia)\b/i, 'America/Los_Angeles'],
+  [/\b(?:phoenix|scottsdale|sedona|tucson|arizona|az)\b/i, 'America/Phoenix'],
+  [/\b(?:denver|aspen|vail|boulder|colorado|co|salt lake|park city|moab|utah|ut|bozeman|jackson hole|montana|mt|wyoming|wy|santa fe|albuquerque|new mexico|nm|boise|idaho|id|banff|calgary)\b/i, 'America/Denver'],
+  [/\b(?:chicago|austin|dallas|houston|san antonio|texas|tx|new orleans|louisiana|la|nashville|memphis|tennessee|tn|minneapolis|minnesota|mn|illinois|il|wisconsin|wi|missouri|mo|mexico city|cancun|tulum|playa del carmen)\b/i, 'America/Chicago'],
+  [/\b(?:new york|nyc|manhattan|brooklyn|boston|massachusetts|ma|miami|orlando|key west|tampa|florida|fl|atlanta|savannah|georgia|ga|charleston|south carolina|sc|asheville|charlotte|north carolina|nc|washington,?\s*dc|d\.c\.|virginia|va|philadelphia|pennsylvania|pa|new jersey|nj|maine|me|vermont|vt|toronto|montreal)\b/i, 'America/New_York'],
+  [/\b(?:london|edinburgh|uk|united kingdom|england|scotland|dublin|ireland|lisbon|portugal)\b/i, 'Europe/London'],
+  [/\b(?:paris|france|rome|florence|venice|milan|amalfi|italy|barcelona|madrid|spain|amsterdam|netherlands|zurich|geneva|switzerland|berlin|munich|germany|vienna|austria|prague|copenhagen|stockholm|oslo)\b/i, 'Europe/Paris'],
+  [/\b(?:athens|santorini|mykonos|greece)\b/i, 'Europe/Athens'],
+  [/\b(?:tokyo|kyoto|osaka|japan)\b/i, 'Asia/Tokyo'],
+  [/\b(?:sydney|melbourne|australia)\b/i, 'Australia/Sydney'],
+];
+
+function validIanaTimeZone(value) {
+  const tz = String(value || '').trim();
+  if (!tz) return '';
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: tz });
+    return tz;
+  } catch (error) {
+    void error;
+    return '';
+  }
+}
+
+function inferTimeZoneFromCoords(lat, lng) {
+  const la = Number(lat);
+  const ln = Number(lng);
+  if (!Number.isFinite(la) || !Number.isFinite(ln)) return '';
+  if (la >= 18 && la <= 23 && ln >= -161 && ln <= -154) return 'Pacific/Honolulu';
+  if (la >= 51 && la <= 72 && ln >= -170 && ln <= -129) return 'America/Anchorage';
+  if (la >= 24 && la <= 50 && ln >= -126 && ln <= -114.5) return 'America/Los_Angeles';
+  if (la >= 31 && la <= 37 && ln > -114.5 && ln <= -109) return 'America/Phoenix';
+  if (la >= 24 && la <= 50 && ln > -114.5 && ln <= -102) return 'America/Denver';
+  if (la >= 24 && la <= 50 && ln > -102 && ln <= -85.5) return 'America/Chicago';
+  if (la >= 24 && la <= 50 && ln > -85.5 && ln <= -66) return 'America/New_York';
+  if (la >= 49 && la <= 61 && ln >= -11 && ln <= 2) return 'Europe/London';
+  if (la >= 36 && la <= 56 && ln > 2 && ln <= 20) return 'Europe/Paris';
+  if (la >= 30 && la <= 46 && ln >= 129 && ln <= 146) return 'Asia/Tokyo';
+  return '';
+}
+
+export function inferVacationTimeZone({ timezone = '', timezoneExplicit = false, destination = '', points = [] } = {}) {
+  const explicit = validIanaTimeZone(timezone);
+  if (explicit && (explicit.toUpperCase() !== 'UTC' || timezoneExplicit === true)) {
+    return explicit;
+  }
+  const dest = String(destination || '').trim();
+  if (dest) {
+    for (const [pattern, tz] of DESTINATION_TZ_RULES) {
+      if (pattern.test(dest)) return tz;
+    }
+  }
+  for (const point of Array.isArray(points) ? points : []) {
+    const inferred = inferTimeZoneFromCoords(point?.lat ?? point?.latitude, point?.lng ?? point?.longitude);
+    if (inferred) return inferred;
+  }
+  return explicit || 'UTC';
+}
+
+export function formatLocalClockTime(value, vacationTimeZone = 'UTC') {
+  if (!value) return '';
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return '';
+    const ampm = trimmed.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)$/i);
+    if (ampm) {
+      let hour = Number(ampm[1]);
+      const min = ampm[2] || '00';
+      const meridiem = ampm[3].toLowerCase();
+      if (meridiem === 'pm' && hour < 12) hour += 12;
+      if (meridiem === 'am' && hour === 12) hour = 0;
+      if (hour >= 0 && hour <= 23) return `${String(hour).padStart(2, '0')}:${min}`;
+    }
+    const hhmm = trimmed.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+    if (hhmm) {
+      const hour = Number(hhmm[1]);
+      if (hour >= 0 && hour <= 23) return `${String(hour).padStart(2, '0')}:${hhmm[2]}`;
+    }
+    const localWithOffset = trimmed.match(/^\d{4}-\d{2}-\d{2}[T ](\d{2}):(\d{2})(?::\d{2}(?:\.\d+)?)?([+-]\d{2}:?\d{2})$/);
+    if (localWithOffset) {
+      return `${localWithOffset[1]}:${localWithOffset[2]}`;
+    }
+    const naiveIso = trimmed.match(/^\d{4}-\d{2}-\d{2}[T ](\d{2}):(\d{2})(?::\d{2}(?:\.\d+)?)?$/);
+    if (naiveIso) {
+      return `${naiveIso[1]}:${naiveIso[2]}`;
+    }
+  }
+  const date = value instanceof Date ? value : new Date(String(value));
+  if (Number.isNaN(date.getTime())) return '';
+  const tz = validIanaTimeZone(vacationTimeZone) || 'UTC';
+  try {
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      timeZone: tz,
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).formatToParts(date);
+    const hour = parts.find((part) => part.type === 'hour')?.value;
+    const minute = parts.find((part) => part.type === 'minute')?.value;
+    if (hour && minute) {
+      const h = hour === '24' ? '00' : hour;
+      return `${h}:${minute}`;
+    }
+  } catch (error) {
+    void error;
+  }
+  return `${String(date.getUTCHours()).padStart(2, '0')}:${String(date.getUTCMinutes()).padStart(2, '0')}`;
 }

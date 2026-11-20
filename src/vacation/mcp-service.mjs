@@ -7,8 +7,9 @@ import {
 import { assertVacationScope, ensureVacationMcpSchema } from './mcp-tokens.mjs';
 import { buildDraftImportPreview, buildTargetedEditPreview } from './mcp-preview.mjs';
 import { applyApprovedDraftImport, applyApprovedTargetedEdit } from './mcp-apply.mjs';
-import { asArray, asObject, readLiveVacationDocument } from './mcp-read.mjs';
+import { asArray, asObject, readLiveVacationDocument, vacationShareSlugForRow } from './mcp-read.mjs';
 import { loadScopedChangeSet, loadTripContext } from './mcp-media-service.mjs';
+import { invalidateSharedUpstreamCacheForSlug } from './shared-trip-upstream-cache.mjs';
 
 const WHOLESALE_OVERWRITE_KEYS = new Set([
   'replace_all', 'replace', 'overwrite', 'vacation', 'days',
@@ -188,7 +189,7 @@ export async function handleCommitImport(db, tokenRecord, args = {}) {
       {
         statusCode: 409,
         code: 'preview_hash_mismatch',
-        details: { expected_preview_hash: currentHash, provided_preview_hash: providedHash },
+        details: { provided_preview_hash: providedHash },
       },
     );
   }
@@ -281,7 +282,7 @@ export async function handleUpdateVacation(db, tokenRecord, args = {}) {
       {
         statusCode: 409,
         code: 'preview_hash_mismatch',
-        details: { expected_preview_hash: preview.preview_hash, provided_preview_hash: expectedHash },
+        details: { provided_preview_hash: expectedHash },
       },
     );
   }
@@ -359,13 +360,31 @@ export async function getVacationChangeSetPreview(db, { tripId, changeSetId }) {
   };
 }
 
-export async function approveVacationChangeSet(db, { tripId, changeSetId, actorEmail = 'owner', actorRole = 'owner' }) {
+export async function approveVacationChangeSet(db, {
+  tripId,
+  changeSetId,
+  actorEmail = 'owner',
+  actorRole = 'owner',
+  previewHash = '',
+}) {
   await ensureVacationMcpSchema(db);
   const changeSet = await loadScopedChangeSet(db, { changeSetId, scopedTripId: tripId });
   if (changeSet.status !== 'pending_approval') {
     throw Object.assign(
       new Error(`Only pending_approval change sets can be approved (current status: ${changeSet.status}).`),
       { statusCode: 409, code: 'change_set_not_pending' },
+    );
+  }
+  const providedHash = cleanText(previewHash, 128);
+  const storedHash = cleanText(asObject(changeSet.preview).preview_hash, 128);
+  if (providedHash && storedHash && providedHash !== storedHash) {
+    throw Object.assign(
+      new Error('Preview changed since it was loaded. Refresh the preview before approving.'),
+      {
+        statusCode: 409,
+        code: 'preview_hash_mismatch',
+        details: { provided_preview_hash: providedHash },
+      },
     );
   }
   const mediaRows = await db`
@@ -389,6 +408,10 @@ export async function approveVacationChangeSet(db, { tripId, changeSetId, actorE
       updated_at = now()
     where id = ${changeSet.id}
   `;
+  if (result.shareSlug) invalidateSharedUpstreamCacheForSlug(result.shareSlug);
+  const scopeRows = await db`select id, metadata from trips where id = ${tripId} limit 1`;
+  const scopeSlug = scopeRows[0] ? vacationShareSlugForRow(scopeRows[0]) : '';
+  if (scopeSlug && scopeSlug !== result.shareSlug) invalidateSharedUpstreamCacheForSlug(scopeSlug);
   return {
     ok: true,
     id: String(changeSet.id),

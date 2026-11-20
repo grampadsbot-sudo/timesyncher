@@ -14,7 +14,7 @@ import {
   webAccessCookieName,
   webAccessForSession,
 } from '../src/vacation/web-access.mjs';
-import { setVacationAppOwnerWebAccessCookie } from '../src/vacation/vacation-app-owner-web-access.mjs';
+import { setVacationAppCollaboratorWebAccessCookie, setVacationAppOwnerWebAccessCookie } from '../src/vacation/vacation-app-owner-web-access.mjs';
 import { collaboratorWelcomeTurnExists } from '../src/vacation/collaborator-welcome.mjs';
 import { collaboratorEulaAcceptUrl, loadCollaboratorInviteForWebAccessGrant } from '../src/vacation/collaborators.mjs';
 import bindThingMediaHandler from '../src/vacation/bind-thing-media-handler.mjs';
@@ -33,7 +33,6 @@ import { loadSessionPersistent } from '../src/onboarding/eula-persistent-core.mj
 import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-store.mjs';
 import { customerModality, jevStamp, liveTurnRecord, intakeSpan, firstMarkedIntake, produceLiveAppReply, finishTierRewrite, activityCommitDecisions, applyAgreedAppSwim, applyCustomerNotes, completeRosterParty } from '../src/vacation/live-app-turn.mjs';
 import { queueVacationAppTurn as runQueueVacationAppTurn } from './vacation-app-chat-queue.mjs';
-
 import { cannedWelcomeLiveTurn, missingWelcomeFields, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
 import {
   bindPreTripOnboardingWelcome,
@@ -934,6 +933,7 @@ async function handleVacationApp(req, res, db, url) {
     }
     const tripSiteUrl = selected ? tripWelcomeSiteUrl(selected) : '';
     if (!seat && selected?.id) await setVacationAppOwnerWebAccessCookie(db, req, res, { session, tripId: selected.id });
+    if (seat && selected?.id) await setVacationAppCollaboratorWebAccessCookie(db, req, res, { session, seat, tripId: selected.id });
     return sendJson(res, 200, {
       ok: true,
       session: {

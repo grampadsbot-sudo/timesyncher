@@ -5,7 +5,7 @@ function inviteRow(turnActionResults) {
 }
 
 const TURN_INVITE_PENDING_RULE =
-  'This turn emailed a collaborator invite only. The invitee is pending until they accept. Say the invite was emailed and is pending; do not welcome them by name or say they are joining, on, or confirmed on the trip.';
+  'This turn emailed a collaborator invite only. The invitee is pending until they accept. Say the invite was emailed and is pending; do not welcome them by name or say they are joining, on, or confirmed on the vacation. Always say "vacation", never "trip".';
 
 export function turnInviteReplyFacts(turnActionResults) {
   const invite = inviteRow(turnActionResults);

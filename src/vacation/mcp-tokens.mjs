@@ -2,6 +2,8 @@ import crypto from 'node:crypto';
 import { cleanText } from './http.mjs';
 
 const DEFAULT_UPLOAD_TTL_SECONDS = 900;
+const DEFAULT_TOKEN_TTL_DAYS = 30;
+const MAX_TOKEN_TTL_DAYS = 90;
 
 function tokenSalt(env = process.env) {
   return String(
@@ -134,6 +136,23 @@ function publicTokenView(row) {
   };
 }
 
+function resolveTokenExpiry({ expiresAt = null, expiresInDays = null, now = () => new Date() } = {}) {
+  const currentMs = now().getTime();
+  const maxMs = currentMs + MAX_TOKEN_TTL_DAYS * 86400 * 1000;
+  if (expiresAt) {
+    const parsed = new Date(expiresAt);
+    if (!Number.isNaN(parsed.getTime())) {
+      const clampedMs = Math.min(maxMs, parsed.getTime());
+      return new Date(clampedMs).toISOString();
+    }
+  }
+  const daysRaw = Number(expiresInDays);
+  const days = Number.isFinite(daysRaw) && daysRaw > 0
+    ? Math.min(MAX_TOKEN_TTL_DAYS, Math.max(1 / 24, daysRaw))
+    : DEFAULT_TOKEN_TTL_DAYS;
+  return new Date(currentMs + Math.round(days * 86400 * 1000)).toISOString();
+}
+
 export async function createMcpToken(db, {
   tripId,
   ownerCustomerId = null,
@@ -141,6 +160,8 @@ export async function createMcpToken(db, {
   label = 'AI access',
   role = 'collaborator',
   expiresAt = null,
+  expiresInDays = null,
+  now = () => new Date(),
   env = process.env,
 }) {
   await ensureVacationMcpSchema(db);
@@ -151,6 +172,7 @@ export async function createMcpToken(db, {
   const rawToken = generateRawMcpToken();
   const tokenHash = hashMcpToken(rawToken, env);
   const tokenPrefix = rawToken.slice(0, 10);
+  const effectiveExpiresAt = resolveTokenExpiry({ expiresAt, expiresInDays, now });
   const rows = await db`
     insert into vacation_mcp_tokens (
       trip_id, owner_customer_id, created_by_email, label, role,
@@ -158,7 +180,7 @@ export async function createMcpToken(db, {
     ) values (
       ${scopedTripId}, ${ownerCustomerId || null}, ${cleanText(createdByEmail, 180) || null},
       ${normalizedLabel}, ${normalizedRole}, ${tokenHash}, ${tokenPrefix},
-      'active', ${expiresAt || null}
+      'active', ${effectiveExpiresAt}
     )
     returning *
   `;

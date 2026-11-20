@@ -8,6 +8,7 @@ import { writeRatings } from './write-ratings.mjs';
 import { addressIsSpecific } from './dossier-evidence-hydrate.mjs';
 import { thingDetailOverrideFields } from './thing-detail-fields.mjs';
 import { categoryFor } from './intake-shared-trip-category.mjs';
+import { formatLocalClockTime } from './mcp-exif.mjs';
 
 const MONTHS = {
   jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
@@ -204,6 +205,7 @@ export function thingRecordFromTripRow(row = {}) {
     whenLabel: meta.whenLabel || '',
     customerWhen: meta.customerWhen || '',
     starts_at: row.starts_at || row.startsAt || null,
+    ends_at: row.ends_at || row.endsAt || null,
     notes: Array.isArray(meta.notes) ? meta.notes : [],
     collaboratorNotes: Array.isArray(meta.collaboratorNotes) ? meta.collaboratorNotes : [],
     ratings,
@@ -227,20 +229,36 @@ function textField(value) {
   return String(value || '').trim();
 }
 
+function importedClockTime(explicit, rawIso, tz, isMcp) {
+  const direct = formatLocalClockTime(explicit, tz);
+  if (direct) return direct;
+  if (!rawIso) return '';
+  const isoText = rawIso instanceof Date ? rawIso.toISOString() : String(rawIso).trim();
+  if (isMcp && /T12:00:00(?:\.000)?Z$/i.test(isoText)) return '';
+  return formatLocalClockTime(rawIso, tz);
+}
+
 export function sharedTripFromIntake({ trip, things }) {
-  const start = isoDate(trip?.start_date || trip?.startDate);
-  const end = isoDate(trip?.end_date || trip?.endDate) || start;
+  const tripMeta = trip?.metadata && typeof trip.metadata === 'object' && !Array.isArray(trip.metadata) ? trip.metadata : {};
+  const tripTz = textField(tripMeta.timezone) || 'UTC';
+  const metaDaysByDate = new Map((Array.isArray(tripMeta.days) ? tripMeta.days : []).map((row) => [isoDate(row?.date), row]).filter(([k]) => k));
+  const dayMetaByDate = tripMeta.dayMeta && typeof tripMeta.dayMeta === 'object' && !Array.isArray(tripMeta.dayMeta) ? tripMeta.dayMeta : {};
+  const metaDates = [...metaDaysByDate.keys()].sort();
+  const start = isoDate(trip?.start_date || trip?.startDate) || metaDates[0] || '';
+  const end = isoDate(trip?.end_date || trip?.endDate) || metaDates[metaDates.length - 1] || start;
   const year = start ? Number(start.slice(0, 4)) : null;
   const tripDates = eachDate(start, end);
-  const days = tripDates.map((date, index) => ({
-    id: intId(`${trip.id}:day:${date}`),
-    trip_id: intId(trip.id),
-    day_number: index + 1,
-    date,
-    notes: '',
-    title: '',
-  }));
+  const dayNotes = {};
+  const days = tripDates.map((date, index) => {
+    const id = intId(`${trip.id}:day:${date}`);
+    const metaRow = metaDaysByDate.get(date) || {};
+    const patchRow = dayMetaByDate[date] && typeof dayMetaByDate[date] === 'object' ? dayMetaByDate[date] : {};
+    const dayNote = textField(patchRow.notes ?? metaRow.notes ?? '');
+    if (dayNote) dayNotes[String(id)] = dayNote;
+    return { id, trip_id: intId(trip.id), day_number: index + 1, date, notes: dayNote, title: textField(patchRow.title ?? metaRow.title ?? '') };
+  });
   const dayByDate = new Map(days.map((day, index) => [tripDates[index], day]));
+  const todayIso = new Date().toISOString().slice(0, 10);
   const places = [];
   const assignments = {};
   const thingOverrides = {};
@@ -253,6 +271,28 @@ export function sharedTripFromIntake({ trip, things }) {
     const ratings = writeRatings(thing);
     const sourceRef = sourceRefOf(thing);
     const source = String(thing.source || ratings.source || 'customer');
+    const thingMeta = thingMetadata(thing);
+    const detailOverrides = thingDetailOverrideFields(thing);
+    const isMcpThing = thingMeta.source === 'mcp_import' || thingMeta.source === 'mcp_update';
+    const isUnscheduled = thingMeta.unscheduled === true || thingMeta.timeline === false;
+    const scheduledDates = isUnscheduled ? [] : assignDates(thing, year, tripDates);
+    const itemTz = textField(thingMeta.timezone) || tripTz;
+    const startTime = isUnscheduled
+      ? ''
+      : (isMcpThing
+        ? importedClockTime(thingMeta.startTime || detailOverrides.startTime, thing.starts_at, itemTz, true)
+        : textField(thingMeta.startTime || detailOverrides.startTime));
+    const endTime = isUnscheduled
+      ? ''
+      : (isMcpThing
+        ? importedClockTime(thingMeta.endTime || detailOverrides.endTime, thing.ends_at, itemTz, true)
+        : textField(thingMeta.endTime || detailOverrides.endTime));
+    const explicitStatus = textField(thingMeta.status || detailOverrides.status);
+    const isPastItem = Boolean(
+      (scheduledDates.length && scheduledDates.every((date) => date < todayIso))
+      || (!scheduledDates.length && end && end < todayIso),
+    );
+    const itemStatus = explicitStatus || (isMcpThing && isPastItem ? 'completed' : 'considering');
     places.push({
       id,
       trip_id: intId(trip.id),
@@ -261,7 +301,9 @@ export function sharedTripFromIntake({ trip, things }) {
       category_name: kind.category_name,
       category_icon: kind.category_icon,
       category: { name: kind.category_name, icon: kind.category_icon },
-      reservation_status: 'considering',
+      reservation_status: itemStatus,
+      ...(startTime ? { place_time: startTime } : {}),
+      ...(endTime ? { end_time: endTime } : {}),
       notes,
       source,
       ratings,
@@ -271,23 +313,24 @@ export function sharedTripFromIntake({ trip, things }) {
       ...(thing.logoCaptureReason ? { logoCaptureReason: thing.logoCaptureReason } : {}),
       ...(point ? { lat: point.lat, lng: point.lng, ...(point.address ? { address: point.address } : {}) } : {}),
     });
-    const thingMeta = thingMetadata(thing);
-    const isUnscheduled = thingMeta.unscheduled === true || thingMeta.timeline === false;
     const dayIds = [];
     thingOverrides[`place:${id}`] = {
       timeline: !isUnscheduled,
-      status: 'considering',
+      status: itemStatus,
       category: kind.category,
       source,
       dayIds,
       ...ratings,
-      ...thingDetailOverrideFields(thing),
+      ...detailOverrides,
+      ...(startTime ? { startTime } : {}),
+      ...(endTime ? { endTime } : {}),
+      ...(isMcpThing && notes && !detailOverrides.itineraryNote ? { itineraryNote: notes } : {}),
       ...(sourceRef ? { sourceRef } : {}),
       ...(thing.logoUrl ? { logoUrl: thing.logoUrl } : {}),
       ...(thing.logoCaptureReason ? { logoCaptureReason: thing.logoCaptureReason } : {}),
     };
     if (!isUnscheduled) {
-      for (const date of assignDates(thing, year, tripDates)) {
+      for (const date of scheduledDates) {
         const day = dayByDate.get(date);
         if (!day) continue;
         dayIds.push(day.id);
@@ -336,7 +379,7 @@ export function sharedTripFromIntake({ trip, things }) {
     },
     days,
     assignments,
-    dayNotes: {},
+    dayNotes,
     places,
     categories,
     permissions: {

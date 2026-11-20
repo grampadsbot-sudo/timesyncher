@@ -441,6 +441,7 @@ export async function webAccessForSession(db, {
           or trips.metadata->>'publicSlug' = ${normalizedShareToken}
           or trips.metadata->>'source_token' = ${normalizedShareToken}
           or trips.metadata->>'slug' = ${normalizedShareToken}
+          or ('intake-' || left(replace(trips.id::text, '-', ''), 12)) = lower(${normalizedShareToken})
         )
       limit 1
     `;

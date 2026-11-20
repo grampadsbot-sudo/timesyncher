@@ -13,6 +13,7 @@ import { applyTripMetadataBudgetTargets } from './shared-trip-api-budget.mjs';
 import { applyStoredDossiersToSharedTrip } from './shared-trip-dossier-overlay.mjs';
 import { scheduleMissingEvidenceCapturesForTrip } from './thing-evidence-capture-trigger.mjs';
 import { finalizeServedSharedTripPayload, projectServedBoundaryLogosForHttp } from './shared-trip-served-page.mjs';
+import { mergeBindingsIntoShared } from './thing-media-bind.mjs';
 import { sharedTripEditAccessFromRequest } from './web-access.mjs';
 
 let sharedTripDatabase = null;
@@ -110,13 +111,56 @@ async function loadIntakeTripRow(shareToken, db) {
   return trip;
 }
 
+async function loadIntakeMediaBindings(shareToken, shared, db) {
+  let rows = [];
+  try {
+    rows = await db`
+      select id, share_token, trek_trip_id, trek_place_id, thing_name, trek_day_id, day_number,
+        caption, media_kind, mime_type, original_name, file_size_bytes, public_url,
+        storage_provider, trek_apply_status, created_at
+      from thing_media_bindings
+      where share_token = ${shareToken}
+      order by created_at asc
+    `;
+  } catch (error) {
+    void error;
+    return shared;
+  }
+  if (!Array.isArray(rows) || !rows.length) return shared;
+  const dayIdByNumber = new Map((shared.days || []).map((day) => [Number(day.day_number), day.id]));
+  const priorImageUrls = new Map((shared.places || []).map((place) => [Number(place.id), place.image_url]));
+  const normalized = rows.map((row) => ({
+    ...row,
+    trek_day_id: row.trek_day_id || (row.day_number ? dayIdByNumber.get(Number(row.day_number)) || null : null),
+  }));
+  const merged = mergeBindingsIntoShared(shared, normalized);
+  for (const place of merged.places || []) {
+    const priorUrl = priorImageUrls.get(Number(place.id));
+    if (priorUrl === undefined) delete place.image_url;
+    else place.image_url = priorUrl;
+  }
+  const boundByPlaceId = new Map((merged.places || []).map((place) => [Number(place.id), place.bound_media]));
+  if (merged.assignments && typeof merged.assignments === 'object') {
+    for (const list of Object.values(merged.assignments)) {
+      for (const entry of Array.isArray(list) ? list : []) {
+        const pid = Number(entry?.place?.id ?? entry?.place_id);
+        const bound = boundByPlaceId.get(pid);
+        if (bound && entry?.place) {
+          entry.place = { ...entry.place, bound_media: bound, media: bound };
+        }
+      }
+    }
+  }
+  return merged;
+}
+
 export async function intakeSharedResponse(shareToken, db = null) {
   if (!shareToken || !shareToken.startsWith('intake-')) return null;
   if (!db) db = openSharedDb();
   const trip = await loadIntakeTripRow(shareToken, db);
   if (!trip) return null;
   const things = await db`
-    select id, category, title, description, metadata, ratings, location, source, starts_at
+    select id, category, title, description, metadata, ratings, location, source, starts_at, ends_at
     from trip_things
     where trip_id = ${trip.id}
     order by created_at asc
@@ -130,13 +174,15 @@ export async function intakeSharedResponse(shareToken, db = null) {
       endDate: trip.end_date,
       timeoutMs: 2000,
     });
-  } catch {
+  } catch (error) {
+    void error;
     forecast = [];
   }
   const presented = applyThingPresentation({ ...shared, forecast: Array.isArray(forecast) ? forecast : [] });
   const captured = applyCapturedLogos(presented);
   const withBudgetTargets = applyTripMetadataBudgetTargets(captured, trip);
   const withDossiers = await applyStoredDossiersToSharedTrip(withBudgetTargets, { env: process.env });
+  const withBindings = await loadIntakeMediaBindings(shareToken, withDossiers, db);
   void scheduleMissingEvidenceCapturesForTrip({
     trip,
     things: mappedThings,
@@ -144,7 +190,7 @@ export async function intakeSharedResponse(shareToken, db = null) {
   }).catch((error) => {
     logSharedTripFailure('thing_evidence_capture_schedule_failed', intakeShareSlug(trip.id), error);
   });
-  return finalizeServedSharedTripPayload(withDossiers);
+  return finalizeServedSharedTripPayload(withBindings);
 }
 
 function sharedPayloadHasPlaces(payload) {
@@ -227,7 +273,12 @@ function sendSlugMiss(res, shareToken) {
 async function respondSharedTripGet(req, res, shareToken) {
   try {
     const payload = await loadSharedTripPayload(shareToken, req);
-    if (payload) return sendSharedTripPayload(res, 200, payload);
+    if (payload) {
+      if (String(shareToken || '').startsWith('intake-')) {
+        return sendJson(res, 200, projectServedBoundaryLogosForHttp(payload));
+      }
+      return sendSharedTripPayload(res, 200, payload);
+    }
     if (String(shareToken || '').startsWith('intake-')) return sendSlugMiss(res, shareToken);
     if (cleanText(process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL)) {
       const upstream = await readUpstreamSharedResponse(shareToken, req);
@@ -328,7 +379,6 @@ export default async function handler(req, res) {
   const trekPath = trekPathFromReq(req);
   const shareToken = shareTokenFromTrekPath(trekPath);
   if (isShareEditAccess(req.method, trekPath)) {
-    if (String(shareToken || '').startsWith('intake-')) return sendJson(res, 200, { canEdit: false });
     return respondShareEditAccess(req, res, shareToken);
   }
   if (isSharedTripGet(req.method, trekPath)) {

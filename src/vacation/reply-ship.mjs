@@ -142,7 +142,13 @@ export async function persistVacationAppOutboundReply({
     )
     values (
       ${transcriptOwnerId}, ${tripId}, ${requestId}, 'app', 'vacation-app', ${produced.reply},
-      ${{ source: 'vacation_app', surface: 'vacation-app', selectedTripId: tripId, liveTranscript: appLive }},
+      ${{
+        source: 'vacation_app',
+        surface: 'vacation-app',
+        selectedTripId: tripId,
+        liveTranscript: appLive,
+        ...(base?.turnActionResults?.invite?.ok === false ? { inviteActionFailed: true } : {}),
+      }},
       'outbound', now(), ${exchangeLatency}
     )
   `;
@@ -259,7 +265,13 @@ export async function commitShippedRewrite(db, session, pending, finished, { rec
     )
     values (
       ${transcriptCustomerId(session)}, ${pending.tripId}, ${pending.requestId}, 'app', 'vacation-app', ${finished.reply},
-      ${{ source: 'vacation_app', surface: 'vacation-app', selectedTripId: pending.tripId, liveTranscript: appLive }},
+      ${{
+        source: 'vacation_app',
+        surface: 'vacation-app',
+        selectedTripId: pending.tripId,
+        liveTranscript: appLive,
+        ...(pending?.turnActionResults?.invite?.ok === false ? { inviteActionFailed: true } : {}),
+      }},
       'outbound', now(), ${wallMs}
     )
   `;

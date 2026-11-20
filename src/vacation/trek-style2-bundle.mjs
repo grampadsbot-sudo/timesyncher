@@ -25,7 +25,7 @@ import { patchTimelineItineraryNote } from './trek-timeline-itinerary-note-patch
 import { patchThingDetail951, patchThingDetail964In951 } from './trek-thing-detail-951-patch.mjs';
 import { patchDetailEditState } from './trek-detail-edit-state-patch.mjs'; import { patchThingDetailV3 } from './trek-thing-detail-v3-patch.mjs';
 import { patchUi734Round1, patchUi734Round2, patchUi735SharedPdf } from './trek-ui-734-round1-patch.mjs';
-import { patchUi737 } from './trek-ui-737-patch.mjs'; import { patchUi754 } from './trek-ui-754-patch.mjs'; import { patchVk890Rebrand } from './trek-vk-890-rebrand-patch.mjs'; import { patchVk980TotalPrice } from './trek-vk-980-total-price-patch.mjs'; import { patchVk982TravelNoRating } from './trek-vk-982-travel-no-rating-patch.mjs'; import { patchVk994FlightTitles } from './trek-vk-994-flight-title-patch.mjs'; const SERVED_BUNDLE = new URL('../../public/assets/index-BKun7ofk.js', import.meta.url);
+import { patchUi737 } from './trek-ui-737-patch.mjs'; import { patchUi754 } from './trek-ui-754-patch.mjs'; import { patchVk890Rebrand } from './trek-vk-890-rebrand-patch.mjs'; import { patchVk980TotalPrice } from './trek-vk-980-total-price-patch.mjs'; import { patchVk982TravelNoRating } from './trek-vk-982-travel-no-rating-patch.mjs'; import { patchVk994FlightTitles } from './trek-vk-994-flight-title-patch.mjs'; import { patchVk1066McpUi } from './trek-vk-1066-mcp-ui-patch.mjs'; const SERVED_BUNDLE = new URL('../../public/assets/index-BKun7ofk.js', import.meta.url);
 const ZU_STYLE2 = 'G==="keepsake-style-2"?zu()';
 const AE_STYLE2 = 'G==="keepsake-style-2"?Ae(!0)';
 export const STYLE2_USES_ZU = ZU_STYLE2; export const STYLE2_USES_AE = AE_STYLE2;
@@ -242,7 +242,7 @@ const CO_PATCH =
   'Co=G=>{const d=ha(G)||{};return String(d.description??(G&&G.description)??"")}';
 
 const MN_CATEGORY_NEEDLE = 'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("car")||Re.includes("rental")?"car":Re.includes("hotel")?"hotel":';
-const MN_CATEGORY_PATCH = 'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("restaurant")?"restaurant":Re.includes("hotel")||Re.includes("lodging")||Re.includes("accommodation")||Re.includes("resort")?"hotel":Re.includes("car")||Re.includes("rental")?"car":';
+const MN_CATEGORY_PATCH = 'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("restaurant")?"restaurant":Re.includes("hotel")||Re.includes("lodging")||Re.includes("accommodation")||Re.includes("resort")?"hotel":/\\bcar\\b/.test(Re)||Re.includes("rental")?"car":';
 
 const IT_CATEGORY_NEEDLE = 'It=G=>Mn(ha(G).category??Fn(G))';
 const IT_CATEGORY_PATCH = 'It=G=>Mn(ha(G).category??(typeof G.category==="string"?G.category:G.category&&G.category.name)??G.category_name??Fn(G))';
@@ -513,7 +513,7 @@ export function renderServedTrekBundle(raw) {
   assertServedBundleClean(js);
   const finalJs = patchUi903DetailChrome(patchVk890Rebrand(patchUi754(patchUi737(patchUi735SharedPdf(patchTimelineItineraryNote(patchUi734Round2(patchUi734Round1(patchInlineListRowDescriptionOnThingHeader(patchSharedTripListWrapping(patchStarRatings(patchThingDetailCapture(js))))))))))));
   const servedJs = patchStarRatingThingKeys(patchThingDetail951(patchListRowDescription(finalJs)));
-  return patchDetailEditState(patchVk994FlightTitles(patchVk982TravelNoRating(patchUi903DetailChrome(patchDetailSubstanceHarness(patchThingDetailV3(patchVk980TotalPrice(patchListRowDates(patchThingDetail964In951(servedJs)))))))));
+  return patchVk1066McpUi(patchDetailEditState(patchVk994FlightTitles(patchVk982TravelNoRating(patchUi903DetailChrome(patchDetailSubstanceHarness(patchThingDetailV3(patchVk980TotalPrice(patchListRowDates(patchThingDetail964In951(servedJs))))))))));
 }
 
 function endOfCall(text, callStart) {

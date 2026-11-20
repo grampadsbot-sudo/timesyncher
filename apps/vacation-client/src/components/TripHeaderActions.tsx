@@ -211,7 +211,7 @@ export function TripHeaderActions({
         {configOpen ? (
           <div className="tsv-header-popover tsv-header-popover-wide" role="menu">
             <p className="tsv-header-popover-title" role="presentation">
-              Trip View
+              Vacation View
             </p>
             {(['flights', 'hotels', 'cars'] as const).map((key) => (
               <label key={key} className="tsv-header-config-row" role="menuitemcheckbox">

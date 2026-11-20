@@ -1,13 +1,13 @@
 import { cleanText } from './http.mjs';
 import { putMediaBlob } from './thing-media-store.mjs';
-import { extractExifFromBuffer, resolveMediaDayAssignment } from './mcp-exif.mjs';
+import { extractExifFromBuffer, inferVacationTimeZone, resolveMediaDayAssignment } from './mcp-exif.mjs';
 import {
   assertVacationScope,
   ensureVacationMcpSchema,
   signMediaUploadUrl,
   verifyMediaUploadSignature,
 } from './mcp-tokens.mjs';
-import { asArray, asObject, enumerateVacationDates, recordVacationMediaUsage } from './mcp-read.mjs';
+import { asArray, asObject, enumerateVacationDates, isoDateOnly, recordVacationMediaUsage } from './mcp-read.mjs';
 
 const FORBIDDEN_MEDIA_BYTE_KEYS = new Set([
   'bytes', 'data', 'base64', 'content', 'dataurl', 'data_url',
@@ -63,17 +63,25 @@ async function resolveTimeZoneAndDates(db, { scopeTripId, changeSetId = null, fa
     const csRows = await db`select payload from vacation_mcp_change_sets where id = ${changeSetId} limit 1`;
     const draft = asObject(csRows[0]?.payload);
     const vac = asObject(draft.vacation);
-    const draftDays = asArray(draft.days).map((d) => String(d?.date || '').slice(0, 10)).filter(Boolean);
+    const draftDays = asArray(draft.days).map((d) => isoDateOnly(d?.date)).filter(Boolean);
     const dayDates = draftDays.length ? draftDays : enumerateVacationDates(vac.start_date, vac.end_date);
-    const timeZone = cleanText(vac.timezone || fallbackTimeZone, 80) || 'UTC';
+    const timeZone = inferVacationTimeZone({
+      timezone: cleanText(vac.timezone || fallbackTimeZone, 80),
+      timezoneExplicit: Boolean(cleanText(vac.timezone || fallbackTimeZone, 80)),
+      destination: cleanText(vac.destination || vac.title, 180),
+    });
     if (dayDates.length) return { timeZone, dayDates };
   }
-  const tripRows = await db`select start_date, end_date, metadata from trips where id = ${scopeTripId} limit 1`;
+  const tripRows = await db`select title, destination, start_date, end_date, metadata from trips where id = ${scopeTripId} limit 1`;
   const trip = tripRows[0];
   const meta = asObject(trip?.metadata);
-  const metaDays = asArray(meta.days).map((d) => String(d?.date || '').slice(0, 10)).filter(Boolean);
+  const metaDays = asArray(meta.days).map((d) => isoDateOnly(d?.date)).filter(Boolean);
   const dayDates = metaDays.length ? metaDays : enumerateVacationDates(trip?.start_date, trip?.end_date);
-  const timeZone = cleanText(meta.timezone || fallbackTimeZone, 80) || 'UTC';
+  const timeZone = inferVacationTimeZone({
+    timezone: cleanText(meta.timezone || fallbackTimeZone, 80),
+    timezoneExplicit: meta.timezoneExplicit === true,
+    destination: cleanText(trip?.destination || trip?.title, 180),
+  });
   return { timeZone, dayDates };
 }
 
@@ -124,8 +132,12 @@ export async function handleUploadMedia(db, tokenRecord, args = {}, {
         fallbackTimeZone: cleanText(args.timezone, 80),
       });
       const exifRaw = asObject(row.exif_raw);
+      const hasOffset = Boolean(exifRaw.offsetText) || (typeof exifRaw.capturedAtIso === 'string' && /(?:Z|[+-]\d{2}:?\d{2})$/i.test(exifRaw.capturedAtIso));
+      const capturedForMatch = !hasOffset && exifRaw.capturedAtRaw
+        ? exifRaw.capturedAtRaw
+        : (row.exif_captured_at || exifRaw.capturedAtIso || exifRaw.capturedAtRaw || null);
       const assignment = resolveMediaDayAssignment({
-        capturedAt: row.exif_captured_at || exifRaw.capturedAtRaw || null,
+        capturedAt: capturedForMatch,
         offsetText: exifRaw.offsetText || null,
         vacationTimeZone: timeZone,
         dayDates,

@@ -97,12 +97,12 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
     [changes, selectedId],
   );
 
-  async function handleApprove(changeSetId: string) {
+  async function handleApprove(changeSetId: string, previewHash?: string) {
     setBusyId(changeSetId);
     setError('');
     setNotice('');
     try {
-      await approveMcpChange(shareToken, changeSetId);
+      await approveMcpChange(shareToken, changeSetId, previewHash);
       setNotice('Approved and applied to this vacation.');
       await refreshData();
       onApproved();
@@ -372,7 +372,7 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
                             type="button"
                             className="tsv-header-btn tsv-mcp-btn-approve"
                             disabled={busyId === selected.id}
-                            onClick={() => void handleApprove(selected.id)}
+                            onClick={() => void handleApprove(selected.id, previewView.previewHash)}
                           >
                             Approve
                           </button>
@@ -446,6 +446,7 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
                       <strong>{item.label}</strong> ({item.role}) · <code>{item.tokenPrefix}…</code>
                       <div className="tsv-mcp-item-meta">
                         {item.status === 'active' ? 'Active' : 'Revoked'}
+                        {item.expiresAt ? ` · Expires ${item.expiresAt.slice(0, 10)}` : ''}
                       </div>
                     </div>
                     {item.status === 'active' ? (
