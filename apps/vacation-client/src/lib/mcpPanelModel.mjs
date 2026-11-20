@@ -17,12 +17,62 @@ export function formatMediaBytes(bytes) {
   return `${(value / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+export function formatMediaMatchLabel(media) {
+  const parts = [];
+  const dayDate = media?.attached_day_date || media?.assigned_day_date || null;
+  const dayNumber = media?.attached_day_number ?? media?.assigned_day_number ?? null;
+  if (dayDate) {
+    parts.push(`Day ${dayNumber || ''} (${dayDate})`.replace('Day  ', 'Day '));
+  }
+  if (media?.attached_thing_title) {
+    const scope = media.attached_thing_scheduled === false ? 'unscheduled' : 'item';
+    parts.push(`${media.attached_thing_title} (${scope})`);
+  }
+  if (!parts.length) parts.push('Unassigned');
+  const exif = media?.exif_match || {};
+  const matchNotes = [];
+  if (exif.time_matched) matchNotes.push('EXIF time');
+  if (exif.gps_matched) {
+    const dist = Number.isFinite(Number(exif.gps_distance_meters)) ? ` ${exif.gps_distance_meters}m` : '';
+    matchNotes.push(`EXIF GPS${dist}`);
+  }
+  if (matchNotes.length) parts.push(matchNotes.join(' + '));
+  return parts.join(' · ');
+}
+
+export function extractApprovalPreviewView(changeSet) {
+  const preview = changeSet?.preview || {};
+  const days = Array.isArray(preview.days)
+    ? preview.days
+    : (Array.isArray(preview.will_create?.days) ? preview.will_create.days : []);
+  const unscheduledThings = Array.isArray(preview.unscheduled_things)
+    ? preview.unscheduled_things
+    : (Array.isArray(preview.will_create?.unscheduled_things) ? preview.will_create.unscheduled_things : []);
+  const media = Array.isArray(preview.media)
+    ? preview.media
+    : (Array.isArray(preview.will_create?.media)
+      ? preview.will_create.media
+      : (Array.isArray(preview.will_attach_media) ? preview.will_attach_media : []));
+  const totalBytes = Number.isFinite(Number(preview.total_bytes))
+    ? Number(preview.total_bytes)
+    : media.reduce((sum, item) => sum + Number(item?.bytes || 0), 0);
+  const previewHash = String(preview.preview_hash || changeSet?.previewHash || '');
+  return {
+    previewHash,
+    days,
+    unscheduledThings,
+    media,
+    totalBytes,
+  };
+}
+
 export function previewSummaryBullets(changeSet) {
   const preview = changeSet?.preview || {};
   const lines = [];
   if (preview.kind === 'targeted_edit') {
     for (const item of preview.will_add || []) {
-      lines.push(`Add ${item.category || 'item'}: ${item.title || 'Untitled'}`);
+      const tag = item.scheduled === false ? ' (unscheduled)' : '';
+      lines.push(`Add ${item.category || 'item'}: ${item.title || 'Untitled'}${tag}`);
     }
     for (const item of preview.will_update || []) {
       const fields = Array.isArray(item.changed_fields) ? item.changed_fields.join(', ') : '';
@@ -49,8 +99,10 @@ export function previewSummaryBullets(changeSet) {
     ['hotels', 'Hotels'],
     ['cars', 'Cars'],
     ['restaurants', 'Restaurants'],
+    ['stores', 'Stores'],
     ['things_to_do', 'Activities'],
     ['notes', 'Notes'],
+    ['unscheduled_things', 'Unscheduled long-list Things'],
     ['media', 'Photos & videos'],
   ];
   for (const [key, label] of sectionLabels) {

@@ -120,9 +120,10 @@ async function test_A2_draft_import_staged_until_approve() {
   const preview = previewRes.json.result.structuredContent.preview;
   assert.equal(preview.will_create.vacation.title, 'Astoria Coast Weekend');
   assert.equal(preview.counts.media, 1);
+  assert.ok(preview.preview_hash);
   assert.equal(db.liveSnapshot(), liveBefore);
 
-  const commitRes = await mcpRpc('tools/call', { name: 'commit_import', arguments: { draft_id: draftId } }, token);
+  const commitRes = await mcpRpc('tools/call', { name: 'commit_import', arguments: { draft_id: draftId, preview_hash: preview.preview_hash } }, token);
   assert.equal(commitRes.json.result.structuredContent.status, 'pending_approval');
   assert.equal(commitRes.json.result.structuredContent.published, false);
   assert.equal(db.liveSnapshot(), liveBefore);
@@ -157,7 +158,8 @@ async function test_A3_decline_leaves_live_unchanged() {
   const liveBefore = db.liveSnapshot();
   const startRes = await mcpRpc('tools/call', { name: 'start_import', arguments: VACATION_IMPORT_EXAMPLE }, token);
   const draftId = startRes.json.result.structuredContent.draft_id;
-  await mcpRpc('tools/call', { name: 'commit_import', arguments: { draft_id: draftId } }, token);
+  const previewHash = (await mcpRpc('tools/call', { name: 'preview_import', arguments: { draft_id: draftId } }, token)).json.result.structuredContent.preview_hash;
+  await mcpRpc('tools/call', { name: 'commit_import', arguments: { draft_id: draftId, preview_hash: previewHash } }, token);
 
   const declineRes = await invokeRoute(apiHandler, {
     method: 'POST',
@@ -354,6 +356,7 @@ async function test_A9_copy_rules_no_trip_travel_si() {
     '../src/vacation/mcp-schema.mjs',
     '../src/vacation/mcp-tools.mjs',
     '../src/vacation/mcp-preview.mjs',
+    '../src/vacation/mcp-preview-common.mjs',
     '../apps/vacation-client/src/components/McpApprovalPanel.tsx',
     '../apps/vacation-client/src/lib/mcpPanelModel.mjs',
     '../apps/vacation-client/src/api/mcpAdmin.ts',

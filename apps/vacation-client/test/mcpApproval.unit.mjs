@@ -2,7 +2,9 @@ import assert from 'node:assert/strict';
 import {
   changeSetKindLabel,
   changeSetStatusLabel,
+  extractApprovalPreviewView,
   formatMediaBytes,
+  formatMediaMatchLabel,
   previewSummaryBullets,
   sortChangeSetsForReview,
 } from '../src/lib/mcpPanelModel.mjs';
@@ -53,10 +55,39 @@ const sorted = sortChangeSetsForReview([
 ]);
 assert.deepEqual(sorted.map((item) => item.id), ['2', '3', '1']);
 
+const previewView = extractApprovalPreviewView({
+  previewHash: 'abc123',
+  preview: {
+    preview_hash: 'abc123',
+    days: [{ day_number: 1, date: '2026-07-03', title: 'Arrival', items: [{ title: 'Harbor Cafe', scheduled: true }] }],
+    unscheduled_things: [{ category: 'store', title: 'River Books', scheduled: false }],
+    media: [{
+      media_id: 'm1',
+      filename: 'sunset.jpg',
+      bytes: 4096,
+      attached_day_date: '2026-07-03',
+      attached_day_number: 1,
+      attached_thing_title: 'Harbor Cafe',
+      attached_thing_scheduled: true,
+      exif_match: { time_matched: true, gps_matched: true, gps_distance_meters: 18 },
+    }],
+    total_bytes: 4096,
+  },
+});
+assert.equal(previewView.previewHash, 'abc123');
+assert.equal(previewView.days.length, 1);
+assert.equal(previewView.unscheduledThings.length, 1);
+assert.equal(previewView.totalBytes, 4096);
+const mediaLabel = formatMediaMatchLabel(previewView.media[0]);
+assert.match(mediaLabel, /Day 1 \(2026-07-03\)/);
+assert.match(mediaLabel, /Harbor Cafe/);
+assert.match(mediaLabel, /EXIF time \+ EXIF GPS 18m/);
+
 const joined = [
   changeSetStatusLabel('pending_approval'),
   changeSetKindLabel('draft_import'),
   changeSetKindLabel('targeted_edit'),
+  mediaLabel,
   ...draftBullets,
   ...editBullets,
 ].join(' ');

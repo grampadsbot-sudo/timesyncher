@@ -12,22 +12,75 @@ export type McpTokenRecord = {
   expiresAt: string | null;
 };
 
+export type McpPreviewExifMatch = {
+  captured_at?: string | null;
+  local_date?: string | null;
+  timezone?: string;
+  time_matched?: boolean;
+  matched_day_date?: string | null;
+  matched_day_number?: number | null;
+  lat?: number | null;
+  lng?: number | null;
+  gps_matched?: boolean;
+  gps_distance_meters?: number | null;
+  gps_matched_thing_ref?: string | null;
+  gps_matched_thing_title?: string | null;
+  match_reason?: string;
+};
+
 export type McpPreviewMedia = {
   media_id: string;
   filename: string;
   media_kind?: string;
+  mime_type?: string;
   bytes?: number;
   upload_status?: string;
   assignment_bucket?: string;
   assigned_day_date?: string | null;
   assigned_day_number?: number | null;
+  attached_day_date?: string | null;
+  attached_day_number?: number | null;
+  target_thing_ref?: string | null;
+  attached_thing_ref?: string | null;
+  attached_thing_title?: string | null;
+  attached_thing_scheduled?: boolean | null;
   caption?: string | null;
+  exif_match?: McpPreviewExifMatch;
+};
+
+export type McpPreviewLandingItem = {
+  id?: string;
+  ref?: string | null;
+  category?: string;
+  title?: string;
+  description?: string | null;
+  scheduled?: boolean;
+  day_date?: string | null;
+  starts_at?: string | null;
+  total_price_cents?: number | null;
+  currency?: string;
+  media?: McpPreviewMedia[];
+};
+
+export type McpPreviewDay = {
+  day_number?: number;
+  date?: string;
+  title?: string;
+  notes?: string;
+  items?: McpPreviewLandingItem[];
+  media?: McpPreviewMedia[];
 };
 
 export type McpChangePreview = {
   kind?: string;
+  preview_hash?: string;
   summary_text?: string;
   counts?: Record<string, number>;
+  days?: McpPreviewDay[];
+  unscheduled_things?: McpPreviewLandingItem[];
+  media?: McpPreviewMedia[];
+  media_count?: number;
+  total_bytes?: number;
   will_create?: {
     vacation?: {
       title?: string;
@@ -37,20 +90,22 @@ export type McpChangePreview = {
       timezone?: string;
       summary?: string;
     };
-    days?: Array<{ day_number?: number; date?: string; title?: string }>;
+    days?: McpPreviewDay[];
     flights?: Array<{ title?: string; day_date?: string | null }>;
     hotels?: Array<{ title?: string; check_in?: string | null; check_out?: string | null }>;
     cars?: Array<{ title?: string }>;
     restaurants?: Array<{ title?: string; day_date?: string | null }>;
+    stores?: Array<{ title?: string; day_date?: string | null }>;
     things_to_do?: Array<{ title?: string; day_date?: string | null }>;
     notes?: Array<{ title?: string; day_date?: string | null }>;
+    unscheduled_things?: McpPreviewLandingItem[];
     media?: McpPreviewMedia[];
   };
-  will_add?: Array<{ category?: string; title?: string; day_date?: string | null }>;
+  will_add?: Array<{ category?: string; title?: string; day_date?: string | null; scheduled?: boolean }>;
   will_update?: Array<{ item_id?: string; current_title?: string; changed_fields?: string[] }>;
   will_remove?: Array<{ item_id?: string; title?: string; category?: string }>;
   day_updates?: Array<{ day_date?: string; changed_fields?: string[] }>;
-  will_attach_media?: Array<{ media_id?: string; filename?: string; day_date?: string | null }>;
+  will_attach_media?: McpPreviewMedia[];
   missing?: string[];
   conflicts?: string[];
 };
@@ -63,6 +118,7 @@ export type McpChangeSet = {
   applyMode: string;
   status: 'draft' | 'pending_approval' | 'approved' | 'declined';
   summary: string;
+  previewHash?: string | null;
   preview: McpChangePreview;
   committedAt: string | null;
   reviewedAt: string | null;

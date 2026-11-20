@@ -271,9 +271,11 @@ export function sharedTripFromIntake({ trip, things }) {
       ...(thing.logoCaptureReason ? { logoCaptureReason: thing.logoCaptureReason } : {}),
       ...(point ? { lat: point.lat, lng: point.lng, ...(point.address ? { address: point.address } : {}) } : {}),
     });
+    const thingMeta = thingMetadata(thing);
+    const isUnscheduled = thingMeta.unscheduled === true || thingMeta.timeline === false;
     const dayIds = [];
     thingOverrides[`place:${id}`] = {
-      timeline: true,
+      timeline: !isUnscheduled,
       status: 'considering',
       category: kind.category,
       source,
@@ -284,21 +286,23 @@ export function sharedTripFromIntake({ trip, things }) {
       ...(thing.logoUrl ? { logoUrl: thing.logoUrl } : {}),
       ...(thing.logoCaptureReason ? { logoCaptureReason: thing.logoCaptureReason } : {}),
     };
-    for (const date of assignDates(thing, year, tripDates)) {
-      const day = dayByDate.get(date);
-      if (!day) continue;
-      dayIds.push(day.id);
-      const key = String(day.id);
-      const rows = assignments[key] || [];
-      rows.push({
-        id: intId(`${thing.id}:${date}`),
-        day_id: day.id,
-        order_index: rows.length,
-        notes,
-        place_id: id,
-        place: places[places.length - 1],
-      });
-      assignments[key] = rows;
+    if (!isUnscheduled) {
+      for (const date of assignDates(thing, year, tripDates)) {
+        const day = dayByDate.get(date);
+        if (!day) continue;
+        dayIds.push(day.id);
+        const key = String(day.id);
+        const rows = assignments[key] || [];
+        rows.push({
+          id: intId(`${thing.id}:${date}`),
+          day_id: day.id,
+          order_index: rows.length,
+          notes,
+          place_id: id,
+          place: places[places.length - 1],
+        });
+        assignments[key] = rows;
+      }
     }
   }
   const categoryRegistry = new Map();

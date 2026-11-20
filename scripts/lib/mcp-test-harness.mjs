@@ -14,6 +14,9 @@ function clone(value) {
 }
 
 export function createMcpTestDb() {
+  if (!process.env.TIMESYNCHER_SITE_BASE_URL && !process.env.TIMESYNCHER_TRAVEL_BASE_URL) {
+    process.env.TIMESYNCHER_SITE_BASE_URL = 'https://vacation-staging.timesyncher.com';
+  }
   const tables = {
     customers: [],
     trips: [],
@@ -33,22 +36,7 @@ export function createMcpTestDb() {
     if (/^(create|alter)\s/.test(text)) return Promise.resolve([]);
 
     if (text.startsWith('insert into vacation_mcp_tokens')) {
-      const row = {
-        id: crypto.randomUUID(),
-        trip_id: String(values[0]),
-        owner_customer_id: values[1] ? String(values[1]) : null,
-        created_by_email: values[2] || null,
-        label: String(values[3] || 'AI access'),
-        role: String(values[4] || 'collaborator'),
-        token_hash: String(values[5]),
-        token_prefix: String(values[6]),
-        status: 'active',
-        created_at: nowIso,
-        last_used_at: null,
-        revoked_at: null,
-        expires_at: values[7] || null,
-        metadata: {},
-      };
+      const row = { id: crypto.randomUUID(), trip_id: String(values[0]), owner_customer_id: values[1] ? String(values[1]) : null, created_by_email: values[2] || null, label: String(values[3] || 'AI access'), role: String(values[4] || 'collaborator'), token_hash: String(values[5]), token_prefix: String(values[6]), status: 'active', created_at: nowIso, last_used_at: null, revoked_at: null, expires_at: values[7] || null, metadata: {} };
       tables.vacation_mcp_tokens.push(row);
       return Promise.resolve([clone(row)]);
     }
@@ -139,6 +127,19 @@ export function createMcpTestDb() {
       return Promise.resolve(tables.vacation_mcp_change_sets.filter((r) => String(r.scope_trip_id) === String(values[0])).map(clone));
     }
 
+    if (text.startsWith('update vacation_mcp_change_sets set payload =')) {
+      const found = tables.vacation_mcp_change_sets.find((r) => String(r.id) === String(values[5]));
+      if (found) {
+        found.payload = clone(values[0]);
+        found.preview = clone(values[1]);
+        found.summary = String(values[2] || '');
+        found.apply_mode = String(values[3] || found.apply_mode);
+        found.target_trip_id = values[4] ? String(values[4]) : null;
+        found.updated_at = nowIso;
+      }
+      return Promise.resolve([]);
+    }
+
     if (text.startsWith('update vacation_mcp_change_sets set preview =')) {
       const found = tables.vacation_mcp_change_sets.find((r) => String(r.id) === String(values[2]));
       if (found) { found.preview = clone(values[0]); found.summary = String(values[1] || ''); found.updated_at = nowIso; }
@@ -164,34 +165,7 @@ export function createMcpTestDb() {
     }
 
     if (text.startsWith('insert into vacation_mcp_draft_media')) {
-      const row = {
-        id: crypto.randomUUID(),
-        scope_trip_id: String(values[0]),
-        change_set_id: values[1] ? String(values[1]) : null,
-        filename: String(values[2]),
-        mime_type: String(values[3]),
-        media_kind: String(values[4]),
-        expected_bytes: values[5] ?? null,
-        actual_bytes: 0,
-        upload_status: 'signed',
-        upload_token_hash: String(values[6]),
-        upload_expires_at: String(values[7]),
-        storage_provider: 'pending',
-        storage_pathname: null,
-        public_url: null,
-        caption: values[8] || null,
-        target_thing_ref: values[9] || null,
-        assigned_day_date: null,
-        assigned_day_number: null,
-        assignment_bucket: 'unassigned',
-        exif_captured_at: null,
-        exif_lat: null,
-        exif_lng: null,
-        exif_raw: {},
-        file_bytes: null,
-        created_at: nowIso,
-        updated_at: nowIso,
-      };
+      const row = { id: crypto.randomUUID(), scope_trip_id: String(values[0]), change_set_id: values[1] ? String(values[1]) : null, filename: String(values[2]), mime_type: String(values[3]), media_kind: String(values[4]), expected_bytes: values[5] ?? null, actual_bytes: 0, upload_status: 'signed', upload_token_hash: String(values[6]), upload_expires_at: String(values[7]), storage_provider: 'pending', storage_pathname: null, public_url: null, caption: values[8] || null, target_thing_ref: values[9] || null, assigned_day_date: null, assigned_day_number: null, assignment_bucket: 'unassigned', exif_captured_at: null, exif_lat: null, exif_lng: null, exif_raw: {}, file_bytes: null, created_at: nowIso, updated_at: nowIso };
       tables.vacation_mcp_draft_media.push(row);
       return Promise.resolve([clone(row)]);
     }
@@ -304,6 +278,16 @@ export function createMcpTestDb() {
       return Promise.resolve(found ? [clone(found)] : []);
     }
 
+    if (text.startsWith('update trips set metadata = coalesce')) {
+      const patch = typeof values[0] === 'string' ? JSON.parse(values[0]) : (values[0] || {});
+      const found = tables.trips.find((r) => String(r.id) === String(values[1]));
+      if (found) {
+        found.metadata = { ...(found.metadata || {}), ...patch };
+        return Promise.resolve([{ public_slug: found.metadata.publicSlug || '' }]);
+      }
+      return Promise.resolve([]);
+    }
+
     if (text.startsWith('update trips set metadata =')) {
       const found = tables.trips.find((r) => String(r.id) === String(values[1]));
       if (found) found.metadata = clone(values[0]);
@@ -312,14 +296,7 @@ export function createMcpTestDb() {
 
     if (text.startsWith('update trips set title =') && text.includes('start_date =')) {
       const found = tables.trips.find((r) => String(r.id) === String(values[5]));
-      if (found) {
-        found.title = String(values[0]);
-        found.destination = values[1] || null;
-        found.start_date = values[2] || null;
-        found.end_date = values[3] || null;
-        found.metadata = clone(values[4]);
-        found.status = 'active';
-      }
+      if (found) { found.title = String(values[0]); found.destination = values[1] || null; found.start_date = values[2] || null; found.end_date = values[3] || null; found.metadata = clone(values[4]); found.status = 'active'; }
       return Promise.resolve([]);
     }
 
@@ -330,28 +307,37 @@ export function createMcpTestDb() {
     }
 
     if (text.startsWith('insert into trip_things')) {
-      const hasSubtype = text.includes('subtype');
-      const offset = hasSubtype ? 1 : 0;
+      const parseJsonField = (v, fb) => (typeof v === 'string' ? JSON.parse(v) : (v ?? fb));
+      const hasSourceReq = text.includes('source_request_id');
+      const offset = (hasSourceReq ? 1 : 0) + (text.includes('subtype') ? 1 : 0);
+      const catIdx = hasSourceReq ? 2 : 1;
       const row = {
         id: crypto.randomUUID(),
         trip_id: String(values[0]),
-        category: String(values[1]),
-        subtype: hasSubtype ? (values[2] || null) : null,
+        source_request_id: hasSourceReq ? (values[1] || null) : null,
+        category: String(values[catIdx]),
+        subtype: text.includes('subtype') ? (values[catIdx + 1] || null) : null,
         title: String(values[2 + offset]),
         description: values[3 + offset] || null,
         starts_at: values[4 + offset] || null,
         ends_at: values[5 + offset] || null,
         cost_estimate_cents: values[6 + offset] ?? null,
         currency: String(values[7 + offset] || 'usd'),
-        location: clone(values[8 + offset] || {}),
-        links: clone(values[9 + offset] || []),
-        ratings: clone(values[10 + offset] || {}),
-        metadata: clone(values[11 + offset] || {}),
+        location: clone(parseJsonField(values[8 + offset], {})),
+        links: clone(parseJsonField(values[9 + offset], [])),
+        ratings: clone(parseJsonField(values[10 + offset], {})),
+        metadata: clone(parseJsonField(values[11 + offset], {})),
+        source: hasSourceReq ? (values[12 + offset] || null) : null,
         created_at: nowIso,
         updated_at: nowIso,
       };
       tables.trip_things.push(row);
       return Promise.resolve([clone(row)]);
+    }
+
+    if (text.startsWith('select count(*)::int as n from trip_things where trip_id =')) {
+      const n = tables.trip_things.filter((r) => String(r.trip_id) === String(values[0])).length;
+      return Promise.resolve([{ n }]);
     }
 
     if (text.startsWith('select') && text.includes('from trip_things where id =') && text.includes('and trip_id =')) {

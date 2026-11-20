@@ -178,12 +178,15 @@ export async function readLiveVacationDocument(db, tripId) {
 
   const items = things.map((row) => {
     const rowMeta = asObject(row.metadata);
+    const dayDate = rowMeta.unscheduled === true ? null : (isoDateOnly(rowMeta.dayDate || row.starts_at) || null);
+    const scheduled = Boolean(dayDate) && rowMeta.unscheduled !== true && rowMeta.timeline !== false;
     return {
       id: String(row.id),
       category: String(row.category || 'note'),
       title: String(row.title || ''),
       description: row.description || '',
-      day_date: isoDateOnly(rowMeta.dayDate || row.starts_at) || null,
+      day_date: dayDate,
+      scheduled,
       starts_at: row.starts_at || null,
       ends_at: row.ends_at || null,
       total_price_cents: Number.isInteger(row.cost_estimate_cents) ? row.cost_estimate_cents : null,
@@ -214,8 +217,11 @@ export async function readLiveVacationDocument(db, tripId) {
     hotels: items.filter((item) => item.category === 'hotel' || item.category === 'lodging'),
     cars: items.filter((item) => item.category === 'car'),
     restaurants: items.filter((item) => item.category === 'restaurant'),
+    stores: items.filter((item) => item.category === 'store'),
     things_to_do: items.filter((item) => !['flight', 'hotel', 'lodging', 'car', 'restaurant', 'note'].includes(item.category)),
     notes: items.filter((item) => item.category === 'note'),
+    unscheduled_things: items.filter((item) => !item.scheduled),
+    long_list: items,
     media: bindings.map((row) => {
       const m = asObject(row.metadata);
       return {

@@ -12,7 +12,9 @@ import {
 import {
   changeSetKindLabel,
   changeSetStatusLabel,
+  extractApprovalPreviewView,
   formatMediaBytes,
+  formatMediaMatchLabel,
   previewSummaryBullets,
   sortChangeSetsForReview,
 } from '../lib/mcpPanelModel.mjs';
@@ -164,9 +166,10 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
   }
 
   const previewBullets = selected ? previewSummaryBullets(selected) : [];
+  const previewView = useMemo(() => extractApprovalPreviewView(selected), [selected]);
   const missingItems = selected?.preview?.missing || [];
   const conflictItems = selected?.preview?.conflicts || [];
-  const mediaItems = selected?.preview?.will_create?.media || [];
+  const mediaItems = previewView.media;
 
   return (
     <div
@@ -266,6 +269,11 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
                       <p className="tsv-mcp-status-line">
                         Status: <strong>{changeSetStatusLabel(selected.status)}</strong>
                       </p>
+                      {previewView.previewHash ? (
+                        <p className="tsv-mcp-status-line" data-ts-mcp-preview-hash={previewView.previewHash}>
+                          Preview hash: <code>{previewView.previewHash}</code>
+                        </p>
+                      ) : null}
                       <p className="tsv-mcp-summary">{selected.preview?.summary_text || selected.summary}</p>
 
                       {previewBullets.length > 0 ? (
@@ -279,14 +287,57 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
                         </div>
                       ) : null}
 
+                      {previewView.days.length > 0 ? (
+                        <div className="tsv-mcp-block" data-ts-mcp-preview-days="1">
+                          <h4>Itinerary by day</h4>
+                          <ul>
+                            {previewView.days.map((day, idx) => (
+                              <li key={`${day.date || idx}`}>
+                                <strong>
+                                  Day {day.day_number ?? idx + 1}
+                                  {day.date ? ` (${day.date})` : ''}
+                                  {day.title ? ` — ${day.title}` : ''}
+                                </strong>
+                                {Array.isArray(day.items) && day.items.length > 0 ? (
+                                  <ul>
+                                    {day.items.map((item, itemIdx) => (
+                                      <li key={`${item.ref || item.id || itemIdx}`}>
+                                        {item.category ? `${item.category}: ` : ''}
+                                        {item.title}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                ) : null}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
+
+                      {previewView.unscheduledThings.length > 0 ? (
+                        <div className="tsv-mcp-block" data-ts-mcp-preview-unscheduled="1">
+                          <h4>Unscheduled long-list Things ({previewView.unscheduledThings.length})</h4>
+                          <ul>
+                            {previewView.unscheduledThings.map((item, idx) => (
+                              <li key={`${item.ref || item.id || idx}`}>
+                                {item.category ? `${item.category}: ` : ''}
+                                {item.title} — Unscheduled
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
+
                       {mediaItems.length > 0 ? (
-                        <div className="tsv-mcp-block">
-                          <h4>Media attachments</h4>
+                        <div className="tsv-mcp-block" data-ts-mcp-preview-media="1">
+                          <h4>
+                            Media attachments ({mediaItems.length} · {formatMediaBytes(previewView.totalBytes)})
+                          </h4>
                           <ul>
                             {mediaItems.map((media) => (
                               <li key={media.media_id}>
                                 {media.filename} ({formatMediaBytes(media.bytes || 0)}) —{' '}
-                                {media.assigned_day_date ? `Day ${media.assigned_day_number || ''} (${media.assigned_day_date})` : 'Unassigned'}
+                                {formatMediaMatchLabel(media)}
                               </li>
                             ))}
                           </ul>

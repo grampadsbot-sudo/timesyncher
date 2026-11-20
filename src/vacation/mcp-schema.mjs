@@ -72,10 +72,37 @@ const PLACE_ITEM_SCHEMA = {
   additionalProperties: false,
   properties: {
     ref: { type: 'string', description: 'Optional draft reference id for linking media.' },
+    category: {
+      type: 'string',
+      enum: ['restaurant', 'activity', 'attraction', 'store', 'bar', 'tour', 'event', 'sightseeing'],
+      description: 'Optional Thing category.',
+    },
     title: { type: 'string', minLength: 1, description: 'Place or activity name.' },
     description: { type: 'string', description: 'Description of what to expect or what you loved.' },
-    day_date: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}$', description: 'Vacation day date (YYYY-MM-DD).' },
+    day_date: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}$', description: 'Optional vacation day date (YYYY-MM-DD). Omit for an unscheduled long-list Thing.' },
     starts_at: { type: 'string', description: 'Scheduled or visited time in ISO 8601 format.' },
+    unscheduled: { type: 'boolean', description: 'Set true to store on the vacation long list without scheduling on any day.' },
+    total_price_cents: { type: 'integer', minimum: 0, description: 'Estimated or actual total in cents.' },
+    currency: { type: 'string', description: 'Three-letter currency code, default usd.' },
+    location: ITEM_LOCATION_SCHEMA,
+    website: { type: 'string', description: 'Official website URL.' },
+    notes: { type: 'string', description: 'Personal notes or highlights.' },
+  },
+};
+
+const UNSCHEDULED_THING_SCHEMA = {
+  type: 'object',
+  required: ['title'],
+  additionalProperties: false,
+  properties: {
+    ref: { type: 'string', description: 'Optional draft reference id for linking media.' },
+    category: {
+      type: 'string',
+      enum: ['restaurant', 'activity', 'attraction', 'store', 'bar', 'tour', 'event', 'sightseeing', 'hotel', 'flight', 'car', 'note'],
+      description: 'Long-list Thing category such as restaurant, attraction, store, or activity.',
+    },
+    title: { type: 'string', minLength: 1, description: 'Saved unscheduled Thing name.' },
+    description: { type: 'string', description: 'Description or reason this Thing is saved.' },
     total_price_cents: { type: 'integer', minimum: 0, description: 'Estimated or actual total in cents.' },
     currency: { type: 'string', description: 'Three-letter currency code, default usd.' },
     location: ITEM_LOCATION_SCHEMA,
@@ -149,7 +176,9 @@ export const VACATION_IMPORT_FORMAT_SCHEMA = {
     hotels: { type: 'array', items: HOTEL_ITEM_SCHEMA, description: 'Hotels and lodging stays.' },
     cars: { type: 'array', items: CAR_ITEM_SCHEMA, description: 'Rental cars.' },
     restaurants: { type: 'array', items: PLACE_ITEM_SCHEMA, description: 'Restaurants, cafes, and dining stops.' },
+    stores: { type: 'array', items: PLACE_ITEM_SCHEMA, description: 'Shops, boutiques, and stores.' },
     things_to_do: { type: 'array', items: PLACE_ITEM_SCHEMA, description: 'Activities, sights, museums, parks, and stores.' },
+    unscheduled_things: { type: 'array', items: UNSCHEDULED_THING_SCHEMA, description: 'Long-list Things saved for the vacation that are not scheduled on any day.' },
     notes: { type: 'array', items: NOTE_ITEM_SCHEMA, description: 'General or day-level notes and memories.' },
     media: { type: 'array', items: MEDIA_LINK_SCHEMA, description: 'Links between uploaded media ids and vacation days or itinerary items.' },
   },
@@ -333,7 +362,7 @@ export function validateVacationImportDocument(doc) {
       });
     }
   }
-  for (const section of ['flights', 'hotels', 'cars', 'restaurants', 'things_to_do']) {
+  for (const section of ['flights', 'hotels', 'cars', 'restaurants', 'stores', 'things_to_do', 'unscheduled_things']) {
     if (doc[section] === undefined) continue;
     if (!Array.isArray(doc[section])) { errors.push(`${section} must be an array.`); continue; }
     doc[section].forEach((item, idx) => {
@@ -344,6 +373,9 @@ export function validateVacationImportDocument(doc) {
       validateString(item.check_out, `${section}[${idx}].check_out`, errors, { pattern: ISO_DATE_RE });
       validatePrice(item.total_price_cents, `${section}[${idx}].total_price_cents`, errors);
       validateLocation(item.location, `${section}[${idx}].location`, errors);
+      if (item.unscheduled !== undefined && typeof item.unscheduled !== 'boolean') {
+        errors.push(`${section}[${idx}].unscheduled must be a boolean.`);
+      }
     });
   }
   if (doc.notes !== undefined) {
