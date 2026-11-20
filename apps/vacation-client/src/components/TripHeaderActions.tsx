@@ -9,6 +9,7 @@ type Props = {
   saveStatus: 'idle' | 'checking' | 'saving' | 'saved' | 'error';
   onSectionVisibilityChange: (key: 'flights' | 'hotels' | 'cars', visible: boolean) => void;
   onActiveTabHidden?: () => void;
+  onOpenMcpPanel?: (mode: 'approvals' | 'tokens') => void;
   activeTab?: string;
 };
 
@@ -32,6 +33,7 @@ export function TripHeaderActions({
   saveStatus,
   onSectionVisibilityChange,
   onActiveTabHidden,
+  onOpenMcpPanel,
   activeTab,
 }: Props) {
   const [configOpen, setConfigOpen] = useState(false);
@@ -222,6 +224,35 @@ export function TripHeaderActions({
                 <span>{key.charAt(0).toUpperCase() + key.slice(1)}</span>
               </label>
             ))}
+            {canEdit && onOpenMcpPanel ? (
+              <>
+                <p className="tsv-header-popover-title" role="presentation">
+                  AI Access &amp; Approvals
+                </p>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="tsv-header-popover-item"
+                  onClick={() => {
+                    setConfigOpen(false);
+                    onOpenMcpPanel('approvals');
+                  }}
+                >
+                  Pending AI approvals
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="tsv-header-popover-item"
+                  onClick={() => {
+                    setConfigOpen(false);
+                    onOpenMcpPanel('tokens');
+                  }}
+                >
+                  AI access tokens
+                </button>
+              </>
+            ) : null}
           </div>
         ) : null}
       </div>

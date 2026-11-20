@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { McpApprovalPanel, type McpPanelMode } from './components/McpApprovalPanel';
 import { ThingDetailPanel } from './components/ThingDetailPanel';
 import { TripShell } from './components/TripShell';
 import { useSharedTrip } from './hooks/useSharedTrip';
@@ -24,6 +25,10 @@ export default function App() {
   const tripState = useSharedTrip();
   const [tab, setTab] = useTabFromUrl();
   const [detail, setDetail] = useState<SharedPlace | null>(null);
+  const [mcpPanelMode, setMcpPanelMode] = useState<McpPanelMode | null>(() => {
+    const mode = new URLSearchParams(window.location.search).get('aiPanel');
+    return mode === 'approvals' || mode === 'tokens' ? mode : null;
+  });
 
   const title = useMemo(() => {
     if (tripState.status !== 'ready') return 'Vacay Keepsake';
@@ -139,9 +144,19 @@ export default function App() {
         onTabChange={setTab}
         onSectionVisibilityChange={setSectionVisibility}
         onActiveTabHidden={() => setTab('day-by-day')}
+        onOpenMcpPanel={(mode) => setMcpPanelMode(mode)}
       >
         {body}
       </TripShell>
+      {mcpPanelMode && tripState.canEdit ? (
+        <McpApprovalPanel
+          key={mcpPanelMode}
+          shareToken={token}
+          initialMode={mcpPanelMode}
+          onClose={() => setMcpPanelMode(null)}
+          onApproved={() => window.location.reload()}
+        />
+      ) : null}
       {detail ? (
         <ThingDetailPanel
           place={detail}
