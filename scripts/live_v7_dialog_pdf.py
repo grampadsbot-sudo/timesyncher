@@ -221,6 +221,31 @@ def build(pack):
     story.append(Paragraph(latin(pack.get("beats") or "(none stored)"), styles["Body"]))
     story.append(Paragraph("Dialog judge rollup", styles["Section"]))
     story.append(Paragraph(latin(pack.get("judge")), styles["Body"]))
+    ssr_section = pack.get("ssr_section")
+    if isinstance(ssr_section, dict) and ssr_section.get("aggregate_rows"):
+        story.append(Paragraph(latin(ssr_section.get("title") or "SSR FREE-TEXT RATINGS (PRIMARY)"), styles["Section"]))
+        story.append(Paragraph(
+            latin(
+                f"Method: {ssr_section.get('method', 'ssr-maier-2025')} ({ssr_section.get('citation', '')}) | "
+                f"Anchors: {ssr_section.get('anchor_set_version', '')} | "
+                f"Embedding: {ssr_section.get('embedding_model', '')}@{ssr_section.get('embedding_revision', '')}"
+            ),
+            styles["Meta"],
+        ))
+        story.append(Spacer(1, 3))
+        story.append(tbl(ssr_section.get("aggregate_rows") or [], [1.1 * inch, 1.0 * inch, 0.4 * inch, 0.9 * inch, 3.3 * inch]))
+        if ssr_section.get("construct_rows"):
+            story.append(Spacer(1, 4))
+            story.append(Paragraph("SSR Aggregate by Construct", styles["SubSec"]))
+            story.append(tbl(ssr_section.get("construct_rows") or [], [1.2 * inch, 0.5 * inch, 1.0 * inch, 4.0 * inch]))
+        if ssr_section.get("per_customer_rows") and len(ssr_section.get("per_customer_rows")) > 1:
+            story.append(Spacer(1, 4))
+            story.append(Paragraph("SSR Per-Customer Expected Scores", styles["SubSec"]))
+            story.append(tbl(ssr_section.get("per_customer_rows") or [], [1.1 * inch, 1.1 * inch, 1.0 * inch, 0.9 * inch, 2.6 * inch]))
+        if ssr_section.get("dlr_comparison_rows") and len(ssr_section.get("dlr_comparison_rows")) > 1:
+            story.append(Spacer(1, 4))
+            story.append(Paragraph("Legacy Direct-Number Ratings (Comparison Only, Non-Primary)", styles["SubSec"]))
+            story.append(tbl(ssr_section.get("dlr_comparison_rows") or [], [1.4 * inch, 1.8 * inch, 1.8 * inch, 1.7 * inch]))
     story.append(PageBreak())
     story.append(Paragraph("Full interleaved transcript (quality + timing under each app turn)", styles["Section"]))
     story.append(Paragraph("Mark in-app corrections here. Each APP turn shows model + tier.", styles["Meta"]))
