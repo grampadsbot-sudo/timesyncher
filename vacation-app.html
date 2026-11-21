@@ -365,7 +365,7 @@
       width: 100%;
       min-height: 42px;
       max-height: 150px;
-      resize: vertical;
+      resize: none; overflow-y: hidden; overflow-x: hidden; display: block; min-width: 0;
       border: 1px solid var(--line);
       border-radius: 8px;
       padding: 10px 11px;
@@ -696,7 +696,7 @@
         renderAttachments();
         messageText.focus();
       });
-      window.tsVacationAppChrome.bindVoice(getState);
+      window.tsVacationAppChrome.bindVoice(getState); window.tsVacationAppChrome.bindComposerAutosize();
       let shiftBreak = false, imeBreak = false;
       const enterSend = (event, fromBreak) => {
         const skip = shiftBreak || imeBreak || event.isComposing === true || event.keyCode === 229 || event.shiftKey === true || event.repeat;
@@ -734,7 +734,7 @@
       state.voiceArmed = false;
       const messages = document.getElementById('messages');
       messages.insertAdjacentHTML('beforeend', `<article class="bubble user"><small>You</small>${safe(text || 'Vacation files attached')}</article>`);
-      textarea.value = ''; textarea.focus();
+      textarea.value = ''; window.tsVacationAppChrome.resizeComposer(textarea); textarea.focus();
       const attachments = await Promise.all(state.attachments.map(filePayload));
       state.attachments = [];
       renderAttachments();

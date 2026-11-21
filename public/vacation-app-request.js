@@ -358,7 +358,10 @@ window.tsVacationAppChrome = {
         if (text) {
           heard = true;
           quickFailures = 0;
-          if (messageText) messageText.value = joinText(committedText, text);
+          if (messageText) {
+            messageText.value = joinText(committedText, text);
+            window.tsVacationAppChrome.resizeComposer(messageText);
+          }
           getState().voiceArmed = true;
           showStatus('');
         }
@@ -702,5 +705,60 @@ window.tsVacationAppChrome = {
     }
     startReadyPoll();
     armTimeout(generation);
+  },
+  resizeComposer(target) {
+    const el = target || document.getElementById('messageText');
+    if (!el || !el.style) return;
+    const cs = typeof window.getComputedStyle === 'function' ? window.getComputedStyle(el) : null;
+    const minHeight = Number.parseFloat(cs?.minHeight) || 42;
+    const parsedMax = Number.parseFloat(cs?.maxHeight);
+    const maxHeight = Number.isFinite(parsedMax) && parsedMax > 0 ? parsedMax : 150;
+    const borderY = (Number.parseFloat(cs?.borderTopWidth) || 0) + (Number.parseFloat(cs?.borderBottomWidth) || 0);
+    const prevScrollTop = Number(el.scrollTop || 0);
+    const prevOverflow = Number(el.scrollHeight || 0) > Number(el.clientHeight || 0) + 1;
+    const wasAtBottom = prevOverflow && prevScrollTop + Number(el.clientHeight || 0) >= Number(el.scrollHeight || 0) - 2;
+    const valLen = String(el.value || '').length;
+    const atEnd = typeof el.selectionStart === 'number'
+      && el.selectionStart === el.selectionEnd
+      && el.selectionEnd === valLen;
+    el.style.overflowY = 'hidden';
+    el.style.height = 'auto';
+    const measured = Number(el.scrollHeight || 0);
+    const rawHeight = measured > 0 ? measured + borderY : minHeight;
+    const nextHeight = Math.min(maxHeight, Math.max(minHeight, Math.ceil(rawHeight)));
+    const overflowing = rawHeight > maxHeight + 0.5;
+    el.style.height = `${nextHeight}px`;
+    el.style.overflowY = overflowing ? 'auto' : 'hidden';
+    if (overflowing) {
+      if (wasAtBottom || (!prevOverflow && (atEnd || document.activeElement !== el))) {
+        el.scrollTop = el.scrollHeight;
+      } else if (prevScrollTop > 0) {
+        el.scrollTop = prevScrollTop;
+      }
+    } else {
+      el.scrollTop = 0;
+    }
+  },
+  bindComposerAutosize() {
+    const textarea = document.getElementById('messageText');
+    if (!textarea) return;
+    const sync = () => window.tsVacationAppChrome.resizeComposer(textarea);
+    textarea.addEventListener('input', sync);
+    textarea.addEventListener('change', sync);
+    const form = textarea.form || textarea.closest?.('form') || null;
+    form?.addEventListener?.('reset', () => queueMicrotask(sync));
+    if (window.__tsComposerResizeListener) {
+      window.removeEventListener('resize', window.__tsComposerResizeListener);
+    }
+    const onWindowResize = () => {
+      if (textarea.isConnected === false) {
+        window.removeEventListener('resize', onWindowResize);
+        return;
+      }
+      sync();
+    };
+    window.__tsComposerResizeListener = onWindowResize;
+    window.addEventListener('resize', onWindowResize);
+    sync();
   },
 };
