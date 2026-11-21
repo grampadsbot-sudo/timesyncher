@@ -6,7 +6,11 @@ import {
   extractApprovalPreviewView,
   formatMediaBytes,
   formatMediaMatchLabel,
+  formatPreviewClock,
+  formatPreviewDayDate,
+  previewCategoryIcon,
   previewSummaryBullets,
+  previewSummaryChips,
   sortChangeSetsForReview,
 } from '../src/lib/mcpPanelModel.mjs';
 
@@ -106,10 +110,34 @@ assert.match(shellSource, /data-ts-vacation-grid-root/);
 assert.match(shellSource, /AI Access &amp; Approvals/);
 assert.match(shellSource, /\['flights', 'cars', 'hotels'\]/);
 
+assert.equal(formatPreviewDayDate('2026-07-03'), 'Fri, Jul 3');
+assert.equal(formatPreviewClock('12:00'), '12:00 PM');
+assert.equal(formatPreviewClock('14:30'), '2:30 PM');
+assert.equal(previewCategoryIcon('restaurant'), '🍽️');
+assert.equal(previewCategoryIcon('sightseeing'), '🏞️');
+assert.equal(previewCategoryIcon('store'), '🛍️');
+
+const draftChips = previewSummaryChips({
+  preview: {
+    kind: 'draft_import',
+    will_create: {
+      vacation: { title: 'Carmel Weekend', destination: 'Carmel-by-the-Sea, CA' },
+      days: [{ day_number: 1, date: '2026-07-03' }],
+      restaurants: [{ title: 'Carmel Belle' }],
+      unscheduled_things: [{ title: 'Pilgrim Way Bookshop' }],
+      media: [{ media_id: 'm1', filename: 'a.jpg' }],
+    },
+  },
+});
+assert.deepEqual(draftChips, ['1 day', '1 restaurant', '1 saved for later', '1 photo or video']);
+
 const panelSource = await readFile(new URL('../src/components/McpApprovalPanel.tsx', import.meta.url), 'utf8');
 assert.match(panelSource, /handleApprove\(selected\.id, previewView\.previewHash\)/);
 assert.match(panelSource, /item\.expiresAt/);
 assert.doesNotMatch(panelSource, /Media attachments/i);
+assert.doesNotMatch(panelSource, /Unscheduled long-list items/i);
+assert.doesNotMatch(panelSource, /long-list/i);
+assert.match(panelSource, /Saved for later/);
 assert.match(panelSource, /Not placed yet/);
 
 const apiSource = await readFile(new URL('../src/api/mcpAdmin.ts', import.meta.url), 'utf8');
@@ -118,7 +146,9 @@ assert.match(apiSource, /preview_hash: previewHash/);
 const livePanelSource = await readFile(new URL('../../../public/ts-mcp-ai-access.js', import.meta.url), 'utf8');
 assert.match(livePanelSource, /__tsOpenMcpPanel/);
 assert.match(livePanelSource, /preview_hash: previewHash/);
-assert.match(livePanelSource, /Unscheduled long-list items/);
+assert.match(livePanelSource, /Saved for later/);
+assert.doesNotMatch(livePanelSource, /Unscheduled long-list items/i);
+assert.doesNotMatch(livePanelSource, /long-list/i);
 assert.doesNotMatch(livePanelSource, /Media attachments/i);
 assert.match(livePanelSource, /Not placed yet/);
 assert.match(livePanelSource, /data-ts-preview-thumb/);

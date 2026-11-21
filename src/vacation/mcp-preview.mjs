@@ -11,6 +11,25 @@ import {
   previewList,
 } from './mcp-preview-common.mjs';
 
+function pluralCount(count, singular, plural = `${singular}s`) {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
+function formatUnplacedMediaNote(items) {
+  const count = items.length;
+  if (!count) return '';
+  const hasPhoto = items.some((m) => String(m.media_kind || 'photo').toLowerCase() !== 'video');
+  const hasVideo = items.some((m) => String(m.media_kind || 'photo').toLowerCase() === 'video');
+  const noun = hasPhoto && hasVideo
+    ? (count === 1 ? 'photo or video' : 'photos and videos')
+    : hasVideo
+      ? (count === 1 ? 'video' : 'videos')
+      : (count === 1 ? 'photo' : 'photos');
+  return count === 1
+    ? `1 ${noun} doesn't have a date in this vacation, so it's in Not placed yet.`
+    : `${count} ${noun} don't have a date in this vacation, so they're in Not placed yet.`;
+}
+
 export function buildDraftImportPreview({
   draft,
   mediaRows = [],
@@ -53,7 +72,7 @@ export function buildDraftImportPreview({
   if (!startDate || !endDate) missing.push('Vacation start and end dates are missing.');
   if (!cleanPreviewText(vacation.timezone, 80)) missing.push('Vacation timezone is missing (UTC will be used for photo dates).');
   if (!rawDays.length && rangeDates.length) {
-    missing.push(`No custom day titles provided (${rangeDates.length} calendar days will be created automatically).`);
+    missing.push(`No custom day titles provided (${pluralCount(rangeDates.length, 'calendar day')} will be created automatically).`);
   }
 
   for (const hotel of hotels) {
@@ -114,11 +133,15 @@ export function buildDraftImportPreview({
 
   const unassignedMedia = mediaEntries.filter((item) => item.assignment_bucket === 'unassigned');
   if (unassignedMedia.length) {
-    missing.push(`${unassignedMedia.length} photo or video item(s) could not be matched to a vacation day and will appear in Not placed yet.`);
+    missing.push(formatUnplacedMediaNote(unassignedMedia));
   }
   const pendingUploadMedia = mediaEntries.filter((item) => item.upload_status === 'signed');
   if (pendingUploadMedia.length) {
-    missing.push(`${pendingUploadMedia.length} signed media upload(s) have not been uploaded yet.`);
+    missing.push(
+      pendingUploadMedia.length === 1
+        ? '1 photo or video has not finished uploading yet.'
+        : `${pendingUploadMedia.length} photos or videos have not finished uploading yet.`,
+    );
   }
 
   const { days: landingDays, unscheduledThings, unplacedMedia } = groupLandingDaysAndUnscheduled({
@@ -168,8 +191,13 @@ export function buildDraftImportPreview({
     total_bytes: totalBytes,
   };
 
-  const unscheduledNote = unscheduledThings.length ? `, ${unscheduledThings.length} unscheduled long-list item(s)` : '';
-  const summaryText = `Ready to ${applyMode === 'populate_scoped' ? 'update' : 'create'} vacation "${vacationBlock.title}" with ${counts.days} day(s), ${scheduledItems.length} scheduled item(s)${unscheduledNote}, and ${counts.media} media file(s).`;
+  const summaryParts = [
+    pluralCount(counts.days, 'day'),
+    pluralCount(scheduledItems.length, 'planned stop'),
+    ...(unscheduledThings.length ? [`${unscheduledThings.length} saved for later`] : []),
+    ...(counts.media ? [pluralCount(counts.media, 'photo or video', 'photos & videos')] : []),
+  ];
+  const summaryText = `Ready to ${applyMode === 'populate_scoped' ? 'update' : 'create'} vacation "${vacationBlock.title}" with ${summaryParts.join(', ')}.`;
 
   const hashPayload = {
     kind: 'draft_import',
@@ -382,8 +410,15 @@ export function buildTargetedEditPreview({
   });
 
   const vacationTitle = cleanPreviewText(workingVacation.title, 180) || 'this vacation';
+  const editParts = [
+    willAdd.length && pluralCount(willAdd.length, 'addition'),
+    willUpdate.length && pluralCount(willUpdate.length, 'update'),
+    willRemove.length && pluralCount(willRemove.length, 'removal'),
+    dayUpdates.length && pluralCount(dayUpdates.length, 'day update'),
+    mediaEntries.length && pluralCount(mediaEntries.length, 'photo or video', 'photos & videos'),
+  ].filter(Boolean);
   const summaryText = cleanPreviewText(summary, 300)
-    || `Proposed AI edits for "${vacationTitle}": ${willAdd.length} add, ${willUpdate.length} update, ${willRemove.length} remove, ${dayUpdates.length} day change(s), ${mediaEntries.length} media attachment(s).`;
+    || `Proposed AI edits for "${vacationTitle}"${editParts.length ? `: ${editParts.join(', ')}` : ''}.`;
 
   const hashPayload = {
     kind: 'targeted_edit',
