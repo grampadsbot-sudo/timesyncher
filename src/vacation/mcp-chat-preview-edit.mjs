@@ -28,6 +28,40 @@ const RESCUE_WAS_RE = /\b(?:photo|picture|pic|image|video|clip|file|media|\.(?:j
 const PREVIEW_WORD_RE = /\b(preview|pending|import|won'?t\s+be\s+imported|saved\s+for\s+later|before\s+approv)/i;
 const REMOVE_VERB_RE = /\b(drop|remove|delete|exclude|omit|skip)\b/i;
 const NO_DATE_TARGET_RE = /\b(no\s+date|unplaced|not\s+placed|unassigned|without\s+a\s+date|remove\s+(?:its|the)\s+date)\b/i;
+const FILE_EXT_RE = /\.(?:jpe?g|png|webp|heic|mov|mp4|webm|m4v)\b/i;
+
+function isVideoMedia(media) {
+  return String(media?.media_kind || media?.kind || '').toLowerCase() === 'video'
+    || String(media?.mime_type || '').toLowerCase().startsWith('video/');
+}
+
+function mediaArticleNoun(media) {
+  return isVideoMedia(media) ? 'a video' : 'a photo';
+}
+
+function safeMediaHint(media) {
+  const caption = cleanText(media?.caption, 120);
+  if (caption && !FILE_EXT_RE.test(caption)) return caption;
+  return mediaArticleNoun(media);
+}
+
+function compactChangeMedia(media) {
+  const mediaId = cleanText(media?.media_id || media?.id, 80);
+  if (!mediaId) return null;
+  const kind = isVideoMedia(media) ? 'video' : 'photo';
+  const url = cleanText(media?.url || media?.preview_url || media?.public_url, 600)
+    || `/api/mcp/media/${encodeURIComponent(mediaId)}`;
+  const posterUrl = cleanText(media?.poster_url || media?.thumbnail_url, 600) || null;
+  const caption = cleanText(media?.caption, 300);
+  return {
+    media_id: mediaId,
+    media_kind: kind,
+    mime_type: cleanText(media?.mime_type, 120) || (kind === 'video' ? 'video/mp4' : 'image/jpeg'),
+    url,
+    ...(posterUrl && posterUrl !== url ? { poster_url: posterUrl } : {}),
+    ...(caption && !FILE_EXT_RE.test(caption) ? { caption } : {}),
+  };
+}
 
 function upsertDraftMediaLink(draft, mediaId, patch) {
   const links = asArray(draft.media).filter((l) => String(l?.media_id || '') !== String(mediaId));
@@ -53,7 +87,8 @@ function applyClauseToDraft({ clause, draft, preview, days, liveThings, selected
   if (mentionsMedia && isRemove && !/\b(?:move|put|place|attach|assign|to\s+day|on\s+day)\b/i.test(clause)) {
     const matched = matchPreviewMedia(clause, preview, { selectedMediaId });
     if (!matched.media) {
-      const list = matched.candidates.map((m) => m.filename || m.caption || m.media_id).filter(Boolean).join(', ');
+      const hints = [...new Set(matched.candidates.map(safeMediaHint).filter(Boolean))];
+      const list = hints.length > 1 ? hints.join(', ') : '';
       return {
         ok: false,
         clarified: true,
@@ -66,7 +101,13 @@ function applyClauseToDraft({ clause, draft, preview, days, liveThings, selected
     removed.add(String(matched.media.media_id));
     draft.removed_media_ids = [...removed];
     draft.media = asArray(draft.media).filter((l) => String(l?.media_id || '') !== String(matched.media.media_id));
-    return { ok: true, change: `Removed ${matched.media.filename || matched.media.media_kind}` };
+    return {
+      ok: true,
+      change: {
+        text: `Removed ${mediaArticleNoun(matched.media)} from the preview`,
+        media: compactChangeMedia(matched.media),
+      },
+    };
   }
 
   if (mentionsMedia && (RESCUE_WAS_RE.test(clause) || /\b(?:put|place|move|attach|assign|rescue|keep|add|tag|link)\b/i.test(clause))) {
@@ -95,7 +136,8 @@ function applyClauseToDraft({ clause, draft, preview, days, liveThings, selected
     const preferSkipped = RESCUE_WAS_RE.test(clause) || /\b(?:rescue|won'?t\s+be\s+imported|skipped|undated|out[- ]of[- ]range)\b/i.test(clause);
     const matchedMedia = matchPreviewMedia(clause, preview, { preferSkipped, selectedMediaId });
     if (!matchedMedia.media) {
-      const list = matchedMedia.candidates.map((m) => m.filename || m.caption || m.media_id).filter(Boolean).join(', ');
+      const hints = [...new Set(matchedMedia.candidates.map(safeMediaHint).filter(Boolean))];
+      const list = hints.length > 1 ? hints.join(', ') : '';
       return {
         ok: false,
         clarified: true,
@@ -110,37 +152,48 @@ function applyClauseToDraft({ clause, draft, preview, days, liveThings, selected
       ? matchDraftEntry(targetPhrase, entries, { dayDate: dayTarget.day.date, mealWord })
       : matchDraftEntry(targetPhrase, entries, { mealWord });
 
+    const thatMedia = isVideoMedia(matchedMedia.media) ? 'that video' : 'that photo';
     if (matchedEntry.ambiguous) {
       return {
         ok: false,
         clarified: true,
-        reply: `Which stop should I attach ${matchedMedia.media.filename || 'that photo'} to: ${matchedEntry.candidates.map((c) => c.title).join(', ')}?`,
+        reply: `Which stop should I attach ${thatMedia} to: ${matchedEntry.candidates.map((c) => c.title).join(', ')}?`,
       };
     }
     if (!matchedEntry.entry && !dayTarget.day) {
       return {
         ok: false,
         clarified: true,
-        reply: `Which vacation day (${vacationDateSummary(days)}) or stop should I attach ${matchedMedia.media.filename || 'that photo'} to?`,
+        reply: `Which vacation day (${vacationDateSummary(days)}) or stop should I attach ${thatMedia} to?`,
       };
     }
-    const mediaLabel = matchedMedia.media.filename || matchedMedia.media.media_kind || 'photo';
+    const mediaNoun = mediaArticleNoun(matchedMedia.media);
+    const changeMedia = compactChangeMedia(matchedMedia.media);
     if (matchedEntry.entry) {
+      const targetDayDate = matchedEntry.entry.day_date || dayTarget.day?.date || null;
       upsertDraftMediaLink(draft, matchedMedia.media.media_id, {
         thing_ref: matchedEntry.entry.ref,
-        day_date: matchedEntry.entry.day_date || dayTarget.day?.date || null,
+        day_date: targetDayDate,
         clear_thing: false,
       });
-      const verb = matchedMedia.media.isSkipped ? "Rescued from Won't be imported and attached" : 'Attached';
-      return { ok: true, change: `${verb} ${mediaLabel} to ${matchedEntry.entry.title}` };
+      const entryDay = targetDayDate
+        ? days.find((d) => String(d?.date || '').slice(0, 10) === String(targetDayDate).slice(0, 10))
+        : null;
+      const daySuffix = entryDay ? ` on ${formatDayFriendly(entryDay)}` : '';
+      const text = matchedMedia.media.isSkipped
+        ? `Moved ${mediaNoun} from Won't be imported to ${matchedEntry.entry.title}${daySuffix}`
+        : `Moved ${mediaNoun} to ${matchedEntry.entry.title}${daySuffix}`;
+      return { ok: true, change: { text, media: changeMedia } };
     }
     upsertDraftMediaLink(draft, matchedMedia.media.media_id, {
       thing_ref: '',
       clear_thing: true,
       day_date: dayTarget.day.date,
     });
-    const verb = matchedMedia.media.isSkipped ? "Rescued from Won't be imported and placed" : 'Placed';
-    return { ok: true, change: `${verb} ${mediaLabel} on ${formatDayFriendly(dayTarget.day)}` };
+    const text = matchedMedia.media.isSkipped
+      ? `Moved ${mediaNoun} from Won't be imported to ${formatDayFriendly(dayTarget.day)}`
+      : `Moved ${mediaNoun} to ${formatDayFriendly(dayTarget.day)}`;
+    return { ok: true, change: { text, media: changeMedia } };
   }
 
   const dayTarget = parseDayTarget(clause, days);
@@ -394,7 +447,8 @@ export async function handlePendingPreviewChatTurn(db, {
     replacedByVersion: revised.previewVersion,
   });
 
-  const reply = `Updated your pending preview: ${appliedChanges.join('; ')}. Review the updated preview below before approving.`;
+  const appliedChangeTexts = appliedChanges.map((item) => (typeof item === 'string' ? item : item.text));
+  const reply = `Updated your pending preview: ${appliedChangeTexts.join('; ')}. Review the updated preview below before approving.`;
   const tokenRecord = {
     tripId,
     ownerCustomerId: transcriptOwnerId,
@@ -419,7 +473,7 @@ export async function handlePendingPreviewChatTurn(db, {
     previewVersion: revised.previewVersion,
     previewHash: revised.preview.preview_hash,
     previousPreviewHash: revised.previousPreviewHash,
-    appliedChanges,
+    appliedChanges: appliedChangeTexts,
     clarified: false,
     limitBlocked: false,
     latencyMs: Math.max(1, Date.now() - started),

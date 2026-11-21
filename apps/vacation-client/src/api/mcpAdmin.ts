@@ -88,6 +88,13 @@ export type McpChangeRequest = {
   preview_hash?: string | null;
 };
 
+export type McpPreviewChangeEntry =
+  | string
+  | {
+    text: string;
+    media?: McpPreviewMedia | null;
+  };
+
 export type McpChangePreview = {
   kind?: string;
   preview_version?: number;
@@ -99,7 +106,7 @@ export type McpChangePreview = {
   media?: McpPreviewMedia[];
   skipped_media?: McpPreviewMedia[];
   skipped_media_note?: string;
-  last_changes?: string[];
+  last_changes?: McpPreviewChangeEntry[];
   change_requests?: McpChangeRequest[];
   latest_change_request?: McpChangeRequest | null;
   media_count?: number;
