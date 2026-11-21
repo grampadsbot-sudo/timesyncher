@@ -105,6 +105,15 @@ function compactPreviewMedia(media = {}) {
   };
 }
 
+function compactPreviewChange(entry) {
+  const isObj = entry && typeof entry === 'object';
+  const raw = cleanText(isObj ? entry.text : entry, 300);
+  if (!raw) return null;
+  const text = raw.replace(/\S+\.(?:jpe?g|png|webp|heic|mov|mp4|webm|m4v)\b/gi, (m) => (/\.(?:mov|mp4|webm|m4v)$/i.test(m) ? 'a video' : 'a photo'));
+  const media = isObj && entry.media ? compactPreviewMedia(entry.media) : null;
+  return media ? { text, media } : text;
+}
+
 function buildCardLandingPreview(preview = {}) {
   const rawDays = asArray(preview.days || preview.will_create?.days);
   const rawUnscheduled = asArray(preview.unscheduled_things || preview.will_create?.unscheduled_things);
@@ -398,7 +407,7 @@ export async function postStagedPreviewToChat(db, {
   const bullets = buildPreviewSummaryBullets(kind, preview);
   const landing = buildCardLandingPreview(preview);
   const changeRequests = asArray(preview?.change_requests).slice(-6);
-  const recentChanges = asArray(preview?.last_changes).slice(0, 6);
+  const recentChanges = asArray(preview?.last_changes).slice(0, 6).map(compactPreviewChange).filter(Boolean);
   const previewVersion = Math.max(1, Number(preview?.preview_version) || 1);
   const card = {
     kind: 'ai_staged_approval',

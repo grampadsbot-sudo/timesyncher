@@ -1,5 +1,10 @@
 import type { McpChangeRequest, McpChangeSet, McpPreviewDay, McpPreviewLandingItem, McpPreviewMedia, McpReservationConnection } from '../api/mcpAdmin';
 
+export type NormalizedPreviewChange = {
+  text: string;
+  media: McpPreviewMedia | null;
+};
+
 export type ApprovalPreviewView = {
   previewVersion: number;
   previewHash: string;
@@ -8,7 +13,7 @@ export type ApprovalPreviewView = {
   media: McpPreviewMedia[];
   skippedMedia: McpPreviewMedia[];
   skippedMediaNote: string;
-  lastChanges: string[];
+  lastChanges: NormalizedPreviewChange[];
   changeRequests: McpChangeRequest[];
   totalBytes: number;
 };

@@ -370,22 +370,34 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
                   No pending AI imports or edits for this vacation yet. Nothing goes live until approved here.
                 </p>
               ) : (
-                <div className="tsv-mcp-split">
-                  <ul className="tsv-mcp-list">
-                    {changes.map((item) => (
-                      <li key={item.id}>
-                        <button
-                          type="button"
-                          className={`tsv-mcp-list-item${selected?.id === item.id ? ' is-selected' : ''}`}
-                          onClick={() => setSelectedId(item.id)}
-                        >
-                          <span className="tsv-mcp-item-title">{changeSetKindLabel(item.kind)}</span>
-                          <span className="tsv-mcp-item-meta">{changeSetStatusLabel(item.status)}</span>
-                          <span className="tsv-mcp-item-summary">{item.summary}</span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
+                <div className={`tsv-mcp-split${changes.length <= 1 ? ' is-single' : ''}`}>
+                  {changes.length > 1 ? (
+                    <ul className="tsv-mcp-list">
+                      {changes.map((item, idx) => {
+                        const vacationTitle = String(
+                          item.preview?.will_create?.vacation?.title || '',
+                        ).trim();
+                        const baseLabel = item.kind === 'targeted_edit' ? `Edit ${idx + 1}` : `Import ${idx + 1}`;
+                        const selectorLabel = vacationTitle ? `${vacationTitle} · ${baseLabel}` : baseLabel;
+                        const ver = Math.max(1, Number(item.preview?.preview_version || item.previewVersion || 1));
+                        return (
+                          <li key={item.id}>
+                            <button
+                              type="button"
+                              className={`tsv-mcp-list-item${selected?.id === item.id ? ' is-selected' : ''}`}
+                              onClick={() => setSelectedId(item.id)}
+                            >
+                              <span className="tsv-mcp-item-title">{selectorLabel}</span>
+                              <span className="tsv-mcp-item-meta">
+                                {changeSetStatusLabel(item.status)}
+                                {ver > 1 ? ` · v${ver}` : ''}
+                              </span>
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  ) : null}
 
                   {selected ? (
                     <div
@@ -417,11 +429,30 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
                         <div className="tsv-mcp-block" data-ts-preview-changes="1">
                           <h4>Updated in this preview</h4>
                           <div className="tsv-mcp-notes">
-                            {previewView.lastChanges.map((item, index) => (
-                              <p key={`${index}-${item}`} className="tsv-mcp-note">
-                                {item}
-                              </p>
-                            ))}
+                            {previewView.lastChanges.map((entry, index) =>
+                              entry.media ? (
+                                <div
+                                  key={`${index}-${entry.text}`}
+                                  className="tsv-mcp-note tsv-mcp-change-row"
+                                  data-ts-preview-change-row="1"
+                                >
+                                  <PreviewMediaThumbs
+                                    items={[entry.media]}
+                                    ownerLabel={entry.text}
+                                    scope="change"
+                                  />
+                                  <span className="tsv-mcp-change-text">{entry.text}</span>
+                                </div>
+                              ) : (
+                                <p
+                                  key={`${index}-${entry.text}`}
+                                  className="tsv-mcp-note"
+                                  data-ts-preview-change-row="1"
+                                >
+                                  {entry.text}
+                                </p>
+                              ),
+                            )}
                           </div>
                         </div>
                       ) : null}

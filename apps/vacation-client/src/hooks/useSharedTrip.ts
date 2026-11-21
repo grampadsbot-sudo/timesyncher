@@ -25,7 +25,7 @@ function initialTripState(): State {
     return {
       status: 'error',
       token: '',
-      message: 'This link is missing trip information. Open the share link you received from your trip owner.',
+      message: 'This link is missing vacation information. Open the share link you received from your vacation owner.',
     };
   }
   return { status: 'loading' };

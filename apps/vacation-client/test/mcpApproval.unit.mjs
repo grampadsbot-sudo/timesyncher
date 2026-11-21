@@ -173,12 +173,36 @@ const skippedView = extractApprovalPreviewView({
 });
 assert.equal(skippedView.previewVersion, 2);
 assert.equal(skippedView.lastChanges.length, 1);
+assert.equal(skippedView.lastChanges[0].text, 'Moved Pilgrim Way Bookshop to Day 2 · Sat, Jul 4');
+assert.equal(skippedView.lastChanges[0].media, null);
 assert.equal(skippedView.changeRequests.length, 1);
 assert.equal(skippedView.skippedMedia.length, 2);
 assert.equal(
   skippedView.skippedMediaNote,
   "These 2 photos don't have a date during this vacation, so they won't be imported.",
 );
+
+const mediaChangeView = extractApprovalPreviewView({
+  previewHash: 'chg1077',
+  preview: {
+    preview_version: 3,
+    preview_hash: 'chg1077',
+    days: [],
+    media: [],
+    last_changes: [
+      {
+        text: "Moved a photo from Won't be imported to Day 2 · Sat, Jul 4",
+        media: { media_id: 'm9', media_kind: 'photo', url: '/api/mcp/media/m9' },
+      },
+      "Rescued from Won't be imported and placed undated-dinner.jpg on Day 2 · Sun, Oct 18",
+    ],
+  },
+});
+assert.equal(mediaChangeView.lastChanges.length, 2);
+assert.equal(mediaChangeView.lastChanges[0].text, "Moved a photo from Won't be imported to Day 2 · Sat, Jul 4");
+assert.equal(mediaChangeView.lastChanges[0].media?.media_id, 'm9');
+assert.equal(mediaChangeView.lastChanges[1].text, "Moved a photo from Won't be imported to Day 2 · Sun, Oct 18");
+assert.doesNotMatch(mediaChangeView.lastChanges.map((c) => c.text).join(' '), /\.(jpe?g|png|heic|mov|mp4)\b/i);
 
 assert.match(panelSource, /Request changes/);
 assert.match(livePanelSource, /Request changes/);

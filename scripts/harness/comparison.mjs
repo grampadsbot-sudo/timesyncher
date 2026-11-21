@@ -97,6 +97,8 @@ export function compareBackends(cards) {
       failure_rate: stories ? failures / stories : null,
       refusal_rate: stories ? refusals / stories : null,
       quality_mean: mean(scores),
+      quality_mean_role: 'comparison_only',
+      dlr_comparison_mean: mean(scores),
       quality_gaps: qualityGaps,
       speed_p50: percentile(walls, 50),
       speed_p95: percentile(walls, 95),
@@ -161,7 +163,7 @@ export function formatEstimateDollars(amount, state) {
 }
 
 export function comparisonMarkdown(rows) {
-  const header = '| backend | stories | passes | failures | failure rate | refusals | refusal rate | quality mean | speed p50 ms | speed p95 ms | cost / customer | cost / 100 | usage % / customer | usage % / 100 | estimated $ / customer | estimated $ / 100 |';
+  const header = '| backend | stories | passes | failures | failure rate | refusals | refusal rate | legacy DLR/jev comparison (non-primary) | speed p50 ms | speed p95 ms | cost / customer | cost / 100 | usage % / customer | usage % / 100 | estimated $ / customer | estimated $ / 100 |';
   const rule = '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |';
   const body = rows.map((row) => `| ${row.backend} | ${row.stories} | ${row.passes} | ${row.failures} | ${rate(row.failure_rate)} | ${row.refusals} | ${rate(row.refusal_rate)} | ${num(row.quality_mean)} | ${num(row.speed_p50)} | ${num(row.speed_p95)} | ${formatCostAmount(row.cost_per_customer, row.cost_unit, row.cost_state, row.cost_gap)} | ${formatCostAmount(row.cost_per_100, row.cost_unit, row.cost_state, row.cost_gap)} | ${formatCostAmount(row.usage_percent_per_customer, 'percent', row.usage_percent_per_customer == null ? 'not-run' : 'measured', '')} | ${formatCostAmount(row.usage_percent_per_100, 'percent', row.usage_percent_per_100 == null ? 'not-run' : 'measured', '')} | ${formatEstimateDollars(row.estimated_dollars_per_customer, row.estimated_dollars_state)} | ${formatEstimateDollars(row.estimated_dollars_per_100, row.estimated_dollars_state)} |`);
   return [header, rule, ...body].join('\n');

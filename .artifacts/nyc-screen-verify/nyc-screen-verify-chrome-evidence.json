@@ -16,7 +16,7 @@
       "carLogos": 4,
       "carRows": 7,
       "carBrandLabels": [
-        "Priceline Express Deal (car company shown after booking)",
+        "Priceline Express Deal",
         "Hertz",
         "Dollar",
         "Thrifty"
@@ -55,7 +55,7 @@
       "carLogos": 4,
       "carRows": 7,
       "carBrandLabels": [
-        "Priceline Express Deal (car company shown after booking)",
+        "Priceline Express Deal",
         "Hertz",
         "Dollar",
         "Thrifty"
@@ -89,8 +89,8 @@
       "carboneHhHidden": true
     }
   ],
-  "origin": "http://127.0.0.1:41319",
-  "bundleSha256": "9f854352f4df80827623156d21bda08fb19839f4a98ad7f93735fc196e859f33",
+  "origin": "http://127.0.0.1:40605",
+  "bundleSha256": "b85ff7a3b46a32500e0fc8d116947cd1d9464cf03a75406accbe4cb70025c284",
   "slug": "8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y",
-  "liveApiPath": "/home/ubishere9995/tsv-work/vkfill-969-cursor-mgr-20261114-194546/scripts/fixtures/nyc-screen-trip99-live-shared-api.json"
+  "liveApiPath": "/home/ubishere9995/tsv-work/vkfill-1080-20261121101621/scripts/fixtures/nyc-screen-trip99-live-shared-api.json"
 }

@@ -6,6 +6,9 @@ import { redactText } from './redact.mjs';
 import { buildScorecard } from './scorecard.mjs';
 import { confirmStoredTurns } from './stored-turn.mjs';
 import { noteUnstoredRows } from './unstored-turn.mjs';
+import { extractLegacyDlrComparison } from '../customer_suite/ssr/aggregate.mjs';
+import { recordDialogPdfStatus } from '../customer_suite/ssr/dialog-hook.mjs';
+import { createHarnessSsrHook } from '../customer_suite/ssr/hooks.mjs';
 
 function mergeWall(rows, timings) {
   const byN = new Map((timings || []).map((row) => [row.n, row.wall_ms]));
@@ -140,6 +143,33 @@ export async function runCustomer(story, options) {
     artifact: '',
   });
   checks.push({ id: 'scorecard', pass: true, detail: 'written', artifact: 'scorecard.json' });
+  let ssr = null;
+  let dialogPdfStatus = null;
+  const ssrHook = options.ssrHook
+    || (options.ssrReactions || played?.ssrReactions || story?.ssr_reactions
+      ? createHarnessSsrHook({
+          reactionsByStory: options.ssrReactions ? { [story.story_id]: options.ssrReactions } : null,
+        })
+      : null);
+  if (ssrHook) {
+    ssr = await ssrHook.scoreCustomer({ story, played, outDir: options.outDir });
+    dialogPdfStatus = ssrHook.dialogPdfStatus({
+      generated: played?.dialogOk === true,
+      pdfPath: played?.dialogOk === true ? path.join(options.outDir, 'dialog.pdf') : '',
+      ssrAggregate: ssr,
+    });
+  } else if (played?.dialogPdfStatus) {
+    dialogPdfStatus = played.dialogPdfStatus;
+  } else if (options.skipDialogPdf) {
+    dialogPdfStatus = recordDialogPdfStatus({
+      generated: false,
+      skipReason: options.skipDialogReason || 'dialog-pdf-skipped',
+      ssrAggregate: ssr,
+    });
+  }
+  const dlrComparison = ssr
+    ? extractLegacyDlrComparison([{ story_id: story.story_id, turns, dlr_score: story.dlr_score ?? played?.dlrScore }])
+    : null;
   const card = buildScorecard({
     run_id: options.runId,
     story_id: story.story_id,
@@ -157,6 +187,9 @@ export async function runCustomer(story, options) {
     gaps,
     reason,
     session_ref: played?.sessionRef || '',
+    ...(ssr ? { ssr } : {}),
+    ...(dlrComparison && dlrComparison.n > 0 ? { dlr_comparison: dlrComparison } : {}),
+    ...(dialogPdfStatus ? { dialog_pdf_status: dialogPdfStatus } : {}),
     ...(reason === 'turn-not-stored' || reason === 'first-intake-reply-flagged' ? { turn_http: played?.exchange || null } : {}),
   });
   fs.writeFileSync(path.join(options.outDir, 'scorecard.json'), `${JSON.stringify(card, null, 2)}\n`);

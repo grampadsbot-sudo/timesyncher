@@ -52,7 +52,7 @@ export function DayByDayScreen({ trip, onOpen }: Props) {
   if (!days.length) {
     return (
       <section className="tsv-screen tsv-day-screen">
-        <p className="tsv-empty">No days on this trip yet.</p>
+        <p className="tsv-empty">No days on this vacation yet.</p>
       </section>
     );
   }
@@ -64,7 +64,7 @@ export function DayByDayScreen({ trip, onOpen }: Props) {
         <div
           className="tsv-day-chip-row"
           role="tablist"
-          aria-label="Trip days"
+          aria-label="Vacation days"
           onKeyDown={(event) => {
             if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
             event.preventDefault();

@@ -1892,6 +1892,10 @@ html[data-ts-keepsake] #root {
   gap: 12px;
 }
 
+.tsv-mcp-split.is-single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 @media (max-width: 600px) {
   .tsv-mcp-split {
     grid-template-columns: 1fr;
@@ -2105,6 +2109,27 @@ html[data-ts-keepsake] #root {
   border-radius: 8px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
+}
+
+.tsv-mcp-change-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tsv-mcp-change-row .tsv-mcp-thumb-strip {
+  margin-top: 0;
+  flex: 0 0 auto;
+}
+
+.tsv-mcp-change-row .tsv-mcp-thumb {
+  width: 44px;
+  height: 44px;
+}
+
+.tsv-mcp-change-text {
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .tsv-mcp-block-warn .tsv-mcp-note {

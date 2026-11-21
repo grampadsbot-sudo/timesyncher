@@ -78,6 +78,32 @@ function isSkippedMediaEntry(media) {
     && !media.assigned_day_date;
 }
 
+function sanitizePreviewChangeText(raw) {
+  const value = String(raw || '').trim();
+  if (!value) return '';
+  const replaced = value.replace(/\S+\.(?:jpe?g|png|webp|heic|mov|mp4|webm|m4v)\b/gi, (match) => (/\.(?:mov|mp4|webm|m4v)$/i.test(match) ? 'a video' : 'a photo'));
+  const rescuePlace = replaced.match(/^Rescued from Won't be imported and placed (a (?:photo|video)) on (.+)$/i);
+  if (rescuePlace) return `Moved ${rescuePlace[1]} from Won't be imported to ${rescuePlace[2]}`;
+  const rescueAttach = replaced.match(/^Rescued from Won't be imported and attached (a (?:photo|video)) to (.+)$/i);
+  if (rescueAttach) return `Moved ${rescueAttach[1]} from Won't be imported to ${rescueAttach[2]}`;
+  return replaced;
+}
+
+function normalizePreviewChangeEntry(entry) {
+  if (!entry) return null;
+  if (typeof entry === 'string') {
+    const text = sanitizePreviewChangeText(entry);
+    return text ? { text, media: null } : null;
+  }
+  if (typeof entry === 'object') {
+    const text = sanitizePreviewChangeText(entry.text || '');
+    if (!text) return null;
+    const media = entry.media ? normalizePreviewMediaEntry(entry.media) : null;
+    return { text, media };
+  }
+  return null;
+}
+
 function formatSkippedMediaNote(items) {
   const count = items.length;
   if (!count) return '';
@@ -136,7 +162,9 @@ export function extractApprovalPreviewView(changeSet) {
     : media.reduce((sum, item) => sum + Number(item?.bytes || 0), 0);
   const previewHash = String(preview.preview_hash || changeSet?.previewHash || '');
   const previewVersion = Math.max(1, Number(preview.preview_version || changeSet?.previewVersion || 1));
-  const lastChanges = Array.isArray(preview.last_changes) ? preview.last_changes.filter(Boolean) : [];
+  const lastChanges = Array.isArray(preview.last_changes)
+    ? preview.last_changes.map(normalizePreviewChangeEntry).filter(Boolean)
+    : [];
   const rawRequests = Array.isArray(preview.change_requests)
     ? preview.change_requests
     : (Array.isArray(changeSet?.changeRequests) ? changeSet.changeRequests : []);

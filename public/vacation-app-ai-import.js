@@ -132,6 +132,10 @@
       '.ts-ai-day-media-label{margin:2px 0 0;font-size:11px;font-weight:700;color:#64748b}',
       '.ts-ai-notes{display:grid;gap:6px}',
       '.ts-ai-note{margin:0;font-size:12px;line-height:1.45;color:#475569;padding:8px 10px;border-radius:8px;background:#f8fafc;border:1px solid #e2e8f0}',
+      '.ts-ai-change-row{display:flex;align-items:center;gap:10px}',
+      '.ts-ai-change-row .ts-ai-thumb-strip{margin-top:0;flex:0 0 auto}',
+      '.ts-ai-change-row .ts-ai-thumb{width:44px;height:44px}',
+      '.ts-ai-change-text{min-width:0;flex:1 1 auto}',
       '.ts-ai-thumb-strip{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}',
       '.ts-ai-thumb{position:relative;width:58px;height:58px;padding:0;border-radius:8px;overflow:hidden;border:1px solid #cbd5e1;background:#0f172a;cursor:pointer;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center}',
       '.ts-ai-thumb-media{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}',
@@ -229,6 +233,32 @@
       + '</section>';
   }
 
+  function sanitizeChangeText(raw) {
+    const value = String(raw || '').trim();
+    if (!value) return '';
+    const replaced = value.replace(/\S+\.(?:jpe?g|png|webp|heic|mov|mp4|webm|m4v)\b/gi, (m) => (/\.(?:mov|mp4|webm|m4v)$/i.test(m) ? 'a video' : 'a photo'));
+    const rescuePlace = replaced.match(/^Rescued from Won't be imported and placed (a (?:photo|video)) on (.+)$/i);
+    if (rescuePlace) return `Moved ${rescuePlace[1]} from Won't be imported to ${rescuePlace[2]}`;
+    const rescueAttach = replaced.match(/^Rescued from Won't be imported and attached (a (?:photo|video)) to (.+)$/i);
+    if (rescueAttach) return `Moved ${rescueAttach[1]} from Won't be imported to ${rescueAttach[2]}`;
+    return replaced;
+  }
+
+  function normalizeChangeEntry(entry) {
+    if (!entry) return null;
+    if (typeof entry === 'string') {
+      const text = sanitizeChangeText(entry);
+      return text ? { text, media: null } : null;
+    }
+    if (typeof entry === 'object') {
+      const text = sanitizeChangeText(entry.text || '');
+      if (!text) return null;
+      const media = entry.media ? normalizeMedia(entry.media) : null;
+      return { text, media };
+    }
+    return null;
+  }
+
   function formatSkippedMediaNote(items) {
     const count = items.length;
     if (!count) return '';
@@ -253,7 +283,7 @@
     const unscheduled = Array.isArray(card.unscheduledThings) ? card.unscheduledThings : [];
     const skipped = Array.isArray(card.skippedMedia) ? card.skippedMedia : [];
     const skippedNote = String(card.skippedMediaNote || '').trim() || formatSkippedMediaNote(skipped);
-    const recentChanges = Array.isArray(card.recentChanges) ? card.recentChanges.filter(Boolean) : [];
+    const recentChanges = Array.isArray(card.recentChanges) ? card.recentChanges.map(normalizeChangeEntry).filter(Boolean) : [];
     const changeRequests = Array.isArray(card.changeRequests) ? card.changeRequests.filter((r) => r && r.note) : [];
     const previewVersion = Math.max(1, Number(card.previewVersion) || 1);
     const status = String(card.status || 'pending_approval');
@@ -309,7 +339,17 @@
       })}</div>`
       : '';
     const recentChangesHtml = recentChanges.length
-      ? `<div class="ts-ai-block" data-ts-preview-changes="1"><h4>Updated in this preview</h4><div class="ts-ai-notes">${recentChanges.map((line) => `<p class="ts-ai-note">${esc(line)}</p>`).join('')}</div></div>`
+      ? `<div class="ts-ai-block" data-ts-preview-changes="1"><h4>Updated in this preview</h4><div class="ts-ai-notes">${recentChanges.map((entry, idx) => {
+        if (entry.media) {
+          const thumb = renderThumbStripHtml([entry.media], {
+            galleryKey: `${cardKey}:change:${idx}`,
+            ownerLabel: entry.text,
+            scope: 'change',
+          });
+          return `<div class="ts-ai-note ts-ai-change-row" data-ts-preview-change-row="1">${thumb}<span class="ts-ai-change-text">${esc(entry.text)}</span></div>`;
+        }
+        return `<p class="ts-ai-note" data-ts-preview-change-row="1">${esc(entry.text)}</p>`;
+      }).join('')}</div></div>`
       : '';
     const requestedHtml = changeRequests.length
       ? `<div class="ts-ai-block" data-ts-requested-changes="1"><h4>Requested changes</h4><div class="ts-ai-notes">${changeRequests.map((entry) => `<p class="ts-ai-note">${esc(entry.note)}</p>`).join('')}</div></div>`
