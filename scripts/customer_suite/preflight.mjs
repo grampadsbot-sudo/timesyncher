@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import { chromeHits } from '../harness/chrome.mjs';
 import { resolvePlaywright } from '../harness/live-outputs.mjs';
+import { reportFailures } from './report.mjs';
 import { RESULTS, STAGING, servedBuild, writeJson } from './staging.mjs';
 
 const VIEWPORTS = [
@@ -13,13 +14,13 @@ const VIEWPORTS = [
 const PUBLIC_API = new Set(['/api/checkout-products']);
 const PAGES = [
   {
-    id: 'signup-entry',
+    id: 's1', name: 'sign-up entry copy', slug: 'signup-entry',
     path: '/login.html',
     expected: ['Sign In', 'Vacation onboarding'],
     blocker: 'The sign-in form has no submission handler. The customer app uses the onboarding link from checkout, and there is no public account deletion flow.',
   },
   {
-    id: 'website-entry',
+    id: 's3', name: 'website entry copy', slug: 'website-entry',
     path: '/',
     expected: ['Planning a Vacation', 'Vacation date', 'Go to step two'],
     blocker: 'The website gates onboarding behind checkout. A staging throwaway lifecycle covering checkout, account deletion, and vacation deletion is still required.',
@@ -36,29 +37,32 @@ function safeRead(request) {
 
 async function inspect(page, run, scenario, width) {
   const assertions = [];
-  const add = (expected, pass) => assertions.push({ expected, pass });
+  const add = (expected, pass, actual) => assertions.push({ expected, pass, actual });
   const response = await page.goto(`${STAGING}${scenario.path}`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
   add('public staging page returns HTTP 200', response?.status() === 200);
   const text = await page.locator('body').innerText({ timeout: 10_000 });
   for (const word of scenario.expected) add(`visible text includes "${word}"`, text.includes(word));
-  add('visible copy uses vacation terminology', /\bvacations?\b/i.test(text) && !/\btrips?\b/i.test(text));
+  const retiredCopy = text.match(/\btrips?\b/i)?.[0];
+  add('visible copy uses vacation terminology', /\bvacations?\b/i.test(text) && !retiredCopy, retiredCopy);
   add('visible AI copy uses uppercase AI', !/\bAi\b|\bai\b/.test(text));
   add('visible copy has no stub or engineering chrome', chromeHits(text).length === 0 && !/\b(?:undefined|NaN|TODO|Uncaught TypeError)\b|\[object Object\]/.test(text));
-  const screenshot = path.join(run.dir, 'screenshots', `${scenario.id}-${width}.png`);
+  const screenshot = path.join(run.dir, 'screenshots', `${scenario.slug}-${width}.png`);
   await page.screenshot({ path: screenshot, animations: 'disabled', timeout: 10_000 });
   return { width, assertions, screenshot };
 }
 
-export async function runPreflight({ trigger = 'manual', expectedSha } = {}) {
+export async function runPreflight({ trigger = 'manual', expectedSha, only, report = true } = {}) {
   const sha = await servedBuild();
   if (expectedSha && expectedSha !== sha) throw new Error('staging build changed before the browser run');
   const timestamp = new Date().toISOString();
   const id = `${timestamp.replace(/[:.]/g, '')}-${randomUUID().slice(0, 8)}`;
   const dir = path.join(RESULTS, id);
   fs.mkdirSync(path.join(dir, 'screenshots'), { recursive: true, mode: 0o700 });
+  const pages = only ? PAGES.filter(({ id }) => id === only) : PAGES;
+  if (!pages.length) throw new Error('unknown staging preflight scenario');
   const result = {
     run: id, dir, trigger, sha, target: STAGING, startedAt: timestamp,
-    status: 'blocked', checks: PAGES.map(({ id, blocker }) => ({ id, blocker, evidence: [] })),
+    status: 'blocked', checks: pages.map(({ id, name, blocker }) => ({ id, name, blocker, evidence: [] })),
     cleanup: { accountsCreated: 0, accountsDeleted: 0, vacationsCreated: 0, vacationsDeleted: 0 },
   };
   const playwright = resolvePlaywright();
@@ -75,7 +79,7 @@ export async function runPreflight({ trigger = 'manual', expectedSha } = {}) {
           return route.fulfill({ response });
         });
         const page = await context.newPage();
-        for (const [index, scenario] of PAGES.entries()) {
+        for (const [index, scenario] of pages.entries()) {
           const check = result.checks[index];
           try {
             check.evidence.push(await inspect(page, { dir }, scenario, width));
@@ -93,13 +97,23 @@ export async function runPreflight({ trigger = 'manual', expectedSha } = {}) {
   result.finishedAt = new Date().toISOString();
   result.verifiedSha = await servedBuild();
   if (result.verifiedSha !== result.sha) result.status = 'staging-changed';
-  writeJson(path.join(dir, 'results.json'), result);
+  else if (result.checks.some((check) => check.evidence.some((item) => item.assertions.some((a) => !a.pass)))) result.status = 'red';
+  const output = path.join(dir, 'results.json');
+  writeJson(output, result);
+  if (report && result.status === 'red') {
+    try {
+      result.issues = await reportFailures(result);
+    } catch (error) {
+      result.reporting = { status: 'error', httpStatus: error.status ?? null, code: error.code ?? null };
+    }
+    writeJson(output, result);
+  }
   return result;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const trigger = process.argv[2] || 'manual';
-  const result = await runPreflight({ trigger });
+  const result = await runPreflight({ trigger, report: !process.argv.includes('--no-report') });
   console.log(JSON.stringify({ run: result.run, status: result.status, sha: result.sha, dir: result.dir }));
-  process.exitCode = result.status === 'staging-changed' ? 1 : 0;
+  process.exitCode = 1;
 }
