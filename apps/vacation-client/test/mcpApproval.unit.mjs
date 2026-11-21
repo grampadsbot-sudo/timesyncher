@@ -99,7 +99,12 @@ assert.doesNotMatch(joined, /\bSI\b/);
 const headerSource = await readFile(new URL('../src/components/TripHeaderActions.tsx', import.meta.url), 'utf8');
 assert.match(headerSource, /Vacation View/);
 assert.doesNotMatch(headerSource, />Trip View</);
-assert.match(headerSource, /AI Access &amp; Approvals/);
+assert.doesNotMatch(headerSource, /AI Access &amp; Approvals/);
+
+const shellSource = await readFile(new URL('../src/components/TripShell.tsx', import.meta.url), 'utf8');
+assert.match(shellSource, /data-ts-vacation-grid-root/);
+assert.match(shellSource, /AI Access &amp; Approvals/);
+assert.match(shellSource, /\['flights', 'cars', 'hotels'\]/);
 
 const panelSource = await readFile(new URL('../src/components/McpApprovalPanel.tsx', import.meta.url), 'utf8');
 assert.match(panelSource, /handleApprove\(selected\.id, previewView\.previewHash\)/);
