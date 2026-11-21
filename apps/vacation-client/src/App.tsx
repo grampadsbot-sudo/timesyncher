@@ -79,7 +79,7 @@ export default function App() {
     if (tripState.status === 'error') {
       return (
         <div className="tsv-error" role="alert">
-          <h1>Could not load this trip</h1>
+          <h1>Could not load this vacation</h1>
           <p>{tripState.message}</p>
           {import.meta.env.DEV ? (
             <p className="tsv-muted">
@@ -91,7 +91,7 @@ export default function App() {
     }
     return (
       <div className="tsv-loading" role="status" aria-live="polite">
-        Loading trip…
+        Loading vacation…
       </div>
     );
   }
@@ -113,9 +113,9 @@ export default function App() {
   } else if (tab === 'budget') {
     body = <BudgetScreen trip={trip} />;
   } else if (tab === 'packing') {
-    body = <FlagTabScreen message="Packing list opens when the trip owner enables packing on the share link." />;
+    body = <FlagTabScreen message="Packing list opens when the vacation owner enables packing on the share link." />;
   } else if (tab === 'chat') {
-    body = <FlagTabScreen message="Collaborator chat opens when the trip owner enables collaboration on the share link." />;
+    body = <FlagTabScreen message="Collaborator chat opens when the vacation owner enables collaboration on the share link." />;
   } else {
     body = (
       <CategoryTabScreen

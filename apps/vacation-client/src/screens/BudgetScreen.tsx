@@ -47,7 +47,7 @@ export function BudgetScreen({ trip }: Props) {
     return (
       <section className="tsv-screen tsv-budget-screen" data-tab="budget">
         <p className="tsv-empty" role="alert">
-          No budget items yet. Prices from your trip list will appear here when available.
+          No budget items yet. Prices from your vacation list will appear here when available.
         </p>
       </section>
     );
@@ -56,18 +56,18 @@ export function BudgetScreen({ trip }: Props) {
   return (
     <section className="tsv-screen tsv-budget-screen" data-tab="budget">
       <div className="tsv-budget-panel" data-ts-budget-panel="1">
-        <h2 className="tsv-budget-overall-title">Overall trip budget</h2>
+        <h2 className="tsv-budget-overall-title">Overall vacation budget</h2>
 
         <div className="tsv-budget-trip-total" data-ts-budget-trip-total="1">
           <span className="tsv-budget-trip-icon" aria-hidden="true">
             💵
           </span>
-          <span className="tsv-budget-trip-label">Trip total</span>
+          <span className="tsv-budget-trip-label">Vacation total</span>
           <TargetReadout
             planned={model.tripPlanned}
             target={model.tripTarget}
             currency={model.currency}
-            ariaLabel="Trip total target"
+            ariaLabel="Vacation total target"
           />
           <span className="tsv-budget-timeline-pill">
             {formatUsd(model.tripTimelinePlanned, model.currency)} timeline

@@ -298,8 +298,8 @@ export async function runChatItineraryEditTurn({
   const guard = shareSlugEditGuardDecision(slug);
   if (!guard.ok) {
     const replyContext = guard.reason === 'not_allowlisted'
-      ? 'Tell the customer itinerary editing is not enabled for this trip yet.'
-      : guard.reason === 'demo_locked' ? '' : 'Tell the customer this demo trip cannot be edited via chat.';
+      ? 'Tell the customer itinerary editing is not enabled for this vacation yet.'
+      : guard.reason === 'demo_locked' ? '' : 'Tell the customer this demo vacation cannot be edited via chat.';
     return editSkip(guard.reason, replyContext, { applied: false, reason: guard.reason });
   }
   const webAccessToken = readCookie(httpReq, webAccessCookieName())
@@ -359,7 +359,7 @@ export async function runChatItineraryEditTurn({
     const anchorId = await loadAnchorPlaceId(db, trip.id);
     if (anchorId) place = (payload.places || []).find((p) => String(p.id) === String(anchorId)) || null;
   }
-  if (!place) return editSkip('place_not_found', 'Ask which itinerary place they want to change, using names from the trip.', { applied: false, reason: 'place_not_found' });
+  if (!place) return editSkip('place_not_found', 'Ask which itinerary place they want to change, using names from the vacation.', { applied: false, reason: 'place_not_found' });
   const storedAnchorId = intent.op === 'add_bar_before' ? (await loadAnchorPlaceId(db, trip.id)) : '';
   const dayResolve = resolveItineraryEditDayNumber({
     payload,
@@ -375,7 +375,7 @@ export async function runChatItineraryEditTurn({
   }
   const day = dayForNumber(payload, dayNumber);
   if (!day) {
-    return editSkip('day_not_found', 'Ask which day number on this trip they mean.', { applied: false, reason: 'day_not_found' });
+    return editSkip('day_not_found', 'Ask which day number on this vacation they mean.', { applied: false, reason: 'day_not_found' });
   }
   if (intent.op === 'set_time') {
     const timeHHMM = parseTimeToHHMM(intent.time);
@@ -395,7 +395,7 @@ export async function runChatItineraryEditTurn({
         const assignedDays = assignedDayNumbersForPlace(payload, place.id);
         const onDay = priorAssignment
           ? (assignedDays.length ? `Day ${assignedDays.join(', ')}` : `day ${priorAssignment.dayId}`)
-          : 'this trip';
+          : 'this vacation';
         return editSkip(
           'assignment_move_failed',
           `${place.name || place.title} could not be moved onto Day ${dayNumber}; it is still scheduled on ${onDay}.`,
@@ -407,7 +407,7 @@ export async function runChatItineraryEditTurn({
     if (!placeAssignedOnDay(payload, place.id, day.id)) {
       return editSkip(
         'assignment_move_failed',
-        `${place.name || place.title} is not on Day ${dayNumber} yet; try again after refreshing the trip.`,
+        `${place.name || place.title} is not on Day ${dayNumber} yet; try again after refreshing the vacation.`,
         { applied: false, reason: 'assignment_move_failed' },
       );
     }
@@ -436,7 +436,7 @@ export async function runChatItineraryEditTurn({
     const anchorTime = parseTimeToHHMM(anchorSchedule?.startTime || anchorSchedule?.time || place.place_time || '');
     if (!anchorTime) return editSkip('anchor_time_missing', `Set a time for ${place.name || place.title} on that day before adding a bar before it.`, { applied: false, reason: 'anchor_time_missing' });
     const bar = selectNearestBarBeforeAnchor(payload, place, day.id);
-    if (!bar) return editSkip('no_bar_candidate', 'No unused bar already on this trip is available to schedule before that dinner.', { applied: false, reason: 'no_bar_candidate' });
+    if (!bar) return editSkip('no_bar_candidate', 'No unused bar already on this vacation is available to schedule before that dinner.', { applied: false, reason: 'no_bar_candidate' });
     const barAssignment = await ensurePlaceAssignedOnDay({
       payload, slug, placeId: bar.id, dayId: day.id, webAccessToken, env, putAssignmentMove, postDayAssignment,
     });

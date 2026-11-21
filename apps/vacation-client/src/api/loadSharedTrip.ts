@@ -18,7 +18,7 @@ const TRIP_LOAD_TIMEOUT_MS = 30_000;
 export async function loadSharedTrip(token: string): Promise<SharedTripPayload> {
   const slug = token.replace(/^\/+|\/+$/g, '');
   if (!slug) {
-    throw new Error('This share link is missing a trip token.');
+    throw new Error('This share link is missing a vacation token.');
   }
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), TRIP_LOAD_TIMEOUT_MS);
@@ -31,14 +31,14 @@ export async function loadSharedTrip(token: string): Promise<SharedTripPayload> 
     });
   } catch (err) {
     if (err instanceof DOMException && err.name === 'AbortError') {
-      throw new Error('Trip load timed out. Check your connection and try again.');
+      throw new Error('Vacation load timed out. Check your connection and try again.');
     }
     throw err;
   } finally {
     window.clearTimeout(timeout);
   }
   if (!response.ok) {
-    let message = `Trip load failed (${response.status})`;
+    let message = `Vacation load failed (${response.status})`;
     try {
       const body = (await response.json()) as { customerMessage?: string };
       if (body.customerMessage) message = body.customerMessage;
@@ -51,10 +51,10 @@ export async function loadSharedTrip(token: string): Promise<SharedTripPayload> 
   try {
     data = (await response.json()) as SharedTripPayload;
   } catch {
-    throw new Error('Trip data could not be read. Try again in a moment.');
+    throw new Error('Vacation data could not be read. Try again in a moment.');
   }
   if (!data || !Array.isArray(data.places)) {
-    throw new Error('Invalid trip payload from API');
+    throw new Error('Invalid vacation payload from API');
   }
   return data;
 }

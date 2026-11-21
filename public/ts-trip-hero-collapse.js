@@ -76,14 +76,14 @@
     btn.type = 'button';
     btn.setAttribute('data-ts-hero-collapse', '1');
     btn.setAttribute('data-ts-trip-hero-collapse', '1');
-    btn.setAttribute('aria-label', 'Collapse trip header');
+    btn.setAttribute('aria-label', 'Collapse vacation header');
     btn.textContent = '▾';
     btn.addEventListener('click', () => {
       const collapsed = hero.getAttribute('data-collapsed') === '1';
       const next = !collapsed;
       hero.setAttribute('data-collapsed', next ? '1' : '0');
       btn.setAttribute('aria-expanded', next ? 'false' : 'true');
-      btn.setAttribute('aria-label', next ? 'Expand trip header' : 'Collapse trip header');
+      btn.setAttribute('aria-label', next ? 'Expand vacation header' : 'Collapse vacation header');
       try { localStorage.setItem(storageKey, next ? '1' : '0'); } catch {}
     });
     hero.appendChild(btn);
@@ -120,7 +120,7 @@
       const btn = hero.querySelector('[data-ts-trip-hero-collapse]');
       if (btn) {
         btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-        btn.setAttribute('aria-label', collapsed ? 'Expand trip header' : 'Collapse trip header');
+        btn.setAttribute('aria-label', collapsed ? 'Expand vacation header' : 'Collapse vacation header');
       }
     }
     return true;

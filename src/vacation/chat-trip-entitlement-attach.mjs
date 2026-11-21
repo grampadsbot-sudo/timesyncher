@@ -108,7 +108,7 @@ export async function preflightAttachOwnerEntitlementForChatTrip(db, session) {
       ok: false,
       statusCode: 409,
       code: 'vacation_app_single_plan_second_trip_forbidden',
-      error: 'The single-vacation plan already has a trip. Start a new purchase to plan another vacation.',
+      error: 'The single-vacation plan already has a vacation. Start a new purchase to plan another vacation.',
     };
   }
   return { ok: true, purchase, checkoutPlan };
@@ -121,7 +121,7 @@ export async function attachPurchasedEntitlementToChatTrip(db, session, tripId) 
       ok: false,
       statusCode: 500,
       code: 'vacation_app_owner_entitlement_attach_failed',
-      error: 'Trip id is required to attach the purchased entitlement.',
+      error: 'Vacation id is required to attach the purchased entitlement.',
     };
   }
   const customerId = String(session?.customer_id || '').trim();
@@ -140,7 +140,7 @@ export async function attachPurchasedEntitlementToChatTrip(db, session, tripId) 
         ok: false,
         statusCode: 409,
         code: 'vacation_app_single_plan_second_trip_forbidden',
-        error: 'The single-vacation plan already has a trip. Start a new purchase to plan another vacation.',
+        error: 'The single-vacation plan already has a vacation. Start a new purchase to plan another vacation.',
       };
     }
     const updated = await db`
@@ -156,7 +156,7 @@ export async function attachPurchasedEntitlementToChatTrip(db, session, tripId) 
         ok: false,
         statusCode: 409,
         code: 'vacation_app_single_plan_second_trip_forbidden',
-        error: 'The single-vacation plan already has a trip. Start a new purchase to plan another vacation.',
+        error: 'The single-vacation plan already has a vacation. Start a new purchase to plan another vacation.',
       };
     }
     return { ok: true, entitlementId: updated[0].id, action: 'attached' };

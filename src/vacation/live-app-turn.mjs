@@ -458,14 +458,14 @@ export function draftingFacts(priorTurns, customerTurn = '', saved = null) {
   const roster = [
     `Party rule: ${statedLine}`,
     travelers.length ? `Traveling: ${travelers.map((person) => person.payer ? `${person.name} (payer ${person.payer})` : person.name).join(', ')}.${holder}` : '',
-    absent.length ? `Not on the trip: ${absent.join(', ')}. Viewers and editors are not coming, not in the house, and not in the day's group.` : '',
+    absent.length ? `Not on the vacation: ${absent.join(', ')}. Viewers and editors are not coming, not in the house, and not in the day's group.` : '',
   ].filter(Boolean).join(' ');
   const span = record?.span || null;
   const gap = draftingGapFields(record, things);
   const facts = {
     itinerary,
     roster,
-    dates: span?.spanLabel ? `Saved trip dates: ${span.spanLabel}.` : '',
+    dates: span?.spanLabel ? `Saved vacation dates: ${span.spanLabel}.` : '',
     ...gap.facts,
   };
   if (party.askRoster === true) facts.askRoster = true;
@@ -1545,7 +1545,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const genStarted = Date.now();
   const speaker = String(tripFacts.addressedTo || '').trim();
   const turnInviteExtra = tripContext?.turnInvite?.ok === true
-    ? String(tripContext.turnInviteRule || 'This turn only sent a pending collaborator invite. Do not welcome the invitee or say they are joining or on the trip.')
+    ? String(tripContext.turnInviteRule || 'This turn only sent a pending collaborator invite. Do not welcome the invitee or say they are joining or on the vacation.')
     : '';
   const draftExtra = [
     tripContext.roster || '',
@@ -1816,7 +1816,7 @@ async function interimFromTierOne({ rules, customerTurn, destination, env, facts
     speaker
       ? `The person speaking now is ${speaker}. Address ${speaker}. Do not address ${owner || 'someone else'} as the speaker.`
       : (owner ? `The customer is ${owner}. Do not call anyone else the account holder.` : 'Do not name an account holder.'),
-    absent.length ? `Do not put ${absent.join(' or ')} on the trip.` : 'Do not add viewers or editors to the traveling party.',
+    absent.length ? `Do not put ${absent.join(' or ')} on the vacation.` : 'Do not add viewers or editors to the traveling party.',
     upsell ? `Upsell facts: ${JSON.stringify(upsell)}` : '',
     customerAsksPrice(customerTurn, intent) && Number(facts.seatDollars) > 0
       ? `This turn asks the price. State this line exactly and do not say the plan is already owned: ${payerLineFromDollars(customerTurn, facts.seatDollars, intent?.seats || facts.payerRows)}.`
@@ -1934,12 +1934,12 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
       seat: pending?.seat || null,
       systemExtra: [
         request.systemExtra,
-        'Keep the days already on the saved trip.',
+        'Keep the days already on the saved vacation.',
         'Never invent a place or id.',
-        'Do not copy the draft and do not put a lead line in front of it. Do not insert a sentence the draft did not earn. Do not repeat a paragraph. The account holder stays the account holder. Do not call a joining collaborator the account holder. Keep only people the customer already named in chat. Never invent people. If the customer stated a party size, do not list more people than that size. Address the person who is speaking. Do not give that person an activity the saved trip record assigns to someone else. Do not say an activity is saved, now set, or on the list unless it is already saved. Do not say we have corrected that or I have corrected that. Do not call a saved preference rule locked and do not rename it. If you add or remove a person or a saved claim, the WHAT_I_CHANGED sentence must name it.',
+        'Do not copy the draft and do not put a lead line in front of it. Do not insert a sentence the draft did not earn. Do not repeat a paragraph. The account holder stays the account holder. Do not call a joining collaborator the account holder. Keep only people the customer already named in chat. Never invent people. If the customer stated a party size, do not list more people than that size. Address the person who is speaking. Do not give that person an activity the saved vacation record assigns to someone else. Do not say an activity is saved, now set, or on the list unless it is already saved. Do not say we have corrected that or I have corrected that. Do not call a saved preference rule locked and do not rename it. If you add or remove a person or a saved claim, the WHAT_I_CHANGED sentence must name it.',
         [pending?.tripContext?.roster && `Saved roster: ${pending.tripContext.roster}`, pending?.tripFacts?.rule && `Saved preference rule: ${pending.tripFacts.rule}`].filter(Boolean).join(' '),
-        'Use the saved trip dates. Do not shorten the trip. Do not call a day the last day, the last evening, after checkout, or one last time, and do not say pack or head out, unless that day is the saved trip end.',
-        'Do not offer an activity on a day that is not already that activity on the saved trip. Do not put viewers or editors on the trip. Never say "splitting payments" or splitting anything up.',
+        'Use the saved vacation dates. Do not shorten the vacation. Do not call a day the last day, the last evening, after checkout, or one last time, and do not say pack or head out, unless that day is the saved vacation end.',
+        'Do not offer an activity on a day that is not already that activity on the saved vacation. Do not put viewers or editors on the vacation.', 'Item34 ban: never say "splitting payments", split payment, split-payer, splitting payment, or splitting anything up. If one seat is already covered and another person has their own seat, say that.',
         placeResultExtra(pending?.placeResults),
         pending?.planTable?.payer_line && Number(pending.planTable.dollars_per_collaborator_seat) > 0
           ? `$${pending.planTable.dollars_per_collaborator_seat} per collaborator seat. State this line exactly: ${pending.planTable.payer_line}. Make no coverage claims. Do not say whole group.`

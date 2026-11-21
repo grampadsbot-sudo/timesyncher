@@ -123,7 +123,7 @@ export function KeepsakeJourneyScreen({ trip, shareToken }: Props) {
       <article className="tsv-keepsake-page tsv-keepsake-cover keepsake-report">
         <KeepsakePrintBrand tripTitle={model.tripTitle} style={model.style} />
         {model.sections.find((s) => s.kind === 'summary') ? (
-          <p className="tsv-muted">Trip summary</p>
+          <p className="tsv-muted">Vacation summary</p>
         ) : null}
       </article>
 
