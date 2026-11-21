@@ -452,6 +452,20 @@ const finalCards = afterApproveTurns.map((t) => t.payload?.aiApprovalCard).filte
 assert.equal(finalCards.find((c) => c.previewHash === hashV1)?.status, 'replaced');
 assert.equal(finalCards.find((c) => c.previewHash === hashV5)?.status, 'approved');
 
+const readOnlySqlCalls = [];
+const selectOnlyDb = async (strings) => {
+  const sql = strings.join(' ').replace(/\s+/g, ' ').trim();
+  readOnlySqlCalls.push(sql);
+  if (!/^\s*select\b/i.test(sql)) throw new Error(`unexpected non-select sql: ${sql}`);
+  return [];
+};
+assert.equal(await tryHandlePendingPreviewChatTurn(selectOnlyDb, { session: ownerSession, trip, requestText: 'Maui March 10-17 2027' }), null);
+assert.equal(readOnlySqlCalls.length, 1);
+const missingTableDb = async () => {
+  throw Object.assign(new Error('relation "vacation_mcp_change_sets" does not exist'), { code: '42P01' });
+};
+assert.equal(await tryHandlePendingPreviewChatTurn(missingTableDb, { session: ownerSession, trip, requestText: 'move bookshop to Day 2' }), null);
+
 useSharedTripDatabase(null);
 useVacationMcpDatabase(null);
 setVacationMcpClock(null);

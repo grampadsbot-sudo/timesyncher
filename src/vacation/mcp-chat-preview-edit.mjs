@@ -1,6 +1,5 @@
 import { cleanText } from './http.mjs';
 import { seatFromSession, transcriptCustomerId } from './collaborator-app-seat.mjs';
-import { ensureVacationMcpSchema } from './mcp-tokens.mjs';
 import { loadTripContext } from './mcp-media-service.mjs';
 import { asArray, asObject } from './mcp-read.mjs';
 import { postStagedPreviewToChat } from './mcp-chat-import.mjs';
@@ -234,13 +233,22 @@ function splitClauses(requestText) {
 async function findPendingPreviewForChat(db, { tripId, session, seat, changeSetId = '' }) {
   const normalizedTripId = cleanText(tripId, 80);
   if (!normalizedTripId) return null;
-  await ensureVacationMcpSchema(db);
-  const rows = await db`
-    select * from vacation_mcp_change_sets
-    where scope_trip_id = ${normalizedTripId}
-    order by created_at desc
-  `;
-  const pending = rows.filter((r) => r.status === 'pending_approval');
+  let rows;
+  try {
+    rows = await db`
+      select * from vacation_mcp_change_sets
+      where scope_trip_id = ${normalizedTripId}
+      order by created_at desc
+    `;
+  } catch (error) {
+    const code = String(error?.code || '');
+    const msg = String(error?.message || '');
+    if (code === '42P01' || /relation\s+["']?vacation_mcp_change_sets["']?\s+does not exist/i.test(msg)) {
+      return null;
+    }
+    throw error;
+  }
+  const pending = asArray(rows).filter((r) => r.status === 'pending_approval');
   if (!pending.length) return null;
   if (changeSetId) {
     const exact = pending.find((r) => String(r.id) === String(changeSetId));
