@@ -13,7 +13,7 @@ type ViewerWindow = Window & {
 type Props = {
   items: McpPreviewMedia[];
   ownerLabel: string;
-  scope: 'thing' | 'day' | 'unplaced';
+  scope: 'thing' | 'day' | 'skipped';
 };
 
 function resolveMediaUrl(item: McpPreviewMedia) {

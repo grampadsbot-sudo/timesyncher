@@ -68,7 +68,7 @@ function isDayOnlyMediaEntry(media) {
   return Boolean(media.attached_day_date || media.assigned_day_date || media.attached_day_number || media.assigned_day_number || media.assignment_bucket === 'day');
 }
 
-function isUnplacedMediaEntry(media) {
+function isSkippedMediaEntry(media) {
   if (!media || typeof media !== 'object') return false;
   if (media.assignment_bucket === 'unassigned') return true;
   return !media.attached_thing_ref
@@ -76,6 +76,20 @@ function isUnplacedMediaEntry(media) {
     && !media.attached_thing_title
     && !media.attached_day_date
     && !media.assigned_day_date;
+}
+
+function formatSkippedMediaNote(items) {
+  const count = items.length;
+  if (!count) return '';
+  const hasPhoto = items.some((m) => String(m.media_kind || 'photo').toLowerCase() !== 'video');
+  const hasVideo = items.some((m) => String(m.media_kind || 'photo').toLowerCase() === 'video');
+  if (count === 1) {
+    return hasVideo
+      ? "This video doesn't have a date during this vacation, so it won't be imported."
+      : "This photo doesn't have a date during this vacation, so it won't be imported.";
+  }
+  const noun = hasPhoto && hasVideo ? 'photos and videos' : (hasVideo ? 'videos' : 'photos');
+  return `These ${count} ${noun} don't have a date during this vacation, so they won't be imported.`;
 }
 
 export function extractApprovalPreviewView(changeSet) {
@@ -112,10 +126,11 @@ export function extractApprovalPreviewView(changeSet) {
     ...item,
     media: (Array.isArray(item?.media) ? item.media : []).map(normalizePreviewMediaEntry).filter(Boolean),
   }));
-  const rawUnplaced = Array.isArray(preview.unplaced_media)
-    ? preview.unplaced_media
-    : media.filter(isUnplacedMediaEntry);
-  const unplacedMedia = rawUnplaced.map(normalizePreviewMediaEntry).filter(Boolean);
+  const rawSkipped = Array.isArray(preview.skipped_media)
+    ? preview.skipped_media
+    : media.filter(isSkippedMediaEntry);
+  const skippedMedia = rawSkipped.map(normalizePreviewMediaEntry).filter(Boolean);
+  const skippedMediaNote = String(preview.skipped_media_note || '').trim() || formatSkippedMediaNote(skippedMedia);
   const totalBytes = Number.isFinite(Number(preview.total_bytes))
     ? Number(preview.total_bytes)
     : media.reduce((sum, item) => sum + Number(item?.bytes || 0), 0);
@@ -125,9 +140,104 @@ export function extractApprovalPreviewView(changeSet) {
     days,
     unscheduledThings,
     media,
-    unplacedMedia,
+    skippedMedia,
+    skippedMediaNote,
     totalBytes,
   };
+}
+
+const PREVIEW_CATEGORY_ICONS = {
+  flight: '✈️',
+  hotel: '🏨',
+  car: '🚗',
+  restaurant: '🍽️',
+  bar: '🍸',
+  store: '🛍️',
+  sightseeing: '🏞️',
+  tour: '🧭',
+  attraction: '🎟️',
+  music: '🎵',
+  theatre: '🎭',
+  workout: '🏃',
+  tickets: '🎫',
+  family_event: '👨‍👩‍👧‍👦',
+  artist: '🎨',
+  transport: '🚆',
+  event: '🎉',
+  note: '📝',
+  activity: '📍',
+};
+
+export function previewCategoryIcon(category) {
+  const key = String(category || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+  return PREVIEW_CATEGORY_ICONS[key] || '📍';
+}
+
+export function formatPreviewDayDate(iso) {
+  const trimmed = String(iso || '').trim();
+  if (!trimmed) return '';
+  const match = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  const parsed = match
+    ? Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 12, 0, 0)
+    : Date.parse(trimmed);
+  if (!Number.isFinite(parsed)) return trimmed;
+  return new Date(parsed).toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
+export function formatPreviewClock(value) {
+  const raw = String(value || '').trim().replace(/(\d{1,2}:\d{2}):\d{2}/g, '$1');
+  const match = raw.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return raw;
+  const hour = Number(match[1]);
+  return `${hour % 12 || 12}:${match[2]} ${hour < 12 ? 'AM' : 'PM'}`;
+}
+
+export function previewSummaryChips(changeSet) {
+  const preview = changeSet?.preview || {};
+  const chips = [];
+  if (preview.kind === 'targeted_edit') {
+    for (const item of preview.will_add || []) {
+      const tag = item.scheduled === false ? ' · saved for later' : '';
+      chips.push(`Add ${item.title || 'Untitled'}${tag}`);
+    }
+    for (const item of preview.will_update || []) {
+      chips.push(`Update ${item.current_title || item.item_id}`);
+    }
+    for (const item of preview.will_remove || []) {
+      chips.push(`Remove ${item.title || item.item_id}`);
+    }
+    for (const day of preview.day_updates || []) {
+      chips.push(`Update ${formatPreviewDayDate(day.day_date) || 'day'}`);
+    }
+    const attachMedia = Array.isArray(preview.will_attach_media) ? preview.will_attach_media : [];
+    if (attachMedia.length > 0) {
+      chips.push(`${attachMedia.length} ${attachMedia.length === 1 ? 'photo or video' : 'photos & videos'}`);
+    }
+    return chips;
+  }
+  const willCreate = preview.will_create || {};
+  const sectionLabels = [
+    ['days', 'day', 'days'],
+    ['flights', 'flight', 'flights'],
+    ['hotels', 'hotel', 'hotels'],
+    ['cars', 'car', 'cars'],
+    ['restaurants', 'restaurant', 'restaurants'],
+    ['stores', 'store', 'stores'],
+    ['things_to_do', 'activity', 'activities'],
+    ['notes', 'note', 'notes'],
+    ['unscheduled_things', 'saved for later', 'saved for later'],
+    ['media', 'photo or video', 'photos & videos'],
+  ];
+  for (const [key, singular, plural] of sectionLabels) {
+    const items = Array.isArray(willCreate[key]) ? willCreate[key] : [];
+    if (items.length > 0) chips.push(`${items.length} ${items.length === 1 ? singular : plural}`);
+  }
+  return chips;
 }
 
 export function previewSummaryBullets(changeSet) {
@@ -135,18 +245,18 @@ export function previewSummaryBullets(changeSet) {
   const lines = [];
   if (preview.kind === 'targeted_edit') {
     for (const item of preview.will_add || []) {
-      const tag = item.scheduled === false ? ' (unscheduled)' : '';
-      lines.push(`Add ${item.category || 'item'}: ${item.title || 'Untitled'}${tag}`);
+      const tag = item.scheduled === false ? ' (saved for later)' : '';
+      lines.push(`Add ${item.title || 'Untitled'}${tag}`);
     }
     for (const item of preview.will_update || []) {
       const fields = Array.isArray(item.changed_fields) ? item.changed_fields.join(', ') : '';
       lines.push(`Update ${item.current_title || item.item_id}${fields ? ` (${fields})` : ''}`);
     }
     for (const item of preview.will_remove || []) {
-      lines.push(`Remove ${item.category || 'item'}: ${item.title || item.item_id}`);
+      lines.push(`Remove ${item.title || item.item_id}`);
     }
     for (const day of preview.day_updates || []) {
-      lines.push(`Update day ${day.day_date || ''}`);
+      lines.push(`Update ${formatPreviewDayDate(day.day_date) || 'day'}`);
     }
     const attachMedia = Array.isArray(preview.will_attach_media) ? preview.will_attach_media : [];
     if (attachMedia.length > 0) {
@@ -167,7 +277,7 @@ export function previewSummaryBullets(changeSet) {
     ['stores', 'Stores'],
     ['things_to_do', 'Activities'],
     ['notes', 'Notes'],
-    ['unscheduled_things', 'Unscheduled long-list items'],
+    ['unscheduled_things', 'Saved for later'],
     ['media', 'Photos & videos'],
   ];
   for (const [key, label] of sectionLabels) {

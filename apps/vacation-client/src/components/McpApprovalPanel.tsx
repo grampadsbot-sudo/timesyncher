@@ -13,7 +13,10 @@ import {
   changeSetKindLabel,
   changeSetStatusLabel,
   extractApprovalPreviewView,
-  previewSummaryBullets,
+  formatPreviewClock,
+  formatPreviewDayDate,
+  previewCategoryIcon,
+  previewSummaryChips,
   sortChangeSetsForReview,
 } from '../lib/mcpPanelModel.mjs';
 import { PreviewMediaThumbs } from './PreviewMediaThumbs';
@@ -164,11 +167,12 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
     }
   }
 
-  const previewBullets = selected ? previewSummaryBullets(selected) : [];
+  const summaryChips = selected ? previewSummaryChips(selected) : [];
   const previewView = useMemo(() => extractApprovalPreviewView(selected), [selected]);
   const missingItems = selected?.preview?.missing || [];
   const conflictItems = selected?.preview?.conflicts || [];
-  const unplacedMedia = previewView.unplacedMedia;
+  const skippedMedia = previewView.skippedMedia;
+  const skippedMediaNote = previewView.skippedMediaNote;
 
   return (
     <div
@@ -263,65 +267,87 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
                   </ul>
 
                   {selected ? (
-                    <div className="tsv-mcp-preview" data-ts-mcp-preview="1">
-                      <h3 className="tsv-mcp-subheading">{changeSetKindLabel(selected.kind)}</h3>
-                      <p className="tsv-mcp-status-line">
-                        Status: <strong>{changeSetStatusLabel(selected.status)}</strong>
-                      </p>
-                      {previewView.previewHash ? (
-                        <p className="tsv-mcp-status-line" data-ts-mcp-preview-hash={previewView.previewHash}>
-                          Preview hash: <code>{previewView.previewHash}</code>
-                        </p>
-                      ) : null}
+                    <div
+                      className="tsv-mcp-preview"
+                      data-ts-mcp-preview="1"
+                      data-ts-mcp-preview-hash={previewView.previewHash || undefined}
+                    >
+                      <div className="tsv-mcp-preview-head">
+                        <h3 className="tsv-mcp-subheading">{changeSetKindLabel(selected.kind)}</h3>
+                        <span className="tsv-mcp-status-pill">{changeSetStatusLabel(selected.status)}</span>
+                      </div>
                       <p className="tsv-mcp-summary">{selected.preview?.summary_text || selected.summary}</p>
 
-                      {previewBullets.length > 0 ? (
-                        <div className="tsv-mcp-block">
-                          <h4>What will change</h4>
-                          <ul>
-                            {previewBullets.map((line, index) => (
-                              <li key={`${index}-${line}`}>{line}</li>
-                            ))}
-                          </ul>
+                      {summaryChips.length > 0 ? (
+                        <div className="tsv-mcp-chips">
+                          {summaryChips.map((chip, index) => (
+                            <span key={`${index}-${chip}`} className="tsv-mcp-chip">
+                              {chip}
+                            </span>
+                          ))}
                         </div>
                       ) : null}
 
                       {previewView.days.length > 0 ? (
                         <div className="tsv-mcp-block" data-ts-mcp-preview-days="1">
                           <h4>Itinerary by day</h4>
-                          <ul>
+                          <div className="tsv-mcp-days">
                             {previewView.days.map((day, idx) => {
-                              const dayLabel = `Day ${day.day_number ?? idx + 1}${day.date ? ` (${day.date})` : ''}`;
+                              const dayNum = day.day_number ?? idx + 1;
+                              const friendlyDate = formatPreviewDayDate(day.date);
+                              const dayLabel = `Day ${dayNum}${friendlyDate ? ` · ${friendlyDate}` : ''}`;
                               const dayMedia = Array.isArray(day.day_media) ? day.day_media : [];
                               return (
-                                <li key={`${day.date || idx}`} data-ts-preview-day={day.date || String(day.day_number ?? idx + 1)}>
-                                  <strong>
+                                <section
+                                  key={`${day.date || idx}`}
+                                  className="tsv-mcp-day-card"
+                                  data-ts-preview-day={day.date || String(dayNum)}
+                                >
+                                  <div className="tsv-mcp-day-head" data-ts-preview-day-header="1">
                                     {dayLabel}
                                     {day.title ? ` — ${day.title}` : ''}
-                                  </strong>
+                                  </div>
                                   {Array.isArray(day.items) && day.items.length > 0 ? (
-                                    <ul>
-                                      {day.items.map((item, itemIdx) => (
-                                        <li key={`${item.ref || item.id || itemIdx}`} data-ts-preview-thing={item.ref || item.id || item.title || String(itemIdx)}>
-                                          <span>
-                                            {item.category ? `${item.category}: ` : ''}
-                                            {item.title}
-                                          </span>
-                                          {Array.isArray(item.media) && item.media.length > 0 ? (
-                                            <PreviewMediaThumbs
-                                              items={item.media}
-                                              ownerLabel={item.title || dayLabel}
-                                              scope="thing"
-                                            />
-                                          ) : null}
-                                        </li>
-                                      ))}
-                                    </ul>
+                                    <div className="tsv-mcp-thing-list">
+                                      {day.items.map((item, itemIdx) => {
+                                        const timeLabel = item.start_time ? formatPreviewClock(item.start_time) : '';
+                                        return (
+                                          <div
+                                            key={`${item.ref || item.id || itemIdx}`}
+                                            className="tsv-mcp-thing-row"
+                                            data-ts-preview-thing={item.ref || item.id || item.title || String(itemIdx)}
+                                          >
+                                            <div className="tsv-mcp-thing-main">
+                                              <span
+                                                className="tsv-mcp-thing-icon"
+                                                data-ts-preview-type-icon="1"
+                                                aria-hidden="true"
+                                              >
+                                                {previewCategoryIcon(item.category)}
+                                              </span>
+                                              <span className="tsv-mcp-thing-label">
+                                                <span className="tsv-mcp-thing-name">{item.title}</span>
+                                                {timeLabel ? (
+                                                  <span className="tsv-mcp-thing-time"> · {timeLabel}</span>
+                                                ) : null}
+                                              </span>
+                                            </div>
+                                            {Array.isArray(item.media) && item.media.length > 0 ? (
+                                              <PreviewMediaThumbs
+                                                items={item.media}
+                                                ownerLabel={item.title || dayLabel}
+                                                scope="thing"
+                                              />
+                                            ) : null}
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
                                   ) : null}
                                   {dayMedia.length > 0 ? (
-                                    <div>
+                                    <div className="tsv-mcp-day-media">
                                       <p className="tsv-mcp-day-media-label">
-                                        Day {day.day_number ?? idx + 1} photos &amp; videos
+                                        Day {dayNum} photos &amp; videos
                                       </p>
                                       <PreviewMediaThumbs
                                         items={dayMedia}
@@ -330,23 +356,35 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
                                       />
                                     </div>
                                   ) : null}
-                                </li>
+                                </section>
                               );
                             })}
-                          </ul>
+                          </div>
                         </div>
                       ) : null}
 
                       {previewView.unscheduledThings.length > 0 ? (
-                        <div className="tsv-mcp-block" data-ts-mcp-preview-unscheduled="1" data-ts-mcp-preview-long-list="1">
-                          <h4>Unscheduled long-list items ({previewView.unscheduledThings.length})</h4>
-                          <ul>
+                        <div className="tsv-mcp-block" data-ts-mcp-preview-unscheduled="1">
+                          <h4>Saved for later</h4>
+                          <div className="tsv-mcp-thing-list">
                             {previewView.unscheduledThings.map((item, idx) => (
-                              <li key={`${item.ref || item.id || idx}`} data-ts-preview-thing={item.ref || item.id || item.title || String(idx)}>
-                                <span>
-                                  {item.category ? `${item.category}: ` : ''}
-                                  {item.title} — Unscheduled
-                                </span>
+                              <div
+                                key={`${item.ref || item.id || idx}`}
+                                className="tsv-mcp-thing-row"
+                                data-ts-preview-thing={item.ref || item.id || item.title || String(idx)}
+                              >
+                                <div className="tsv-mcp-thing-main">
+                                  <span
+                                    className="tsv-mcp-thing-icon"
+                                    data-ts-preview-type-icon="1"
+                                    aria-hidden="true"
+                                  >
+                                    {previewCategoryIcon(item.category)}
+                                  </span>
+                                  <span className="tsv-mcp-thing-label">
+                                    <span className="tsv-mcp-thing-name">{item.title}</span>
+                                  </span>
+                                </div>
                                 {Array.isArray(item.media) && item.media.length > 0 ? (
                                   <PreviewMediaThumbs
                                     items={item.media}
@@ -354,42 +392,51 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
                                     scope="thing"
                                   />
                                 ) : null}
-                              </li>
+                              </div>
                             ))}
-                          </ul>
+                          </div>
                         </div>
                       ) : null}
 
-                      {unplacedMedia.length > 0 ? (
-                        <div className="tsv-mcp-block" data-ts-mcp-preview-unplaced="1">
-                          <h4>Not placed yet</h4>
+                      {skippedMedia.length > 0 ? (
+                        <div className="tsv-mcp-block" data-ts-mcp-preview-wont-import="1">
+                          <h4>Won&apos;t be imported</h4>
+                          {skippedMediaNote ? (
+                            <p className="tsv-mcp-note" data-ts-wont-import-note="1">
+                              {skippedMediaNote}
+                            </p>
+                          ) : null}
                           <PreviewMediaThumbs
-                            items={unplacedMedia}
-                            ownerLabel="Not placed yet"
-                            scope="unplaced"
+                            items={skippedMedia}
+                            ownerLabel="Won't be imported"
+                            scope="skipped"
                           />
                         </div>
                       ) : null}
 
                       {missingItems.length > 0 ? (
-                        <div className="tsv-mcp-block">
-                          <h4>Missing details</h4>
-                          <ul>
+                        <div className="tsv-mcp-block" data-ts-mcp-preview-notes="1">
+                          <h4>Good to know</h4>
+                          <div className="tsv-mcp-notes">
                             {missingItems.map((item, index) => (
-                              <li key={`${index}-${item}`}>{item}</li>
+                              <p key={`${index}-${item}`} className="tsv-mcp-note">
+                                {item}
+                              </p>
                             ))}
-                          </ul>
+                          </div>
                         </div>
                       ) : null}
 
                       {conflictItems.length > 0 ? (
                         <div className="tsv-mcp-block tsv-mcp-block-warn">
                           <h4>Conflicts to review</h4>
-                          <ul>
+                          <div className="tsv-mcp-notes">
                             {conflictItems.map((item, index) => (
-                              <li key={`${index}-${item}`}>{item}</li>
+                              <p key={`${index}-${item}`} className="tsv-mcp-note">
+                                {item}
+                              </p>
                             ))}
-                          </ul>
+                          </div>
                         </div>
                       ) : null}
 
