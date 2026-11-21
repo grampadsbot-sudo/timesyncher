@@ -1,1 +1,0 @@
-scripts/test_issue_1073_import_preview_polish.mjs
