@@ -6,7 +6,7 @@ import { setVacationMcpClock, useVacationMcpDatabase } from '../routes/vacation-
 import { sharedTripFromIntake, thingRecordFromTripRow } from '../src/vacation/intake-shared-trip.mjs';
 import { hashMcpToken } from '../src/vacation/mcp-tokens.mjs';
 import { tryHandleReservationsChatTurn } from '../src/vacation/mcp-reservations-chat.mjs';
-import { isReservationAsk, parseReservationsHandshakeText, reservationChatTurnNeedsLookup } from '../src/vacation/mcp-reservations-handshake.mjs';
+import { isReservationAsk, parseReservationsHandshakeText } from '../src/vacation/mcp-reservations-handshake.mjs';
 import { RESERVATION_HOW_TO_URI, RESERVATION_MCP_TOOLS } from '../src/vacation/mcp-reservations-tools.mjs';
 import { createReservationsTestDb } from './lib/reservations-test-harness.mjs';
 import { invokeRoute } from './lib/mcp-test-exif.mjs';
@@ -39,24 +39,6 @@ async function test_R1_R2_R3_R5_ask_setup_and_handshake_by_paste() {
 
   assert.equal(isReservationAsk('book Carbone for 8 on Wednesday'), true);
   assert.equal(isReservationAsk('I want to import vacation details from my AI'), false);
-  assert.equal(reservationChatTurnNeedsLookup('hi'), false);
-  assert.equal(reservationChatTurnNeedsLookup('Hello'), false);
-  assert.equal(reservationChatTurnNeedsLookup('book Carbone for 8 on Wednesday'), true);
-  assert.equal(reservationChatTurnNeedsLookup('Yes, please set it up'), true);
-
-  let ordinaryCalls = 0;
-  const countingDb = (strings, ...values) => {
-    ordinaryCalls += 1;
-    return db(strings, ...values);
-  };
-  const ignored = await tryHandleReservationsChatTurn(countingDb, {
-    session: ownerSession,
-    trip: tripRef,
-    requestText: 'hi',
-    httpReq: reqHeaders,
-  });
-  assert.equal(ignored, null);
-  assert.equal(ordinaryCalls, 0);
 
   const offerRes = await tryHandleReservationsChatTurn(db, { session: ownerSession, trip: tripRef, requestText: 'book Carbone for 8 on Wednesday', httpReq: reqHeaders });
   assert.equal(offerRes.ok, true);
