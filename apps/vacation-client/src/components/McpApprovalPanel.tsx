@@ -13,11 +13,10 @@ import {
   changeSetKindLabel,
   changeSetStatusLabel,
   extractApprovalPreviewView,
-  formatMediaBytes,
-  formatMediaMatchLabel,
   previewSummaryBullets,
   sortChangeSetsForReview,
 } from '../lib/mcpPanelModel.mjs';
+import { PreviewMediaThumbs } from './PreviewMediaThumbs';
 
 export type McpPanelMode = 'approvals' | 'tokens';
 
@@ -86,7 +85,7 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape' && !(window as { __tsPicFsActive?: boolean }).__tsPicFsActive) onClose();
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
@@ -169,7 +168,7 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
   const previewView = useMemo(() => extractApprovalPreviewView(selected), [selected]);
   const missingItems = selected?.preview?.missing || [];
   const conflictItems = selected?.preview?.conflicts || [];
-  const mediaItems = previewView.media;
+  const unplacedMedia = previewView.unplacedMedia;
 
   return (
     <div
@@ -291,22 +290,69 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
                         <div className="tsv-mcp-block" data-ts-mcp-preview-days="1">
                           <h4>Itinerary by day</h4>
                           <ul>
-                            {previewView.days.map((day, idx) => (
-                              <li key={`${day.date || idx}`}>
-                                <strong>
-                                  Day {day.day_number ?? idx + 1}
-                                  {day.date ? ` (${day.date})` : ''}
-                                  {day.title ? ` — ${day.title}` : ''}
-                                </strong>
-                                {Array.isArray(day.items) && day.items.length > 0 ? (
-                                  <ul>
-                                    {day.items.map((item, itemIdx) => (
-                                      <li key={`${item.ref || item.id || itemIdx}`}>
-                                        {item.category ? `${item.category}: ` : ''}
-                                        {item.title}
-                                      </li>
-                                    ))}
-                                  </ul>
+                            {previewView.days.map((day, idx) => {
+                              const dayLabel = `Day ${day.day_number ?? idx + 1}${day.date ? ` (${day.date})` : ''}`;
+                              const dayMedia = Array.isArray(day.day_media) ? day.day_media : [];
+                              return (
+                                <li key={`${day.date || idx}`} data-ts-preview-day={day.date || String(day.day_number ?? idx + 1)}>
+                                  <strong>
+                                    {dayLabel}
+                                    {day.title ? ` — ${day.title}` : ''}
+                                  </strong>
+                                  {Array.isArray(day.items) && day.items.length > 0 ? (
+                                    <ul>
+                                      {day.items.map((item, itemIdx) => (
+                                        <li key={`${item.ref || item.id || itemIdx}`} data-ts-preview-thing={item.ref || item.id || item.title || String(itemIdx)}>
+                                          <span>
+                                            {item.category ? `${item.category}: ` : ''}
+                                            {item.title}
+                                          </span>
+                                          {Array.isArray(item.media) && item.media.length > 0 ? (
+                                            <PreviewMediaThumbs
+                                              items={item.media}
+                                              ownerLabel={item.title || dayLabel}
+                                              scope="thing"
+                                            />
+                                          ) : null}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  ) : null}
+                                  {dayMedia.length > 0 ? (
+                                    <div>
+                                      <p className="tsv-mcp-day-media-label">
+                                        Day {day.day_number ?? idx + 1} photos &amp; videos
+                                      </p>
+                                      <PreviewMediaThumbs
+                                        items={dayMedia}
+                                        ownerLabel={dayLabel}
+                                        scope="day"
+                                      />
+                                    </div>
+                                  ) : null}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      ) : null}
+
+                      {previewView.unscheduledThings.length > 0 ? (
+                        <div className="tsv-mcp-block" data-ts-mcp-preview-unscheduled="1" data-ts-mcp-preview-long-list="1">
+                          <h4>Unscheduled long-list items ({previewView.unscheduledThings.length})</h4>
+                          <ul>
+                            {previewView.unscheduledThings.map((item, idx) => (
+                              <li key={`${item.ref || item.id || idx}`} data-ts-preview-thing={item.ref || item.id || item.title || String(idx)}>
+                                <span>
+                                  {item.category ? `${item.category}: ` : ''}
+                                  {item.title} — Unscheduled
+                                </span>
+                                {Array.isArray(item.media) && item.media.length > 0 ? (
+                                  <PreviewMediaThumbs
+                                    items={item.media}
+                                    ownerLabel={item.title || 'Saved item'}
+                                    scope="thing"
+                                  />
                                 ) : null}
                               </li>
                             ))}
@@ -314,33 +360,14 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
                         </div>
                       ) : null}
 
-                      {previewView.unscheduledThings.length > 0 ? (
-                        <div className="tsv-mcp-block" data-ts-mcp-preview-unscheduled="1">
-                          <h4>Unscheduled long-list items ({previewView.unscheduledThings.length})</h4>
-                          <ul>
-                            {previewView.unscheduledThings.map((item, idx) => (
-                              <li key={`${item.ref || item.id || idx}`}>
-                                {item.category ? `${item.category}: ` : ''}
-                                {item.title} — Unscheduled
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      ) : null}
-
-                      {mediaItems.length > 0 ? (
-                        <div className="tsv-mcp-block" data-ts-mcp-preview-media="1">
-                          <h4>
-                            Media attachments ({mediaItems.length} · {formatMediaBytes(previewView.totalBytes)})
-                          </h4>
-                          <ul>
-                            {mediaItems.map((media) => (
-                              <li key={media.media_id}>
-                                {media.filename} ({formatMediaBytes(media.bytes || 0)}) —{' '}
-                                {formatMediaMatchLabel(media)}
-                              </li>
-                            ))}
-                          </ul>
+                      {unplacedMedia.length > 0 ? (
+                        <div className="tsv-mcp-block" data-ts-mcp-preview-unplaced="1">
+                          <h4>Not placed yet</h4>
+                          <PreviewMediaThumbs
+                            items={unplacedMedia}
+                            ownerLabel="Not placed yet"
+                            scope="unplaced"
+                          />
                         </div>
                       ) : null}
 

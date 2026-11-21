@@ -79,6 +79,70 @@ function buildAiImportHandoffText({
   return lines.join('\n');
 }
 
+function compactPreviewMedia(media = {}) {
+  const mediaId = cleanText(media.media_id || media.id, 80);
+  if (!mediaId) return null;
+  const kind = String(media.media_kind || media.kind || '').toLowerCase() === 'video'
+    || String(media.mime_type || '').toLowerCase().startsWith('video/')
+    ? 'video'
+    : 'photo';
+  const url = cleanText(media.url || media.preview_url || media.public_url, 600)
+    || `/api/mcp/media/${encodeURIComponent(mediaId)}`;
+  const posterUrl = cleanText(media.poster_url || media.thumbnail_url, 600) || null;
+  const dayNum = Number(media.attached_day_number ?? media.assigned_day_number);
+  return {
+    media_id: mediaId,
+    media_kind: kind,
+    mime_type: cleanText(media.mime_type, 120) || (kind === 'video' ? 'video/mp4' : 'image/jpeg'),
+    url,
+    ...(posterUrl ? { poster_url: posterUrl } : {}),
+    ...(media.caption ? { caption: cleanText(media.caption, 300) } : {}),
+    assignment_bucket: cleanText(media.assignment_bucket, 32) || 'unassigned',
+    attached_day_date: cleanText(media.attached_day_date || media.assigned_day_date, 20) || null,
+    attached_day_number: Number.isFinite(dayNum) && dayNum > 0 ? dayNum : null,
+    attached_thing_ref: cleanText(media.attached_thing_ref || media.target_thing_ref, 120) || null,
+    attached_thing_title: cleanText(media.attached_thing_title, 180) || null,
+  };
+}
+
+function buildCardLandingPreview(preview = {}) {
+  const rawDays = asArray(preview.days || preview.will_create?.days);
+  const rawUnscheduled = asArray(preview.unscheduled_things || preview.will_create?.unscheduled_things);
+  const rawMedia = asArray(preview.media || preview.will_create?.media || preview.will_attach_media);
+  const days = rawDays.map((day, idx) => {
+    const dayItems = asArray(day?.items).map((item) => ({
+      ...(item?.id ? { id: String(item.id) } : {}),
+      ...(item?.ref ? { ref: cleanText(item.ref, 120) } : {}),
+      category: cleanText(item?.category, 60),
+      title: cleanText(item?.title, 200),
+      ...(item?.start_time ? { start_time: cleanText(item.start_time, 32) } : {}),
+      media: asArray(item?.media).map(compactPreviewMedia).filter(Boolean),
+    }));
+    const rawDayMedia = Array.isArray(day?.day_media)
+      ? day.day_media
+      : asArray(day?.media).filter((m) => !m?.attached_thing_ref && !m?.attached_thing_title && m?.assignment_bucket !== 'thing');
+    return {
+      day_number: Number(day?.day_number || idx + 1),
+      date: cleanText(day?.date, 20),
+      title: cleanText(day?.title, 180),
+      items: dayItems,
+      day_media: rawDayMedia.map(compactPreviewMedia).filter(Boolean),
+    };
+  });
+  const unscheduledThings = rawUnscheduled.map((item) => ({
+    ...(item?.id ? { id: String(item.id) } : {}),
+    ...(item?.ref ? { ref: cleanText(item.ref, 120) } : {}),
+    category: cleanText(item?.category, 60),
+    title: cleanText(item?.title, 200),
+    media: asArray(item?.media).map(compactPreviewMedia).filter(Boolean),
+  }));
+  const rawUnplaced = Array.isArray(preview.unplaced_media)
+    ? preview.unplaced_media
+    : rawMedia.filter((m) => (m?.assignment_bucket === 'unassigned') || (!m?.attached_thing_ref && !m?.attached_thing_title && !m?.attached_day_date && !m?.assigned_day_date));
+  const unplacedMedia = rawUnplaced.map(compactPreviewMedia).filter(Boolean);
+  return { days, unscheduledThings, unplacedMedia };
+}
+
 function buildPreviewSummaryBullets(kind, preview = {}) {
   const out = [];
   if (kind === 'draft_import') {
@@ -94,7 +158,7 @@ function buildPreviewSummaryBullets(kind, preview = {}) {
       c.stores && `${c.stores} store${c.stores === 1 ? '' : 's'}`,
       c.things_to_do && `${c.things_to_do} activity item${c.things_to_do === 1 ? '' : 's'}`,
       c.unscheduled_things && `${c.unscheduled_things} saved unscheduled item${c.unscheduled_things === 1 ? '' : 's'}`,
-      c.media && `${c.media} media file${c.media === 1 ? '' : 's'}`,
+      c.media && `${c.media} photo or video item${c.media === 1 ? '' : 's'}`,
     ].filter(Boolean);
     if (counts.length) out.push(`Will stage: ${counts.join(', ')}`);
     return out;
@@ -108,7 +172,7 @@ function buildPreviewSummaryBullets(kind, preview = {}) {
   if (upd.length) out.push(`Update ${upd.length}: ${upd.map((i) => i.current_title).filter(Boolean).join(', ')}`);
   if (rem.length) out.push(`Remove ${rem.length}: ${rem.map((i) => i.title).filter(Boolean).join(', ')}`);
   if (dayUpd.length) out.push(`Update ${dayUpd.length} day(s): ${dayUpd.map((d) => d.day_date).filter(Boolean).join(', ')}`);
-  if (media.length) out.push(`Attach ${media.length} media file(s)`);
+  if (media.length) out.push(`Attach ${media.length} photo or video item(s)`);
   return out;
 }
 
@@ -320,6 +384,7 @@ export async function postStagedPreviewToChat(db, {
   const forEmail = cleanText(meta.personEmail || tokenRecord?.createdByEmail, 180).toLowerCase() || null;
   const summaryText = cleanText(preview?.summary_text || summary, 500) || 'Your AI staged vacation updates for your review.';
   const bullets = buildPreviewSummaryBullets(kind, preview);
+  const landing = buildCardLandingPreview(preview);
   const card = {
     kind: 'ai_staged_approval',
     changeSetId: String(changeSetId),
@@ -328,6 +393,9 @@ export async function postStagedPreviewToChat(db, {
     previewHash: cleanText(preview?.preview_hash, 128),
     summary: summaryText,
     bullets,
+    days: landing.days,
+    unscheduledThings: landing.unscheduledThings,
+    unplacedMedia: landing.unplacedMedia,
     vacationId: tripId,
     vacationTitle: cleanText(preview?.vacation?.title || preview?.will_create?.vacation?.title, 180),
     counts: asObject(preview?.counts),

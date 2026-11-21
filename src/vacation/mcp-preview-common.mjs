@@ -241,26 +241,36 @@ export function buildPreviewMediaEntries({
     const attachedThingTitle = resolvedItem ? resolvedItem.title : null;
     const attachedThingScheduled = resolvedItem ? Boolean(resolvedItem.scheduled) : null;
 
-    const explicitDayDate = previewIsoDateOnly(link.day_date || row.assigned_day_date) || null;
-    const attachedDayDate = explicitDayDate
+    const manualDayDate = previewIsoDateOnly(link.day_date) || null;
+    const storedDayDate = previewIsoDateOnly(row.assigned_day_date) || null;
+    const validManualDay = manualDayDate && (!dayNumberByDate.size || dayNumberByDate.has(manualDayDate)) ? manualDayDate : null;
+    const validStoredDay = storedDayDate && dayNumberByDate.has(storedDayDate) ? storedDayDate : null;
+    const attachedDayDate = validManualDay
       || (timeMatched ? localCaptureDate : null)
+      || validStoredDay
       || (resolvedItem?.scheduled ? resolvedItem.day_date : null);
     const attachedDayNumber = attachedDayDate
-      ? (dayNumberByDate.get(attachedDayDate) ?? row.assigned_day_number ?? null)
+      ? (dayNumberByDate.get(attachedDayDate) ?? null)
       : null;
     const assignmentBucket = attachedThingRef ? 'thing' : (attachedDayDate ? 'day' : 'unassigned');
 
     const reasons = [];
     if (timeMatched) reasons.push('exif_time');
     if (gpsMatch) reasons.push('exif_gps');
-    if (!reasons.length && (explicitRef || explicitDayDate)) reasons.push('manual');
+    if (!reasons.length && (explicitRef || validManualDay)) reasons.push('manual');
     const matchReason = reasons.length ? reasons.join('+') : 'unassigned';
+    const mediaIdStr = String(row.id);
+    const mediaUrl = cleanPreviewText(row.public_url, 600) || `/api/mcp/media/${encodeURIComponent(mediaIdStr)}`;
+    const posterUrl = cleanPreviewText(link.poster_url || row.poster_url || exifRaw.posterUrl, 600) || null;
 
     media.push({
-      media_id: String(row.id),
+      media_id: mediaIdStr,
       filename: String(row.filename || ''),
       media_kind: String(row.media_kind || 'photo'),
       mime_type: String(row.mime_type || ''),
+      url: mediaUrl,
+      preview_url: mediaUrl,
+      ...(posterUrl ? { poster_url: posterUrl } : {}),
       bytes,
       upload_status: String(row.upload_status || 'signed'),
       assignment_bucket: assignmentBucket,
@@ -306,6 +316,8 @@ function itemLandingShape(item, attachedMedia = []) {
     day_date: item.scheduled ? (item.day_date || null) : null,
     starts_at: item.scheduled ? (item.starts_at || null) : null,
     ends_at: item.scheduled ? (item.ends_at || null) : null,
+    ...(item.start_time ? { start_time: item.start_time } : {}),
+    ...(item.end_time ? { end_time: item.end_time } : {}),
     ...(item.check_in ? { check_in: item.check_in } : {}),
     ...(item.check_out ? { check_out: item.check_out } : {}),
     total_price_cents: Number.isInteger(item.total_price_cents) ? item.total_price_cents : null,
@@ -317,6 +329,10 @@ function itemLandingShape(item, attachedMedia = []) {
       media_id: m.media_id,
       filename: m.filename,
       media_kind: m.media_kind,
+      mime_type: m.mime_type,
+      url: m.url,
+      preview_url: m.preview_url || m.url,
+      ...(m.poster_url ? { poster_url: m.poster_url } : {}),
       bytes: m.bytes,
       caption: m.caption,
       exif_match: m.exif_match,
@@ -327,11 +343,19 @@ function itemLandingShape(item, attachedMedia = []) {
 export function groupLandingDaysAndUnscheduled({ resolvedDays, scheduledItems, unscheduledItems, mediaEntries }) {
   const mediaByThingKey = new Map();
   const mediaByDayDate = new Map();
+  const dayOnlyMediaByDate = new Map();
+  const unplacedMedia = [];
   for (const media of mediaEntries) {
     if (media.attached_thing_ref) {
       const list = mediaByThingKey.get(media.attached_thing_ref) || [];
       list.push(media);
       mediaByThingKey.set(media.attached_thing_ref, list);
+    } else if (media.attached_day_date) {
+      const list = dayOnlyMediaByDate.get(media.attached_day_date) || [];
+      list.push(media);
+      dayOnlyMediaByDate.set(media.attached_day_date, list);
+    } else {
+      unplacedMedia.push(media);
     }
     if (media.attached_day_date) {
       const list = mediaByDayDate.get(media.attached_day_date) || [];
@@ -362,6 +386,7 @@ export function groupLandingDaysAndUnscheduled({ resolvedDays, scheduledItems, u
       notes: cleanPreviewText(day.notes, 1000),
       items: itemsByDay.get(date) || [],
       media: mediaByDayDate.get(date) || [],
+      day_media: dayOnlyMediaByDate.get(date) || [],
     };
   });
 
@@ -373,6 +398,7 @@ export function groupLandingDaysAndUnscheduled({ resolvedDays, scheduledItems, u
       notes: '',
       items: itemsByDay.get(date) || [],
       media: mediaByDayDate.get(date) || [],
+      day_media: dayOnlyMediaByDate.get(date) || [],
     });
   }
 
@@ -381,5 +407,5 @@ export function groupLandingDaysAndUnscheduled({ resolvedDays, scheduledItems, u
     return itemLandingShape(item, mediaKey ? (mediaByThingKey.get(String(mediaKey)) || []) : []);
   });
 
-  return { days, unscheduledThings };
+  return { days, unscheduledThings, unplacedMedia };
 }

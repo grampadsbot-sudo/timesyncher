@@ -1,7 +1,7 @@
 import { cleanText } from './http.mjs';
 import { intakeShareSlug } from './intake-shared-trip.mjs';
 import { insertTripThing } from './trip-things.mjs';
-import { formatLocalClockTime, inferVacationTimeZone } from './mcp-exif.mjs';
+import { formatLocalClockTime, inferVacationTimeZone, resolveLocalCaptureDate } from './mcp-exif.mjs';
 import { collectDraftLandingItems, findClosestGpsItem, normalizeImportedCategory } from './mcp-preview-common.mjs';
 import {
   asArray,
@@ -187,6 +187,7 @@ export async function applyApprovedDraftImport(db, { changeSet, mediaRows }) {
     }
   }
 
+  const dayNumberByDate = new Map(days.map((d, idx) => [isoDateOnly(d.date), Number(d.day_number || idx + 1)]));
   const mediaLinksById = new Map(asArray(draft.media).map((link) => [String(link.media_id || ''), link]));
   const publishedMedia = [];
   let newTripBytes = 0;
@@ -197,10 +198,17 @@ export async function applyApprovedDraftImport(db, { changeSet, mediaRows }) {
     const ref = cleanText(link.thing_ref || mediaRow.target_thing_ref, 120);
     const gpsMatch = !ref ? findClosestGpsItem(mediaRow.exif_lat, mediaRow.exif_lng, createdItemsForGps) : null;
     const linked = (ref ? refToThing.get(ref) || null : null) || gpsMatch?.item || null;
-    const dayDate = isoDateOnly(link.day_date || mediaRow.assigned_day_date || (linked?.scheduled ? linked.day_date : '')) || null;
-    const dayNumber = dayDate
-      ? (days.findIndex((d) => isoDateOnly(d.date) === dayDate) + 1) || mediaRow.assigned_day_number
-      : null;
+    const exifRaw = asObject(mediaRow.exif_raw);
+    const hasOffset = Boolean(exifRaw.offsetText) || (typeof exifRaw.capturedAtIso === 'string' && /(?:Z|[+-]\d{2}:?\d{2})$/i.test(exifRaw.capturedAtIso));
+    const rawCaptured = !hasOffset && exifRaw.capturedAtRaw ? exifRaw.capturedAtRaw : (mediaRow.exif_captured_at || exifRaw.capturedAtIso || exifRaw.capturedAtRaw || null);
+    const localCaptureDate = resolveLocalCaptureDate({ capturedAt: rawCaptured, offsetText: exifRaw.offsetText || null, vacationTimeZone: resolvedTimezone });
+    const timeMatchedDate = localCaptureDate && dayNumberByDate.has(localCaptureDate) ? localCaptureDate : null;
+    const explicitDay = isoDateOnly(link.day_date) || null;
+    const storedDay = isoDateOnly(mediaRow.assigned_day_date) || null;
+    const validManualDay = explicitDay && (!dayNumberByDate.size || dayNumberByDate.has(explicitDay)) ? explicitDay : null;
+    const validStoredDay = storedDay && dayNumberByDate.has(storedDay) ? storedDay : null;
+    const dayDate = validManualDay || timeMatchedDate || validStoredDay || (linked?.scheduled ? linked.day_date : null) || null;
+    const dayNumber = dayDate ? (dayNumberByDate.get(dayDate) || null) : null;
     const published = await publishMediaRow(db, {
       mediaRow,
       shareSlug,
@@ -397,14 +405,29 @@ export async function applyApprovedTargetedEdit(db, { changeSet, mediaRows }) {
         const tRows = await db`select title from trip_things where id = ${linkedId} and trip_id = ${tripId} limit 1`;
         thingTitle = tRows[0]?.title || null;
       }
+      const tripDays = asArray(nextMeta.days).length
+        ? asArray(nextMeta.days).map((d, idx) => ({ date: isoDateOnly(d.date), day_number: Number(d.day_number || idx + 1) }))
+        : enumerateVacationDates(trip.start_date, trip.end_date).map((date, idx) => ({ date, day_number: idx + 1 }));
+      const editDayNumberByDate = new Map(tripDays.filter((d) => d.date).map((d) => [d.date, d.day_number]));
+      const editTz = inferVacationTimeZone({ timezone: cleanText(nextMeta.timezone, 80), timezoneExplicit: nextMeta.timezoneExplicit === true, destination: cleanText(nextDestination || nextTitle, 200) });
+      const exifRaw = asObject(mediaRow.exif_raw);
+      const hasOffset = Boolean(exifRaw.offsetText) || (typeof exifRaw.capturedAtIso === 'string' && /(?:Z|[+-]\d{2}:?\d{2})$/i.test(exifRaw.capturedAtIso));
+      const rawCaptured = !hasOffset && exifRaw.capturedAtRaw ? exifRaw.capturedAtRaw : (mediaRow.exif_captured_at || exifRaw.capturedAtIso || exifRaw.capturedAtRaw || null);
+      const localCaptureDate = resolveLocalCaptureDate({ capturedAt: rawCaptured, offsetText: exifRaw.offsetText || null, vacationTimeZone: editTz });
+      const timeMatchedDate = localCaptureDate && editDayNumberByDate.has(localCaptureDate) ? localCaptureDate : null;
+      const explicitDay = isoDateOnly(op.day_date) || null;
+      const storedDay = isoDateOnly(mediaRow.assigned_day_date) || null;
+      const validStoredDay = storedDay && editDayNumberByDate.has(storedDay) ? storedDay : null;
+      const resolvedDayDate = explicitDay || timeMatchedDate || validStoredDay || null;
+      const resolvedDayNumber = resolvedDayDate ? (editDayNumberByDate.get(resolvedDayDate) || null) : null;
       await publishMediaRow(db, {
         mediaRow,
         shareSlug,
         tripId,
         linkedThingId: linkedId,
         linkedThingTitle: thingTitle,
-        dayDate: op.day_date || mediaRow.assigned_day_date || null,
-        dayNumber: mediaRow.assigned_day_number ?? null,
+        dayDate: resolvedDayDate,
+        dayNumber: resolvedDayNumber,
         caption: op.caption ?? mediaRow.caption,
       });
       applied.mediaAttached += 1;

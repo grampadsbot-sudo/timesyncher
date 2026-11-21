@@ -109,6 +109,8 @@ assert.match(shellSource, /\['flights', 'cars', 'hotels'\]/);
 const panelSource = await readFile(new URL('../src/components/McpApprovalPanel.tsx', import.meta.url), 'utf8');
 assert.match(panelSource, /handleApprove\(selected\.id, previewView\.previewHash\)/);
 assert.match(panelSource, /item\.expiresAt/);
+assert.doesNotMatch(panelSource, /Media attachments/i);
+assert.match(panelSource, /Not placed yet/);
 
 const apiSource = await readFile(new URL('../src/api/mcpAdmin.ts', import.meta.url), 'utf8');
 assert.match(apiSource, /preview_hash: previewHash/);
@@ -117,7 +119,9 @@ const livePanelSource = await readFile(new URL('../../../public/ts-mcp-ai-access
 assert.match(livePanelSource, /__tsOpenMcpPanel/);
 assert.match(livePanelSource, /preview_hash: previewHash/);
 assert.match(livePanelSource, /Unscheduled long-list items/);
-assert.match(livePanelSource, /Media attachments/);
+assert.doesNotMatch(livePanelSource, /Media attachments/i);
+assert.match(livePanelSource, /Not placed yet/);
+assert.match(livePanelSource, /data-ts-preview-thumb/);
 assert.doesNotMatch(livePanelSource, /\btrips?\b/i);
 
 console.log('mcpApproval.unit.mjs passed');

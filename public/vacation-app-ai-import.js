@@ -3,12 +3,53 @@
 
   const STYLE_ID = 'ts-vacation-app-ai-import-style';
   const copyPayloads = new Map();
+  const galleryGroups = new Map();
   let pollTimer = null;
   let visibilityBound = false;
   let lastTurnCount = 0;
 
   function esc(value) {
     return String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  function normalizeMedia(row) {
+    if (!row || typeof row !== 'object') return null;
+    const mediaId = String(row.media_id || row.id || '').trim();
+    const mime = String(row.mime_type || row.mimeType || '').trim();
+    const url = String(row.url || row.preview_url || row.public_url || '').trim()
+      || (mediaId ? `/api/mcp/media/${encodeURIComponent(mediaId)}` : '');
+    if (!url) return null;
+    const isVideo = String(row.media_kind || row.kind || '').toLowerCase() === 'video'
+      || mime.toLowerCase().startsWith('video/')
+      || /\.(mp4|mov|webm|m4v)(\?|#|$)/i.test(url);
+    const posterUrl = String(row.poster_url || row.posterUrl || row.thumbnail_url || '').trim();
+    return {
+      media_id: mediaId || url,
+      media_kind: isVideo ? 'video' : 'photo',
+      mime_type: mime || (isVideo ? 'video/mp4' : 'image/jpeg'),
+      url,
+      poster_url: posterUrl && posterUrl !== url ? posterUrl : '',
+      caption: String(row.caption || '').trim(),
+    };
+  }
+
+  function videoThumbSrc(url, posterUrl) {
+    if (posterUrl || !url || url.startsWith('data:') || url.includes('#')) return url;
+    return `${url}#t=0.1`;
+  }
+
+  function renderThumbStripHtml(rawMedia, { galleryKey, ownerLabel, scope }) {
+    const items = (Array.isArray(rawMedia) ? rawMedia : []).map(normalizeMedia).filter(Boolean);
+    if (!items.length) return '';
+    galleryGroups.set(galleryKey, { items, title: ownerLabel });
+    const buttons = items.map((item, idx) => {
+      const isVideo = item.media_kind === 'video';
+      const inner = isVideo
+        ? `<video class="ts-ai-thumb-media" src="${esc(videoThumbSrc(item.url, item.poster_url))}"${item.poster_url ? ` poster="${esc(item.poster_url)}"` : ''} muted playsinline preload="metadata" aria-hidden="true"></video><span class="ts-ai-thumb-play" data-ts-media-play-badge="1" aria-hidden="true">▶</span>`
+        : `<img class="ts-ai-thumb-media" src="${esc(item.url)}" alt="${esc(item.caption || ownerLabel)}" loading="lazy" />`;
+      return `<button type="button" class="ts-ai-thumb${isVideo ? ' is-video' : ''}" data-ts-preview-thumb="1" data-ts-gallery-key="${esc(galleryKey)}" data-ts-gallery-index="${idx}" data-media-id="${esc(item.media_id)}" data-media-kind="${esc(item.media_kind)}" aria-label="${esc(isVideo ? `Play video for ${ownerLabel}` : `View photo for ${ownerLabel}`)}">${inner}</button>`;
+    }).join('');
+    return `<div class="ts-ai-thumb-strip" data-ts-media-strip="${esc(scope)}" data-ts-media-owner="${esc(ownerLabel)}">${buttons}</div>`;
   }
 
   function ensureStyles() {
@@ -24,6 +65,14 @@
       '.ts-ai-token-row code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;font-weight:700;color:#0f172a;word-break:break-all}',
       '.ts-ai-meta{font-size:11px;color:#64748b}',
       '.ts-ai-bullets{margin:0;padding-left:18px;display:grid;gap:4px;font-size:13px;color:#1e293b}',
+      '.ts-ai-block{border-top:1px solid #e2e8f0;padding-top:8px;display:grid;gap:6px}',
+      '.ts-ai-block h4{margin:0;font-size:11px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:#475569}',
+      '.ts-ai-block ul{margin:0;padding-left:18px;display:grid;gap:6px;font-size:13px;color:#1e293b}',
+      '.ts-ai-day-media-label{margin:6px 0 0;font-size:11px;font-weight:700;color:#64748b}',
+      '.ts-ai-thumb-strip{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}',
+      '.ts-ai-thumb{position:relative;width:58px;height:58px;padding:0;border-radius:8px;overflow:hidden;border:1px solid #cbd5e1;background:#0f172a;cursor:pointer;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center}',
+      '.ts-ai-thumb-media{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}',
+      '.ts-ai-thumb-play{position:absolute;inset:0;margin:auto;width:24px;height:24px;border-radius:999px;background:rgba(15,23,42,.78);color:#ffffff;font-size:11px;display:inline-flex;align-items:center;justify-content:center;pointer-events:none;box-shadow:0 2px 6px rgba(0,0,0,.35)}',
       '.ts-ai-warn{padding:8px 10px;border-radius:8px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;font-size:12px;font-weight:600}',
       '.ts-ai-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:2px}',
       '.ts-ai-btn{min-height:38px;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:750;cursor:pointer;border:1px solid #cbd5e1;background:#ffffff;color:#0f172a}',
@@ -114,9 +163,58 @@
     const heading = card.changeKind === 'targeted_edit' ? 'Targeted vacation edit' : 'Vacation draft import';
     const bullets = Array.isArray(card.bullets) ? card.bullets.filter(Boolean) : [];
     const conflicts = Array.isArray(card.conflicts) ? card.conflicts.filter(Boolean) : [];
+    const days = Array.isArray(card.days) ? card.days : [];
+    const unscheduled = Array.isArray(card.unscheduledThings) ? card.unscheduledThings : [];
+    const unplaced = Array.isArray(card.unplacedMedia) ? card.unplacedMedia : [];
     const status = String(card.status || 'pending_approval');
+    const cardKey = String(card.changeSetId || 'staged');
     const bulletsHtml = bullets.length
       ? `<ul class="ts-ai-bullets">${bullets.map((line) => `<li>${esc(line)}</li>`).join('')}</ul>`
+      : '';
+    const daysHtml = days.length
+      ? `<div class="ts-ai-block" data-ts-mcp-preview-days="1"><h4>Itinerary by day</h4><ul>${days.map((day, idx) => {
+        const dayNum = day.day_number ?? idx + 1;
+        const dayLabel = `Day ${dayNum}${day.date ? ` (${day.date})` : ''}`;
+        const itemsHtml = Array.isArray(day.items) && day.items.length
+          ? `<ul>${day.items.map((item, itemIdx) => {
+            const thingTitle = String(item.title || '').trim() || 'Item';
+            const thumbs = renderThumbStripHtml(item.media, {
+              galleryKey: `${cardKey}:day:${idx}:thing:${item.ref || item.id || itemIdx}`,
+              ownerLabel: thingTitle,
+              scope: 'thing',
+            });
+            return `<li data-ts-preview-thing="${esc(item.ref || item.id || thingTitle)}"><span>${item.category ? `${esc(item.category)}: ` : ''}${esc(thingTitle)}</span>${thumbs}</li>`;
+          }).join('')}</ul>`
+          : '';
+        const dayOnly = Array.isArray(day.day_media)
+          ? day.day_media
+          : (Array.isArray(day.media) ? day.media.filter((m) => !m?.attached_thing_ref && !m?.attached_thing_title && m?.assignment_bucket !== 'thing') : []);
+        const dayThumbs = renderThumbStripHtml(dayOnly, {
+          galleryKey: `${cardKey}:day:${idx}:direct`,
+          ownerLabel: dayLabel,
+          scope: 'day',
+        });
+        const dayMediaBlock = dayThumbs ? `<div class="ts-ai-day-media-label">Day ${esc(dayNum)} photos &amp; videos</div>${dayThumbs}` : '';
+        return `<li data-ts-preview-day="${esc(day.date || String(dayNum))}"><strong>${esc(dayLabel)}${day.title ? ` — ${esc(day.title)}` : ''}</strong>${itemsHtml}${dayMediaBlock}</li>`;
+      }).join('')}</ul></div>`
+      : '';
+    const unscheduledHtml = unscheduled.length
+      ? `<div class="ts-ai-block" data-ts-mcp-preview-unscheduled="1" data-ts-mcp-preview-long-list="1"><h4>Unscheduled long-list items (${unscheduled.length})</h4><ul>${unscheduled.map((item, idx) => {
+        const thingTitle = String(item.title || '').trim() || 'Saved item';
+        const thumbs = renderThumbStripHtml(item.media, {
+          galleryKey: `${cardKey}:unscheduled:${item.ref || item.id || idx}`,
+          ownerLabel: thingTitle,
+          scope: 'thing',
+        });
+        return `<li data-ts-preview-thing="${esc(item.ref || item.id || thingTitle)}"><span>${item.category ? `${esc(item.category)}: ` : ''}${esc(thingTitle)} — Unscheduled</span>${thumbs}</li>`;
+      }).join('')}</ul></div>`
+      : '';
+    const unplacedHtml = unplaced.length
+      ? `<div class="ts-ai-block" data-ts-mcp-preview-unplaced="1"><h4>Not placed yet</h4>${renderThumbStripHtml(unplaced, {
+        galleryKey: `${cardKey}:unplaced`,
+        ownerLabel: 'Not placed yet',
+        scope: 'unplaced',
+      })}</div>`
       : '';
     const conflictsHtml = conflicts.length
       ? `<div class="ts-ai-warn">${esc(conflicts.join(' '))}</div>`
@@ -137,6 +235,9 @@
       + `<h3 class="ts-ai-title">${esc(heading)}</h3>`
       + `<p class="ts-ai-desc">${esc(card.summary || '')}</p>`
       + bulletsHtml
+      + daysHtml
+      + unscheduledHtml
+      + unplacedHtml
       + conflictsHtml
       + footerHtml
       + '<p class="ts-ai-status" data-ai-approval-status="1" hidden></p>'
@@ -262,6 +363,16 @@
     if (messages && !messages.dataset.tsAiImportBound) {
       messages.dataset.tsAiImportBound = '1';
       messages.addEventListener('click', (event) => {
+        const thumbBtn = event.target?.closest?.('[data-ts-preview-thumb="1"]');
+        if (thumbBtn) {
+          const key = thumbBtn.getAttribute('data-ts-gallery-key') || '';
+          const idx = Number(thumbBtn.getAttribute('data-ts-gallery-index') || 0);
+          const group = galleryGroups.get(key);
+          if (group && typeof window.__tsOpenMediaViewer === 'function') {
+            window.__tsOpenMediaViewer({ items: group.items, startIndex: idx, title: group.title });
+          }
+          return;
+        }
         const copyBtn = event.target?.closest?.('[data-ai-import-copy]');
         if (copyBtn) {
           void handleCopyClick(copyBtn);

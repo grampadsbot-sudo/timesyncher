@@ -5,6 +5,7 @@ export type ApprovalPreviewView = {
   days: McpPreviewDay[];
   unscheduledThings: McpPreviewLandingItem[];
   media: McpPreviewMedia[];
+  unplacedMedia: McpPreviewMedia[];
   totalBytes: number;
 };
 

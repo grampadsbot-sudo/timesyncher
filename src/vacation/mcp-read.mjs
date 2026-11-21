@@ -52,9 +52,13 @@ export async function publishMediaRow(db, {
   caption = null,
 }) {
   const effectiveCaption = cleanText(caption ?? mediaRow.caption, 400) || null;
-  const effectiveDayDate = isoDateOnly(dayDate || mediaRow.assigned_day_date) || null;
-  const effectiveDayNumber = dayNumber ?? mediaRow.assigned_day_number ?? null;
-  const bucket = linkedThingId ? 'thing' : (effectiveDayDate ? 'day' : String(mediaRow.assignment_bucket || 'unassigned'));
+  const effectiveDayDate = dayDate !== undefined
+    ? (isoDateOnly(dayDate) || null)
+    : (isoDateOnly(mediaRow.assigned_day_date) || null);
+  const effectiveDayNumber = dayNumber !== undefined
+    ? (dayNumber ?? null)
+    : (mediaRow.assigned_day_number ?? null);
+  const bucket = linkedThingId ? 'thing' : (effectiveDayDate ? 'day' : 'unassigned');
   const bindingId = crypto.randomUUID();
   const storedUrl = cleanText(mediaRow.public_url, 600);
   const publicUrl = (!storedUrl || storedUrl.startsWith('/api/mcp/media/') || mediaRow.storage_provider === 'neon')

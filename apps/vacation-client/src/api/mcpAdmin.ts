@@ -30,9 +30,13 @@ export type McpPreviewExifMatch = {
 
 export type McpPreviewMedia = {
   media_id: string;
-  filename: string;
+  filename?: string;
   media_kind?: string;
   mime_type?: string;
+  url?: string;
+  preview_url?: string;
+  poster_url?: string | null;
+  thumbnail_url?: string | null;
   bytes?: number;
   upload_status?: string;
   assignment_bucket?: string;
@@ -58,6 +62,7 @@ export type McpPreviewLandingItem = {
   scheduled?: boolean;
   day_date?: string | null;
   starts_at?: string | null;
+  start_time?: string | null;
   total_price_cents?: number | null;
   currency?: string;
   media?: McpPreviewMedia[];
@@ -70,6 +75,7 @@ export type McpPreviewDay = {
   notes?: string;
   items?: McpPreviewLandingItem[];
   media?: McpPreviewMedia[];
+  day_media?: McpPreviewMedia[];
 };
 
 export type McpChangePreview = {
@@ -80,6 +86,7 @@ export type McpChangePreview = {
   days?: McpPreviewDay[];
   unscheduled_things?: McpPreviewLandingItem[];
   media?: McpPreviewMedia[];
+  unplaced_media?: McpPreviewMedia[];
   media_count?: number;
   total_bytes?: number;
   will_create?: {

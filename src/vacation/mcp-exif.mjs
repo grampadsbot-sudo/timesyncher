@@ -86,10 +86,119 @@ function findExifTiffStart(buffer) {
   return -1;
 }
 
+const MAC_EPOCH_TO_UNIX_SECONDS = 2082844800;
+const MP4_TOP_TYPES = new Set(['ftyp', 'moov', 'mdat', 'free', 'skip', 'wide']);
+
+function parseIso6709Location(text) {
+  const match = String(text || '').trim().match(/^([+-]\d+(?:\.\d+)?)([+-]\d+(?:\.\d+)?)/);
+  if (!match) return { lat: null, lng: null };
+  const lat = Number(match[1]);
+  const lng = Number(match[2]);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) return { lat: null, lng: null };
+  return { lat: Number(lat.toFixed(6)), lng: Number(lng.toFixed(6)) };
+}
+
+function readBoxHeader(buf, offset, limit) {
+  if (offset + 8 > limit) return null;
+  let size = buf.readUInt32BE(offset);
+  const type = buf.subarray(offset + 4, offset + 8).toString('latin1');
+  let headerSize = 8;
+  if (size === 1) {
+    if (offset + 16 > limit) return null;
+    size = Number(buf.readBigUInt64BE(offset + 8));
+    headerSize = 16;
+  } else if (size === 0) size = limit - offset;
+  if (!Number.isFinite(size) || size < headerSize || offset + size > limit) return null;
+  return { type, start: offset, dataStart: offset + headerSize, end: offset + size };
+}
+
+function extractIsoStringFromAtom(buf, start, end) {
+  for (let cursor = start; cursor + 8 <= end;) {
+    const child = readBoxHeader(buf, cursor, end);
+    if (!child) break;
+    if (child.type === 'data' && child.dataStart + 8 <= child.end) {
+      const value = buf.subarray(child.dataStart + 8, child.end).toString('utf8').replace(/\0+$/, '').trim();
+      if (value) return value;
+    }
+    cursor = child.end;
+  }
+  if (start + 4 <= end) {
+    const strLen = buf.readUInt16BE(start);
+    if (strLen > 0 && start + 4 + strLen <= end) return buf.subarray(start + 4, start + 4 + strLen).toString('utf8').replace(/\0+$/, '').trim();
+  }
+  return '';
+}
+
+function scanMp4Container(buf, start, end, acc, depth = 0) {
+  if (depth > 8) return;
+  let keys = [];
+  for (let cursor = start; cursor + 8 <= end;) {
+    const box = readBoxHeader(buf, cursor, end);
+    if (!box) break;
+    if (box.type === 'mvhd' && box.dataStart + 8 <= box.end) {
+      const version = buf[box.dataStart];
+      const macSec = version === 1 && box.dataStart + 12 <= box.end
+        ? Number(buf.readBigUInt64BE(box.dataStart + 4))
+        : (version === 0 ? buf.readUInt32BE(box.dataStart + 4) : 0);
+      if (macSec > MAC_EPOCH_TO_UNIX_SECONDS && !acc.mvhdIso) {
+        const dt = new Date((macSec - MAC_EPOCH_TO_UNIX_SECONDS) * 1000);
+        if (!Number.isNaN(dt.getTime()) && dt.getUTCFullYear() >= 1990 && dt.getUTCFullYear() <= 2100) acc.mvhdIso = dt.toISOString();
+      }
+    } else if (box.type === 'keys' && box.dataStart + 8 <= box.end) {
+      const count = buf.readUInt32BE(box.dataStart + 4);
+      keys = [];
+      for (let i = 0, kc = box.dataStart + 8; i < count && kc + 8 <= box.end; i += 1) {
+        const kBox = readBoxHeader(buf, kc, box.end);
+        if (!kBox) break;
+        keys.push(buf.subarray(kBox.dataStart, kBox.end).toString('utf8').trim());
+        kc = kBox.end;
+      }
+    } else if (box.type === 'ilst') {
+      for (let ic = box.dataStart; ic + 8 <= box.end;) {
+        const entry = readBoxHeader(buf, ic, box.end);
+        if (!entry) break;
+        const idx = buf.readUInt32BE(entry.start + 4);
+        const keyName = idx >= 1 && idx <= keys.length ? keys[idx - 1] : '';
+        if (entry.type === '\xa9day' || keyName === 'com.apple.quicktime.creationdate') {
+          const val = extractIsoStringFromAtom(buf, entry.dataStart, entry.end);
+          if (val && !acc.tagDate) acc.tagDate = val;
+        } else if (entry.type === '\xa9xyz' || keyName === 'com.apple.quicktime.location.ISO6709') {
+          const loc = parseIso6709Location(extractIsoStringFromAtom(buf, entry.dataStart, entry.end));
+          if (loc.lat !== null && acc.lat === null) { acc.lat = loc.lat; acc.lng = loc.lng; }
+        }
+        ic = entry.end;
+      }
+    } else if (box.type === '\xa9day') {
+      const val = extractIsoStringFromAtom(buf, box.dataStart, box.end);
+      if (val && !acc.tagDate) acc.tagDate = val;
+    } else if (box.type === '\xa9xyz') {
+      const loc = parseIso6709Location(extractIsoStringFromAtom(buf, box.dataStart, box.end));
+      if (loc.lat !== null && acc.lat === null) { acc.lat = loc.lat; acc.lng = loc.lng; }
+    } else if (box.type === 'moov' || box.type === 'udta') {
+      scanMp4Container(buf, box.dataStart, box.end, acc, depth + 1);
+    } else if (box.type === 'meta') {
+      const childStart = box.dataStart + 4 <= box.end && buf.readUInt32BE(box.dataStart) === 0 ? box.dataStart + 4 : box.dataStart;
+      scanMp4Container(buf, childStart, box.end, acc, depth + 1);
+    }
+    cursor = box.end;
+  }
+}
+
+function extractVideoMetadataFromBuffer(buffer) {
+  const empty = { hasExif: false, capturedAtRaw: null, offsetText: null, capturedAtIso: null, lat: null, lng: null };
+  if (!Buffer.isBuffer(buffer) || buffer.length < 12 || !MP4_TOP_TYPES.has(buffer.subarray(4, 8).toString('latin1'))) return empty;
+  const acc = { tagDate: '', mvhdIso: '', lat: null, lng: null };
+  scanMp4Container(buffer, 0, buffer.length, acc, 0);
+  const rawDate = acc.tagDate || acc.mvhdIso || null;
+  const offsetText = rawDate ? (String(rawDate).match(/(Z|[+-]\d{2}:?\d{2})$/i)?.[1] || null) : null;
+  const capturedAtIso = normalizeExifTimestamp(rawDate, offsetText);
+  return { hasExif: Boolean(capturedAtIso || (acc.lat !== null && acc.lng !== null)), capturedAtRaw: rawDate, offsetText, capturedAtIso, lat: acc.lat, lng: acc.lng };
+}
+
 export function extractExifFromBuffer(buffer) {
   const empty = { hasExif: false, capturedAtRaw: null, offsetText: null, capturedAtIso: null, lat: null, lng: null };
   const tiffStart = findExifTiffStart(buffer);
-  if (tiffStart < 0 || tiffStart + 8 > buffer.length) return empty;
+  if (tiffStart < 0 || tiffStart + 8 > buffer.length) return extractVideoMetadataFromBuffer(buffer);
   const byteOrder = buffer.subarray(tiffStart, tiffStart + 2).toString('ascii');
   const littleEndian = byteOrder === 'II';
   if (!littleEndian && byteOrder !== 'MM') return empty;

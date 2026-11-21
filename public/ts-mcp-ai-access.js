@@ -3,6 +3,7 @@
 
   const STYLE_ID = 'ts-mcp-ai-access-style';
   const ROOT_ID = 'ts-mcp-ai-access-root';
+  const galleryGroups = new Map();
 
   function esc(value) {
     return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -29,14 +30,6 @@
     } catch (error) {
       void error;
     }
-  }
-
-  function formatBytes(bytes) {
-    const value = Number(bytes || 0);
-    if (!Number.isFinite(value) || value <= 0) return '0 B';
-    if (value >= 1024 * 1024) return `${(value / (1024 * 1024)).toFixed(1)} MB`;
-    if (value >= 1024) return `${Math.round(value / 1024)} KB`;
-    return `${Math.round(value)} B`;
   }
 
   function formatClock(value) {
@@ -66,26 +59,58 @@
     });
   }
 
-  function mediaMatchLabel(media) {
-    const attached = media?.attached_thing_title || media?.target_thing_ref || '';
-    const dayNum = media?.attached_day_number || media?.assigned_day_number || null;
-    const bucket = media?.assignment_bucket || '';
-    const exif = media?.exif_match || {};
-    const parts = [];
-    if (attached) {
-      const scope = media?.attached_thing_scheduled === false ? 'unscheduled' : (dayNum ? `Day ${dayNum}` : 'scheduled');
-      parts.push(`Attached to ${attached} (${scope})`);
-    } else if (dayNum) {
-      parts.push(`Day ${dayNum}`);
-    } else if (bucket === 'day_unmatched' || bucket === 'unassigned') {
-      parts.push('Unassigned');
-    } else {
-      parts.push('Vacation photo');
-    }
-    if (exif.time_matched && exif.gps_matched) parts.push('EXIF time + GPS matched');
-    else if (exif.time_matched) parts.push(`EXIF time matched${exif.local_date ? ` (${exif.local_date})` : ''}`);
-    else if (exif.gps_matched) parts.push('EXIF GPS matched');
-    return parts.join(' · ');
+  function normalizeMedia(row) {
+    if (!row || typeof row !== 'object') return null;
+    const mediaId = String(row.media_id || row.id || '').trim();
+    const mime = String(row.mime_type || row.mimeType || '').trim();
+    const url = String(row.url || row.preview_url || row.public_url || '').trim()
+      || (mediaId ? `/api/mcp/media/${encodeURIComponent(mediaId)}` : '');
+    if (!url) return null;
+    const isVideo = String(row.media_kind || row.kind || '').toLowerCase() === 'video'
+      || mime.toLowerCase().startsWith('video/')
+      || /\.(mp4|mov|webm|m4v)(\?|#|$)/i.test(url);
+    const posterUrl = String(row.poster_url || row.posterUrl || row.thumbnail_url || '').trim();
+    return {
+      ...row,
+      media_id: mediaId || url,
+      media_kind: isVideo ? 'video' : 'photo',
+      mime_type: mime || (isVideo ? 'video/mp4' : 'image/jpeg'),
+      url,
+      poster_url: posterUrl && posterUrl !== url ? posterUrl : '',
+      caption: String(row.caption || '').trim(),
+    };
+  }
+
+  function isDayOnlyMedia(row) {
+    if (!row || typeof row !== 'object') return false;
+    if (row.attached_thing_ref || row.target_thing_ref || row.attached_thing_title) return false;
+    if (row.assignment_bucket === 'thing') return false;
+    return Boolean(row.attached_day_date || row.assigned_day_date || row.attached_day_number || row.assigned_day_number || row.assignment_bucket === 'day');
+  }
+
+  function isUnplacedMedia(row) {
+    if (!row || typeof row !== 'object') return false;
+    if (row.assignment_bucket === 'unassigned') return true;
+    return !row.attached_thing_ref && !row.target_thing_ref && !row.attached_thing_title && !row.attached_day_date && !row.assigned_day_date;
+  }
+
+  function videoThumbSrc(url, posterUrl) {
+    if (posterUrl || !url || url.startsWith('data:') || url.includes('#')) return url;
+    return `${url}#t=0.1`;
+  }
+
+  function renderThumbStrip(rawMedia, { galleryKey, ownerLabel, scope }) {
+    const items = (Array.isArray(rawMedia) ? rawMedia : []).map(normalizeMedia).filter(Boolean);
+    if (!items.length) return '';
+    galleryGroups.set(galleryKey, { items, title: ownerLabel });
+    const buttons = items.map((item, idx) => {
+      const isVideo = item.media_kind === 'video';
+      const inner = isVideo
+        ? `<video class="ts-mcp-thumb-media" src="${esc(videoThumbSrc(item.url, item.poster_url))}"${item.poster_url ? ` poster="${esc(item.poster_url)}"` : ''} muted playsinline preload="metadata" aria-hidden="true"></video><span class="ts-mcp-thumb-play" data-ts-media-play-badge="1" aria-hidden="true">▶</span>`
+        : `<img class="ts-mcp-thumb-media" src="${esc(item.url)}" alt="${esc(item.caption || ownerLabel)}" loading="lazy" />`;
+      return `<button type="button" class="ts-mcp-thumb${isVideo ? ' is-video' : ''}" data-ts-preview-thumb="1" data-ts-gallery-key="${esc(galleryKey)}" data-ts-gallery-index="${idx}" data-media-id="${esc(item.media_id)}" data-media-kind="${esc(item.media_kind)}" aria-label="${esc(isVideo ? `Play video for ${ownerLabel}` : `View photo for ${ownerLabel}`)}">${inner}</button>`;
+    }).join('');
+    return `<div class="ts-mcp-thumb-strip" data-ts-media-strip="${esc(scope)}" data-ts-media-owner="${esc(ownerLabel)}">${buttons}</div>`;
   }
 
   function previewBullets(changeSet) {
@@ -103,8 +128,8 @@
         c.restaurants && `${c.restaurants} restaurants`,
         c.stores && `${c.stores} stores`,
         c.things_to_do && `${c.things_to_do} things to do`,
-        c.unscheduled && `${c.unscheduled} unscheduled items`,
-        c.media && `${c.media} media files`,
+        c.unscheduled_things && `${c.unscheduled_things} unscheduled items`,
+        c.media && `${c.media} photos & videos`,
       ].filter(Boolean);
       if (counts.length) out.push(`Will create: ${counts.join(', ')}`);
       return out;
@@ -113,19 +138,31 @@
     if (Array.isArray(preview.will_update) && preview.will_update.length) out.push(`Update ${preview.will_update.length}: ${preview.will_update.map((i) => i.current_title).filter(Boolean).join(', ')}`);
     if (Array.isArray(preview.will_remove) && preview.will_remove.length) out.push(`Remove ${preview.will_remove.length}: ${preview.will_remove.map((i) => i.title).filter(Boolean).join(', ')}`);
     if (Array.isArray(preview.day_updates) && preview.day_updates.length) out.push(`Day notes/titles updated: ${preview.day_updates.map((d) => d.day_date).filter(Boolean).join(', ')}`);
-    if (Array.isArray(preview.will_attach_media) && preview.will_attach_media.length) out.push(`Attach ${preview.will_attach_media.length} media file(s)`);
+    if (Array.isArray(preview.will_attach_media) && preview.will_attach_media.length) out.push(`Photos & videos: ${preview.will_attach_media.length}`);
     return out;
   }
 
   function extractPreview(changeSet) {
     const preview = changeSet?.preview || {};
     const wc = preview.will_create || {};
-    const days = Array.isArray(preview.days) ? preview.days : (Array.isArray(wc.days) ? wc.days : []);
-    const unscheduled = Array.isArray(preview.unscheduled_things) ? preview.unscheduled_things : (Array.isArray(wc.unscheduled_things) ? wc.unscheduled_things : []);
-    const media = Array.isArray(preview.media) ? preview.media : (Array.isArray(wc.media) ? wc.media : (Array.isArray(preview.will_attach_media) ? preview.will_attach_media : []));
-    const totalBytes = Number.isFinite(Number(preview.total_bytes)) ? Number(preview.total_bytes) : media.reduce((sum, row) => sum + Number(row?.bytes || 0), 0);
+    const rawDays = Array.isArray(preview.days) ? preview.days : (Array.isArray(wc.days) ? wc.days : []);
+    const rawUnscheduled = Array.isArray(preview.unscheduled_things) ? preview.unscheduled_things : (Array.isArray(wc.unscheduled_things) ? wc.unscheduled_things : []);
+    const rawMedia = Array.isArray(preview.media) ? preview.media : (Array.isArray(wc.media) ? wc.media : (Array.isArray(preview.will_attach_media) ? preview.will_attach_media : []));
+    const media = rawMedia.map(normalizeMedia).filter(Boolean);
+    const days = rawDays.map((day) => {
+      const items = Array.isArray(day?.items)
+        ? day.items.map((item) => ({ ...item, media: (Array.isArray(item?.media) ? item.media : []).map(normalizeMedia).filter(Boolean) }))
+        : [];
+      const dayOnly = Array.isArray(day?.day_media)
+        ? day.day_media
+        : (Array.isArray(day?.media) ? day.media.filter(isDayOnlyMedia) : []);
+      return { ...day, items, day_media: dayOnly.map(normalizeMedia).filter(Boolean) };
+    });
+    const unscheduled = rawUnscheduled.map((item) => ({ ...item, media: (Array.isArray(item?.media) ? item.media : []).map(normalizeMedia).filter(Boolean) }));
+    const rawUnplaced = Array.isArray(preview.unplaced_media) ? preview.unplaced_media : media.filter(isUnplacedMedia);
+    const unplacedMedia = rawUnplaced.map(normalizeMedia).filter(Boolean);
     const previewHash = String(preview.preview_hash || changeSet?.previewHash || '').trim();
-    return { days, unscheduled, media, totalBytes, previewHash };
+    return { days, unscheduled, media, unplacedMedia, previewHash };
   }
 
   async function apiJson(url, options) {
@@ -144,7 +181,7 @@
     if (document.getElementById(STYLE_ID)) return;
     const style = document.createElement('style');
     style.id = STYLE_ID;
-    style.textContent = '.ts-mcp-backdrop{position:fixed;inset:0;z-index:10050;background:rgba(15,23,42,.58);display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif}.ts-mcp-sheet{width:100%;max-width:780px;background:#fff;color:#111827;border-radius:16px;box-shadow:0 24px 64px rgba(15,23,42,.32);overflow:hidden;border:1px solid #e5e7eb}.ts-mcp-head{padding:16px 18px 12px;border-bottom:1px solid #e5e7eb;background:#f8fafc}.ts-mcp-kicker{font-size:10px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;color:#0f766e;margin:0 0 4px}.ts-mcp-title-row{display:flex;align-items:center;justify-content:space-between;gap:12px}.ts-mcp-title{margin:0;font-size:19px;font-weight:800;color:#111827}.ts-mcp-close{width:34px;height:34px;border-radius:999px;border:1px solid #d1d5db;background:#fff;color:#111827;font-size:18px;font-weight:800;cursor:pointer;line-height:1}.ts-mcp-tabs{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}.ts-mcp-tab{border:1px solid #d1d5db;background:#fff;color:#374151;border-radius:999px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer}.ts-mcp-tab.is-active{background:#0f172a;border-color:#0f172a;color:#fff}.ts-mcp-body{padding:16px 18px 20px;font-size:13px;line-height:1.45}.ts-mcp-alert{padding:10px 12px;border-radius:10px;margin:0 0 12px;font-weight:600}.ts-mcp-alert-err{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}.ts-mcp-alert-ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}.ts-mcp-split{display:grid;grid-template-columns:minmax(180px,230px) minmax(0,1fr);gap:14px}@media(max-width:640px){.ts-mcp-split{grid-template-columns:1fr}}.ts-mcp-list{list-style:none;margin:0;padding:0;display:grid;gap:8px;align-content:start}.ts-mcp-list-btn{width:100%;text-align:left;border:1px solid #e5e7eb;background:#fff;border-radius:10px;padding:10px;cursor:pointer;display:grid;gap:3px;color:#111827}.ts-mcp-list-btn.is-selected{border-color:#0f766e;background:#f0fdfa}.ts-mcp-meta{font-size:11px;color:#6b7280}.ts-mcp-preview{border:1px solid #e5e7eb;border-radius:12px;padding:14px;background:#fff}.ts-mcp-block{margin-top:12px;padding-top:10px;border-top:1px solid #f1f5f9}.ts-mcp-block h4{margin:0 0 6px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:#475569}.ts-mcp-block ul{margin:0;padding-left:18px;display:grid;gap:4px}.ts-mcp-block-warn{background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px}.ts-mcp-actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}.ts-mcp-btn{border-radius:10px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;border:1px solid #d1d5db;background:#fff;color:#111827}.ts-mcp-btn-primary{background:#0f766e;border-color:#0f766e;color:#fff}.ts-mcp-btn-danger{background:#fff;border-color:#fca5a5;color:#b91c1c}.ts-mcp-btn[disabled]{opacity:.55;cursor:not-allowed}.ts-mcp-form{display:grid;grid-template-columns:minmax(0,1fr) 130px 110px auto;gap:8px;align-items:end;margin:12px 0}@media(max-width:640px){.ts-mcp-form{grid-template-columns:1fr}}.ts-mcp-field{display:grid;gap:4px;font-size:11px;font-weight:700;color:#475569}.ts-mcp-field input,.ts-mcp-field select{border:1px solid #d1d5db;border-radius:8px;padding:8px 10px;font:inherit;font-size:13px;color:#111827;background:#fff}.ts-mcp-reveal{background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:12px;margin:12px 0;word-break:break-all}.ts-mcp-reveal code{display:block;margin-top:6px;padding:8px;border-radius:6px;background:#fff;border:1px solid #bbf7d0;font-size:12px}.ts-mcp-token-list{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:8px}.ts-mcp-token-row{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px}';
+    style.textContent = '.ts-mcp-backdrop{position:fixed;inset:0;z-index:10050;background:rgba(15,23,42,.58);display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif}.ts-mcp-sheet{width:100%;max-width:780px;background:#fff;color:#111827;border-radius:16px;box-shadow:0 24px 64px rgba(15,23,42,.32);overflow:hidden;border:1px solid #e5e7eb}.ts-mcp-head{padding:16px 18px 12px;border-bottom:1px solid #e5e7eb;background:#f8fafc}.ts-mcp-kicker{font-size:10px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;color:#0f766e;margin:0 0 4px}.ts-mcp-title-row{display:flex;align-items:center;justify-content:space-between;gap:12px}.ts-mcp-title{margin:0;font-size:19px;font-weight:800;color:#111827}.ts-mcp-close{width:34px;height:34px;border-radius:999px;border:1px solid #d1d5db;background:#fff;color:#111827;font-size:18px;font-weight:800;cursor:pointer;line-height:1}.ts-mcp-tabs{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}.ts-mcp-tab{border:1px solid #d1d5db;background:#fff;color:#374151;border-radius:999px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer}.ts-mcp-tab.is-active{background:#0f172a;border-color:#0f172a;color:#fff}.ts-mcp-body{padding:16px 18px 20px;font-size:13px;line-height:1.45}.ts-mcp-alert{padding:10px 12px;border-radius:10px;margin:0 0 12px;font-weight:600}.ts-mcp-alert-err{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}.ts-mcp-alert-ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}.ts-mcp-split{display:grid;grid-template-columns:minmax(180px,230px) minmax(0,1fr);gap:14px;min-width:0}@media(max-width:640px){.ts-mcp-split{grid-template-columns:minmax(0,1fr)}}.ts-mcp-list{list-style:none;margin:0;padding:0;display:grid;gap:8px;align-content:start;min-width:0}.ts-mcp-list-btn{width:100%;text-align:left;border:1px solid #e5e7eb;background:#fff;border-radius:10px;padding:10px;cursor:pointer;display:grid;gap:3px;color:#111827}.ts-mcp-list-btn.is-selected{border-color:#0f766e;background:#f0fdfa}.ts-mcp-meta{font-size:11px;color:#6b7280}.ts-mcp-preview{border:1px solid #e5e7eb;border-radius:12px;padding:14px;background:#fff;color:#111827;min-width:0;overflow-wrap:anywhere}.ts-mcp-preview code{word-break:break-all;overflow-wrap:anywhere}.ts-mcp-block{margin-top:12px;padding-top:10px;border-top:1px solid #f1f5f9}.ts-mcp-block h4{margin:0 0 6px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:#475569}.ts-mcp-block ul{margin:0;padding-left:18px;display:grid;gap:6px}.ts-mcp-day-media-label{margin:6px 0 0;font-size:11px;font-weight:700;color:#64748b}.ts-mcp-thumb-strip{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.ts-mcp-thumb{position:relative;width:58px;height:58px;padding:0;border-radius:8px;overflow:hidden;border:1px solid #cbd5e1;background:#0f172a;cursor:pointer;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center}.ts-mcp-thumb-media{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}.ts-mcp-thumb-play{position:absolute;inset:0;margin:auto;width:24px;height:24px;border-radius:999px;background:rgba(15,23,42,.78);color:#fff;font-size:11px;display:inline-flex;align-items:center;justify-content:center;pointer-events:none;box-shadow:0 2px 6px rgba(0,0,0,.35)}.ts-mcp-block-warn{background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px}.ts-mcp-actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}.ts-mcp-btn{border-radius:10px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;border:1px solid #d1d5db;background:#fff;color:#111827}.ts-mcp-btn-primary{background:#0f766e;border-color:#0f766e;color:#fff}.ts-mcp-btn-danger{background:#fff;border-color:#fca5a5;color:#b91c1c}.ts-mcp-btn[disabled]{opacity:.55;cursor:not-allowed}.ts-mcp-form{display:grid;grid-template-columns:minmax(0,1fr) 130px 110px auto;gap:8px;align-items:end;margin:12px 0}@media(max-width:640px){.ts-mcp-form{grid-template-columns:1fr}}.ts-mcp-field{display:grid;gap:4px;font-size:11px;font-weight:700;color:#475569}.ts-mcp-field input,.ts-mcp-field select{border:1px solid #d1d5db;border-radius:8px;padding:8px 10px;font:inherit;font-size:13px;color:#111827;background:#fff}.ts-mcp-reveal{background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:12px;margin:12px 0;word-break:break-all}.ts-mcp-reveal code{display:block;margin-top:6px;padding:8px;border-radius:6px;background:#fff;border:1px solid #bbf7d0;font-size:12px}.ts-mcp-token-list{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:8px}.ts-mcp-token-row{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px}';
     document.head.appendChild(style);
   }
 
@@ -241,15 +278,49 @@
     const bullets = previewBullets(selected);
     const missing = Array.isArray(selected?.preview?.missing) ? selected.preview.missing : [];
     const conflicts = Array.isArray(selected?.preview?.conflicts) ? selected.preview.conflicts : [];
+    galleryGroups.clear();
     const listHtml = state.changes.map((item) => `<li><button type="button" class="ts-mcp-list-btn${item.id === selected.id ? ' is-selected' : ''}" data-mcp-select="${esc(item.id)}"><strong>${esc(kindLabel(item.kind))}</strong><span class="ts-mcp-meta">${esc(statusLabel(item.status))}</span><span>${esc(item.summary || '')}</span></button></li>`).join('');
     const daysHtml = pv.days.length
-      ? `<div class="ts-mcp-block" data-ts-mcp-preview-days="1"><h4>Itinerary by day</h4><ul>${pv.days.map((day, idx) => `<li><strong>Day ${esc(day.day_number ?? idx + 1)}${day.date ? ` (${esc(day.date)})` : ''}${day.title ? ` — ${esc(day.title)}` : ''}</strong>${Array.isArray(day.items) && day.items.length ? `<ul>${day.items.map((item) => `<li>${item.category ? `${esc(item.category)}: ` : ''}${esc(item.title || '')}${item.start_time ? ` · ${esc(formatClock(item.start_time))}` : ''}</li>`).join('')}</ul>` : ''}</li>`).join('')}</ul></div>`
+      ? `<div class="ts-mcp-block" data-ts-mcp-preview-days="1"><h4>Itinerary by day</h4><ul>${pv.days.map((day, idx) => {
+        const dayNum = day.day_number ?? idx + 1;
+        const dayLabel = `Day ${dayNum}${day.date ? ` (${day.date})` : ''}`;
+        const itemsHtml = Array.isArray(day.items) && day.items.length
+          ? `<ul>${day.items.map((item, itemIdx) => {
+            const thingTitle = String(item.title || '').trim() || 'Item';
+            const thumbs = renderThumbStrip(item.media, {
+              galleryKey: `${selected.id}:day:${idx}:thing:${item.ref || item.id || itemIdx}`,
+              ownerLabel: thingTitle,
+              scope: 'thing',
+            });
+            return `<li data-ts-preview-thing="${esc(item.ref || item.id || thingTitle)}"><span>${item.category ? `${esc(item.category)}: ` : ''}${esc(thingTitle)}${item.start_time ? ` · ${esc(formatClock(item.start_time))}` : ''}</span>${thumbs}</li>`;
+          }).join('')}</ul>`
+          : '';
+        const dayThumbs = renderThumbStrip(day.day_media, {
+          galleryKey: `${selected.id}:day:${idx}:direct`,
+          ownerLabel: dayLabel,
+          scope: 'day',
+        });
+        const dayMediaBlock = dayThumbs ? `<div class="ts-mcp-day-media-label">Day ${esc(dayNum)} photos &amp; videos</div>${dayThumbs}` : '';
+        return `<li data-ts-preview-day="${esc(day.date || String(dayNum))}"><strong>${esc(dayLabel)}${day.title ? ` — ${esc(day.title)}` : ''}</strong>${itemsHtml}${dayMediaBlock}</li>`;
+      }).join('')}</ul></div>`
       : '';
     const unscheduledHtml = pv.unscheduled.length
-      ? `<div class="ts-mcp-block" data-ts-mcp-preview-unscheduled="1"><h4>Unscheduled long-list items (${pv.unscheduled.length})</h4><ul>${pv.unscheduled.map((item) => `<li>${item.category ? `${esc(item.category)}: ` : ''}${esc(item.title || '')} — Unscheduled</li>`).join('')}</ul></div>`
+      ? `<div class="ts-mcp-block" data-ts-mcp-preview-unscheduled="1" data-ts-mcp-preview-long-list="1"><h4>Unscheduled long-list items (${pv.unscheduled.length})</h4><ul>${pv.unscheduled.map((item, idx) => {
+        const thingTitle = String(item.title || '').trim() || 'Saved item';
+        const thumbs = renderThumbStrip(item.media, {
+          galleryKey: `${selected.id}:unscheduled:${item.ref || item.id || idx}`,
+          ownerLabel: thingTitle,
+          scope: 'thing',
+        });
+        return `<li data-ts-preview-thing="${esc(item.ref || item.id || thingTitle)}"><span>${item.category ? `${esc(item.category)}: ` : ''}${esc(thingTitle)} — Unscheduled</span>${thumbs}</li>`;
+      }).join('')}</ul></div>`
       : '';
-    const mediaHtml = pv.media.length
-      ? `<div class="ts-mcp-block" data-ts-mcp-preview-media="1"><h4>Media attachments (${pv.media.length} · ${esc(formatBytes(pv.totalBytes))})</h4><ul>${pv.media.map((m) => `<li>${esc(m.filename || 'photo')} (${esc(formatBytes(m.bytes || 0))}) — ${esc(mediaMatchLabel(m))}</li>`).join('')}</ul></div>`
+    const unplacedHtml = pv.unplacedMedia.length
+      ? `<div class="ts-mcp-block" data-ts-mcp-preview-unplaced="1"><h4>Not placed yet</h4>${renderThumbStrip(pv.unplacedMedia, {
+        galleryKey: `${selected.id}:unplaced`,
+        ownerLabel: 'Not placed yet',
+        scope: 'unplaced',
+      })}</div>`
       : '';
     const bulletsHtml = bullets.length ? `<div class="ts-mcp-block"><h4>What will change</h4><ul>${bullets.map((b) => `<li>${esc(b)}</li>`).join('')}</ul></div>` : '';
     const missingHtml = missing.length ? `<div class="ts-mcp-block"><h4>Missing details</h4><ul>${missing.map((m) => `<li>${esc(m)}</li>`).join('')}</ul></div>` : '';
@@ -257,7 +328,7 @@
     const actionsHtml = selected.status === 'pending_approval'
       ? `<div class="ts-mcp-actions"><button type="button" class="ts-mcp-btn ts-mcp-btn-primary" data-mcp-approve="${esc(selected.id)}" data-mcp-hash="${esc(pv.previewHash)}"${state.busy === selected.id ? ' disabled' : ''}>Approve</button><button type="button" class="ts-mcp-btn ts-mcp-btn-danger" data-mcp-decline="${esc(selected.id)}"${state.busy === selected.id ? ' disabled' : ''}>Decline</button></div>`
       : '';
-    return `<div class="ts-mcp-split"><ul class="ts-mcp-list">${listHtml}</ul><div class="ts-mcp-preview" data-ts-mcp-preview="1"><h3 style="margin:0 0 6px;font-size:16px">${esc(kindLabel(selected.kind))}</h3><p style="margin:0 0 6px">Status: <strong>${esc(statusLabel(selected.status))}</strong></p>${pv.previewHash ? `<p style="margin:0 0 6px" data-ts-mcp-preview-hash="${esc(pv.previewHash)}">Preview hash: <code>${esc(pv.previewHash)}</code></p>` : ''}<p style="margin:0">${esc(selected.preview?.summary_text || selected.summary || '')}</p>${bulletsHtml}${daysHtml}${unscheduledHtml}${mediaHtml}${missingHtml}${conflictsHtml}${actionsHtml}</div></div>`;
+    return `<div class="ts-mcp-split"><ul class="ts-mcp-list">${listHtml}</ul><div class="ts-mcp-preview" data-ts-mcp-preview="1"><h3 style="margin:0 0 6px;font-size:16px">${esc(kindLabel(selected.kind))}</h3><p style="margin:0 0 6px">Status: <strong>${esc(statusLabel(selected.status))}</strong></p>${pv.previewHash ? `<p style="margin:0 0 6px" data-ts-mcp-preview-hash="${esc(pv.previewHash)}">Preview hash: <code>${esc(pv.previewHash)}</code></p>` : ''}<p style="margin:0">${esc(selected.preview?.summary_text || selected.summary || '')}</p>${bulletsHtml}${daysHtml}${unscheduledHtml}${unplacedHtml}${missingHtml}${conflictsHtml}${actionsHtml}</div></div>`;
   }
 
   function renderTokens() {
@@ -324,13 +395,21 @@
         }
       });
     }
+    root.querySelectorAll('[data-ts-preview-thumb="1"]').forEach((btn) => btn.addEventListener('click', () => {
+      const key = btn.getAttribute('data-ts-gallery-key') || '';
+      const idx = Number(btn.getAttribute('data-ts-gallery-index') || 0);
+      const group = galleryGroups.get(key);
+      if (group && typeof window.__tsOpenMediaViewer === 'function') {
+        window.__tsOpenMediaViewer({ items: group.items, startIndex: idx, title: group.title });
+      }
+    }));
     root.querySelectorAll('[data-mcp-revoke]').forEach((btn) => btn.addEventListener('click', () => {
       const id = btn.getAttribute('data-mcp-revoke') || '';
       void runAction(id, () => apiJson(`/api/mcp/tokens/${encodeURIComponent(id)}/revoke`, { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json' }, body: JSON.stringify({ shareToken }) }), 'AI access token revoked.', 'Unable to revoke AI access token.');
     }));
   }
 
-  document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && state.open) closeModal(); });
+  document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && state.open && !window.__tsPicFsActive) closeModal(); });
 
   window.__tsOpenMcpPanel = function (mode) {
     state.mode = mode === 'tokens' ? 'tokens' : 'approvals';
