@@ -5,6 +5,7 @@ import {
   declineMcpChange,
   fetchMcpChanges,
   fetchMcpTokens,
+  requestMcpChanges,
   revokeVacationMcpToken,
   type McpChangeSet,
   type McpTokenRecord,
@@ -44,6 +45,8 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
   const [busyId, setBusyId] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [notice, setNotice] = useState<string>('');
+  const [requestBoxOpen, setRequestBoxOpen] = useState<boolean>(false);
+  const [requestNote, setRequestNote] = useState<string>('');
 
   const refreshData = useCallback(async () => {
     setError('');
@@ -121,10 +124,34 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
     setNotice('');
     try {
       await declineMcpChange(shareToken, changeSetId);
+      setRequestBoxOpen(false);
+      setRequestNote('');
       setNotice('Change set declined. Live vacation data was not changed.');
       await refreshData();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to decline this change set.');
+    } finally {
+      setBusyId('');
+    }
+  }
+
+  async function handleRequestChanges(changeSetId: string, previewHash?: string) {
+    const trimmed = requestNote.trim();
+    if (!trimmed) {
+      setError('Please enter a short note describing what to change.');
+      return;
+    }
+    setBusyId(changeSetId);
+    setError('');
+    setNotice('');
+    try {
+      await requestMcpChanges(shareToken, changeSetId, trimmed, previewHash);
+      setRequestNote('');
+      setRequestBoxOpen(false);
+      setNotice('Change request saved for your AI.');
+      await refreshData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to save change request.');
     } finally {
       setBusyId('');
     }
@@ -270,11 +297,15 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
                     <div
                       className="tsv-mcp-preview"
                       data-ts-mcp-preview="1"
+                      data-ts-mcp-preview-version={String(previewView.previewVersion)}
                       data-ts-mcp-preview-hash={previewView.previewHash || undefined}
                     >
                       <div className="tsv-mcp-preview-head">
                         <h3 className="tsv-mcp-subheading">{changeSetKindLabel(selected.kind)}</h3>
-                        <span className="tsv-mcp-status-pill">{changeSetStatusLabel(selected.status)}</span>
+                        <span className="tsv-mcp-status-pill">
+                          {changeSetStatusLabel(selected.status)}
+                          {previewView.previewVersion > 1 ? ` · v${previewView.previewVersion}` : ''}
+                        </span>
                       </div>
                       <p className="tsv-mcp-summary">{selected.preview?.summary_text || selected.summary}</p>
 
@@ -285,6 +316,19 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
                               {chip}
                             </span>
                           ))}
+                        </div>
+                      ) : null}
+
+                      {previewView.lastChanges.length > 0 ? (
+                        <div className="tsv-mcp-block" data-ts-preview-changes="1">
+                          <h4>Updated in this preview</h4>
+                          <div className="tsv-mcp-notes">
+                            {previewView.lastChanges.map((item, index) => (
+                              <p key={`${index}-${item}`} className="tsv-mcp-note">
+                                {item}
+                              </p>
+                            ))}
+                          </div>
                         </div>
                       ) : null}
 
@@ -440,25 +484,83 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
                         </div>
                       ) : null}
 
-                      {selected.status === 'pending_approval' ? (
-                        <div className="tsv-mcp-actions">
-                          <button
-                            type="button"
-                            className="tsv-header-btn tsv-mcp-btn-approve"
-                            disabled={busyId === selected.id}
-                            onClick={() => void handleApprove(selected.id, previewView.previewHash)}
-                          >
-                            Approve
-                          </button>
-                          <button
-                            type="button"
-                            className="tsv-header-btn tsv-mcp-btn-decline"
-                            disabled={busyId === selected.id}
-                            onClick={() => void handleDecline(selected.id)}
-                          >
-                            Decline
-                          </button>
+                      {previewView.changeRequests.length > 0 ? (
+                        <div className="tsv-mcp-block" data-ts-requested-changes="1">
+                          <h4>Requested changes</h4>
+                          <div className="tsv-mcp-notes">
+                            {previewView.changeRequests.map((entry, index) => (
+                              <p key={`${entry.id || index}`} className="tsv-mcp-note">
+                                {entry.note}
+                              </p>
+                            ))}
+                          </div>
                         </div>
+                      ) : null}
+
+                      {selected.status === 'pending_approval' ? (
+                        <>
+                          <div className="tsv-mcp-actions">
+                            <button
+                              type="button"
+                              className="tsv-header-btn tsv-mcp-btn-approve"
+                              disabled={busyId === selected.id}
+                              onClick={() => void handleApprove(selected.id, previewView.previewHash)}
+                            >
+                              Approve
+                            </button>
+                            <button
+                              type="button"
+                              className="tsv-header-btn tsv-mcp-btn-secondary"
+                              data-ts-request-changes-btn="1"
+                              disabled={busyId === selected.id}
+                              onClick={() => setRequestBoxOpen((prev) => !prev)}
+                            >
+                              Request changes
+                            </button>
+                            <button
+                              type="button"
+                              className="tsv-header-btn tsv-mcp-btn-decline"
+                              disabled={busyId === selected.id}
+                              onClick={() => void handleDecline(selected.id)}
+                            >
+                              Decline
+                            </button>
+                          </div>
+                          {requestBoxOpen ? (
+                            <div className="tsv-mcp-change-box" data-ts-request-changes-box="1">
+                              <label className="tsv-mcp-change-label">What should your AI change?</label>
+                              <textarea
+                                className="tsv-mcp-change-input"
+                                data-ts-request-changes-input="1"
+                                rows={3}
+                                maxLength={1000}
+                                value={requestNote}
+                                onChange={(event) => setRequestNote(event.target.value)}
+                                placeholder="Move a stop, drop a photo, or adjust a time…"
+                              />
+                              <div className="tsv-mcp-actions">
+                                <button
+                                  type="button"
+                                  className="tsv-header-btn tsv-mcp-btn-approve"
+                                  data-ts-request-changes-submit="1"
+                                  disabled={busyId === selected.id}
+                                  onClick={() => void handleRequestChanges(selected.id, previewView.previewHash)}
+                                >
+                                  Send note
+                                </button>
+                                <button
+                                  type="button"
+                                  className="tsv-header-btn"
+                                  data-ts-request-changes-cancel="1"
+                                  disabled={busyId === selected.id}
+                                  onClick={() => setRequestBoxOpen(false)}
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          ) : null}
+                        </>
                       ) : null}
                     </div>
                   ) : null}

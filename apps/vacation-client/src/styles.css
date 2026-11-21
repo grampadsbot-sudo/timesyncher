@@ -2146,6 +2146,7 @@ html[data-ts-keepsake] #root {
 
 .tsv-mcp-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 12px;
 }
@@ -2156,9 +2157,46 @@ html[data-ts-keepsake] #root {
   color: #ffffff;
 }
 
+.tsv-mcp-btn-secondary {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: var(--text);
+}
+
 .tsv-mcp-btn-decline {
   border-color: #dc2626;
   color: #991b1b;
+}
+
+.tsv-mcp-change-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+}
+
+.tsv-mcp-change-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.tsv-mcp-change-input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text);
+  background: var(--card);
+  resize: vertical;
 }
 
 .tsv-mcp-form {

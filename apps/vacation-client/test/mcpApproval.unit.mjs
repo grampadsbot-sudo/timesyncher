@@ -159,19 +159,28 @@ assert.doesNotMatch(livePanelSource, /\btrips?\b/i);
 const skippedView = extractApprovalPreviewView({
   previewHash: 'skip123',
   preview: {
+    preview_version: 2,
     preview_hash: 'skip123',
     days: [],
     media: [],
+    last_changes: ['Moved Pilgrim Way Bookshop to Day 2 · Sat, Jul 4'],
+    change_requests: [{ id: 'cr1', note: 'Add a coffee stop on Day 3' }],
     skipped_media: [
       { media_id: 's1', media_kind: 'photo', url: '/api/mcp/media/s1' },
       { media_id: 's2', media_kind: 'photo', url: '/api/mcp/media/s2' },
     ],
   },
 });
+assert.equal(skippedView.previewVersion, 2);
+assert.equal(skippedView.lastChanges.length, 1);
+assert.equal(skippedView.changeRequests.length, 1);
 assert.equal(skippedView.skippedMedia.length, 2);
 assert.equal(
   skippedView.skippedMediaNote,
   "These 2 photos don't have a date during this vacation, so they won't be imported.",
 );
+
+assert.match(panelSource, /Request changes/);
+assert.match(livePanelSource, /Request changes/);
 
 console.log('mcpApproval.unit.mjs passed');

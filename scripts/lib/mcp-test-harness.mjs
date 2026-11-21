@@ -100,25 +100,7 @@ export function createMcpTestDb() {
 
     if (text.startsWith('insert into vacation_mcp_change_sets')) {
       const hasCommitted = text.includes('committed_at');
-      const row = {
-        id: crypto.randomUUID(),
-        scope_trip_id: String(values[0]),
-        target_trip_id: values[1] ? String(values[1]) : null,
-        published_trip_id: null,
-        token_id: values[2] ? String(values[2]) : null,
-        kind: hasCommitted ? 'targeted_edit' : 'draft_import',
-        apply_mode: hasCommitted ? 'targeted_edit' : String(values[3]),
-        status: hasCommitted ? 'pending_approval' : 'draft',
-        summary: String(hasCommitted ? values[3] : values[4]),
-        payload: clone(hasCommitted ? values[4] : values[5]),
-        preview: clone(hasCommitted ? values[5] : values[6]),
-        committed_at: hasCommitted ? nowIso : null,
-        reviewed_at: null,
-        reviewed_by: null,
-        review_note: null,
-        created_at: nowIso,
-        updated_at: nowIso,
-      };
+      const row = { id: crypto.randomUUID(), scope_trip_id: String(values[0]), target_trip_id: values[1] ? String(values[1]) : null, published_trip_id: null, token_id: values[2] ? String(values[2]) : null, kind: hasCommitted ? 'targeted_edit' : 'draft_import', apply_mode: hasCommitted ? 'targeted_edit' : String(values[3]), status: hasCommitted ? 'pending_approval' : 'draft', summary: String(hasCommitted ? values[3] : values[4]), payload: clone(hasCommitted ? values[4] : values[5]), preview: clone(hasCommitted ? values[5] : values[6]), committed_at: hasCommitted ? nowIso : null, reviewed_at: null, reviewed_by: null, review_note: null, created_at: nowIso, updated_at: nowIso };
       tables.vacation_mcp_change_sets.push(row);
       return Promise.resolve([clone(row)]);
     }
@@ -142,6 +124,12 @@ export function createMcpTestDb() {
         found.target_trip_id = values[4] ? String(values[4]) : null;
         found.updated_at = nowIso;
       }
+      return Promise.resolve([]);
+    }
+
+    if (text.startsWith('update vacation_mcp_change_sets set preview =') && text.includes('review_note =')) {
+      const found = tables.vacation_mcp_change_sets.find((r) => String(r.id) === String(values[2]));
+      if (found) { found.preview = clone(values[0]); found.review_note = values[1] || null; found.updated_at = nowIso; }
       return Promise.resolve([]);
     }
 
@@ -262,18 +250,7 @@ export function createMcpTestDb() {
     }
 
     if (text.startsWith('insert into trips')) {
-      const row = {
-        id: crypto.randomUUID(),
-        customer_id: values[0] ? String(values[0]) : null,
-        title: String(values[1]),
-        destination: values[2] || null,
-        start_date: values[3] || null,
-        end_date: values[4] || null,
-        status: 'active',
-        metadata: clone(values[5] || {}),
-        created_at: nowIso,
-        updated_at: nowIso,
-      };
+      const row = { id: crypto.randomUUID(), customer_id: values[0] ? String(values[0]) : null, title: String(values[1]), destination: values[2] || null, start_date: values[3] || null, end_date: values[4] || null, status: 'active', metadata: clone(values[5] || {}), created_at: nowIso, updated_at: nowIso };
       tables.trips.push(row);
       return Promise.resolve([clone(row)]);
     }
@@ -420,9 +397,32 @@ export function createMcpTestDb() {
       tables.transcript_turns.push(row);
       return Promise.resolve([clone(row)]);
     }
+    if (text.startsWith('update transcript_turns') && text.includes('replacedbyhash')) {
+      const [s, h, v, tid, cid, ex] = [JSON.parse(String(values[0])), JSON.parse(String(values[1])), JSON.parse(String(values[2])), String(values[3]), String(values[4]), String(values[5] || '')];
+      for (const row of tables.transcript_turns) {
+        const c = row.payload?.aiApprovalCard;
+        if (c && String(row.trip_id) === tid && String(c.changeSetId || '') === cid && c.status === 'pending_approval' && String(c.previewHash || '') !== ex) {
+          c.status = s; c.replacedByHash = h; c.replacedByVersion = v;
+        }
+      }
+      return Promise.resolve([]);
+    }
+    if (text.startsWith('update transcript_turns') && text.includes('changerequests')) {
+      const [list, latest, tid, cid, th] = [JSON.parse(String(values[0])), JSON.parse(String(values[1])), String(values[2]), String(values[3]), String(values[4] || '')];
+      for (const row of tables.transcript_turns) {
+        const c = row.payload?.aiApprovalCard;
+        if (c && String(row.trip_id) === tid && String(c.changeSetId || '') === cid && c.status === 'pending_approval' && (!th || String(c.previewHash || '') === th)) {
+          c.changeRequests = clone(list); c.latestChangeRequest = clone(latest);
+        }
+      }
+      return Promise.resolve([]);
+    }
     if (text.startsWith('update transcript_turns') && text.includes('aiapprovalcard')) {
       const nextStatus = JSON.parse(String(values[0]));
-      for (const row of tables.transcript_turns) if (String(row.trip_id) === String(values[1]) && String(row.payload?.aiApprovalCard?.changeSetId || '') === String(values[2])) row.payload.aiApprovalCard.status = nextStatus;
+      for (const row of tables.transcript_turns) {
+        const c = row.payload?.aiApprovalCard;
+        if (String(row.trip_id) === String(values[1]) && String(c?.changeSetId || '') === String(values[2]) && c?.status !== 'replaced') c.status = nextStatus;
+      }
       return Promise.resolve([]);
     }
     if (text.includes('from transcript_turns') && text.includes('welcomeaudience')) return Promise.resolve([]);

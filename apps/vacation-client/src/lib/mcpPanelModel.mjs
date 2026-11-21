@@ -135,13 +135,22 @@ export function extractApprovalPreviewView(changeSet) {
     ? Number(preview.total_bytes)
     : media.reduce((sum, item) => sum + Number(item?.bytes || 0), 0);
   const previewHash = String(preview.preview_hash || changeSet?.previewHash || '');
+  const previewVersion = Math.max(1, Number(preview.preview_version || changeSet?.previewVersion || 1));
+  const lastChanges = Array.isArray(preview.last_changes) ? preview.last_changes.filter(Boolean) : [];
+  const rawRequests = Array.isArray(preview.change_requests)
+    ? preview.change_requests
+    : (Array.isArray(changeSet?.changeRequests) ? changeSet.changeRequests : []);
+  const changeRequests = rawRequests.filter((entry) => entry && typeof entry === 'object' && String(entry.note || '').trim());
   return {
+    previewVersion,
     previewHash,
     days,
     unscheduledThings,
     media,
     skippedMedia,
     skippedMediaNote,
+    lastChanges,
+    changeRequests,
     totalBytes,
   };
 }

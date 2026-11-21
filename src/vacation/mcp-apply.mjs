@@ -188,6 +188,7 @@ export async function applyApprovedDraftImport(db, { changeSet, mediaRows }) {
   }
 
   const dayNumberByDate = new Map(days.map((d, idx) => [isoDateOnly(d.date), Number(d.day_number || idx + 1)]));
+  const removedMediaIds = new Set(asArray(draft.removed_media_ids).map((id) => String(id || '')));
   const mediaLinksById = new Map(asArray(draft.media).map((link) => [String(link.media_id || ''), link]));
   const publishedMedia = [];
   let skippedMediaCount = 0;
@@ -195,9 +196,11 @@ export async function applyApprovedDraftImport(db, { changeSet, mediaRows }) {
   let newTripMediaCount = 0;
   for (const mediaRow of asArray(mediaRows)) {
     if (mediaRow.upload_status === 'signed' || mediaRow.upload_status === 'expired') continue;
+    if (removedMediaIds.has(String(mediaRow.id))) continue;
     const link = mediaLinksById.get(String(mediaRow.id)) || {};
-    const ref = cleanText(link.thing_ref || mediaRow.target_thing_ref, 120);
-    const gpsMatch = !ref ? findClosestGpsItem(mediaRow.exif_lat, mediaRow.exif_lng, createdItemsForGps) : null;
+    const clearThing = link.clear_thing === true || link.thing_ref === '';
+    const ref = clearThing ? '' : cleanText(link.thing_ref || mediaRow.target_thing_ref, 120);
+    const gpsMatch = (!ref && !clearThing) ? findClosestGpsItem(mediaRow.exif_lat, mediaRow.exif_lng, createdItemsForGps) : null;
     const linked = (ref ? refToThing.get(ref) || null : null) || gpsMatch?.item || null;
     const exifRaw = asObject(mediaRow.exif_raw);
     const hasOffset = Boolean(exifRaw.offsetText) || (typeof exifRaw.capturedAtIso === 'string' && /(?:Z|[+-]\d{2}:?\d{2})$/i.test(exifRaw.capturedAtIso));
@@ -262,6 +265,7 @@ export async function applyApprovedTargetedEdit(db, { changeSet, mediaRows }) {
   if (!trip) throw Object.assign(new Error('Target vacation not found.'), { statusCode: 404, code: 'vacation_not_found' });
   const shareSlug = vacationShareSlugForRow(trip);
   const operations = asArray(changeSet.payload?.operations);
+  const removedMediaIds = new Set(asArray(changeSet.payload?.removed_media_ids).map((id) => String(id || '')));
   const mediaById = new Map(asArray(mediaRows).map((row) => [String(row.id), row]));
   const refToThing = new Map();
   let metaDirty = false;
@@ -400,6 +404,7 @@ export async function applyApprovedTargetedEdit(db, { changeSet, mediaRows }) {
       if (patch.timezone !== undefined) { nextMeta.timezone = cleanText(patch.timezone, 80); metaDirty = true; }
       if (patch.summary !== undefined) { nextMeta.summary = cleanText(patch.summary, 1000); metaDirty = true; }
     } else if (op.op === 'attach_media') {
+      if (removedMediaIds.has(String(op.media_id || ''))) continue;
       const mediaRow = mediaById.get(String(op.media_id || ''));
       if (!mediaRow || mediaRow.upload_status === 'signed' || mediaRow.upload_status === 'expired') continue;
       let linkedId = op.thing_id || null;

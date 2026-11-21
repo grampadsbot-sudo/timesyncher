@@ -78,8 +78,19 @@ export type McpPreviewDay = {
   day_media?: McpPreviewMedia[];
 };
 
+export type McpChangeRequest = {
+  id?: string;
+  note: string;
+  author_email?: string | null;
+  author_role?: string;
+  created_at?: string;
+  preview_version?: number;
+  preview_hash?: string | null;
+};
+
 export type McpChangePreview = {
   kind?: string;
+  preview_version?: number;
   preview_hash?: string;
   summary_text?: string;
   counts?: Record<string, number>;
@@ -88,6 +99,9 @@ export type McpChangePreview = {
   media?: McpPreviewMedia[];
   skipped_media?: McpPreviewMedia[];
   skipped_media_note?: string;
+  last_changes?: string[];
+  change_requests?: McpChangeRequest[];
+  latest_change_request?: McpChangeRequest | null;
   media_count?: number;
   total_bytes?: number;
   will_create?: {
@@ -127,7 +141,10 @@ export type McpChangeSet = {
   applyMode: string;
   status: 'draft' | 'pending_approval' | 'approved' | 'declined';
   summary: string;
+  previewVersion?: number;
   previewHash?: string | null;
+  changeRequests?: McpChangeRequest[];
+  latestChangeRequest?: McpChangeRequest | null;
   preview: McpChangePreview;
   committedAt: string | null;
   reviewedAt: string | null;
@@ -188,6 +205,28 @@ export async function declineMcpChange(shareToken: string, changeSetId: string):
   if (!response.ok) {
     throw new Error(await readApiError(response, 'Unable to decline this AI change set.'));
   }
+}
+
+export async function requestMcpChanges(
+  shareToken: string,
+  changeSetId: string,
+  note: string,
+  previewHash?: string,
+): Promise<{ changeRequest: McpChangeRequest; changeRequests: McpChangeRequest[] }> {
+  const response = await fetch(`/api/mcp/changes/${encodeURIComponent(changeSetId)}/request-changes`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'content-type': 'application/json', accept: 'application/json' },
+    body: JSON.stringify({
+      shareToken,
+      note,
+      ...(previewHash ? { preview_hash: previewHash } : {}),
+    }),
+  });
+  if (!response.ok) {
+    throw new Error(await readApiError(response, 'Unable to save change request.'));
+  }
+  return (await response.json()) as { changeRequest: McpChangeRequest; changeRequests: McpChangeRequest[] };
 }
 
 export async function fetchMcpTokens(shareToken: string): Promise<{ mcpEndpoint: string; tokens: McpTokenRecord[] }> {

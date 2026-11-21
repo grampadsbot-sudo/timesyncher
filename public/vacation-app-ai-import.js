@@ -140,8 +140,13 @@
       '.ts-ai-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:2px}',
       '.ts-ai-btn{min-height:38px;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:750;cursor:pointer;border:1px solid #cbd5e1;background:#ffffff;color:#0f172a}',
       '.ts-ai-btn-primary{background:#0f766e;border-color:#0f766e;color:#ffffff}',
+      '.ts-ai-btn-secondary{background:#f8fafc;border-color:#94a3b8;color:#0f172a}',
       '.ts-ai-btn-danger{background:#ffffff;border-color:#fca5a5;color:#b91c1c}',
       '.ts-ai-btn[disabled]{opacity:.55;cursor:not-allowed}',
+      '.ts-ai-change-box{display:grid;gap:8px;padding:10px;border-radius:10px;background:#f8fafc;border:1px solid #cbd5e1;margin-top:4px}',
+      '.ts-ai-change-box[hidden]{display:none}',
+      '.ts-ai-change-label{font-size:12px;font-weight:700;color:#0f172a}',
+      '.ts-ai-change-input{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:8px;padding:8px 10px;font:inherit;font-size:13px;line-height:1.4;color:#0f172a;background:#ffffff;resize:vertical}',
       '.ts-ai-pill{display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:750}',
       '.ts-ai-pill-ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}',
       '.ts-ai-pill-muted{background:#f1f5f9;color:#475569;border:1px solid #cbd5e1}',
@@ -245,8 +250,11 @@
     const unscheduled = Array.isArray(card.unscheduledThings) ? card.unscheduledThings : [];
     const skipped = Array.isArray(card.skippedMedia) ? card.skippedMedia : [];
     const skippedNote = String(card.skippedMediaNote || '').trim() || formatSkippedMediaNote(skipped);
+    const recentChanges = Array.isArray(card.recentChanges) ? card.recentChanges.filter(Boolean) : [];
+    const changeRequests = Array.isArray(card.changeRequests) ? card.changeRequests.filter((r) => r && r.note) : [];
+    const previewVersion = Math.max(1, Number(card.previewVersion) || 1);
     const status = String(card.status || 'pending_approval');
-    const cardKey = String(card.changeSetId || 'staged');
+    const cardKey = `${String(card.changeSetId || 'staged')}:v${previewVersion}`;
     const chipsHtml = bullets.length
       ? `<div class="ts-ai-chips">${bullets.map((line) => `<span class="ts-ai-chip">${esc(line)}</span>`).join('')}</div>`
       : '';
@@ -297,6 +305,12 @@
         scope: 'skipped',
       })}</div>`
       : '';
+    const recentChangesHtml = recentChanges.length
+      ? `<div class="ts-ai-block" data-ts-preview-changes="1"><h4>Updated in this preview</h4><div class="ts-ai-notes">${recentChanges.map((line) => `<p class="ts-ai-note">${esc(line)}</p>`).join('')}</div></div>`
+      : '';
+    const requestedHtml = changeRequests.length
+      ? `<div class="ts-ai-block" data-ts-requested-changes="1"><h4>Requested changes</h4><div class="ts-ai-notes">${changeRequests.map((entry) => `<p class="ts-ai-note">${esc(entry.note)}</p>`).join('')}</div></div>`
+      : '';
     const missingHtml = missing.length
       ? `<div class="ts-ai-block" data-ts-mcp-preview-notes="1"><h4>Good to know</h4><div class="ts-ai-notes">${missing.map((line) => `<p class="ts-ai-note">${esc(line)}</p>`).join('')}</div></div>`
       : '';
@@ -307,21 +321,39 @@
     if (status === 'pending_approval') {
       footerHtml = '<div class="ts-ai-actions">'
         + `<button type="button" class="ts-ai-btn ts-ai-btn-primary" data-ai-chat-approve="${esc(card.changeSetId)}" data-ai-preview-hash="${esc(card.previewHash || '')}" data-ai-share-slug="${esc(card.shareSlug || '')}" data-ai-vacation-id="${esc(card.vacationId || '')}">Approve</button>`
+        + `<button type="button" class="ts-ai-btn ts-ai-btn-secondary" data-ai-chat-request-changes="${esc(card.changeSetId)}" data-ts-request-changes-btn="1">Request changes</button>`
         + `<button type="button" class="ts-ai-btn ts-ai-btn-danger" data-ai-chat-decline="${esc(card.changeSetId)}" data-ai-share-slug="${esc(card.shareSlug || '')}" data-ai-vacation-id="${esc(card.vacationId || '')}">Decline</button>`
+        + '</div>'
+        + '<div class="ts-ai-change-box" data-ts-request-changes-box="1" hidden>'
+        + '<label class="ts-ai-change-label">What should your AI change?</label>'
+        + '<textarea class="ts-ai-change-input" data-ts-request-changes-input="1" rows="3" maxlength="1000" placeholder="Move a stop, drop a photo, or adjust a time…"></textarea>'
+        + '<div class="ts-ai-actions">'
+        + `<button type="button" class="ts-ai-btn ts-ai-btn-primary" data-ai-chat-request-submit="${esc(card.changeSetId)}" data-ai-preview-hash="${esc(card.previewHash || '')}" data-ai-share-slug="${esc(card.shareSlug || '')}" data-ai-vacation-id="${esc(card.vacationId || '')}" data-ts-request-changes-submit="1">Send note</button>`
+        + '<button type="button" class="ts-ai-btn" data-ai-chat-request-cancel="1" data-ts-request-changes-cancel="1">Cancel</button>'
+        + '</div></div>';
+    } else if (status === 'replaced') {
+      footerHtml = '<div class="ts-ai-actions">'
+        + `<button type="button" class="ts-ai-btn ts-ai-btn-primary" data-ai-chat-approve="${esc(card.changeSetId)}" data-ai-preview-hash="${esc(card.previewHash || '')}" disabled>Approve</button>`
+        + '<span class="ts-ai-pill ts-ai-pill-muted" data-ai-approval-state="replaced">Replaced by updated preview</span>'
         + '</div>';
     } else if (status === 'approved') {
       footerHtml = '<div class="ts-ai-actions"><span class="ts-ai-pill ts-ai-pill-ok" data-ai-approval-state="approved">Approved and live on your vacation</span></div>';
     } else if (status === 'declined') {
       footerHtml = '<div class="ts-ai-actions"><span class="ts-ai-pill ts-ai-pill-muted" data-ai-approval-state="declined">Declined — live vacation unchanged</span></div>';
     }
-    return `<section class="ts-ai-card" data-ts-ai-approval-card="1" data-change-set-id="${esc(card.changeSetId || '')}" aria-label="AI vacation preview">`
-      + '<span class="ts-ai-kicker">AI Preview Ready</span>'
+    const kickerText = status === 'replaced'
+      ? `Replaced Preview · v${previewVersion}`
+      : (previewVersion > 1 ? `Updated AI Preview · v${previewVersion}` : 'AI Preview Ready');
+    return `<section class="ts-ai-card" data-ts-ai-approval-card="1" data-change-set-id="${esc(card.changeSetId || '')}" data-preview-version="${esc(String(previewVersion))}" data-preview-hash="${esc(card.previewHash || '')}" data-card-status="${esc(status)}" aria-label="AI vacation preview">`
+      + `<span class="ts-ai-kicker">${esc(kickerText)}</span>`
       + `<h3 class="ts-ai-title">${esc(heading)}</h3>`
       + `<p class="ts-ai-desc">${esc(card.summary || '')}</p>`
       + chipsHtml
+      + recentChangesHtml
       + daysHtml
       + unscheduledHtml
       + skippedHtml
+      + requestedHtml
       + missingHtml
       + conflictsHtml
       + footerHtml
@@ -408,7 +440,10 @@
         void error;
       }
       if (!response.ok || body.ok === false) {
-        throw new Error(String(body.error || `Unable to ${action} AI changes.`));
+        const err = new Error(String(body.error || `Unable to ${action} AI changes.`));
+        err.code = body.code || '';
+        err.status = response.status;
+        throw err;
       }
       const actionsRow = card.querySelector('.ts-ai-actions');
       if (actionsRow) {
@@ -416,6 +451,8 @@
           ? '<span class="ts-ai-pill ts-ai-pill-ok" data-ai-approval-state="approved">Approved and live on your vacation</span>'
           : '<span class="ts-ai-pill ts-ai-pill-muted" data-ai-approval-state="declined">Declined — live vacation unchanged</span>';
       }
+      const changeBox = card.querySelector('[data-ts-request-changes-box="1"]');
+      if (changeBox) changeBox.hidden = true;
       if (status) {
         status.textContent = action === 'approve' ? 'Approved and applied to your vacation.' : 'Declined. Live vacation data was not changed.';
         status.className = 'ts-ai-status';
@@ -426,12 +463,90 @@
         setTimeout(() => { void ctx.loadApp(nextId); }, 250);
       }
     } catch (error) {
-      buttons.forEach((b) => { b.disabled = false; });
+      if (action === 'approve' && (error?.code === 'preview_hash_mismatch' || error?.status === 409)) {
+        const actionsRow = card.querySelector('.ts-ai-actions');
+        if (actionsRow) {
+          actionsRow.innerHTML = `<button type="button" class="ts-ai-btn ts-ai-btn-primary" data-ai-chat-approve="${esc(changeSetId)}" data-ai-preview-hash="${esc(previewHash)}" disabled>Approve</button><span class="ts-ai-pill ts-ai-pill-muted" data-ai-approval-state="replaced">Replaced by updated preview</span>`;
+        }
+      } else {
+        buttons.forEach((b) => { b.disabled = false; });
+      }
       if (status) {
         status.textContent = error instanceof Error ? error.message : `Unable to ${action} AI changes.`;
         status.className = 'ts-ai-status ts-ai-status-err';
         status.hidden = false;
       }
+    }
+  }
+
+  async function handleRequestChangesSubmit(btn, ctx) {
+    const card = btn.closest('[data-ts-ai-approval-card="1"]');
+    const changeSetId = btn.getAttribute('data-ai-chat-request-submit') || '';
+    const previewHash = btn.getAttribute('data-ai-preview-hash') || '';
+    const shareToken = btn.getAttribute('data-ai-share-slug') || ctx.currentTrip?.()?.shareToken || '';
+    const tripId = btn.getAttribute('data-ai-vacation-id') || ctx.currentTrip?.()?.id || '';
+    const box = card?.querySelector('[data-ts-request-changes-box="1"]');
+    const input = box?.querySelector('[data-ts-request-changes-input="1"]');
+    const status = card?.querySelector('[data-ai-approval-status="1"]');
+    const note = String(input?.value || '').trim();
+    if (!changeSetId || !card) return;
+    if (!note) {
+      if (status) {
+        status.textContent = 'Please enter a short note describing what to change.';
+        status.className = 'ts-ai-status ts-ai-status-err';
+        status.hidden = false;
+      }
+      input?.focus?.();
+      return;
+    }
+    btn.disabled = true;
+    try {
+      const response = await fetch(`/api/mcp/changes/${encodeURIComponent(changeSetId)}/request-changes`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'content-type': 'application/json', accept: 'application/json' },
+        body: JSON.stringify({
+          ...(shareToken ? { shareToken } : {}),
+          ...(tripId ? { tripId } : {}),
+          ...(previewHash ? { preview_hash: previewHash } : {}),
+          note,
+        }),
+      });
+      let body = {};
+      try {
+        body = await response.json();
+      } catch (error) {
+        void error;
+      }
+      if (!response.ok || body.ok === false) {
+        throw new Error(String(body.error || 'Unable to save change request.'));
+      }
+      const list = Array.isArray(body.changeRequests) ? body.changeRequests : [{ note }];
+      let block = card.querySelector('[data-ts-requested-changes="1"]');
+      if (!block) {
+        block = document.createElement('div');
+        block.className = 'ts-ai-block';
+        block.setAttribute('data-ts-requested-changes', '1');
+        const actionsRow = card.querySelector('.ts-ai-actions');
+        if (actionsRow) card.insertBefore(block, actionsRow);
+        else card.appendChild(block);
+      }
+      block.innerHTML = `<h4>Requested changes</h4><div class="ts-ai-notes">${list.map((entry) => `<p class="ts-ai-note">${esc(entry.note || '')}</p>`).join('')}</div>`;
+      if (input) input.value = '';
+      if (box) box.hidden = true;
+      if (status) {
+        status.textContent = 'Change request saved for your AI.';
+        status.className = 'ts-ai-status';
+        status.hidden = false;
+      }
+    } catch (error) {
+      if (status) {
+        status.textContent = error instanceof Error ? error.message : 'Unable to save change request.';
+        status.className = 'ts-ai-status ts-ai-status-err';
+        status.hidden = false;
+      }
+    } finally {
+      btn.disabled = false;
     }
   }
 
@@ -466,6 +581,28 @@
         const approveBtn = event.target?.closest?.('[data-ai-chat-approve]');
         if (approveBtn) {
           void handleApprovalClick(approveBtn, 'approve', ctx);
+          return;
+        }
+        const requestBtn = event.target?.closest?.('[data-ai-chat-request-changes]');
+        if (requestBtn) {
+          const card = requestBtn.closest('[data-ts-ai-approval-card="1"]');
+          const box = card?.querySelector('[data-ts-request-changes-box="1"]');
+          if (box) {
+            box.hidden = !box.hidden;
+            if (!box.hidden) box.querySelector('[data-ts-request-changes-input="1"]')?.focus?.();
+          }
+          return;
+        }
+        const cancelReqBtn = event.target?.closest?.('[data-ai-chat-request-cancel]');
+        if (cancelReqBtn) {
+          const card = cancelReqBtn.closest('[data-ts-ai-approval-card="1"]');
+          const box = card?.querySelector('[data-ts-request-changes-box="1"]');
+          if (box) box.hidden = true;
+          return;
+        }
+        const submitReqBtn = event.target?.closest?.('[data-ai-chat-request-submit]');
+        if (submitReqBtn) {
+          void handleRequestChangesSubmit(submitReqBtn, ctx);
           return;
         }
         const declineBtn = event.target?.closest?.('[data-ai-chat-decline]');

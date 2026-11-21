@@ -233,9 +233,10 @@ export function buildPreviewMediaEntries({
       ? dayNumberByDate.get(localCaptureDate)
       : null;
     const timeMatched = Boolean(localCaptureDate && exifDayNumber !== null);
-    const gpsMatch = findClosestGpsItem(row.exif_lat, row.exif_lng, items);
+    const clearThing = link.clear_thing === true || link.thing_ref === '';
+    const gpsMatch = clearThing ? null : findClosestGpsItem(row.exif_lat, row.exif_lng, items);
 
-    const explicitRef = cleanPreviewText(link.thing_ref || link.thing_id || row.target_thing_ref, 120) || null;
+    const explicitRef = clearThing ? null : (cleanPreviewText(link.thing_ref || link.thing_id || row.target_thing_ref, 120) || null);
     const resolvedItem = (explicitRef ? itemByRef.get(explicitRef) : null) || gpsMatch?.item || null;
     const attachedThingRef = resolvedItem ? (resolvedItem.ref || resolvedItem.id || explicitRef) : explicitRef;
     const attachedThingTitle = resolvedItem ? resolvedItem.title : null;

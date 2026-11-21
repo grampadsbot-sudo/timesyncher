@@ -29,7 +29,7 @@ export const MCP_TOOLS = [
   },
   {
     name: 'upload_media',
-    description: 'Issues one signed expiring upload URL per photo or video so raw media bytes never pass through the AI or MCP request body. Call with action="finalize" after uploading to attach media to a Thing or vacation day by capture date; media without a Thing or an in-vacation capture date is skipped on import.',
+    description: 'Issues one signed expiring upload URL per photo or video so raw media bytes never pass through the AI or MCP request body. Call with action="finalize" after uploading to attach media to an item or vacation day by capture date; media without an item or an in-vacation capture date is skipped on import.',
     inputSchema: {
       type: 'object',
       additionalProperties: false,

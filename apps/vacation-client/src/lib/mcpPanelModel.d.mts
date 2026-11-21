@@ -1,12 +1,15 @@
-import type { McpChangeSet, McpPreviewDay, McpPreviewLandingItem, McpPreviewMedia } from '../api/mcpAdmin';
+import type { McpChangeRequest, McpChangeSet, McpPreviewDay, McpPreviewLandingItem, McpPreviewMedia } from '../api/mcpAdmin';
 
 export type ApprovalPreviewView = {
+  previewVersion: number;
   previewHash: string;
   days: McpPreviewDay[];
   unscheduledThings: McpPreviewLandingItem[];
   media: McpPreviewMedia[];
   skippedMedia: McpPreviewMedia[];
   skippedMediaNote: string;
+  lastChanges: string[];
+  changeRequests: McpChangeRequest[];
   totalBytes: number;
 };
 

@@ -368,6 +368,7 @@ export async function postStagedPreviewToChat(db, {
   kind = 'draft_import',
   preview = {},
   summary = '',
+  replyBody = '',
 }) {
   const tripId = cleanText(tokenRecord?.tripId, 80);
   if (!tripId || !changeSetId) return null;
@@ -396,14 +397,20 @@ export async function postStagedPreviewToChat(db, {
   const summaryText = cleanText(preview?.summary_text || summary, 500) || 'Your AI staged vacation updates for your review.';
   const bullets = buildPreviewSummaryBullets(kind, preview);
   const landing = buildCardLandingPreview(preview);
+  const changeRequests = asArray(preview?.change_requests).slice(-6);
+  const recentChanges = asArray(preview?.last_changes).slice(0, 6);
+  const previewVersion = Math.max(1, Number(preview?.preview_version) || 1);
   const card = {
     kind: 'ai_staged_approval',
     changeSetId: String(changeSetId),
     changeKind: kind === 'targeted_edit' ? 'targeted_edit' : 'draft_import',
     status: 'pending_approval',
+    previewVersion,
     previewHash: cleanText(preview?.preview_hash, 128),
     summary: summaryText,
     bullets,
+    ...(recentChanges.length ? { recentChanges } : {}),
+    ...(changeRequests.length ? { changeRequests, latestChangeRequest: changeRequests[changeRequests.length - 1] } : {}),
     days: landing.days,
     unscheduledThings: landing.unscheduledThings,
     skippedMedia: landing.skippedMedia,
@@ -416,7 +423,7 @@ export async function postStagedPreviewToChat(db, {
     conflicts: asArray(preview?.conflicts).slice(0, 6),
     shareSlug,
   };
-  const body = 'Your AI staged a preview for your review.';
+  const body = cleanText(replyBody, 600) || 'Your AI staged a preview for your review.';
   try {
     await db`
       insert into transcript_turns (
@@ -454,6 +461,7 @@ export async function syncApprovalCardStatusInChat(db, { tripId, changeSetId, st
       set payload = jsonb_set(payload, '{aiApprovalCard,status}', ${JSON.stringify(normalizedStatus)}::jsonb, true)
       where trip_id = ${normalizedTripId}
         and payload->'aiApprovalCard'->>'changeSetId' = ${normalizedId}
+        and coalesce(payload->'aiApprovalCard'->>'status', '') <> 'replaced'
     `;
   } catch (error) {
     void error;

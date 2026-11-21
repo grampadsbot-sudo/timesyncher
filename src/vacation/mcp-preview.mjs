@@ -30,11 +30,8 @@ function formatSkippedMediaNote(items) {
 }
 
 export function buildDraftImportPreview({
-  draft,
-  mediaRows = [],
-  existingTrip = null,
-  existingThings = [],
-  applyMode = 'create_new',
+  draft, mediaRows = [], existingTrip = null, existingThings = [], applyMode = 'create_new',
+  previewVersion = 1, changeRequests = [], lastChanges = [],
 }) {
   const vacation = draft?.vacation && typeof draft.vacation === 'object' ? draft.vacation : {};
   const startDate = previewIsoDateOnly(vacation.start_date);
@@ -121,9 +118,11 @@ export function buildDraftImportPreview({
     }
   }
 
+  const removedMediaIds = new Set(previewList(draft?.removed_media_ids).map((id) => String(id || '')));
+  const activeMediaRows = previewList(mediaRows).filter((row) => !removedMediaIds.has(String(row.id || '')));
   const mediaLinksById = new Map(previewList(draft?.media).map((link) => [String(link.media_id || ''), link]));
   const { media: mediaEntries } = buildPreviewMediaEntries({
-    mediaRows,
+    mediaRows: activeMediaRows,
     mediaLinksById,
     items: allItems,
     days: resolvedDays,
@@ -197,9 +196,13 @@ export function buildDraftImportPreview({
   ];
   const summaryText = `Ready to ${applyMode === 'populate_scoped' ? 'update' : 'create'} vacation "${vacationBlock.title}" with ${summaryParts.join(', ')}.`;
 
+  const normalizedVersion = Math.max(1, Number(previewVersion) || 1);
+  const normalizedRequests = previewList(changeRequests);
+  const normalizedChanges = previewList(lastChanges).filter(Boolean);
   const hashPayload = {
     kind: 'draft_import',
     apply_mode: applyMode,
+    ...(normalizedVersion > 1 ? { preview_version: normalizedVersion } : {}),
     vacation: vacationBlock,
     days: landingDays,
     unscheduled_things: unscheduledThings,
@@ -214,6 +217,7 @@ export function buildDraftImportPreview({
 
   return {
     kind: 'draft_import',
+    preview_version: normalizedVersion,
     preview_hash: previewHash,
     summary_text: summaryText,
     counts,
@@ -223,6 +227,9 @@ export function buildDraftImportPreview({
     media: importedMedia,
     skipped_media: skippedMedia,
     ...(skippedMediaNote ? { skipped_media_note: skippedMediaNote } : {}),
+    ...(normalizedChanges.length ? { last_changes: normalizedChanges } : {}),
+    change_requests: normalizedRequests,
+    latest_change_request: normalizedRequests.length ? normalizedRequests[normalizedRequests.length - 1] : null,
     media_count: importedMedia.length,
     total_bytes: importedBytes,
     will_create: willCreate,
@@ -255,11 +262,8 @@ function existingThingToLanding(row) {
 }
 
 export function buildTargetedEditPreview({
-  operations = [],
-  existingTrip = null,
-  existingThings = [],
-  mediaRows = [],
-  summary = '',
+  operations = [], existingTrip = null, existingThings = [], mediaRows = [], summary = '',
+  previewVersion = 1, changeRequests = [], lastChanges = [], removedMediaIds = [],
 }) {
   const byId = new Map(previewList(existingThings).map((row) => [String(row.id), row]));
   const mediaById = new Map(previewList(mediaRows).map((row) => [String(row.id), row]));
@@ -394,8 +398,9 @@ export function buildTargetedEditPreview({
     }
   }
 
+  const removedSet = new Set(previewList(removedMediaIds).map((id) => String(id || '')));
   const { media: mediaEntries } = buildPreviewMediaEntries({
-    mediaRows: attachMediaRows,
+    mediaRows: attachMediaRows.filter((row) => !removedSet.has(String(row.id || ''))),
     mediaLinksById: attachMediaLinks,
     items: workingItems,
     days: baseDays,
@@ -423,8 +428,12 @@ export function buildTargetedEditPreview({
   const summaryText = cleanPreviewText(summary, 300)
     || `Proposed AI edits for "${vacationTitle}"${editParts.length ? `: ${editParts.join(', ')}` : ''}.`;
 
+  const normalizedVersion = Math.max(1, Number(previewVersion) || 1);
+  const normalizedRequests = previewList(changeRequests);
+  const normalizedChanges = previewList(lastChanges).filter(Boolean);
   const hashPayload = {
     kind: 'targeted_edit',
+    ...(normalizedVersion > 1 ? { preview_version: normalizedVersion } : {}),
     vacation: workingVacation,
     days: landingDays,
     unscheduled_things: unscheduledThings,
@@ -444,6 +453,7 @@ export function buildTargetedEditPreview({
 
   return {
     kind: 'targeted_edit',
+    preview_version: normalizedVersion,
     preview_hash: previewHash,
     summary_text: summaryText,
     counts: {
@@ -462,6 +472,9 @@ export function buildTargetedEditPreview({
     media: importedMedia,
     skipped_media: skippedMedia,
     ...(skippedMediaNote ? { skipped_media_note: skippedMediaNote } : {}),
+    ...(normalizedChanges.length ? { last_changes: normalizedChanges } : {}),
+    change_requests: normalizedRequests,
+    latest_change_request: normalizedRequests.length ? normalizedRequests[normalizedRequests.length - 1] : null,
     media_count: importedMedia.length,
     total_bytes: importedBytes,
     will_add: willAdd,

@@ -86,6 +86,7 @@ import { loadSessionOwnerReplyPlan } from '../src/vacation/reply-plan-entitlemen
 import { scheduleChatThing } from '../src/vacation/chat-thing-schedule.mjs';
 import { resolveVacationAppQueueIntake } from '../src/vacation/vacation-app-queue-intake.mjs';
 import { handleAiImportChatTurn, isAiImportChatRequest } from '../src/vacation/mcp-chat-import.mjs';
+import { tryHandlePendingPreviewChatTurn } from '../src/vacation/mcp-chat-preview-edit.mjs';
 import { refreshSearchProgressFromTripThings, searchProgressForClient, searchProgressForVacationAppTrip, syncSearchProgressStage } from '../src/vacation/search-progress.mjs';
 
 let vacationAppDatabase = null;
@@ -545,6 +546,8 @@ async function queueVacationAppTurn(db, session, trip, body, intakePrefill = nul
   const welcomeMs = Date.now() - welcomeStarted;
   const requestText = cleanText(body.text || body.message, 12000);
   if (isAiImportChatRequest(requestText)) return handleAiImportChatTurn(db, { session, trip, requestText, httpReq, env: process.env });
+  const pendingPreviewReply = await tryHandlePendingPreviewChatTurn(db, { session, trip, requestText });
+  if (pendingPreviewReply) return pendingPreviewReply;
   const intake = await resolveVacationAppQueueIntake(requestText, intakePrefill, process.env);
   return runQueueVacationAppTurn(db, session, trip, body, queueVacationAppHooks(), { requestText, ...intake, welcomeMs, httpReq });
 }
