@@ -52,6 +52,15 @@ export type DetailPhoneCallBox = {
   href: string;
 };
 
+export type DetailReservationBooking = {
+  bookedByLabel: string;
+  date: string;
+  time: string;
+  partySize: number | null;
+  confirmationNumber: string;
+  notes: string;
+};
+
 export type DetailViewModel = {
   name: string;
   category: string;
@@ -78,6 +87,8 @@ export type DetailViewModel = {
   addressHoursBox: DetailAddressHoursBox | null;
   phoneCallBox: DetailPhoneCallBox | null;
   fieldRows: Array<{ key: string; label: string; value: string; href?: string }>;
+  reservationBooking: DetailReservationBooking | null;
 };
 
+export function detailReservationBooking(place: SharedPlace, trip: SharedTripPayload): DetailReservationBooking | null;
 export function buildDetailViewModel(place: SharedPlace, trip: SharedTripPayload): DetailViewModel;

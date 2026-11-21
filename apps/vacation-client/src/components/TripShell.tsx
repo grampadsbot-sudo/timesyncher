@@ -12,12 +12,13 @@ type Props = {
   permissions?: SharedTripPayload['permissions'];
   activeTab: TabId;
   canEdit: boolean;
+  isOwner?: boolean;
   editChecked: boolean;
   saveStatus: 'idle' | 'checking' | 'saving' | 'saved' | 'error';
   onTabChange: (tab: TabId) => void;
   onSectionVisibilityChange: (key: 'flights' | 'hotels' | 'cars', visible: boolean) => void;
   onActiveTabHidden: () => void;
-  onOpenMcpPanel?: (mode: 'approvals' | 'tokens') => void;
+  onOpenMcpPanel?: (mode: 'approvals' | 'tokens' | 'reservations') => void;
   children: ReactNode;
 };
 
@@ -34,6 +35,7 @@ export function TripShell({
   permissions,
   activeTab,
   canEdit,
+  isOwner = false,
   editChecked,
   saveStatus,
   onTabChange,
@@ -119,7 +121,7 @@ export function TripShell({
                 <span>{key.charAt(0).toUpperCase() + key.slice(1)}</span>
               </label>
             ))}
-            {canEdit && onOpenMcpPanel ? (
+            {canEdit && isOwner && onOpenMcpPanel ? (
               <div className="tsv-bottom-grid-section">
                 <p className="tsv-header-popover-title" role="presentation">
                   AI Access &amp; Approvals
@@ -147,6 +149,18 @@ export function TripShell({
                   }}
                 >
                   AI access tokens
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="tsv-header-popover-item"
+                  data-ts-mcp-open="reservations"
+                  onClick={() => {
+                    setGridOpen(false);
+                    onOpenMcpPanel('reservations');
+                  }}
+                >
+                  Reservations AI
                 </button>
               </div>
             ) : null}

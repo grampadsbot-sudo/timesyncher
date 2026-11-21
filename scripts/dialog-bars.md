@@ -13,7 +13,7 @@ The same text in any other file stays in scope. A paraphrase in either file stay
 
 ## Purchase flow
 
-`BAR-RESERVATION-PAYMENT` is exempt on the TimeSyncher purchase-flow paths listed in `dialog-bar-terms.json`. Chat, replies, and prompts stay in scope.
+`BAR-RESERVATION-PAYMENT` is exempt on the TimeSyncher purchase-flow paths listed in `dialog-bar-terms.json`. Chat, replies, and prompts stay in scope. `reservationWordFiles` lets only the bare word reservation through in the #1076 account-handshake sources. make-a-reservation, book-for-you, deposit, payment, checkout, pay, and charge still fail in those files, and the bare word still fails everywhere else, including dialog-pack turns.
 
 `BAR-SPLIT-PAYER` and `BAR-UNLIMITED-WORDING` are exempt only on the checkout modules:
 

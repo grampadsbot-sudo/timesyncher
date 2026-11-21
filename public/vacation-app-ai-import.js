@@ -153,7 +153,10 @@
       '.ts-ai-change-input{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:8px;padding:8px 10px;font:inherit;font-size:13px;line-height:1.4;color:#0f172a;background:#ffffff;resize:vertical}',
       '.ts-ai-pill{display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:750}',
       '.ts-ai-pill-ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}',
+      '.ts-ai-pill-warn{background:#fffbeb;color:#92400e;border:1px solid #fde68a}',
+      '.ts-ai-pill-err{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}',
       '.ts-ai-pill-muted{background:#f1f5f9;color:#475569;border:1px solid #cbd5e1}',
+      '.ts-ai-options{margin:0;padding-left:18px;display:grid;gap:4px;font-size:12px;color:#334155}',
       '.ts-ai-status{margin:0;font-size:12px;font-weight:650;color:#0f766e}',
       '.ts-ai-status-err{color:#b91c1c}',
       '@media(max-width:480px){.ts-ai-card{padding:11px 12px}.ts-ai-actions .ts-ai-btn{flex:1 1 auto;text-align:center}}',
@@ -401,11 +404,91 @@
       + '</section>';
   }
 
+  function renderReservationCardHtml(card) {
+    if (!card || typeof card !== 'object') return '';
+    if (card.kind === 'ai_reservation_offer') {
+      return '<section class="ts-ai-card" data-ts-ai-reservation-offer="1" aria-label="AI reservations setup offer">'
+        + '<span class="ts-ai-kicker">AI Reservations</span>'
+        + '<h3 class="ts-ai-title">Let your own AI book for you</h3>'
+        + '<p class="ts-ai-desc">Vacay Keepsake never books directly. Connect your AI once at the account level and it can book across every vacation you own or collaborate on.</p>'
+        + '<div class="ts-ai-actions"><button type="button" class="ts-ai-btn ts-ai-btn-primary" data-ai-reservation-offer-yes="1">Set up my AI</button></div>'
+        + '</section>';
+    }
+    if (card.kind === 'ai_reservation_setup') {
+      const key = card.connectionId ? `res:${card.connectionId}` : '';
+      if (key && card.copyText) rememberCopyText(key, card.copyText);
+      const masked = card.maskedToken || `${card.tokenPrefix || 'vkr_'}••••••••••••`;
+      const options = Array.isArray(card.options) && card.options.length
+        ? card.options
+        : [
+          '(a) Webhook or inbox URL Vacay Keepsake can ping',
+          '(b) Scheduled polling of the Vacay Keepsake MCP',
+          '(c) Manual — paste "check my VK reservations" into your AI each time',
+        ];
+      return `<section class="ts-ai-card" data-ts-ai-reservation-setup="1" data-connection-id="${esc(card.connectionId || '')}" aria-label="AI reservations setup card">`
+        + '<span class="ts-ai-kicker">AI Reservations Setup</span>'
+        + '<h3 class="ts-ai-title">Connect your AI for reservations</h3>'
+        + '<p class="ts-ai-desc">Copy this setup card and paste it into your AI (ChatGPT, Claude, Gemini, or any MCP client). Your AI picks the best handshake option it supports:</p>'
+        + `<div class="ts-ai-token-row"><span><strong>MCP address:</strong> <code data-ts-ai-mcp-endpoint="1">${esc(card.mcpEndpoint || '')}</code></span></div>`
+        + `<div class="ts-ai-token-row"><span><strong>Reservations token:</strong> <code data-ts-ai-masked-token="1">${esc(masked)}</code></span><span class="ts-ai-meta">${esc(formatExpiry(card.expiresAt))}</span></div>`
+        + `<ul class="ts-ai-options">${options.map((opt) => `<li>${esc(opt)}</li>`).join('')}</ul>`
+        + `<div class="ts-ai-actions"><button type="button" class="ts-ai-btn ts-ai-btn-primary" data-ai-reservation-copy="${esc(key)}">Copy setup instructions</button></div>`
+        + '<p class="ts-ai-status" data-ai-reservation-copy-status="1" hidden></p>'
+        + '</section>';
+    }
+    if (card.kind === 'ai_reservation_connected') {
+      return `<section class="ts-ai-card" data-ts-ai-reservation-connected="1" data-reservation-mode="${esc(card.mode || '')}" aria-label="AI reservations connected">`
+        + '<span class="ts-ai-kicker">AI Reservations Connected</span>'
+        + `<h3 class="ts-ai-title">${esc(card.headline || "You're set up for reservations")}</h3>`
+        + `<div class="ts-ai-chips"><span class="ts-ai-pill ts-ai-pill-ok">${esc(card.modeLabel || card.mode || 'Connected')}</span></div>`
+        + `<p class="ts-ai-desc">${esc(card.nextStep || '')}</p>`
+        + '</section>';
+    }
+    if (card.kind === 'ai_reservation_handshake_error') {
+      return '<section class="ts-ai-card" data-ts-ai-reservation-error="1" aria-label="AI handshake help">'
+        + '<span class="ts-ai-kicker">AI Reservations</span>'
+        + `<div class="ts-ai-warn">${esc(card.message || 'Could not read that handshake reply.')}</div>`
+        + '</section>';
+    }
+    if (card.kind === 'ai_reservation_status') {
+      const status = String(card.status || 'waiting');
+      const pillClass = status === 'booked' ? 'ts-ai-pill-ok' : (status === 'failed' ? 'ts-ai-pill-err' : 'ts-ai-pill-warn');
+      const statusLabel = status === 'booked' ? 'booked' : (status === 'failed' ? 'failed' : 'waiting');
+      const chips = [
+        card.bookedByLabel && status === 'booked' ? card.bookedByLabel : '',
+        card.date ? formatFriendlyDate(card.date) : (card.requestedDate ? formatFriendlyDate(card.requestedDate) : ''),
+        card.time || card.requestedTime || '',
+        card.partySize ? `Party of ${card.partySize}` : '',
+        card.confirmationNumber ? `Confirmation #${card.confirmationNumber}` : '',
+      ].filter(Boolean);
+      const chipsHtml = chips.length
+        ? `<div class="ts-ai-chips">${chips.map((c) => `<span class="ts-ai-chip">${esc(c)}</span>`).join('')}</div>`
+        : '';
+      const manualPrompt = card.mode === 'manual' && status === 'waiting'
+        ? `<div class="ts-ai-actions"><button type="button" class="ts-ai-btn ts-ai-btn-primary" data-ai-manual-check-copy="${esc(card.manualPrompt || 'check my VK reservations')}">Copy "check my VK reservations"</button></div><p class="ts-ai-status" data-ai-manual-copy-status="1" hidden></p>`
+        : '';
+      const failedHtml = status === 'failed'
+        ? `<p class="ts-ai-desc">${esc(card.reason || '')}</p>${Array.isArray(card.alternatives) && card.alternatives.length ? `<div class="ts-ai-chips">${card.alternatives.map((alt) => `<span class="ts-ai-chip">${esc(alt)}</span>`).join('')}</div>` : ''}`
+        : '';
+      const notesHtml = status === 'booked' && card.notes ? `<p class="ts-ai-note">${esc(card.notes)}</p>` : '';
+      return `<section class="ts-ai-card" data-ts-ai-reservation-status-card="1" data-ai-reservation-status="${esc(status)}" data-request-id="${esc(card.requestId || '')}" aria-label="Reservation status">`
+        + `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap"><span class="ts-ai-kicker">Reservation</span><span class="ts-ai-pill ${pillClass}" data-ai-reservation-badge="${esc(status)}">${esc(statusLabel)}</span></div>`
+        + `<h3 class="ts-ai-title">${esc(card.venueName || 'Reservation')}</h3>`
+        + chipsHtml
+        + notesHtml
+        + failedHtml
+        + manualPrompt
+        + '</section>';
+    }
+    return '';
+  }
+
   function renderTurnCardHtml(turn) {
     ensureStyles();
     const payload = turn?.payload && typeof turn.payload === 'object' ? turn.payload : {};
     if (payload.aiImportCard) return renderImportCardHtml(payload.aiImportCard);
     if (payload.aiApprovalCard) return renderApprovalCardHtml(payload.aiApprovalCard);
+    if (payload.reservationCard) return renderReservationCardHtml(payload.reservationCard);
     return '';
   }
 
@@ -413,6 +496,7 @@
     ensureStyles();
     if (data?.aiImportCard) return renderImportCardHtml(data.aiImportCard);
     if (data?.aiApprovalCard) return renderApprovalCardHtml(data.aiApprovalCard);
+    if (data?.reservationCard) return renderReservationCardHtml(data.reservationCard);
     return '';
   }
 
@@ -618,6 +702,65 @@
           void handleCopyClick(copyBtn);
           return;
         }
+        const resCopyBtn = event.target?.closest?.('[data-ai-reservation-copy]');
+        if (resCopyBtn) {
+          const key = resCopyBtn.getAttribute('data-ai-reservation-copy') || '';
+          const card = resCopyBtn.closest('[data-ts-ai-reservation-setup="1"]');
+          const status = card?.querySelector('[data-ai-reservation-copy-status="1"]');
+          const payload = lookupCopyText(key);
+          if (!payload) {
+            if (status) {
+              status.textContent = 'Ask in chat to create a fresh AI reservations setup card.';
+              status.className = 'ts-ai-status ts-ai-status-err';
+              status.hidden = false;
+            }
+            return;
+          }
+          void writeClipboard(payload).then((ok) => {
+            if (ok) {
+              resCopyBtn.textContent = 'Copied';
+              if (status) {
+                status.textContent = 'Copied to clipboard. Paste into your AI to finish setup.';
+                status.className = 'ts-ai-status';
+                status.hidden = false;
+              }
+              setTimeout(() => { if (resCopyBtn.isConnected) resCopyBtn.textContent = 'Copy setup instructions'; }, 2500);
+            } else if (status) {
+              status.textContent = 'Could not access clipboard. Please allow clipboard access and try again.';
+              status.className = 'ts-ai-status ts-ai-status-err';
+              status.hidden = false;
+            }
+          });
+          return;
+        }
+        const manualCopyBtn = event.target?.closest?.('[data-ai-manual-check-copy]');
+        if (manualCopyBtn) {
+          const promptText = manualCopyBtn.getAttribute('data-ai-manual-check-copy') || 'check my VK reservations';
+          const card = manualCopyBtn.closest('[data-ts-ai-reservation-status-card="1"]');
+          const status = card?.querySelector('[data-ai-manual-copy-status="1"]');
+          void writeClipboard(promptText).then((ok) => {
+            if (ok) {
+              manualCopyBtn.textContent = 'Copied';
+              if (status) {
+                status.textContent = 'Copied "check my VK reservations" — paste into your AI.';
+                status.className = 'ts-ai-status';
+                status.hidden = false;
+              }
+              setTimeout(() => { if (manualCopyBtn.isConnected) manualCopyBtn.textContent = 'Copy "check my VK reservations"'; }, 2500);
+            }
+          });
+          return;
+        }
+        const offerYesBtn = event.target?.closest?.('[data-ai-reservation-offer-yes="1"]');
+        if (offerYesBtn) {
+          const textarea = document.getElementById('messageText');
+          const composer = document.getElementById('composer');
+          if (textarea && composer) {
+            textarea.value = 'Yes, set up my AI for reservations';
+            composer.requestSubmit();
+          }
+          return;
+        }
         const approveBtn = event.target?.closest?.('[data-ai-chat-approve]');
         if (approveBtn) {
           void handleApprovalClick(approveBtn, 'approve', ctx);
@@ -654,7 +797,7 @@
 
     const turns = ctx.getState?.()?.turns || [];
     lastTurnCount = turns.length;
-    const hasAiCard = turns.some((t) => Boolean(t?.payload?.aiImportCard)) || copyPayloads.size > 0;
+    const hasAiCard = turns.some((t) => Boolean(t?.payload?.aiImportCard || t?.payload?.reservationCard)) || copyPayloads.size > 0;
     const checkForUpdates = async () => {
       if (document.hidden || ctx.getState?.()?.sending) return;
       const token = ctx.getSessionToken?.() || '';

@@ -390,6 +390,28 @@ export function detailFieldRows(place, trip) {
   return rows;
 }
 
+export function detailReservationBooking(place, trip) {
+  const override = overrideFor(trip, place);
+  const booked = override.bookedByAi === true || place?.booked_by_ai === true;
+  if (!booked) return null;
+  const confirmationNumber = text(
+    override.confirmationNumber || override.confirmationCode || place?.confirmation_number,
+  );
+  const time = text(override.reservationTime || place?.reservation_time || override.startTime || place?.place_time);
+  const date = text(override.reservationDate || override.dayDate);
+  const partyRaw = Number(override.partySize ?? place?.party_size);
+  const partySize = Number.isInteger(partyRaw) && partyRaw > 0 ? partyRaw : null;
+  const notes = text(override.reservationNotes || place?.reservation_notes);
+  return {
+    bookedByLabel: text(override.bookedByLabel || place?.booked_by_label) || 'Booked by your AI',
+    date,
+    time,
+    partySize,
+    confirmationNumber,
+    notes,
+  };
+}
+
 export function buildDetailViewModel(place, trip) {
   const override = overrideFor(trip, place);
   const category = detailCategoryKey(place, trip);
@@ -424,5 +446,6 @@ export function buildDetailViewModel(place, trip) {
     addressHoursBox: detailAddressHoursBox(place, trip),
     phoneCallBox: detailPhoneCallBox(place, trip),
     fieldRows: detailFieldRows(place, trip),
+    reservationBooking: detailReservationBooking(place, trip),
   };
 }

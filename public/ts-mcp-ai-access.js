@@ -277,7 +277,8 @@
 
   const state = {
     open: false, mode: 'approvals', loading: false, busy: '', error: '', notice: '',
-    changes: [], selectedId: '', tokens: [], mcpEndpoint: '', createdToken: '',
+    isAdmin: true,
+    changes: [], selectedId: '', tokens: [], reservationConnections: [], mcpEndpoint: '', createdToken: '',
     label: 'Family AI', role: 'collaborator', expiresInDays: 30,
     requestBoxFor: '', requestNote: '',
   };
@@ -305,10 +306,22 @@
         apiJson(`/api/mcp/changes?shareToken=${encodeURIComponent(shareToken)}`),
         apiJson(`/api/mcp/tokens?shareToken=${encodeURIComponent(shareToken)}`),
       ]);
+      state.isAdmin = tokensRes.isAdmin !== false && tokensRes.role !== 'collaborator';
       state.changes = sortChanges(changesRes.changes || []);
       if (!state.selectedId || !state.changes.some((c) => c.id === state.selectedId)) state.selectedId = state.changes[0]?.id || '';
       state.tokens = Array.isArray(tokensRes.tokens) ? tokensRes.tokens : [];
       state.mcpEndpoint = String(tokensRes.mcpEndpoint || `${location.origin}/api/mcp`);
+      if (state.isAdmin) {
+        try {
+          const resConn = await apiJson(`/api/mcp/reservations/connections?shareToken=${encodeURIComponent(shareToken)}&admin=1`);
+          state.reservationConnections = Array.isArray(resConn.connections) ? resConn.connections : [];
+        } catch (connErr) {
+          void connErr;
+          state.reservationConnections = [];
+        }
+      } else {
+        state.reservationConnections = [];
+      }
     } catch (error) {
       state.error = error instanceof Error ? error.message : 'Unable to load AI settings for this vacation.';
     } finally {
@@ -459,6 +472,18 @@
     return `<p class="ts-mcp-meta" style="margin:0 0 8px">Create an AI token scoped to this vacation only. Any AI using this token can read this vacation, stage draft imports, or propose edits for your approval.</p>${endpointHtml}<form class="ts-mcp-form" data-mcp-token-form="1"><label class="ts-mcp-field"><span>Token label</span><input type="text" name="label" value="${esc(state.label)}" maxlength="120" placeholder="Family AI" /></label><label class="ts-mcp-field"><span>Role</span><select name="role"><option value="collaborator"${state.role === 'collaborator' ? ' selected' : ''}>Collaborator</option><option value="owner"${state.role === 'owner' ? ' selected' : ''}>Owner</option></select></label><label class="ts-mcp-field"><span>Expires (days)</span><input type="number" name="expiresInDays" min="1" max="90" value="${esc(state.expiresInDays)}" /></label><button type="submit" class="ts-mcp-btn ts-mcp-btn-primary"${state.busy === 'create-token' ? ' disabled' : ''}>Create AI token</button></form>${revealHtml}${rowsHtml}`;
   }
 
+  function renderReservations() {
+    const rowsHtml = state.reservationConnections.length
+      ? `<ul class="ts-mcp-token-list" data-ts-reservation-connections-list="1">${state.reservationConnections.map((c) => {
+        const created = c.createdAt ? String(c.createdAt).slice(0, 10) : '';
+        const modeLabel = c.modeLabel || (c.mode === 'webhook' ? 'Webhook (automatic ping)' : (c.mode === 'polling' ? `Scheduled polling (every ${c.pollIntervalMinutes || 5} min)` : (c.mode === 'manual' ? 'Manual check' : 'Waiting for handshake')));
+        const statusText = c.status === 'active' ? 'Active' : (c.status === 'revoked' ? 'Revoked' : 'Pending setup');
+        return `<li class="ts-mcp-token-row" data-ts-reservation-connection-row="${esc(c.id)}"><div><strong>${esc(c.label || 'Reservations AI')}</strong> · <code>${esc(c.tokenPrefix || 'vkr_')}…</code><div class="ts-mcp-meta" data-ts-reservation-mode="1">Mode: ${esc(modeLabel)}</div><div class="ts-mcp-meta" data-ts-reservation-created="1">${esc(statusText)}${created ? ` · Created ${esc(created)}` : ''}</div></div>${c.status !== 'revoked' ? `<button type="button" class="ts-mcp-btn ts-mcp-btn-danger" data-mcp-revoke-reservation="${esc(c.id)}"${state.busy === c.id ? ' disabled' : ''}>Revoke</button>` : ''}</li>`;
+      }).join('')}</ul>`
+      : '<p class="ts-mcp-meta">No reservations AI connections yet. Ask for a reservation in chat to connect your own AI.</p>';
+    return `<p class="ts-mcp-meta" style="margin:0 0 8px">Account-level reservations permission. Separate from vacation import tokens: revoking a reservations connection does not affect import access.</p>${rowsHtml}`;
+  }
+
   function render() {
     if (!state.open) return;
     ensureStyles();
@@ -470,14 +495,25 @@
     }
     const pendingCount = state.changes.filter((c) => c.status === 'pending_approval').length;
     const activeTokenCount = state.tokens.filter((t) => t.status === 'active').length;
-    root.innerHTML = `<div class="ts-mcp-backdrop" data-ts-mcp-backdrop="1" role="presentation"><aside class="ts-mcp-sheet" data-ts-mcp-panel="1" role="dialog" aria-modal="true" aria-label="AI Access and Approvals"><header class="ts-mcp-head"><p class="ts-mcp-kicker">Vacation AI</p><div class="ts-mcp-title-row"><h2 class="ts-mcp-title">AI Access &amp; Approvals</h2><button type="button" class="ts-mcp-close" data-mcp-close="1" aria-label="Close">×</button></div><div class="ts-mcp-tabs" role="tablist"><button type="button" role="tab" aria-selected="${state.mode === 'approvals' ? 'true' : 'false'}" class="ts-mcp-tab${state.mode === 'approvals' ? ' is-active' : ''}" data-mcp-tab="approvals">Pending approvals (${pendingCount})</button><button type="button" role="tab" aria-selected="${state.mode === 'tokens' ? 'true' : 'false'}" class="ts-mcp-tab${state.mode === 'tokens' ? ' is-active' : ''}" data-mcp-tab="tokens">AI access tokens (${activeTokenCount})</button></div></header><div class="ts-mcp-body">${state.error ? `<p class="ts-mcp-alert ts-mcp-alert-err" role="alert">${esc(state.error)}</p>` : ''}${state.notice ? `<p class="ts-mcp-alert ts-mcp-alert-ok" role="status">${esc(state.notice)}</p>` : ''}${state.loading ? '<p class="ts-mcp-meta">Loading vacation AI activity…</p>' : (state.mode === 'approvals' ? renderApprovals() : renderTokens())}</div></aside></div>`;
+    const activeResCount = state.reservationConnections.filter((c) => c.status !== 'revoked').length;
+    const tabsHtml = state.isAdmin
+      ? `<div class="ts-mcp-tabs" role="tablist"><button type="button" role="tab" aria-selected="${state.mode === 'approvals' ? 'true' : 'false'}" class="ts-mcp-tab${state.mode === 'approvals' ? ' is-active' : ''}" data-mcp-tab="approvals">Pending approvals (${pendingCount})</button><button type="button" role="tab" aria-selected="${state.mode === 'tokens' ? 'true' : 'false'}" class="ts-mcp-tab${state.mode === 'tokens' ? ' is-active' : ''}" data-mcp-tab="tokens">AI access tokens (${activeTokenCount})</button><button type="button" role="tab" aria-selected="${state.mode === 'reservations' ? 'true' : 'false'}" class="ts-mcp-tab${state.mode === 'reservations' ? ' is-active' : ''}" data-mcp-tab="reservations">Reservations AI (${activeResCount})</button></div>`
+      : '';
+    const bodyHtml = !state.isAdmin
+      ? '<p class="ts-mcp-alert ts-mcp-alert-err" data-ts-mcp-admin-only="1" role="alert">AI Access &amp; Approvals is only available to the vacation owner.</p>'
+      : (state.mode === 'approvals' ? renderApprovals() : (state.mode === 'reservations' ? renderReservations() : renderTokens()));
+    root.innerHTML = `<div class="ts-mcp-backdrop" data-ts-mcp-backdrop="1" role="presentation"><aside class="ts-mcp-sheet" data-ts-mcp-panel="1" role="dialog" aria-modal="true" aria-label="AI Access and Approvals"><header class="ts-mcp-head"><p class="ts-mcp-kicker">Vacation AI</p><div class="ts-mcp-title-row"><h2 class="ts-mcp-title">AI Access &amp; Approvals</h2><button type="button" class="ts-mcp-close" data-mcp-close="1" aria-label="Close">×</button></div>${tabsHtml}</header><div class="ts-mcp-body">${state.error ? `<p class="ts-mcp-alert ts-mcp-alert-err" role="alert">${esc(state.error)}</p>` : ''}${state.notice ? `<p class="ts-mcp-alert ts-mcp-alert-ok" role="status">${esc(state.notice)}</p>` : ''}${state.loading ? '<p class="ts-mcp-meta">Loading vacation AI activity…</p>' : bodyHtml}</div></aside></div>`;
 
     const shareToken = currentShareToken();
     const backdrop = root.querySelector('[data-ts-mcp-backdrop="1"]');
     if (backdrop) backdrop.addEventListener('click', (event) => { if (event.target === backdrop) closeModal(); });
     const closeBtn = root.querySelector('[data-mcp-close="1"]');
     if (closeBtn) closeBtn.addEventListener('click', closeModal);
-    root.querySelectorAll('[data-mcp-tab]').forEach((btn) => btn.addEventListener('click', () => { state.mode = btn.getAttribute('data-mcp-tab') === 'tokens' ? 'tokens' : 'approvals'; render(); }));
+    root.querySelectorAll('[data-mcp-tab]').forEach((btn) => btn.addEventListener('click', () => {
+      const next = btn.getAttribute('data-mcp-tab');
+      state.mode = next === 'tokens' || next === 'reservations' ? next : 'approvals';
+      render();
+    }));
     root.querySelectorAll('[data-mcp-select]').forEach((btn) => btn.addEventListener('click', () => { state.selectedId = btn.getAttribute('data-mcp-select') || ''; render(); }));
     const approveBtn = root.querySelector('[data-mcp-approve]');
     if (approveBtn) approveBtn.addEventListener('click', () => { void approveSelected(approveBtn.getAttribute('data-mcp-approve') || '', approveBtn.getAttribute('data-mcp-hash') || ''); });
@@ -561,12 +597,16 @@
       const id = btn.getAttribute('data-mcp-revoke') || '';
       void runAction(id, () => apiJson(`/api/mcp/tokens/${encodeURIComponent(id)}/revoke`, { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json' }, body: JSON.stringify({ shareToken }) }), 'AI access token revoked.', 'Unable to revoke AI access token.');
     }));
+    root.querySelectorAll('[data-mcp-revoke-reservation]').forEach((btn) => btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-mcp-revoke-reservation') || '';
+      void runAction(id, () => apiJson(`/api/mcp/reservations/connections/${encodeURIComponent(id)}/revoke`, { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json' }, body: JSON.stringify({ shareToken }) }), 'Reservations AI connection revoked.', 'Unable to revoke reservations connection.');
+    }));
   }
 
   document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && state.open && !window.__tsPicFsActive) closeModal(); });
 
   window.__tsOpenMcpPanel = function (mode) {
-    state.mode = mode === 'tokens' ? 'tokens' : 'approvals';
+    state.mode = mode === 'tokens' || mode === 'reservations' ? mode : 'approvals';
     state.open = true;
     state.error = '';
     state.notice = '';
@@ -579,6 +619,7 @@
     const panel = String(params.get('panel') || params.get('mcp') || '').trim().toLowerCase();
     if (panel === 'ai-approvals' || panel === 'approvals') window.__tsOpenMcpPanel('approvals');
     else if (panel === 'ai-access' || panel === 'tokens') window.__tsOpenMcpPanel('tokens');
+    else if (panel === 'reservations' || panel === 'ai-reservations') window.__tsOpenMcpPanel('reservations');
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', checkInitialPanelParam);

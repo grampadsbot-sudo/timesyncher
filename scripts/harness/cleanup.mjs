@@ -27,6 +27,7 @@ async function dropTripTable(db, table, tripIds) {
   if (table === 'vacation_collaborators') return (await db`delete from vacation_collaborators where trip_id = any(${tripIds}::uuid[]) returning id`).length;
   if (table === 'vacation_collaborator_invites') return (await db`delete from vacation_collaborator_invites where trip_id = any(${tripIds}::uuid[]) returning id`).length;
   if (table === 'entitlements') return (await db`delete from entitlements where trip_id = any(${tripIds}::uuid[]) returning id`).length;
+  if (table === 'vacation_reservation_requests') return (await db`delete from vacation_reservation_requests where trip_id = any(${tripIds}::uuid[]) returning id`).length;
   if (table === 'paid_orders') return (await db`delete from paid_orders where trip_id = any(${tripIds}::uuid[]) returning id`).length;
   return 0;
 }
@@ -51,7 +52,7 @@ export async function deleteTaggedRows(db, tag) {
   if (shares.length && await tableExists(db, 'thing_media_bindings')) {
     deleted.media = (await db`delete from thing_media_bindings where share_token = any(${shares}::text[]) returning id`).length;
   }
-  for (const table of ['transcript_turns', 'budget_items', 'trip_things', 'worker_jobs', 'vacation_requests', 'support_notes', 'telegram_sessions', 'vacation_web_access_grants', 'vacation_collaborators', 'vacation_collaborator_invites', 'paid_orders', 'entitlements']) {
+  for (const table of ['transcript_turns', 'budget_items', 'trip_things', 'worker_jobs', 'vacation_requests', 'vacation_reservation_requests', 'support_notes', 'telegram_sessions', 'vacation_web_access_grants', 'vacation_collaborators', 'vacation_collaborator_invites', 'paid_orders', 'entitlements']) {
     await dropTripTable(db, table, tripIds);
   }
   for (const session of sessions) {
@@ -65,6 +66,9 @@ export async function deleteTaggedRows(db, tag) {
   }
   const customerIds = customers.map((row) => row.id);
   if (customerIds.length) {
+    if (await tableExists(db, 'vacation_reservation_connections')) {
+      await db`delete from vacation_reservation_connections where account_customer_id = any(${customerIds}::uuid[])`;
+    }
     if (await tableExists(db, 'outbound_emails')) {
       await db`delete from outbound_emails where customer_id = any(${customerIds}::uuid[])`;
     }

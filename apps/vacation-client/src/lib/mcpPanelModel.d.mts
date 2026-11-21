@@ -1,4 +1,4 @@
-import type { McpChangeRequest, McpChangeSet, McpPreviewDay, McpPreviewLandingItem, McpPreviewMedia } from '../api/mcpAdmin';
+import type { McpChangeRequest, McpChangeSet, McpPreviewDay, McpPreviewLandingItem, McpPreviewMedia, McpReservationConnection } from '../api/mcpAdmin';
 
 export type NormalizedPreviewChange = {
   text: string;
@@ -29,3 +29,5 @@ export function extractApprovalPreviewView(changeSet: McpChangeSet | null): Appr
 export function previewSummaryChips(changeSet: McpChangeSet): string[];
 export function previewSummaryBullets(changeSet: McpChangeSet): string[];
 export function sortChangeSetsForReview(changes: McpChangeSet[]): McpChangeSet[];
+export function reservationConnectionModeLabel(connection: Partial<McpReservationConnection> | null | undefined): string;
+export function formatReservationCreatedDate(iso?: string | null): string;

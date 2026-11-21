@@ -334,3 +334,19 @@ export function sortChangeSetsForReview(changes) {
     return String(b?.createdAt || '').localeCompare(String(a?.createdAt || ''));
   });
 }
+
+export function reservationConnectionModeLabel(connection) {
+  if (connection?.modeLabel) return String(connection.modeLabel);
+  if (connection?.mode === 'webhook') return 'Webhook (automatic ping)';
+  if (connection?.mode === 'polling') {
+    const mins = Math.max(1, Math.round(Number(connection?.pollIntervalMinutes) || 5));
+    return `Scheduled polling (every ${mins} min)`;
+  }
+  if (connection?.mode === 'manual') return 'Manual check';
+  return 'Waiting for handshake';
+}
+
+export function formatReservationCreatedDate(iso) {
+  const value = String(iso || '').trim().slice(0, 10);
+  return value ? `Created ${value}` : '';
+}

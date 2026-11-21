@@ -218,10 +218,28 @@ function detailBodyV3({ n, d, edit, days, selectedDays, scheduled, start, durati
     }
     return kids.length ? n.jsx('div', { style: { minWidth: 0 }, children: kids }) : null;
   })() : null;
+  const aiBookingBanner = d.bookedByAi ? n.jsxs('section', {
+    'data-ts-booked-by-ai': '1',
+    style: { border: '1px solid #a7f3d0', background: '#ecfdf5', color: '#065f46', borderRadius: 10, padding: '10px 12px', marginBottom: 10, display: 'grid', gap: 4 },
+    children: [
+      n.jsx('div', { style: { fontSize: 11, fontWeight: 800, letterSpacing: 0.6, textTransform: 'uppercase' }, children: text(d.bookedByLabel) || 'Booked by your AI' }),
+      n.jsx('div', {
+        style: { fontSize: 13, fontWeight: 700, color: '#0f172a' },
+        children: [
+          text(d.reservationDate),
+          text(d.reservationTime) || (text(d.startTime) ? clock(d.startTime) : ''),
+          d.partySize ? `Party of ${d.partySize}` : '',
+          text(d.confirmationNumber || d.confirmationCode) ? `Confirmation #${text(d.confirmationNumber || d.confirmationCode)}` : '',
+        ].filter(Boolean).join(' · '),
+      }),
+      text(d.reservationNotes) ? n.jsx('p', { style: { margin: 0, fontSize: 12, color: '#334155' }, children: text(d.reservationNotes) }) : null,
+    ],
+  }) : null;
   return n.jsxs('div', {
     'data-ts-detail-v3': '1', 'data-ts-detail-mode': edit ? 'edit' : 'view', ...(edit ? { 'data-ts-detail-editing': '1' } : {}),
     style: { fontSize: 13, lineHeight: 1.45, color: '#1f2937', minWidth: 0 },
     children: [
+    aiBookingBanner,
     timeline,
     field('story', 'Story', true, d.story, { sparseEdit: true }),
     flag('includeInTripRecap', 'Include this story in the final keepsake'),

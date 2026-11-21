@@ -27,7 +27,7 @@ export default function App() {
   const [detail, setDetail] = useState<SharedPlace | null>(null);
   const [mcpPanelMode, setMcpPanelMode] = useState<McpPanelMode | null>(() => {
     const mode = new URLSearchParams(window.location.search).get('aiPanel');
-    return mode === 'approvals' || mode === 'tokens' ? mode : null;
+    return mode === 'approvals' || mode === 'tokens' || mode === 'reservations' ? mode : null;
   });
 
   const title = useMemo(() => {
@@ -139,6 +139,7 @@ export default function App() {
         permissions={trip.permissions}
         activeTab={tab}
         canEdit={tripState.canEdit}
+        isOwner={tripState.editRole === 'owner'}
         editChecked={tripState.editChecked}
         saveStatus={tripState.saveStatus}
         onTabChange={setTab}
@@ -148,7 +149,7 @@ export default function App() {
       >
         {body}
       </TripShell>
-      {mcpPanelMode && tripState.canEdit ? (
+      {mcpPanelMode && tripState.canEdit && tripState.editRole === 'owner' ? (
         <McpApprovalPanel
           key={mcpPanelMode}
           shareToken={token}

@@ -792,7 +792,7 @@
           }
           if (data.searchProgress) applyServerProgress(data.searchProgress, data.vacation || data.trip, data.vacation?.publicUrl);
           messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>Vacay Keepsake</small>${chatText(data.reply)}${window.tsVacationAppAiImport?.renderReplyCardHtml(data) || ''}</article>`);
-          if (data.aiImportCard || data.aiApprovalCard) window.tsVacationAppAiImport?.bindMessages({ getState, getSessionToken, currentTrip, loadApp });
+          if (data.aiImportCard || data.aiApprovalCard || data.reservationCard) window.tsVacationAppAiImport?.bindMessages({ getState, getSessionToken, currentTrip, loadApp });
         }
       } catch (error) {
         document.getElementById('tsTyping')?.remove();

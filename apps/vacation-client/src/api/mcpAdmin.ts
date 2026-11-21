@@ -236,7 +236,9 @@ export async function requestMcpChanges(
   return (await response.json()) as { changeRequest: McpChangeRequest; changeRequests: McpChangeRequest[] };
 }
 
-export async function fetchMcpTokens(shareToken: string): Promise<{ mcpEndpoint: string; tokens: McpTokenRecord[] }> {
+export async function fetchMcpTokens(
+  shareToken: string,
+): Promise<{ mcpEndpoint: string; tokens: McpTokenRecord[]; isAdmin: boolean }> {
   const response = await fetch(`/api/mcp/tokens?shareToken=${encodeURIComponent(shareToken)}`, {
     credentials: 'include',
     headers: { accept: 'application/json', 'Cache-Control': 'no-cache' },
@@ -244,10 +246,16 @@ export async function fetchMcpTokens(shareToken: string): Promise<{ mcpEndpoint:
   if (!response.ok) {
     throw new Error(await readApiError(response, 'Unable to load AI access tokens for this vacation.'));
   }
-  const data = (await response.json()) as { mcpEndpoint?: string; tokens?: McpTokenRecord[] };
+  const data = (await response.json()) as {
+    mcpEndpoint?: string;
+    tokens?: McpTokenRecord[];
+    isAdmin?: boolean;
+    role?: string;
+  };
   return {
     mcpEndpoint: data.mcpEndpoint || `${window.location.origin}/api/mcp`,
     tokens: Array.isArray(data.tokens) ? data.tokens : [],
+    isAdmin: data.isAdmin !== false && data.role !== 'collaborator',
   };
 }
 
@@ -267,6 +275,26 @@ export async function createVacationMcpToken(
   return (await response.json()) as { token: string; record: McpTokenRecord; mcpEndpoint: string };
 }
 
+export type McpReservationConnection = {
+  id: string;
+  accountCustomerId: string;
+  accountEmail: string | null;
+  label: string;
+  scope: 'reservations';
+  tokenPrefix: string;
+  status: 'pending_handshake' | 'active' | 'revoked';
+  mode: 'webhook' | 'polling' | 'manual' | null;
+  modeLabel?: string;
+  webhookUrl: string | null;
+  pollIntervalMinutes: number | null;
+  aiClientName: string | null;
+  handshakeCompletedAt: string | null;
+  createdAt: string | null;
+  lastUsedAt: string | null;
+  revokedAt: string | null;
+  expiresAt: string | null;
+};
+
 export async function revokeVacationMcpToken(shareToken: string, tokenId: string): Promise<McpTokenRecord> {
   const response = await fetch(`/api/mcp/tokens/${encodeURIComponent(tokenId)}/revoke`, {
     method: 'POST',
@@ -278,5 +306,42 @@ export async function revokeVacationMcpToken(shareToken: string, tokenId: string
     throw new Error(await readApiError(response, 'Unable to revoke this AI access token.'));
   }
   const data = (await response.json()) as { record: McpTokenRecord };
+  return data.record;
+}
+
+export async function fetchReservationConnections(
+  shareToken: string,
+): Promise<{ isAdmin: boolean; connections: McpReservationConnection[] }> {
+  const response = await fetch(`/api/mcp/reservations/connections?shareToken=${encodeURIComponent(shareToken)}&admin=1`, {
+    credentials: 'include',
+    headers: { accept: 'application/json', 'Cache-Control': 'no-cache' },
+  });
+  if (response.status === 403) {
+    return { isAdmin: false, connections: [] };
+  }
+  if (!response.ok) {
+    throw new Error(await readApiError(response, 'Unable to load reservations AI connections.'));
+  }
+  const data = (await response.json()) as { isAdmin?: boolean; connections?: McpReservationConnection[] };
+  return {
+    isAdmin: data.isAdmin !== false,
+    connections: Array.isArray(data.connections) ? data.connections : [],
+  };
+}
+
+export async function revokeReservationConnectionApi(
+  shareToken: string,
+  connectionId: string,
+): Promise<McpReservationConnection> {
+  const response = await fetch(`/api/mcp/reservations/connections/${encodeURIComponent(connectionId)}/revoke`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'content-type': 'application/json', accept: 'application/json' },
+    body: JSON.stringify({ shareToken }),
+  });
+  if (!response.ok) {
+    throw new Error(await readApiError(response, 'Unable to revoke this reservations AI connection.'));
+  }
+  const data = (await response.json()) as { record: McpReservationConnection };
   return data.record;
 }

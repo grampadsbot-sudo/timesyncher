@@ -859,6 +859,24 @@ const tripPay = scanText('src/vacation/live-app-turn.mjs', purchase).filter((fin
 assert.equal(tripPay.length > 0, true);
 assert.equal(classify(tripPay, []).fail.length, tripPay.length);
 
+const reservationWordFiles = [
+  'routes/vacation-mcp.mjs',
+  'src/vacation/mcp-reservations-chat.mjs',
+  'src/vacation/mcp-reservations-handshake.mjs',
+  'src/vacation/mcp-reservations-http.mjs',
+  'src/vacation/mcp-reservations-service.mjs',
+  'src/vacation/mcp-reservations-store.mjs',
+  'src/vacation/mcp-reservations-submit.mjs',
+  'src/vacation/mcp-reservations-tools.mjs',
+  'src/vacation/trek-vk-1066-mcp-ui-patch.mjs',
+];
+const reservationWord = 'const line = "Ask to set up your AI for reservations first.";';
+for (const file of reservationWordFiles) {
+  assert.equal(scanText(file, reservationWord).some((finding) => finding.rule === 'BAR-RESERVATION-PAYMENT'), false, file);
+  assert.equal(scanText(file, purchase).some((finding) => finding.rule === 'BAR-RESERVATION-PAYMENT'), true, file);
+}
+assert.equal(scanText('src/vacation/live-app-turn.mjs', reservationWord).some((finding) => finding.rule === 'BAR-RESERVATION-PAYMENT'), true);
+
 const invite = 'function collaboratorInviteEmail() { return `Vacation website: ${site}`; }';
 assert.equal(scanText('src/vacation/email.mjs', invite).some((finding) => finding.rule === 'BAR-COLLAB-URL'), false);
 const seatReply = 'function vacationSupportReply() { return `Here is the vacation website: ${url}`; }';

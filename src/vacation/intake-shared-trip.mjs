@@ -9,6 +9,7 @@ import { addressIsSpecific } from './dossier-evidence-hydrate.mjs';
 import { thingDetailOverrideFields } from './thing-detail-fields.mjs';
 import { categoryFor } from './intake-shared-trip-category.mjs';
 import { formatLocalClockTime } from './mcp-exif.mjs';
+import { reservationPlaceFields } from './mcp-reservations-submit.mjs';
 
 const MONTHS = {
   jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
@@ -302,6 +303,7 @@ export function sharedTripFromIntake({ trip, things }) {
       category_icon: kind.category_icon,
       category: { name: kind.category_name, icon: kind.category_icon },
       reservation_status: itemStatus,
+      ...reservationPlaceFields(thingMeta),
       ...(startTime ? { place_time: startTime } : {}),
       ...(endTime ? { end_time: endTime } : {}),
       notes,
