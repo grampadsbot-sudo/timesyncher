@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
 import crypto from 'node:crypto';
-import { existsSync, statSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { mkdir, readFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
@@ -14,7 +13,7 @@ import { intakeSharedResponse, useSharedTripDatabase } from '../src/vacation/sha
 import { loadTripScopedVacationAppTurns } from '../src/vacation/vacation-app-transcript.mjs';
 import { createMcpTestDb } from './lib/mcp-test-harness.mjs';
 import { invokeRoute } from './lib/mcp-test-exif.mjs';
-import { buildCarmelWeekendFixture } from './lib/c10-test-media.mjs';
+import { buildCarmelWeekendFixture, ensureVacationClientDist, resolveChromeExecutable } from './lib/c10-test-media.mjs';
 
 const require = createRequire(import.meta.url);
 const root = fileURLToPath(new URL('..', import.meta.url));
@@ -28,22 +27,6 @@ function loadPuppeteer() {
     void error;
     return require('/tmp/pptr/node_modules/puppeteer-core');
   }
-}
-
-function ensureClientDistBuilt() {
-  const htmlPath = path.join(root, 'apps/vacation-client/dist/vacation-app-next.html');
-  const sources = [
-    'apps/vacation-client/src/components/McpApprovalPanel.tsx',
-    'apps/vacation-client/src/components/PreviewMediaThumbs.tsx',
-    'apps/vacation-client/src/lib/mcpPanelModel.mjs',
-    'apps/vacation-client/src/styles.css',
-  ];
-  if (existsSync(htmlPath)) {
-    const distMtime = statSync(htmlPath).mtimeMs;
-    const fresh = sources.every((rel) => statSync(path.join(root, rel)).mtimeMs <= distMtime);
-    if (fresh) return;
-  }
-  execFileSync('npm', ['--prefix', 'apps/vacation-client', 'run', 'build'], { cwd: root, stdio: 'pipe' });
 }
 
 async function mcpRpc(method, params = {}, token = '') {
@@ -64,7 +47,7 @@ function send(res, status, body, type) {
 }
 
 async function startSurfaceServer({ approvalCard, shareSlug, sessionToken, sharedPayload }) {
-  ensureClientDistBuilt();
+  ensureVacationClientDist(root);
   const distDir = path.join(root, 'apps/vacation-client/dist');
   const [viewerJs, gridPanelJs, chatAiJs, nextHtml] = await Promise.all([
     readFile(path.join(root, 'public/ts-pic-popup-viewer.js'), 'utf8'),
@@ -390,7 +373,7 @@ const bannedFilenames = mediaFiles.map((f) => f.filename);
 const server = await startSurfaceServer({ approvalCard, shareSlug, sessionToken, sharedPayload });
 const puppeteer = loadPuppeteer();
 const browser = await puppeteer.launch({
-  executablePath: process.env.CHROME_PATH || process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser',
+  executablePath: resolveChromeExecutable(),
   headless: true,
   args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
 });

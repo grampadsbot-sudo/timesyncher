@@ -1,8 +1,82 @@
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, statSync, symlinkSync } from 'node:fs';
+import { homedir, tmpdir } from 'node:os';
 import path from 'node:path';
 import { buildJpegWithExif } from './mcp-test-exif.mjs';
+
+const FALLBACK_1X1_JPEG = Buffer.from(
+  '/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=',
+  'base64',
+);
+
+export function ensureVacationClientDist(root) {
+  const clientDir = path.join(root, 'apps/vacation-client');
+  const htmlPath = path.join(clientDir, 'dist/vacation-app-next.html');
+  const sources = [
+    'apps/vacation-client/src/components/McpApprovalPanel.tsx',
+    'apps/vacation-client/src/components/PreviewMediaThumbs.tsx',
+    'apps/vacation-client/src/lib/mcpPanelModel.mjs',
+    'apps/vacation-client/src/styles.css',
+  ];
+  if (existsSync(htmlPath)) {
+    const distMtime = statSync(htmlPath).mtimeMs;
+    if (sources.every((rel) => statSync(path.join(root, rel)).mtimeMs <= distMtime)) return;
+  }
+  const clientNodeModules = path.join(clientDir, 'node_modules');
+  if (!existsSync(path.join(clientNodeModules, 'vite'))) {
+    let linked = false;
+    const topNodeModules = path.join(root, 'node_modules');
+    if (existsSync(topNodeModules)) {
+      try {
+        const sharedRoot = path.dirname(realpathSync(topNodeModules));
+        const sharedClientModules = path.join(sharedRoot, 'apps/vacation-client/node_modules');
+        if (existsSync(path.join(sharedClientModules, 'vite')) && !existsSync(clientNodeModules)) {
+          symlinkSync(sharedClientModules, clientNodeModules, 'dir');
+          linked = true;
+        }
+      } catch (error) {
+        void error;
+      }
+    }
+    if (!linked && !existsSync(path.join(clientNodeModules, 'vite'))) {
+      execFileSync('npm', ['ci'], { cwd: clientDir, stdio: 'pipe' });
+    }
+  }
+  execFileSync('npm', ['--prefix', 'apps/vacation-client', 'run', 'build'], { cwd: root, stdio: 'pipe' });
+}
+
+export function resolveChromeExecutable() {
+  const direct = [process.env.CHROME_PATH, process.env.PUPPETEER_EXECUTABLE_PATH]
+    .map((v) => String(v || '').trim())
+    .filter(Boolean);
+  for (const candidate of direct) {
+    if (existsSync(candidate)) return candidate;
+  }
+  const pwCache = path.join(homedir(), '.cache/ms-playwright');
+  if (existsSync(pwCache)) {
+    const dirs = readdirSync(pwCache)
+      .filter((name) => name.startsWith('chromium-'))
+      .sort()
+      .reverse();
+    for (const dir of dirs) {
+      for (const rel of ['chrome-linux64/chrome', 'chrome-linux/chrome']) {
+        const candidate = path.join(pwCache, dir, rel);
+        if (existsSync(candidate)) return candidate;
+      }
+    }
+  }
+  for (const candidate of [
+    '/usr/bin/google-chrome-stable',
+    '/usr/bin/google-chrome',
+    '/usr/local/bin/google-chrome',
+    '/usr/bin/chromium',
+    '/snap/bin/chromium',
+    '/usr/bin/chromium-browser',
+  ]) {
+    if (existsSync(candidate)) return candidate;
+  }
+  throw new Error('No Chromium executable found for C10 media thumbnails test');
+}
 
 function spliceExifIntoValidJpeg(validJpeg, exifOpts) {
   if (!exifOpts) return validJpeg;
@@ -24,7 +98,7 @@ function makeColorJpegViaFfmpeg({ color, text, exifOpts = null }) {
   } catch (error) {
     void error;
     void text;
-    return exifOpts ? buildJpegWithExif(exifOpts) : buildJpegWithExif({ dateTimeOriginal: '' });
+    return spliceExifIntoValidJpeg(FALLBACK_1X1_JPEG, exifOpts);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

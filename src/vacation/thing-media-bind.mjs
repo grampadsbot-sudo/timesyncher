@@ -212,7 +212,6 @@ export function mergeBindingsIntoShared(shared = {}, bindings = []) {
       trip_id: binding.trekTripId,
       place_id: binding.thingId,
       day_id: binding.dayId,
-      day_number: binding.dayNumber,
       filename: binding.originalName,
       original_name: binding.originalName,
       originalName: binding.originalName,
