@@ -83,10 +83,10 @@ function civilToday(nowMs = Date.now()) {
   return `${parts.year}-${month}-${day}`;
 }
 
-export const VIEW_WITHOUT_SIGN_IN = 'anyone with the trip link can view plans and photos without signing in';
+export const VIEW_WITHOUT_SIGN_IN = 'anyone with the vacation link can view plans and photos without signing in';
 
 const FIRST_INTAKE_TONE = [
-  'Address the customer in the second person. Use customer_name when it is present, copied verbatim. Do not use a customer id, a session id, or a trip id. Do not speak about the customer in the third person.',
+  'Address the customer in the second person. Use customer_name when it is present, copied verbatim. Do not use a customer id, a session id, or a vacation id. Do not speak about the customer in the third person.',
   'Echo dates, weekdays, and names exactly as they appear in the facts or in customer_said. Do not shorten a name. Do not calculate a weekday. If weekday or end_weekday is present, use that weekday.',
   'Do not use a relative month phrase unless when_relative is true. Otherwise say the year.',
   'Tone: warm and plain, with contractions. No sales voice. At most one exclamation point. No emoji.',
@@ -113,7 +113,7 @@ const INVITE_CONTACT_ASK = 'When invite_contact is the first gap in gaps, ask fo
 
 export const FIRST_INTAKE_GAP_INSTRUCTION = [
   'You are writing the first reply after a short or vague intake in the Vacay Keepsake vacation app. Write it in your own words from the intake facts. Do not copy this instruction back.',
-  'Start the trip draft anyway, as a short draft.',
+  'Start the vacation draft anyway, as a short draft.',
   'Then nudge them to send a voice note.',
   'Do not offer to add collaborators. Do not pitch a plan.',
   'Use only customer_said and the other intake facts. Do not invent a place, a date, a lodging, a plan, or a name.',

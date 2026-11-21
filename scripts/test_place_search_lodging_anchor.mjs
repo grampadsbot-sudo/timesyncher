@@ -177,6 +177,6 @@ const failed = await runCustomerChatPlaceSearch({
   env: { OPENROUTER_API_KEY: 'test' },
 });
 assert.equal(failed.status, 'failed');
-assert.match(failed.error, /Place search needs a trip destination or a named area/);
+assert.match(failed.error, /Place search needs a vacation destination or a named area/);
 
 console.log('test_place_search_lodging_anchor: ok');

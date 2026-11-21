@@ -58,7 +58,7 @@ assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /exactly one question/);
 assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /exactly one question/);
 assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /Never ask a second question/);
 assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /lodgingAsk/);
-assert.match(FIRST_INTAKE_GAP_INSTRUCTION, /Start the trip draft anyway/);
+assert.match(FIRST_INTAKE_GAP_INSTRUCTION, /Start the vacation draft anyway/);
 assert.match(FIRST_INTAKE_GAP_INSTRUCTION, /voice note/);
 assert.match(FIRST_INTAKE_GAP_INSTRUCTION, /second person/);
 assert.match(FIRST_INTAKE_GAP_INSTRUCTION, /Do not offer to add collaborators/);
@@ -180,7 +180,7 @@ for (const input of [shortInput, vagueInput]) {
   assert.doesNotMatch(prompt, /plan they already purchased/);
   assert.doesNotMatch(prompt, /Offer to add collaborators, naming/);
   assert.doesNotMatch(prompt, leakWord);
-  assert.match(prompt, /Start the trip draft anyway/);
+  assert.match(prompt, /Start the vacation draft anyway/);
   assert.match(prompt, /voice note/);
   assert.match(prompt, /second person/);
   assert.equal(prompt.startsWith(FIRST_INTAKE_GAP_INSTRUCTION), true);
@@ -335,7 +335,7 @@ try {
       assert.equal(user.jev, undefined);
       assertCleanFacts(user);
       assert.doesNotMatch(system, leakWord);
-      assert.match(system, /Start the trip draft anyway/);
+      assert.match(system, /Start the vacation draft anyway/);
       assert.match(system, /voice note/);
       assert.match(system, /second person/);
       assert.doesNotMatch(system, /timesyncher_vacation_single/);

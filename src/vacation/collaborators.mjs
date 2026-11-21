@@ -187,7 +187,7 @@ async function ensureOwnerWorkspaceTripForInvite(db, { ownerCustomerId, onboardi
   const ownerId = cleanInviteLookup(ownerCustomerId, 80);
   const sessionId = cleanInviteLookup(onboardingSessionId, 80);
   if (!ownerId || !sessionId) {
-    throw Object.assign(new Error('Owner onboarding session is required for a pre-trip collaborator invite.'), { statusCode: 409 });
+    throw Object.assign(new Error('Owner onboarding session is required for a pre-vacation collaborator invite.'), { statusCode: 409 });
   }
   const sessions = await db`
     select id, trip_id, customer_id, order_id
@@ -215,7 +215,7 @@ async function ensureOwnerWorkspaceTripForInvite(db, { ownerCustomerId, onboardi
   `;
   const tripId = String(tripRows[0]?.id || '').trim();
   if (!tripId) {
-    throw Object.assign(new Error('Owner workspace trip could not be created for collaborator invite.'), { statusCode: 500 });
+    throw Object.assign(new Error('Owner workspace vacation could not be created for collaborator invite.'), { statusCode: 500 });
   }
   await db`
     update onboarding_sessions
@@ -227,7 +227,7 @@ async function ensureOwnerWorkspaceTripForInvite(db, { ownerCustomerId, onboardi
   const attached = await attachPurchasedEntitlementToChatTrip(db, { ...session, trip_id: tripId }, tripId);
   if (!attached.ok) {
     throw Object.assign(
-      new Error(attached.error || 'Owner entitlement could not be attached to workspace trip.'),
+      new Error(attached.error || 'Owner entitlement could not be attached to workspace vacation.'),
       { statusCode: attached.statusCode || 502, code: attached.code || 'vacation_app_owner_entitlement_attach_failed' },
     );
   }

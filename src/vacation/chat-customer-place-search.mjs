@@ -46,7 +46,7 @@ export async function runCustomerChatPlaceSearch({
     planDestination: plan.destination,
   });
   if (!geocodeDestination) {
-    const error = 'Place search needs a trip destination or a named area in the message.';
+    const error = 'Place search needs a vacation destination or a named area in the message.';
     console.error(`customer chat place search refused: ${error}`);
     return {
       status: 'failed',

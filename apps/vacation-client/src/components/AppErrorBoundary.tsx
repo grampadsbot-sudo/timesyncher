@@ -19,7 +19,7 @@ export class AppErrorBoundary extends Component<Props, State> {
       return (
         <div className="tsv-error" role="alert">
           <h1>Something went wrong</h1>
-          <p>We could not show this trip. Refresh the page or try again later.</p>
+          <p>We could not show this vacation. Refresh the page or try again later.</p>
         </div>
       );
     }
