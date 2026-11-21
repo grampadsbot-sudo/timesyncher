@@ -36,6 +36,17 @@ type Props = {
   onApproved: () => void;
 };
 
+async function loadReservationConnectionsSafe(
+  shareToken: string,
+): Promise<{ isAdmin: boolean; connections: McpReservationConnection[] }> {
+  try {
+    return await fetchReservationConnections(shareToken);
+  } catch (err) {
+    void err;
+    return { isAdmin: true, connections: [] };
+  }
+}
+
 export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved }: Props) {
   const titleId = useId();
   const [mode, setMode] = useState<McpPanelMode>(initialMode);
@@ -61,14 +72,14 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
       const [changeList, tokenInfo, resInfo] = await Promise.all([
         fetchMcpChanges(shareToken),
         fetchMcpTokens(shareToken),
-        fetchReservationConnections(shareToken),
+        loadReservationConnectionsSafe(shareToken),
       ]);
       const sorted = sortChangeSetsForReview(changeList);
       setChanges(sorted);
       setSelectedId((prev) => (prev && sorted.some((item) => item.id === prev) ? prev : sorted[0]?.id || ''));
       setTokens(tokenInfo.tokens);
       setMcpEndpoint(tokenInfo.mcpEndpoint);
-      setIsAdmin(resInfo.isAdmin);
+      setIsAdmin(tokenInfo.isAdmin && resInfo.isAdmin);
       setReservationConnections(resInfo.connections);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to load AI settings for this vacation.');
@@ -82,7 +93,7 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
     Promise.all([
       fetchMcpChanges(shareToken),
       fetchMcpTokens(shareToken),
-      fetchReservationConnections(shareToken),
+      loadReservationConnectionsSafe(shareToken),
     ])
       .then(([changeList, tokenInfo, resInfo]) => {
         if (cancelled) return;
@@ -91,7 +102,7 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
         setSelectedId((prev) => (prev && sorted.some((item) => item.id === prev) ? prev : sorted[0]?.id || ''));
         setTokens(tokenInfo.tokens);
         setMcpEndpoint(tokenInfo.mcpEndpoint);
-        setIsAdmin(resInfo.isAdmin);
+        setIsAdmin(tokenInfo.isAdmin && resInfo.isAdmin);
         setReservationConnections(resInfo.connections);
         setLoading(false);
       })

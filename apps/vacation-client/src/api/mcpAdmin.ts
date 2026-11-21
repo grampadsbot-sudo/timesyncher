@@ -229,7 +229,9 @@ export async function requestMcpChanges(
   return (await response.json()) as { changeRequest: McpChangeRequest; changeRequests: McpChangeRequest[] };
 }
 
-export async function fetchMcpTokens(shareToken: string): Promise<{ mcpEndpoint: string; tokens: McpTokenRecord[] }> {
+export async function fetchMcpTokens(
+  shareToken: string,
+): Promise<{ mcpEndpoint: string; tokens: McpTokenRecord[]; isAdmin: boolean }> {
   const response = await fetch(`/api/mcp/tokens?shareToken=${encodeURIComponent(shareToken)}`, {
     credentials: 'include',
     headers: { accept: 'application/json', 'Cache-Control': 'no-cache' },
@@ -237,10 +239,16 @@ export async function fetchMcpTokens(shareToken: string): Promise<{ mcpEndpoint:
   if (!response.ok) {
     throw new Error(await readApiError(response, 'Unable to load AI access tokens for this vacation.'));
   }
-  const data = (await response.json()) as { mcpEndpoint?: string; tokens?: McpTokenRecord[] };
+  const data = (await response.json()) as {
+    mcpEndpoint?: string;
+    tokens?: McpTokenRecord[];
+    isAdmin?: boolean;
+    role?: string;
+  };
   return {
     mcpEndpoint: data.mcpEndpoint || `${window.location.origin}/api/mcp`,
     tokens: Array.isArray(data.tokens) ? data.tokens : [],
+    isAdmin: data.isAdmin !== false && data.role !== 'collaborator',
   };
 }
 
