@@ -117,7 +117,7 @@ function covered(spans, start, end) {
   return spans.some(([from, to]) => start < to && end > from);
 }
 
-function termHits(prose, terms, ruleId) {
+function termHits(prose, terms, ruleId, file) {
   const rule = terms.rules[ruleId];
   if (!rule) return [];
   const allows = ruleId === 'BAR-RESERVATION-PAYMENT' && (terms.allow || []).some((allow) => (!allow.rules || allow.rules.includes(ruleId)) && compile(allow.pattern, 'i').test(prose))
@@ -125,6 +125,7 @@ function termHits(prose, terms, ruleId) {
     : allowHits(prose, terms.allow, ruleId);
   const hits = [];
   for (const source of rule.terms) {
+    if (reservationWordExempt(terms, file, source)) continue;
     const re = compile(source, rule.flags || '');
     let match = re.exec(prose);
     while (match) {
@@ -201,6 +202,12 @@ function exemptSpec(terms, ruleId) {
 
 function pathExempt(terms, ruleId, file) {
   return (exemptSpec(terms, ruleId).paths || []).includes(normFile(file));
+}
+
+function reservationWordExempt(terms, file, source) {
+  const spec = terms.reservationWordFiles || {};
+  if (!spec.term || source !== spec.term) return false;
+  return (spec.paths || []).includes(normFile(file));
 }
 
 function commentSpans(text) {
@@ -343,7 +350,7 @@ export function barFindings(file, text, terms = loadBarTerms()) {
     for (const ruleId of Object.keys(terms.rules)) {
       if (pathExempt(terms, ruleId, file)) continue;
       if (ruleId === 'BAR-THING-CUSTOMER' && thingInternal(terms, file, value, base, prose, comments)) continue;
-      for (const hit of termHits(prose, terms, ruleId)) push(ruleId, base + hit.index, hit.match);
+      for (const hit of termHits(prose, terms, ruleId, file)) push(ruleId, base + hit.index, hit.match);
     }
   };
   const exact = terms.exactAllow || {};

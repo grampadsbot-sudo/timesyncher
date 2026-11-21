@@ -62,6 +62,21 @@
     "sitePhrase": "vacation website|website link|here is the|open the vacation",
     "note": "A collaborator-seat reply builder is a function whose name matches builderName. A hit is a template literal in that function that contains sitePhrase and a ${...} interpolation."
   },
+  "reservationWordFiles": {
+    "note": "#1076 external-AI reservations (Craig). These source files may use the bare word reservation for the account handshake. The make/making/made-a-reservation term, book-for-you, deposit, payment, checkout, pay, and charge still fail in these files. Every other file, and every dialog-pack turn, still fails on the bare word. This is not a whole-rule path exemption.",
+    "term": "\\breservations?\\b",
+    "paths": [
+      "routes/vacation-mcp.mjs",
+      "src/vacation/mcp-reservations-chat.mjs",
+      "src/vacation/mcp-reservations-handshake.mjs",
+      "src/vacation/mcp-reservations-http.mjs",
+      "src/vacation/mcp-reservations-service.mjs",
+      "src/vacation/mcp-reservations-store.mjs",
+      "src/vacation/mcp-reservations-submit.mjs",
+      "src/vacation/mcp-reservations-tools.mjs",
+      "src/vacation/trek-vk-1066-mcp-ui-patch.mjs"
+    ]
+  },
   "exempt": {
     "note": "Path exemptions apply to source scans only. Dialog pack turns are chat, so the pack checker does not use these paths.",
     "BAR-RESERVATION-PAYMENT": {
