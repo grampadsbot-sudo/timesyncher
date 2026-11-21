@@ -53,7 +53,7 @@ function customerMessage(customerTurn, priorTurns, tripTitle) {
   }).filter(Boolean);
   const title = text(tripTitle, 180);
   return [
-    title ? `Trip: ${title}` : '',
+    title ? `Vacation: ${title}` : '',
     recent.length ? `Recent conversation:\n${recent.join('\n')}` : '',
     `Customer message:\n${text(customerTurn, 4000)}`,
   ].filter(Boolean).join('\n\n');

@@ -96,12 +96,19 @@ function detailBodyV3({ n, d, edit, days, selectedDays, scheduled, start, durati
     ...Object.keys(d.perDaySchedule || {}),
   ].map(id => Number(id)).filter(id => Number.isFinite(id) && id))];
   const showSchedule = scheduled || scheduleIds.length > 0;
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const visitStatusLabel = visit => {
+    const raw = text(visit.status);
+    if (!raw) return '';
+    if (/^considering$/i.test(raw) && visit.dayDate && String(visit.dayDate).slice(0, 10) < todayIso) return '';
+    return `Status: ${raw.charAt(0).toUpperCase() + raw.slice(1)}`;
+  };
   const visits = showSchedule ? scheduleIds.flatMap(dayId => {
     const day = days.find(row => String(row.id) === String(dayId));
     if (!day) return [];
     const schedule = d.perDaySchedule?.[String(dayId)] || {};
     const rows = Array.isArray(schedule.visits) ? schedule.visits : [{ startTime: schedule.startTime ?? start, duration: schedule.duration ?? duration, status: schedule.status ?? status }];
-    return rows.map(row => ({ ...row, dayId: day.id, dayNumber: day.day_number }));
+    return rows.map(row => ({ ...row, dayId: day.id, dayNumber: day.day_number, dayDate: day.date || '' }));
   }) : [];
   const saveVisits = rows => update(previous => {
     const dayIds = [...new Set(rows.map(row => row.dayId))];
@@ -142,7 +149,7 @@ function detailBodyV3({ n, d, edit, days, selectedDays, scheduled, start, durati
       })] }),
       n.jsx('button', { type: 'button', 'aria-label': `Remove visit ${index + 1}`, onClick: () => saveVisits(visits.filter((row, i) => i !== index)), style: { ...buttonStyle, padding: '6px 0', fontSize: 15 }, children: '×' }),
     ] }, index) : n.jsx('p', { 'data-ts-detail-visit': '1', style: { margin: '0 0 8px', fontSize: 'clamp(9px, 2.55vw, 12px)', fontWeight: 700, whiteSpace: 'nowrap' },
-      children: [`Day ${visit.dayNumber}`, text(visit.startTime) ? `Start: ${clock(visit.startTime)}` : '', text(visit.duration) ? /^\d+$/.test(text(visit.duration)) ? `${visit.duration} min` : text(visit.duration) : '', text(visit.status) ? `Status: ${visit.status.charAt(0).toUpperCase() + visit.status.slice(1)}` : ''].filter(Boolean).join(' · '),
+      children: [`Day ${visit.dayNumber}`, text(visit.startTime) ? `Start: ${clock(visit.startTime)}` : '', text(visit.duration) ? /^\d+$/.test(text(visit.duration)) ? `${visit.duration} min` : text(visit.duration) : '', visitStatusLabel(visit)].filter(Boolean).join(' · '),
     }, index)),
     edit ? n.jsx('button', { type: 'button', 'data-ts-add-visit': '1', disabled: !days.length, onClick: () => saveVisits([...visits, { dayId: days[0]?.id, startTime: '', duration: '', status: 'considering' }]), style: buttonStyle, children: '+ Add visit' }) : null,
   ] }) : null;
@@ -241,7 +248,7 @@ function detailBodyV3({ n, d, edit, days, selectedDays, scheduled, start, durati
     edit ? field('website', 'Website') : viewContactStrip,
     !edit ? field('area', 'Area') : null,
     field('itineraryNote', 'Itinerary note', true), field('longDetails', 'Details', true),
-    field('lat', 'Latitude'), field('lng', 'Longitude'),
+    edit ? field('lat', 'Latitude') : null, edit ? field('lng', 'Longitude') : null,
     edit ? field('logoUrl', 'Logo URL') : null, edit ? field('travelTime', 'Estimated travel time') : null,
     platformRatings,
     extras,

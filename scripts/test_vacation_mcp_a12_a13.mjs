@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import apiHandler from '../api/[...route].mjs';
 import { setVacationMcpClock, useVacationMcpDatabase } from '../routes/vacation-mcp.mjs';
 import { sharedTripFromIntake, thingRecordFromTripRow } from '../src/vacation/intake-shared-trip.mjs';
+import sharedTripHandler, { intakeSharedResponse, useSharedTripDatabase } from '../src/vacation/shared-trip-handler.mjs';
+import { loadTripScopedVacationAppTurns } from '../src/vacation/vacation-app-transcript.mjs';
 import { buildDayTimeline } from '../apps/vacation-client/src/lib/dayTimelineModel.mjs';
 import { placesForCategoryTab } from '../apps/vacation-client/src/lib/listTabModel.mjs';
 import { extractApprovalPreviewView } from '../apps/vacation-client/src/lib/mcpPanelModel.mjs';
@@ -399,7 +402,79 @@ async function test_A13_unscheduled_long_list_things_end_to_end() {
   assert.equal(unscheduledAfter.some((item) => item.title === 'Maritime Museum' && item.scheduled === false && item.day_date === null), true);
 }
 
+async function test_B3_B4_B5_B6_B7_intake_photos_times_icons_detail_copy() {
+  const db = createMcpTestDb();
+  useVacationMcpDatabase(db);
+  useSharedTripDatabase(db);
+  const carmelTrip = db.seedVacation({ title: 'Carmel-by-the-Sea', destination: 'Carmel-by-the-Sea, CA', startDate: new Date('2025-05-10T00:00:00.000Z'), endDate: new Date('2025-05-11T00:00:00.000Z'), timezone: 'UTC' });
+  db.seedEditorSession({ tripId: carmelTrip.id, ownerCustomerId: carmelTrip.customer_id, email: 'owner@example.com', role: 'owner', sessionToken: 'sess-b4', shareSlug: carmelTrip.metadata.publicSlug });
+  const token = (await invokeRoute(apiHandler, { method: 'POST', url: '/api/mcp/tokens', headers: { 'content-type': 'application/json', 'x-timesyncher-web-access-token': 'sess-b4' }, body: { tripId: carmelTrip.id, label: 'Carmel AI', role: 'owner' } })).json.token;
+
+  const readBefore = (await mcpRpc('tools/call', { name: 'read_vacation', arguments: {} }, token)).json.result.structuredContent;
+  assert.equal(readBefore.vacation.start_date, '2025-05-10');
+  assert.equal(readBefore.vacation.end_date, '2025-05-11');
+  assert.equal(readBefore.vacation.timezone, 'America/Los_Angeles');
+
+  const draft = {
+    vacation: { title: 'Carmel Coast', destination: 'Carmel-by-the-Sea, CA', start_date: '2025-05-10', end_date: '2025-05-11', timezone: 'America/Los_Angeles' },
+    days: [{ day_number: 1, date: '2025-05-10', title: 'Point Lobos Hike', notes: 'Arrive early' }, { day_number: 2, date: '2025-05-11', title: 'Village Stroll', notes: 'Ocean Ave' }],
+    things_to_do: [{ ref: 'hike-1', category: 'activity', title: 'Point Lobos Carmel Hike', day_date: '2025-05-10', starts_at: '2025-05-10T09:00:00-07:00', notes: 'Bring windbreaker', location: { lat: 36.515, lng: -121.943 } }],
+    unscheduled_things: [{ ref: 'beach-1', category: 'activity', title: 'Carmel Beach Sunset', notes: 'Great sunset spot', location: { lat: 36.554, lng: -121.928 } }],
+  };
+  const draftId = (await mcpRpc('tools/call', { name: 'start_import', arguments: draft }, token)).json.result.structuredContent.draft_id;
+  const slots = (await mcpRpc('tools/call', { name: 'upload_media', arguments: { action: 'request_upload', draft_id: draftId, files: [{ filename: 'hike.jpg', mime_type: 'image/jpeg', thing_ref: 'hike-1' }, { filename: 'beach.jpg', mime_type: 'image/jpeg', thing_ref: 'beach-1' }] } }, token)).json.result.structuredContent.uploads;
+  for (const [slot, bytes] of [[slots[0], buildJpegWithExif({ dateTimeOriginal: '2025:05:10 09:45:00' })], [slots[1], buildPlainJpeg()]]) {
+    const u = new URL(slot.upload_url);
+    assert.equal((await invokeRoute(apiHandler, { method: 'PUT', url: u.pathname + u.search, headers: { 'content-type': 'image/jpeg' }, body: bytes })).statusCode, 200);
+  }
+  const fin = (await mcpRpc('tools/call', { name: 'upload_media', arguments: { action: 'finalize', draft_id: draftId, media_ids: slots.map((s) => s.media_id) } }, token)).json.result.structuredContent.finalized;
+  assert.equal(fin[0].assigned_day_date, '2025-05-10');
+  db.tables.vacation_mcp_draft_media.find((m) => m.id === slots[0].media_id).exif_captured_at = new Date('2025-05-10T09:45:00.000Z');
+
+  const preview = (await mcpRpc('tools/call', { name: 'preview_import', arguments: { draft_id: draftId } }, token)).json.result.structuredContent.preview;
+  const hikeMediaPreview = preview.media.find((m) => m.media_id === slots[0].media_id);
+  assert.equal(hikeMediaPreview.exif_match.time_matched, true);
+  assert.equal(hikeMediaPreview.exif_match.local_date, '2025-05-10');
+  assert.equal((await mcpRpc('tools/call', { name: 'commit_import', arguments: { draft_id: draftId, preview_hash: preview.preview_hash } }, token)).statusCode, 200);
+  const approve = await invokeRoute(apiHandler, { method: 'POST', url: `/api/mcp/changes/${draftId}/approve`, headers: { 'content-type': 'application/json', 'x-timesyncher-web-access-token': 'sess-b4' }, body: { tripId: carmelTrip.id, preview_hash: preview.preview_hash } });
+  assert.equal(approve.statusCode, 200);
+  const served = await intakeSharedResponse(approve.json.shareSlug, db);
+  assert.equal(served.days[0].title, 'Point Lobos Hike');
+  assert.equal(served.media.length, 2);
+  const hikePlace = served.places.find((p) => p.name === 'Point Lobos Carmel Hike');
+  const beachPlace = served.places.find((p) => p.name === 'Carmel Beach Sunset');
+  assert.equal(hikePlace.bound_media.length, 1);
+  assert.equal(beachPlace.bound_media.length, 1);
+  assert.match(hikePlace.bound_media[0].publicUrl, /^\/api\/bind-thing-media\?/);
+  assert.equal(hikePlace.category_name, 'sightseeing');
+  assert.equal(served.thingOverrides[`place:${hikePlace.id}`].startTime, '09:00');
+  assert.equal(served.thingOverrides[`place:${hikePlace.id}`].itineraryNote, 'Bring windbreaker');
+  assert.equal(served.thingOverrides[`place:${hikePlace.id}`].status, 'completed');
+
+  const httpShared = await invokeRoute(sharedTripHandler, { method: 'GET', url: `/api/shared/${approve.json.shareSlug}/` });
+  assert.equal(httpShared.statusCode, 200);
+  assert.equal(httpShared.headers['cache-control'], 'no-store');
+  assert.doesNotMatch(await readFile(new URL('../content/onboarding-welcome.json', import.meta.url), 'utf8'), /\btrips?\b/i);
+  const bundleJs = await readFile(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
+  assert.ok(bundleJs.includes('children:"Vacation View"') && bundleJs.includes('children:"AI Access & Approvals"') && bundleJs.includes("edit ? field('lat', 'Latitude') : null") && bundleJs.includes('visitStatusLabel(visit)'));
+
+  const filtered = await loadTripScopedVacationAppTurns(
+    async (strings) => (strings.join(' ').includes('customer_id =') ? [] : [
+      { request_id: 'r1', speaker: 'customer', body: 'Invite bad@invalid', channel: 'vacation-app', direction: 'inbound', payload: { authorId: 'o1', authorName: 'Ada', turnActionResults: { invite: { ok: false } } }, received_at: '2026-07-01T10:00:00Z' },
+      { request_id: 'r1', speaker: 'app', body: 'That invite bounced.', channel: 'vacation-app', direction: 'outbound', payload: { inviteActionFailed: true }, sent_at: '2026-07-01T10:00:02Z' },
+      { request_id: 'r2', speaker: 'customer', body: 'Looking forward to Carmel!', channel: 'vacation-app', direction: 'inbound', payload: { authorId: 'o1', authorName: 'Ada' }, received_at: '2026-07-01T10:05:00Z' },
+    ]),
+    { customer_id: 'c1', metadata: { seat: { role: 'collaborator', ownerCustomerId: 'o1', ownerTripId: 't1', displayName: 'Sam' } } },
+    't1',
+    { loadTranscriptAuthorPeople: async () => [{ id: 'o1', firstName: 'Ada', displayName: 'Ada' }, { id: 'c1', firstName: 'Sam', displayName: 'Sam' }] },
+  );
+  assert.equal(filtered.length, 1);
+  assert.equal(filtered[0].body, 'Looking forward to Carmel!');
+  useSharedTripDatabase(null);
+}
+
 await test_A12_bot_preview_hash_guard_and_inapp_parity();
 await test_A13_unscheduled_long_list_things_end_to_end();
+await test_B3_B4_B5_B6_B7_intake_photos_times_icons_detail_copy();
 useVacationMcpDatabase(null);
-console.log('vacation mcp acceptance tests A12-A13 passed');
+console.log('vacation mcp acceptance tests A12-A13 + B3-B7 passed');

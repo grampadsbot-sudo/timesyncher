@@ -1,7 +1,8 @@
 import { cleanText } from './http.mjs';
 import { intakeShareSlug } from './intake-shared-trip.mjs';
 import { insertTripThing } from './trip-things.mjs';
-import { collectDraftLandingItems, findClosestGpsItem } from './mcp-preview-common.mjs';
+import { formatLocalClockTime, inferVacationTimeZone } from './mcp-exif.mjs';
+import { collectDraftLandingItems, findClosestGpsItem, normalizeImportedCategory } from './mcp-preview-common.mjs';
 import {
   asArray,
   asObject,
@@ -12,7 +13,7 @@ import {
   vacationShareSlugForRow,
 } from './mcp-read.mjs';
 
-function landingItemToThingRow(item, sourceTag) {
+function landingItemToThingRow(item, sourceTag, timezone = 'UTC') {
   const extraMeta = {};
   if (item.airline) extraMeta.airline = item.airline;
   if (item.flight_number) extraMeta.flightNumber = item.flight_number;
@@ -28,12 +29,38 @@ function landingItemToThingRow(item, sourceTag) {
   if (item.dropoff_location) extraMeta.dropoffLocation = item.dropoff_location;
 
   const unscheduled = !item.scheduled;
+  const startTime = unscheduled ? '' : (cleanText(item.start_time, 32) || '');
+  const endTime = unscheduled ? '' : (cleanText(item.end_time, 32) || '');
+  const thingDetail = {};
+  if (startTime) thingDetail.startTime = startTime;
+  if (endTime) thingDetail.endTime = endTime;
+  if (item.category === 'flight') {
+    if (startTime) thingDetail.departureTime = startTime;
+    if (endTime) thingDetail.arrivalTime = endTime;
+    if (item.airline) thingDetail.airline = item.airline;
+    if (item.flight_number) thingDetail.flightNumber = item.flight_number;
+  }
+  if (item.category === 'hotel') {
+    if (item.check_in) thingDetail.checkInDate = item.check_in;
+    if (item.check_out) thingDetail.checkOutDate = item.check_out;
+    if (startTime) thingDetail.checkInTime = startTime;
+    if (endTime) thingDetail.checkOutTime = endTime;
+  }
+  if (item.notes) thingDetail.itineraryNote = item.notes;
+  if (item.description) thingDetail.longDetails = item.description;
+  if (item.website) thingDetail.website = item.website;
+  if (item.location?.address) thingDetail.address = item.location.address;
+
   const metadata = {
     ...extraMeta,
     ...(item.ref ? { draftRef: item.ref } : {}),
     ...(!unscheduled && item.day_date ? { dayDate: item.day_date, whenLabel: item.day_date } : {}),
+    ...(startTime ? { startTime } : {}),
+    ...(endTime ? { endTime } : {}),
     ...(item.notes ? { notes: [item.notes] } : {}),
     ...(item.website ? { website: item.website } : {}),
+    ...(Object.keys(thingDetail).length ? { thingDetail } : {}),
+    ...(timezone ? { timezone } : {}),
     scheduled: !unscheduled,
     unscheduled,
     timeline: !unscheduled,
@@ -76,8 +103,17 @@ export async function applyApprovedDraftImport(db, { changeSet, mediaRows }) {
   const days = rawDays.length
     ? rawDays
     : enumerateVacationDates(startDate, endDate).map((date, idx) => ({ day_number: idx + 1, date, title: '', notes: '' }));
+  const prelimItems = collectDraftLandingItems(draft).allItems;
+  const explicitTz = cleanText(vacation.timezone, 80);
+  const resolvedTimezone = inferVacationTimeZone({
+    timezone: explicitTz,
+    timezoneExplicit: Boolean(explicitTz),
+    destination: cleanText(vacation.destination || vacation.title, 200),
+    points: prelimItems.map((item) => item.location).filter(Boolean),
+  });
   const baseMeta = {
-    timezone: cleanText(vacation.timezone, 80) || 'UTC',
+    timezone: resolvedTimezone,
+    ...(explicitTz ? { timezoneExplicit: true } : {}),
     currency: cleanText(vacation.currency, 12) || 'usd',
     summary: cleanText(vacation.summary, 1000) || '',
     days,
@@ -129,9 +165,9 @@ export async function applyApprovedDraftImport(db, { changeSet, mediaRows }) {
 
   const refToThing = new Map();
   const createdItemsForGps = [];
-  const { allItems } = collectDraftLandingItems(draft);
+  const { allItems } = collectDraftLandingItems(draft, resolvedTimezone);
   for (const item of allItems) {
-    const row = landingItemToThingRow(item, 'mcp_import');
+    const row = landingItemToThingRow(item, 'mcp_import', resolvedTimezone);
     const created = await insertTripThing(db, {
       tripId: targetTripId,
       requestId: null,
@@ -225,11 +261,32 @@ export async function applyApprovedTargetedEdit(db, { changeSet, mediaRows }) {
       const dayDate = unscheduled ? null : rawDayDate;
       const ref = cleanText(item.ref, 120) || null;
       const website = cleanText(item.website, 500) || null;
+      const tripTz = inferVacationTimeZone({
+        timezone: cleanText(nextMeta.timezone, 80),
+        timezoneExplicit: nextMeta.timezoneExplicit === true,
+        destination: cleanText(nextDestination || nextTitle, 200),
+      });
+      const startTime = unscheduled ? '' : (formatLocalClockTime(item.start_time || item.starts_at, tripTz) || '');
+      const endTime = unscheduled ? '' : (formatLocalClockTime(item.end_time || item.ends_at, tripTz) || '');
+      const itemTitle = cleanText(item.title, 240);
+      const itemDesc = cleanText(item.description, 4000) || null;
+      const itemNotes = cleanText(item.notes, 1000) || null;
+      const normalizedCategory = normalizeImportedCategory(item.category, 'note', itemTitle, itemDesc || '');
+      const thingDetail = {
+        ...(startTime ? { startTime } : {}),
+        ...(endTime ? { endTime } : {}),
+        ...(itemNotes ? { itineraryNote: itemNotes } : {}),
+        ...(itemDesc ? { longDetails: itemDesc } : {}),
+        ...(website ? { website } : {}),
+      };
       const itemMeta = {
         ...(ref ? { draftRef: ref } : {}),
         ...(dayDate ? { dayDate, whenLabel: dayDate } : {}),
-        ...(item.notes ? { notes: [cleanText(item.notes, 1000)] } : {}),
+        ...(startTime ? { startTime } : {}),
+        ...(endTime ? { endTime } : {}),
+        ...(itemNotes ? { notes: [itemNotes] } : {}),
         ...(website ? { website } : {}),
+        ...(Object.keys(thingDetail).length ? { thingDetail } : {}),
         scheduled: !unscheduled,
         unscheduled,
         timeline: !unscheduled,
@@ -239,9 +296,9 @@ export async function applyApprovedTargetedEdit(db, { changeSet, mediaRows }) {
         tripId,
         requestId: null,
         thing: {
-          category: cleanText(item.category, 60) || 'note',
-          title: cleanText(item.title, 240),
-          description: cleanText(item.description, 4000) || null,
+          category: normalizedCategory,
+          title: itemTitle,
+          description: itemDesc,
           startsAt: unscheduled ? null : (item.starts_at || (dayDate ? `${dayDate}T12:00:00.000Z` : null)),
           endsAt: unscheduled ? null : (item.ends_at || null),
           costEstimateCents: Number.isInteger(item.total_price_cents) ? item.total_price_cents : null,

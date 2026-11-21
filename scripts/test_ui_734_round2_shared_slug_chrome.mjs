@@ -147,14 +147,14 @@ try {
     });
     await page.waitForFunction(() => {
       const root = document.querySelector('[data-trip-view-root]');
-      return root && /Trip View/i.test(root.textContent || '');
+      return root && /Vacation View/i.test(root.textContent || '');
     }, { timeout: 120000 });
     const tripView = await page.evaluate(() => {
       const root = document.querySelector('[data-trip-view-root]');
       const text = root ? root.innerText.replace(/\s+/g, ' ').trim() : '';
       return { text };
     });
-    assert.match(tripView.text, /Trip View/i);
+    assert.match(tripView.text, /Vacation View/i);
     assert.match(tripView.text, /Flights/i, `B7 flights toggle at ${width}`);
     assert.match(tripView.text, /Hotels/i, `B7 hotels toggle at ${width}`);
     assert.match(tripView.text, /Cars/i, `B7 cars toggle at ${width}`);

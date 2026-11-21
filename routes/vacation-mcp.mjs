@@ -235,14 +235,33 @@ export default async function handler(req, res) {
 
     if (sub[0] === 'media' && sub[1] && req.method === 'GET') {
       const mediaId = decodeURIComponent(sub[1]);
+      const rawToken = extractMcpBearer(req);
+      const sessionToken = readCookie(req, webAccessCookieName()) || cleanText(headerValue(req, 'x-timesyncher-web-access-token'), 400);
+      if (!rawToken && !sessionToken) {
+        return sendJson(res, 401, { ok: false, code: 'media_auth_required', error: 'Authentication is required to view staged vacation media.' });
+      }
+      let tokenRecord = null;
+      if (rawToken) {
+        tokenRecord = await authenticateMcpToken(db, rawToken, { env: process.env, now: nowFn });
+      }
       const rows = await db`
-        select mime_type, filename, file_bytes from vacation_mcp_draft_media where id = ${mediaId} limit 1
+        select scope_trip_id, upload_status, mime_type, filename, file_bytes
+        from vacation_mcp_draft_media
+        where id = ${mediaId}
+        limit 1
       `;
       const row = rows[0];
       if (!row || !row.file_bytes) return sendJson(res, 404, { ok: false, error: 'Media not found.' });
+      if (tokenRecord) {
+        if (String(row.scope_trip_id) !== String(tokenRecord.tripId)) {
+          return sendJson(res, 403, { ok: false, code: 'vacation_scope_mismatch', error: 'This AI access token is scoped to a different vacation.' });
+        }
+      } else {
+        await resolveEditorAccess(db, req, { tripId: String(row.scope_trip_id) });
+      }
       res.statusCode = 200;
       res.setHeader('content-type', row.mime_type || 'application/octet-stream');
-      res.setHeader('cache-control', 'private, max-age=300');
+      res.setHeader('cache-control', 'private, no-store');
       return res.end(Buffer.isBuffer(row.file_bytes) ? row.file_bytes : Buffer.from(row.file_bytes));
     }
 
@@ -268,6 +287,9 @@ export default async function handler(req, res) {
           createdByEmail: editor.email,
           label: cleanText(body.label, 120) || 'AI access',
           role: requestedRole,
+          expiresAt: body.expiresAt || body.expires_at || null,
+          expiresInDays: body.expiresInDays ?? body.expires_in_days ?? null,
+          now: nowFn,
           env: process.env,
         });
         return sendJson(res, 201, { ok: true, token: created.token, record: created.record, mcpEndpoint: `${requestBaseUrl(req)}/api/mcp` });
@@ -311,6 +333,7 @@ export default async function handler(req, res) {
           changeSetId: decodeURIComponent(sub[1]),
           actorEmail: editor.email,
           actorRole: editor.role,
+          previewHash: cleanText(body.preview_hash || body.previewHash, 128),
         });
         return sendJson(res, 200, result);
       }

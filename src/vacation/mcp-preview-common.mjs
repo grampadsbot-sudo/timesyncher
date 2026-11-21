@@ -1,11 +1,14 @@
 import crypto from 'node:crypto';
-import { resolveLocalCaptureDate } from './mcp-exif.mjs';
+import { formatLocalClockTime, resolveLocalCaptureDate } from './mcp-exif.mjs';
 
 export function cleanPreviewText(value, max = 300) {
   return String(value || '').trim().slice(0, max);
 }
 
 export function previewIsoDateOnly(value) {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value.toISOString().slice(0, 10);
+  }
   const match = String(value || '').match(/^(\d{4}-\d{2}-\d{2})/);
   return match ? match[1] : '';
 }
@@ -90,25 +93,67 @@ function normalizeLocation(raw) {
   return out;
 }
 
-export function normalizeDraftLandingItem(defaultCategory, rawItem, { forceUnscheduled = false, currency = 'usd', source = 'mcp_import' } = {}) {
+export function normalizeImportedCategory(rawCategory, defaultCategory = 'activity', title = '', description = '') {
+  const raw = cleanPreviewText(rawCategory, 60).toLowerCase().replace(/[\s-]+/g, '_');
+  const fallback = cleanPreviewText(defaultCategory, 60).toLowerCase() || 'activity';
+  const key = raw || fallback;
+  if (key === 'flight' || key === 'air') return 'flight';
+  if (['hotel', 'lodging', 'accommodation', 'resort', 'inn', 'motel'].includes(key)) return 'hotel';
+  if (['car', 'rental', 'car_rental', 'rental_car'].includes(key)) return 'car';
+  if (['restaurant', 'dining', 'food', 'bakery', 'bistro', 'eatery', 'brunch', 'dinner', 'lunch', 'breakfast'].includes(key)) return 'restaurant';
+  if (['store', 'shop', 'shopping', 'boutique', 'market', 'bookstore', 'grocery'].includes(key)) return 'store';
+  if (['bar', 'cafe', 'coffee', 'pub', 'brewery', 'winery', 'wine_bar', 'cocktail', 'lounge'].includes(key)) return 'bar';
+  if (['tour', 'guided_tour', 'walking_tour', 'boat_tour', 'excursion'].includes(key)) return 'tour';
+  if (['sightseeing', 'hike', 'hiking', 'trail', 'beach', 'park', 'nature', 'outdoor', 'outdoors', 'scenic', 'viewpoint', 'reserve', 'coast', 'landmark', 'monument', 'lighthouse', 'garden'].includes(key)) return 'sightseeing';
+  if (['attraction', 'museum', 'gallery', 'aquarium', 'zoo', 'mission'].includes(key)) return 'attraction';
+  if (['music', 'concert', 'jazz', 'festival'].includes(key)) return 'music';
+  if (['theatre', 'theater', 'show', 'broadway'].includes(key)) return 'theatre';
+  if (['workout', 'fitness', 'gym', 'yoga', 'spa', 'golf', 'surf', 'kayak'].includes(key)) return 'workout';
+  if (['tickets', 'ticket', 'admission'].includes(key)) return 'tickets';
+  if (['family_event', 'family'].includes(key)) return 'family_event';
+  if (['artist', 'studio'].includes(key)) return 'artist';
+  if (['transport', 'transfer', 'ferry', 'train', 'shuttle'].includes(key)) return 'transport';
+  if (key === 'event' || key === 'note') return key;
+  if (key === 'activity' || key === 'other' || key === 'place') {
+    const blob = `${title} ${description}`.toLowerCase();
+    if (/\b(?:hike|hiking|trail|beach|cove|reserve|point lobos|scenic|drive|overlook|viewpoint|lighthouse|state park|national park|coast|cliff|park|garden|mission)\b/.test(blob)) return 'sightseeing';
+    if (/\b(?:tour|whale watching|walking tour|boat tour|kayak|guided)\b/.test(blob)) return 'tour';
+    if (/\b(?:museum|aquarium|gallery|zoo|observatory|historic)\b/.test(blob)) return 'attraction';
+    if (/\b(?:winery|tasting room|brewery|cocktail|wine bar|coffee|cafe)\b/.test(blob)) return 'bar';
+    if (/\b(?:concert|jazz|symphony|live music)\b/.test(blob)) return 'music';
+    if (/\b(?:theatre|theater|play|opera|ballet)\b/.test(blob)) return 'theatre';
+    if (/\b(?:spa|yoga|golf|gym|fitness|surf)\b/.test(blob)) return 'workout';
+    return 'activity';
+  }
+  return key;
+}
+
+export function normalizeDraftLandingItem(defaultCategory, rawItem, { forceUnscheduled = false, currency = 'usd', source = 'mcp_import', timezone = 'UTC' } = {}) {
   const title = cleanPreviewText(rawItem?.title, 240);
   if (!title) return null;
-  const category = cleanPreviewText(rawItem?.category || defaultCategory, 60) || defaultCategory;
+  const description = cleanPreviewText(rawItem?.description || rawItem?.body || '', 4000) || null;
+  const category = normalizeImportedCategory(rawItem?.category, defaultCategory, title, description || '');
   const rawDayDate = previewIsoDateOnly(rawItem?.day_date || rawItem?.check_in || rawItem?.starts_at) || null;
   const unscheduled = Boolean(forceUnscheduled || rawItem?.unscheduled === true || !rawDayDate);
   const dayDate = unscheduled ? null : rawDayDate;
   const checkIn = unscheduled ? null : (previewIsoDateOnly(rawItem?.check_in) || null);
   const checkOut = unscheduled ? null : (previewIsoDateOnly(rawItem?.check_out) || null);
+  const explicitStartsAt = rawItem?.starts_at || null;
+  const explicitEndsAt = rawItem?.ends_at || null;
+  const startTime = unscheduled ? null : (formatLocalClockTime(rawItem?.start_time || explicitStartsAt, timezone) || null);
+  const endTime = unscheduled ? null : (formatLocalClockTime(rawItem?.end_time || explicitEndsAt, timezone) || null);
   return {
     ref: cleanPreviewText(rawItem?.ref, 120) || null,
     category,
     title,
     source: cleanPreviewText(rawItem?.source, 80) || source,
-    description: cleanPreviewText(rawItem?.description || rawItem?.body || '', 4000) || null,
+    description,
     scheduled: !unscheduled,
     day_date: dayDate,
-    starts_at: unscheduled ? null : (rawItem?.starts_at || (dayDate ? `${dayDate}T12:00:00.000Z` : null)),
-    ends_at: unscheduled ? null : (rawItem?.ends_at || (checkOut ? `${checkOut}T11:00:00.000Z` : null)),
+    starts_at: unscheduled ? null : (explicitStartsAt || (dayDate ? `${dayDate}T12:00:00.000Z` : null)),
+    ends_at: unscheduled ? null : (explicitEndsAt || (checkOut ? `${checkOut}T11:00:00.000Z` : null)),
+    ...(startTime ? { start_time: startTime } : {}),
+    ...(endTime ? { end_time: endTime } : {}),
     check_in: checkIn,
     check_out: checkOut,
     total_price_cents: Number.isInteger(rawItem?.total_price_cents) ? rawItem.total_price_cents : null,
@@ -126,12 +171,13 @@ export function normalizeDraftLandingItem(defaultCategory, rawItem, { forceUnsch
   };
 }
 
-export function collectDraftLandingItems(draft) {
+export function collectDraftLandingItems(draft, timezone = '') {
   const currency = cleanPreviewText(draft?.vacation?.currency, 12) || 'usd';
+  const tz = cleanPreviewText(timezone || draft?.vacation?.timezone, 80) || 'UTC';
   const items = [];
   const pushSection = (list, defaultCategory, forceUnscheduled = false) => {
     for (const entry of previewList(list)) {
-      const normalized = normalizeDraftLandingItem(defaultCategory, entry, { forceUnscheduled, currency });
+      const normalized = normalizeDraftLandingItem(defaultCategory, entry, { forceUnscheduled, currency, timezone: tz });
       if (normalized) items.push(normalized);
     }
   };
@@ -171,7 +217,13 @@ export function buildPreviewMediaEntries({
     const bytes = Number(row.actual_bytes || row.expected_bytes || 0);
     totalBytes += bytes;
     const exifRaw = row.exif_raw && typeof row.exif_raw === 'object' ? row.exif_raw : {};
-    const capturedAt = row.exif_captured_at || exifRaw.capturedAtIso || exifRaw.capturedAtRaw || null;
+    const hasOffset = Boolean(exifRaw.offsetText) || (typeof exifRaw.capturedAtIso === 'string' && /(?:Z|[+-]\d{2}:?\d{2})$/i.test(exifRaw.capturedAtIso));
+    const rawCaptured = !hasOffset && exifRaw.capturedAtRaw
+      ? exifRaw.capturedAtRaw
+      : (row.exif_captured_at || exifRaw.capturedAtIso || exifRaw.capturedAtRaw || null);
+    const capturedAt = rawCaptured instanceof Date
+      ? (Number.isNaN(rawCaptured.getTime()) ? null : rawCaptured.toISOString())
+      : rawCaptured;
     const localCaptureDate = resolveLocalCaptureDate({
       capturedAt,
       offsetText: exifRaw.offsetText || null,

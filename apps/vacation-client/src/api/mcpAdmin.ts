@@ -150,17 +150,24 @@ export async function fetchMcpChanges(shareToken: string): Promise<McpChangeSet[
   return Array.isArray(data.changes) ? data.changes : [];
 }
 
-export async function approveMcpChange(shareToken: string, changeSetId: string): Promise<{ publishedVacationId?: string }> {
+export async function approveMcpChange(
+  shareToken: string,
+  changeSetId: string,
+  previewHash?: string,
+): Promise<{ publishedVacationId?: string; shareSlug?: string }> {
   const response = await fetch(`/api/mcp/changes/${encodeURIComponent(changeSetId)}/approve`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'content-type': 'application/json', accept: 'application/json' },
-    body: JSON.stringify({ shareToken }),
+    body: JSON.stringify({
+      shareToken,
+      ...(previewHash ? { preview_hash: previewHash } : {}),
+    }),
   });
   if (!response.ok) {
     throw new Error(await readApiError(response, 'Unable to approve this AI change set.'));
   }
-  return (await response.json()) as { publishedVacationId?: string };
+  return (await response.json()) as { publishedVacationId?: string; shareSlug?: string };
 }
 
 export async function declineMcpChange(shareToken: string, changeSetId: string): Promise<void> {

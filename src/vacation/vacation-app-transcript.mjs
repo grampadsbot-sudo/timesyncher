@@ -43,6 +43,25 @@ function mapVacationAppTurnRows(rows, { session, customerId, tripKey, people }) 
   });
 }
 
+const BOUNCED_INVITE_BODY_RE = /\binvite\b[\s\S]{0,120}\b(bounced|bounce|undeliverable|could not be delivered|couldn['’]t deliver|failed to send|couldn['’]t send|unable to send|did not go through|wasn['’]t sent|not sent|invalid email)\b|\b(bounced|bounce|undeliverable|delivery failed)\b[\s\S]{0,120}\binvite\b/i;
+
+function filterCollaboratorVisibleRows(rows) {
+  const failedRequestIds = new Set();
+  for (const row of rows) {
+    const payload = row?.payload && typeof row.payload === 'object' ? row.payload : {};
+    const failed = payload?.turnActionResults?.invite?.ok === false || payload?.inviteActionFailed === true;
+    if (failed && row?.request_id) failedRequestIds.add(String(row.request_id));
+  }
+  return rows.filter((row) => {
+    const payload = row?.payload && typeof row.payload === 'object' ? row.payload : {};
+    if (payload?.turnActionResults?.invite?.ok === false || payload?.inviteActionFailed === true) return false;
+    if (row?.request_id && failedRequestIds.has(String(row.request_id))) return false;
+    const outbound = row?.speaker === 'app' || row?.direction === 'outbound';
+    if (outbound && BOUNCED_INVITE_BODY_RE.test(String(row?.body || ''))) return false;
+    return true;
+  });
+}
+
 export async function loadTripScopedVacationAppTurns(db, session, tripId, { loadTranscriptAuthorPeople }) {
   const partyCustomerId = transcriptCustomerId(session);
   if (!partyCustomerId) return [];
@@ -52,7 +71,7 @@ export async function loadTripScopedVacationAppTurns(db, session, tripId, { load
   const welcomeCustomerId = onboardingWelcomeTranscriptCustomerId(session, seat);
   const rows = tripKey
     ? await db`
-      select speaker, body, channel, payload, direction, received_at, sent_at, created_at
+      select request_id, speaker, body, channel, payload, direction, received_at, sent_at, created_at
       from transcript_turns
       where trip_id = ${tripKey}
         and channel in ('vacation-app', 'vacation_app', 'telegram_vacation_bot', 'telegram_vacation_media')
@@ -60,7 +79,7 @@ export async function loadTripScopedVacationAppTurns(db, session, tripId, { load
       limit 120
     `
     : await db`
-      select speaker, body, channel, payload, direction, received_at, sent_at, created_at
+      select request_id, speaker, body, channel, payload, direction, received_at, sent_at, created_at
       from transcript_turns
       where customer_id = ${partyCustomerId}
         and trip_id is null
@@ -68,12 +87,12 @@ export async function loadTripScopedVacationAppTurns(db, session, tripId, { load
       order by coalesce(received_at, sent_at, created_at) desc nulls last
       limit 120
     `;
-  let merged = rows;
+  let merged = seat ? filterCollaboratorVisibleRows(rows) : rows;
   if (seat && welcomeCustomerId && welcomeCustomerId !== partyCustomerId && tripKey) {
     const welcomeRows = await loadCollaboratorWelcomeTranscriptRows(db, welcomeCustomerId, tripKey);
-    const seen = new Set(rows.map((row) => `${row.body}|${row.received_at}|${row.sent_at}`));
+    const seen = new Set(merged.map((row) => `${row.body}|${row.received_at}|${row.sent_at}`));
     const extra = welcomeRows.filter((row) => !seen.has(`${row.body}|${row.received_at}|${row.sent_at}`));
-    merged = [...rows, ...extra];
+    merged = [...merged, ...extra];
     merged.sort((a, b) => {
       const atA = a.received_at || a.sent_at || a.created_at;
       const atB = b.received_at || b.sent_at || b.created_at;

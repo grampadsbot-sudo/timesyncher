@@ -1,3 +1,4 @@
+import { inferVacationTimeZone } from './mcp-exif.mjs';
 import {
   buildPreviewMediaEntries,
   cleanPreviewText,
@@ -22,7 +23,13 @@ export function buildDraftImportPreview({
   const endDate = previewIsoDateOnly(vacation.end_date);
   const rangeDates = previewDateRange(startDate, endDate);
   const rangeSet = new Set(rangeDates);
-  const vacationTimeZone = cleanPreviewText(vacation.timezone, 80) || 'UTC';
+  const preliminaryItems = collectDraftLandingItems(draft).allItems;
+  const vacationTimeZone = inferVacationTimeZone({
+    timezone: cleanPreviewText(vacation.timezone, 80),
+    timezoneExplicit: Boolean(cleanPreviewText(vacation.timezone, 80)),
+    destination: cleanPreviewText(vacation.destination, 180) || cleanPreviewText(vacation.title, 180),
+    points: preliminaryItems.map((item) => item.location).filter(Boolean),
+  });
   const rawDays = previewList(draft?.days);
   const flights = previewList(draft?.flights);
   const hotels = previewList(draft?.hotels);
@@ -33,7 +40,7 @@ export function buildDraftImportPreview({
   const notes = previewList(draft?.notes);
   const explicitUnscheduled = previewList(draft?.unscheduled_things);
 
-  const { allItems, scheduledItems, unscheduledItems } = collectDraftLandingItems(draft);
+  const { allItems, scheduledItems, unscheduledItems } = collectDraftLandingItems(draft, vacationTimeZone);
   const resolvedDays = rawDays.length
     ? rawDays
     : rangeDates.map((date, idx) => ({ day_number: idx + 1, date, title: '', notes: '' }));

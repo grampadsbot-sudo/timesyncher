@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import { webAccessTokenHash } from '../../src/vacation/web-access.mjs';
 
 function clone(value) {
+  if (value instanceof Date) return new Date(value.getTime());
   if (Buffer.isBuffer(value)) return Buffer.from(value);
   if (value instanceof Uint8Array) return Buffer.from(value);
   if (Array.isArray(value)) return value.map(clone);
@@ -278,6 +279,15 @@ export function createMcpTestDb() {
       return Promise.resolve(found ? [clone(found)] : []);
     }
 
+    if (text.includes('from trips') && text.includes("metadata->>'publicslug' =")) {
+      const found = tables.trips.find((r) => String(r.metadata?.publicSlug || '') === String(values[0]));
+      return Promise.resolve(found ? [clone(found)] : []);
+    }
+
+    if (text.includes('from thing_media_bindings where share_token =')) {
+      return Promise.resolve(tables.thing_media_bindings.filter((r) => String(r.share_token) === String(values[0])).map(clone));
+    }
+
     if (text.startsWith('update trips set metadata = coalesce')) {
       const patch = typeof values[0] === 'string' ? JSON.parse(values[0]) : (values[0] || {});
       const found = tables.trips.find((r) => String(r.id) === String(values[1]));
@@ -371,24 +381,26 @@ export function createMcpTestDb() {
     }
 
     if (text.startsWith('insert into thing_media_bindings')) {
+      const hasExplicitId = /\(\s*id\s*,/.test(text);
+      const off = hasExplicitId ? 1 : 0;
       const row = {
-        id: crypto.randomUUID(),
-        share_token: String(values[0]),
-        trek_trip_id: values[1],
-        trek_place_id: values[2],
-        day_number: values[3] ?? null,
-        thing_name: values[4] || null,
-        caption: values[5] || null,
-        media_kind: String(values[6] || 'photo'),
-        mime_type: String(values[7] || ''),
-        original_name: String(values[8] || ''),
-        file_size_bytes: Number(values[9] || 0),
-        public_url: String(values[10] || ''),
-        storage_provider: String(values[11] || 'neon'),
-        storage_pathname: values[12] || null,
+        id: hasExplicitId ? String(values[0]) : crypto.randomUUID(),
+        share_token: String(values[off]),
+        trek_trip_id: values[off + 1],
+        trek_place_id: values[off + 2],
+        day_number: values[off + 3] ?? null,
+        thing_name: values[off + 4] || null,
+        caption: values[off + 5] || null,
+        media_kind: String(values[off + 6] || 'photo'),
+        mime_type: String(values[off + 7] || ''),
+        original_name: String(values[off + 8] || ''),
+        file_size_bytes: Number(values[off + 9] || 0),
+        public_url: String(values[off + 10] || ''),
+        storage_provider: String(values[off + 11] || 'neon'),
+        storage_pathname: values[off + 12] || null,
         trek_apply_status: 'applied',
-        metadata: clone(values[13] || {}),
-        file_bytes: values[14] ? Buffer.from(values[14]) : null,
+        metadata: clone(values[off + 13] || {}),
+        file_bytes: values[off + 14] ? Buffer.from(values[off + 14]) : null,
         created_at: nowIso,
       };
       tables.thing_media_bindings.push(row);

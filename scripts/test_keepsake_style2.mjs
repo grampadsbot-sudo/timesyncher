@@ -720,7 +720,7 @@ assert.deepEqual(KEEPSAKE_LIST_MINIMUMS, {
 });
 const minimumsSource = await readFile(new URL('../src/vacation/keepsake-list-minimums.mjs', import.meta.url), 'utf8');
 assert.doesNotMatch(minimumsSource, /\b(?:KEEPSAKE_LIST_FILL|BIG_ISLAND_LIST_FILL|KEEPSAKE_FILL_DETAILS|BIG_ISLAND_FILL_DETAILS|LIVE_TAB_FILL|FILL_BUCKET_META|catalogForShared|padKeepsakeListNames|padLiveTabRows)\b/);
-assert.match(patchedAe, /Re\.includes\("restaurant"\)\?"restaurant":Re\.includes\("hotel"\)\|\|Re\.includes\("lodging"\)\|\|Re\.includes\("accommodation"\)\|\|Re\.includes\("resort"\)\?"hotel":Re\.includes\("car"\)\|\|Re\.includes\("rental"\)\?"car"/);
+assert.match(patchedAe, /Re\.includes\("restaurant"\)\?"restaurant":Re\.includes\("hotel"\)\|\|Re\.includes\("lodging"\)\|\|Re\.includes\("accommodation"\)\|\|Re\.includes\("resort"\)\?"hotel":\/\\bcar\\b\/\.test\(Re\)\|\|Re\.includes\("rental"\)\?"car"/);
 assert.match(patchedAe, /tsPad=\(rows\)=>rows/);
 assert.doesNotMatch(patchedAe, /__tsLiveFill:1/);
 assert.match(patchedAe, /Qa\.flatMap\(di=>Ci\(di\)\)/);
@@ -862,7 +862,7 @@ assert.doesNotMatch(patchedAe, /\.style2-details\{display:grid;grid-template-col
 const livePatched = await readFile(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
 assertPatchedStyleTwo(livePatched);
 assert.equal(livePatched.includes('8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y'), false);
-assert.equal(livePatched.includes('children:"Trip View"'), true);
+assert.equal(livePatched.includes('children:"Vacation View"'), true);
 assertStyleTwoPatchParses(livePatched);
 await assertTemporaryJavaScriptParses(livePatched, 'patched TREK bundle failed node --check');
 assert.equal(

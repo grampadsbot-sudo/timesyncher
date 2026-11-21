@@ -151,7 +151,7 @@ try {
       if (!btn) throw new Error('Config Options button missing');
       btn.click();
     });
-    await page.waitForFunction(() => /Trip View/i.test(document.querySelector('[data-trip-view-root]')?.innerText || ''), {
+    await page.waitForFunction(() => /Vacation View/i.test(document.querySelector('[data-trip-view-root]')?.innerText || ''), {
       timeout: 120000,
     });
 
