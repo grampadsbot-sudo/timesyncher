@@ -11,6 +11,7 @@ import { redactText } from './redact.mjs';
 import { resolveDriveSha, stampMissingDriveSha, stampRunReplyBackend } from './drive-build.mjs';
 import { unstoredTurnNote } from './unstored-turn.mjs';
 import { loadHostMediaBindToken } from '../host/vk_ship_dry_env.mjs';
+import { attachSsrToKeepsakeMetadata, recordDialogPdfStatus } from '../customer_suite/ssr/dialog-hook.mjs';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
 
@@ -51,12 +52,45 @@ function notePdf(text) {
   return Buffer.from(body);
 }
 
-export async function renderDialog({ token, outDir, secrets, buildSha = '', origin = '', fetchImpl, loadTranscript, replyBackend = '', spawnImpl = spawnSync } = {}) {
+export async function renderDialog({
+  token,
+  outDir,
+  secrets,
+  buildSha = '',
+  origin = '',
+  fetchImpl,
+  loadTranscript,
+  replyBackend = '',
+  spawnImpl = spawnSync,
+  ssrSummary = null,
+  skipDialogPdf = false,
+  skipReason = '',
+} = {}) {
   const out = path.join(outDir, 'dialog.pdf');
   const jsonl = path.join(outDir, 'live-transcript.jsonl');
   const timing = path.join(outDir, 'timing.json');
   const state = path.join(outDir, 'qa-input.json');
   const transcriptFile = path.join(outDir, 'dialog-transcript.json');
+  if (skipDialogPdf) {
+    fs.mkdirSync(outDir, { recursive: true });
+    const dialogPdfStatus = recordDialogPdfStatus({
+      generated: false,
+      pdfPath: out,
+      skipReason: skipReason || 'dialog-pdf-skipped',
+      ssrAggregate: ssrSummary,
+    });
+    fs.writeFileSync(path.join(outDir, 'dialog-pdf-status.json'), `${JSON.stringify(dialogPdfStatus, null, 2)}\n`);
+    return {
+      ok: false,
+      skipped: true,
+      detail: dialogPdfStatus.skip_reason,
+      dialogPdfStatus,
+      transcript: null,
+      pdfText: '',
+      refusals: [],
+      out,
+    };
+  }
   const sha = await resolveDriveSha(buildSha, origin, fetchImpl);
   let doc;
   try {
@@ -70,7 +104,9 @@ export async function renderDialog({ token, outDir, secrets, buildSha = '', orig
     return { ok: false, detail: redactText(error?.message || error, secrets), transcript: null, pdfText: '', refusals: [], out };
   }
   fs.mkdirSync(outDir, { recursive: true });
-  fs.writeFileSync(transcriptFile, JSON.stringify(stampRunReplyBackend(stampMissingDriveSha(doc, sha), replyBackend)));
+  const stamped = stampRunReplyBackend(stampMissingDriveSha(doc, sha), replyBackend);
+  const payload = ssrSummary ? { ...stamped, ssrSummary } : stamped;
+  fs.writeFileSync(transcriptFile, JSON.stringify(payload));
   const result = spawnImpl(process.execPath, [
     path.join(root, 'scripts/live-transcript-dialog-pdf.mjs'),
     '--transcript', transcriptFile,
@@ -94,9 +130,11 @@ export async function renderDialog({ token, outDir, secrets, buildSha = '', orig
   }
   const { extractPdfText } = await import('../live-transcript-dialog-pdf.mjs');
   const pdfText = nonEmpty(out) ? extractPdfText(fs.readFileSync(out)) : '';
+  const generated = parsed.ok === true && nonEmpty(out);
   return {
-    ok: parsed.ok === true && nonEmpty(out),
+    ok: generated,
     detail: parsed.ok === true ? 'ok' : detail,
+    dialogPdfStatus: recordDialogPdfStatus({ generated, pdfPath: out, skipReason: generated ? '' : detail, ssrAggregate: ssrSummary }),
     transcript: transcriptFromJsonl(jsonl),
     pdfText,
     refusals: parsed.contentFails || [],
@@ -205,14 +243,18 @@ async function readKeptResponse(response) {
   };
 }
 
-export async function fetchKeepsake({ origin, shareToken, fetchImpl, outDir }) {
+export async function fetchKeepsake({ origin, shareToken, fetchImpl, outDir, ssrRecord = null } = {}) {
   const file = path.join(outDir, 'keepsake.pdf');
   const pdfUrl = new URL(`/api/pdf/shared/${encodeURIComponent(shareToken)}/report/complete-list.pdf`, origin);
   const response = await fetchImpl(pdfUrl, { redirect: 'manual', headers: { accept: 'application/pdf' } });
   const read = await readKeptResponse(response);
   const decision = keepsakeDecision(read);
-  if (!decision.ok) return { ok: false, file, detail: decision.detail };
+  if (!decision.ok) {
+    if (ssrRecord) attachSsrToKeepsakeMetadata({ outDir, keepsakePath: '', ssrRecord, keepsakeStatus: 'skipped', keepsakeNote: decision.detail });
+    return { ok: false, file, detail: decision.detail };
+  }
   fs.writeFileSync(file, read.bytes);
+  if (ssrRecord) attachSsrToKeepsakeMetadata({ outDir, keepsakePath: file, ssrRecord, keepsakeStatus: 'shown', keepsakeNote: decision.detail });
   return { ok: true, file, detail: decision.detail };
 }
 

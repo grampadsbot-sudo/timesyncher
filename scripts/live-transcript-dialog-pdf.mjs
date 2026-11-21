@@ -27,6 +27,7 @@ import { priceAnswered } from '../src/vacation/seat-price.mjs';
 import { DIALOG_TEST_FINGERPRINT, INTERIM_MODEL, bakeoffTierModels, isBakeoffModelId } from './vacation-app-reply-rules.mjs';
 import { pdfTextHasSha, readTipSha } from './void-stale-build.mjs';
 import { buildUsedVsTipLine, driveBanner, driveShaFromTranscript, isUntrustedPack } from './build-used-vs-tip.mjs';
+import { attachSsrToDialogPack } from './customer_suite/ssr/dialog-hook.mjs';
 
 const V6_GPT5_MINI_P50_MS = 28834;
 const V6_GPT5_MINI_P95_MS = 39693;
@@ -608,7 +609,7 @@ export function liveV7Pack(doc, shape) {
   const wall = shape.summary.sessionE2eMs ?? 'n/a';
   timingRows.push(['v7 real per-turn', 'latencyMs', String(realTurn.count), String(realTurn.p50), String(realTurn.p95), String(realTurn.mean), String(realTurn.max)]);
   const name = String(doc.targetPerson || 'customer').toUpperCase();
-  return {
+  return attachSsrToDialogPack({
     title,
     deploy_banner: String(doc.deployBanner || '').trim(),
     build_vs_tip: String(doc.buildVsTip || '').trim(),
@@ -689,7 +690,7 @@ export function liveV7Pack(doc, shape) {
         }) : '',
       };
     }),
-  };
+  }, doc.ssrSummary || doc.ssr || null);
 }
 
 function jevRanLine(turn) {
@@ -833,7 +834,6 @@ export function renderLiveTranscriptPdf(doc, options = {}) {
   }
   return pdf;
 }
-
 
 export function extractPdfText(buffer) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'live-pdf-text-'));

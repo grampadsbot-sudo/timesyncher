@@ -8,6 +8,7 @@ import { harnessTag } from './harness/protected.mjs';
 import { liveOptions } from './harness/runtime.mjs';
 import { loadStorySchema, validateStory, validateWave } from './harness/schema.mjs';
 import { runWave } from './harness/wave.mjs';
+import { createHarnessSsrHook } from './customer_suite/ssr/hooks.mjs';
 
 function value(flag) {
   const index = process.argv.indexOf(flag);
@@ -64,6 +65,8 @@ if (!hostEnvReady()) {
 }
 
 const sha = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' });
+const ssrFile = value('--ssr-reactions');
+const ssrReactions = ssrFile ? JSON.parse(fs.readFileSync(ssrFile, 'utf8')) : null;
 const result = await runWave(stories, {
   ...liveOptions(process.env),
   runId,
@@ -72,6 +75,7 @@ const result = await runWave(stories, {
   continueOnFail: has('--continue-on-fail'),
   keep: has('--keep'),
   buildSha: String(sha.stdout || '').trim(),
+  ...(ssrReactions ? { ssrHook: createHarnessSsrHook({ reactionsByStory: ssrReactions }) } : {}),
 });
 const failed = result.cards.some((card) => card.verdict !== 'PASS');
 process.stdout.write(`${JSON.stringify({ run_id: runId, stories: result.cards.length, failed })}\n`);
