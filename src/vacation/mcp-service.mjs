@@ -10,6 +10,7 @@ import { applyApprovedDraftImport, applyApprovedTargetedEdit } from './mcp-apply
 import { asArray, asObject, readLiveVacationDocument, vacationShareSlugForRow } from './mcp-read.mjs';
 import { loadScopedChangeSet, loadTripContext } from './mcp-media-service.mjs';
 import { invalidateSharedUpstreamCacheForSlug } from './shared-trip-upstream-cache.mjs';
+import { postStagedPreviewToChat, syncApprovalCardStatusInChat } from './mcp-chat-import.mjs';
 
 const WHOLESALE_OVERWRITE_KEYS = new Set([
   'replace_all', 'replace', 'overwrite', 'vacation', 'days',
@@ -202,6 +203,13 @@ export async function handleCommitImport(db, tokenRecord, args = {}) {
       updated_at = now()
     where id = ${changeSet.id}
   `;
+  await postStagedPreviewToChat(db, {
+    tokenRecord,
+    changeSetId: changeSet.id,
+    kind: changeSet.kind,
+    preview: previewResult.preview,
+    summary: previewResult.preview?.summary_text || changeSet.summary,
+  });
   return {
     ok: true,
     draft_id: String(changeSet.id),
@@ -296,6 +304,13 @@ export async function handleUpdateVacation(db, tokenRecord, args = {}) {
     )
     returning id, status
   `;
+  await postStagedPreviewToChat(db, {
+    tokenRecord,
+    changeSetId: rows[0].id,
+    kind: 'targeted_edit',
+    preview,
+    summary: preview.summary_text,
+  });
   return {
     ok: true,
     change_set_id: String(rows[0].id),
@@ -412,6 +427,7 @@ export async function approveVacationChangeSet(db, {
   const scopeRows = await db`select id, metadata from trips where id = ${tripId} limit 1`;
   const scopeSlug = scopeRows[0] ? vacationShareSlugForRow(scopeRows[0]) : '';
   if (scopeSlug && scopeSlug !== result.shareSlug) invalidateSharedUpstreamCacheForSlug(scopeSlug);
+  await syncApprovalCardStatusInChat(db, { tripId, changeSetId: changeSet.id, status: 'approved' });
   return {
     ok: true,
     id: String(changeSet.id),
@@ -442,5 +458,6 @@ export async function declineVacationChangeSet(db, { tripId, changeSetId, actorE
       updated_at = now()
     where id = ${changeSet.id}
   `;
+  await syncApprovalCardStatusInChat(db, { tripId, changeSetId: changeSet.id, status: 'declined' });
   return { ok: true, id: String(changeSet.id), status: 'declined', reviewedBy: reviewer };
 }

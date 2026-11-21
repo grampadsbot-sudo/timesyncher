@@ -32,8 +32,20 @@ function generateRawMcpToken() {
   return `vkm_${crypto.randomBytes(24).toString('base64url')}`;
 }
 
+async function runIdempotentDdl(step) {
+  try {
+    await step();
+  } catch (error) {
+    const code = String(error?.code || '');
+    const msg = String(error?.message || '');
+    if (code === '42710' || /constraint.*already exists/i.test(msg)) return;
+    if (code === '23505' && /pg_type_typname_nsp_index/i.test(msg)) return;
+    throw error;
+  }
+}
+
 export async function ensureVacationMcpSchema(db) {
-  await db`
+  await runIdempotentDdl(() => db`
     create table if not exists vacation_mcp_tokens (
       id uuid primary key default gen_random_uuid(),
       trip_id uuid not null references trips(id) on delete cascade,
@@ -52,8 +64,8 @@ export async function ensureVacationMcpSchema(db) {
       check (role in ('owner', 'collaborator')),
       check (status in ('active', 'revoked'))
     )
-  `;
-  await db`
+  `);
+  await runIdempotentDdl(() => db`
     create table if not exists vacation_mcp_change_sets (
       id uuid primary key default gen_random_uuid(),
       scope_trip_id uuid not null references trips(id) on delete cascade,
@@ -76,8 +88,8 @@ export async function ensureVacationMcpSchema(db) {
       check (apply_mode in ('create_new', 'populate_scoped', 'targeted_edit')),
       check (status in ('draft', 'pending_approval', 'approved', 'declined'))
     )
-  `;
-  await db`
+  `);
+  await runIdempotentDdl(() => db`
     create table if not exists vacation_mcp_draft_media (
       id uuid primary key default gen_random_uuid(),
       scope_trip_id uuid not null references trips(id) on delete cascade,
@@ -109,15 +121,15 @@ export async function ensureVacationMcpSchema(db) {
       check (upload_status in ('signed', 'uploaded', 'finalized', 'published', 'expired')),
       check (assignment_bucket in ('day', 'thing', 'unassigned'))
     )
-  `;
-  await db`
+  `);
+  await runIdempotentDdl(() => db`
     create table if not exists vacation_media_usage (
       trip_id uuid primary key references trips(id) on delete cascade,
       total_bytes bigint not null default 0,
       media_count integer not null default 0,
       updated_at timestamptz not null default now()
     )
-  `;
+  `);
 }
 
 function publicTokenView(row) {
@@ -161,6 +173,7 @@ export async function createMcpToken(db, {
   role = 'collaborator',
   expiresAt = null,
   expiresInDays = null,
+  metadata = {},
   now = () => new Date(),
   env = process.env,
 }) {
@@ -173,14 +186,15 @@ export async function createMcpToken(db, {
   const tokenHash = hashMcpToken(rawToken, env);
   const tokenPrefix = rawToken.slice(0, 10);
   const effectiveExpiresAt = resolveTokenExpiry({ expiresAt, expiresInDays, now });
+  const safeMeta = metadata && typeof metadata === 'object' && !Array.isArray(metadata) ? metadata : {};
   const rows = await db`
     insert into vacation_mcp_tokens (
       trip_id, owner_customer_id, created_by_email, label, role,
-      token_hash, token_prefix, status, expires_at
+      token_hash, token_prefix, status, expires_at, metadata
     ) values (
       ${scopedTripId}, ${ownerCustomerId || null}, ${cleanText(createdByEmail, 180) || null},
       ${normalizedLabel}, ${normalizedRole}, ${tokenHash}, ${tokenPrefix},
-      'active', ${effectiveExpiresAt}
+      'active', ${effectiveExpiresAt}, ${safeMeta}
     )
     returning *
   `;
@@ -231,7 +245,7 @@ export async function authenticateMcpToken(db, rawToken, { env = process.env, no
   await ensureVacationMcpSchema(db);
   const tokenHash = hashMcpToken(cleaned, env);
   const rows = await db`
-    select id, trip_id, owner_customer_id, created_by_email, label, role, status, expires_at
+    select id, trip_id, owner_customer_id, created_by_email, label, role, status, expires_at, metadata
     from vacation_mcp_tokens
     where token_hash = ${tokenHash}
     limit 1
@@ -259,6 +273,7 @@ export async function authenticateMcpToken(db, rawToken, { env = process.env, no
     createdByEmail: row.created_by_email || null,
     label: String(row.label || 'AI access'),
     role: String(row.role || 'collaborator'),
+    metadata: row.metadata && typeof row.metadata === 'object' ? row.metadata : {},
   };
 }
 

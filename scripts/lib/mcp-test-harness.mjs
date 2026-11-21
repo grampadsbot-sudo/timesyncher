@@ -28,16 +28,20 @@ export function createMcpTestDb() {
     vacation_mcp_change_sets: [],
     vacation_mcp_draft_media: [],
     vacation_media_usage: [],
+    transcript_turns: [],
+    vacation_collaborators: [],
+    vacation_collaborator_invites: [],
+    onboarding_sessions: [],
   };
 
   function sqlTag(strings, ...values) {
     const text = strings.join(' ? ').replace(/\s+/g, ' ').trim().toLowerCase();
     const nowIso = new Date().toISOString();
 
-    if (/^(create|alter)\s/.test(text)) return Promise.resolve([]);
+    if (/^(create|alter|do)\s/.test(text)) return Promise.resolve([]);
 
     if (text.startsWith('insert into vacation_mcp_tokens')) {
-      const row = { id: crypto.randomUUID(), trip_id: String(values[0]), owner_customer_id: values[1] ? String(values[1]) : null, created_by_email: values[2] || null, label: String(values[3] || 'AI access'), role: String(values[4] || 'collaborator'), token_hash: String(values[5]), token_prefix: String(values[6]), status: 'active', created_at: nowIso, last_used_at: null, revoked_at: null, expires_at: values[7] || null, metadata: {} };
+      const row = { id: crypto.randomUUID(), trip_id: String(values[0]), owner_customer_id: values[1] ? String(values[1]) : null, created_by_email: values[2] || null, label: String(values[3] || 'AI access'), role: String(values[4] || 'collaborator'), token_hash: String(values[5]), token_prefix: String(values[6]), status: 'active', created_at: nowIso, last_used_at: null, revoked_at: null, expires_at: values[7] || null, metadata: clone(values[8] || {}) };
       tables.vacation_mcp_tokens.push(row);
       return Promise.resolve([clone(row)]);
     }
@@ -410,6 +414,21 @@ export function createMcpTestDb() {
     if (text.includes('from thing_media_bindings where share_token =')) {
       return Promise.resolve(tables.thing_media_bindings.filter((r) => String(r.share_token) === String(values[0])).map(clone));
     }
+
+    if (text.startsWith('insert into transcript_turns')) {
+      const row = { id: crypto.randomUUID(), customer_id: values[0] ? String(values[0]) : null, trip_id: values[1] ? String(values[1]) : null, request_id: null, speaker: text.includes("'customer'") ? 'customer' : 'app', channel: 'vacation-app', body: String(values[2] || ''), payload: clone(values[3] || {}), direction: text.includes("'inbound'") ? 'inbound' : 'outbound', received_at: text.includes('received_at') ? nowIso : null, sent_at: text.includes('sent_at') ? nowIso : null, created_at: nowIso };
+      tables.transcript_turns.push(row);
+      return Promise.resolve([clone(row)]);
+    }
+    if (text.startsWith('update transcript_turns') && text.includes('aiapprovalcard')) {
+      const nextStatus = JSON.parse(String(values[0]));
+      for (const row of tables.transcript_turns) if (String(row.trip_id) === String(values[1]) && String(row.payload?.aiApprovalCard?.changeSetId || '') === String(values[2])) row.payload.aiApprovalCard.status = nextStatus;
+      return Promise.resolve([]);
+    }
+    if (text.includes('from transcript_turns') && text.includes('welcomeaudience')) return Promise.resolve([]);
+    if (text.includes('from transcript_turns') && text.includes('where trip_id =')) return Promise.resolve(tables.transcript_turns.filter((r) => String(r.trip_id) === String(values[0])).reverse().map(clone));
+    if (text.includes('from vacation_collaborators')) return Promise.resolve(tables.vacation_collaborators.map(clone));
+    if (text.includes('from vacation_collaborator_invites')) return Promise.resolve(tables.vacation_collaborator_invites.map(clone));
 
     throw new Error(`Unhandled test SQL: ${text}`);
   }

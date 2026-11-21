@@ -6,6 +6,7 @@ import {
 import { appReplyTelemetry } from './reply-telemetry.mjs';
 import { vacationAppTurnPayloadForClient } from './reply-ship.mjs';
 import { transcriptAuthorMissingError, turnAuthorLabel } from './turn-author.mjs';
+import { isTurnVisibleToViewer } from './mcp-chat-import.mjs';
 
 function mapVacationAppTurnRows(rows, { session, customerId, tripKey, people }) {
   const labelSession = { ...session, viewerId: session.viewerId || session.customer_id || null };
@@ -87,7 +88,7 @@ export async function loadTripScopedVacationAppTurns(db, session, tripId, { load
       order by coalesce(received_at, sent_at, created_at) desc nulls last
       limit 120
     `;
-  let merged = seat ? filterCollaboratorVisibleRows(rows) : rows;
+  let merged = (seat ? filterCollaboratorVisibleRows(rows) : rows).filter((row) => isTurnVisibleToViewer(row, session, seat));
   if (seat && welcomeCustomerId && welcomeCustomerId !== partyCustomerId && tripKey) {
     const welcomeRows = await loadCollaboratorWelcomeTranscriptRows(db, welcomeCustomerId, tripKey);
     const seen = new Set(merged.map((row) => `${row.body}|${row.received_at}|${row.sent_at}`));

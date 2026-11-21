@@ -114,14 +114,14 @@ export function buildDraftImportPreview({
 
   const unassignedMedia = mediaEntries.filter((item) => item.assignment_bucket === 'unassigned');
   if (unassignedMedia.length) {
-    missing.push(`${unassignedMedia.length} media file(s) had no matching EXIF date and will stay in the Unassigned bucket.`);
+    missing.push(`${unassignedMedia.length} photo or video item(s) could not be matched to a vacation day and will appear in Not placed yet.`);
   }
   const pendingUploadMedia = mediaEntries.filter((item) => item.upload_status === 'signed');
   if (pendingUploadMedia.length) {
     missing.push(`${pendingUploadMedia.length} signed media upload(s) have not been uploaded yet.`);
   }
 
-  const { days: landingDays, unscheduledThings } = groupLandingDaysAndUnscheduled({
+  const { days: landingDays, unscheduledThings, unplacedMedia } = groupLandingDaysAndUnscheduled({
     resolvedDays,
     scheduledItems,
     unscheduledItems,
@@ -194,6 +194,7 @@ export function buildDraftImportPreview({
     days: landingDays,
     unscheduled_things: unscheduledThings,
     media: mediaEntries,
+    unplaced_media: unplacedMedia,
     media_count: mediaEntries.length,
     total_bytes: totalBytes,
     will_create: willCreate,
@@ -373,7 +374,7 @@ export function buildTargetedEditPreview({
     vacationTimeZone: workingVacation.timezone,
   });
 
-  const { days: landingDays, unscheduledThings } = groupLandingDaysAndUnscheduled({
+  const { days: landingDays, unscheduledThings, unplacedMedia } = groupLandingDaysAndUnscheduled({
     resolvedDays: baseDays,
     scheduledItems: workingItems.filter((item) => item.scheduled),
     unscheduledItems: workingItems.filter((item) => !item.scheduled),
@@ -420,6 +421,7 @@ export function buildTargetedEditPreview({
     days: landingDays,
     unscheduled_things: unscheduledThings,
     media: mediaEntries,
+    unplaced_media: unplacedMedia,
     media_count: mediaEntries.length,
     total_bytes: totalBytes,
     will_add: willAdd,

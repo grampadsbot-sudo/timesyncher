@@ -85,12 +85,8 @@ import { blockVacationAppReplyIdCitation } from '../src/vacation/reply-id-citati
 import { loadSessionOwnerReplyPlan } from '../src/vacation/reply-plan-entitlement.mjs';
 import { scheduleChatThing } from '../src/vacation/chat-thing-schedule.mjs';
 import { resolveVacationAppQueueIntake } from '../src/vacation/vacation-app-queue-intake.mjs';
-import {
-  refreshSearchProgressFromTripThings,
-  searchProgressForClient,
-  searchProgressForVacationAppTrip,
-  syncSearchProgressStage,
-} from '../src/vacation/search-progress.mjs';
+import { handleAiImportChatTurn, isAiImportChatRequest } from '../src/vacation/mcp-chat-import.mjs';
+import { refreshSearchProgressFromTripThings, searchProgressForClient, searchProgressForVacationAppTrip, syncSearchProgressStage } from '../src/vacation/search-progress.mjs';
 
 let vacationAppDatabase = null;
 
@@ -548,13 +544,9 @@ async function queueVacationAppTurn(db, session, trip, body, intakePrefill = nul
   if (!seatFromSession(session)) await ensureOnboardingOpener(db, session, trip || null);
   const welcomeMs = Date.now() - welcomeStarted;
   const requestText = cleanText(body.text || body.message, 12000);
+  if (isAiImportChatRequest(requestText)) return handleAiImportChatTurn(db, { session, trip, requestText, httpReq, env: process.env });
   const intake = await resolveVacationAppQueueIntake(requestText, intakePrefill, process.env);
-  return runQueueVacationAppTurn(db, session, trip, body, queueVacationAppHooks(), {
-    requestText,
-    ...intake,
-    welcomeMs,
-    httpReq,
-  });
+  return runQueueVacationAppTurn(db, session, trip, body, queueVacationAppHooks(), { requestText, ...intake, welcomeMs, httpReq });
 }
 
 function chatSaveMetadata(thing, scheduled) {
@@ -1061,6 +1053,8 @@ async function handleVacationApp(req, res, db, url) {
       `;
       return sendJson(res, 201, { ok: true, status: 'joined', reply: null, event: event.payload.event });
     }
+    if (!seat && selected?.id) await setVacationAppOwnerWebAccessCookie(db, req, res, { session, tripId: selected.id });
+    if (seat && selected?.id) await setVacationAppCollaboratorWebAccessCookie(db, req, res, { session, seat, tripId: selected.id });
     const queueStarted = Date.now();
     const queued = await queueVacationAppTurn(db, session, selected, body, intakePrefill, req);
     const queueTurnMs = Date.now() - queueStarted;

@@ -40,19 +40,82 @@ export function formatMediaMatchLabel(media) {
   return parts.join(' · ');
 }
 
+function normalizePreviewMediaEntry(media) {
+  if (!media || typeof media !== 'object') return null;
+  const mediaId = String(media.media_id || media.id || '').trim();
+  const mime = String(media.mime_type || media.mimeType || '').trim();
+  const url = String(media.url || media.preview_url || media.public_url || '').trim()
+    || (mediaId ? `/api/mcp/media/${encodeURIComponent(mediaId)}` : '');
+  const isVideo = String(media.media_kind || media.kind || '').toLowerCase() === 'video'
+    || mime.toLowerCase().startsWith('video/')
+    || /\.(mp4|mov|webm|m4v)(\?|#|$)/i.test(url);
+  const posterUrl = String(media.poster_url || media.posterUrl || media.thumbnail_url || '').trim();
+  return {
+    ...media,
+    media_id: mediaId || url,
+    media_kind: isVideo ? 'video' : 'photo',
+    mime_type: mime || (isVideo ? 'video/mp4' : 'image/jpeg'),
+    url,
+    preview_url: url,
+    ...(posterUrl && posterUrl !== url ? { poster_url: posterUrl } : {}),
+  };
+}
+
+function isDayOnlyMediaEntry(media) {
+  if (!media || typeof media !== 'object') return false;
+  if (media.attached_thing_ref || media.target_thing_ref || media.attached_thing_title) return false;
+  if (media.assignment_bucket === 'thing') return false;
+  return Boolean(media.attached_day_date || media.assigned_day_date || media.attached_day_number || media.assigned_day_number || media.assignment_bucket === 'day');
+}
+
+function isUnplacedMediaEntry(media) {
+  if (!media || typeof media !== 'object') return false;
+  if (media.assignment_bucket === 'unassigned') return true;
+  return !media.attached_thing_ref
+    && !media.target_thing_ref
+    && !media.attached_thing_title
+    && !media.attached_day_date
+    && !media.assigned_day_date;
+}
+
 export function extractApprovalPreviewView(changeSet) {
   const preview = changeSet?.preview || {};
-  const days = Array.isArray(preview.days)
+  const rawDays = Array.isArray(preview.days)
     ? preview.days
     : (Array.isArray(preview.will_create?.days) ? preview.will_create.days : []);
-  const unscheduledThings = Array.isArray(preview.unscheduled_things)
+  const rawUnscheduled = Array.isArray(preview.unscheduled_things)
     ? preview.unscheduled_things
     : (Array.isArray(preview.will_create?.unscheduled_things) ? preview.will_create.unscheduled_things : []);
-  const media = Array.isArray(preview.media)
+  const rawMedia = Array.isArray(preview.media)
     ? preview.media
     : (Array.isArray(preview.will_create?.media)
       ? preview.will_create.media
       : (Array.isArray(preview.will_attach_media) ? preview.will_attach_media : []));
+  const media = rawMedia.map(normalizePreviewMediaEntry).filter(Boolean);
+  const days = rawDays.map((day) => {
+    const items = Array.isArray(day?.items)
+      ? day.items.map((item) => ({
+        ...item,
+        media: (Array.isArray(item?.media) ? item.media : []).map(normalizePreviewMediaEntry).filter(Boolean),
+      }))
+      : [];
+    const rawDayOnly = Array.isArray(day?.day_media)
+      ? day.day_media
+      : (Array.isArray(day?.media) ? day.media.filter(isDayOnlyMediaEntry) : []);
+    return {
+      ...day,
+      items,
+      day_media: rawDayOnly.map(normalizePreviewMediaEntry).filter(Boolean),
+    };
+  });
+  const unscheduledThings = rawUnscheduled.map((item) => ({
+    ...item,
+    media: (Array.isArray(item?.media) ? item.media : []).map(normalizePreviewMediaEntry).filter(Boolean),
+  }));
+  const rawUnplaced = Array.isArray(preview.unplaced_media)
+    ? preview.unplaced_media
+    : media.filter(isUnplacedMediaEntry);
+  const unplacedMedia = rawUnplaced.map(normalizePreviewMediaEntry).filter(Boolean);
   const totalBytes = Number.isFinite(Number(preview.total_bytes))
     ? Number(preview.total_bytes)
     : media.reduce((sum, item) => sum + Number(item?.bytes || 0), 0);
@@ -62,6 +125,7 @@ export function extractApprovalPreviewView(changeSet) {
     days,
     unscheduledThings,
     media,
+    unplacedMedia,
     totalBytes,
   };
 }
@@ -84,8 +148,9 @@ export function previewSummaryBullets(changeSet) {
     for (const day of preview.day_updates || []) {
       lines.push(`Update day ${day.day_date || ''}`);
     }
-    for (const media of preview.will_attach_media || []) {
-      lines.push(`Attach media: ${media.filename || media.media_id}`);
+    const attachMedia = Array.isArray(preview.will_attach_media) ? preview.will_attach_media : [];
+    if (attachMedia.length > 0) {
+      lines.push(`Photos & videos: ${attachMedia.length}`);
     }
     return lines;
   }

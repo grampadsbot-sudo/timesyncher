@@ -161,6 +161,52 @@ body {
   cursor: pointer;
 }
 
+.tsv-bottom-grid-wrap {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding: 18px 0 24px;
+}
+
+.tsv-bottom-grid-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.tsv-bottom-grid-menu {
+  position: absolute;
+  bottom: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 210px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 8px;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.18);
+}
+
+.tsv-bottom-grid-section {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .tsv-header-config-row input {
   margin: 0;
 }
@@ -1900,6 +1946,21 @@ html[data-ts-keepsake] #root {
   border-radius: 8px;
   padding: 12px;
   background: var(--card);
+  color: var(--text);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.tsv-mcp-preview code {
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+.tsv-mcp-day-media-label {
+  margin: 6px 0 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
 }
 
 .tsv-mcp-subheading {
@@ -1998,4 +2059,142 @@ html[data-ts-keepsake] #root {
   padding: 8px 10px;
   font-size: 12px;
   background: var(--card);
+}
+
+.tsv-mcp-thumb-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.tsv-mcp-thumb {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  padding: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #0f172a;
+  cursor: pointer;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tsv-mcp-thumb-media {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
+.tsv-mcp-thumb-play {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.78);
+  color: #ffffff;
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.tsv-mcp-viewer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: #0f172a;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: stretch;
+  touch-action: none;
+}
+
+.tsv-mcp-viewer-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 12px 12px;
+}
+
+.tsv-mcp-viewer-media {
+  max-width: 96vw;
+  max-height: calc(100vh - 132px);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.tsv-mcp-viewer-close,
+.tsv-mcp-viewer-nav {
+  position: absolute;
+  z-index: 4;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  background: rgba(15, 23, 42, 0.78);
+  color: #ffffff;
+  font-size: 22px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tsv-mcp-viewer-close {
+  top: 12px;
+  right: 12px;
+}
+
+.tsv-mcp-viewer-nav {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.tsv-mcp-viewer-nav.is-prev {
+  left: 12px;
+}
+
+.tsv-mcp-viewer-nav.is-next {
+  right: 12px;
+}
+
+.tsv-mcp-viewer-counter {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 3;
+  color: #f8fafc;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+.tsv-mcp-viewer-caption {
+  flex: 0 0 auto;
+  width: 100%;
+  padding: 12px 16px 18px;
+  color: #f8fafc;
+  font-size: 14px;
+  text-align: center;
+  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.65));
 }
