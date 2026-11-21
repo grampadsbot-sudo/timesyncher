@@ -30,7 +30,9 @@ const system = replyRulesSystem(rules, 'Maui', 'forbidden', true, 'please invite
   planOwned: true,
 });
 assert.match(system, /pending collaborator invite|pending invite/i);
-assert.match(system, /not on the trip yet/i);
+assert.match(system, /not on the vacation yet/i);
+assert.match(system, /Always say "vacation", never "trip"/);
+assert.doesNotMatch(system, /not on the trip yet/i);
 
 const honest = 'I emailed Kim at kim@example.com — the invite is pending until they accept.';
 assert.equal(replyActionClaimReason(honest, inviteOk, { activeCollaborators: [], turnInviteeNames: ['Kim'] }), '');
