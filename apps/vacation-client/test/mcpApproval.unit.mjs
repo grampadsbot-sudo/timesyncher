@@ -6,7 +6,11 @@ import {
   extractApprovalPreviewView,
   formatMediaBytes,
   formatMediaMatchLabel,
+  formatPreviewClock,
+  formatPreviewDayDate,
+  previewCategoryIcon,
   previewSummaryBullets,
+  previewSummaryChips,
   sortChangeSetsForReview,
 } from '../src/lib/mcpPanelModel.mjs';
 
@@ -106,11 +110,36 @@ assert.match(shellSource, /data-ts-vacation-grid-root/);
 assert.match(shellSource, /AI Access &amp; Approvals/);
 assert.match(shellSource, /\['flights', 'cars', 'hotels'\]/);
 
+assert.equal(formatPreviewDayDate('2026-07-03'), 'Fri, Jul 3');
+assert.equal(formatPreviewClock('12:00'), '12:00 PM');
+assert.equal(formatPreviewClock('14:30'), '2:30 PM');
+assert.equal(previewCategoryIcon('restaurant'), '🍽️');
+assert.equal(previewCategoryIcon('sightseeing'), '🏞️');
+assert.equal(previewCategoryIcon('store'), '🛍️');
+
+const draftChips = previewSummaryChips({
+  preview: {
+    kind: 'draft_import',
+    will_create: {
+      vacation: { title: 'Carmel Weekend', destination: 'Carmel-by-the-Sea, CA' },
+      days: [{ day_number: 1, date: '2026-07-03' }],
+      restaurants: [{ title: 'Carmel Belle' }],
+      unscheduled_things: [{ title: 'Pilgrim Way Bookshop' }],
+      media: [{ media_id: 'm1', filename: 'a.jpg' }],
+    },
+  },
+});
+assert.deepEqual(draftChips, ['1 day', '1 restaurant', '1 saved for later', '1 photo or video']);
+
 const panelSource = await readFile(new URL('../src/components/McpApprovalPanel.tsx', import.meta.url), 'utf8');
 assert.match(panelSource, /handleApprove\(selected\.id, previewView\.previewHash\)/);
 assert.match(panelSource, /item\.expiresAt/);
 assert.doesNotMatch(panelSource, /Media attachments/i);
-assert.match(panelSource, /Not placed yet/);
+assert.doesNotMatch(panelSource, /Unscheduled long-list items/i);
+assert.doesNotMatch(panelSource, /long-list/i);
+assert.match(panelSource, /Saved for later/);
+assert.doesNotMatch(panelSource, /Not placed yet/i);
+assert.match(panelSource, /Won(&apos;|')t be imported/);
 
 const apiSource = await readFile(new URL('../src/api/mcpAdmin.ts', import.meta.url), 'utf8');
 assert.match(apiSource, /preview_hash: previewHash/);
@@ -118,10 +147,40 @@ assert.match(apiSource, /preview_hash: previewHash/);
 const livePanelSource = await readFile(new URL('../../../public/ts-mcp-ai-access.js', import.meta.url), 'utf8');
 assert.match(livePanelSource, /__tsOpenMcpPanel/);
 assert.match(livePanelSource, /preview_hash: previewHash/);
-assert.match(livePanelSource, /Unscheduled long-list items/);
+assert.match(livePanelSource, /Saved for later/);
+assert.doesNotMatch(livePanelSource, /Unscheduled long-list items/i);
+assert.doesNotMatch(livePanelSource, /long-list/i);
 assert.doesNotMatch(livePanelSource, /Media attachments/i);
-assert.match(livePanelSource, /Not placed yet/);
+assert.doesNotMatch(livePanelSource, /Not placed yet/i);
+assert.match(livePanelSource, /Won(&#39;|')t be imported/);
 assert.match(livePanelSource, /data-ts-preview-thumb/);
 assert.doesNotMatch(livePanelSource, /\btrips?\b/i);
+
+const skippedView = extractApprovalPreviewView({
+  previewHash: 'skip123',
+  preview: {
+    preview_version: 2,
+    preview_hash: 'skip123',
+    days: [],
+    media: [],
+    last_changes: ['Moved Pilgrim Way Bookshop to Day 2 · Sat, Jul 4'],
+    change_requests: [{ id: 'cr1', note: 'Add a coffee stop on Day 3' }],
+    skipped_media: [
+      { media_id: 's1', media_kind: 'photo', url: '/api/mcp/media/s1' },
+      { media_id: 's2', media_kind: 'photo', url: '/api/mcp/media/s2' },
+    ],
+  },
+});
+assert.equal(skippedView.previewVersion, 2);
+assert.equal(skippedView.lastChanges.length, 1);
+assert.equal(skippedView.changeRequests.length, 1);
+assert.equal(skippedView.skippedMedia.length, 2);
+assert.equal(
+  skippedView.skippedMediaNote,
+  "These 2 photos don't have a date during this vacation, so they won't be imported.",
+);
+
+assert.match(panelSource, /Request changes/);
+assert.match(livePanelSource, /Request changes/);
 
 console.log('mcpApproval.unit.mjs passed');

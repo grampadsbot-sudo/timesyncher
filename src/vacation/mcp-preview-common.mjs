@@ -233,9 +233,10 @@ export function buildPreviewMediaEntries({
       ? dayNumberByDate.get(localCaptureDate)
       : null;
     const timeMatched = Boolean(localCaptureDate && exifDayNumber !== null);
-    const gpsMatch = findClosestGpsItem(row.exif_lat, row.exif_lng, items);
+    const clearThing = link.clear_thing === true || link.thing_ref === '';
+    const gpsMatch = clearThing ? null : findClosestGpsItem(row.exif_lat, row.exif_lng, items);
 
-    const explicitRef = cleanPreviewText(link.thing_ref || link.thing_id || row.target_thing_ref, 120) || null;
+    const explicitRef = clearThing ? null : (cleanPreviewText(link.thing_ref || link.thing_id || row.target_thing_ref, 120) || null);
     const resolvedItem = (explicitRef ? itemByRef.get(explicitRef) : null) || gpsMatch?.item || null;
     const attachedThingRef = resolvedItem ? (resolvedItem.ref || resolvedItem.id || explicitRef) : explicitRef;
     const attachedThingTitle = resolvedItem ? resolvedItem.title : null;
@@ -344,7 +345,7 @@ export function groupLandingDaysAndUnscheduled({ resolvedDays, scheduledItems, u
   const mediaByThingKey = new Map();
   const mediaByDayDate = new Map();
   const dayOnlyMediaByDate = new Map();
-  const unplacedMedia = [];
+  const skippedMedia = [];
   for (const media of mediaEntries) {
     if (media.attached_thing_ref) {
       const list = mediaByThingKey.get(media.attached_thing_ref) || [];
@@ -355,7 +356,7 @@ export function groupLandingDaysAndUnscheduled({ resolvedDays, scheduledItems, u
       list.push(media);
       dayOnlyMediaByDate.set(media.attached_day_date, list);
     } else {
-      unplacedMedia.push(media);
+      skippedMedia.push(media);
     }
     if (media.attached_day_date) {
       const list = mediaByDayDate.get(media.attached_day_date) || [];
@@ -407,5 +408,5 @@ export function groupLandingDaysAndUnscheduled({ resolvedDays, scheduledItems, u
     return itemLandingShape(item, mediaKey ? (mediaByThingKey.get(String(mediaKey)) || []) : []);
   });
 
-  return { days, unscheduledThings, unplacedMedia };
+  return { days, unscheduledThings, skippedMedia };
 }

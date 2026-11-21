@@ -11,6 +11,7 @@ import { asArray, asObject, readLiveVacationDocument, vacationShareSlugForRow } 
 import { loadScopedChangeSet, loadTripContext } from './mcp-media-service.mjs';
 import { invalidateSharedUpstreamCacheForSlug } from './shared-trip-upstream-cache.mjs';
 import { postStagedPreviewToChat, syncApprovalCardStatusInChat } from './mcp-chat-import.mjs';
+import { extractChangeRequests, extractPreviewVersion, loadPendingPreviewsForVacation, markPriorApprovalCardsReplaced } from './mcp-preview-revision.mjs';
 
 const WHOLESALE_OVERWRITE_KEYS = new Set([
   'replace_all', 'replace', 'overwrite', 'vacation', 'days',
@@ -57,7 +58,7 @@ export async function handleStartImport(db, tokenRecord, args = {}) {
   const existingDraftId = cleanText(args.draft_id, 80);
   if (existingDraftId) {
     const existing = await loadScopedChangeSet(db, { changeSetId: existingDraftId, scopedTripId: tokenRecord.tripId });
-    if (existing.status !== 'draft') {
+    if (existing.status !== 'draft' && existing.status !== 'pending_approval') {
       throw Object.assign(new Error(`Draft can no longer be edited (status: ${existing.status}).`), { statusCode: 409, code: 'change_set_not_editable' });
     }
     const existingMedia = await db`
@@ -66,12 +67,17 @@ export async function handleStartImport(db, tokenRecord, args = {}) {
         and change_set_id = ${existing.id}
       order by created_at asc
     `;
+    const prevVersion = extractPreviewVersion(existing.preview);
+    const nextVersion = existing.status === 'pending_approval' ? prevVersion + 1 : prevVersion;
+    const changeRequests = extractChangeRequests(existing.preview);
     const preview = buildDraftImportPreview({
       draft,
       mediaRows: existingMedia,
       existingTrip: trip,
       existingThings: things,
       applyMode,
+      previewVersion: nextVersion,
+      changeRequests,
     });
     await db`
       update vacation_mcp_change_sets
@@ -138,6 +144,9 @@ export async function handlePreviewImport(db, tokenRecord, args = {}) {
     order by created_at asc
   `;
   const { trip, things } = await loadTripContext(db, tokenRecord.tripId);
+  const previewVersion = extractPreviewVersion(changeSet.preview);
+  const changeRequests = extractChangeRequests(changeSet.preview);
+  const lastChanges = asArray(changeSet.preview?.last_changes);
   const preview = changeSet.kind === 'targeted_edit'
     ? buildTargetedEditPreview({
       operations: changeSet.payload?.operations || [],
@@ -145,6 +154,10 @@ export async function handlePreviewImport(db, tokenRecord, args = {}) {
       existingThings: things,
       mediaRows,
       summary: changeSet.summary,
+      previewVersion,
+      changeRequests,
+      lastChanges,
+      removedMediaIds: asArray(changeSet.payload?.removed_media_ids),
     })
     : buildDraftImportPreview({
       draft: changeSet.payload,
@@ -152,6 +165,9 @@ export async function handlePreviewImport(db, tokenRecord, args = {}) {
       existingTrip: trip,
       existingThings: things,
       applyMode: changeSet.apply_mode,
+      previewVersion,
+      changeRequests,
+      lastChanges,
     });
   await db`
     update vacation_mcp_change_sets
@@ -163,7 +179,10 @@ export async function handlePreviewImport(db, tokenRecord, args = {}) {
     draft_id: String(changeSet.id),
     status: String(changeSet.status),
     published: changeSet.status === 'approved',
+    preview_version: previewVersion,
     preview_hash: preview.preview_hash,
+    change_requests: changeRequests,
+    latest_change_request: changeRequests.length ? changeRequests[changeRequests.length - 1] : null,
     preview,
   };
 }
@@ -203,6 +222,13 @@ export async function handleCommitImport(db, tokenRecord, args = {}) {
       updated_at = now()
     where id = ${changeSet.id}
   `;
+  await markPriorApprovalCardsReplaced(db, {
+    tripId: tokenRecord.tripId,
+    changeSetId: changeSet.id,
+    exceptHash: currentHash,
+    replacedByHash: currentHash,
+    replacedByVersion: extractPreviewVersion(previewResult.preview),
+  });
   await postStagedPreviewToChat(db, {
     tokenRecord,
     changeSetId: changeSet.id,
@@ -226,7 +252,8 @@ export async function handleReadVacation(db, tokenRecord, args = {}) {
   const scopedTripId = assertVacationScope(tokenRecord, args.vacation_id);
   const doc = await readLiveVacationDocument(db, scopedTripId);
   if (!doc) throw Object.assign(new Error('Vacation not found.'), { statusCode: 404, code: 'vacation_not_found' });
-  return { ok: true, ...doc };
+  const pendingPreviews = await loadPendingPreviewsForVacation(db, scopedTripId);
+  return { ok: true, ...doc, pending_previews: pendingPreviews };
 }
 
 export async function handleUpdateVacation(db, tokenRecord, args = {}) {
@@ -323,6 +350,30 @@ export async function handleUpdateVacation(db, tokenRecord, args = {}) {
   };
 }
 
+function formatChangeSetRow(row) {
+  const preview = asObject(row.preview);
+  const changeRequests = extractChangeRequests(preview);
+  return {
+    id: String(row.id),
+    vacationId: String(row.scope_trip_id),
+    publishedVacationId: row.published_trip_id ? String(row.published_trip_id) : null,
+    kind: String(row.kind),
+    applyMode: String(row.apply_mode),
+    status: String(row.status),
+    summary: String(row.summary || ''),
+    previewVersion: extractPreviewVersion(preview),
+    previewHash: preview.preview_hash || null,
+    changeRequests,
+    latestChangeRequest: changeRequests.length ? changeRequests[changeRequests.length - 1] : null,
+    preview,
+    committedAt: row.committed_at || null,
+    reviewedAt: row.reviewed_at || null,
+    reviewedBy: row.reviewed_by || null,
+    reviewNote: row.review_note || null,
+    createdAt: row.created_at || null,
+  };
+}
+
 export async function listVacationChangeSets(db, { tripId }) {
   await ensureVacationMcpSchema(db);
   const rows = await db`
@@ -332,47 +383,13 @@ export async function listVacationChangeSets(db, { tripId }) {
     where scope_trip_id = ${tripId}
     order by created_at desc
   `;
-  return rows.map((row) => {
-    const preview = asObject(row.preview);
-    return {
-      id: String(row.id),
-      vacationId: String(row.scope_trip_id),
-      publishedVacationId: row.published_trip_id ? String(row.published_trip_id) : null,
-      kind: String(row.kind),
-      applyMode: String(row.apply_mode),
-      status: String(row.status),
-      summary: String(row.summary || ''),
-      previewHash: preview.preview_hash || null,
-      preview,
-      committedAt: row.committed_at || null,
-      reviewedAt: row.reviewed_at || null,
-      reviewedBy: row.reviewed_by || null,
-      reviewNote: row.review_note || null,
-      createdAt: row.created_at || null,
-    };
-  });
+  return rows.map(formatChangeSetRow);
 }
 
 export async function getVacationChangeSetPreview(db, { tripId, changeSetId }) {
   await ensureVacationMcpSchema(db);
   const changeSet = await loadScopedChangeSet(db, { changeSetId, scopedTripId: tripId });
-  const preview = asObject(changeSet.preview);
-  return {
-    id: String(changeSet.id),
-    vacationId: String(changeSet.scope_trip_id),
-    publishedVacationId: changeSet.published_trip_id ? String(changeSet.published_trip_id) : null,
-    kind: String(changeSet.kind),
-    applyMode: String(changeSet.apply_mode),
-    status: String(changeSet.status),
-    summary: String(changeSet.summary || ''),
-    previewHash: preview.preview_hash || null,
-    preview,
-    committedAt: changeSet.committed_at || null,
-    reviewedAt: changeSet.reviewed_at || null,
-    reviewedBy: changeSet.reviewed_by || null,
-    reviewNote: changeSet.review_note || null,
-    createdAt: changeSet.created_at || null,
-  };
+  return formatChangeSetRow(changeSet);
 }
 
 export async function approveVacationChangeSet(db, {

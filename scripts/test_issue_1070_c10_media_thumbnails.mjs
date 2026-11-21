@@ -135,10 +135,11 @@ async function auditSurfaceInPage(page, surfaceName, bannedFilenames) {
     const day2 = rootEl?.querySelector('[data-ts-preview-day="2026-07-04"]');
     const day2Direct = day2?.querySelector('[data-ts-media-strip="day"]');
     const day2Thumbs = day2Direct ? [...day2Direct.querySelectorAll('[data-ts-preview-thumb="1"]')] : [];
-    const unplacedBlock = rootEl?.querySelector('[data-ts-mcp-preview-unplaced="1"]');
-    const unplacedThumbs = unplacedBlock ? [...unplacedBlock.querySelectorAll('[data-ts-preview-thumb="1"]')] : [];
+    const skippedBlock = rootEl?.querySelector('[data-ts-mcp-preview-wont-import="1"]');
+    const skippedThumbs = skippedBlock ? [...skippedBlock.querySelectorAll('[data-ts-preview-thumb="1"]')] : [];
     const leakedFilenames = filenames.filter((name) => visibleText.toLowerCase().includes(name.toLowerCase()));
     const hasMediaAttachmentsHeading = /media attachments/i.test(visibleText);
+    const hasNotPlacedYetText = /not placed yet/i.test(visibleText);
     const hasByteSizeText = /\b\d+(?:\.\d+)?\s*(?:kb|mb|bytes)\b/i.test(visibleText);
     const hasExifOrGpsText = /\b(?:exif|gps)\b/i.test(visibleText);
     return {
@@ -149,8 +150,9 @@ async function auditSurfaceInPage(page, surfaceName, bannedFilenames) {
       day2DirectPhotos: day2Thumbs.filter((t) => t.getAttribute('data-media-kind') === 'photo').length,
       day2DirectVideos: day2Thumbs.filter((t) => t.getAttribute('data-media-kind') === 'video').length,
       day2PlayBadges: day2Direct ? day2Direct.querySelectorAll('[data-ts-media-play-badge="1"]').length : 0,
-      unplacedHeading: unplacedBlock?.querySelector('h4')?.textContent?.trim() || '',
-      unplacedCount: unplacedThumbs.length,
+      skippedHeading: skippedBlock?.querySelector('h4')?.textContent?.trim() || '',
+      skippedCount: skippedThumbs.length,
+      hasNotPlacedYetText,
       leakedFilenames,
       hasMediaAttachmentsHeading,
       hasByteSizeText,
@@ -171,8 +173,9 @@ async function auditSurfaceInPage(page, surfaceName, bannedFilenames) {
   assert.equal(audit.day2DirectPhotos, 1, `${surfaceName}: Day 2 unmatched photo missing`);
   assert.equal(audit.day2DirectVideos, 1, `${surfaceName}: Day 2 unmatched video missing`);
   assert.equal(audit.day2PlayBadges, 1, `${surfaceName}: Day 2 video play badge missing`);
-  assert.equal(audit.unplacedHeading, 'Not placed yet', `${surfaceName}: Not placed yet heading missing`);
-  assert.equal(audit.unplacedCount, 2, `${surfaceName}: only no-date + out-of-vacation media belong in Not placed yet`);
+  assert.equal(audit.hasNotPlacedYetText, false, `${surfaceName}: Not placed yet must be removed per D9`);
+  assert.equal(audit.skippedHeading, "Won't be imported", `${surfaceName}: Won't be imported heading missing`);
+  assert.equal(audit.skippedCount, 2, `${surfaceName}: no-date + out-of-vacation media belong in Won't be imported`);
   assert.deepEqual(audit.leakedFilenames, [], `${surfaceName}: leaked filenames`);
   assert.equal(audit.hasMediaAttachmentsHeading, false, `${surfaceName}: Media attachments list must be removed`);
   assert.equal(audit.hasByteSizeText, false, `${surfaceName}: byte sizes must not appear`);
@@ -332,9 +335,10 @@ assert.deepEqual(
   day2Preview.day_media.map((m) => m.media_id).sort(),
   [mediaIdByKey.get('day2UnmatchedPhoto'), mediaIdByKey.get('day2UnmatchedVideo')].sort(),
 );
-assert.equal(preview.unplaced_media.length, 2, 'only no-date and out-of-vacation media belong in unplaced_media');
+assert.equal(preview.unplaced_media, undefined, 'unplaced_media bucket must be removed');
+assert.equal(preview.skipped_media.length, 2, 'no-date and out-of-vacation media belong in skipped_media');
 assert.deepEqual(
-  preview.unplaced_media.map((m) => m.media_id).sort(),
+  preview.skipped_media.map((m) => m.media_id).sort(),
   [mediaIdByKey.get('undatedPhoto'), mediaIdByKey.get('outOfRangePhoto')].sort(),
 );
 for (const line of preview.missing || []) {
@@ -354,7 +358,8 @@ const turns = await loadTripScopedVacationAppTurns(db, ownerSession, trip.id, {
 const approvalCard = turns.find((t) => t.payload?.aiApprovalCard?.changeSetId === draftId)?.payload?.aiApprovalCard;
 assert.ok(approvalCard, 'in-chat approval card must be posted');
 assert.equal(approvalCard.days.find((d) => d.date === '2026-07-04').day_media.length, 2);
-assert.equal(approvalCard.unplacedMedia.length, 2);
+assert.equal(approvalCard.skippedMedia.length, 2);
+assert.equal(approvalCard.unplacedMedia, undefined);
 
 const sharedPayload = {
   trip: { id: 1070, title: 'Carmel Weekend', destination: 'Carmel-by-the-Sea, CA', start_date: '2026-07-03', end_date: '2026-07-05' },
@@ -434,7 +439,7 @@ const approveRes = await invokeRoute(apiHandler, {
 assert.equal(approveRes.statusCode, 200);
 
 const liveBindings = db.tables.thing_media_bindings.filter((b) => b.share_token === shareSlug);
-assert.equal(liveBindings.length, mediaFiles.length);
+assert.equal(liveBindings.length, mediaFiles.length - 2, 'skipped media must not be imported on approve');
 const byMcpId = new Map(liveBindings.map((b) => [b.metadata.mcpMediaId, b]));
 assert.equal(byMcpId.get(mediaIdByKey.get('day2UnmatchedPhoto')).day_number, 2);
 assert.equal(byMcpId.get(mediaIdByKey.get('day2UnmatchedPhoto')).metadata.assignedDayDate, '2026-07-04');
@@ -443,10 +448,8 @@ assert.equal(byMcpId.get(mediaIdByKey.get('day2UnmatchedPhoto')).metadata.thingI
 assert.equal(byMcpId.get(mediaIdByKey.get('day2UnmatchedVideo')).day_number, 2);
 assert.equal(byMcpId.get(mediaIdByKey.get('day2UnmatchedVideo')).metadata.assignedDayDate, '2026-07-04');
 assert.equal(byMcpId.get(mediaIdByKey.get('day2UnmatchedVideo')).metadata.assignmentBucket, 'day');
-assert.equal(byMcpId.get(mediaIdByKey.get('undatedPhoto')).day_number, null);
-assert.equal(byMcpId.get(mediaIdByKey.get('undatedPhoto')).metadata.assignmentBucket, 'unassigned');
-assert.equal(byMcpId.get(mediaIdByKey.get('outOfRangePhoto')).day_number, null);
-assert.equal(byMcpId.get(mediaIdByKey.get('outOfRangePhoto')).metadata.assignmentBucket, 'unassigned');
+assert.equal(byMcpId.get(mediaIdByKey.get('undatedPhoto')), undefined, 'undated photo must not be stored');
+assert.equal(byMcpId.get(mediaIdByKey.get('outOfRangePhoto')), undefined, 'out-of-vacation photo must not be stored');
 
 const served = await intakeSharedResponse(shareSlug, db);
 const day2Live = served.days.find((d) => Number(d.day_number) === 2);

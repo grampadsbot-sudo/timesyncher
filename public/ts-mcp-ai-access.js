@@ -32,6 +32,49 @@
     }
   }
 
+  const CATEGORY_ICONS = {
+    flight: '✈️',
+    hotel: '🏨',
+    car: '🚗',
+    restaurant: '🍽️',
+    bar: '🍸',
+    store: '🛍️',
+    sightseeing: '🏞️',
+    tour: '🧭',
+    attraction: '🎟️',
+    music: '🎵',
+    theatre: '🎭',
+    workout: '🏃',
+    tickets: '🎫',
+    family_event: '👨‍👩‍👧‍👦',
+    artist: '🎨',
+    transport: '🚆',
+    event: '🎉',
+    note: '📝',
+    activity: '📍',
+  };
+
+  function categoryIcon(category) {
+    const key = String(category || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+    return CATEGORY_ICONS[key] || '📍';
+  }
+
+  function formatFriendlyDate(iso) {
+    const trimmed = String(iso || '').trim();
+    if (!trimmed) return '';
+    const m = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    const parsed = m
+      ? Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12, 0, 0)
+      : Date.parse(trimmed);
+    if (!Number.isFinite(parsed)) return trimmed;
+    return new Date(parsed).toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'UTC',
+    });
+  }
+
   function formatClock(value) {
     const raw = String(value || '').trim().replace(/(\d{1,2}:\d{2}):\d{2}/g, '$1');
     const m = raw.match(/^(\d{1,2}):(\d{2})$/);
@@ -88,10 +131,24 @@
     return Boolean(row.attached_day_date || row.assigned_day_date || row.attached_day_number || row.assigned_day_number || row.assignment_bucket === 'day');
   }
 
-  function isUnplacedMedia(row) {
+  function isSkippedMedia(row) {
     if (!row || typeof row !== 'object') return false;
     if (row.assignment_bucket === 'unassigned') return true;
     return !row.attached_thing_ref && !row.target_thing_ref && !row.attached_thing_title && !row.attached_day_date && !row.assigned_day_date;
+  }
+
+  function formatSkippedMediaNote(items) {
+    const count = items.length;
+    if (!count) return '';
+    const hasPhoto = items.some((m) => String(m.media_kind || 'photo').toLowerCase() !== 'video');
+    const hasVideo = items.some((m) => String(m.media_kind || 'photo').toLowerCase() === 'video');
+    if (count === 1) {
+      return hasVideo
+        ? "This video doesn't have a date during this vacation, so it won't be imported."
+        : "This photo doesn't have a date during this vacation, so it won't be imported.";
+    }
+    const noun = hasPhoto && hasVideo ? 'photos and videos' : (hasVideo ? 'videos' : 'photos');
+    return `These ${count} ${noun} don't have a date during this vacation, so they won't be imported.`;
   }
 
   function videoThumbSrc(url, posterUrl) {
@@ -113,32 +170,28 @@
     return `<div class="ts-mcp-thumb-strip" data-ts-media-strip="${esc(scope)}" data-ts-media-owner="${esc(ownerLabel)}">${buttons}</div>`;
   }
 
-  function previewBullets(changeSet) {
+  function previewChips(changeSet) {
     const preview = changeSet?.preview || {};
     const out = [];
     if (changeSet?.kind === 'draft_import') {
-      const vac = preview.will_create?.vacation || {};
-      if (vac.title) out.push(`Vacation: ${vac.title}${vac.destination ? ` (${vac.destination})` : ''}`);
       const c = preview.counts || {};
-      const counts = [
-        c.days && `${c.days} days`,
-        c.flights && `${c.flights} flights`,
-        c.hotels && `${c.hotels} hotels`,
-        c.cars && `${c.cars} cars`,
-        c.restaurants && `${c.restaurants} restaurants`,
-        c.stores && `${c.stores} stores`,
-        c.things_to_do && `${c.things_to_do} things to do`,
-        c.unscheduled_things && `${c.unscheduled_things} unscheduled items`,
-        c.media && `${c.media} photos & videos`,
+      return [
+        c.days && `${c.days} ${c.days === 1 ? 'day' : 'days'}`,
+        c.flights && `${c.flights} ${c.flights === 1 ? 'flight' : 'flights'}`,
+        c.hotels && `${c.hotels} ${c.hotels === 1 ? 'hotel' : 'hotels'}`,
+        c.cars && `${c.cars} ${c.cars === 1 ? 'car' : 'cars'}`,
+        c.restaurants && `${c.restaurants} ${c.restaurants === 1 ? 'restaurant' : 'restaurants'}`,
+        c.stores && `${c.stores} ${c.stores === 1 ? 'store' : 'stores'}`,
+        c.things_to_do && `${c.things_to_do} ${c.things_to_do === 1 ? 'activity' : 'activities'}`,
+        c.unscheduled_things && `${c.unscheduled_things} saved for later`,
+        c.media && `${c.media} ${c.media === 1 ? 'photo or video' : 'photos & videos'}`,
       ].filter(Boolean);
-      if (counts.length) out.push(`Will create: ${counts.join(', ')}`);
-      return out;
     }
-    if (Array.isArray(preview.will_add) && preview.will_add.length) out.push(`Add ${preview.will_add.length}: ${preview.will_add.map((i) => i.title).filter(Boolean).join(', ')}`);
-    if (Array.isArray(preview.will_update) && preview.will_update.length) out.push(`Update ${preview.will_update.length}: ${preview.will_update.map((i) => i.current_title).filter(Boolean).join(', ')}`);
-    if (Array.isArray(preview.will_remove) && preview.will_remove.length) out.push(`Remove ${preview.will_remove.length}: ${preview.will_remove.map((i) => i.title).filter(Boolean).join(', ')}`);
-    if (Array.isArray(preview.day_updates) && preview.day_updates.length) out.push(`Day notes/titles updated: ${preview.day_updates.map((d) => d.day_date).filter(Boolean).join(', ')}`);
-    if (Array.isArray(preview.will_attach_media) && preview.will_attach_media.length) out.push(`Photos & videos: ${preview.will_attach_media.length}`);
+    if (Array.isArray(preview.will_add) && preview.will_add.length) out.push(`Add ${preview.will_add.map((i) => i.title).filter(Boolean).join(', ')}`);
+    if (Array.isArray(preview.will_update) && preview.will_update.length) out.push(`Update ${preview.will_update.map((i) => i.current_title).filter(Boolean).join(', ')}`);
+    if (Array.isArray(preview.will_remove) && preview.will_remove.length) out.push(`Remove ${preview.will_remove.map((i) => i.title).filter(Boolean).join(', ')}`);
+    if (Array.isArray(preview.day_updates) && preview.day_updates.length) out.push(`Update ${preview.day_updates.map((d) => formatFriendlyDate(d.day_date)).filter(Boolean).join(', ')}`);
+    if (Array.isArray(preview.will_attach_media) && preview.will_attach_media.length) out.push(`${preview.will_attach_media.length} ${preview.will_attach_media.length === 1 ? 'photo or video' : 'photos & videos'}`);
     return out;
   }
 
@@ -159,10 +212,15 @@
       return { ...day, items, day_media: dayOnly.map(normalizeMedia).filter(Boolean) };
     });
     const unscheduled = rawUnscheduled.map((item) => ({ ...item, media: (Array.isArray(item?.media) ? item.media : []).map(normalizeMedia).filter(Boolean) }));
-    const rawUnplaced = Array.isArray(preview.unplaced_media) ? preview.unplaced_media : media.filter(isUnplacedMedia);
-    const unplacedMedia = rawUnplaced.map(normalizeMedia).filter(Boolean);
+    const rawSkipped = Array.isArray(preview.skipped_media) ? preview.skipped_media : media.filter(isSkippedMedia);
+    const skippedMedia = rawSkipped.map(normalizeMedia).filter(Boolean);
+    const skippedMediaNote = String(preview.skipped_media_note || '').trim() || formatSkippedMediaNote(skippedMedia);
     const previewHash = String(preview.preview_hash || changeSet?.previewHash || '').trim();
-    return { days, unscheduled, media, unplacedMedia, previewHash };
+    const previewVersion = Math.max(1, Number(preview.preview_version || changeSet?.previewVersion || 1));
+    const lastChanges = Array.isArray(preview.last_changes) ? preview.last_changes.filter(Boolean) : [];
+    const rawRequests = Array.isArray(preview.change_requests) ? preview.change_requests : (Array.isArray(changeSet?.changeRequests) ? changeSet.changeRequests : []);
+    const changeRequests = rawRequests.filter((entry) => entry && typeof entry === 'object' && String(entry.note || '').trim());
+    return { days, unscheduled, media, skippedMedia, skippedMediaNote, previewHash, previewVersion, lastChanges, changeRequests };
   }
 
   async function apiJson(url, options) {
@@ -181,7 +239,7 @@
     if (document.getElementById(STYLE_ID)) return;
     const style = document.createElement('style');
     style.id = STYLE_ID;
-    style.textContent = '.ts-mcp-backdrop{position:fixed;inset:0;z-index:10050;background:rgba(15,23,42,.58);display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif}.ts-mcp-sheet{width:100%;max-width:780px;background:#fff;color:#111827;border-radius:16px;box-shadow:0 24px 64px rgba(15,23,42,.32);overflow:hidden;border:1px solid #e5e7eb}.ts-mcp-head{padding:16px 18px 12px;border-bottom:1px solid #e5e7eb;background:#f8fafc}.ts-mcp-kicker{font-size:10px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;color:#0f766e;margin:0 0 4px}.ts-mcp-title-row{display:flex;align-items:center;justify-content:space-between;gap:12px}.ts-mcp-title{margin:0;font-size:19px;font-weight:800;color:#111827}.ts-mcp-close{width:34px;height:34px;border-radius:999px;border:1px solid #d1d5db;background:#fff;color:#111827;font-size:18px;font-weight:800;cursor:pointer;line-height:1}.ts-mcp-tabs{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}.ts-mcp-tab{border:1px solid #d1d5db;background:#fff;color:#374151;border-radius:999px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer}.ts-mcp-tab.is-active{background:#0f172a;border-color:#0f172a;color:#fff}.ts-mcp-body{padding:16px 18px 20px;font-size:13px;line-height:1.45}.ts-mcp-alert{padding:10px 12px;border-radius:10px;margin:0 0 12px;font-weight:600}.ts-mcp-alert-err{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}.ts-mcp-alert-ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}.ts-mcp-split{display:grid;grid-template-columns:minmax(180px,230px) minmax(0,1fr);gap:14px;min-width:0}@media(max-width:640px){.ts-mcp-split{grid-template-columns:minmax(0,1fr)}}.ts-mcp-list{list-style:none;margin:0;padding:0;display:grid;gap:8px;align-content:start;min-width:0}.ts-mcp-list-btn{width:100%;text-align:left;border:1px solid #e5e7eb;background:#fff;border-radius:10px;padding:10px;cursor:pointer;display:grid;gap:3px;color:#111827}.ts-mcp-list-btn.is-selected{border-color:#0f766e;background:#f0fdfa}.ts-mcp-meta{font-size:11px;color:#6b7280}.ts-mcp-preview{border:1px solid #e5e7eb;border-radius:12px;padding:14px;background:#fff;color:#111827;min-width:0;overflow-wrap:anywhere}.ts-mcp-preview code{word-break:break-all;overflow-wrap:anywhere}.ts-mcp-block{margin-top:12px;padding-top:10px;border-top:1px solid #f1f5f9}.ts-mcp-block h4{margin:0 0 6px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:#475569}.ts-mcp-block ul{margin:0;padding-left:18px;display:grid;gap:6px}.ts-mcp-day-media-label{margin:6px 0 0;font-size:11px;font-weight:700;color:#64748b}.ts-mcp-thumb-strip{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.ts-mcp-thumb{position:relative;width:58px;height:58px;padding:0;border-radius:8px;overflow:hidden;border:1px solid #cbd5e1;background:#0f172a;cursor:pointer;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center}.ts-mcp-thumb-media{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}.ts-mcp-thumb-play{position:absolute;inset:0;margin:auto;width:24px;height:24px;border-radius:999px;background:rgba(15,23,42,.78);color:#fff;font-size:11px;display:inline-flex;align-items:center;justify-content:center;pointer-events:none;box-shadow:0 2px 6px rgba(0,0,0,.35)}.ts-mcp-block-warn{background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px}.ts-mcp-actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}.ts-mcp-btn{border-radius:10px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;border:1px solid #d1d5db;background:#fff;color:#111827}.ts-mcp-btn-primary{background:#0f766e;border-color:#0f766e;color:#fff}.ts-mcp-btn-danger{background:#fff;border-color:#fca5a5;color:#b91c1c}.ts-mcp-btn[disabled]{opacity:.55;cursor:not-allowed}.ts-mcp-form{display:grid;grid-template-columns:minmax(0,1fr) 130px 110px auto;gap:8px;align-items:end;margin:12px 0}@media(max-width:640px){.ts-mcp-form{grid-template-columns:1fr}}.ts-mcp-field{display:grid;gap:4px;font-size:11px;font-weight:700;color:#475569}.ts-mcp-field input,.ts-mcp-field select{border:1px solid #d1d5db;border-radius:8px;padding:8px 10px;font:inherit;font-size:13px;color:#111827;background:#fff}.ts-mcp-reveal{background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:12px;margin:12px 0;word-break:break-all}.ts-mcp-reveal code{display:block;margin-top:6px;padding:8px;border-radius:6px;background:#fff;border:1px solid #bbf7d0;font-size:12px}.ts-mcp-token-list{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:8px}.ts-mcp-token-row{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px}';
+    style.textContent = '.ts-mcp-backdrop{position:fixed;inset:0;z-index:10050;background:rgba(15,23,42,.58);display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif}.ts-mcp-sheet{width:100%;max-width:780px;background:#fff;color:#111827;border-radius:16px;box-shadow:0 24px 64px rgba(15,23,42,.32);overflow:hidden;border:1px solid #e5e7eb}.ts-mcp-head{padding:16px 18px 12px;border-bottom:1px solid #e5e7eb;background:#f8fafc}.ts-mcp-kicker{font-size:10px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;color:#0f766e;margin:0 0 4px}.ts-mcp-title-row{display:flex;align-items:center;justify-content:space-between;gap:12px}.ts-mcp-title{margin:0;font-size:19px;font-weight:800;color:#111827}.ts-mcp-close{width:34px;height:34px;border-radius:999px;border:1px solid #d1d5db;background:#fff;color:#111827;font-size:18px;font-weight:800;cursor:pointer;line-height:1}.ts-mcp-tabs{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}.ts-mcp-tab{border:1px solid #d1d5db;background:#fff;color:#374151;border-radius:999px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer}.ts-mcp-tab.is-active{background:#0f172a;border-color:#0f172a;color:#fff}.ts-mcp-body{padding:16px 18px 20px;font-size:13px;line-height:1.45}.ts-mcp-alert{padding:10px 12px;border-radius:10px;margin:0 0 12px;font-weight:600}.ts-mcp-alert-err{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}.ts-mcp-alert-ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}.ts-mcp-split{display:grid;grid-template-columns:minmax(180px,230px) minmax(0,1fr);gap:14px;min-width:0}@media(max-width:640px){.ts-mcp-split{grid-template-columns:minmax(0,1fr)}}.ts-mcp-list{list-style:none;margin:0;padding:0;display:grid;gap:8px;align-content:start;min-width:0}.ts-mcp-list-btn{width:100%;text-align:left;border:1px solid #e5e7eb;background:#fff;border-radius:10px;padding:10px;cursor:pointer;display:grid;gap:3px;color:#111827}.ts-mcp-list-btn.is-selected{border-color:#0f766e;background:#f0fdfa}.ts-mcp-meta{font-size:11px;color:#6b7280}.ts-mcp-preview{border:1px solid #e5e7eb;border-radius:12px;padding:14px;background:#fff;color:#111827;min-width:0;overflow-wrap:anywhere}.ts-mcp-preview code{word-break:break-all;overflow-wrap:anywhere}.ts-mcp-preview-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 10px;margin-bottom:6px}.ts-mcp-status-pill{display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;background:#f1f5f9;color:#334155;border:1px solid #cbd5e1}.ts-mcp-chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}.ts-mcp-chip{display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;background:#f8fafc;color:#334155;border:1px solid #e2e8f0}.ts-mcp-block{margin-top:12px;padding-top:10px;border-top:1px solid #f1f5f9}.ts-mcp-block h4{margin:0 0 8px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:#64748b}.ts-mcp-days{display:grid;gap:8px}.ts-mcp-day-card{border:1px solid #e2e8f0;border-radius:12px;padding:10px;background:#f8fafc;display:grid;gap:8px}.ts-mcp-day-head{font-size:13px;font-weight:800;color:#0f172a;line-height:1.3}.ts-mcp-thing-list{display:grid;gap:6px}.ts-mcp-thing-row{border:1px solid #e2e8f0;border-radius:10px;padding:8px 10px;background:#fff;display:grid;gap:4px}.ts-mcp-thing-main{display:flex;align-items:center;gap:8px;min-width:0}.ts-mcp-thing-icon{width:24px;height:24px;flex:0 0 24px;display:inline-grid;place-items:center;border-radius:6px;border:1px solid #e2e8f0;background:#f8fafc;font-size:13px;line-height:1}.ts-mcp-thing-label{min-width:0;font-size:13px;line-height:1.35;color:#0f172a;overflow-wrap:anywhere}.ts-mcp-thing-name{font-weight:700}.ts-mcp-thing-time{color:#64748b;font-weight:600}.ts-mcp-day-media-label{margin:2px 0 0;font-size:11px;font-weight:700;color:#64748b}.ts-mcp-notes{display:grid;gap:6px}.ts-mcp-note{margin:0;font-size:12px;line-height:1.45;color:#475569;padding:8px 10px;border-radius:8px;background:#f8fafc;border:1px solid #e2e8f0}.ts-mcp-thumb-strip{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}.ts-mcp-thumb{position:relative;width:58px;height:58px;padding:0;border-radius:8px;overflow:hidden;border:1px solid #cbd5e1;background:#0f172a;cursor:pointer;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center}.ts-mcp-thumb-media{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}.ts-mcp-thumb-play{position:absolute;inset:0;margin:auto;width:24px;height:24px;border-radius:999px;background:rgba(15,23,42,.78);color:#fff;font-size:11px;display:inline-flex;align-items:center;justify-content:center;pointer-events:none;box-shadow:0 2px 6px rgba(0,0,0,.35)}.ts-mcp-block-warn .ts-mcp-note{background:#fffbeb;border-color:#fde68a;color:#92400e}.ts-mcp-actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}.ts-mcp-btn{border-radius:10px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;border:1px solid #d1d5db;background:#fff;color:#111827}.ts-mcp-btn-primary{background:#0f766e;border-color:#0f766e;color:#fff}.ts-mcp-btn-secondary{background:#f8fafc;border-color:#94a3b8;color:#0f172a}.ts-mcp-btn-danger{background:#fff;border-color:#fca5a5;color:#b91c1c}.ts-mcp-btn[disabled]{opacity:.55;cursor:not-allowed}.ts-mcp-change-box{display:grid;gap:8px;margin-top:10px;padding:10px;border-radius:10px;background:#f8fafc;border:1px solid #cbd5e1}.ts-mcp-change-label{font-size:12px;font-weight:700;color:#0f172a}.ts-mcp-change-input{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:8px;padding:8px 10px;font:inherit;font-size:13px;line-height:1.4;color:#0f172a;background:#fff;resize:vertical}.ts-mcp-form{display:grid;grid-template-columns:minmax(0,1fr) 130px 110px auto;gap:8px;align-items:end;margin:12px 0}@media(max-width:640px){.ts-mcp-form{grid-template-columns:1fr}}.ts-mcp-field{display:grid;gap:4px;font-size:11px;font-weight:700;color:#475569}.ts-mcp-field input,.ts-mcp-field select{border:1px solid #d1d5db;border-radius:8px;padding:8px 10px;font:inherit;font-size:13px;color:#111827;background:#fff}.ts-mcp-reveal{background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:12px;margin:12px 0;word-break:break-all}.ts-mcp-reveal code{display:block;margin-top:6px;padding:8px;border-radius:6px;background:#fff;border:1px solid #bbf7d0;font-size:12px}.ts-mcp-token-list{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:8px}.ts-mcp-token-row{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px}';
     document.head.appendChild(style);
   }
 
@@ -189,6 +247,7 @@
     open: false, mode: 'approvals', loading: false, busy: '', error: '', notice: '',
     changes: [], selectedId: '', tokens: [], mcpEndpoint: '', createdToken: '',
     label: 'Family AI', role: 'collaborator', expiresInDays: 30,
+    requestBoxFor: '', requestNote: '',
   };
 
   function closeModal() {
@@ -275,60 +334,70 @@
     }
     const selected = state.changes.find((c) => c.id === state.selectedId) || state.changes[0];
     const pv = extractPreview(selected);
-    const bullets = previewBullets(selected);
+    const chips = previewChips(selected);
     const missing = Array.isArray(selected?.preview?.missing) ? selected.preview.missing : [];
     const conflicts = Array.isArray(selected?.preview?.conflicts) ? selected.preview.conflicts : [];
     galleryGroups.clear();
     const listHtml = state.changes.map((item) => `<li><button type="button" class="ts-mcp-list-btn${item.id === selected.id ? ' is-selected' : ''}" data-mcp-select="${esc(item.id)}"><strong>${esc(kindLabel(item.kind))}</strong><span class="ts-mcp-meta">${esc(statusLabel(item.status))}</span><span>${esc(item.summary || '')}</span></button></li>`).join('');
     const daysHtml = pv.days.length
-      ? `<div class="ts-mcp-block" data-ts-mcp-preview-days="1"><h4>Itinerary by day</h4><ul>${pv.days.map((day, idx) => {
+      ? `<div class="ts-mcp-block" data-ts-mcp-preview-days="1"><h4>Itinerary by day</h4><div class="ts-mcp-days">${pv.days.map((day, idx) => {
         const dayNum = day.day_number ?? idx + 1;
-        const dayLabel = `Day ${dayNum}${day.date ? ` (${day.date})` : ''}`;
+        const friendlyDate = formatFriendlyDate(day.date);
+        const dayLabel = `Day ${dayNum}${friendlyDate ? ` · ${friendlyDate}` : ''}`;
         const itemsHtml = Array.isArray(day.items) && day.items.length
-          ? `<ul>${day.items.map((item, itemIdx) => {
+          ? `<div class="ts-mcp-thing-list">${day.items.map((item, itemIdx) => {
             const thingTitle = String(item.title || '').trim() || 'Item';
+            const timeLabel = item.start_time ? formatClock(item.start_time) : '';
             const thumbs = renderThumbStrip(item.media, {
               galleryKey: `${selected.id}:day:${idx}:thing:${item.ref || item.id || itemIdx}`,
               ownerLabel: thingTitle,
               scope: 'thing',
             });
-            return `<li data-ts-preview-thing="${esc(item.ref || item.id || thingTitle)}"><span>${item.category ? `${esc(item.category)}: ` : ''}${esc(thingTitle)}${item.start_time ? ` · ${esc(formatClock(item.start_time))}` : ''}</span>${thumbs}</li>`;
-          }).join('')}</ul>`
+            return `<div class="ts-mcp-thing-row" data-ts-preview-thing="${esc(item.ref || item.id || thingTitle)}"><div class="ts-mcp-thing-main"><span class="ts-mcp-thing-icon" data-ts-preview-type-icon="1" aria-hidden="true">${categoryIcon(item.category)}</span><span class="ts-mcp-thing-label"><span class="ts-mcp-thing-name">${esc(thingTitle)}</span>${timeLabel ? `<span class="ts-mcp-thing-time"> · ${esc(timeLabel)}</span>` : ''}</span></div>${thumbs}</div>`;
+          }).join('')}</div>`
           : '';
         const dayThumbs = renderThumbStrip(day.day_media, {
           galleryKey: `${selected.id}:day:${idx}:direct`,
           ownerLabel: dayLabel,
           scope: 'day',
         });
-        const dayMediaBlock = dayThumbs ? `<div class="ts-mcp-day-media-label">Day ${esc(dayNum)} photos &amp; videos</div>${dayThumbs}` : '';
-        return `<li data-ts-preview-day="${esc(day.date || String(dayNum))}"><strong>${esc(dayLabel)}${day.title ? ` — ${esc(day.title)}` : ''}</strong>${itemsHtml}${dayMediaBlock}</li>`;
-      }).join('')}</ul></div>`
+        const dayMediaBlock = dayThumbs ? `<div><div class="ts-mcp-day-media-label">Day ${esc(dayNum)} photos &amp; videos</div>${dayThumbs}</div>` : '';
+        return `<section class="ts-mcp-day-card" data-ts-preview-day="${esc(day.date || String(dayNum))}"><div class="ts-mcp-day-head" data-ts-preview-day-header="1">${esc(dayLabel)}${day.title ? ` — ${esc(day.title)}` : ''}</div>${itemsHtml}${dayMediaBlock}</section>`;
+      }).join('')}</div></div>`
       : '';
     const unscheduledHtml = pv.unscheduled.length
-      ? `<div class="ts-mcp-block" data-ts-mcp-preview-unscheduled="1" data-ts-mcp-preview-long-list="1"><h4>Unscheduled long-list items (${pv.unscheduled.length})</h4><ul>${pv.unscheduled.map((item, idx) => {
+      ? `<div class="ts-mcp-block" data-ts-mcp-preview-unscheduled="1"><h4>Saved for later</h4><div class="ts-mcp-thing-list">${pv.unscheduled.map((item, idx) => {
         const thingTitle = String(item.title || '').trim() || 'Saved item';
         const thumbs = renderThumbStrip(item.media, {
           galleryKey: `${selected.id}:unscheduled:${item.ref || item.id || idx}`,
           ownerLabel: thingTitle,
           scope: 'thing',
         });
-        return `<li data-ts-preview-thing="${esc(item.ref || item.id || thingTitle)}"><span>${item.category ? `${esc(item.category)}: ` : ''}${esc(thingTitle)} — Unscheduled</span>${thumbs}</li>`;
-      }).join('')}</ul></div>`
+        return `<div class="ts-mcp-thing-row" data-ts-preview-thing="${esc(item.ref || item.id || thingTitle)}"><div class="ts-mcp-thing-main"><span class="ts-mcp-thing-icon" data-ts-preview-type-icon="1" aria-hidden="true">${categoryIcon(item.category)}</span><span class="ts-mcp-thing-label"><span class="ts-mcp-thing-name">${esc(thingTitle)}</span></span></div>${thumbs}</div>`;
+      }).join('')}</div></div>`
       : '';
-    const unplacedHtml = pv.unplacedMedia.length
-      ? `<div class="ts-mcp-block" data-ts-mcp-preview-unplaced="1"><h4>Not placed yet</h4>${renderThumbStrip(pv.unplacedMedia, {
-        galleryKey: `${selected.id}:unplaced`,
-        ownerLabel: 'Not placed yet',
-        scope: 'unplaced',
+    const skippedHtml = pv.skippedMedia.length
+      ? `<div class="ts-mcp-block" data-ts-mcp-preview-wont-import="1"><h4>Won&#39;t be imported</h4>${pv.skippedMediaNote ? `<p class="ts-mcp-note" data-ts-wont-import-note="1">${esc(pv.skippedMediaNote)}</p>` : ''}${renderThumbStrip(pv.skippedMedia, {
+        galleryKey: `${selected.id}:skipped`,
+        ownerLabel: "Won't be imported",
+        scope: 'skipped',
       })}</div>`
       : '';
-    const bulletsHtml = bullets.length ? `<div class="ts-mcp-block"><h4>What will change</h4><ul>${bullets.map((b) => `<li>${esc(b)}</li>`).join('')}</ul></div>` : '';
-    const missingHtml = missing.length ? `<div class="ts-mcp-block"><h4>Missing details</h4><ul>${missing.map((m) => `<li>${esc(m)}</li>`).join('')}</ul></div>` : '';
-    const conflictsHtml = conflicts.length ? `<div class="ts-mcp-block ts-mcp-block-warn"><h4>Conflicts to review</h4><ul>${conflicts.map((c) => `<li>${esc(c)}</li>`).join('')}</ul></div>` : '';
-    const actionsHtml = selected.status === 'pending_approval'
-      ? `<div class="ts-mcp-actions"><button type="button" class="ts-mcp-btn ts-mcp-btn-primary" data-mcp-approve="${esc(selected.id)}" data-mcp-hash="${esc(pv.previewHash)}"${state.busy === selected.id ? ' disabled' : ''}>Approve</button><button type="button" class="ts-mcp-btn ts-mcp-btn-danger" data-mcp-decline="${esc(selected.id)}"${state.busy === selected.id ? ' disabled' : ''}>Decline</button></div>`
+    const chipsHtml = chips.length ? `<div class="ts-mcp-chips">${chips.map((b) => `<span class="ts-mcp-chip">${esc(b)}</span>`).join('')}</div>` : '';
+    const changesHtml = pv.lastChanges.length ? `<div class="ts-mcp-block" data-ts-preview-changes="1"><h4>Updated in this preview</h4><div class="ts-mcp-notes">${pv.lastChanges.map((c) => `<p class="ts-mcp-note">${esc(c)}</p>`).join('')}</div></div>` : '';
+    const requestedHtml = pv.changeRequests.length ? `<div class="ts-mcp-block" data-ts-requested-changes="1"><h4>Requested changes</h4><div class="ts-mcp-notes">${pv.changeRequests.map((entry) => `<p class="ts-mcp-note">${esc(entry.note)}</p>`).join('')}</div></div>` : '';
+    const missingHtml = missing.length ? `<div class="ts-mcp-block" data-ts-mcp-preview-notes="1"><h4>Good to know</h4><div class="ts-mcp-notes">${missing.map((m) => `<p class="ts-mcp-note">${esc(m)}</p>`).join('')}</div></div>` : '';
+    const conflictsHtml = conflicts.length ? `<div class="ts-mcp-block ts-mcp-block-warn"><h4>Conflicts to review</h4><div class="ts-mcp-notes">${conflicts.map((c) => `<p class="ts-mcp-note">${esc(c)}</p>`).join('')}</div></div>` : '';
+    const requestBoxHtml = selected.status === 'pending_approval' && state.requestBoxFor === selected.id
+      ? `<div class="ts-mcp-change-box" data-ts-request-changes-box="1"><label class="ts-mcp-change-label">What should your AI change?</label><textarea class="ts-mcp-change-input" data-ts-request-changes-input="1" rows="3" maxlength="1000" placeholder="Move a stop, drop a photo, or adjust a time…">${esc(state.requestNote)}</textarea><div class="ts-mcp-actions" style="margin-top:0"><button type="button" class="ts-mcp-btn ts-mcp-btn-primary" data-mcp-request-submit="${esc(selected.id)}" data-mcp-hash="${esc(pv.previewHash)}" data-ts-request-changes-submit="1"${state.busy === selected.id ? ' disabled' : ''}>Send note</button><button type="button" class="ts-mcp-btn" data-mcp-request-cancel="1" data-ts-request-changes-cancel="1">Cancel</button></div></div>`
       : '';
-    return `<div class="ts-mcp-split"><ul class="ts-mcp-list">${listHtml}</ul><div class="ts-mcp-preview" data-ts-mcp-preview="1"><h3 style="margin:0 0 6px;font-size:16px">${esc(kindLabel(selected.kind))}</h3><p style="margin:0 0 6px">Status: <strong>${esc(statusLabel(selected.status))}</strong></p>${pv.previewHash ? `<p style="margin:0 0 6px" data-ts-mcp-preview-hash="${esc(pv.previewHash)}">Preview hash: <code>${esc(pv.previewHash)}</code></p>` : ''}<p style="margin:0">${esc(selected.preview?.summary_text || selected.summary || '')}</p>${bulletsHtml}${daysHtml}${unscheduledHtml}${unplacedHtml}${missingHtml}${conflictsHtml}${actionsHtml}</div></div>`;
+    const actionsHtml = selected.status === 'pending_approval'
+      ? `<div class="ts-mcp-actions"><button type="button" class="ts-mcp-btn ts-mcp-btn-primary" data-mcp-approve="${esc(selected.id)}" data-mcp-hash="${esc(pv.previewHash)}"${state.busy === selected.id ? ' disabled' : ''}>Approve</button><button type="button" class="ts-mcp-btn ts-mcp-btn-secondary" data-mcp-request-toggle="${esc(selected.id)}" data-ts-request-changes-btn="1"${state.busy === selected.id ? ' disabled' : ''}>Request changes</button><button type="button" class="ts-mcp-btn ts-mcp-btn-danger" data-mcp-decline="${esc(selected.id)}"${state.busy === selected.id ? ' disabled' : ''}>Decline</button></div>${requestBoxHtml}`
+      : '';
+    const hashAttr = pv.previewHash ? ` data-ts-mcp-preview-hash="${esc(pv.previewHash)}"` : '';
+    const versionAttr = ` data-ts-mcp-preview-version="${esc(String(pv.previewVersion))}"`;
+    const versionSuffix = pv.previewVersion > 1 ? ` · v${pv.previewVersion}` : '';
+    return `<div class="ts-mcp-split"><ul class="ts-mcp-list">${listHtml}</ul><div class="ts-mcp-preview" data-ts-mcp-preview="1"${versionAttr}${hashAttr}><div class="ts-mcp-preview-head"><h3 style="margin:0;font-size:16px">${esc(kindLabel(selected.kind))}</h3><span class="ts-mcp-status-pill">${esc(statusLabel(selected.status))}${esc(versionSuffix)}</span></div><p style="margin:0">${esc(selected.preview?.summary_text || selected.summary || '')}</p>${chipsHtml}${changesHtml}${daysHtml}${unscheduledHtml}${skippedHtml}${requestedHtml}${missingHtml}${conflictsHtml}${actionsHtml}</div></div>`;
   }
 
   function renderTokens() {
@@ -362,6 +431,41 @@
     root.querySelectorAll('[data-mcp-select]').forEach((btn) => btn.addEventListener('click', () => { state.selectedId = btn.getAttribute('data-mcp-select') || ''; render(); }));
     const approveBtn = root.querySelector('[data-mcp-approve]');
     if (approveBtn) approveBtn.addEventListener('click', () => { void approveSelected(approveBtn.getAttribute('data-mcp-approve') || '', approveBtn.getAttribute('data-mcp-hash') || ''); });
+    const reqToggleBtn = root.querySelector('[data-mcp-request-toggle]');
+    if (reqToggleBtn) {
+      reqToggleBtn.addEventListener('click', () => {
+        const id = reqToggleBtn.getAttribute('data-mcp-request-toggle') || '';
+        state.requestBoxFor = state.requestBoxFor === id ? '' : id;
+        render();
+        if (state.requestBoxFor) root.querySelector('[data-ts-request-changes-input="1"]')?.focus?.();
+      });
+    }
+    const reqInput = root.querySelector('[data-ts-request-changes-input="1"]');
+    if (reqInput) reqInput.addEventListener('input', () => { state.requestNote = reqInput.value; });
+    const reqCancelBtn = root.querySelector('[data-mcp-request-cancel="1"]');
+    if (reqCancelBtn) reqCancelBtn.addEventListener('click', () => { state.requestBoxFor = ''; render(); });
+    const reqSubmitBtn = root.querySelector('[data-mcp-request-submit]');
+    if (reqSubmitBtn) {
+      reqSubmitBtn.addEventListener('click', () => {
+        const id = reqSubmitBtn.getAttribute('data-mcp-request-submit') || '';
+        const hash = reqSubmitBtn.getAttribute('data-mcp-hash') || '';
+        const note = String(state.requestNote || '').trim();
+        if (!note) {
+          state.error = 'Please enter a short note describing what to change.';
+          render();
+          return;
+        }
+        void runAction(id, async () => {
+          await apiJson(`/api/mcp/changes/${encodeURIComponent(id)}/request-changes`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json', accept: 'application/json' },
+            body: JSON.stringify({ shareToken, note, ...(hash ? { preview_hash: hash } : {}) }),
+          });
+          state.requestNote = '';
+          state.requestBoxFor = '';
+        }, 'Change request saved for your AI.', 'Unable to save change request.');
+      });
+    }
     const declineBtn = root.querySelector('[data-mcp-decline]');
     if (declineBtn) {
       declineBtn.addEventListener('click', () => {

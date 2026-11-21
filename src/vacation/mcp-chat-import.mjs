@@ -136,43 +136,54 @@ function buildCardLandingPreview(preview = {}) {
     title: cleanText(item?.title, 200),
     media: asArray(item?.media).map(compactPreviewMedia).filter(Boolean),
   }));
-  const rawUnplaced = Array.isArray(preview.unplaced_media)
-    ? preview.unplaced_media
+  const rawSkipped = Array.isArray(preview.skipped_media)
+    ? preview.skipped_media
     : rawMedia.filter((m) => (m?.assignment_bucket === 'unassigned') || (!m?.attached_thing_ref && !m?.attached_thing_title && !m?.attached_day_date && !m?.assigned_day_date));
-  const unplacedMedia = rawUnplaced.map(compactPreviewMedia).filter(Boolean);
-  return { days, unscheduledThings, unplacedMedia };
+  const skippedMedia = rawSkipped.map(compactPreviewMedia).filter(Boolean);
+  const skippedMediaNote = cleanText(preview.skipped_media_note, 300);
+  return { days, unscheduledThings, skippedMedia, skippedMediaNote };
+}
+
+function formatPreviewDate(iso) {
+  const trimmed = cleanText(iso, 20);
+  const m = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return trimmed;
+  const parsed = Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12, 0, 0);
+  return new Date(parsed).toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'UTC',
+  });
 }
 
 function buildPreviewSummaryBullets(kind, preview = {}) {
   const out = [];
   if (kind === 'draft_import') {
-    const vac = asObject(preview.vacation || preview.will_create?.vacation);
-    if (vac.title) out.push(`Vacation: ${vac.title}${vac.destination ? ` (${vac.destination})` : ''}`);
     const c = asObject(preview.counts);
     const counts = [
-      c.days && `${c.days} day${c.days === 1 ? '' : 's'}`,
-      c.flights && `${c.flights} flight${c.flights === 1 ? '' : 's'}`,
-      c.hotels && `${c.hotels} hotel${c.hotels === 1 ? '' : 's'}`,
-      c.cars && `${c.cars} car${c.cars === 1 ? '' : 's'}`,
-      c.restaurants && `${c.restaurants} restaurant${c.restaurants === 1 ? '' : 's'}`,
-      c.stores && `${c.stores} store${c.stores === 1 ? '' : 's'}`,
-      c.things_to_do && `${c.things_to_do} activity item${c.things_to_do === 1 ? '' : 's'}`,
-      c.unscheduled_things && `${c.unscheduled_things} saved unscheduled item${c.unscheduled_things === 1 ? '' : 's'}`,
-      c.media && `${c.media} photo or video item${c.media === 1 ? '' : 's'}`,
+      c.days && `${c.days} ${c.days === 1 ? 'day' : 'days'}`,
+      c.flights && `${c.flights} ${c.flights === 1 ? 'flight' : 'flights'}`,
+      c.hotels && `${c.hotels} ${c.hotels === 1 ? 'hotel' : 'hotels'}`,
+      c.cars && `${c.cars} ${c.cars === 1 ? 'car' : 'cars'}`,
+      c.restaurants && `${c.restaurants} ${c.restaurants === 1 ? 'restaurant' : 'restaurants'}`,
+      c.stores && `${c.stores} ${c.stores === 1 ? 'store' : 'stores'}`,
+      c.things_to_do && `${c.things_to_do} ${c.things_to_do === 1 ? 'activity' : 'activities'}`,
+      c.unscheduled_things && `${c.unscheduled_things} saved for later`,
+      c.media && `${c.media} ${c.media === 1 ? 'photo or video' : 'photos & videos'}`,
     ].filter(Boolean);
-    if (counts.length) out.push(`Will stage: ${counts.join(', ')}`);
-    return out;
+    return counts;
   }
   const add = asArray(preview.will_add);
   const upd = asArray(preview.will_update);
   const rem = asArray(preview.will_remove);
   const dayUpd = asArray(preview.day_updates);
   const media = asArray(preview.will_attach_media);
-  if (add.length) out.push(`Add ${add.length}: ${add.map((i) => i.title).filter(Boolean).join(', ')}`);
-  if (upd.length) out.push(`Update ${upd.length}: ${upd.map((i) => i.current_title).filter(Boolean).join(', ')}`);
-  if (rem.length) out.push(`Remove ${rem.length}: ${rem.map((i) => i.title).filter(Boolean).join(', ')}`);
-  if (dayUpd.length) out.push(`Update ${dayUpd.length} day(s): ${dayUpd.map((d) => d.day_date).filter(Boolean).join(', ')}`);
-  if (media.length) out.push(`Attach ${media.length} photo or video item(s)`);
+  if (add.length) out.push(`Add ${add.map((i) => i.title).filter(Boolean).join(', ')}`);
+  if (upd.length) out.push(`Update ${upd.map((i) => i.current_title).filter(Boolean).join(', ')}`);
+  if (rem.length) out.push(`Remove ${rem.map((i) => i.title).filter(Boolean).join(', ')}`);
+  if (dayUpd.length) out.push(`Update ${dayUpd.map((d) => formatPreviewDate(d.day_date)).filter(Boolean).join(', ')}`);
+  if (media.length) out.push(`Attach ${media.length} ${media.length === 1 ? 'photo or video' : 'photos & videos'}`);
   return out;
 }
 
@@ -357,6 +368,7 @@ export async function postStagedPreviewToChat(db, {
   kind = 'draft_import',
   preview = {},
   summary = '',
+  replyBody = '',
 }) {
   const tripId = cleanText(tokenRecord?.tripId, 80);
   if (!tripId || !changeSetId) return null;
@@ -385,17 +397,24 @@ export async function postStagedPreviewToChat(db, {
   const summaryText = cleanText(preview?.summary_text || summary, 500) || 'Your AI staged vacation updates for your review.';
   const bullets = buildPreviewSummaryBullets(kind, preview);
   const landing = buildCardLandingPreview(preview);
+  const changeRequests = asArray(preview?.change_requests).slice(-6);
+  const recentChanges = asArray(preview?.last_changes).slice(0, 6);
+  const previewVersion = Math.max(1, Number(preview?.preview_version) || 1);
   const card = {
     kind: 'ai_staged_approval',
     changeSetId: String(changeSetId),
     changeKind: kind === 'targeted_edit' ? 'targeted_edit' : 'draft_import',
     status: 'pending_approval',
+    previewVersion,
     previewHash: cleanText(preview?.preview_hash, 128),
     summary: summaryText,
     bullets,
+    ...(recentChanges.length ? { recentChanges } : {}),
+    ...(changeRequests.length ? { changeRequests, latestChangeRequest: changeRequests[changeRequests.length - 1] } : {}),
     days: landing.days,
     unscheduledThings: landing.unscheduledThings,
-    unplacedMedia: landing.unplacedMedia,
+    skippedMedia: landing.skippedMedia,
+    ...(landing.skippedMediaNote ? { skippedMediaNote: landing.skippedMediaNote } : {}),
     vacationId: tripId,
     vacationTitle: cleanText(preview?.vacation?.title || preview?.will_create?.vacation?.title, 180),
     counts: asObject(preview?.counts),
@@ -404,7 +423,7 @@ export async function postStagedPreviewToChat(db, {
     conflicts: asArray(preview?.conflicts).slice(0, 6),
     shareSlug,
   };
-  const body = 'Your AI staged a preview for your review.';
+  const body = cleanText(replyBody, 600) || 'Your AI staged a preview for your review.';
   try {
     await db`
       insert into transcript_turns (
@@ -442,6 +461,7 @@ export async function syncApprovalCardStatusInChat(db, { tripId, changeSetId, st
       set payload = jsonb_set(payload, '{aiApprovalCard,status}', ${JSON.stringify(normalizedStatus)}::jsonb, true)
       where trip_id = ${normalizedTripId}
         and payload->'aiApprovalCard'->>'changeSetId' = ${normalizedId}
+        and coalesce(payload->'aiApprovalCard'->>'status', '') <> 'replaced'
     `;
   } catch (error) {
     void error;

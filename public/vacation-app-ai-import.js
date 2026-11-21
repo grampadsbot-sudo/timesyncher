@@ -8,6 +8,57 @@
   let visibilityBound = false;
   let lastTurnCount = 0;
 
+  const CATEGORY_ICONS = {
+    flight: '✈️',
+    hotel: '🏨',
+    car: '🚗',
+    restaurant: '🍽️',
+    bar: '🍸',
+    store: '🛍️',
+    sightseeing: '🏞️',
+    tour: '🧭',
+    attraction: '🎟️',
+    music: '🎵',
+    theatre: '🎭',
+    workout: '🏃',
+    tickets: '🎫',
+    family_event: '👨‍👩‍👧‍👦',
+    artist: '🎨',
+    transport: '🚆',
+    event: '🎉',
+    note: '📝',
+    activity: '📍',
+  };
+
+  function categoryIcon(category) {
+    const key = String(category || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+    return CATEGORY_ICONS[key] || '📍';
+  }
+
+  function formatFriendlyDate(iso) {
+    const trimmed = String(iso || '').trim();
+    if (!trimmed) return '';
+    const m = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    const parsed = m
+      ? Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12, 0, 0)
+      : Date.parse(trimmed);
+    if (!Number.isFinite(parsed)) return trimmed;
+    return new Date(parsed).toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'UTC',
+    });
+  }
+
+  function formatClock(value) {
+    const raw = String(value || '').trim().replace(/(\d{1,2}:\d{2}):\d{2}/g, '$1');
+    const m = raw.match(/^(\d{1,2}):(\d{2})$/);
+    if (!m) return raw;
+    const h = Number(m[1]);
+    return `${h % 12 || 12}:${m[2]} ${h < 12 ? 'AM' : 'PM'}`;
+  }
+
   function esc(value) {
     return String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
@@ -64,12 +115,24 @@
       '.ts-ai-token-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 10px;padding:8px 10px;border-radius:8px;background:#f8fafc;border:1px solid #e2e8f0;font-size:12px}',
       '.ts-ai-token-row code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;font-weight:700;color:#0f172a;word-break:break-all}',
       '.ts-ai-meta{font-size:11px;color:#64748b}',
-      '.ts-ai-bullets{margin:0;padding-left:18px;display:grid;gap:4px;font-size:13px;color:#1e293b}',
-      '.ts-ai-block{border-top:1px solid #e2e8f0;padding-top:8px;display:grid;gap:6px}',
-      '.ts-ai-block h4{margin:0;font-size:11px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:#475569}',
-      '.ts-ai-block ul{margin:0;padding-left:18px;display:grid;gap:6px;font-size:13px;color:#1e293b}',
-      '.ts-ai-day-media-label{margin:6px 0 0;font-size:11px;font-weight:700;color:#64748b}',
-      '.ts-ai-thumb-strip{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}',
+      '.ts-ai-chips{display:flex;flex-wrap:wrap;gap:6px}',
+      '.ts-ai-chip{display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;background:#f8fafc;color:#334155;border:1px solid #e2e8f0}',
+      '.ts-ai-block{border-top:1px solid #e2e8f0;padding-top:10px;display:grid;gap:8px}',
+      '.ts-ai-block h4{margin:0;font-size:11px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:#64748b}',
+      '.ts-ai-days{display:grid;gap:8px}',
+      '.ts-ai-day-card{border:1px solid #e2e8f0;border-radius:12px;padding:10px;background:#f8fafc;display:grid;gap:8px}',
+      '.ts-ai-day-head{font-size:13px;font-weight:800;color:#0f172a;line-height:1.3}',
+      '.ts-ai-thing-list{display:grid;gap:6px}',
+      '.ts-ai-thing-row{border:1px solid #e2e8f0;border-radius:10px;padding:8px 10px;background:#ffffff;display:grid;gap:4px}',
+      '.ts-ai-thing-main{display:flex;align-items:center;gap:8px;min-width:0}',
+      '.ts-ai-thing-icon{width:24px;height:24px;flex:0 0 24px;display:inline-grid;place-items:center;border-radius:6px;border:1px solid #e2e8f0;background:#f8fafc;font-size:13px;line-height:1}',
+      '.ts-ai-thing-label{min-width:0;font-size:13px;line-height:1.35;color:#0f172a;overflow-wrap:anywhere}',
+      '.ts-ai-thing-name{font-weight:700}',
+      '.ts-ai-thing-time{color:#64748b;font-weight:600}',
+      '.ts-ai-day-media-label{margin:2px 0 0;font-size:11px;font-weight:700;color:#64748b}',
+      '.ts-ai-notes{display:grid;gap:6px}',
+      '.ts-ai-note{margin:0;font-size:12px;line-height:1.45;color:#475569;padding:8px 10px;border-radius:8px;background:#f8fafc;border:1px solid #e2e8f0}',
+      '.ts-ai-thumb-strip{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}',
       '.ts-ai-thumb{position:relative;width:58px;height:58px;padding:0;border-radius:8px;overflow:hidden;border:1px solid #cbd5e1;background:#0f172a;cursor:pointer;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center}',
       '.ts-ai-thumb-media{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}',
       '.ts-ai-thumb-play{position:absolute;inset:0;margin:auto;width:24px;height:24px;border-radius:999px;background:rgba(15,23,42,.78);color:#ffffff;font-size:11px;display:inline-flex;align-items:center;justify-content:center;pointer-events:none;box-shadow:0 2px 6px rgba(0,0,0,.35)}',
@@ -77,8 +140,13 @@
       '.ts-ai-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:2px}',
       '.ts-ai-btn{min-height:38px;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:750;cursor:pointer;border:1px solid #cbd5e1;background:#ffffff;color:#0f172a}',
       '.ts-ai-btn-primary{background:#0f766e;border-color:#0f766e;color:#ffffff}',
+      '.ts-ai-btn-secondary{background:#f8fafc;border-color:#94a3b8;color:#0f172a}',
       '.ts-ai-btn-danger{background:#ffffff;border-color:#fca5a5;color:#b91c1c}',
       '.ts-ai-btn[disabled]{opacity:.55;cursor:not-allowed}',
+      '.ts-ai-change-box{display:grid;gap:8px;padding:10px;border-radius:10px;background:#f8fafc;border:1px solid #cbd5e1;margin-top:4px}',
+      '.ts-ai-change-box[hidden]{display:none}',
+      '.ts-ai-change-label{font-size:12px;font-weight:700;color:#0f172a}',
+      '.ts-ai-change-input{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:8px;padding:8px 10px;font:inherit;font-size:13px;line-height:1.4;color:#0f172a;background:#ffffff;resize:vertical}',
       '.ts-ai-pill{display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:750}',
       '.ts-ai-pill-ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}',
       '.ts-ai-pill-muted{background:#f1f5f9;color:#475569;border:1px solid #cbd5e1}',
@@ -158,33 +226,54 @@
       + '</section>';
   }
 
+  function formatSkippedMediaNote(items) {
+    const count = items.length;
+    if (!count) return '';
+    const hasPhoto = items.some((m) => String(m.media_kind || 'photo').toLowerCase() !== 'video');
+    const hasVideo = items.some((m) => String(m.media_kind || 'photo').toLowerCase() === 'video');
+    if (count === 1) {
+      return hasVideo
+        ? "This video doesn't have a date during this vacation, so it won't be imported."
+        : "This photo doesn't have a date during this vacation, so it won't be imported.";
+    }
+    const noun = hasPhoto && hasVideo ? 'photos and videos' : (hasVideo ? 'videos' : 'photos');
+    return `These ${count} ${noun} don't have a date during this vacation, so they won't be imported.`;
+  }
+
   function renderApprovalCardHtml(card) {
     if (!card || card.kind !== 'ai_staged_approval') return '';
     const heading = card.changeKind === 'targeted_edit' ? 'Targeted vacation edit' : 'Vacation draft import';
     const bullets = Array.isArray(card.bullets) ? card.bullets.filter(Boolean) : [];
+    const missing = Array.isArray(card.missing) ? card.missing.filter(Boolean) : [];
     const conflicts = Array.isArray(card.conflicts) ? card.conflicts.filter(Boolean) : [];
     const days = Array.isArray(card.days) ? card.days : [];
     const unscheduled = Array.isArray(card.unscheduledThings) ? card.unscheduledThings : [];
-    const unplaced = Array.isArray(card.unplacedMedia) ? card.unplacedMedia : [];
+    const skipped = Array.isArray(card.skippedMedia) ? card.skippedMedia : [];
+    const skippedNote = String(card.skippedMediaNote || '').trim() || formatSkippedMediaNote(skipped);
+    const recentChanges = Array.isArray(card.recentChanges) ? card.recentChanges.filter(Boolean) : [];
+    const changeRequests = Array.isArray(card.changeRequests) ? card.changeRequests.filter((r) => r && r.note) : [];
+    const previewVersion = Math.max(1, Number(card.previewVersion) || 1);
     const status = String(card.status || 'pending_approval');
-    const cardKey = String(card.changeSetId || 'staged');
-    const bulletsHtml = bullets.length
-      ? `<ul class="ts-ai-bullets">${bullets.map((line) => `<li>${esc(line)}</li>`).join('')}</ul>`
+    const cardKey = `${String(card.changeSetId || 'staged')}:v${previewVersion}`;
+    const chipsHtml = bullets.length
+      ? `<div class="ts-ai-chips">${bullets.map((line) => `<span class="ts-ai-chip">${esc(line)}</span>`).join('')}</div>`
       : '';
     const daysHtml = days.length
-      ? `<div class="ts-ai-block" data-ts-mcp-preview-days="1"><h4>Itinerary by day</h4><ul>${days.map((day, idx) => {
+      ? `<div class="ts-ai-block" data-ts-mcp-preview-days="1"><h4>Itinerary by day</h4><div class="ts-ai-days">${days.map((day, idx) => {
         const dayNum = day.day_number ?? idx + 1;
-        const dayLabel = `Day ${dayNum}${day.date ? ` (${day.date})` : ''}`;
+        const friendlyDate = formatFriendlyDate(day.date);
+        const dayLabel = `Day ${dayNum}${friendlyDate ? ` · ${friendlyDate}` : ''}`;
         const itemsHtml = Array.isArray(day.items) && day.items.length
-          ? `<ul>${day.items.map((item, itemIdx) => {
+          ? `<div class="ts-ai-thing-list">${day.items.map((item, itemIdx) => {
             const thingTitle = String(item.title || '').trim() || 'Item';
+            const timeLabel = item.start_time ? formatClock(item.start_time) : '';
             const thumbs = renderThumbStripHtml(item.media, {
               galleryKey: `${cardKey}:day:${idx}:thing:${item.ref || item.id || itemIdx}`,
               ownerLabel: thingTitle,
               scope: 'thing',
             });
-            return `<li data-ts-preview-thing="${esc(item.ref || item.id || thingTitle)}"><span>${item.category ? `${esc(item.category)}: ` : ''}${esc(thingTitle)}</span>${thumbs}</li>`;
-          }).join('')}</ul>`
+            return `<div class="ts-ai-thing-row" data-ts-preview-thing="${esc(item.ref || item.id || thingTitle)}"><div class="ts-ai-thing-main"><span class="ts-ai-thing-icon" data-ts-preview-type-icon="1" aria-hidden="true">${categoryIcon(item.category)}</span><span class="ts-ai-thing-label"><span class="ts-ai-thing-name">${esc(thingTitle)}</span>${timeLabel ? `<span class="ts-ai-thing-time"> · ${esc(timeLabel)}</span>` : ''}</span></div>${thumbs}</div>`;
+          }).join('')}</div>`
           : '';
         const dayOnly = Array.isArray(day.day_media)
           ? day.day_media
@@ -194,50 +283,78 @@
           ownerLabel: dayLabel,
           scope: 'day',
         });
-        const dayMediaBlock = dayThumbs ? `<div class="ts-ai-day-media-label">Day ${esc(dayNum)} photos &amp; videos</div>${dayThumbs}` : '';
-        return `<li data-ts-preview-day="${esc(day.date || String(dayNum))}"><strong>${esc(dayLabel)}${day.title ? ` — ${esc(day.title)}` : ''}</strong>${itemsHtml}${dayMediaBlock}</li>`;
-      }).join('')}</ul></div>`
+        const dayMediaBlock = dayThumbs ? `<div><div class="ts-ai-day-media-label">Day ${esc(dayNum)} photos &amp; videos</div>${dayThumbs}</div>` : '';
+        return `<section class="ts-ai-day-card" data-ts-preview-day="${esc(day.date || String(dayNum))}"><div class="ts-ai-day-head" data-ts-preview-day-header="1">${esc(dayLabel)}${day.title ? ` — ${esc(day.title)}` : ''}</div>${itemsHtml}${dayMediaBlock}</section>`;
+      }).join('')}</div></div>`
       : '';
     const unscheduledHtml = unscheduled.length
-      ? `<div class="ts-ai-block" data-ts-mcp-preview-unscheduled="1" data-ts-mcp-preview-long-list="1"><h4>Unscheduled long-list items (${unscheduled.length})</h4><ul>${unscheduled.map((item, idx) => {
+      ? `<div class="ts-ai-block" data-ts-mcp-preview-unscheduled="1"><h4>Saved for later</h4><div class="ts-ai-thing-list">${unscheduled.map((item, idx) => {
         const thingTitle = String(item.title || '').trim() || 'Saved item';
         const thumbs = renderThumbStripHtml(item.media, {
           galleryKey: `${cardKey}:unscheduled:${item.ref || item.id || idx}`,
           ownerLabel: thingTitle,
           scope: 'thing',
         });
-        return `<li data-ts-preview-thing="${esc(item.ref || item.id || thingTitle)}"><span>${item.category ? `${esc(item.category)}: ` : ''}${esc(thingTitle)} — Unscheduled</span>${thumbs}</li>`;
-      }).join('')}</ul></div>`
+        return `<div class="ts-ai-thing-row" data-ts-preview-thing="${esc(item.ref || item.id || thingTitle)}"><div class="ts-ai-thing-main"><span class="ts-ai-thing-icon" data-ts-preview-type-icon="1" aria-hidden="true">${categoryIcon(item.category)}</span><span class="ts-ai-thing-label"><span class="ts-ai-thing-name">${esc(thingTitle)}</span></span></div>${thumbs}</div>`;
+      }).join('')}</div></div>`
       : '';
-    const unplacedHtml = unplaced.length
-      ? `<div class="ts-ai-block" data-ts-mcp-preview-unplaced="1"><h4>Not placed yet</h4>${renderThumbStripHtml(unplaced, {
-        galleryKey: `${cardKey}:unplaced`,
-        ownerLabel: 'Not placed yet',
-        scope: 'unplaced',
+    const skippedHtml = skipped.length
+      ? `<div class="ts-ai-block" data-ts-mcp-preview-wont-import="1"><h4>Won&#39;t be imported</h4>${skippedNote ? `<p class="ts-ai-note" data-ts-wont-import-note="1">${esc(skippedNote)}</p>` : ''}${renderThumbStripHtml(skipped, {
+        galleryKey: `${cardKey}:skipped`,
+        ownerLabel: "Won't be imported",
+        scope: 'skipped',
       })}</div>`
       : '';
+    const recentChangesHtml = recentChanges.length
+      ? `<div class="ts-ai-block" data-ts-preview-changes="1"><h4>Updated in this preview</h4><div class="ts-ai-notes">${recentChanges.map((line) => `<p class="ts-ai-note">${esc(line)}</p>`).join('')}</div></div>`
+      : '';
+    const requestedHtml = changeRequests.length
+      ? `<div class="ts-ai-block" data-ts-requested-changes="1"><h4>Requested changes</h4><div class="ts-ai-notes">${changeRequests.map((entry) => `<p class="ts-ai-note">${esc(entry.note)}</p>`).join('')}</div></div>`
+      : '';
+    const missingHtml = missing.length
+      ? `<div class="ts-ai-block" data-ts-mcp-preview-notes="1"><h4>Good to know</h4><div class="ts-ai-notes">${missing.map((line) => `<p class="ts-ai-note">${esc(line)}</p>`).join('')}</div></div>`
+      : '';
     const conflictsHtml = conflicts.length
-      ? `<div class="ts-ai-warn">${esc(conflicts.join(' '))}</div>`
+      ? `<div class="ts-ai-warn">${conflicts.map((line) => `<div>${esc(line)}</div>`).join('')}</div>`
       : '';
     let footerHtml = '';
     if (status === 'pending_approval') {
       footerHtml = '<div class="ts-ai-actions">'
         + `<button type="button" class="ts-ai-btn ts-ai-btn-primary" data-ai-chat-approve="${esc(card.changeSetId)}" data-ai-preview-hash="${esc(card.previewHash || '')}" data-ai-share-slug="${esc(card.shareSlug || '')}" data-ai-vacation-id="${esc(card.vacationId || '')}">Approve</button>`
+        + `<button type="button" class="ts-ai-btn ts-ai-btn-secondary" data-ai-chat-request-changes="${esc(card.changeSetId)}" data-ts-request-changes-btn="1">Request changes</button>`
         + `<button type="button" class="ts-ai-btn ts-ai-btn-danger" data-ai-chat-decline="${esc(card.changeSetId)}" data-ai-share-slug="${esc(card.shareSlug || '')}" data-ai-vacation-id="${esc(card.vacationId || '')}">Decline</button>`
+        + '</div>'
+        + '<div class="ts-ai-change-box" data-ts-request-changes-box="1" hidden>'
+        + '<label class="ts-ai-change-label">What should your AI change?</label>'
+        + '<textarea class="ts-ai-change-input" data-ts-request-changes-input="1" rows="3" maxlength="1000" placeholder="Move a stop, drop a photo, or adjust a time…"></textarea>'
+        + '<div class="ts-ai-actions">'
+        + `<button type="button" class="ts-ai-btn ts-ai-btn-primary" data-ai-chat-request-submit="${esc(card.changeSetId)}" data-ai-preview-hash="${esc(card.previewHash || '')}" data-ai-share-slug="${esc(card.shareSlug || '')}" data-ai-vacation-id="${esc(card.vacationId || '')}" data-ts-request-changes-submit="1">Send note</button>`
+        + '<button type="button" class="ts-ai-btn" data-ai-chat-request-cancel="1" data-ts-request-changes-cancel="1">Cancel</button>'
+        + '</div></div>';
+    } else if (status === 'replaced') {
+      footerHtml = '<div class="ts-ai-actions">'
+        + `<button type="button" class="ts-ai-btn ts-ai-btn-primary" data-ai-chat-approve="${esc(card.changeSetId)}" data-ai-preview-hash="${esc(card.previewHash || '')}" disabled>Approve</button>`
+        + '<span class="ts-ai-pill ts-ai-pill-muted" data-ai-approval-state="replaced">Replaced by updated preview</span>'
         + '</div>';
     } else if (status === 'approved') {
       footerHtml = '<div class="ts-ai-actions"><span class="ts-ai-pill ts-ai-pill-ok" data-ai-approval-state="approved">Approved and live on your vacation</span></div>';
     } else if (status === 'declined') {
       footerHtml = '<div class="ts-ai-actions"><span class="ts-ai-pill ts-ai-pill-muted" data-ai-approval-state="declined">Declined — live vacation unchanged</span></div>';
     }
-    return `<section class="ts-ai-card" data-ts-ai-approval-card="1" data-change-set-id="${esc(card.changeSetId || '')}" aria-label="AI vacation preview">`
-      + '<span class="ts-ai-kicker">AI Preview Ready</span>'
+    const kickerText = status === 'replaced'
+      ? `Replaced Preview · v${previewVersion}`
+      : (previewVersion > 1 ? `Updated AI Preview · v${previewVersion}` : 'AI Preview Ready');
+    return `<section class="ts-ai-card" data-ts-ai-approval-card="1" data-change-set-id="${esc(card.changeSetId || '')}" data-preview-version="${esc(String(previewVersion))}" data-preview-hash="${esc(card.previewHash || '')}" data-card-status="${esc(status)}" aria-label="AI vacation preview">`
+      + `<span class="ts-ai-kicker">${esc(kickerText)}</span>`
       + `<h3 class="ts-ai-title">${esc(heading)}</h3>`
       + `<p class="ts-ai-desc">${esc(card.summary || '')}</p>`
-      + bulletsHtml
+      + chipsHtml
+      + recentChangesHtml
       + daysHtml
       + unscheduledHtml
-      + unplacedHtml
+      + skippedHtml
+      + requestedHtml
+      + missingHtml
       + conflictsHtml
       + footerHtml
       + '<p class="ts-ai-status" data-ai-approval-status="1" hidden></p>'
@@ -323,7 +440,10 @@
         void error;
       }
       if (!response.ok || body.ok === false) {
-        throw new Error(String(body.error || `Unable to ${action} AI changes.`));
+        const err = new Error(String(body.error || `Unable to ${action} AI changes.`));
+        err.code = body.code || '';
+        err.status = response.status;
+        throw err;
       }
       const actionsRow = card.querySelector('.ts-ai-actions');
       if (actionsRow) {
@@ -331,6 +451,8 @@
           ? '<span class="ts-ai-pill ts-ai-pill-ok" data-ai-approval-state="approved">Approved and live on your vacation</span>'
           : '<span class="ts-ai-pill ts-ai-pill-muted" data-ai-approval-state="declined">Declined — live vacation unchanged</span>';
       }
+      const changeBox = card.querySelector('[data-ts-request-changes-box="1"]');
+      if (changeBox) changeBox.hidden = true;
       if (status) {
         status.textContent = action === 'approve' ? 'Approved and applied to your vacation.' : 'Declined. Live vacation data was not changed.';
         status.className = 'ts-ai-status';
@@ -341,12 +463,90 @@
         setTimeout(() => { void ctx.loadApp(nextId); }, 250);
       }
     } catch (error) {
-      buttons.forEach((b) => { b.disabled = false; });
+      if (action === 'approve' && (error?.code === 'preview_hash_mismatch' || error?.status === 409)) {
+        const actionsRow = card.querySelector('.ts-ai-actions');
+        if (actionsRow) {
+          actionsRow.innerHTML = `<button type="button" class="ts-ai-btn ts-ai-btn-primary" data-ai-chat-approve="${esc(changeSetId)}" data-ai-preview-hash="${esc(previewHash)}" disabled>Approve</button><span class="ts-ai-pill ts-ai-pill-muted" data-ai-approval-state="replaced">Replaced by updated preview</span>`;
+        }
+      } else {
+        buttons.forEach((b) => { b.disabled = false; });
+      }
       if (status) {
         status.textContent = error instanceof Error ? error.message : `Unable to ${action} AI changes.`;
         status.className = 'ts-ai-status ts-ai-status-err';
         status.hidden = false;
       }
+    }
+  }
+
+  async function handleRequestChangesSubmit(btn, ctx) {
+    const card = btn.closest('[data-ts-ai-approval-card="1"]');
+    const changeSetId = btn.getAttribute('data-ai-chat-request-submit') || '';
+    const previewHash = btn.getAttribute('data-ai-preview-hash') || '';
+    const shareToken = btn.getAttribute('data-ai-share-slug') || ctx.currentTrip?.()?.shareToken || '';
+    const tripId = btn.getAttribute('data-ai-vacation-id') || ctx.currentTrip?.()?.id || '';
+    const box = card?.querySelector('[data-ts-request-changes-box="1"]');
+    const input = box?.querySelector('[data-ts-request-changes-input="1"]');
+    const status = card?.querySelector('[data-ai-approval-status="1"]');
+    const note = String(input?.value || '').trim();
+    if (!changeSetId || !card) return;
+    if (!note) {
+      if (status) {
+        status.textContent = 'Please enter a short note describing what to change.';
+        status.className = 'ts-ai-status ts-ai-status-err';
+        status.hidden = false;
+      }
+      input?.focus?.();
+      return;
+    }
+    btn.disabled = true;
+    try {
+      const response = await fetch(`/api/mcp/changes/${encodeURIComponent(changeSetId)}/request-changes`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'content-type': 'application/json', accept: 'application/json' },
+        body: JSON.stringify({
+          ...(shareToken ? { shareToken } : {}),
+          ...(tripId ? { tripId } : {}),
+          ...(previewHash ? { preview_hash: previewHash } : {}),
+          note,
+        }),
+      });
+      let body = {};
+      try {
+        body = await response.json();
+      } catch (error) {
+        void error;
+      }
+      if (!response.ok || body.ok === false) {
+        throw new Error(String(body.error || 'Unable to save change request.'));
+      }
+      const list = Array.isArray(body.changeRequests) ? body.changeRequests : [{ note }];
+      let block = card.querySelector('[data-ts-requested-changes="1"]');
+      if (!block) {
+        block = document.createElement('div');
+        block.className = 'ts-ai-block';
+        block.setAttribute('data-ts-requested-changes', '1');
+        const actionsRow = card.querySelector('.ts-ai-actions');
+        if (actionsRow) card.insertBefore(block, actionsRow);
+        else card.appendChild(block);
+      }
+      block.innerHTML = `<h4>Requested changes</h4><div class="ts-ai-notes">${list.map((entry) => `<p class="ts-ai-note">${esc(entry.note || '')}</p>`).join('')}</div>`;
+      if (input) input.value = '';
+      if (box) box.hidden = true;
+      if (status) {
+        status.textContent = 'Change request saved for your AI.';
+        status.className = 'ts-ai-status';
+        status.hidden = false;
+      }
+    } catch (error) {
+      if (status) {
+        status.textContent = error instanceof Error ? error.message : 'Unable to save change request.';
+        status.className = 'ts-ai-status ts-ai-status-err';
+        status.hidden = false;
+      }
+    } finally {
+      btn.disabled = false;
     }
   }
 
@@ -381,6 +581,28 @@
         const approveBtn = event.target?.closest?.('[data-ai-chat-approve]');
         if (approveBtn) {
           void handleApprovalClick(approveBtn, 'approve', ctx);
+          return;
+        }
+        const requestBtn = event.target?.closest?.('[data-ai-chat-request-changes]');
+        if (requestBtn) {
+          const card = requestBtn.closest('[data-ts-ai-approval-card="1"]');
+          const box = card?.querySelector('[data-ts-request-changes-box="1"]');
+          if (box) {
+            box.hidden = !box.hidden;
+            if (!box.hidden) box.querySelector('[data-ts-request-changes-input="1"]')?.focus?.();
+          }
+          return;
+        }
+        const cancelReqBtn = event.target?.closest?.('[data-ai-chat-request-cancel]');
+        if (cancelReqBtn) {
+          const card = cancelReqBtn.closest('[data-ts-ai-approval-card="1"]');
+          const box = card?.querySelector('[data-ts-request-changes-box="1"]');
+          if (box) box.hidden = true;
+          return;
+        }
+        const submitReqBtn = event.target?.closest?.('[data-ai-chat-request-submit]');
+        if (submitReqBtn) {
+          void handleRequestChangesSubmit(submitReqBtn, ctx);
           return;
         }
         const declineBtn = event.target?.closest?.('[data-ai-chat-decline]');

@@ -11,12 +11,27 @@ import {
   previewList,
 } from './mcp-preview-common.mjs';
 
+function pluralCount(count, singular, plural = `${singular}s`) {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
+function formatSkippedMediaNote(items) {
+  const count = items.length;
+  if (!count) return '';
+  const hasPhoto = items.some((m) => String(m.media_kind || 'photo').toLowerCase() !== 'video');
+  const hasVideo = items.some((m) => String(m.media_kind || 'photo').toLowerCase() === 'video');
+  if (count === 1) {
+    return hasVideo
+      ? "This video doesn't have a date during this vacation, so it won't be imported."
+      : "This photo doesn't have a date during this vacation, so it won't be imported.";
+  }
+  const noun = hasPhoto && hasVideo ? 'photos and videos' : (hasVideo ? 'videos' : 'photos');
+  return `These ${count} ${noun} don't have a date during this vacation, so they won't be imported.`;
+}
+
 export function buildDraftImportPreview({
-  draft,
-  mediaRows = [],
-  existingTrip = null,
-  existingThings = [],
-  applyMode = 'create_new',
+  draft, mediaRows = [], existingTrip = null, existingThings = [], applyMode = 'create_new',
+  previewVersion = 1, changeRequests = [], lastChanges = [],
 }) {
   const vacation = draft?.vacation && typeof draft.vacation === 'object' ? draft.vacation : {};
   const startDate = previewIsoDateOnly(vacation.start_date);
@@ -53,7 +68,7 @@ export function buildDraftImportPreview({
   if (!startDate || !endDate) missing.push('Vacation start and end dates are missing.');
   if (!cleanPreviewText(vacation.timezone, 80)) missing.push('Vacation timezone is missing (UTC will be used for photo dates).');
   if (!rawDays.length && rangeDates.length) {
-    missing.push(`No custom day titles provided (${rangeDates.length} calendar days will be created automatically).`);
+    missing.push(`No custom day titles provided (${pluralCount(rangeDates.length, 'calendar day')} will be created automatically).`);
   }
 
   for (const hotel of hotels) {
@@ -103,30 +118,35 @@ export function buildDraftImportPreview({
     }
   }
 
+  const removedMediaIds = new Set(previewList(draft?.removed_media_ids).map((id) => String(id || '')));
+  const activeMediaRows = previewList(mediaRows).filter((row) => !removedMediaIds.has(String(row.id || '')));
   const mediaLinksById = new Map(previewList(draft?.media).map((link) => [String(link.media_id || ''), link]));
-  const { media: mediaEntries, totalBytes } = buildPreviewMediaEntries({
-    mediaRows,
+  const { media: mediaEntries } = buildPreviewMediaEntries({
+    mediaRows: activeMediaRows,
     mediaLinksById,
     items: allItems,
     days: resolvedDays,
     vacationTimeZone,
   });
 
-  const unassignedMedia = mediaEntries.filter((item) => item.assignment_bucket === 'unassigned');
-  if (unassignedMedia.length) {
-    missing.push(`${unassignedMedia.length} photo or video item(s) could not be matched to a vacation day and will appear in Not placed yet.`);
-  }
   const pendingUploadMedia = mediaEntries.filter((item) => item.upload_status === 'signed');
   if (pendingUploadMedia.length) {
-    missing.push(`${pendingUploadMedia.length} signed media upload(s) have not been uploaded yet.`);
+    missing.push(
+      pendingUploadMedia.length === 1
+        ? '1 photo or video has not finished uploading yet.'
+        : `${pendingUploadMedia.length} photos or videos have not finished uploading yet.`,
+    );
   }
 
-  const { days: landingDays, unscheduledThings, unplacedMedia } = groupLandingDaysAndUnscheduled({
+  const { days: landingDays, unscheduledThings, skippedMedia } = groupLandingDaysAndUnscheduled({
     resolvedDays,
     scheduledItems,
     unscheduledItems,
     mediaEntries,
   });
+  const importedMedia = mediaEntries.filter((item) => item.assignment_bucket !== 'unassigned');
+  const importedBytes = importedMedia.reduce((sum, item) => sum + Number(item.bytes || 0), 0);
+  const skippedMediaNote = formatSkippedMediaNote(skippedMedia);
 
   const vacationBlock = {
     title: cleanPreviewText(vacation.title, 180) || 'Untitled Vacation',
@@ -150,7 +170,7 @@ export function buildDraftImportPreview({
     things_to_do: thingsToDo.map((item) => ({ title: cleanPreviewText(item.title, 180), day_date: item.unscheduled === true ? null : (previewIsoDateOnly(item.day_date || item.starts_at) || null) })),
     notes: notes.map((item) => ({ title: cleanPreviewText(item.title, 180), day_date: item.unscheduled === true ? null : (previewIsoDateOnly(item.day_date) || null) })),
     unscheduled_things: unscheduledThings,
-    media: mediaEntries,
+    media: importedMedia,
   };
 
   const counts = {
@@ -164,21 +184,31 @@ export function buildDraftImportPreview({
     notes: willCreate.notes.length,
     scheduled_items: scheduledItems.length,
     unscheduled_things: unscheduledThings.length,
-    media: mediaEntries.length,
-    total_bytes: totalBytes,
+    media: importedMedia.length,
+    total_bytes: importedBytes,
   };
 
-  const unscheduledNote = unscheduledThings.length ? `, ${unscheduledThings.length} unscheduled long-list item(s)` : '';
-  const summaryText = `Ready to ${applyMode === 'populate_scoped' ? 'update' : 'create'} vacation "${vacationBlock.title}" with ${counts.days} day(s), ${scheduledItems.length} scheduled item(s)${unscheduledNote}, and ${counts.media} media file(s).`;
+  const summaryParts = [
+    pluralCount(counts.days, 'day'),
+    pluralCount(scheduledItems.length, 'planned stop'),
+    ...(unscheduledThings.length ? [`${unscheduledThings.length} saved for later`] : []),
+    ...(counts.media ? [pluralCount(counts.media, 'photo or video', 'photos & videos')] : []),
+  ];
+  const summaryText = `Ready to ${applyMode === 'populate_scoped' ? 'update' : 'create'} vacation "${vacationBlock.title}" with ${summaryParts.join(', ')}.`;
 
+  const normalizedVersion = Math.max(1, Number(previewVersion) || 1);
+  const normalizedRequests = previewList(changeRequests);
+  const normalizedChanges = previewList(lastChanges).filter(Boolean);
   const hashPayload = {
     kind: 'draft_import',
     apply_mode: applyMode,
+    ...(normalizedVersion > 1 ? { preview_version: normalizedVersion } : {}),
     vacation: vacationBlock,
     days: landingDays,
     unscheduled_things: unscheduledThings,
-    media: mediaEntries,
-    total_bytes: totalBytes,
+    media: importedMedia,
+    skipped_media: skippedMedia,
+    total_bytes: importedBytes,
     will_create: willCreate,
     missing,
     conflicts,
@@ -187,16 +217,21 @@ export function buildDraftImportPreview({
 
   return {
     kind: 'draft_import',
+    preview_version: normalizedVersion,
     preview_hash: previewHash,
     summary_text: summaryText,
     counts,
     vacation: vacationBlock,
     days: landingDays,
     unscheduled_things: unscheduledThings,
-    media: mediaEntries,
-    unplaced_media: unplacedMedia,
-    media_count: mediaEntries.length,
-    total_bytes: totalBytes,
+    media: importedMedia,
+    skipped_media: skippedMedia,
+    ...(skippedMediaNote ? { skipped_media_note: skippedMediaNote } : {}),
+    ...(normalizedChanges.length ? { last_changes: normalizedChanges } : {}),
+    change_requests: normalizedRequests,
+    latest_change_request: normalizedRequests.length ? normalizedRequests[normalizedRequests.length - 1] : null,
+    media_count: importedMedia.length,
+    total_bytes: importedBytes,
     will_create: willCreate,
     missing,
     conflicts,
@@ -227,11 +262,8 @@ function existingThingToLanding(row) {
 }
 
 export function buildTargetedEditPreview({
-  operations = [],
-  existingTrip = null,
-  existingThings = [],
-  mediaRows = [],
-  summary = '',
+  operations = [], existingTrip = null, existingThings = [], mediaRows = [], summary = '',
+  previewVersion = 1, changeRequests = [], lastChanges = [], removedMediaIds = [],
 }) {
   const byId = new Map(previewList(existingThings).map((row) => [String(row.id), row]));
   const mediaById = new Map(previewList(mediaRows).map((row) => [String(row.id), row]));
@@ -366,38 +398,54 @@ export function buildTargetedEditPreview({
     }
   }
 
-  const { media: mediaEntries, totalBytes } = buildPreviewMediaEntries({
-    mediaRows: attachMediaRows,
+  const removedSet = new Set(previewList(removedMediaIds).map((id) => String(id || '')));
+  const { media: mediaEntries } = buildPreviewMediaEntries({
+    mediaRows: attachMediaRows.filter((row) => !removedSet.has(String(row.id || ''))),
     mediaLinksById: attachMediaLinks,
     items: workingItems,
     days: baseDays,
     vacationTimeZone: workingVacation.timezone,
   });
 
-  const { days: landingDays, unscheduledThings, unplacedMedia } = groupLandingDaysAndUnscheduled({
+  const { days: landingDays, unscheduledThings, skippedMedia } = groupLandingDaysAndUnscheduled({
     resolvedDays: baseDays,
     scheduledItems: workingItems.filter((item) => item.scheduled),
     unscheduledItems: workingItems.filter((item) => !item.scheduled),
     mediaEntries,
   });
+  const importedMedia = mediaEntries.filter((item) => item.assignment_bucket !== 'unassigned');
+  const importedBytes = importedMedia.reduce((sum, item) => sum + Number(item.bytes || 0), 0);
+  const skippedMediaNote = formatSkippedMediaNote(skippedMedia);
 
   const vacationTitle = cleanPreviewText(workingVacation.title, 180) || 'this vacation';
+  const editParts = [
+    willAdd.length && pluralCount(willAdd.length, 'addition'),
+    willUpdate.length && pluralCount(willUpdate.length, 'update'),
+    willRemove.length && pluralCount(willRemove.length, 'removal'),
+    dayUpdates.length && pluralCount(dayUpdates.length, 'day update'),
+    importedMedia.length && pluralCount(importedMedia.length, 'photo or video', 'photos & videos'),
+  ].filter(Boolean);
   const summaryText = cleanPreviewText(summary, 300)
-    || `Proposed AI edits for "${vacationTitle}": ${willAdd.length} add, ${willUpdate.length} update, ${willRemove.length} remove, ${dayUpdates.length} day change(s), ${mediaEntries.length} media attachment(s).`;
+    || `Proposed AI edits for "${vacationTitle}"${editParts.length ? `: ${editParts.join(', ')}` : ''}.`;
 
+  const normalizedVersion = Math.max(1, Number(previewVersion) || 1);
+  const normalizedRequests = previewList(changeRequests);
+  const normalizedChanges = previewList(lastChanges).filter(Boolean);
   const hashPayload = {
     kind: 'targeted_edit',
+    ...(normalizedVersion > 1 ? { preview_version: normalizedVersion } : {}),
     vacation: workingVacation,
     days: landingDays,
     unscheduled_things: unscheduledThings,
-    media: mediaEntries,
-    total_bytes: totalBytes,
+    media: importedMedia,
+    skipped_media: skippedMedia,
+    total_bytes: importedBytes,
     will_add: willAdd,
     will_update: willUpdate,
     will_remove: willRemove,
     day_updates: dayUpdates,
     vacation_field_updates: vacationFieldUpdates,
-    will_attach_media: mediaEntries,
+    will_attach_media: importedMedia,
     missing,
     conflicts,
   };
@@ -405,6 +453,7 @@ export function buildTargetedEditPreview({
 
   return {
     kind: 'targeted_edit',
+    preview_version: normalizedVersion,
     preview_hash: previewHash,
     summary_text: summaryText,
     counts: {
@@ -412,24 +461,28 @@ export function buildTargetedEditPreview({
       update: willUpdate.length,
       remove: willRemove.length,
       days: dayUpdates.length,
-      media: mediaEntries.length,
+      media: importedMedia.length,
       vacation_fields: vacationFieldUpdates.length,
       unscheduled_things: unscheduledThings.length,
-      total_bytes: totalBytes,
+      total_bytes: importedBytes,
     },
     vacation: workingVacation,
     days: landingDays,
     unscheduled_things: unscheduledThings,
-    media: mediaEntries,
-    unplaced_media: unplacedMedia,
-    media_count: mediaEntries.length,
-    total_bytes: totalBytes,
+    media: importedMedia,
+    skipped_media: skippedMedia,
+    ...(skippedMediaNote ? { skipped_media_note: skippedMediaNote } : {}),
+    ...(normalizedChanges.length ? { last_changes: normalizedChanges } : {}),
+    change_requests: normalizedRequests,
+    latest_change_request: normalizedRequests.length ? normalizedRequests[normalizedRequests.length - 1] : null,
+    media_count: importedMedia.length,
+    total_bytes: importedBytes,
     will_add: willAdd,
     will_update: willUpdate,
     will_remove: willRemove,
     day_updates: dayUpdates,
     vacation_field_updates: vacationFieldUpdates,
-    will_attach_media: mediaEntries,
+    will_attach_media: importedMedia,
     missing,
     conflicts,
   };

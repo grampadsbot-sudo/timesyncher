@@ -24,6 +24,7 @@ import {
   handleUpdateVacation,
   listVacationChangeSets,
 } from '../src/vacation/mcp-service.mjs';
+import { requestChangesOnPreview } from '../src/vacation/mcp-preview-revision.mjs';
 
 const MCP_PROTOCOL_VERSION = ['2025', '03', '26'].join('-');
 
@@ -349,6 +350,23 @@ export default async function handler(req, res) {
           actorEmail: editor.email,
           actorRole: editor.role,
           reason: body.reason || '',
+        });
+        return sendJson(res, 200, result);
+      }
+      if (req.method === 'POST' && sub[1] && sub[2] === 'request-changes') {
+        const body = await readJson(req);
+        const editor = await resolveEditorAccess(db, req, {
+          tripId: body.tripId || body.vacationId || url.searchParams.get('tripId') || '',
+          shareToken: body.shareToken || url.searchParams.get('shareToken') || '',
+        });
+        const result = await requestChangesOnPreview(db, {
+          tripId: editor.tripId,
+          changeSetId: decodeURIComponent(sub[1]),
+          actorEmail: editor.email,
+          actorRole: editor.role,
+          note: body.note || body.message || '',
+          previewHash: cleanText(body.preview_hash || body.previewHash, 128),
+          now: nowFn,
         });
         return sendJson(res, 200, result);
       }
