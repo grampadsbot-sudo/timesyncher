@@ -171,7 +171,8 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
   const previewView = useMemo(() => extractApprovalPreviewView(selected), [selected]);
   const missingItems = selected?.preview?.missing || [];
   const conflictItems = selected?.preview?.conflicts || [];
-  const unplacedMedia = previewView.unplacedMedia;
+  const skippedMedia = previewView.skippedMedia;
+  const skippedMediaNote = previewView.skippedMediaNote;
 
   return (
     <div
@@ -397,13 +398,18 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
                         </div>
                       ) : null}
 
-                      {unplacedMedia.length > 0 ? (
-                        <div className="tsv-mcp-block" data-ts-mcp-preview-unplaced="1">
-                          <h4>Not placed yet</h4>
+                      {skippedMedia.length > 0 ? (
+                        <div className="tsv-mcp-block" data-ts-mcp-preview-wont-import="1">
+                          <h4>Won&apos;t be imported</h4>
+                          {skippedMediaNote ? (
+                            <p className="tsv-mcp-note" data-ts-wont-import-note="1">
+                              {skippedMediaNote}
+                            </p>
+                          ) : null}
                           <PreviewMediaThumbs
-                            items={unplacedMedia}
-                            ownerLabel="Not placed yet"
-                            scope="unplaced"
+                            items={skippedMedia}
+                            ownerLabel="Won't be imported"
+                            scope="skipped"
                           />
                         </div>
                       ) : null}

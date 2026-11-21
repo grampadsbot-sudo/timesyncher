@@ -131,10 +131,24 @@
     return Boolean(row.attached_day_date || row.assigned_day_date || row.attached_day_number || row.assigned_day_number || row.assignment_bucket === 'day');
   }
 
-  function isUnplacedMedia(row) {
+  function isSkippedMedia(row) {
     if (!row || typeof row !== 'object') return false;
     if (row.assignment_bucket === 'unassigned') return true;
     return !row.attached_thing_ref && !row.target_thing_ref && !row.attached_thing_title && !row.attached_day_date && !row.assigned_day_date;
+  }
+
+  function formatSkippedMediaNote(items) {
+    const count = items.length;
+    if (!count) return '';
+    const hasPhoto = items.some((m) => String(m.media_kind || 'photo').toLowerCase() !== 'video');
+    const hasVideo = items.some((m) => String(m.media_kind || 'photo').toLowerCase() === 'video');
+    if (count === 1) {
+      return hasVideo
+        ? "This video doesn't have a date during this vacation, so it won't be imported."
+        : "This photo doesn't have a date during this vacation, so it won't be imported.";
+    }
+    const noun = hasPhoto && hasVideo ? 'photos and videos' : (hasVideo ? 'videos' : 'photos');
+    return `These ${count} ${noun} don't have a date during this vacation, so they won't be imported.`;
   }
 
   function videoThumbSrc(url, posterUrl) {
@@ -198,10 +212,11 @@
       return { ...day, items, day_media: dayOnly.map(normalizeMedia).filter(Boolean) };
     });
     const unscheduled = rawUnscheduled.map((item) => ({ ...item, media: (Array.isArray(item?.media) ? item.media : []).map(normalizeMedia).filter(Boolean) }));
-    const rawUnplaced = Array.isArray(preview.unplaced_media) ? preview.unplaced_media : media.filter(isUnplacedMedia);
-    const unplacedMedia = rawUnplaced.map(normalizeMedia).filter(Boolean);
+    const rawSkipped = Array.isArray(preview.skipped_media) ? preview.skipped_media : media.filter(isSkippedMedia);
+    const skippedMedia = rawSkipped.map(normalizeMedia).filter(Boolean);
+    const skippedMediaNote = String(preview.skipped_media_note || '').trim() || formatSkippedMediaNote(skippedMedia);
     const previewHash = String(preview.preview_hash || changeSet?.previewHash || '').trim();
-    return { days, unscheduled, media, unplacedMedia, previewHash };
+    return { days, unscheduled, media, skippedMedia, skippedMediaNote, previewHash };
   }
 
   async function apiJson(url, options) {
@@ -356,11 +371,11 @@
         return `<div class="ts-mcp-thing-row" data-ts-preview-thing="${esc(item.ref || item.id || thingTitle)}"><div class="ts-mcp-thing-main"><span class="ts-mcp-thing-icon" data-ts-preview-type-icon="1" aria-hidden="true">${categoryIcon(item.category)}</span><span class="ts-mcp-thing-label"><span class="ts-mcp-thing-name">${esc(thingTitle)}</span></span></div>${thumbs}</div>`;
       }).join('')}</div></div>`
       : '';
-    const unplacedHtml = pv.unplacedMedia.length
-      ? `<div class="ts-mcp-block" data-ts-mcp-preview-unplaced="1"><h4>Not placed yet</h4>${renderThumbStrip(pv.unplacedMedia, {
-        galleryKey: `${selected.id}:unplaced`,
-        ownerLabel: 'Not placed yet',
-        scope: 'unplaced',
+    const skippedHtml = pv.skippedMedia.length
+      ? `<div class="ts-mcp-block" data-ts-mcp-preview-wont-import="1"><h4>Won&#39;t be imported</h4>${pv.skippedMediaNote ? `<p class="ts-mcp-note" data-ts-wont-import-note="1">${esc(pv.skippedMediaNote)}</p>` : ''}${renderThumbStrip(pv.skippedMedia, {
+        galleryKey: `${selected.id}:skipped`,
+        ownerLabel: "Won't be imported",
+        scope: 'skipped',
       })}</div>`
       : '';
     const chipsHtml = chips.length ? `<div class="ts-mcp-chips">${chips.map((b) => `<span class="ts-mcp-chip">${esc(b)}</span>`).join('')}</div>` : '';
@@ -370,7 +385,7 @@
       ? `<div class="ts-mcp-actions"><button type="button" class="ts-mcp-btn ts-mcp-btn-primary" data-mcp-approve="${esc(selected.id)}" data-mcp-hash="${esc(pv.previewHash)}"${state.busy === selected.id ? ' disabled' : ''}>Approve</button><button type="button" class="ts-mcp-btn ts-mcp-btn-danger" data-mcp-decline="${esc(selected.id)}"${state.busy === selected.id ? ' disabled' : ''}>Decline</button></div>`
       : '';
     const hashAttr = pv.previewHash ? ` data-ts-mcp-preview-hash="${esc(pv.previewHash)}"` : '';
-    return `<div class="ts-mcp-split"><ul class="ts-mcp-list">${listHtml}</ul><div class="ts-mcp-preview" data-ts-mcp-preview="1"${hashAttr}><div class="ts-mcp-preview-head"><h3 style="margin:0;font-size:16px">${esc(kindLabel(selected.kind))}</h3><span class="ts-mcp-status-pill">${esc(statusLabel(selected.status))}</span></div><p style="margin:0">${esc(selected.preview?.summary_text || selected.summary || '')}</p>${chipsHtml}${daysHtml}${unscheduledHtml}${unplacedHtml}${missingHtml}${conflictsHtml}${actionsHtml}</div></div>`;
+    return `<div class="ts-mcp-split"><ul class="ts-mcp-list">${listHtml}</ul><div class="ts-mcp-preview" data-ts-mcp-preview="1"${hashAttr}><div class="ts-mcp-preview-head"><h3 style="margin:0;font-size:16px">${esc(kindLabel(selected.kind))}</h3><span class="ts-mcp-status-pill">${esc(statusLabel(selected.status))}</span></div><p style="margin:0">${esc(selected.preview?.summary_text || selected.summary || '')}</p>${chipsHtml}${daysHtml}${unscheduledHtml}${skippedHtml}${missingHtml}${conflictsHtml}${actionsHtml}</div></div>`;
   }
 
   function renderTokens() {

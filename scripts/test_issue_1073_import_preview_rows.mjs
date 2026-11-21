@@ -42,6 +42,7 @@ function findPreviewCopyViolations({ visibleText, dayHeaders, itemLines }) {
   if (/\btrips?\b/i.test(text)) violations.push('banned_trip_word');
   if (/missing details/i.test(text)) violations.push('missing_details_heading');
   if (/could not be matched to a vacation day/i.test(text)) violations.push('engineering_unmatched_copy');
+  if (/not placed yet/i.test(text)) violations.push('not_placed_yet_copy');
   return violations;
 }
 
@@ -80,6 +81,11 @@ function testD7NegativeControls() {
     findPreviewCopyViolations({ visibleText: 'Pilgrim Way Bookshop — Unscheduled', dayHeaders: [], itemLines: ['Pilgrim Way Bookshop — Unscheduled'] })
       .some((v) => v.startsWith('unscheduled_suffix:')),
     'D7 detector must fail on — Unscheduled suffix',
+  );
+  assert.ok(
+    findPreviewCopyViolations({ visibleText: 'Not placed yet', dayHeaders: [], itemLines: [] })
+      .includes('not_placed_yet_copy'),
+    'D9 detector must fail on Not placed yet',
   );
 }
 
@@ -194,7 +200,10 @@ async function auditPolishedSurface(page, surfaceName) {
       thumbs: el.querySelectorAll('[data-ts-preview-thumb="1"]').length,
     }));
     const unscheduledHeading = rootEl?.querySelector('[data-ts-mcp-preview-unscheduled="1"] h4')?.textContent?.trim() || '';
-    const unplacedHeading = rootEl?.querySelector('[data-ts-mcp-preview-unplaced="1"] h4')?.textContent?.trim() || '';
+    const wontImportEl = rootEl?.querySelector('[data-ts-mcp-preview-wont-import="1"]');
+    const wontImportHeading = wontImportEl?.querySelector('h4')?.textContent?.trim() || '';
+    const wontImportNote = wontImportEl?.querySelector('[data-ts-wont-import-note="1"]')?.textContent?.replace(/\s+/g, ' ').trim() || '';
+    const wontImportThumbs = wontImportEl ? wontImportEl.querySelectorAll('[data-ts-preview-thumb="1"]').length : 0;
     const notesText = [...(rootEl?.querySelectorAll('[data-ts-mcp-preview-notes="1"] p') || [])]
       .map((el) => String(el.textContent || '').replace(/\s+/g, ' ').trim());
     const ulCountInPreview = rootEl ? rootEl.querySelectorAll('ul').length : -1;
@@ -205,7 +214,9 @@ async function auditPolishedSurface(page, surfaceName) {
       dayTags,
       thingRows,
       unscheduledHeading,
-      unplacedHeading,
+      wontImportHeading,
+      wontImportNote,
+      wontImportThumbs,
       notesText,
       ulCountInPreview,
     };
@@ -236,10 +247,17 @@ async function auditPolishedSurface(page, surfaceName) {
   assert.equal(dom.ulCountInPreview, 0, `${surfaceName}: D5 preview must not use bulleted <ul> lists`);
 
   assert.equal(dom.unscheduledHeading, 'Saved for later', `${surfaceName}: D3 Saved for later heading`);
-  assert.equal(dom.unplacedHeading, 'Not placed yet', `${surfaceName}: D6 Not placed yet heading`);
-  assert.ok(
-    dom.notesText.includes("2 photos don't have a date in this vacation, so they're in Not placed yet."),
-    `${surfaceName}: D3 friendly unplaced media note missing (got ${JSON.stringify(dom.notesText)})`,
+  assert.equal(dom.wontImportHeading, "Won't be imported", `${surfaceName}: D9 Won't be imported heading`);
+  assert.equal(
+    dom.wontImportNote,
+    "These 2 photos don't have a date during this vacation, so they won't be imported.",
+    `${surfaceName}: D9 plain won't-be-imported line mismatch`,
+  );
+  assert.equal(dom.wontImportThumbs, 2, `${surfaceName}: D9 Won't be imported thumbnails count`);
+  assert.equal(
+    dom.notesText.some((line) => /not placed yet|won't be imported/i.test(line)),
+    false,
+    `${surfaceName}: D9 skipped media must appear only in Won't be imported`,
   );
 
   assert.match(dom.panelText, /\bvacation\b/i, `${surfaceName}: D4 must say vacation`);

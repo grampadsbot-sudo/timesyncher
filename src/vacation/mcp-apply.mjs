@@ -190,6 +190,7 @@ export async function applyApprovedDraftImport(db, { changeSet, mediaRows }) {
   const dayNumberByDate = new Map(days.map((d, idx) => [isoDateOnly(d.date), Number(d.day_number || idx + 1)]));
   const mediaLinksById = new Map(asArray(draft.media).map((link) => [String(link.media_id || ''), link]));
   const publishedMedia = [];
+  let skippedMediaCount = 0;
   let newTripBytes = 0;
   let newTripMediaCount = 0;
   for (const mediaRow of asArray(mediaRows)) {
@@ -209,6 +210,10 @@ export async function applyApprovedDraftImport(db, { changeSet, mediaRows }) {
     const validStoredDay = storedDay && dayNumberByDate.has(storedDay) ? storedDay : null;
     const dayDate = validManualDay || timeMatchedDate || validStoredDay || (linked?.scheduled ? linked.day_date : null) || null;
     const dayNumber = dayDate ? (dayNumberByDate.get(dayDate) || null) : null;
+    if (!linked?.id && !dayDate) {
+      skippedMediaCount += 1;
+      continue;
+    }
     const published = await publishMediaRow(db, {
       mediaRow,
       shareSlug,
@@ -219,6 +224,10 @@ export async function applyApprovedDraftImport(db, { changeSet, mediaRows }) {
       dayNumber: dayNumber > 0 ? dayNumber : null,
       caption: link.caption ?? mediaRow.caption,
     });
+    if (!published) {
+      skippedMediaCount += 1;
+      continue;
+    }
     publishedMedia.push(published);
     newTripBytes += Number(mediaRow.actual_bytes || 0);
     newTripMediaCount += 1;
@@ -237,6 +246,7 @@ export async function applyApprovedDraftImport(db, { changeSet, mediaRows }) {
     shareSlug,
     itemsCreated: createdItemsForGps.length,
     mediaPublished: publishedMedia.length,
+    mediaSkipped: skippedMediaCount,
   };
 }
 
@@ -259,7 +269,7 @@ export async function applyApprovedTargetedEdit(db, { changeSet, mediaRows }) {
   let nextTitle = trip.title;
   let nextDestination = trip.destination;
   const nextMeta = { ...asObject(trip.metadata) };
-  const applied = { added: 0, updated: 0, removed: 0, daysUpdated: 0, mediaAttached: 0 };
+  const applied = { added: 0, updated: 0, removed: 0, daysUpdated: 0, mediaAttached: 0, mediaSkipped: 0 };
 
   for (const op of operations) {
     if (op.op === 'add_item') {
@@ -417,10 +427,15 @@ export async function applyApprovedTargetedEdit(db, { changeSet, mediaRows }) {
       const timeMatchedDate = localCaptureDate && editDayNumberByDate.has(localCaptureDate) ? localCaptureDate : null;
       const explicitDay = isoDateOnly(op.day_date) || null;
       const storedDay = isoDateOnly(mediaRow.assigned_day_date) || null;
+      const validExplicitDay = explicitDay && (!editDayNumberByDate.size || editDayNumberByDate.has(explicitDay)) ? explicitDay : null;
       const validStoredDay = storedDay && editDayNumberByDate.has(storedDay) ? storedDay : null;
-      const resolvedDayDate = explicitDay || timeMatchedDate || validStoredDay || null;
+      const resolvedDayDate = validExplicitDay || timeMatchedDate || validStoredDay || null;
       const resolvedDayNumber = resolvedDayDate ? (editDayNumberByDate.get(resolvedDayDate) || null) : null;
-      await publishMediaRow(db, {
+      if (!linkedId && !resolvedDayDate) {
+        applied.mediaSkipped += 1;
+        continue;
+      }
+      const published = await publishMediaRow(db, {
         mediaRow,
         shareSlug,
         tripId,
@@ -430,6 +445,10 @@ export async function applyApprovedTargetedEdit(db, { changeSet, mediaRows }) {
         dayNumber: resolvedDayNumber,
         caption: op.caption ?? mediaRow.caption,
       });
+      if (!published) {
+        applied.mediaSkipped += 1;
+        continue;
+      }
       applied.mediaAttached += 1;
     }
   }

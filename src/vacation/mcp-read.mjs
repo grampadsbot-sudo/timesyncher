@@ -58,7 +58,8 @@ export async function publishMediaRow(db, {
   const effectiveDayNumber = dayNumber !== undefined
     ? (dayNumber ?? null)
     : (mediaRow.assigned_day_number ?? null);
-  const bucket = linkedThingId ? 'thing' : (effectiveDayDate ? 'day' : 'unassigned');
+  if (!linkedThingId && !effectiveDayDate) return null;
+  const bucket = linkedThingId ? 'thing' : 'day';
   const bindingId = crypto.randomUUID();
   const storedUrl = cleanText(mediaRow.public_url, 600);
   const publicUrl = (!storedUrl || storedUrl.startsWith('/api/mcp/media/') || mediaRow.storage_provider === 'neon')

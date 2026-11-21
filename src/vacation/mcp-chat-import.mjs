@@ -136,11 +136,12 @@ function buildCardLandingPreview(preview = {}) {
     title: cleanText(item?.title, 200),
     media: asArray(item?.media).map(compactPreviewMedia).filter(Boolean),
   }));
-  const rawUnplaced = Array.isArray(preview.unplaced_media)
-    ? preview.unplaced_media
+  const rawSkipped = Array.isArray(preview.skipped_media)
+    ? preview.skipped_media
     : rawMedia.filter((m) => (m?.assignment_bucket === 'unassigned') || (!m?.attached_thing_ref && !m?.attached_thing_title && !m?.attached_day_date && !m?.assigned_day_date));
-  const unplacedMedia = rawUnplaced.map(compactPreviewMedia).filter(Boolean);
-  return { days, unscheduledThings, unplacedMedia };
+  const skippedMedia = rawSkipped.map(compactPreviewMedia).filter(Boolean);
+  const skippedMediaNote = cleanText(preview.skipped_media_note, 300);
+  return { days, unscheduledThings, skippedMedia, skippedMediaNote };
 }
 
 function formatPreviewDate(iso) {
@@ -405,7 +406,8 @@ export async function postStagedPreviewToChat(db, {
     bullets,
     days: landing.days,
     unscheduledThings: landing.unscheduledThings,
-    unplacedMedia: landing.unplacedMedia,
+    skippedMedia: landing.skippedMedia,
+    ...(landing.skippedMediaNote ? { skippedMediaNote: landing.skippedMediaNote } : {}),
     vacationId: tripId,
     vacationTitle: cleanText(preview?.vacation?.title || preview?.will_create?.vacation?.title, 180),
     counts: asObject(preview?.counts),

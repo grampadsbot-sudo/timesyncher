@@ -221,6 +221,20 @@
       + '</section>';
   }
 
+  function formatSkippedMediaNote(items) {
+    const count = items.length;
+    if (!count) return '';
+    const hasPhoto = items.some((m) => String(m.media_kind || 'photo').toLowerCase() !== 'video');
+    const hasVideo = items.some((m) => String(m.media_kind || 'photo').toLowerCase() === 'video');
+    if (count === 1) {
+      return hasVideo
+        ? "This video doesn't have a date during this vacation, so it won't be imported."
+        : "This photo doesn't have a date during this vacation, so it won't be imported.";
+    }
+    const noun = hasPhoto && hasVideo ? 'photos and videos' : (hasVideo ? 'videos' : 'photos');
+    return `These ${count} ${noun} don't have a date during this vacation, so they won't be imported.`;
+  }
+
   function renderApprovalCardHtml(card) {
     if (!card || card.kind !== 'ai_staged_approval') return '';
     const heading = card.changeKind === 'targeted_edit' ? 'Targeted vacation edit' : 'Vacation draft import';
@@ -229,7 +243,8 @@
     const conflicts = Array.isArray(card.conflicts) ? card.conflicts.filter(Boolean) : [];
     const days = Array.isArray(card.days) ? card.days : [];
     const unscheduled = Array.isArray(card.unscheduledThings) ? card.unscheduledThings : [];
-    const unplaced = Array.isArray(card.unplacedMedia) ? card.unplacedMedia : [];
+    const skipped = Array.isArray(card.skippedMedia) ? card.skippedMedia : [];
+    const skippedNote = String(card.skippedMediaNote || '').trim() || formatSkippedMediaNote(skipped);
     const status = String(card.status || 'pending_approval');
     const cardKey = String(card.changeSetId || 'staged');
     const chipsHtml = bullets.length
@@ -275,11 +290,11 @@
         return `<div class="ts-ai-thing-row" data-ts-preview-thing="${esc(item.ref || item.id || thingTitle)}"><div class="ts-ai-thing-main"><span class="ts-ai-thing-icon" data-ts-preview-type-icon="1" aria-hidden="true">${categoryIcon(item.category)}</span><span class="ts-ai-thing-label"><span class="ts-ai-thing-name">${esc(thingTitle)}</span></span></div>${thumbs}</div>`;
       }).join('')}</div></div>`
       : '';
-    const unplacedHtml = unplaced.length
-      ? `<div class="ts-ai-block" data-ts-mcp-preview-unplaced="1"><h4>Not placed yet</h4>${renderThumbStripHtml(unplaced, {
-        galleryKey: `${cardKey}:unplaced`,
-        ownerLabel: 'Not placed yet',
-        scope: 'unplaced',
+    const skippedHtml = skipped.length
+      ? `<div class="ts-ai-block" data-ts-mcp-preview-wont-import="1"><h4>Won&#39;t be imported</h4>${skippedNote ? `<p class="ts-ai-note" data-ts-wont-import-note="1">${esc(skippedNote)}</p>` : ''}${renderThumbStripHtml(skipped, {
+        galleryKey: `${cardKey}:skipped`,
+        ownerLabel: "Won't be imported",
+        scope: 'skipped',
       })}</div>`
       : '';
     const missingHtml = missing.length
@@ -306,7 +321,7 @@
       + chipsHtml
       + daysHtml
       + unscheduledHtml
-      + unplacedHtml
+      + skippedHtml
       + missingHtml
       + conflictsHtml
       + footerHtml

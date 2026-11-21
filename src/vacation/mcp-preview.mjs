@@ -15,19 +15,18 @@ function pluralCount(count, singular, plural = `${singular}s`) {
   return `${count} ${count === 1 ? singular : plural}`;
 }
 
-function formatUnplacedMediaNote(items) {
+function formatSkippedMediaNote(items) {
   const count = items.length;
   if (!count) return '';
   const hasPhoto = items.some((m) => String(m.media_kind || 'photo').toLowerCase() !== 'video');
   const hasVideo = items.some((m) => String(m.media_kind || 'photo').toLowerCase() === 'video');
-  const noun = hasPhoto && hasVideo
-    ? (count === 1 ? 'photo or video' : 'photos and videos')
-    : hasVideo
-      ? (count === 1 ? 'video' : 'videos')
-      : (count === 1 ? 'photo' : 'photos');
-  return count === 1
-    ? `1 ${noun} doesn't have a date in this vacation, so it's in Not placed yet.`
-    : `${count} ${noun} don't have a date in this vacation, so they're in Not placed yet.`;
+  if (count === 1) {
+    return hasVideo
+      ? "This video doesn't have a date during this vacation, so it won't be imported."
+      : "This photo doesn't have a date during this vacation, so it won't be imported.";
+  }
+  const noun = hasPhoto && hasVideo ? 'photos and videos' : (hasVideo ? 'videos' : 'photos');
+  return `These ${count} ${noun} don't have a date during this vacation, so they won't be imported.`;
 }
 
 export function buildDraftImportPreview({
@@ -123,7 +122,7 @@ export function buildDraftImportPreview({
   }
 
   const mediaLinksById = new Map(previewList(draft?.media).map((link) => [String(link.media_id || ''), link]));
-  const { media: mediaEntries, totalBytes } = buildPreviewMediaEntries({
+  const { media: mediaEntries } = buildPreviewMediaEntries({
     mediaRows,
     mediaLinksById,
     items: allItems,
@@ -131,10 +130,6 @@ export function buildDraftImportPreview({
     vacationTimeZone,
   });
 
-  const unassignedMedia = mediaEntries.filter((item) => item.assignment_bucket === 'unassigned');
-  if (unassignedMedia.length) {
-    missing.push(formatUnplacedMediaNote(unassignedMedia));
-  }
   const pendingUploadMedia = mediaEntries.filter((item) => item.upload_status === 'signed');
   if (pendingUploadMedia.length) {
     missing.push(
@@ -144,12 +139,15 @@ export function buildDraftImportPreview({
     );
   }
 
-  const { days: landingDays, unscheduledThings, unplacedMedia } = groupLandingDaysAndUnscheduled({
+  const { days: landingDays, unscheduledThings, skippedMedia } = groupLandingDaysAndUnscheduled({
     resolvedDays,
     scheduledItems,
     unscheduledItems,
     mediaEntries,
   });
+  const importedMedia = mediaEntries.filter((item) => item.assignment_bucket !== 'unassigned');
+  const importedBytes = importedMedia.reduce((sum, item) => sum + Number(item.bytes || 0), 0);
+  const skippedMediaNote = formatSkippedMediaNote(skippedMedia);
 
   const vacationBlock = {
     title: cleanPreviewText(vacation.title, 180) || 'Untitled Vacation',
@@ -173,7 +171,7 @@ export function buildDraftImportPreview({
     things_to_do: thingsToDo.map((item) => ({ title: cleanPreviewText(item.title, 180), day_date: item.unscheduled === true ? null : (previewIsoDateOnly(item.day_date || item.starts_at) || null) })),
     notes: notes.map((item) => ({ title: cleanPreviewText(item.title, 180), day_date: item.unscheduled === true ? null : (previewIsoDateOnly(item.day_date) || null) })),
     unscheduled_things: unscheduledThings,
-    media: mediaEntries,
+    media: importedMedia,
   };
 
   const counts = {
@@ -187,8 +185,8 @@ export function buildDraftImportPreview({
     notes: willCreate.notes.length,
     scheduled_items: scheduledItems.length,
     unscheduled_things: unscheduledThings.length,
-    media: mediaEntries.length,
-    total_bytes: totalBytes,
+    media: importedMedia.length,
+    total_bytes: importedBytes,
   };
 
   const summaryParts = [
@@ -205,8 +203,9 @@ export function buildDraftImportPreview({
     vacation: vacationBlock,
     days: landingDays,
     unscheduled_things: unscheduledThings,
-    media: mediaEntries,
-    total_bytes: totalBytes,
+    media: importedMedia,
+    skipped_media: skippedMedia,
+    total_bytes: importedBytes,
     will_create: willCreate,
     missing,
     conflicts,
@@ -221,10 +220,11 @@ export function buildDraftImportPreview({
     vacation: vacationBlock,
     days: landingDays,
     unscheduled_things: unscheduledThings,
-    media: mediaEntries,
-    unplaced_media: unplacedMedia,
-    media_count: mediaEntries.length,
-    total_bytes: totalBytes,
+    media: importedMedia,
+    skipped_media: skippedMedia,
+    ...(skippedMediaNote ? { skipped_media_note: skippedMediaNote } : {}),
+    media_count: importedMedia.length,
+    total_bytes: importedBytes,
     will_create: willCreate,
     missing,
     conflicts,
@@ -394,7 +394,7 @@ export function buildTargetedEditPreview({
     }
   }
 
-  const { media: mediaEntries, totalBytes } = buildPreviewMediaEntries({
+  const { media: mediaEntries } = buildPreviewMediaEntries({
     mediaRows: attachMediaRows,
     mediaLinksById: attachMediaLinks,
     items: workingItems,
@@ -402,12 +402,15 @@ export function buildTargetedEditPreview({
     vacationTimeZone: workingVacation.timezone,
   });
 
-  const { days: landingDays, unscheduledThings, unplacedMedia } = groupLandingDaysAndUnscheduled({
+  const { days: landingDays, unscheduledThings, skippedMedia } = groupLandingDaysAndUnscheduled({
     resolvedDays: baseDays,
     scheduledItems: workingItems.filter((item) => item.scheduled),
     unscheduledItems: workingItems.filter((item) => !item.scheduled),
     mediaEntries,
   });
+  const importedMedia = mediaEntries.filter((item) => item.assignment_bucket !== 'unassigned');
+  const importedBytes = importedMedia.reduce((sum, item) => sum + Number(item.bytes || 0), 0);
+  const skippedMediaNote = formatSkippedMediaNote(skippedMedia);
 
   const vacationTitle = cleanPreviewText(workingVacation.title, 180) || 'this vacation';
   const editParts = [
@@ -415,7 +418,7 @@ export function buildTargetedEditPreview({
     willUpdate.length && pluralCount(willUpdate.length, 'update'),
     willRemove.length && pluralCount(willRemove.length, 'removal'),
     dayUpdates.length && pluralCount(dayUpdates.length, 'day update'),
-    mediaEntries.length && pluralCount(mediaEntries.length, 'photo or video', 'photos & videos'),
+    importedMedia.length && pluralCount(importedMedia.length, 'photo or video', 'photos & videos'),
   ].filter(Boolean);
   const summaryText = cleanPreviewText(summary, 300)
     || `Proposed AI edits for "${vacationTitle}"${editParts.length ? `: ${editParts.join(', ')}` : ''}.`;
@@ -425,14 +428,15 @@ export function buildTargetedEditPreview({
     vacation: workingVacation,
     days: landingDays,
     unscheduled_things: unscheduledThings,
-    media: mediaEntries,
-    total_bytes: totalBytes,
+    media: importedMedia,
+    skipped_media: skippedMedia,
+    total_bytes: importedBytes,
     will_add: willAdd,
     will_update: willUpdate,
     will_remove: willRemove,
     day_updates: dayUpdates,
     vacation_field_updates: vacationFieldUpdates,
-    will_attach_media: mediaEntries,
+    will_attach_media: importedMedia,
     missing,
     conflicts,
   };
@@ -447,24 +451,25 @@ export function buildTargetedEditPreview({
       update: willUpdate.length,
       remove: willRemove.length,
       days: dayUpdates.length,
-      media: mediaEntries.length,
+      media: importedMedia.length,
       vacation_fields: vacationFieldUpdates.length,
       unscheduled_things: unscheduledThings.length,
-      total_bytes: totalBytes,
+      total_bytes: importedBytes,
     },
     vacation: workingVacation,
     days: landingDays,
     unscheduled_things: unscheduledThings,
-    media: mediaEntries,
-    unplaced_media: unplacedMedia,
-    media_count: mediaEntries.length,
-    total_bytes: totalBytes,
+    media: importedMedia,
+    skipped_media: skippedMedia,
+    ...(skippedMediaNote ? { skipped_media_note: skippedMediaNote } : {}),
+    media_count: importedMedia.length,
+    total_bytes: importedBytes,
     will_add: willAdd,
     will_update: willUpdate,
     will_remove: willRemove,
     day_updates: dayUpdates,
     vacation_field_updates: vacationFieldUpdates,
-    will_attach_media: mediaEntries,
+    will_attach_media: importedMedia,
     missing,
     conflicts,
   };

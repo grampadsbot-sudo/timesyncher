@@ -138,7 +138,8 @@ assert.doesNotMatch(panelSource, /Media attachments/i);
 assert.doesNotMatch(panelSource, /Unscheduled long-list items/i);
 assert.doesNotMatch(panelSource, /long-list/i);
 assert.match(panelSource, /Saved for later/);
-assert.match(panelSource, /Not placed yet/);
+assert.doesNotMatch(panelSource, /Not placed yet/i);
+assert.match(panelSource, /Won(&apos;|')t be imported/);
 
 const apiSource = await readFile(new URL('../src/api/mcpAdmin.ts', import.meta.url), 'utf8');
 assert.match(apiSource, /preview_hash: previewHash/);
@@ -150,8 +151,27 @@ assert.match(livePanelSource, /Saved for later/);
 assert.doesNotMatch(livePanelSource, /Unscheduled long-list items/i);
 assert.doesNotMatch(livePanelSource, /long-list/i);
 assert.doesNotMatch(livePanelSource, /Media attachments/i);
-assert.match(livePanelSource, /Not placed yet/);
+assert.doesNotMatch(livePanelSource, /Not placed yet/i);
+assert.match(livePanelSource, /Won(&#39;|')t be imported/);
 assert.match(livePanelSource, /data-ts-preview-thumb/);
 assert.doesNotMatch(livePanelSource, /\btrips?\b/i);
+
+const skippedView = extractApprovalPreviewView({
+  previewHash: 'skip123',
+  preview: {
+    preview_hash: 'skip123',
+    days: [],
+    media: [],
+    skipped_media: [
+      { media_id: 's1', media_kind: 'photo', url: '/api/mcp/media/s1' },
+      { media_id: 's2', media_kind: 'photo', url: '/api/mcp/media/s2' },
+    ],
+  },
+});
+assert.equal(skippedView.skippedMedia.length, 2);
+assert.equal(
+  skippedView.skippedMediaNote,
+  "These 2 photos don't have a date during this vacation, so they won't be imported.",
+);
 
 console.log('mcpApproval.unit.mjs passed');

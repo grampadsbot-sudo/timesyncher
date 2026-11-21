@@ -86,7 +86,8 @@ export type McpChangePreview = {
   days?: McpPreviewDay[];
   unscheduled_things?: McpPreviewLandingItem[];
   media?: McpPreviewMedia[];
-  unplaced_media?: McpPreviewMedia[];
+  skipped_media?: McpPreviewMedia[];
+  skipped_media_note?: string;
   media_count?: number;
   total_bytes?: number;
   will_create?: {

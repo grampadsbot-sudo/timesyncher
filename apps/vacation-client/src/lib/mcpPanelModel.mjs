@@ -68,7 +68,7 @@ function isDayOnlyMediaEntry(media) {
   return Boolean(media.attached_day_date || media.assigned_day_date || media.attached_day_number || media.assigned_day_number || media.assignment_bucket === 'day');
 }
 
-function isUnplacedMediaEntry(media) {
+function isSkippedMediaEntry(media) {
   if (!media || typeof media !== 'object') return false;
   if (media.assignment_bucket === 'unassigned') return true;
   return !media.attached_thing_ref
@@ -76,6 +76,20 @@ function isUnplacedMediaEntry(media) {
     && !media.attached_thing_title
     && !media.attached_day_date
     && !media.assigned_day_date;
+}
+
+function formatSkippedMediaNote(items) {
+  const count = items.length;
+  if (!count) return '';
+  const hasPhoto = items.some((m) => String(m.media_kind || 'photo').toLowerCase() !== 'video');
+  const hasVideo = items.some((m) => String(m.media_kind || 'photo').toLowerCase() === 'video');
+  if (count === 1) {
+    return hasVideo
+      ? "This video doesn't have a date during this vacation, so it won't be imported."
+      : "This photo doesn't have a date during this vacation, so it won't be imported.";
+  }
+  const noun = hasPhoto && hasVideo ? 'photos and videos' : (hasVideo ? 'videos' : 'photos');
+  return `These ${count} ${noun} don't have a date during this vacation, so they won't be imported.`;
 }
 
 export function extractApprovalPreviewView(changeSet) {
@@ -112,10 +126,11 @@ export function extractApprovalPreviewView(changeSet) {
     ...item,
     media: (Array.isArray(item?.media) ? item.media : []).map(normalizePreviewMediaEntry).filter(Boolean),
   }));
-  const rawUnplaced = Array.isArray(preview.unplaced_media)
-    ? preview.unplaced_media
-    : media.filter(isUnplacedMediaEntry);
-  const unplacedMedia = rawUnplaced.map(normalizePreviewMediaEntry).filter(Boolean);
+  const rawSkipped = Array.isArray(preview.skipped_media)
+    ? preview.skipped_media
+    : media.filter(isSkippedMediaEntry);
+  const skippedMedia = rawSkipped.map(normalizePreviewMediaEntry).filter(Boolean);
+  const skippedMediaNote = String(preview.skipped_media_note || '').trim() || formatSkippedMediaNote(skippedMedia);
   const totalBytes = Number.isFinite(Number(preview.total_bytes))
     ? Number(preview.total_bytes)
     : media.reduce((sum, item) => sum + Number(item?.bytes || 0), 0);
@@ -125,7 +140,8 @@ export function extractApprovalPreviewView(changeSet) {
     days,
     unscheduledThings,
     media,
-    unplacedMedia,
+    skippedMedia,
+    skippedMediaNote,
     totalBytes,
   };
 }

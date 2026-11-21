@@ -344,7 +344,7 @@ export function groupLandingDaysAndUnscheduled({ resolvedDays, scheduledItems, u
   const mediaByThingKey = new Map();
   const mediaByDayDate = new Map();
   const dayOnlyMediaByDate = new Map();
-  const unplacedMedia = [];
+  const skippedMedia = [];
   for (const media of mediaEntries) {
     if (media.attached_thing_ref) {
       const list = mediaByThingKey.get(media.attached_thing_ref) || [];
@@ -355,7 +355,7 @@ export function groupLandingDaysAndUnscheduled({ resolvedDays, scheduledItems, u
       list.push(media);
       dayOnlyMediaByDate.set(media.attached_day_date, list);
     } else {
-      unplacedMedia.push(media);
+      skippedMedia.push(media);
     }
     if (media.attached_day_date) {
       const list = mediaByDayDate.get(media.attached_day_date) || [];
@@ -407,5 +407,5 @@ export function groupLandingDaysAndUnscheduled({ resolvedDays, scheduledItems, u
     return itemLandingShape(item, mediaKey ? (mediaByThingKey.get(String(mediaKey)) || []) : []);
   });
 
-  return { days, unscheduledThings, unplacedMedia };
+  return { days, unscheduledThings, skippedMedia };
 }
