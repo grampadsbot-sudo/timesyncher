@@ -3,6 +3,22 @@ import { cleanText, headerValue, readJson, sendJson } from '../src/vacation/http
 import { readCookie, verifiedOwnerWebGrant, webAccessCookieName, webAccessForSession } from '../src/vacation/web-access.mjs';
 import { MCP_TOOLS } from '../src/vacation/mcp-tools.mjs';
 import {
+  IMPORT_TOOL_NAMES,
+  MCP_RESOURCES,
+  readMcpResource,
+  RESERVATION_MCP_TOOLS,
+  RESERVATION_TOOL_NAMES,
+} from '../src/vacation/mcp-reservations-tools.mjs';
+import { authenticateReservationToken } from '../src/vacation/mcp-reservations-store.mjs';
+import {
+  handleFindVacation,
+  handleListReservationRequests,
+  handleListVacations,
+  handleRegisterReservationsHandshake,
+} from '../src/vacation/mcp-reservations-service.mjs';
+import { handleSubmitReservationResult } from '../src/vacation/mcp-reservations-submit.mjs';
+import { handleReservationsHttpRoute } from '../src/vacation/mcp-reservations-http.mjs';
+import {
   authenticateMcpToken,
   createMcpToken,
   listMcpTokens,
@@ -122,8 +138,38 @@ function jsonRpcSuccess(id, result) {
   };
 }
 
+async function authenticateAnyMcpToken(db, rawToken) {
+  const cleaned = cleanText(rawToken, 300);
+  if (!cleaned) {
+    throw Object.assign(new Error('AI access token is required.'), { statusCode: 401, code: 'mcp_token_required' });
+  }
+  try {
+    const importRecord = await authenticateMcpToken(db, cleaned, { env: process.env, now: nowFn });
+    return { ...importRecord, tokenScope: 'import' };
+  } catch (error) {
+    if (error?.code !== 'mcp_token_invalid') throw error;
+  }
+  const reservationRecord = await authenticateReservationToken(db, cleaned, { env: process.env, now: nowFn });
+  if (reservationRecord) return reservationRecord;
+  throw Object.assign(new Error('AI access token is invalid.'), { statusCode: 401, code: 'mcp_token_invalid' });
+}
+
 async function executeMcpTool(db, tokenRecord, name, args, req) {
   const ctx = { baseUrl: requestBaseUrl(req), now: nowFn, env: process.env };
+  const isReservationTool = RESERVATION_TOOL_NAMES.has(name);
+  const isImportTool = IMPORT_TOOL_NAMES.has(name);
+  if (isReservationTool && tokenRecord.tokenScope !== 'reservations') {
+    throw Object.assign(
+      new Error('This AI access token does not have reservations permission.'),
+      { statusCode: 403, code: 'reservations_scope_required' },
+    );
+  }
+  if (isImportTool && tokenRecord.tokenScope !== 'import') {
+    throw Object.assign(
+      new Error('This reservations token cannot access vacation import tools.'),
+      { statusCode: 403, code: 'import_scope_required' },
+    );
+  }
   if (name === 'describe_import_format') return handleDescribeImportFormat(tokenRecord, args);
   if (name === 'start_import') return handleStartImport(db, tokenRecord, args);
   if (name === 'upload_media') return handleUploadMedia(db, tokenRecord, args, ctx);
@@ -131,6 +177,11 @@ async function executeMcpTool(db, tokenRecord, name, args, req) {
   if (name === 'commit_import') return handleCommitImport(db, tokenRecord, args);
   if (name === 'read_vacation') return handleReadVacation(db, tokenRecord, args);
   if (name === 'update_vacation') return handleUpdateVacation(db, tokenRecord, args);
+  if (name === 'register_reservations_handshake') return handleRegisterReservationsHandshake(db, tokenRecord, args);
+  if (name === 'list_vacations') return handleListVacations(db, tokenRecord);
+  if (name === 'find_vacation') return handleFindVacation(db, tokenRecord, args);
+  if (name === 'list_reservation_requests') return handleListReservationRequests(db, tokenRecord, args);
+  if (name === 'submit_reservation_result') return handleSubmitReservationResult(db, tokenRecord, args);
   throw Object.assign(new Error(`Unknown MCP tool "${cleanText(name, 80)}".`), { statusCode: 404, code: 'unknown_tool' });
 }
 
@@ -141,10 +192,10 @@ async function handleJsonRpcMessage(db, req, message) {
   const rawToken = extractMcpBearer(req);
 
   if (method === 'initialize') {
-    if (rawToken) await authenticateMcpToken(db, rawToken, { env: process.env, now: nowFn });
+    if (rawToken) await authenticateAnyMcpToken(db, rawToken);
     return jsonRpcSuccess(id, {
       protocolVersion: MCP_PROTOCOL_VERSION,
-      capabilities: { tools: { listChanged: false } },
+      capabilities: { tools: { listChanged: false }, resources: { listChanged: false } },
       serverInfo: { name: 'vacay-keepsake-mcp', version: '1.0.0' },
     });
   }
@@ -154,12 +205,21 @@ async function handleJsonRpcMessage(db, req, message) {
   if (method === 'ping') {
     return jsonRpcSuccess(id, {});
   }
+  if (method === 'resources/list') {
+    if (rawToken) await authenticateAnyMcpToken(db, rawToken);
+    return jsonRpcSuccess(id, { resources: MCP_RESOURCES });
+  }
+  if (method === 'resources/read') {
+    if (rawToken) await authenticateAnyMcpToken(db, rawToken);
+    return jsonRpcSuccess(id, readMcpResource(params.uri));
+  }
   if (method === 'tools/list' || method === 'list_tools') {
-    if (rawToken) await authenticateMcpToken(db, rawToken, { env: process.env, now: nowFn });
-    return jsonRpcSuccess(id, { tools: MCP_TOOLS });
+    const tokenRecord = rawToken ? await authenticateAnyMcpToken(db, rawToken) : null;
+    const useReservations = tokenRecord?.tokenScope === 'reservations' || params.scope === 'reservations';
+    return jsonRpcSuccess(id, { tools: useReservations ? RESERVATION_MCP_TOOLS : MCP_TOOLS });
   }
   if (method === 'tools/call') {
-    const tokenRecord = await authenticateMcpToken(db, rawToken, { env: process.env, now: nowFn });
+    const tokenRecord = await authenticateAnyMcpToken(db, rawToken);
     const toolName = cleanText(params.name, 100);
     const toolArgs = params.arguments && typeof params.arguments === 'object' ? params.arguments : {};
     const payload = await executeMcpTool(db, tokenRecord, toolName, toolArgs, req);
@@ -186,14 +246,19 @@ export default async function handler(req, res) {
   try {
     if (sub.length === 0) {
       if (req.method === 'GET') {
+        const rawToken = extractMcpBearer(req);
+        const tokenRecord = rawToken ? await authenticateAnyMcpToken(db, rawToken) : null;
+        const reservationsScope = tokenRecord?.tokenScope === 'reservations' || url.searchParams.get('scope') === 'reservations';
         return sendJson(res, 200, {
           ok: true,
           name: 'vacay-keepsake-mcp',
           protocolVersion: MCP_PROTOCOL_VERSION,
           transport: 'streamable-http',
           endpoint: '/api/mcp',
-          capabilities: { tools: { listChanged: false } },
-          tools: MCP_TOOLS,
+          capabilities: { tools: { listChanged: false }, resources: { listChanged: false } },
+          tools: reservationsScope ? RESERVATION_MCP_TOOLS : MCP_TOOLS,
+          ...(reservationsScope ? {} : { reservation_tools: RESERVATION_MCP_TOOLS }),
+          resources: MCP_RESOURCES,
         });
       }
       if (req.method === 'POST') {
@@ -243,7 +308,10 @@ export default async function handler(req, res) {
       }
       let tokenRecord = null;
       if (rawToken) {
-        tokenRecord = await authenticateMcpToken(db, rawToken, { env: process.env, now: nowFn });
+        tokenRecord = await authenticateAnyMcpToken(db, rawToken);
+        if (tokenRecord.tokenScope !== 'import') {
+          return sendJson(res, 403, { ok: false, code: 'import_scope_required', error: 'This reservations token cannot access vacation import media.' });
+        }
       }
       const rows = await db`
         select scope_trip_id, upload_status, mime_type, filename, file_bytes
@@ -273,7 +341,14 @@ export default async function handler(req, res) {
           shareToken: url.searchParams.get('shareToken') || '',
         });
         const tokens = await listMcpTokens(db, { tripId: editor.tripId });
-        return sendJson(res, 200, { ok: true, vacationId: editor.tripId, mcpEndpoint: `${requestBaseUrl(req)}/api/mcp`, tokens });
+        return sendJson(res, 200, {
+          ok: true,
+          vacationId: editor.tripId,
+          role: editor.role,
+          isAdmin: editor.role === 'owner',
+          mcpEndpoint: `${requestBaseUrl(req)}/api/mcp`,
+          tokens,
+        });
       }
       if (req.method === 'POST' && sub.length === 1) {
         const body = await readJson(req);
@@ -304,6 +379,16 @@ export default async function handler(req, res) {
         const revoked = await revokeMcpToken(db, { tripId: editor.tripId, tokenId: decodeURIComponent(sub[1]) });
         return sendJson(res, 200, { ok: true, record: revoked });
       }
+    }
+
+    if (sub[0] === 'reservations') {
+      return await handleReservationsHttpRoute(db, req, res, {
+        sub,
+        url,
+        baseUrl: requestBaseUrl(req),
+        nowFn,
+        resolveEditorAccess,
+      });
     }
 
     if (sub[0] === 'changes') {

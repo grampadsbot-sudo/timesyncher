@@ -85,7 +85,7 @@ import { blockVacationAppReplyIdCitation } from '../src/vacation/reply-id-citati
 import { loadSessionOwnerReplyPlan } from '../src/vacation/reply-plan-entitlement.mjs';
 import { scheduleChatThing } from '../src/vacation/chat-thing-schedule.mjs';
 import { resolveVacationAppQueueIntake } from '../src/vacation/vacation-app-queue-intake.mjs';
-import { handleAiImportChatTurn, isAiImportChatRequest } from '../src/vacation/mcp-chat-import.mjs';
+import { tryHandleAiMcpChatTurn } from '../src/vacation/mcp-reservations-chat.mjs';
 import { tryHandlePendingPreviewChatTurn } from '../src/vacation/mcp-chat-preview-edit.mjs';
 import { refreshSearchProgressFromTripThings, searchProgressForClient, searchProgressForVacationAppTrip, syncSearchProgressStage } from '../src/vacation/search-progress.mjs';
 
@@ -545,7 +545,8 @@ async function queueVacationAppTurn(db, session, trip, body, intakePrefill = nul
   if (!seatFromSession(session)) await ensureOnboardingOpener(db, session, trip || null);
   const welcomeMs = Date.now() - welcomeStarted;
   const requestText = cleanText(body.text || body.message, 12000);
-  if (isAiImportChatRequest(requestText)) return handleAiImportChatTurn(db, { session, trip, requestText, httpReq, env: process.env });
+  const aiMcpReply = await tryHandleAiMcpChatTurn(db, { session, trip, requestText, httpReq, env: process.env });
+  if (aiMcpReply) return aiMcpReply;
   const pendingPreviewReply = await tryHandlePendingPreviewChatTurn(db, { session, trip, requestText });
   if (pendingPreviewReply) return pendingPreviewReply;
   const intake = await resolveVacationAppQueueIntake(requestText, intakePrefill, process.env);

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { loadSharedTrip, shareTokenFromLocation } from '../api/loadSharedTrip';
-import { fetchSharedTripEditAccess, saveSharedTripOverrides } from '../api/sharedTripEdits';
+import { fetchSharedTripEditAccessInfo, saveSharedTripOverrides } from '../api/sharedTripEdits';
 import type { SharedTripPayload } from '../types/sharedTrip';
 
 export type SharedTripSaveStatus = 'idle' | 'checking' | 'saving' | 'saved' | 'error';
@@ -12,6 +12,7 @@ type State =
       data: SharedTripPayload;
       token: string;
       canEdit: boolean;
+      editRole: string;
       editChecked: boolean;
       saveStatus: SharedTripSaveStatus;
       saveError: string;
@@ -51,6 +52,7 @@ export function useSharedTrip(): State & {
             data,
             token,
             canEdit: false,
+            editRole: '',
             editChecked: false,
             saveStatus: 'checking',
             saveError: '',
@@ -77,12 +79,12 @@ export function useSharedTrip(): State & {
   useEffect(() => {
     if (!needsEditProbe || !readyToken) return;
     let cancelled = false;
-    fetchSharedTripEditAccess(readyToken)
-      .then((canEdit) => {
+    fetchSharedTripEditAccessInfo(readyToken)
+      .then((access) => {
         if (!cancelled) {
           setState((prev) =>
             prev.status === 'ready'
-              ? { ...prev, canEdit, editChecked: true, saveStatus: 'idle' }
+              ? { ...prev, canEdit: access.canEdit, editRole: access.role, editChecked: true, saveStatus: 'idle' }
               : prev,
           );
         }
@@ -91,7 +93,7 @@ export function useSharedTrip(): State & {
         if (!cancelled) {
           setState((prev) =>
             prev.status === 'ready'
-              ? { ...prev, canEdit: false, editChecked: true, saveStatus: 'idle' }
+              ? { ...prev, canEdit: false, editRole: '', editChecked: true, saveStatus: 'idle' }
               : prev,
           );
         }

@@ -122,6 +122,34 @@ function ThingDetailPanelInner({ place, trip, onClose, canEdit = false, onPatchF
           </div>
         </header>
         <div className="tsv-detail-body">
+          {model.reservationBooking ? (
+            <section
+              className="tsv-detail-info-box"
+              data-ts-booked-by-ai="1"
+              style={{ borderColor: '#a7f3d0', background: '#ecfdf5', color: '#065f46' }}
+            >
+              <p className="tsv-detail-field" style={{ fontWeight: 800, textTransform: 'uppercase', fontSize: 11 }}>
+                {model.reservationBooking.bookedByLabel}
+              </p>
+              <p className="tsv-detail-field" style={{ fontWeight: 700, color: '#0f172a' }}>
+                {[
+                  model.reservationBooking.date,
+                  model.reservationBooking.time,
+                  model.reservationBooking.partySize ? `Party of ${model.reservationBooking.partySize}` : '',
+                  model.reservationBooking.confirmationNumber
+                    ? `Confirmation #${model.reservationBooking.confirmationNumber}`
+                    : '',
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </p>
+              {model.reservationBooking.notes ? (
+                <p className="tsv-detail-field" style={{ color: '#334155' }}>
+                  {model.reservationBooking.notes}
+                </p>
+              ) : null}
+            </section>
+          ) : null}
           {editMode && canEdit ? (
             <label className="tsv-detail-price tsv-detail-field" data-ts-detail-field="price">
               <strong>Price:</strong>{' '}

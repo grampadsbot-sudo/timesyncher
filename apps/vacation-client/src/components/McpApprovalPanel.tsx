@@ -5,9 +5,12 @@ import {
   declineMcpChange,
   fetchMcpChanges,
   fetchMcpTokens,
+  fetchReservationConnections,
   requestMcpChanges,
+  revokeReservationConnectionApi,
   revokeVacationMcpToken,
   type McpChangeSet,
+  type McpReservationConnection,
   type McpTokenRecord,
 } from '../api/mcpAdmin';
 import {
@@ -16,13 +19,15 @@ import {
   extractApprovalPreviewView,
   formatPreviewClock,
   formatPreviewDayDate,
+  formatReservationCreatedDate,
   previewCategoryIcon,
   previewSummaryChips,
+  reservationConnectionModeLabel,
   sortChangeSetsForReview,
 } from '../lib/mcpPanelModel.mjs';
 import { PreviewMediaThumbs } from './PreviewMediaThumbs';
 
-export type McpPanelMode = 'approvals' | 'tokens';
+export type McpPanelMode = 'approvals' | 'tokens' | 'reservations';
 
 type Props = {
   shareToken: string;
@@ -37,6 +42,8 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
   const [changes, setChanges] = useState<McpChangeSet[]>([]);
   const [selectedId, setSelectedId] = useState<string>('');
   const [tokens, setTokens] = useState<McpTokenRecord[]>([]);
+  const [reservationConnections, setReservationConnections] = useState<McpReservationConnection[]>([]);
+  const [isAdmin, setIsAdmin] = useState<boolean>(true);
   const [mcpEndpoint, setMcpEndpoint] = useState<string>('');
   const [label, setLabel] = useState<string>('Family AI');
   const [role, setRole] = useState<'collaborator' | 'owner'>('collaborator');
@@ -51,15 +58,18 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
   const refreshData = useCallback(async () => {
     setError('');
     try {
-      const [changeList, tokenInfo] = await Promise.all([
+      const [changeList, tokenInfo, resInfo] = await Promise.all([
         fetchMcpChanges(shareToken),
         fetchMcpTokens(shareToken),
+        fetchReservationConnections(shareToken),
       ]);
       const sorted = sortChangeSetsForReview(changeList);
       setChanges(sorted);
       setSelectedId((prev) => (prev && sorted.some((item) => item.id === prev) ? prev : sorted[0]?.id || ''));
       setTokens(tokenInfo.tokens);
       setMcpEndpoint(tokenInfo.mcpEndpoint);
+      setIsAdmin(resInfo.isAdmin);
+      setReservationConnections(resInfo.connections);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to load AI settings for this vacation.');
     } finally {
@@ -69,14 +79,20 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([fetchMcpChanges(shareToken), fetchMcpTokens(shareToken)])
-      .then(([changeList, tokenInfo]) => {
+    Promise.all([
+      fetchMcpChanges(shareToken),
+      fetchMcpTokens(shareToken),
+      fetchReservationConnections(shareToken),
+    ])
+      .then(([changeList, tokenInfo, resInfo]) => {
         if (cancelled) return;
         const sorted = sortChangeSetsForReview(changeList);
         setChanges(sorted);
         setSelectedId((prev) => (prev && sorted.some((item) => item.id === prev) ? prev : sorted[0]?.id || ''));
         setTokens(tokenInfo.tokens);
         setMcpEndpoint(tokenInfo.mcpEndpoint);
+        setIsAdmin(resInfo.isAdmin);
+        setReservationConnections(resInfo.connections);
         setLoading(false);
       })
       .catch((err: unknown) => {
@@ -194,6 +210,21 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
     }
   }
 
+  async function handleRevokeReservation(connectionId: string) {
+    setBusyId(connectionId);
+    setError('');
+    setNotice('');
+    try {
+      await revokeReservationConnectionApi(shareToken, connectionId);
+      setNotice('Reservations AI connection revoked.');
+      await refreshData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to revoke reservations AI connection.');
+    } finally {
+      setBusyId('');
+    }
+  }
+
   const summaryChips = selected ? previewSummaryChips(selected) : [];
   const previewView = useMemo(() => extractApprovalPreviewView(selected), [selected]);
   const missingItems = selected?.preview?.missing || [];
@@ -252,6 +283,15 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
             >
               AI access tokens ({tokens.filter((t) => t.status === 'active').length})
             </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mode === 'reservations'}
+              className={`tsv-header-btn${mode === 'reservations' ? ' is-active' : ''}`}
+              onClick={() => setMode('reservations')}
+            >
+              Reservations AI ({reservationConnections.filter((c) => c.status !== 'revoked').length})
+            </button>
           </div>
         </header>
 
@@ -269,6 +309,49 @@ export function McpApprovalPanel({ shareToken, initialMode, onClose, onApproved 
 
           {loading ? (
             <p className="tsv-muted">Loading vacation AI activity…</p>
+          ) : !isAdmin ? (
+            <p className="tsv-mcp-alert tsv-mcp-alert-error" data-ts-mcp-admin-only="1" role="alert">
+              AI Access &amp; Approvals is only available to the vacation owner.
+            </p>
+          ) : mode === 'reservations' ? (
+            <section className="tsv-mcp-section" aria-label="Reservations AI connections">
+              <p className="tsv-muted">
+                Account-level reservations permission. Separate from vacation import tokens: revoking a reservations connection does not affect import access.
+              </p>
+              {reservationConnections.length === 0 ? (
+                <p className="tsv-muted">
+                  No reservations AI connections yet. Ask for a reservation in chat to connect your own AI.
+                </p>
+              ) : (
+                <ul className="tsv-mcp-token-list" data-ts-reservation-connections-list="1">
+                  {reservationConnections.map((item) => (
+                    <li key={item.id} className="tsv-mcp-token-row" data-ts-reservation-connection-row={item.id}>
+                      <div>
+                        <strong>{item.label}</strong> · <code>{item.tokenPrefix}…</code>
+                        <div className="tsv-mcp-item-meta" data-ts-reservation-mode="1">
+                          Mode: {reservationConnectionModeLabel(item)}
+                        </div>
+                        <div className="tsv-mcp-item-meta" data-ts-reservation-created="1">
+                          {item.status === 'active' ? 'Active' : (item.status === 'revoked' ? 'Revoked' : 'Pending setup')}
+                          {item.createdAt ? ` · ${formatReservationCreatedDate(item.createdAt)}` : ''}
+                        </div>
+                      </div>
+                      {item.status !== 'revoked' ? (
+                        <button
+                          type="button"
+                          className="tsv-header-btn tsv-mcp-btn-decline"
+                          data-mcp-revoke-reservation={item.id}
+                          disabled={busyId === item.id}
+                          onClick={() => void handleRevokeReservation(item.id)}
+                        >
+                          Revoke
+                        </button>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
           ) : mode === 'approvals' ? (
             <section className="tsv-mcp-section" aria-label="Pending vacation approvals">
               {changes.length === 0 ? (

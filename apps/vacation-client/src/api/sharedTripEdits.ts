@@ -1,16 +1,17 @@
-export async function fetchSharedTripEditAccess(token: string): Promise<boolean> {
+export async function fetchSharedTripEditAccessInfo(token: string): Promise<{ canEdit: boolean; role: string }> {
   const slug = token.replace(/^\/+|\/+$/g, '');
-  if (!slug) return false;
+  if (!slug) return { canEdit: false, role: '' };
   const response = await fetch(`/api/shared/${encodeURIComponent(slug)}/edit-access`, {
     credentials: 'include',
     headers: { accept: 'application/json', 'Cache-Control': 'no-cache' },
   });
-  if (!response.ok) return false;
+  if (!response.ok) return { canEdit: false, role: '' };
   try {
-    const body = (await response.json()) as { canEdit?: boolean };
-    return Boolean(body?.canEdit);
-  } catch {
-    return false;
+    const body = (await response.json()) as { canEdit?: boolean; role?: string };
+    return { canEdit: Boolean(body?.canEdit), role: String(body?.role || '') };
+  } catch (error) {
+    void error;
+    return { canEdit: false, role: '' };
   }
 }
 
