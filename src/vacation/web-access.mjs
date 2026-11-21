@@ -113,7 +113,10 @@ export async function ensureVacationWebAccessSchema(db) {
     )
   `;
   try {
-    await db`do $$ begin if not exists (select 1 from pg_constraint where conname = 'vacation_web_access_grants_role_check' and conrelid = 'vacation_web_access_grants'::regclass and pg_get_constraintdef(oid) ilike '%viewer%') then alter table vacation_web_access_grants drop constraint if exists vacation_web_access_grants_role_check; alter table vacation_web_access_grants add constraint vacation_web_access_grants_role_check check (role in ('owner', 'web_editor', 'telegram_collaborator', 'viewer')); end if; exception when duplicate_object then null; end $$`;
+    await db`alter table vacation_web_access_grants
+      drop constraint if exists vacation_web_access_grants_role_check,
+      add constraint vacation_web_access_grants_role_check
+      check (role in ('owner', 'web_editor', 'telegram_collaborator', 'viewer'))`;
   } catch (error) {
     if (error?.code !== '42710' && !/constraint.*already exists/i.test(String(error?.message || ''))) throw error;
   }
