@@ -6,6 +6,7 @@ import { RESERVATION_HOW_TO_URI } from './mcp-reservations-tools.mjs';
 const RESERVATION_ASK_RE = /\b(book|reserve|make\s+(?:a|me\s+a|us\s+a)?\s*reservation|need\s+a\s+reservation|get\s+(?:a|me\s+a|us\s+a)\s+(?:table|reservation)|book\s+(?:a\s+table|us|me))\b/i;
 export const YES_REPLY_RE = /^(?:yes|yeah|yep|yup|sure|ok|okay|please|go\s+ahead|do\s+it|sounds\s+good|set\s+(?:it|that)\s+up|yes[\s,!.-]+(?:please|set|let'?s|connect|go).*|let'?s\s+(?:set|do|connect).*|connect\s+my\s+ai.*)$/i;
 const HANDSHAKE_HINT_RE = /\b(handshake|vk_reservations_handshake|poll_interval_minutes|webhook_url|option\s*\(?[a-d]\)?|mode\s*[:=]\s*["']?(?:webhook|polling|manual|a|b|c))\b/i;
+const PENDING_HANDSHAKE_WORD_RE = /\b(option|mode|webhook|poll|manual|handshake|https?:\/\/|minutes?)\b/i;
 
 export function isReservationAsk(rawText = '') {
   const text = cleanText(rawText, 2000);
@@ -13,6 +14,16 @@ export function isReservationAsk(rawText = '') {
   if (isAiImportChatRequest(text)) return false;
   if (/\b(cancel|revoke|remove|delete)\b/i.test(text) && !/\b(book|reserve)\b/i.test(text)) return false;
   return RESERVATION_ASK_RE.test(text);
+}
+
+export function reservationChatTurnNeedsLookup(rawText = '') {
+  const text = cleanText(rawText, 4000);
+  if (!text) return false;
+  if (isReservationAsk(text) || YES_REPLY_RE.test(text)) return true;
+  if (HANDSHAKE_HINT_RE.test(text) || PENDING_HANDSHAKE_WORD_RE.test(text)) return true;
+  const trimmed = text.trim();
+  if (trimmed.startsWith('{') || trimmed.startsWith('[') || trimmed.includes('```')) return true;
+  return false;
 }
 
 export function buildReservationsSetupCopyText({

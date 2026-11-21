@@ -17,6 +17,7 @@ import {
   buildReservationsSetupCopyText,
   isReservationAsk,
   parseReservationsHandshakeText,
+  reservationChatTurnNeedsLookup,
   YES_REPLY_RE,
 } from './mcp-reservations-handshake.mjs';
 
@@ -140,6 +141,7 @@ export async function tryHandleReservationsChatTurn(db, {
 }) {
   const text = cleanText(requestText, 4000);
   if (!text) return null;
+  if (!reservationChatTurnNeedsLookup(text)) return null;
   const started = Date.now();
   const seat = seatFromSession(session);
   const transcriptOwnerId = transcriptCustomerId(session);
