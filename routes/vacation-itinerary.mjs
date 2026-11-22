@@ -24,12 +24,11 @@ import handlePdfQrSvg from '../src/vacation/pdf-qr-svg-handler.mjs';
 import trekStyle2BundleHandler from '../src/vacation/trek-style2-bundle.mjs';
 import { configuredSeatDollars } from '../src/vacation/seat-price.mjs';
 import { storePreCollaboratorSnapshot } from '../src/vacation/pre-collaborator-snapshot.mjs';
-import { assignTripSiteUrl, vacationEulaStatus } from '../src/vacation/onboarding.mjs';
+import { assignTripSiteUrl } from '../src/vacation/onboarding.mjs';
 import { assignTripSiteUrlWhenThingsPresent } from '../src/vacation/trip-site-url-after-insert.mjs';
 import { insertIntakeTripThingRow } from '../src/vacation/trip-things.mjs';
 import { createVacationFromChatMessage } from '../src/vacation/vacation-from-chat-intake.mjs';
 import { onboardingWelcomeFailure, welcomeFailureBody } from '../src/vacation/welcome-failure.mjs';
-import { loadSessionPersistent } from '../src/onboarding/eula-persistent-core.mjs';
 import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-store.mjs';
 import { customerModality, jevStamp, liveTurnRecord, intakeSpan, firstMarkedIntake, produceLiveAppReply, finishTierRewrite, activityCommitDecisions, applyAgreedAppSwim, applyCustomerNotes, completeRosterParty } from '../src/vacation/live-app-turn.mjs';
 import { queueVacationAppTurn as runQueueVacationAppTurn } from './vacation-app-chat-queue.mjs';
@@ -70,14 +69,23 @@ import {
 } from '../src/vacation/chat-intake-place-persist.mjs';
 import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
 import { mergeTripCreateServerTiming } from '../src/vacation/trip-create-server-timing.mjs';
-import { openCollaboratorAppSeats, recordDialogParty, seatFromSession, collaboratorSeatJoinEvent, transcriptCustomerId } from '../src/vacation/collaborator-app-seat.mjs';
+import {
+  collaboratorSeatJoinEvent,
+  loadVacationAppTripRows,
+  openCollaboratorAppSeats,
+  recordDialogParty,
+  seatForSessionTrip,
+  seatFromSession,
+  sessionWithTripSeat,
+  transcriptCustomerId,
+} from '../src/vacation/collaborator-app-seat.mjs';
 import { pickVacationAppTrip } from '../src/vacation/vacation-app-trip-select.mjs';
 import { loadTripScopedVacationAppTurns } from '../src/vacation/vacation-app-transcript.mjs';
 import { intakeShareSlug } from '../src/vacation/intake-shared-trip.mjs';
 import { sharedTripWebsiteUrl } from '../src/vacation/web-access.mjs';
 import {
   collaboratorSessionForAccept,
-  vacationAppEulaForCollaboratorSeat,
+  resolveVacationAppEula,
 } from '../src/vacation/collaborator-eula-accept.mjs';
 import { collaboratorEulaSessionId } from '../src/vacation/collaborators.mjs';
 import { runCollaboratorInviteAction } from '../src/vacation/collaborator-invite-action.mjs';
@@ -247,11 +255,13 @@ function builtVacationSiteUrl(metadata, tripId = '') {
   return url;
 }
 
-function vacationAppTripSummary(row) {
+function vacationAppTripSummary(row, session = null) {
   const metadata = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
   const url = builtVacationSiteUrl(metadata, row.id);
   const slug = metadata.sharedToken || metadata.shareToken || metadata.publicSlug || metadata.source_token || metadata.slug
     || (metadata.intakeShare === true && row.id ? intakeShareSlug(row.id) : null);
+  const role = row.role
+    || (row.customer_id && session?.customer_id && String(row.customer_id) !== String(session.customer_id) ? 'collaborator' : 'owner');
   return {
     id: row.id,
     title: row.title || '',
@@ -260,6 +270,7 @@ function vacationAppTripSummary(row) {
     startDate: row.start_date || null,
     endDate: row.end_date || null,
     status: row.status || 'planning',
+    role,
     current: Boolean(row.current),
     publicUrl: url,
     shareToken: slug,
@@ -292,25 +303,8 @@ async function loadVacationAppSession(db, token) {
 }
 
 async function loadVacationAppTrips(db, session) {
-  const seat = seatFromSession(session);
-  const rows = await db`
-    select
-      trips.id,
-      trips.title, trips.destination,
-      trips.start_date,
-      trips.end_date,
-      trips.status,
-      trips.metadata,
-      (trips.id = ${session.trip_id}) as current
-    from trips
-    where trips.customer_id = ${session.customer_id}
-      or (${seat?.ownerTripId || null}::uuid is not null and trips.id = ${seat?.ownerTripId || null})
-    order by
-      (trips.id = ${session.trip_id}) desc,
-      trips.updated_at desc nulls last,
-      trips.created_at desc nulls last
-  `;
-  return rows.map(vacationAppTripSummary);
+  const rows = await loadVacationAppTripRows(db, session);
+  return rows.map((row) => vacationAppTripSummary(row, session));
 }
 
 async function loadTranscriptAuthorPeople(db, customerId, tripKey) {
@@ -859,31 +853,15 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
   return itinerary;
 }
 
-async function vacationAppEula(session, env = process.env) {
-  const seat = seatFromSession(session);
-  if (seat?.inviteId) return vacationAppEulaForCollaboratorSeat(session, seat, env);
-  const status = await vacationEulaStatus(session, env);
-  const accepted = Boolean(status.ok || status.status === 'accepted');
-  const payload = {
-    accepted,
-    status: accepted ? 'accepted' : (status.status || 'pending'),
-    sessionId: status.sessionId || null,
-    version: null,
-    text: '',
-  };
-  if (accepted || !payload.sessionId) return payload;
-  const store = createPersistentStoreFromEnv(env);
-  const eulaSession = await loadSessionPersistent(store, payload.sessionId);
-  payload.version = eulaSession?.eula?.version || null;
-  payload.text = eulaSession?.eula?.text || '';
-  return payload;
+async function vacationAppEula(db, session, env = process.env) {
+  return resolveVacationAppEula(db, session, env);
 }
 
 async function handleVacationApp(req, res, db, url) {
   const token = cleanText(url.searchParams.get('session') || url.searchParams.get('token'), 180);
   if (!token) return sendJson(res, 400, { ok: false, error: 'session is required.' });
 
-  const session = await loadVacationAppSession(db, token);
+  let session = await loadVacationAppSession(db, token);
   if (!session?.customer_id) return sendJson(res, 404, { ok: false, error: 'Vacation app session not found.' });
   const seat = seatFromSession(session);
   if (seat?.inviteId) {
@@ -894,7 +872,11 @@ async function handleVacationApp(req, res, db, url) {
   if (req.method === 'GET') {
     if (url.searchParams.get('progressOnly') === '1') {
       const requestedTripId = cleanText(url.searchParams.get('tripId') || url.searchParams.get('trip_id'), 80);
-      const selected = pickVacationAppTrip(await loadVacationAppTrips(db, session), session, requestedTripId);
+      const vacations = await loadVacationAppTrips(db, session);
+      if (requestedTripId && !vacations.some((trip) => trip.id === requestedTripId)) {
+        return sendJson(res, 403, { ok: false, code: 'vacation_access_denied', error: 'You do not have access to this vacation.' });
+      }
+      const selected = pickVacationAppTrip(vacations, session, requestedTripId);
       return sendJson(res, 200, {
         ok: true,
         publicUrl: selected?.publicUrl || '',
@@ -903,13 +885,17 @@ async function handleVacationApp(req, res, db, url) {
       });
     }
     const requestedTripId = cleanText(url.searchParams.get('tripId') || url.searchParams.get('trip_id'), 80);
-    if (seat?.ownerTripId) await publishIntakeShare(db, seat.ownerTripId);
     let vacations = await loadVacationAppTrips(db, session);
+    if (requestedTripId && !vacations.some((trip) => trip.id === requestedTripId)) {
+      return sendJson(res, 403, { ok: false, code: 'vacation_access_denied', error: 'You do not have access to this vacation.' });
+    }
     let selected = pickVacationAppTrip(vacations, session, requestedTripId);
     if (selected?.id) await publishIntakeShare(db, selected.id);
     vacations = await loadVacationAppTrips(db, session);
     selected = pickVacationAppTrip(vacations, session, requestedTripId);
-    const eula = await vacationAppEula(session, process.env);
+    const seat = await seatForSessionTrip(db, session, selected?.id || null);
+    session = sessionWithTripSeat(session, seat);
+    const eula = await vacationAppEula(db, session, process.env);
     if (eula.accepted) {
       await ensureOnboardingOpener(db, session, selected || null);
       if (seat) {
@@ -956,13 +942,16 @@ async function handleVacationApp(req, res, db, url) {
     const postStarted = Date.now();
     const body = await readJson(req);
     if (body.action === 'open-seats' || body.action === 'collaborator-invite') {
-      if (seatFromSession(session)) return sendJson(res, 403, { ok: false, error: 'A collaborator seat cannot open seats.' });
-      const seat = Array.isArray(body.seats) ? body.seats[0] : body;
+      const inviteTripId = cleanText(body.tripId || body.trip_id, 80) || session.trip_id || '';
+      if (await seatForSessionTrip(db, session, inviteTripId) || (!inviteTripId && seatFromSession(session))) {
+        return sendJson(res, 403, { ok: false, error: 'A collaborator seat cannot open seats.' });
+      }
+      const targetSeat = Array.isArray(body.seats) ? body.seats[0] : body;
       const result = await runCollaboratorInviteAction(db, {
         session,
-        tripId: cleanText(body.tripId || body.trip_id, 80) || session.trip_id || '',
-        name: seat?.name || seat?.displayName,
-        email: seat?.email,
+        tripId: inviteTripId,
+        name: targetSeat?.name || targetSeat?.displayName,
+        email: targetSeat?.email,
         env: process.env,
       });
       return sendJson(res, 200, { ok: true, seats: result.seats, inviteResult: result });
@@ -971,27 +960,39 @@ async function handleVacationApp(req, res, db, url) {
       const meta = session.metadata && typeof session.metadata === 'object' ? session.metadata : {};
       const pending = meta.pendingRewrite;
       if (!pending?.draft || !pending?.tripId) return sendJson(res, 409, { ok: false, error: 'No rewrite is waiting.' });
+      const rewriteSeat = await seatForSessionTrip(db, session, pending.tripId);
       const finished = pending.resolved?.reply
         ? pending.resolved
         : await finishTierRewrite({ pending, env: process.env });
       if (!finished.reply) return sendJson(res, 502, { ok: false, error: finished.reason || 'The rewrite did not produce a reply.' });
-      const shipped = await commitShippedRewrite(db, session, pending, finished, {
+      const shipped = await commitShippedRewrite(db, sessionWithTripSeat(session, rewriteSeat), pending, finished, {
         recordCustomerThingNotes,
         publishIntakeShare,
       });
       return sendJson(res, 200, shipped);
     }
     if (body.action === 'record-party') {
-      if (seatFromSession(session)) return sendJson(res, 403, { ok: false, error: 'A collaborator seat cannot record the roster.' });
-      const party = await recordDialogParty(db, session.trip_id, body.party);
+      const partyTripId = cleanText(body.tripId || body.trip_id, 80) || session.trip_id || '';
+      if (await seatForSessionTrip(db, session, partyTripId) || (!partyTripId && seatFromSession(session))) {
+        return sendJson(res, 403, { ok: false, error: 'A collaborator seat cannot record the roster.' });
+      }
+      const party = await recordDialogParty(db, partyTripId, body.party);
       return sendJson(res, 200, { ok: true, party });
     }
     let vacations = await loadVacationAppTrips(db, session);
-    const eula = await vacationAppEula(session, process.env);
     const requestedTripId = cleanText(body.tripId || body.trip_id, 80);
+    if (requestedTripId && !vacations.some((trip) => trip.id === requestedTripId)) {
+      return sendJson(res, 403, { ok: false, code: 'vacation_access_denied', error: 'You do not have access to this vacation.' });
+    }
+    if (!requestedTripId && !vacations.length && seatFromSession(session)?.ownerTripId) {
+      return sendJson(res, 403, { ok: false, code: 'vacation_access_denied', error: 'Collaborator seat is no longer active.' });
+    }
     let selected = vacations.find((trip) => trip.id === requestedTripId)
       || vacations.find((trip) => trip.id === session.trip_id)
       || vacations[0];
+    const seat = await seatForSessionTrip(db, session, selected?.id || null);
+    session = sessionWithTripSeat(session, seat);
+    const eula = await vacationAppEula(db, session, process.env);
     let created = null;
     let createVacationMs = null;
     if (!selected) {
@@ -1031,7 +1032,6 @@ async function handleVacationApp(req, res, db, url) {
       }));
     }
     if (body.action === 'seat-join') {
-      const seat = seatFromSession(session);
       if (!seat) return sendJson(res, 403, { ok: false, error: 'Only a collaborator seat records a join.' });
       const tripKey = selected?.id || seat.ownerTripId || null;
       if (!tripKey && !seat.ownerOnboardingSessionId) {

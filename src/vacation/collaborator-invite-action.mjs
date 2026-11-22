@@ -53,12 +53,13 @@ export async function runCollaboratorInviteAction(db, {
   const seat = seats[0];
   return {
     ok: true,
-    code: 'collaborator_invite_sent',
+    code: seat?.seatStatus === 'active' ? 'collaborator_seat_activated' : 'collaborator_invite_sent',
     inviteeEmail,
     inviteeName,
     tripId: scope.tripId || seat?.tripId || null,
     inviteId: seat?.inviteId || null,
     emailStatus: seat?.emailStatus || null,
+    seatStatus: seat?.seatStatus || null,
     seats,
   };
 }

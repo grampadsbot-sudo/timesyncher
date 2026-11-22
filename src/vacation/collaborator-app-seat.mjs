@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { createCollaboratorInvite } from './collaborators.mjs';
+import { createCollaboratorInvite, loadCollaboratorInviteForEmail } from './collaborators.mjs';
 import { queueOrSendCollaboratorInviteEmail } from './email.mjs';
 import { publicTripUrl } from './web-access.mjs';
 import { upsertCustomer, vacationAppLink } from './onboarding.mjs';
@@ -12,6 +12,53 @@ function sessionToken() {
   return crypto.randomBytes(18).toString('base64url');
 }
 
+function inviteContactForSeat(invite) {
+  const metadata = invite?.metadata && typeof invite.metadata === 'object' ? invite.metadata : {};
+  const displayName = clean(metadata.displayName || invite?.requested_for, 180);
+  const email = clean(metadata.email, 180).toLowerCase();
+  const [firstName, ...rest] = displayName.split(/\s+/).filter(Boolean);
+  return {
+    email,
+    displayName,
+    firstName: clean(firstName, 80) || null,
+    lastName: clean(rest.join(' '), 80) || null,
+  };
+}
+
+async function ensureInvitePaidForOwnerSeat(db, invite) {
+  if (!invite?.id) return null;
+  if (invite.status === 'paid' || invite.status === 'accepted') return invite;
+  const metadata = invite.metadata && typeof invite.metadata === 'object' ? invite.metadata : {};
+  const payer = clean(metadata.payer || 'owner', 40);
+  const channel = clean(metadata.channel, 40);
+  if (invite.status !== 'pending_payment') {
+    throw Object.assign(new Error(`Collaborator invite is ${invite.status}.`), { statusCode: 409 });
+  }
+  if (payer !== 'owner' && channel !== 'vacation-app') {
+    throw Object.assign(new Error(`Collaborator invite is ${invite.status}.`), { statusCode: 409 });
+  }
+  const rows = await db`
+    update vacation_collaborator_invites
+    set status = 'paid',
+      paid_at = coalesce(paid_at, now()),
+      updated_at = now(),
+      metadata = metadata || ${{ paidVia: 'owner_app_seat' }}
+    where id = ${invite.id}
+    returning *
+  `;
+  return loadCollaboratorInviteForEmail(db, rows[0]?.id || invite.id);
+}
+
+export async function ensureCollaboratorAppSeatForInvite(db, invite, env = process.env) {
+  const ready = await ensureInvitePaidForOwnerSeat(db, invite);
+  const contact = inviteContactForSeat(ready);
+  if (!contact.email) {
+    throw Object.assign(new Error('Collaborator invite is missing an email address.'), { statusCode: 409 });
+  }
+  const joined = await joinCollaboratorAppSession(db, { invite: ready, contact, env });
+  return { invite: ready, joined, contact };
+}
+
 export function seatFromSession(session) {
   const metadata = session?.metadata && typeof session.metadata === 'object' ? session.metadata : {};
   const seat = metadata.seat;
@@ -19,6 +66,131 @@ export function seatFromSession(session) {
   if (!seat.ownerCustomerId) return null;
   if (!seat.ownerTripId && !seat.ownerOnboardingSessionId) return null;
   return seat;
+}
+
+export function sessionWithTripSeat(session, seat) {
+  if (!session || typeof session !== 'object') return session;
+  const metadata = session.metadata && typeof session.metadata === 'object' ? session.metadata : {};
+  if (!seat && !metadata.seat) return session;
+  return {
+    ...session,
+    metadata: {
+      ...metadata,
+      seat: seat || null,
+    },
+  };
+}
+
+export async function loadVacationAppTripRows(db, session) {
+  if (!session?.customer_id) return [];
+  return db`
+    select
+      trips.id,
+      trips.customer_id,
+      trips.title,
+      trips.destination,
+      trips.start_date,
+      trips.end_date,
+      trips.status,
+      trips.metadata,
+      (trips.id = ${session.trip_id}) as current,
+      case when trips.customer_id = ${session.customer_id} then 'owner' else 'collaborator' end as role
+    from trips
+    where trips.customer_id = ${session.customer_id}
+      or exists (
+        select 1
+        from vacation_collaborators vc
+        join onboarding_sessions seat_os
+          on seat_os.customer_id = ${session.customer_id}
+          and (
+            vc.metadata->>'onboardingToken' = seat_os.token
+            or (
+              vc.invite_id is not null
+              and seat_os.metadata->'seat'->>'inviteId' = vc.invite_id::text
+            )
+          )
+        where vc.status = 'active'
+          and (
+            vc.trip_id = trips.id
+            or (vc.trip_id is null and seat_os.metadata->'seat'->>'ownerTripId' = trips.id::text)
+          )
+      )
+    order by
+      (trips.id = ${session.trip_id}) desc,
+      trips.updated_at desc nulls last,
+      trips.created_at desc nulls last
+  `;
+}
+
+export async function seatForSessionTrip(db, session, tripId) {
+  if (!session?.customer_id) return null;
+  const normalizedTripId = clean(tripId, 80);
+  const direct = seatFromSession(session);
+  if (!normalizedTripId) {
+    if (direct && !direct.ownerTripId && direct.ownerOnboardingSessionId) return direct;
+    return null;
+  }
+  const rows = await db`
+    select
+      vc.id as collaborator_id,
+      vc.invite_id,
+      vc.owner_customer_id,
+      vc.trip_id,
+      vc.display_name,
+      vc.status,
+      vc.metadata as collaborator_metadata,
+      seat_os.token as seat_token,
+      seat_os.metadata as seat_session_metadata
+    from vacation_collaborators vc
+    join onboarding_sessions seat_os
+      on seat_os.customer_id = ${session.customer_id}
+      and (
+        vc.metadata->>'onboardingToken' = seat_os.token
+        or (
+          vc.invite_id is not null
+          and seat_os.metadata->'seat'->>'inviteId' = vc.invite_id::text
+        )
+      )
+    where vc.owner_customer_id <> ${session.customer_id}
+      and (
+        vc.trip_id = ${normalizedTripId}
+        or (vc.trip_id is null and seat_os.metadata->'seat'->>'ownerTripId' = ${normalizedTripId})
+      )
+    order by
+      case when vc.status = 'active' then 0 else 1 end,
+      vc.updated_at desc nulls last,
+      vc.created_at desc nulls last
+    limit 1
+  `;
+  const row = rows[0] || null;
+  if (row) {
+    if (row.status && row.status !== 'active') return null;
+    const seatSessionMeta = row.seat_session_metadata && typeof row.seat_session_metadata === 'object' ? row.seat_session_metadata : {};
+    const seatMeta = seatSessionMeta.seat && typeof seatSessionMeta.seat === 'object' ? seatSessionMeta.seat : {};
+    const collabMeta = row.collaborator_metadata && typeof row.collaborator_metadata === 'object' ? row.collaborator_metadata : {};
+    const ownerCustomerId = clean(row.owner_customer_id || seatMeta.ownerCustomerId, 80) || null;
+    const ownerTripId = clean(row.trip_id || seatMeta.ownerTripId || normalizedTripId, 80) || null;
+    if (!ownerCustomerId || !ownerTripId) return null;
+    return {
+      role: 'collaborator',
+      payer: clean(seatMeta.payer || collabMeta.payer || 'owner', 40) || 'owner',
+      displayName: clean(seatMeta.displayName || row.display_name || session.display_name, 180) || '',
+      ownerCustomerId,
+      ownerTripId,
+      ownerOnboardingSessionId: clean(seatMeta.ownerOnboardingSessionId || collabMeta.onboardingSessionId, 80) || null,
+      inviteId: clean(row.invite_id || seatMeta.inviteId, 80) || null,
+      onboardingToken: clean(row.seat_token || collabMeta.onboardingToken, 120) || null,
+    };
+  }
+  const directTripId = clean(direct?.ownerTripId || session?.trip_id, 80);
+  if (
+    direct
+    && (directTripId === normalizedTripId || (!directTripId && direct.ownerOnboardingSessionId))
+    && clean(direct.ownerCustomerId, 80) !== clean(session.customer_id, 80)
+  ) {
+    return direct;
+  }
+  return null;
 }
 
 export function isCollaboratorAppSeat(session) {
@@ -65,6 +237,13 @@ export async function openCollaboratorAppSeats(db, { ownerCustomerId, tripId, on
     const email = clean(raw.email, 180).toLowerCase();
     const payer = clean(raw.payer || 'owner', 40) || 'owner';
     if (!name || !email) continue;
+    const existingCustomers = await db`
+      select id, email
+      from customers
+      where lower(email) = ${email}
+      limit 1
+    `;
+    const existingCustomer = existingCustomers[0] || null;
     const { invite, token } = await createCollaboratorInvite(db, {
       ownerCustomerId,
       tripId: resolvedTripId,
@@ -80,6 +259,22 @@ export async function openCollaboratorAppSeats(db, { ownerCustomerId, tripId, on
       },
       env,
     });
+    if (existingCustomer?.id && payer === 'owner') {
+      const { joined } = await ensureCollaboratorAppSeatForInvite(db, invite, env);
+      opened.push({
+        name,
+        email,
+        payer,
+        inviteId: invite.id,
+        inviteToken: token,
+        tripId: String(invite.trip_id || resolvedTripId || '').trim() || null,
+        emailStatus: 'skipped_existing_customer',
+        seatStatus: 'active',
+        existingCustomer: true,
+        collaboratorCustomerId: joined?.customerId || existingCustomer.id,
+      });
+      continue;
+    }
     let publicUrl = '';
     if (resolvedTripId) {
       const trips = await db`select title, metadata from trips where id = ${resolvedTripId} limit 1`;
@@ -132,7 +327,7 @@ export async function joinCollaboratorAppSession(db, { invite, contact, env = pr
   const existingToken = clean(metadata.collaboratorOnboardingToken, 120);
   if (existingToken) {
     const prior = await db`
-      select token, metadata
+      select token, customer_id, metadata
       from onboarding_sessions
       where token = ${existingToken}
       limit 1
@@ -150,6 +345,7 @@ export async function joinCollaboratorAppSession(db, { invite, contact, env = pr
       const priorSeat = seatFromSession(prior[0]);
       return {
         token: prior[0].token,
+        customerId: prior[0].customer_id || clean(metadata.collaboratorCustomerId, 80) || null,
         vacationAppUrl: vacationAppLink(prior[0].token, env),
         displayName: priorSeat?.displayName || clean(contact?.displayName, 180),
         payer: priorSeat?.payer || clean(metadata.payer || 'owner', 40) || 'owner',
@@ -165,7 +361,19 @@ export async function joinCollaboratorAppSession(db, { invite, contact, env = pr
     lastName: clean(contact?.lastName || rest.join(' '), 80) || null,
     displayName,
   };
-  const customerId = await upsertCustomer(db, person, { source: 'collaborator_app_seat', inviteId: invite.id });
+  let customerId = null;
+  if (person.email) {
+    const existing = await db`
+      select id
+      from customers
+      where lower(email) = ${person.email}
+      limit 1
+    `;
+    if (existing[0]?.id) customerId = existing[0].id;
+  }
+  if (!customerId) {
+    customerId = await upsertCustomer(db, person, { source: 'collaborator_app_seat', inviteId: invite.id });
+  }
   const token = sessionToken();
   const seat = {
     role: 'collaborator',
@@ -209,6 +417,7 @@ export async function joinCollaboratorAppSession(db, { invite, contact, env = pr
   `;
   return {
     token: session.token,
+    customerId,
     vacationAppUrl: vacationAppLink(session.token, env),
     displayName,
     payer: seat.payer,

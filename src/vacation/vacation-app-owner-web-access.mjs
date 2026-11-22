@@ -58,22 +58,23 @@ export async function vacationAppOwnerWebAccessCookie(db, req, { session, tripId
 async function verifyActiveCollaboratorForTrip(db, { seat, session, tripId }) {
   const ownerId = cleanText(seat?.ownerCustomerId, 80);
   const inviteId = cleanText(seat?.inviteId, 80);
-  const onboardingToken = cleanText(session?.token, 400);
+  const onboardingToken = cleanText(seat?.onboardingToken || session?.token, 400);
   if (!ownerId || !tripId) return null;
   if (seat?.ownerTripId && cleanText(seat.ownerTripId, 80) !== tripId) return null;
   let email = cleanText(session?.email, 180).toLowerCase();
   if (inviteId) {
-    const active = await db`
-      select id, trip_id, metadata
+    const collabRows = await db`
+      select id, trip_id, status, metadata
       from vacation_collaborators
       where invite_id = ${inviteId}
         and owner_customer_id = ${ownerId}
-        and status = 'active'
         and (trip_id = ${tripId} or trip_id is null)
+      order by case when status = 'active' then 0 else 1 end
       limit 1
     `;
-    if (active[0]) {
-      const meta = active[0].metadata && typeof active[0].metadata === 'object' ? active[0].metadata : {};
+    if (collabRows[0]) {
+      if (collabRows[0].status && collabRows[0].status !== 'active') return null;
+      const meta = collabRows[0].metadata && typeof collabRows[0].metadata === 'object' ? collabRows[0].metadata : {};
       if (!email && meta.email) email = cleanText(meta.email, 180).toLowerCase();
       return { email };
     }
@@ -95,15 +96,15 @@ async function verifyActiveCollaboratorForTrip(db, { seat, session, tripId }) {
   }
   if (!onboardingToken) return null;
   const byToken = await db`
-    select id, trip_id, metadata
+    select id, trip_id, status, metadata
     from vacation_collaborators
     where owner_customer_id = ${ownerId}
-      and status = 'active'
       and metadata->>'onboardingToken' = ${onboardingToken}
       and (trip_id = ${tripId} or trip_id is null)
+    order by case when status = 'active' then 0 else 1 end
     limit 1
   `;
-  if (!byToken[0]) return null;
+  if (!byToken[0] || (byToken[0].status && byToken[0].status !== 'active')) return null;
   const meta = byToken[0].metadata && typeof byToken[0].metadata === 'object' ? byToken[0].metadata : {};
   if (!email && meta.email) email = cleanText(meta.email, 180).toLowerCase();
   return { email };

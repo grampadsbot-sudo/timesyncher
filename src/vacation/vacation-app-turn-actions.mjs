@@ -17,7 +17,7 @@ function inviteRow(ok, code, inviteeEmail, inviteeName = '') {
 
 function emailSendSucceeded(status) {
   const normalized = String(status || '').toLowerCase();
-  return normalized === 'sent' || normalized === 'already_sent';
+  return normalized === 'sent' || normalized === 'already_sent' || normalized === 'skipped_existing_customer';
 }
 
 function mapInviteError(error, inviteeEmail) {
@@ -82,7 +82,8 @@ export async function runVacationAppTurnActions({
       results.invite = inviteRow(false, 'send_failed', inviteeEmail);
       return results;
     }
-    results.invite = inviteRow(true, 'collaborator_invite_sent', inviteeEmail, inviteeName);
+    const code = row.seatStatus === 'active' ? 'collaborator_seat_activated' : 'collaborator_invite_sent';
+    results.invite = inviteRow(true, code, inviteeEmail, inviteeName);
   } catch (error) {
     results.invite = mapInviteError(error, inviteeEmail);
   }

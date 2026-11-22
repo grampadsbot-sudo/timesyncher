@@ -10,7 +10,11 @@ import {
 import { renderAcceptPage } from '../src/onboarding/eula-accept-page-render.mjs';
 import { handleOpenClawControl } from '../src/openclaw/control-handler.mjs';
 import { sql } from '../src/vacation/db.mjs';
-import { collaboratorSessionForAccept } from '../src/vacation/collaborator-eula-accept.mjs';
+import {
+  collaboratorSessionForAccept,
+  hasPersonAcceptedEula,
+  recordPersonEulaAcceptance,
+} from '../src/vacation/collaborator-eula-accept.mjs';
 import { ensureCollaboratorWelcomeAfterEulaAccept } from '../src/vacation/collaborator-welcome.mjs';
 import { isCollaboratorEulaSessionId } from '../src/vacation/collaborators.mjs';
 import { welcomeFailureBody } from '../src/vacation/welcome-failure.mjs';
@@ -60,7 +64,17 @@ async function sessionForAccept(store, sessionId) {
   return loadSessionPersistent(store, sessionId);
 }
 
-const DEFAULT_EULA_VERSION = process.env.TIMESYNCHER_EULA_VERSION || '2026-06-terms-advisory-only';
+function defaultEulaVersion() {
+  return process.env.TIMESYNCHER_EULA_VERSION || '2026-06-terms-advisory-only';
+}
+
+function optionalOnboardingDb() {
+  try {
+    return onboardingDatabase();
+  } catch {
+    return null;
+  }
+}
 
 function send(res, status, body, type = 'application/json') {
   res.statusCode = status;
@@ -95,7 +109,7 @@ export default async function handler(req, res) {
       const eulaText = body.eula?.text || loadDefaultEulaText();
       const session = await createOnboardingSessionPersistent(store, {
         ...body,
-        eula: { version: body.eula?.version || DEFAULT_EULA_VERSION, text: eulaText },
+        eula: { version: body.eula?.version || defaultEulaVersion(), text: eulaText },
       });
       return send(res, 201, { ok: true, sessionId: session.sessionId, session: publicSession(session) });
     }
@@ -108,7 +122,11 @@ export default async function handler(req, res) {
       const session = await sessionForAccept(store, url.searchParams.get('sessionId'));
       if (!session || session.unavailableReason) return send(res, 404, 'Acceptance session not found or unavailable', 'text/plain');
       const redirect = String(session.google?.returnUrl || '').trim();
-      if (session.status === 'accepted' && redirect) {
+      const version = session.eula?.version || defaultEulaVersion();
+      const personAccepted = session.personCustomerId
+        ? await hasPersonAcceptedEula(store, optionalOnboardingDb(), { customer_id: session.personCustomerId }, version)
+        : false;
+      if ((session.status === 'accepted' || personAccepted) && redirect) {
         res.statusCode = 302;
         res.setHeader('location', redirect);
         res.setHeader('cache-control', 'no-store');
@@ -129,6 +147,7 @@ export default async function handler(req, res) {
         ipAddress: req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '',
         userAgent: req.headers['user-agent'] || '',
       });
+      await recordPersonEulaAcceptance(store, optionalOnboardingDb(), { sessionId, session, receipt: result.receipt });
       if (isCollaboratorEulaSessionId(sessionId)) {
         const db = onboardingDatabase();
         await ensureCollaboratorWelcomeAfterEulaAccept(db, sessionId, ensureOnboardingOpener, process.env);
@@ -146,7 +165,7 @@ export default async function handler(req, res) {
       return send(res, 200, { ok: true, receipt });
     }
     if (req.method === 'GET' && action === 'activation-status') {
-      const status = await activationStatusPersistent(store, url.searchParams.get('clientKey'), url.searchParams.get('eulaVersion') || DEFAULT_EULA_VERSION);
+      const status = await activationStatusPersistent(store, url.searchParams.get('clientKey'), url.searchParams.get('eulaVersion') || defaultEulaVersion());
       return send(res, 200, status);
     }
     return send(res, 404, { ok: false, error: 'unknown action' });

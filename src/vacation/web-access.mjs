@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import { verifiedCollaboratorWebGrant } from './collaborator-web-grant-verify.mjs';
 
 const WEB_ACCESS_COOKIE = 'ts_vacation_web_access';
 
@@ -448,6 +449,7 @@ export async function webAccessForSession(db, {
       limit 1
     `;
   if (!rows[0]) return null;
+  if (!(await verifiedCollaboratorWebGrant(db, rows[0], rows[0].trip_id))) return null;
   await db`
     update vacation_web_access_grants
     set last_seen_at = now(), updated_at = now()
