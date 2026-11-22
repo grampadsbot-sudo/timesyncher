@@ -893,7 +893,8 @@ async function handleVacationApp(req, res, db, url) {
     if (selected?.id) await publishIntakeShare(db, selected.id);
     vacations = await loadVacationAppTrips(db, session);
     selected = pickVacationAppTrip(vacations, session, requestedTripId);
-    const seat = await seatForSessionTrip(db, session, selected?.id || null);
+    const workspaceTripId = selected?.id || (!vacations.length ? session.trip_id : null) || null;
+    const seat = await seatForSessionTrip(db, session, workspaceTripId);
     session = sessionWithTripSeat(session, seat);
     const eula = await vacationAppEula(db, session, process.env);
     if (eula.accepted) {
@@ -905,7 +906,7 @@ async function handleVacationApp(req, res, db, url) {
         }
       }
     }
-    const turns = await loadVacationAppTurns(db, session, selected?.id || null);
+    const turns = await loadVacationAppTurns(db, session, workspaceTripId);
     const itinerary = selected ? await loadTripThings(db, selected.id) : [];
     let searchProgress = null;
     if (selected?.id) {
@@ -924,7 +925,7 @@ async function handleVacationApp(req, res, db, url) {
         customerName: seat?.displayName || session.display_name || [session.first_name, session.last_name].filter(Boolean).join(' '),
         viewerId: session.customer_id || null,
         email: session.email || null,
-        currentTripId: selected?.id || session.trip_id || vacations[0]?.id || null,
+        currentTripId: selected?.id || vacations[0]?.id || null,
         seat: seat ? { payer: seat.payer, displayName: seat.displayName } : null,
       },
       eula,
@@ -984,13 +985,13 @@ async function handleVacationApp(req, res, db, url) {
     if (requestedTripId && !vacations.some((trip) => trip.id === requestedTripId)) {
       return sendJson(res, 403, { ok: false, code: 'vacation_access_denied', error: 'You do not have access to this vacation.' });
     }
-    if (!requestedTripId && !vacations.length && seatFromSession(session)?.ownerTripId) {
-      return sendJson(res, 403, { ok: false, code: 'vacation_access_denied', error: 'Collaborator seat is no longer active.' });
-    }
     let selected = vacations.find((trip) => trip.id === requestedTripId)
       || vacations.find((trip) => trip.id === session.trip_id)
       || vacations[0];
-    const seat = await seatForSessionTrip(db, session, selected?.id || null);
+    const seat = await seatForSessionTrip(db, session, selected?.id || (!vacations.length ? session.trip_id : null) || null);
+    if (!requestedTripId && !vacations.length && seatFromSession(session)?.ownerTripId && !seat) {
+      return sendJson(res, 403, { ok: false, code: 'vacation_access_denied', error: 'Collaborator seat is no longer active.' });
+    }
     session = sessionWithTripSeat(session, seat);
     const eula = await vacationAppEula(db, session, process.env);
     let created = null;

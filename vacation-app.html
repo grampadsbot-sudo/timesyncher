@@ -433,11 +433,12 @@
 
     function isPlaceholderTrip(trip) {
       if (!trip) return true;
-      const destination = customerPlaceName(trip.destination);
-      const title = customerPlaceName(trip.title);
-      if (destination || trip.startDate || trip.endDate) return false;
-      if (title) return false;
-      return true;
+      const meta = trip.metadata && typeof trip.metadata === 'object' ? trip.metadata : {};
+      const status = String(trip.status || '').trim().toLowerCase(), rawTitle = String(trip.title || '').trim();
+      const end = trip.endDate || trip.end_date, hasItems = trip.hasItems === true || trip.has_items === true || Number(trip.itemCount ?? trip.item_count ?? 0) > 0;
+      if (status === 'account_upgrade' || meta.notARealVacation === true || trip.notARealVacation === true || /\bunlimited\s+account\s+upgrade\b/i.test(rawTitle)) return true;
+      if (/^timesyncher\s+vacation\s+setup$/i.test(rawTitle) && !end && !hasItems) return true;
+      return !(customerPlaceName(trip.destination) || end || hasItems || customerPlaceName(rawTitle));
     }
 
     function dateParts(value) {

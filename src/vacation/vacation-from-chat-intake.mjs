@@ -8,7 +8,7 @@ import {
   attachPurchasedEntitlementToChatTrip,
   preflightAttachOwnerEntitlementForChatTrip,
 } from './chat-trip-entitlement-attach.mjs';
-import { isPlaceholderTripRecord } from './owner-shell-trip.mjs';
+import { isPlaceholderTripRecord, isUpgradeablePlaceholderTrip } from './owner-shell-trip.mjs';
 import { attachSessionCollaboratorInvitesToTrip, loadCollaboratorInviteForEmail } from './collaborators.mjs';
 import { queueOrSendCollaboratorInviteEmail } from './email.mjs';
 import { publicTripUrl } from './web-access.mjs';
@@ -43,6 +43,30 @@ export async function classifyVacationChatIntake(requestText, env = process.env)
   return { classification, jobFields };
 }
 
+async function loadLinkedTripRow(db, tripId) {
+  if (!tripId) return null;
+  const rows = await db`
+    select
+      trips.id,
+      trips.customer_id,
+      trips.title,
+      trips.destination,
+      trips.start_date,
+      trips.end_date,
+      trips.status,
+      trips.metadata,
+      exists (
+        select 1
+        from "trip_things" tt
+        where tt.trip_id = trips.id
+      ) as has_items
+    from trips
+    where id = ${tripId}
+    limit 1
+  `;
+  return rows[0] || null;
+}
+
 export async function createVacationFromChatMessage(db, session, body, loadTrips, env = process.env) {
   if (seatFromSession(session)) {
     return {
@@ -74,47 +98,63 @@ export async function createVacationFromChatMessage(db, session, body, loadTrips
   }
   if (session.trip_id) {
     const vacations = await loadTrips(db, session);
-    const selected = vacations.find((trip) => trip.id === session.trip_id) || vacations[0] || null;
-    if (!selected) {
-      return {
-        ok: false,
-        statusCode: 500,
-        error: 'Unable to load the linked vacation.',
-        code: 'vacation_app_trip_load_failed',
-      };
-    }
-    if (isPlaceholderTripRecord(selected) && intakeTripReadyForCreation(jobFields)) {
-      const tripTitle = cleanText(jobFields.title, 180);
-      const tripDestination = cleanText(jobFields.destination, 180);
-      await db`
-        update trips
-        set title = ${tripTitle},
-          destination = ${tripDestination || null},
-          start_date = coalesce(start_date, ${cleanText(jobFields.startDate, 40) || null}::date),
-          end_date = coalesce(end_date, ${cleanText(jobFields.endDate, 40) || null}::date),
-          status = case when status = 'onboarding' then 'planning' else status end,
-          metadata = coalesce(metadata, '{}'::jsonb) || ${{ placeholderTrip: false, upgradedFromShell: true, source: 'vacation_app_chat' }},
-          updated_at = now()
-        where id = ${session.trip_id}
-      `;
-      const upgraded = await loadTrips(db, session);
-      const upgradedSelected = upgraded.find((trip) => trip.id === session.trip_id) || upgraded[0] || null;
+    const listed = vacations.find((trip) => trip.id === session.trip_id) || null;
+    const linked = listed || await loadLinkedTripRow(db, session.trip_id);
+    if (!linked) {
+      const fallback = vacations[0] || null;
+      if (!fallback) {
+        return {
+          ok: false,
+          statusCode: 500,
+          error: 'Unable to load the linked vacation.',
+          code: 'vacation_app_trip_load_failed',
+        };
+      }
       return {
         ok: true,
-        action: 'upgraded',
-        vacations: upgraded,
-        selected: upgradedSelected,
-        tripId: session.trip_id,
-        jobFields,
-        classification,
-        classifierMs,
+        action: 'existing',
+        vacations,
+        selected: fallback,
+        tripId: fallback.id,
       };
+    }
+    if (isPlaceholderTripRecord(linked)) {
+      if (isUpgradeablePlaceholderTrip(linked) && intakeTripReadyForCreation(jobFields)) {
+        const tripTitle = cleanText(jobFields.title, 180);
+        const tripDestination = cleanText(jobFields.destination, 180);
+        const startDate = cleanText(jobFields.startDate, 40) || null;
+        const endDate = cleanText(jobFields.endDate, 40) || null;
+        await db`
+          update trips
+          set title = ${tripTitle},
+            destination = ${tripDestination || null},
+            start_date = coalesce(${startDate}::date, start_date),
+            end_date = coalesce(${endDate}::date, end_date),
+            status = case when status = 'onboarding' then 'planning' else status end,
+            metadata = coalesce(metadata, '{}'::jsonb) || ${{ placeholderTrip: false, upgradedFromShell: true, source: 'vacation_app_chat' }},
+            updated_at = now()
+          where id = ${session.trip_id}
+        `;
+        const upgraded = await loadTrips(db, session);
+        const upgradedSelected = upgraded.find((trip) => trip.id === session.trip_id) || upgraded[0] || null;
+        return {
+          ok: true,
+          action: 'upgraded',
+          vacations: upgraded,
+          selected: upgradedSelected,
+          tripId: session.trip_id,
+          jobFields,
+          classification,
+          classifierMs,
+        };
+      }
+      return { ok: true, action: 'queue_without_trip', jobFields, classification, classifierMs };
     }
     return {
       ok: true,
       action: 'existing',
       vacations,
-      selected,
+      selected: listed || linked,
       tripId: session.trip_id,
     };
   }
