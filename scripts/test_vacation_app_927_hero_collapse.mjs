@@ -45,9 +45,11 @@ assert.match(heroScript, /\[data-ts-trip-hero-collapse\]\{[^}]*position:absolute
 assert.match(heroScript, /\[data-ts-trip-hero-collapse\]\{[^}]*border:0;border-radius:0;background:transparent/);
 assert.match(heroScript, /\[data-ts-trip-hero-collapse\]\{[^}]*width:44px;height:44px;min-width:44px;min-height:44px/);
 assert.match(heroScript, /\[data-collapsed="1"\][^'"]*\[data-ts-trip-hero-collapse\]\{[^}]*rotate\(180deg\)/);
-assert.doesNotMatch(heroScript, /\[data-collapsed="1"\][^'"]*h1\{[^}]*text-overflow:ellipsis/);
-assert.doesNotMatch(heroScript, /\[data-collapsed="1"\][^'"]*h1\{[^}]*white-space:nowrap/);
+assert.match(heroScript, /\[data-collapsed="1"\][^'"]*h1\{[^}]*text-overflow:ellipsis/);
+assert.match(heroScript, /\[data-collapsed="1"\][^'"]*h1\{[^}]*white-space:nowrap/);
 assert.match(heroScript, /\[data-ts-trip-site-hero\]\[data-collapsed="1"\][^'"]*\[data-ts-trip-hero-actions\]\{display:none!important\}/);
+assert.match(heroScript, /\[data-ts-trip-hero-slogan\]/);
+assert.match(heroScript, /The Art of Remembering/);
 
 const cssRules = [...heroScript.matchAll(/'([^']+)'/g)]
   .map((m) => m[1])
@@ -149,7 +151,7 @@ const assertNoCircleChrome = (m, label) => {
   assert.ok(m.docOverflow <= 0, `${label}: zero horizontal overflow`);
 };
 
-const assertCenteredAndAligned = (m, label, isCollapsed) => {
+const assertCenteredAndAligned = (m, label, isCollapsed, expectEllipsisClip = false) => {
   const heroCenterX = m.heroBox.left + m.heroBox.width / 2;
   const titleCenterX = m.titleBox.left + m.titleBox.width / 2;
   const titleCenterY = m.titleBox.top + m.titleBox.height / 2;
@@ -157,12 +159,17 @@ const assertCenteredAndAligned = (m, label, isCollapsed) => {
   assert.ok(Math.abs(titleCenterX - heroCenterX) <= 1.5, `${label}: title horizontally centered (${titleCenterX} vs ${heroCenterX})`);
   assert.ok(Math.abs(btnCenterY - titleCenterY) <= 1.5, `${label}: chevron vertically centered with title (${btnCenterY} vs ${titleCenterY})`);
   assert.equal(rectsOverlap(m.titleBox, m.btnBox), false, `${label}: chevron must not overlap title`);
-  assert.ok(m.heroPaddingTop >= 12 && m.heroPaddingTop <= 14, `${label}: top padding 12-14px (got ${m.heroPaddingTop})`);
   assert.equal(m.heroPaddingTop, m.heroPaddingBottom, `${label}: equal top and bottom padding`);
   assert.ok(Math.abs((m.titleBox.top - m.heroBox.top) - m.heroPaddingTop) <= 1.5, `${label}: no extra black space above title`);
-  assert.ok(m.titleScrollWidth <= m.titleClientWidth + 1, `${label}: title must not clip horizontally`);
-  assert.notEqual(m.titleOverflow, 'ellipsis', `${label}: title must not use ellipsis`);
-  if (isCollapsed) {
+  if (!isCollapsed) {
+    assert.ok(m.heroPaddingTop >= 12 && m.heroPaddingTop <= 14, `${label}: expanded top padding 12-14px (got ${m.heroPaddingTop})`);
+    assert.ok(m.titleScrollWidth <= m.titleClientWidth + 1, `${label}: expanded title must not clip horizontally`);
+    assert.notEqual(m.titleOverflow, 'ellipsis', `${label}: expanded title must not use ellipsis`);
+  } else {
+    assert.equal(m.titleOverflow, 'ellipsis', `${label}: collapsed title must allow ellipsis`);
+    if (!expectEllipsisClip) {
+      assert.ok(m.titleScrollWidth <= m.titleClientWidth + 1, `${label}: standard collapsed title must not clip horizontally`);
+    }
     const heroCenterY = m.heroBox.top + m.heroBox.height / 2;
     const topGap = m.titleBox.top - m.heroBox.top;
     const bottomGap = m.heroBox.bottom - m.titleBox.bottom;
@@ -170,6 +177,7 @@ const assertCenteredAndAligned = (m, label, isCollapsed) => {
     assert.ok(Math.abs(topGap - bottomGap) <= 1.5, `${label}: collapsed top/bottom gap equal (${topGap} vs ${bottomGap})`);
     const expectedHeight = m.titleBox.height + m.heroPaddingTop + m.heroPaddingBottom;
     assert.ok(Math.abs(m.heroBox.height - expectedHeight) <= 1.5, `${label}: collapsed band height fits title + padding (${m.heroBox.height} vs ${expectedHeight})`);
+    assert.ok(m.heroBox.height >= 56 && m.heroBox.height <= 64, `${label}: collapsed band height 56-64px (got ${m.heroBox.height})`);
   }
 };
 
@@ -241,9 +249,9 @@ try {
   await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   const longCollapsed = await measureHero(page);
   assertNoCircleChrome(longCollapsed, '390 long collapsed');
-  assertCenteredAndAligned(longCollapsed, '390 long collapsed', true);
+  assertCenteredAndAligned(longCollapsed, '390 long collapsed', true, true);
 } finally {
   await browser.close();
 }
 
-console.log('vacation app #927/#1095 hero collapse regression passed');
+console.log('vacation app #927/#1095/#1107 hero collapse regression passed');
