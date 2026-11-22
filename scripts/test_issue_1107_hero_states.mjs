@@ -271,9 +271,9 @@ try {
     assert.ok(expanded.sloganFontSize >= 13 && expanded.sloganFontSize <= 14, `${vp.name} expanded R6: slogan 13-14px (got ${expanded.sloganFontSize})`);
     assert.ok(expanded.sloganFontWeight <= 400, `${vp.name} expanded R6: slogan light weight (got ${expanded.sloganFontWeight})`);
     const sloganRgba = parseRgbaAlpha(expanded.sloganColor);
-    assert.ok(sloganRgba && sloganRgba.r >= 245 && sloganRgba.g >= 245 && sloganRgba.b >= 245, `${vp.name} expanded R6: slogan white ink (${expanded.sloganColor})`);
+    assert.ok(sloganRgba && sloganRgba.r === 255 && sloganRgba.g === 255 && sloganRgba.b === 255, `${vp.name} expanded R6/R12: slogan white ink (${expanded.sloganColor})`);
     const effectiveOpacity = expanded.sloganOpacity * (sloganRgba?.a ?? 1);
-    assert.ok(effectiveOpacity >= 0.5 && effectiveOpacity <= 0.7, `${vp.name} expanded R6: slogan ~60% white opacity (got ${effectiveOpacity})`);
+    assert.equal(effectiveOpacity, 1, `${vp.name} expanded R6/R12: slogan full white opacity (got ${effectiveOpacity})`);
     assert.ok(expanded.sloganLetterSpacing > 0, `${vp.name} expanded R6: slogan slight letter-spacing (got ${expanded.sloganLetterSpacing})`);
 
     assert.ok(expanded.btnRect.width >= 44 && expanded.btnRect.height >= 44, `${vp.name} expanded R4: toggle >= 44x44`);

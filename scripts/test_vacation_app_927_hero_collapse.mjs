@@ -41,7 +41,7 @@ assert.equal(
   '#930 regression: old substring guard rejects live rgb hero',
 );
 
-assert.match(heroScript, /\[data-ts-trip-hero-collapse\]\{[^}]*position:absolute;right:4px/);
+assert.match(heroScript, /\[data-ts-trip-hero-collapse\]\{[^}]*position:absolute;left:4px;right:auto/);
 assert.match(heroScript, /\[data-ts-trip-hero-collapse\]\{[^}]*border:0;border-radius:0;background:transparent/);
 assert.match(heroScript, /\[data-ts-trip-hero-collapse\]\{[^}]*width:44px;height:44px;min-width:44px;min-height:44px/);
 assert.match(heroScript, /\[data-collapsed="1"\][^'"]*\[data-ts-trip-hero-collapse\]\{[^}]*rotate\(180deg\)/);
@@ -147,7 +147,7 @@ const assertNoCircleChrome = (m, label) => {
   assert.equal(m.btnStyle.backgroundColor, 'rgba(0, 0, 0, 0)', `${label}: transparent background`);
   assert.ok(m.svgBox && Math.abs(m.svgBox.width - 20) <= 2 && Math.abs(m.svgBox.height - 20) <= 2, `${label}: ~20px chevron glyph`);
   assert.ok(m.btnBox.width >= 44 && m.btnBox.height >= 44, `${label}: tap target >= 44x44`);
-  assert.ok(m.btnBox.right <= m.heroBox.right + 1 && m.btnBox.right >= m.heroBox.right - 12, `${label}: chevron sits at right edge`);
+  assert.ok(m.btnBox.left >= m.heroBox.left - 1 && m.btnBox.left <= m.heroBox.left + 12, `${label}: chevron sits at left edge`);
   assert.ok(m.docOverflow <= 0, `${label}: zero horizontal overflow`);
 };
 
@@ -254,4 +254,4 @@ try {
   await browser.close();
 }
 
-console.log('vacation app #927/#1095/#1107 hero collapse regression passed');
+console.log('vacation app #927/#1095/#1107/#1109 hero collapse regression passed');
