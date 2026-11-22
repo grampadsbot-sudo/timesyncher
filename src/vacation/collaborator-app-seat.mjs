@@ -3,6 +3,7 @@ import { createCollaboratorInvite, loadCollaboratorInviteForEmail } from './coll
 import { queueOrSendCollaboratorInviteEmail } from './email.mjs';
 import { publicTripUrl } from './web-access.mjs';
 import { upsertCustomer, vacationAppLink } from './onboarding.mjs';
+import { isPlaceholderTripRecord } from './owner-shell-trip.mjs';
 
 function clean(value, max = 180) {
   return String(value || '').trim().slice(0, max);
@@ -83,7 +84,7 @@ export function sessionWithTripSeat(session, seat) {
 
 export async function loadVacationAppTripRows(db, session) {
   if (!session?.customer_id) return [];
-  return db`
+  const rows = await db`
     select
       trips.id,
       trips.customer_id,
@@ -94,7 +95,20 @@ export async function loadVacationAppTripRows(db, session) {
       trips.status,
       trips.metadata,
       (trips.id = ${session.trip_id}) as current,
-      case when trips.customer_id = ${session.customer_id} then 'owner' else 'collaborator' end as role
+      case when trips.customer_id = ${session.customer_id} then 'owner' else 'collaborator' end as role,
+      exists (
+        select 1
+        from "trip_things" tt
+        where tt.trip_id = trips.id
+      ) as has_items,
+      exists (
+        select 1
+        from "onboarding_sessions" os
+        where os.trip_id = trips.id
+          and os.started_at is null
+          and os.status = 'purchase_confirmed'
+          and coalesce(os.current_step, '') = 'post_purchase'
+      ) as never_started_onboarding
     from trips
     where trips.customer_id = ${session.customer_id}
       or exists (
@@ -120,6 +134,7 @@ export async function loadVacationAppTripRows(db, session) {
       trips.updated_at desc nulls last,
       trips.created_at desc nulls last
   `;
+  return rows.filter((row) => !isPlaceholderTripRecord(row));
 }
 
 export async function seatForSessionTrip(db, session, tripId) {
