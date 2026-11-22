@@ -581,7 +581,7 @@
           const joinRes = await fetch(`/api/vacation-itinerary?app=1&session=${encodeURIComponent(sessionToken)}`, {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ action: 'seat-join' }),
+            body: JSON.stringify({ action: 'seat-join', tripId: state.currentTripId || undefined }),
           });
           const joinData = await joinRes.json().catch(() => ({}));
           if (!joinRes.ok || joinData.ok === false) throw new Error(joinData.error || 'Seat join was not stored.');

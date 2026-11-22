@@ -43,6 +43,7 @@ export async function createOnboardingSessionPersistent(store, input, now = new 
     selectedFunctionality: input.selectedFunctionality || [],
     google: input.google || {},
     eula: input.eula,
+    ...(input.personCustomerId ? { personCustomerId: String(input.personCustomerId).trim() } : {}),
     status: input.status || 'pending',
     createdAt: now.toISOString(),
     expiresAt: input.expiresAt || new Date(now.getTime() + 1000 * 60 * 60 * 24 * 14).toISOString(),

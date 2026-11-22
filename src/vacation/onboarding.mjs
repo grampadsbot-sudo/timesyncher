@@ -255,14 +255,15 @@ export async function ensureVacationEulaSession(row, { contact = {}, env = proce
   if (!row?.id || !row?.token) return null;
   const store = createPersistentStoreFromEnv(env);
   const sessionId = eulaSessionIdForOnboarding(row);
+  const version = env.TIMESYNCHER_EULA_VERSION || DEFAULT_EULA_VERSION;
   const existing = await loadSessionPersistent(store, sessionId);
-  if (existing && !existing.unavailableReason) {
-    const status = await activationStatusPersistent(store, eulaClientKeyForOnboarding(row), env.TIMESYNCHER_EULA_VERSION || DEFAULT_EULA_VERSION);
+  if (existing && !existing.unavailableReason && existing.eula?.version === version) {
+    const status = await activationStatusPersistent(store, eulaClientKeyForOnboarding(row), version);
     return {
       sessionId,
       acceptUrl: eulaAcceptLink(row, env),
-      status: status.ok ? 'accepted' : existing.status,
-      receiptSha256: status.receiptSha256 || existing.receiptSha256 || null,
+      status: status.ok ? 'accepted' : 'pending',
+      receiptSha256: status.ok ? (status.receiptSha256 || existing.receiptSha256 || null) : null,
     };
   }
 
@@ -271,6 +272,7 @@ export async function ensureVacationEulaSession(row, { contact = {}, env = proce
     clientKey: eulaClientKeyForOnboarding(row),
     clientLabel: cleanText(contact.displayName || row.display_name || [row.first_name, row.last_name].filter(Boolean).join(' '), 180) || 'Vacay Keepsake customer',
     contact: eulaContactFromOnboarding(row, contact),
+    personCustomerId: cleanText(row.customer_id, 80) || null,
     selectedFunctionality: [
       'vacation_planning_onboarding',
       'in_app_text_voice_and_file_intake',
@@ -281,7 +283,7 @@ export async function ensureVacationEulaSession(row, { contact = {}, env = proce
       returnUrl: vacationAppLink(row.token, env),
     },
     eula: {
-      version: env.TIMESYNCHER_EULA_VERSION || DEFAULT_EULA_VERSION,
+      version,
       text: loadDefaultEulaText(env),
     },
     expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString(),
@@ -302,7 +304,7 @@ export async function vacationEulaStatus(row, env = process.env) {
   const status = await activationStatusPersistent(store, eulaClientKeyForOnboarding(row), env.TIMESYNCHER_EULA_VERSION || DEFAULT_EULA_VERSION);
   return {
     ...status,
-    status: status.ok ? 'accepted' : eula?.status || 'pending',
+    status: status.ok ? 'accepted' : 'pending',
     sessionId: eula?.sessionId || eulaSessionIdForOnboarding(row),
     acceptUrl: eulaAcceptLink(row, env),
   };

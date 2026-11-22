@@ -196,6 +196,7 @@ export async function createVacationFromChatMessage(db, session, body, loadTrips
   }
   for (const invite of attachedInvites) {
     const metadata = invite.metadata && typeof invite.metadata === 'object' ? invite.metadata : {};
+    if (invite.status === 'accepted' || metadata.collaboratorOnboardingToken) continue;
     const email = String(metadata.email || '').trim().toLowerCase();
     const displayName = String(metadata.displayName || invite.requested_for || '').trim();
     if (!email) continue;
