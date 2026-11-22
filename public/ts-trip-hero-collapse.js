@@ -7,27 +7,31 @@
   const styleId = 'ts-trip-hero-collapse-css';
   const svgNs = 'http://www.w3.org/2000/svg';
 
+  const sloganText = 'The Art of Remembering';
+
   const injectCss = () => {
     if (document.getElementById(styleId)) return;
     const style = document.createElement('style');
     style.id = styleId;
     style.textContent = [
-      '[data-ts-trip-site-hero]{box-sizing:border-box;padding:13px 20px!important}',
+      '[data-ts-trip-site-hero]{box-sizing:border-box;padding:14px 20px!important}',
       '[data-ts-trip-site-hero] h1{display:block!important;width:fit-content!important;max-width:calc(100% - 64px)!important;margin:0 auto 4px!important;padding:0!important;min-width:0;box-sizing:border-box;text-align:center;font-weight:700;letter-spacing:-.5px;line-height:1.15;overflow-wrap:anywhere;white-space:normal}',
       '[data-ts-trip-site-hero][data-has-details="0"] h1{margin:0 auto!important}',
       '[data-ts-trip-hero-detail]{margin-left:auto;margin-right:auto}',
+      '[data-ts-trip-hero-slogan]{display:block!important;margin:8px auto 0!important;padding:0!important;max-width:100%;box-sizing:border-box;text-align:center;font-size:13.5px!important;font-weight:300!important;font-style:italic!important;line-height:1.35!important;letter-spacing:.04em!important;color:#fff!important;opacity:.6!important}',
       '[data-ts-trip-hero-decor]{pointer-events:none!important}',
-      '[data-ts-trip-hero-actions]{margin-top:8px;display:flex;justify-content:center;gap:6px;flex-wrap:wrap}',
-      '[data-ts-trip-hero-collapse]{position:absolute;right:4px;top:var(--ts-hero-title-mid,25px);transform:translateY(-50%);transition:none!important;z-index:30;width:44px;height:44px;min-width:44px;min-height:44px;border:0;border-radius:0;background:transparent;box-shadow:none;color:rgba(255,255,255,.55);font:inherit;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;margin:0;appearance:none;-webkit-appearance:none;-webkit-tap-highlight-color:transparent}',
+      '[data-ts-trip-hero-actions]{margin:8px auto 0!important;display:flex;justify-content:center;gap:6px;flex-wrap:wrap}',
+      '[data-ts-trip-hero-collapse]{position:absolute;right:4px;top:var(--ts-hero-title-mid,26px);transform:translateY(-50%);transition:none!important;z-index:30;width:44px;height:44px;min-width:44px;min-height:44px;border:0;border-radius:0;background:transparent;box-shadow:none;color:rgba(255,255,255,.55);font:inherit;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;margin:0;appearance:none;-webkit-appearance:none;-webkit-tap-highlight-color:transparent}',
       '[data-ts-trip-hero-collapse]:hover,[data-ts-trip-hero-collapse]:focus-visible{color:rgba(255,255,255,.85)}',
       '[data-ts-trip-hero-collapse]:focus-visible{outline:2px solid rgba(255,255,255,.5);outline-offset:-4px}',
       '[data-ts-trip-hero-collapse] svg{display:block;width:20px;height:20px;flex:0 0 auto;pointer-events:none}',
-      '[data-ts-trip-site-hero][data-collapsed="1"]{padding-top:13px!important;padding-bottom:13px!important}',
+      '[data-ts-trip-site-hero][data-collapsed="1"]{padding:18px 20px!important;min-height:58px!important}',
       '[data-ts-trip-site-hero][data-collapsed="1"] [data-ts-trip-hero-detail],[data-ts-trip-site-hero][data-collapsed="1"] [data-ts-trip-hero-actions]{display:none!important}',
+      '[data-ts-trip-site-hero][data-collapsed="1"] [data-ts-trip-hero-slogan]{display:none!important}',
       '[data-ts-trip-site-hero][data-collapsed="1"] [data-ts-trip-hero-decor]{display:none!important}',
-      '[data-ts-trip-site-hero][data-collapsed="1"] h1{font-size:18px!important;line-height:1.2;max-width:calc(100% - 64px)!important;margin:0 auto!important}',
+      '[data-ts-trip-site-hero][data-collapsed="1"] h1{width:100%!important;max-width:calc(100% - 64px)!important;margin:0 auto!important;color:#fff!important;font-size:17.5px!important;font-weight:600!important;line-height:22px!important;letter-spacing:-.2px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;overflow-wrap:normal!important}',
       '[data-ts-trip-site-hero][data-collapsed="1"] [data-ts-trip-hero-collapse]{top:50%;transform:translateY(-50%) rotate(180deg)}',
-      '@media (max-width: 844px){[data-ts-trip-site-hero] h1{font-size:21px!important}[data-ts-trip-site-hero][data-collapsed="1"] h1{font-size:16px!important}}',
+      '@media (max-width: 844px){[data-ts-trip-site-hero] h1{font-size:21px!important}[data-ts-trip-site-hero][data-collapsed="1"] h1{font-size:17px!important}}',
       '@media print{[data-ts-trip-hero-collapse]{display:none!important}}',
     ].join('');
     document.head.appendChild(style);
@@ -50,11 +54,19 @@
 
   const findHero = () => {
     const tripView = document.querySelector('[data-trip-view-root]');
-    if (!tripView) return null;
-    let node = tripView.parentElement;
-    while (node && node !== document.body) {
-      if (nodeHasBlackTripHeroBg(node) && node.querySelector('h1')) return node;
-      node = node.parentElement;
+    if (tripView) {
+      let node = tripView.parentElement;
+      while (node && node !== document.body) {
+        if (nodeHasBlackTripHeroBg(node) && node.querySelector('h1')) return node;
+        node = node.parentElement;
+      }
+    }
+    for (const h1 of document.querySelectorAll('h1')) {
+      let node = h1.parentElement;
+      while (node && node !== document.body) {
+        if (nodeHasBlackTripHeroBg(node)) return node;
+        node = node.parentElement;
+      }
     }
     return null;
   };
@@ -79,6 +91,10 @@
     for (const child of [...hero.children]) {
       if (child === h1) continue;
       if (child.matches('[data-ts-trip-hero-collapse]')) continue;
+      if (child.matches('[data-ts-trip-hero-slogan]')) {
+        hasDetails = true;
+        continue;
+      }
       if (getComputedStyle(child).position === 'absolute') {
         if (child.children.length === 0 && !String(child.textContent || '').trim()) {
           if (!child.hasAttribute('data-ts-trip-hero-decor')) child.setAttribute('data-ts-trip-hero-decor', '1');
@@ -93,6 +109,32 @@
       if (!child.hasAttribute('data-ts-trip-hero-detail')) child.setAttribute('data-ts-trip-hero-detail', '1');
     }
     hero.setAttribute('data-has-details', hasDetails ? '1' : '0');
+  };
+
+  const ensureSlogan = (hero) => {
+    let slogan = hero.querySelector('[data-ts-trip-hero-slogan]');
+    if (!slogan) {
+      slogan = document.createElement('div');
+      slogan.setAttribute('data-ts-trip-hero-slogan', '1');
+      slogan.textContent = sloganText;
+    } else if (slogan.textContent !== sloganText) {
+      slogan.textContent = sloganText;
+    }
+    const details = [...hero.children].filter((child) => child.hasAttribute('data-ts-trip-hero-detail'));
+    const actions = [...hero.children].find((child) => child.hasAttribute('data-ts-trip-hero-actions'));
+    const toggle = [...hero.children].find((child) => child.hasAttribute('data-ts-trip-hero-collapse'));
+    const afterDetail = details.length ? details[details.length - 1] : null;
+    if (afterDetail) {
+      const expectedNext = afterDetail.nextElementSibling;
+      if (expectedNext !== slogan) {
+        hero.insertBefore(slogan, expectedNext);
+      }
+      return;
+    }
+    const beforeNode = actions || toggle || null;
+    if (slogan.parentElement !== hero || slogan.nextElementSibling !== beforeNode) {
+      hero.insertBefore(slogan, beforeNode);
+    }
   };
 
   const createChevronSvg = () => {
@@ -161,6 +203,8 @@
       hero.setAttribute('data-ts-trip-site-hero', '1');
       if (!hero.style.position) hero.style.position = 'relative';
       markDetails(hero);
+      ensureSlogan(hero);
+      markDetails(hero);
       attachToggle(hero);
       let collapsed = false;
       try {
@@ -175,6 +219,8 @@
       syncTitleMid(hero);
       requestAnimationFrame(() => syncTitleMid(hero));
     } else {
+      markDetails(hero);
+      ensureSlogan(hero);
       markDetails(hero);
       syncTitleMid(hero);
     }
