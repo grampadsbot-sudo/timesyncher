@@ -1,5 +1,6 @@
 import { callTieredModel, INTERIM_MODEL, jevPrecall, jevQualityRewrite } from '../../scripts/vacation-app-reply-rules.mjs';
 import { sumModelCost } from './turn-cost.mjs';
+import { replaceTripWithVacation } from './post-intake-collab-copy.mjs';
 
 const FIRST_INTAKE_REPLY_TIMEOUT_MS = 8000;
 import { appTextBanned, loadSavedTripRecord } from './live-app-turn.mjs';
@@ -117,7 +118,11 @@ export async function produceFirstIntakeReply({
     }));
     if (model && typeof model === 'object') model.genLatencyMs = Math.max(0, Date.now() - genStarted);
     reply = model?.called && model.text ? String(model.text).trim() : '';
-    const nextReasons = reply ? intakeReplyBlockReasons(reply, appTextBanned, facts, ids) : [];
+    let nextReasons = reply ? intakeReplyBlockReasons(reply, appTextBanned, facts, ids) : [];
+    if (nextReasons.length && attempt === 1 && nextReasons.every((r) => r === 'first_intake_trip_word' || r === 'first_intake_question_count')) {
+      reply = replaceTripWithVacation(reply);
+      nextReasons = intakeReplyBlockReasons(reply, appTextBanned, facts, ids);
+    }
     if (nextReasons.length) {
       blockedReasons = nextReasons;
       const onlyQuestionCount = nextReasons.length === 1 && nextReasons[0] === 'first_intake_question_count';
@@ -200,5 +205,6 @@ export async function produceFirstIntakeReply({
       },
     };
   }
+  if (reply) reply = replaceTripWithVacation(reply);
   return { reply, rules, jev, model, quality, customerInput, reason: null };
 }

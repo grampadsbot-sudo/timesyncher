@@ -7,6 +7,7 @@ import { appReplyTelemetry } from './reply-telemetry.mjs';
 import { vacationAppTurnPayloadForClient } from './reply-ship.mjs';
 import { transcriptAuthorMissingError, turnAuthorLabel } from './turn-author.mjs';
 import { isTurnVisibleToViewer } from './mcp-chat-import.mjs';
+import { replaceTripWithVacation } from './post-intake-collab-copy.mjs';
 
 function mapVacationAppTurnRows(rows, { session, customerId, tripKey, people }) {
   const labelSession = { ...session, viewerId: session.viewerId || session.customer_id || null };
@@ -17,7 +18,7 @@ function mapVacationAppTurnRows(rows, { session, customerId, tripKey, people }) 
     const inbound = row.speaker === 'customer' || row.direction === 'inbound';
     const turn = {
       speaker: row.speaker || 'customer',
-      body: row.body || '',
+      body: inbound ? (row.body || '') : replaceTripWithVacation(row.body || ''),
       channel: row.channel || '',
       direction: row.direction || '',
       payload: clientPayload,

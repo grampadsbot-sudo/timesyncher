@@ -471,7 +471,7 @@
       return words.length >= 3 ? words.map((word) => Array.from(word)[0].toUpperCase()).join('') : first;
     }
     function tripSwitcherShortName(trip) {
-      if (!trip || isPlaceholderTrip(trip)) return 'Trip';
+      if (!trip || isPlaceholderTrip(trip)) return 'Vacation';
       const stored = String(trip?.shortName ?? trip?.short_name ?? '').trim();
       if (stored) return stored;
       let compact = tripDestinationCompact(trip.destination) || tripDestinationToken(trip.title);
@@ -479,7 +479,7 @@
       const start = dateParts(trip?.startDate ?? trip?.start_date);
       const parts = compact ? [compact] : [];
       if (start && tripMonthsFull[start.m - 1]) parts.push(tripMonthsFull[start.m - 1], start.y);
-      return parts.length ? parts.join(' ') : 'Trip';
+      return parts.length ? parts.join(' ') : 'Vacation';
     }
 
     function tripTriggerInner(trip) {
@@ -499,7 +499,7 @@
     function vacationSelector(trips, trip) {
       if (trips.length < 2) return '';
       const label = (item) => tripTitle(item);
-      return `<div class="vacation-dropdown" id="vacationDropdown" data-trip-switcher-root="1"><button class="trip-button" id="tripButton" data-trip-switcher="1" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Switch trip">${tripTriggerInner(trip)}${icon.chevron}</button><div class="trip-list" role="listbox">${trips.map((item) => `<button class="trip-option ${item.id === trip?.id ? 'active' : ''}" type="button" data-trip-id="${safe(item.id)}" role="option" aria-selected="${item.id === trip?.id ? 'true' : 'false'}"><span>${item.id === trip?.id ? icon.check : ''}</span><span class="trip-option-text"><b>${safe(label(item))}</b>${tripDates(item) ? `<small>${safe(tripDates(item))}</small>` : ''}</span></button>`).join('')}</div></div>`;
+      return `<div class="vacation-dropdown" id="vacationDropdown" data-trip-switcher-root="1"><button class="trip-button" id="tripButton" data-trip-switcher="1" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Switch vacation">${tripTriggerInner(trip)}${icon.chevron}</button><div class="trip-list" role="listbox">${trips.map((item) => `<button class="trip-option ${item.id === trip?.id ? 'active' : ''}" type="button" data-trip-id="${safe(item.id)}" role="option" aria-selected="${item.id === trip?.id ? 'true' : 'false'}"><span>${item.id === trip?.id ? icon.check : ''}</span><span class="trip-option-text"><b>${safe(label(item))}</b>${tripDates(item) ? `<small>${safe(tripDates(item))}</small>` : ''}</span></button>`).join('')}</div></div>`;
     }
 
     function realVacations() {

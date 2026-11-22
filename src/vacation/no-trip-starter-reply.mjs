@@ -8,20 +8,22 @@ import { failReplyPlanEntitlement, loadSessionOwnerReplyPlan } from './reply-pla
 import { isCollaboratorAppSeat } from './collaborator-app-seat.mjs';
 import { firstIntakeReplyLeak, intakeCustomerName } from './first-intake-reply.mjs';
 import { applyTurnInviteReplyFacts } from './turn-invite-reply-facts.mjs';
+import { replaceTripWithVacation } from './post-intake-collab-copy.mjs';
 
 const FIRST_INTAKE_TONE = [
-  'Address the customer in the second person. Use customer_name when it is present, copied verbatim. Do not use a customer id, a session id, or a trip id. Do not speak about the customer in the third person.',
+  'Address the customer in the second person. Use customer_name when it is present, copied verbatim. Do not use a customer id, a session id, or a vacation id. Do not speak about the customer in the third person.',
   'Echo dates, weekdays, and names exactly as they appear in the facts or in customer_said. Do not shorten a name. Do not calculate a weekday. If weekday or end_weekday is present, use that weekday.',
   'Do not use a relative month phrase unless when_relative is true. Otherwise say the year.',
   'Tone: warm and plain, with contractions. No sales voice. At most one exclamation point. No emoji.',
   'Say place, activity, or day. Do not use EULA, terms, or seat.',
+  'Always say "vacation", never "trip".',
 ].join('\n');
 
 export const NO_TRIP_STARTER_INSTRUCTION = [
   'You are writing a reply in the Vacay Keepsake vacation app before a vacation record exists yet. Write it in your own words. Do not copy this instruction back.',
   'The customer has not given enough detail to start a vacation yet. Ask only for what is still missing to begin planning: where they are going and when.',
   'Use exactly one question.',
-  'Do not mention a trip link, shared site, or URL. Do not include /shared/ or any website link.',
+  'Do not mention a vacation link, shared site, or URL. Do not include /shared/ or any website link.',
   'Do not invent a place, date, lodging, activity, or name.',
   FIRST_INTAKE_TONE,
 ].join('\n');
@@ -66,6 +68,7 @@ export function noTripReplyBlock(reply, banned = appTextBanned, facts = {}) {
   if (!text) return '';
   if (/\/shared\//i.test(text)) return 'no_trip_reply_shared_link';
   if (firstIntakeReplyLeak(text)) return 'no_trip_reply_flagged';
+  if (/\btrips?\b/i.test(text)) return 'no_trip_reply_trip_word';
   if (facts.shape === 'no-trip' && questionCount(text) !== 1) return 'no_trip_reply_flagged';
   return '';
 }
@@ -151,5 +154,6 @@ export async function produceNoTripStarterReply({
       blockedReasons: [String(error.reason || 'reply_action_claim_blocked')],
     };
   }
+  if (reply) reply = replaceTripWithVacation(reply);
   return requireReplyQuality({ reply, rules, jev, model, reason: null }, { customerTurn, env });
 }

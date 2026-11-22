@@ -1,5 +1,14 @@
 import { POST_INTAKE_COLLAB_COPY } from './live-app-turn.mjs';
 
+export function replaceTripWithVacation(text) {
+  if (!text) return text;
+  return String(text)
+    .replace(/\bTrips\b/g, 'Vacations')
+    .replace(/\btrips\b/g, 'vacations')
+    .replace(/\bTrip\b/g, 'Vacation')
+    .replace(/\btrip\b/g, 'vacation');
+}
+
 export function postIntakeCollabCopyMissing(text) {
   const value = String(text || '');
   return !/build(?:ing)? (?:the|your) itinerary/i.test(value)
@@ -11,7 +20,7 @@ export function postIntakeCollabCopyMissing(text) {
 }
 
 export function ensurePostIntakeCollabCopy(text) {
-  let value = String(text || '').trim().replace(/\byou also have unlimited\b/gi, 'the plan includes');
+  let value = replaceTripWithVacation(String(text || '').trim().replace(/\byou also have unlimited\b/gi, 'the plan includes'));
   if (!value) return value;
   if (!postIntakeCollabCopyMissing(value)) return value;
   return `${value} ${POST_INTAKE_COLLAB_COPY}`;

@@ -71,6 +71,7 @@ export function intakeReplyBlockReasons(reply, banned = appTextBanned, facts = {
     if (!allowedDays.has(day)) reasons.push(`first_intake_weekday_not_allowed:${day}`);
   }
   if (facts?.when_relative !== true && relativeMonthPhrase(text)) reasons.push('first_intake_relative_month');
+  if (/\btrips?\b/i.test(text)) reasons.push('first_intake_trip_word');
   const names = [...(facts?.who || []), ...(facts?.collaborators || []), facts?.customer_name].filter(Boolean);
   if (shortenedName(text, names)) reasons.push('first_intake_shortened_name');
   const questions = questionCount(text);

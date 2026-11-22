@@ -7,6 +7,7 @@ import { loadVacationAppReplyRules } from '../scripts/vacation-app-reply-rules.m
 import { applyLiveAppReplyFailureToPayload, persistVacationAppOutboundReply, storeReplyFailure, stampCustomerLivePayload } from '../src/vacation/reply-ship.mjs';
 import { logBlockedReplyReasons } from '../src/vacation/blocked-turn-payload.mjs';
 import { applyReplyQuality } from '../src/vacation/reply-quality-gate.mjs';
+import { replaceTripWithVacation } from '../src/vacation/post-intake-collab-copy.mjs';
 import { tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
 import { tripIntakeJobKind } from '../src/vacation/vacation-from-chat-intake.mjs';
 import { intakeExtractedThings, intakeThingsForPersistence, runVacationAppInTurnSearch } from '../src/vacation/chat-place-search.mjs';
@@ -407,8 +408,8 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
       await storeReplyFailure(db, turnRows[0].id, payload);
       return { ...base, ok: false, status: failure.failureStatus, error: failure.replyFailure, invented: failure.invented, modelId: produced?.model?.responseModel || null, responseModel: produced?.model?.responseModel || null };
     }
-    if (produced.interimReply) produced.interimReply.text = interimText;
-    const interimBlocked = await blockReplyShipGate(interimText);
+    if (produced.interimReply) produced.interimReply.text = replaceTripWithVacation(interimText || produced.interimReply.text);
+    const interimBlocked = await blockReplyShipGate(produced.interimReply?.text || interimText);
     if (interimBlocked) return interimBlocked;
     const pending = {
       ...produced.pending,
@@ -433,7 +434,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
       ok: true,
       status: 'interim',
       interimReply: produced.interimReply,
-      reply: interimText || produced.interimReply?.text || '',
+      reply: replaceTripWithVacation(interimText || produced.interimReply?.text || ''),
       error: null,
     };
   }
@@ -451,6 +452,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
   } else if (!vkBotTurn) {
     produced.reply = await rewriteClaim(produced.reply);
   }
+  if (produced.reply) produced.reply = replaceTripWithVacation(produced.reply);
   await applyReplyQuality(produced, { customerTurn: requestText, env, previousReply: claimedFrom });
   if (!produced.reply) {
     const failure = applyLiveAppReplyFailureToPayload(payload, customerLive, produced);

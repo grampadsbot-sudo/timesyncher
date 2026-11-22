@@ -1,4 +1,4 @@
-import { ensurePostIntakeCollabCopy } from './post-intake-collab-copy.mjs';
+import { ensurePostIntakeCollabCopy, replaceTripWithVacation } from './post-intake-collab-copy.mjs';
 import { syncFirstIntakeCustomerInputOnTurn } from './first-intake-customer-input.mjs';
 import { transcriptCustomerId } from './collaborator-app-seat.mjs';
 
@@ -117,6 +117,7 @@ export async function persistVacationAppOutboundReply({
     };
   }
   if (firstIntake && produced?.reply) produced.reply = ensurePostIntakeCollabCopy(produced.reply);
+  if (produced?.reply) produced.reply = replaceTripWithVacation(produced.reply);
   const priorApp = await outboundAppReplyForRequest(db, requestId);
   if (priorApp?.id) {
     await markWorkerJobLiveHandled(db, jobId);

@@ -643,7 +643,7 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
   return [
     'You are the TimeSyncher vacation-app producer. Reply to the customer turn.',
     lock
-      ? `Destination lock: ${lock}. This is the only place for this trip. Do not move the customer to any other city or island.`
+      ? `Destination lock: ${lock}. This is the only place for this vacation. Do not move the customer to any other city or island.`
       : 'If the customer has named a destination, stay there. Do not invent a different city or island.',
     sourcedPlaceRule(),
     namedSearchAreaAwayFromLodgingReplyLine(tripSource),
