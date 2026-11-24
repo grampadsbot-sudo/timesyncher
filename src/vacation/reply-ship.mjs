@@ -1,3 +1,4 @@
+import { sayVacationNotTrip } from './customer-visible-copy.mjs';
 import { ensurePostIntakeCollabCopy } from './post-intake-collab-copy.mjs';
 import { syncFirstIntakeCustomerInputOnTurn } from './first-intake-customer-input.mjs';
 import { transcriptCustomerId } from './collaborator-app-seat.mjs';
@@ -117,6 +118,7 @@ export async function persistVacationAppOutboundReply({
     };
   }
   if (firstIntake && produced?.reply) produced.reply = ensurePostIntakeCollabCopy(produced.reply);
+  if (produced?.reply) produced.reply = sayVacationNotTrip(produced.reply);
   const priorApp = await outboundAppReplyForRequest(db, requestId);
   if (priorApp?.id) {
     await markWorkerJobLiveHandled(db, jobId);
@@ -243,6 +245,7 @@ export async function commitShippedRewrite(db, session, pending, finished, { rec
   if (!judgedQuality) {
     return { ok: false, status: 'reply_unavailable', reply: null, error: String(finished?.quality?.reason || finished?.reason || 'quality_not_judged') };
   }
+  finished = { ...finished, reply: sayVacationNotTrip(finished.reply) };
   const wallMs = Math.max(1, Date.now() - (Number(pending.wallStarted) || Date.now()));
   const appLive = liveTurnRecord({
     turnIndex: Number(pending.customerTurnIndex) + 1,
