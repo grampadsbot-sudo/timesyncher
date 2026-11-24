@@ -92,14 +92,30 @@ async function retargetOntoVk(io, pull) {
   return pull;
 }
 
-export function noteMergeFailure(round, message) {
-  const text = String(message || '');
+export function noteMergeFailure(round, message, action) {
+  const raw = String(message || '');
+  const text = raw.split('\n')[0];
   if (text.startsWith('skip:')) {
     round.skipped = [...(round.skipped || []), text];
     console.log(text);
     return;
   }
-  round.errors.push(text);
+  const type = action?.type || '';
+  round.errors.push(type ? `${type}: ${raw}` : raw);
+}
+
+export function rebaseOntoVk(pull, spawn) {
+  const branch = String(pull?.head?.ref || '').trim();
+  const base = stackBaseRef(pull);
+  if (!branch || !base || typeof spawn !== 'function') return pull;
+  const fetch = spawn(['fetch', 'origin', 'vk', base, branch]);
+  if (!fetch || fetch.status !== 0) throw new Error(`skip: #${pull.number} rebase onto vk failed`);
+  const rebase = spawn(['rebase', '--onto', 'origin/vk', `origin/${base}`, branch]);
+  if (!rebase || rebase.status !== 0) throw new Error(`skip: #${pull.number} rebase onto vk failed`);
+  const pushed = spawn(['push', '--force-with-lease', 'origin', branch]);
+  if (!pushed || pushed.status !== 0) throw new Error(`skip: #${pull.number} rebase onto vk failed`);
+  const named = String(spawn(['rev-parse', branch])?.stdout || '').trim();
+  return { ...pull, head: { sha: named, ref: branch }, base: { ref: 'vk' }, stack: null };
 }
 
 function mergeRank(action) {
@@ -125,7 +141,8 @@ export async function mergePull(action, round, io) {
   const state = String(fresh.state || '').toUpperCase();
   if (fresh.merged === true || state === 'MERGED') return confirmMerged(io, action.pr).then(() => true);
   if (head !== action.sha || state !== 'OPEN') throw new Error(`skip: #${action.pr} head moved`);
-  const current = stackBaseRef(fresh) ? await retargetOntoVk(io, fresh) : fresh;
+  let current = stackBaseRef(fresh) ? await retargetOntoVk(io, fresh) : fresh;
+  if (stackBaseRef(current) && io.rebase) current = await io.rebase(current);
   const now = pullHeadSha(current);
   if (now !== action.sha) throw new Error(`skip: #${action.pr} retargeted onto vk`);
   if (!stackBaseRef(current)) {

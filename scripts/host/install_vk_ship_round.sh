@@ -52,6 +52,8 @@ sys.stdout.buffer.write(GH().req("GET", "/repos/grampadsbot-sudo/timesyncher/con
 fetch_raw scripts/host/vk_ship_round.sh > "$ROOT/bin/vk_ship_round.sh"
 fetch_raw scripts/host/vk_ship_round.mjs > "$ROOT/bootstrap/vk_ship_round.mjs"
 fetch_raw scripts/host/vk_ship_round_core.mjs > "$ROOT/bootstrap/vk_ship_round_core.mjs"
+fetch_raw scripts/host/vk_ship_merge.mjs > "$ROOT/bootstrap/vk_ship_merge.mjs"
+fetch_raw scripts/host/vk_ship_dry_env.mjs > "$ROOT/bootstrap/vk_ship_dry_env.mjs"
 fetch_raw scripts/host/vk_ship_github.py > "$ROOT/bootstrap/vk_ship_github.py"
 chmod 755 "$ROOT/bin/vk_ship_round.sh"
 export TSV_DISPATCH_ROOT="$ROOT"

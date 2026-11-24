@@ -326,7 +326,7 @@ function appendDeployOrDry(actions, world, errors) {
   if (merges.length) {
     actions.push({ type: 'batch-deploy' });
     actions.push({ type: 'live-accept' });
-    actions.push({ type: 'dry-run-after-deploy' });
+    actions.push({ type: 'dry-run-after-deploy', runId: world.runId || '' });
     return blankDry('');
   }
   const tipLive = world.tipLive || {};

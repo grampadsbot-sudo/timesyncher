@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { applyMissingScorecard, dryRunId, ensureMediaBindDeployed, ensureShipRepoDeps, harnessEnvSkipped, loadStagingDatabaseUrl, markEnvBlocked } from './vk_ship_dry_env.mjs';
-import { mergeOrder, mergePull, noteMergeFailure } from './vk_ship_merge.mjs';
+import { mergeOrder, mergePull, noteMergeFailure, rebaseOntoVk } from './vk_ship_merge.mjs';
 import {
   BOOTSTRAP_PULLS,
   applyDryRunCard,
@@ -211,7 +211,7 @@ function runPy(file, args) {
   const result = spawnSync('python3', [bin, ...args], { encoding: 'utf8', env: process.env });
   if (result.status !== 0) throw new Error(scrub(runPyFailure(file, result.status, result.stderr), secrets).slice(0, 240));
 }
-async function runHarness(round, runId, sha) {
+async function runHarness(round, runId, sha) { if (typeof runId !== 'string' || !runId) throw new Error('dry-run missing runId');
   const block = ensureShipRepoDeps({ repo: repoDir(), stateDir: path.join(root, 'state'), spawn: (cmd, args, opts) => spawnSync(cmd, args, { ...opts, encoding: 'utf8' }) });
   if (block) { round.errors.push(block); round.dryRun = markEnvBlocked(round.dryRun, sha, runId, block); return; }
   const roots = [root, process.env.TSV_REPO || '', repoDir(), path.join(root, 'ship-repo')];
@@ -228,7 +228,7 @@ async function runHarness(round, runId, sha) {
   const run = spawnSync('node', ['scripts/vk-customer-harness.mjs', '--story', 'scripts/fixtures/harness/story-dry-run.json', '--run-id', runId, '--out-root', out], { cwd: repoDir(), encoding: 'utf8', env: { ...process.env, DATABASE_URL: loaded.url, NEON_DATABASE_URL: loaded.url, TIMESYNCHER_MEDIA_BIND_TOKEN: ready.token, HARNESS_LIVE: '1' } });
   const output = scrub(`${run.stderr || ''}\n${run.stdout || ''}`, secrets);
   if (harnessEnvSkipped(output)) { round.dryRun = markEnvBlocked(round.dryRun, sha, runId); return; }
-  const cardPath = path.join(out, runId, 'dry-run', 'scorecard.json');
+  const cardPath = path.join(out, typeof runId === 'string' && runId ? runId : (() => { throw new Error('dry-run missing runId'); })(), 'dry-run', 'scorecard.json');
   round.dryRun = { ...round.dryRun, ran: true, blockedEnv: false, sha, id: runId };
   if (!fs.existsSync(cardPath)) applyMissingScorecard(round, scrub(output, secrets));
   else applyDryRunCard(round, JSON.parse(fs.readFileSync(cardPath, 'utf8')));
@@ -268,6 +268,7 @@ async function perform(action, round) {
       reportFor: (sha) => checksFor(sha),
       request: (method, apiPath, data, version) => api(method, apiPath, data, version),
       retarget: (number, base) => api('PATCH', `/repos/${REPO}/pulls/${number}`, { base }),
+      rebase: (pull) => rebaseOntoVk(pull, (args) => spawnSync('git', ['-C', repoDir(), '-c', `credential.helper=!python3 ${fileURLToPath(new URL('./vk_ship_github.py', import.meta.url))} credential`, ...args], { encoding: 'utf8', env: process.env })),
       listByHead: (ref) => api('GET', `/repos/${REPO}/pulls?state=open&per_page=50&head=${encodeURIComponent(`grampadsbot-sudo:${ref}`)}`),
     });
   }
@@ -326,7 +327,7 @@ async function runBootstrap(stamp) {
         }
       }
     } catch (error) {
-      noteMergeFailure(round, scrub(error.message, secrets));
+      noteMergeFailure(round, scrub(`${error.message}\n${error.stack || ''}`, secrets));
     }
   }
   const live = tipLive();
@@ -337,7 +338,7 @@ async function runBootstrap(stamp) {
     : (caughtUp ? [{ type: 'live-accept' }, { type: 'dry-run-after-deploy', runId }] : []);
   for (const action of tail) {
     try { await perform(action, round); }
-    catch (error) { round.errors.push(scrub(error.message, secrets)); }
+    catch (error) { round.errors.push(scrub(`${action.type}: ${error.message}\n${error.stack || ''}`, secrets)); }
   }
   return round;
 }
@@ -480,7 +481,7 @@ async function runGeneral(pulls, stamp) {
         if (!round.merges.includes(action.pr)) round.merges.push(action.pr);
       }
     } catch (error) {
-      noteMergeFailure(round, scrub(error.message, secrets));
+      noteMergeFailure(round, scrub(`${error.message}\n${error.stack || ''}`, secrets), action);
     }
   }
   const tail = merged
@@ -488,7 +489,7 @@ async function runGeneral(pulls, stamp) {
     : planned.actions.filter((action) => action.type === 'dry-run' || action.type === 'live-accept' || action.type === 'dry-run-after-deploy');
   for (const action of tail) {
     try { await perform(action, round); }
-    catch (error) { round.errors.push(scrub(error.message, secrets)); }
+    catch (error) { round.errors.push(scrub(`${action.type}: ${error.message}\n${error.stack || ''}`, secrets)); }
   }
   return round;
 }
