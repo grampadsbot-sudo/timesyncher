@@ -267,7 +267,10 @@ assert.match(launcher, /^SHIP_ROUND_VERSION=2$/m);
 assert.match(launcher, /vk_copy_current "\$installed_version" "\$fresh_version"/);
 assert.match(launcher, /exec node "\$ROOT\/bootstrap\/vk_ship_round\.mjs"/);
 assert.doesNotMatch(roundJs, /spawnSync\('gh'/);
-assert.match(roundJs, /api\('PUT', `\/repos\/\$\{REPO\}\/pulls\/\$\{action\.pr\}\/merge`/);
+const mergeJs = readFileSync(new URL('./host/vk_ship_merge.mjs', import.meta.url), 'utf8');
+assert.match(mergeJs, /\/pulls\/\$\{number\}\/merge`, \{ merge_method: 'merge', sha: head \}/);
+assert.match(mergeJs, /merge-async/); assert.match(mergeJs, /merged !== true/);
+assert.match(roundJs, /mergePull\(action, round/);
 const acceptedRunPy = {
   'live_accept.py': [['run']],
   'tsv_dispatch.py': [['--batch-deploy']],

@@ -2,6 +2,8 @@
 import json
 import os
 import sys
+import urllib.error
+import urllib.request
 
 root = os.environ.get("TSV_DISPATCH_ROOT") or os.path.expanduser("~/tsv-dispatch")
 sys.path.insert(0, root)
@@ -40,9 +42,29 @@ def main():
         else:
             sys.stdout.buffer.write(body or b"")
         return 0
-    result = gh.req(method, path, data=data)
+    version = os.environ.get("TSV_GH_API_VERSION") or ""
+    if version:
+        result = req_version(gh, method, path, data, version)
+    else:
+        result = gh.req(method, path, data=data)
     json.dump(result if result is not None else {}, sys.stdout)
     return 0
+
+
+def req_version(gh, method, path, data, version):
+    url = path if path.startswith("http") else "https://api.github.com" + path
+    req = urllib.request.Request(url, method=method, data=None if data is None else json.dumps(data).encode(),
+        headers={"Authorization": "Bearer " + gh.tok, "Accept": "application/vnd.github+json", "User-Agent": "tsv-independence",
+                 "X-GitHub-Api-Version": version})
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            body = resp.read()
+            return json.loads(body) if body else {}
+    except urllib.error.HTTPError as error:
+        detail = "GitHub %s %s -> HTTP %s %s" % (method, path.split("?")[0], error.code, error.read()[:200].decode("utf-8", "replace"))
+        if gh.tok:
+            detail = detail.replace(gh.tok, "[redacted]")
+        raise RuntimeError(detail)
 
 
 if __name__ == "__main__":

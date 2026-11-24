@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { applyMissingScorecard, dryRunId, ensureMediaBindDeployed, ensureShipRepoDeps, harnessEnvSkipped, loadStagingDatabaseUrl, markEnvBlocked } from './vk_ship_dry_env.mjs';
+import { mergeOrder, mergePull, noteMergeFailure } from './vk_ship_merge.mjs';
 import {
   BOOTSTRAP_PULLS,
   applyDryRunCard,
@@ -37,19 +38,14 @@ function log(line) {
 
 const REPO = 'grampadsbot-sudo/timesyncher';
 
-function api(method, apiPath, data) {
+function api(method, apiPath, data, version) {
   const helper = fileURLToPath(new URL('./vk_ship_github.py', import.meta.url));
-  const result = spawnSync('python3', [helper, method, apiPath], {
-    encoding: 'utf8',
-    input: data === undefined ? undefined : JSON.stringify(data),
-    env: process.env,
-  });
-  if (result.status !== 0) {
-    const detail = scrub(`${result.stderr || result.stdout || 'github failed'}`, secrets);
-    throw new Error(detail.split('\n')[0].slice(0, 240));
-  }
-  if (!result.stdout) return {};
-  return JSON.parse(result.stdout);
+  const env = { ...process.env };
+  if (version) env.TSV_GH_API_VERSION = version;
+  else delete env.TSV_GH_API_VERSION;
+  const result = spawnSync('python3', [helper, method, apiPath], { encoding: 'utf8', input: data === undefined ? undefined : JSON.stringify(data), env });
+  if (result.status !== 0) throw new Error(scrub(`${result.stderr || result.stdout || 'github failed'}`, secrets).split('\n')[0].slice(0, 240));
+  return result.stdout ? JSON.parse(result.stdout) : {};
 }
 
 function titleIssue(title) {
@@ -96,6 +92,7 @@ function shapePull(full) {
     issueLabels,
     state,
     merged: full.merged === true || state === 'MERGED',
+    baseRef: String(full.base?.ref || 'vk'),
     mergeableState: dirty || conflict.files.length ? 'dirty' : 'clean',
     conflictFiles: conflict.files,
     conflictDeletions: conflict.deletions,
@@ -265,11 +262,14 @@ async function perform(action, round) {
     return true;
   }
   if (action.type === 'merge') {
-    const fresh = api('GET', `/repos/${REPO}/pulls/${action.pr}`);
-    const state = String(fresh.state || '').toUpperCase();
-    if ((fresh.head?.sha || fresh.headRefOid) !== action.sha || state !== 'OPEN') return false;
-    api('PUT', `/repos/${REPO}/pulls/${action.pr}/merge`, { merge_method: 'merge' });
-    return true;
+    return mergePull(action, round, {
+      repo: REPO,
+      getPull: (number) => api('GET', `/repos/${REPO}/pulls/${number}`),
+      reportFor: (sha) => checksFor(sha),
+      request: (method, apiPath, data, version) => api(method, apiPath, data, version),
+      retarget: (number, base) => api('PATCH', `/repos/${REPO}/pulls/${number}`, { base }),
+      listByHead: (ref) => api('GET', `/repos/${REPO}/pulls?state=open&per_page=50&head=${encodeURIComponent(`grampadsbot-sudo:${ref}`)}`),
+    });
   }
   if (action.type === 'batch-deploy') {
     const ready = await ensureMediaBindDeployed({ env: process.env, roots: [root, process.env.TSV_REPO || '', repoDir(), path.join(root, 'ship-repo')], deploy: () => runPy('tsv_dispatch.py', ['--batch-deploy']) }); if (ready.block) throw new Error(scrub(ready.block, secrets)); if (ready.token) secrets.push(ready.token); if (!ready.deployed) runPy('tsv_dispatch.py', ['--batch-deploy']);
@@ -326,7 +326,7 @@ async function runBootstrap(stamp) {
         }
       }
     } catch (error) {
-      round.errors.push(scrub(error.message, secrets));
+      noteMergeFailure(round, scrub(error.message, secrets));
     }
   }
   const live = tipLive();
@@ -472,16 +472,15 @@ async function runGeneral(pulls, stamp) {
     if (row.error) round.errors.push(row.error);
   }
   let merged = 0;
-  for (const action of planned.actions) {
-    if (action.type === 'batch-deploy' || action.type === 'live-accept' || action.type === 'dry-run-after-deploy') continue;
+  for (const action of mergeOrder(planned.actions)) {
     try {
       const ok = await perform(action, round);
       if (action.type === 'merge' && ok) {
         merged += 1;
-        round.merges.push(action.pr);
+        if (!round.merges.includes(action.pr)) round.merges.push(action.pr);
       }
     } catch (error) {
-      round.errors.push(scrub(error.message, secrets));
+      noteMergeFailure(round, scrub(error.message, secrets));
     }
   }
   const tail = merged
