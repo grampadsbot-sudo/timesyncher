@@ -1,20 +1,9 @@
-// Roster mode for scripts/vk-customer-harness.mjs.
-//   --roster <file>        roster JSON (default ~/tsv-dispatch/jobs/customer-rosters-r1-job/vk-roster.json)
-//   --customer <id>        one roster customer
-//   --wave-size <n>        one wave: the first n customers of the fixed order
-//   --ramp                 1 -> 5 -> 20 -> 100, stop at the first failed wave
-//   --stories-dir <dir>    use Dialog-written story JSON files (story_id vk-NNN) instead of templated lines
-//   --dry                  no network, no spend: adapter, schema, coupon checks, ledger, scorecards,
-//                          placeholder PDFs, findings. Never PASS: verdict is DRY_PASS or FAIL.
-//   --inject-fail <ids>    dry only: comma-separated roster ids whose card is forced to FAIL (stop-rule proof)
-//   --findings <file>      findings feed (live default: ~/tsv-dispatch/findings/vk-customer-test-findings.md;
-//                          dry default: <out-root>/<run-id>/findings.md seeded from the feed's skeleton)
 import fs from 'node:fs';
 import path from 'node:path';
 import { dryRunCustomer } from './dry.mjs';
 import { DEFAULT_FINDINGS, REQUIRED_HEADINGS } from './findings.mjs';
 import { runRamp } from './ramp.mjs';
-import { DEFAULT_ROSTER, RAMP_SIZES, abArms, loadRoster, loadStoriesDir, rampOrder, storyForEntry } from './roster.mjs';
+import { DEFAULT_ROSTER, RAMP_SIZES, abArms, loadRoster, loadStoriesDir, rampOrder, storyForEntry, waveStories } from './roster.mjs';
 
 function value(argv, flag) {
   const index = argv.indexOf(flag);
@@ -35,6 +24,12 @@ function seedDryFindings(file) {
   return file;
 }
 
+function validatedBackend(name) {
+  if (!name) return '';
+  if (name === 'openrouter' || name === 'vk_bot_mcp') return name;
+  throw new Error('refused: --reply-backend must be openrouter or vk_bot_mcp');
+}
+
 export async function runRosterCli(argv, { outRoot, liveOptions = null, buildSha = '', log = (line) => process.stdout.write(`${line}\n`) } = {}) {
   const runId = value(argv, '--run-id');
   if (!/^[a-z0-9][a-z0-9._-]{0,60}$/.test(runId)) throw new Error('refused: --run-id is required (lowercase letters, digits, . _ -)');
@@ -42,6 +37,7 @@ export async function runRosterCli(argv, { outRoot, liveOptions = null, buildSha
   const inject = value(argv, '--inject-fail');
   if (inject && !dry) throw new Error('refused: --inject-fail is dry-only');
   if (!dry && !liveOptions) throw new Error('refused: live roster run needs the host env (DATABASE_URL and HARNESS_LIVE=1)');
+  const forcedBackend = validatedBackend(value(argv, '--reply-backend'));
   const customers = loadRoster(value(argv, '--roster') || DEFAULT_ROSTER);
   const dialogStories = value(argv, '--stories-dir') ? loadStoriesDir(value(argv, '--stories-dir')) : null;
   const one = value(argv, '--customer');
@@ -54,10 +50,16 @@ export async function runRosterCli(argv, { outRoot, liveOptions = null, buildSha
     const entry = rampOrder(customers).find((row) => String(row.id) === one);
     if (!entry) throw new Error(`refused: roster has no customer ${one}`);
     const story = storyForEntry(entry, abArms(customers), dialogStories);
+    const chosen = forcedBackend ? { ...story, reply_backend: forcedBackend } : story;
     sizes = [1];
-    storiesFor = () => [story];
+    storiesFor = () => [chosen];
   } else if (waveSize) {
     sizes = [Number(waveSize)];
+    if (forcedBackend) {
+      storiesFor = (size) => waveStories(customers, size, { dialogStories }).map((story) => ({ ...story, reply_backend: forcedBackend }));
+    }
+  } else if (forcedBackend) {
+    storiesFor = (size) => waveStories(customers, size, { dialogStories }).map((story) => ({ ...story, reply_backend: forcedBackend }));
   }
   const findingsFile = value(argv, '--findings') || (dry ? seedDryFindings(path.join(outRoot, runId, 'findings.md')) : DEFAULT_FINDINGS);
   const injectFail = new Set(inject.split(',').map((id) => Number(id.trim())).filter(Number.isInteger));

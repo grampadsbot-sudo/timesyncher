@@ -1,14 +1,12 @@
-// Roster test-coupon redemption for the VK harness. No real payment: the only payment path the
-// harness may use is the app's own coupon route (routes/checkout-coupon.mjs at /api/checkout-coupon).
-// Every other payment path (Stripe PaymentIntents, card fields, api.stripe.com) is refused.
 import fs from 'node:fs';
 import path from 'node:path';
 import { shortHash } from './redact.mjs';
 
 export const COUPON_ROUTE = '/api/checkout-coupon';
-export const COUPON_PATTERN = /^VK-TEST-(0\d{2}|100)$/;
+const COUPON_PATTERN = /^VK-TEST-(0\d{2}|100)$/;
 const PAYMENT_BODY_KEYS = ['paymentMethod', 'payment_method', 'paymentIntent', 'payment_intent', 'clientSecret', 'card', 'cardNumber', 'number', 'cvc', 'stripeToken'];
 const NON_COUPON_PAYMENT = [/\/api\/create-payment-intent/i, /\/api\/checkout-session/i, /(^|\.)stripe\.com$/i, /\/v1\/payment_intents/i, /\/v1\/charges/i];
+const EXPIRED_PROMO_PATTERN = /^VK-EXPIRED-(0\d{2}|100)$/;
 
 export function assertCouponCode(code) {
   const value = String(code || '').trim().toUpperCase();
@@ -26,8 +24,6 @@ export function isNonCouponPayment(url) {
   return NON_COUPON_PAYMENT.some((rule) => rule.test(parsed.pathname) || rule.test(parsed.hostname));
 }
 
-export const EXPIRED_PROMO_PATTERN = /^VK-EXPIRED-(0\d{2}|100)$/;
-
 export function assertCouponOnlyRequest(url, body = {}) {
   const parsed = new URL(String(url));
   if (parsed.pathname !== COUPON_ROUTE) throw new Error('refused: non-coupon payment path');
@@ -35,15 +31,11 @@ export function assertCouponOnlyRequest(url, body = {}) {
   for (const key of PAYMENT_BODY_KEYS) {
     if (Object.hasOwn(body, key)) throw new Error(`refused: payment field ${key} on a coupon request`);
   }
-  // A validate-only probe with a made-up expired promo code consumes nothing; anything else must
-  // carry the customer's own VK-TEST roster coupon.
   const probe = body.action === 'validate_coupon' && EXPIRED_PROMO_PATTERN.test(String(body.couponCode || ''));
   if (!probe) assertCouponCode(body.couponCode);
   return parsed;
 }
 
-// One ledger per run. A coupon may be redeemed once; a second redemption is refused unless the story
-// is flagged coupon misuse, and then it is sent only so the harness can record the app's rejection.
 export function createCouponLedger(file = '') {
   const rows = new Map();
   if (file && fs.existsSync(file)) {
@@ -112,11 +104,6 @@ function publicError(data) {
   return String(data?.error || '').slice(0, 160);
 }
 
-// Results the scorecard records per customer (coupon_redemption):
-//   redeemed: the app accepted the coupon and charged $0 (amountCents 0)
-//   rejected: the app refused the first redemption (FAIL)
-//   reuse_rejected: misuse customer re-sent its own coupon and the app refused it (expected)
-//   reuse_accepted: the app accepted a reused coupon (FAIL, app bug)
 export async function redeemRosterCoupon({ story, runId, origin, fetchImpl, ledger }) {
   const code = assertCouponCode(story.coupon?.code);
   const result = {
@@ -138,8 +125,6 @@ export async function redeemRosterCoupon({ story, runId, origin, fetchImpl, ledg
   ledger.claim(code, story.story_id);
   if (result.misuse && result.misuse_kind === 'expired-promo') {
     for (let attempt = 1; attempt <= 2; attempt += 1) {
-      // The expired promo is not a roster coupon: a validate-only request with a code that cannot
-      // exist, so nothing is consumed. The app must refuse it; the answer is recorded.
       const fake = { ...couponRequestBody(story, runId), action: 'validate_coupon', couponCode: code.replace('VK-TEST-', 'VK-EXPIRED-') };
       const probe = await post(fetchImpl, origin, fake);
       result.pre_attempts.push({ kind: 'expired-promo-validate', attempt, http_status: probe.status, rejected: probe.data?.ok !== true });
@@ -183,8 +168,6 @@ export async function redeemRosterCoupon({ story, runId, origin, fetchImpl, ledg
   return result;
 }
 
-// Dry mode: the same request is built and checked (coupon-only path, VK-TEST code, ledger single-use)
-// but nothing is sent. The scorecard says sent:false; it never claims the app redeemed anything.
 export function dryRosterCoupon({ story, runId, origin, ledger }) {
   const code = assertCouponCode(story.coupon?.code);
   ledger.claim(code, story.story_id);

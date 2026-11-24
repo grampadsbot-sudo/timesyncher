@@ -1,22 +1,14 @@
-// VK roster adapter (#1020 follow-up, Craig 11/18-11/23 design).
-// Turns one entry of ~/tsv-dispatch/jobs/customer-rosters-r1-job/vk-roster.json into a story in the
-// existing story schema (scripts/fixtures/harness/story.schema.json). Deterministic: the same roster
-// entry always produces the same story (no clock, no randomness). Scripted lines are templated from
-// roster fields; Dialog-written stories can replace them with --stories-dir (see loadStoriesDir).
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { validateStory } from './schema.mjs';
 
-export const DEFAULT_ROSTER = path.join(os.homedir(), 'tsv-dispatch', 'jobs', 'customer-rosters-r1-job', 'vk-roster.json');
+export const DEFAULT_ROSTER = path.join(os.homedir(), 'tsv-dispatch', 'jobs', 'customer-rosters-r2-job', 'vk-roster.json');
 export const RAMP_SIZES = [1, 5, 20, 100];
 export const AB_SET_SIZE = 10;
-export const EDGE_CASES = ['confused', 'impatient', 'changes mind', 'coupon misuse', 'quits partway'];
-export const VOICE_FIXTURE = 'scripts/fixtures/harness/media/voice-note.txt';
-export const PHOTO_FIXTURE = 'scripts/fixtures/harness/media/photo.png';
-export const VIDEO_FIXTURE = 'scripts/fixtures/harness/media/clip.mp4';
-// 11/18 media spec: every itinerary item (TBDs included) gets 2 photos and one 30-second video;
-// hotel check-in and check-out each get 2 photos and one video; long-list items off the itinerary get none.
+const EDGE_CASES = ['confused', 'impatient', 'changes mind', 'coupon misuse', 'quits partway'];
+const PHOTO_FIXTURE = 'scripts/fixtures/harness/media/photo.png';
+const VIDEO_FIXTURE = 'scripts/fixtures/harness/media/clip.mp4';
 export const MEDIA_PLAN = Object.freeze({
   itinerary_item: { photos: 2, videos: 1, video_seconds: 30, include_tbd: true },
   hotel_check_in: { photos: 2, videos: 1, video_seconds: 30 },
@@ -27,7 +19,7 @@ export const MEDIA_PLAN = Object.freeze({
 const REQUIRED = ['id', 'customer_label', 'party_type', 'party_detail', 'travelers', 'destination', 'country',
   'length_days', 'budget_band', 'tech_comfort', 'planner', 'planner_device', 'test_coupon', 'payment_mode', 'is_edge_case'];
 const FEMALE = ['Maria', 'Grace', 'Nina', 'Laura', 'Hannah', 'Priya', 'Elena', 'Sofia', 'Claire', 'Rosa', 'Megan', 'Tessa', 'Ivy', 'Dana', 'Leah', 'Carmen'];
-const MALE = ['Daniel', 'Marcus', 'Luis', 'Owen', 'Raj', 'Ethan', 'Victor', 'Simon', 'Aaron', 'Felix', 'Noah', 'Peter', 'Hugo', 'Ben', 'Tomas', 'Kevin'];
+const MALE = ['Daniel', 'Mateo', 'Luis', 'Owen', 'Raj', 'Ethan', 'Victor', 'Simon', 'Aaron', 'Felix', 'Noah', 'Peter', 'Hugo', 'Ben', 'Tomas', 'Kevin'];
 const NEUTRAL = ['Jordan', 'Casey', 'Riley', 'Morgan', 'Avery', 'Quinn', 'Rowan', 'Sky', 'Parker', 'Reese', 'Emerson', 'Blair'];
 const KIDS = ['Mia', 'Leo', 'Ava', 'Eli', 'Zoe', 'Max', 'Lily', 'Sam', 'Ruby', 'Finn', 'Nora', 'Jack', 'Iris', 'Theo'];
 const OTHER_SURNAMES = ['Hayes', 'Ortiz', 'Lane', 'Patton', 'Shaw', 'Rivera', 'Wells', 'Moreno', 'Chen', 'Doyle', 'Kerr', 'Baird'];
@@ -97,7 +89,7 @@ export function kidAges(detail) {
     if (count === 1) return [low];
     return Array.from({ length: count }, (_, index) => Math.round(low + ((high - low) * index) / (count - 1)));
   }
-  const listed = text.match(/(?:kids?|teens?)\s+((?:\d+(?:,\s*|\s+and\s+|,\s*and\s+)?)+)/i);
+  const listed = text.match(/(?:kids?|teens?)\s+((?:\d+(?:,\s*and\s+|,\s*|\s+and\s+)?)+)/i);
   if (!listed) return [];
   return (listed[1].match(/\d+/g) || []).map(Number);
 }
@@ -119,7 +111,7 @@ function ownerName(entry) {
   return `${pick(list, entry.id * 7)} ${surnameOf(entry)}`;
 }
 
-export function rosterParty(entry) {
+function rosterParty(entry) {
   const surname = surnameOf(entry);
   const ages = kidAges(entry.party_detail);
   const adults = Math.max(1, Number(entry.travelers) - ages.length);
@@ -132,7 +124,7 @@ export function rosterParty(entry) {
   return { collaborators, kids, viewers: [], editors: [] };
 }
 
-export function rosterDates(entry) {
+function rosterDates(entry) {
   const start = START + (Number(entry.id) - 1) * 3 * DAY;
   return { start: isoDay(start), end: isoDay(start + (Number(entry.length_days) - 1) * DAY) };
 }
@@ -210,7 +202,7 @@ function edgeLines(entry, owner, dates) {
   }
 }
 
-export function scriptedTurns(entry, owner, dates) {
+function scriptedTurns(entry, owner, dates) {
   const where = place(entry);
   const say = (text, expect) => ({ speaker: owner, modality: 'text', text, ...(expect ? { expect } : {}) });
   const opener = say(
@@ -233,7 +225,7 @@ export function scriptedTurns(entry, owner, dates) {
   return [opener, lowTech, interest, hotel, firstDay].filter(Boolean);
 }
 
-export function couponPlan(entry) {
+function couponPlan(entry) {
   const misuse = entry.edge_case_type === 'coupon misuse';
   const note = String(entry.edge_case_note || '');
   return {
@@ -255,7 +247,6 @@ export function rosterToStory(entry) {
     destination: place(entry),
     dates,
     turns: scriptedTurns(entry, owner, dates),
-    // A quits-partway customer still gets the full host steps: the app must keep what was planned.
     steps: ['onboarding', 'coupon', 'chat', 'media', 'collaborator'],
     media: [
       { kind: 'photo', fixture: PHOTO_FIXTURE, attach_to: 'thing' },
@@ -280,16 +271,10 @@ export function rosterToStory(entry) {
   return story;
 }
 
-// Fixed, documented ramp order: roster ids ascending (1, 2, 3, ...). Wave N is the first N customers of
-// that order (1, then 1-5, then 1-20, then 1-100). The first AB_SET_SIZE customers are the A/B set.
 export function rampOrder(customers) {
   return [...customers].sort((a, b) => Number(a.id) - Number(b.id));
 }
 
-// A/B arms for the first 10: group by party type (groups in order of their first roster id), ids
-// ascending inside a group, then alternate openrouter / vk_bot_mcp down that list. Each arm gets 5,
-// every party type is split as evenly as its count allows, and customer #1 is on openrouter.
-// For vk-roster.json: openrouter = 1, 5, 6, 7, 9; vk_bot_mcp = 4, 2, 3, 8, 10. Customers past the A/B set use openrouter.
 export function abArms(customers) {
   const set = rampOrder(customers).slice(0, AB_SET_SIZE);
   const firstSeen = new Map();

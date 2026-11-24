@@ -51,7 +51,6 @@ export function liveOptions(env = process.env) {
       const secrets = secretValues(ready, [created.token]);
       let couponRedemption = null;
       if (story.coupon) {
-        // Roster customers pay only with their VK-TEST coupon through the app's coupon route.
         try {
           couponRedemption = await redeemRosterCoupon({ story, runId: options.runId, origin, fetchImpl, ledger: options.ledger || createCouponLedger() });
           if (couponRedemption.session_token) secrets.push(couponRedemption.session_token);

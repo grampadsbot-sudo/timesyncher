@@ -1,14 +1,7 @@
-// OpenRouter spending cap for live waves. Craig's limited OpenRouter credits are the cap.
-// The harness never calls the model host itself (banned-hosts.json; the host also has OpenRouter
-// disabled, Craig 11/9). The balance comes from a snapshot file the host writes from the account's
-// credits endpoint; the harness reads its path from HARNESS_OPENROUTER_CREDITS_FILE.
-// Snapshot shape: { "total_credits": <usd>, "total_usage": <usd>, "as_of": "<ISO time>" }.
-// Fail closed: no file, unreadable, stale, or not enough headroom => the wave does not start, and a
-// running wave stops before the next customer.
 import fs from 'node:fs';
 
-export const CREDIT_SNAPSHOT_MAX_AGE_MS = 30 * 60 * 1000;
-export const DEFAULT_RESERVE_USD = 1;
+const CREDIT_SNAPSHOT_MAX_AGE_MS = 30 * 60 * 1000;
+const DEFAULT_RESERVE_USD = 1;
 
 function money(value) {
   const n = Number(value);
@@ -34,7 +27,6 @@ export function readCreditSnapshot(env = process.env, now = Date.now()) {
   return { ok: true, remaining: total - used, total, used, as_of: new Date(asOf).toISOString() };
 }
 
-// projectedPerCustomer: measured $/customer from earlier waves, else HARNESS_REPLY_DOLLARS_PER_CUSTOMER.
 export function creditHeadroom({ snapshot, customers, projectedPerCustomer, spentSoFar = 0, env = process.env }) {
   if (!snapshot?.ok) return { ok: false, reason: snapshot?.reason || 'credit-unknown', detail: snapshot?.detail || 'no credit snapshot' };
   const perCustomer = money(projectedPerCustomer) ?? money(env.HARNESS_REPLY_DOLLARS_PER_CUSTOMER);

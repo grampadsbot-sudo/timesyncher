@@ -1,23 +1,17 @@
-// Dry mode (--dry): runs the real roster adapter, story schema, A/B assignment, coupon-only request
-// checks and single-use coupon ledger, wave stop rules, scorecard and findings, with NO network:
-// no staging, no OpenRouter, no Grok/MCP, no database. Dialog and keepsake PDFs are written as
-// clearly labelled DRY RUN placeholders; every live check is listed under not_run, never passed.
 import fs from 'node:fs';
 import path from 'node:path';
 import { couponCheck, dryRosterCoupon } from './coupon.mjs';
 import { dryMediaLoad } from './media-plan.mjs';
 import { validateStory } from './schema.mjs';
 
-export const DRY_ORIGIN = 'https://vacation-staging.timesyncher.com';
+const DRY_ORIGIN = 'https://vacation-staging.timesyncher.com';
 export const LIVE_CHECK_IDS = ['dialog-pdf', 'keepsake-pdf', 'screens', 'onboarding-screens-in-pdf', 'video-check', 'video-check-pass', 'dialog-renderer-ok', 'no-stub-chrome', 'build-sha', 'cleanup', 'stored-cost'];
 
 function pdfEscape(text) {
   return String(text).replace(/[^\x20-\x7e]/g, '?').replace(/([\\()])/g, '\\$1');
 }
 
-// Minimal one-page PDF (Helvetica text lines). Enough for a labelled placeholder; real PDFs come
-// only from a live run.
-export function writeTextPdf(file, lines) {
+function writeTextPdf(file, lines) {
   const shown = lines.slice(0, 60);
   const ops = ['BT', '/F1 10 Tf', '12 TL', '40 800 Td', ...shown.map((line, index) => `${index ? 'T* ' : ''}(${pdfEscape(line).slice(0, 110)}) Tj`), 'ET'].join('\n');
   const objects = [

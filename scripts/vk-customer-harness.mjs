@@ -37,7 +37,6 @@ if (!runId) {
   process.exit(2);
 }
 
-// Roster mode (vk-roster.json): --customer / --wave-size / --ramp, optional --dry. See harness/roster-cli.mjs.
 if (isRosterMode(process.argv)) {
   const dry = has('--dry');
   if (!dry && !hostEnvReady()) {

@@ -119,11 +119,6 @@ export async function submitTestCard(page) {
   await page.click('#payBtn');
 }
 
-// Coupon checkout for roster customers (no real payment). The coupon was already redeemed once
-// through /api/checkout-coupon (coupon.mjs). Each width shows step two with the customer's coupon
-// entered and the Redeem coupon button, then opens the redeemed session's order-success link instead
-// of redeeming again. Every non-coupon payment request from the page (PaymentIntent, Stripe API) is
-// aborted, so this walk can never reach a card charge, live key or not.
 export function couponPaymentSteps({ code, sessionToken, origin }) {
   const coupon = assertCouponCode(code);
   return {

@@ -1,7 +1,3 @@
-// Append-only findings feed: ~/tsv-dispatch/findings/vk-customer-test-findings.md.
-// One section per customer and per wave, in the skeleton's section format. Lock-protected (O_EXCL
-// lock file next to the feed), append-only (O_APPEND), and it refuses to write if the file no longer
-// starts with what was there before (an earlier section was rewritten) or the skeleton headings are gone.
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -15,7 +11,7 @@ function sleep(ms) {
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 }
 
-export function withFindingsLock(file, work) {
+export function withFindingsLock(file, work, { waitMs = LOCK_WAIT_MS, staleMs = LOCK_STALE_MS } = {}) {
   const lock = `${file}.lock`;
   const started = Date.now();
   let fd = null;
@@ -25,11 +21,11 @@ export function withFindingsLock(file, work) {
     } catch (error) {
       if (error.code !== 'EEXIST') throw error;
       const age = Date.now() - (fs.statSync(lock, { throwIfNoEntry: false })?.mtimeMs ?? Date.now());
-      if (age > LOCK_STALE_MS) {
+      if (age > staleMs) {
         fs.rmSync(lock, { force: true });
         continue;
       }
-      if (Date.now() - started > LOCK_WAIT_MS) throw new Error('refused: findings lock is held');
+      if (Date.now() - started > waitMs) throw new Error('refused: findings lock is held');
       sleep(50);
     }
   }
@@ -50,7 +46,7 @@ function hst(date = new Date()) {
   return `${date.toLocaleString('en-US', { timeZone: 'Pacific/Honolulu', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false })} HST`;
 }
 
-export function appendSection(file, text) {
+export function appendSection(file, text, lockOptions) {
   return withFindingsLock(file, () => {
     const before = fs.readFileSync(file, 'utf8');
     for (const heading of REQUIRED_HEADINGS) {
@@ -66,7 +62,7 @@ export function appendSection(file, text) {
     const after = fs.readFileSync(file, 'utf8');
     if (!after.startsWith(before)) throw new Error('refused: findings file changed under the lock (earlier sections rewritten)');
     return { bytes: Buffer.byteLength(body) };
-  });
+  }, lockOptions);
 }
 
 function turnTimes(card) {
