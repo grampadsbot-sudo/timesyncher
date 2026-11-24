@@ -11,6 +11,10 @@ const read = (rel) => fs.readFileSync(path.join(root, rel), 'utf8');
 
 assert.deepEqual(checkLocal(root), [], 'shared composer matches its manifest');
 assert.equal(read(MANIFEST), manifestText(root), 'manifest is current');
+const release = 'https://raw.githubusercontent.com/grampadsbot-sudo/timesyncher/235a932e84160ef9cbeef0741bd87f0cd9bd3de9';
+const canonical = await compareWith(release, root);
+assert.ok(canonical.found, 'the canonical VK release is available');
+assert.deepEqual(canonical.problems, [], 'the local composer matches the canonical release');
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'chat-composer-'));
 try {
