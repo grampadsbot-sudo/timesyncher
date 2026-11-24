@@ -2,14 +2,8 @@
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { deleteTaggedRows } from './harness/cleanup.mjs';
 import { defaultRunRoot, hostEnvReady, loadStagingHarnessDatabase, STAGING_PROJECT_NAME } from './harness/env.mjs';
 import { harnessTag } from './harness/protected.mjs';
-import { liveOptions } from './harness/runtime.mjs';
-import { loadStorySchema, validateStory, validateWave } from './harness/schema.mjs';
-import { runWave } from './harness/wave.mjs';
-import { isRosterMode, runRosterCli } from './harness/roster-cli.mjs';
-import { createHarnessSsrHook } from './customer_suite/ssr/hooks.mjs';
 
 function value(flag) {
   const index = process.argv.indexOf(flag);
@@ -21,11 +15,14 @@ const root = fileURLToPath(new URL('..', import.meta.url));
 const runId = value('--run-id');
 const storyId = value('--story-id');
 
+const rosterMode = ['--roster', '--customer', '--wave-size', '--ramp', '--dry', '--stories-dir'].some((flag) => process.argv.includes(flag));
+
 if (has('--cleanup-only')) {
   if (!hostEnvReady()) {
     process.stderr.write('refused: host env absent (DATABASE_URL and HARNESS_LIVE=1). Cleanup was not executed.\n');
     process.exit(1);
   }
+  const { deleteTaggedRows } = await import('./harness/cleanup.mjs');
   const { sql } = await import('../src/vacation/db.mjs');
   const result = await deleteTaggedRows(sql(process.env), harnessTag(runId, storyId));
   process.stdout.write(`${JSON.stringify({ remaining: result.remaining })}\n`);
@@ -52,7 +49,7 @@ async function stagingLiveEnv() {
   return prepared.env;
 }
 
-if (isRosterMode(process.argv)) {
+if (rosterMode) {
   const dry = has('--dry');
   if (!dry) {
     const liveEnv = await stagingLiveEnv();
@@ -61,6 +58,8 @@ if (isRosterMode(process.argv)) {
     process.env.DATABASE_URL = liveEnv.DATABASE_URL;
     process.env.HARNESS_LIVE = liveEnv.HARNESS_LIVE;
   }
+  const { liveOptions } = await import('./harness/runtime.mjs');
+  const { runRosterCli } = await import('./harness/roster-cli.mjs');
   const sha = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' });
   try {
     const result = await runRosterCli(process.argv, {
@@ -75,6 +74,18 @@ if (isRosterMode(process.argv)) {
   }
 }
 
+if (!hostEnvReady()) {
+  const liveEnv = await stagingLiveEnv();
+  delete process.env.NEON_DATABASE_URL;
+  delete process.env.OPENROUTER_API_KEY;
+  process.env.DATABASE_URL = liveEnv.DATABASE_URL;
+  process.env.HARNESS_LIVE = liveEnv.HARNESS_LIVE;
+}
+
+const { loadStorySchema, validateStory, validateWave } = await import('./harness/schema.mjs');
+const { runWave } = await import('./harness/wave.mjs');
+const { liveOptions } = await import('./harness/runtime.mjs');
+const { createHarnessSsrHook } = await import('./customer_suite/ssr/hooks.mjs');
 const schema = loadStorySchema();
 let stories = [];
 if (value('--wave')) {
@@ -96,14 +107,6 @@ if (value('--wave')) {
 } else {
   process.stderr.write('refused: pass --story or --wave\n');
   process.exit(2);
-}
-
-if (!hostEnvReady()) {
-  const liveEnv = await stagingLiveEnv();
-  delete process.env.NEON_DATABASE_URL;
-  delete process.env.OPENROUTER_API_KEY;
-  process.env.DATABASE_URL = liveEnv.DATABASE_URL;
-  process.env.HARNESS_LIVE = liveEnv.HARNESS_LIVE;
 }
 
 const sha = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' });
