@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const vacationAppRequest = await readFile(new URL('../public/vacation-app-request.js', import.meta.url), 'utf8');
-const vacationApp = await readFile(new URL('../vacation-app.html', import.meta.url), 'utf8');
+const vacationApp = await readFile(new URL('../vacation-app.html', import.meta.url), 'utf8') + await readFile(new URL('../public/chat-composer/chat-composer.js', import.meta.url), 'utf8') + await readFile(new URL('../public/chat-composer/chat-composer.css', import.meta.url), 'utf8');
 const sharedAudio = await readFile(new URL('../public/ts-shared-audio-recorder.js', import.meta.url), 'utf8');
 const layoutMeasure = await readFile(new URL('./layout-app-measure.mjs', import.meta.url), 'utf8');
 const tripHeaderActions = await readFile(

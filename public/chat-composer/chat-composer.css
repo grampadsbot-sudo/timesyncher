@@ -1,0 +1,66 @@
+    .composer {
+      border-top: 1px solid var(--line);
+      padding: 10px clamp(10px, 2.5vw, 18px);
+      padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+      background: rgba(255, 255, 255, .96);
+    }
+    .attachment-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .attachment-row:empty { display: none; }
+    .chip {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 8px;
+      background: #fbfcfd;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .compose-grid {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto auto;
+      gap: 8px;
+      align-items: end;
+    }
+    .icon-button {
+      min-width: 42px;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--ink);
+      display: inline-grid;
+      place-items: center;
+      font-weight: 850;
+    }
+    .icon-button.recording {
+      color: #fff;
+      border-color: var(--danger);
+      background: var(--danger);
+    }
+    .voice-mic-wrap { display: inline-flex; align-items: center; gap: 6px; }
+    #voiceElapsed { font-size: 13px; font-weight: 750; color: var(--danger); min-width: 2.5em; }
+    textarea {
+      width: 100%;
+      min-height: 42px;
+      max-height: 150px;
+      resize: none; overflow-y: hidden; overflow-x: hidden; display: block; min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 11px;
+      color: var(--ink);
+      background: #fbfcfd;
+      outline: none;
+    }
+    textarea:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(47, 111, 159, .12);
+    }

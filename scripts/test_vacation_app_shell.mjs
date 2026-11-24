@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { purchaseEmail } from '../src/vacation/email.mjs';
 import { collaboratorSeatJoinEvent } from '../src/vacation/collaborator-app-seat.mjs';
 
-const page = await readFile(new URL('../vacation-app.html', import.meta.url), 'utf8');
+const page = await readFile(new URL('../vacation-app.html', import.meta.url), 'utf8') + await readFile(new URL('../public/chat-composer/chat-composer.js', import.meta.url), 'utf8') + await readFile(new URL('../public/chat-composer/chat-composer.css', import.meta.url), 'utf8');
 assert.match(page, /Vacay Keepsake App/);
 assert.match(page, /id="splitter"/);
 assert.match(page, /class="trip-list"/);
@@ -49,7 +49,8 @@ assert.match(page, /workspace\.chat-only/);
 assert.match(page, /realSiteUrl/);
 assert.doesNotMatch(page, /class="mark"[^>]*>TS</);
 assert.match(page, /id="attachButton"[\s\S]*id="messageText"[\s\S]*id="voiceButton"[\s\S]*id="sendButton"/);
-assert.match(page, /id="sendButton"[^>]*type="submit"[^>]*aria-label="Send"/);
+assert.match(page, /id="sendButton"[^>]*type="submit"[^>]*aria-label="\$\{esc\(o\.sendLabel\)\}"/);
+assert.match(page, /sendLabel: 'Send'/);
 assert.doesNotMatch(page, /class="path-nav"/);
 assert.doesNotMatch(page, /id="tripMenu"/);
 assert.doesNotMatch(page, /title="Voice mode"/);

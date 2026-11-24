@@ -11,7 +11,8 @@ assert.doesNotMatch(vacationApp, /tsVacationAppRequest \|\| \{\}/);
 assert.match(requestJs, /customerSafeErrorMessage/);
 assert.match(sendBlock, /showComposerStatus/);
 assert.match(sendBlock, /failAppRequest/);
-assert.match(vacationApp, /id="composerStatus"/);
+const composer = await readFile(new URL('../public/chat-composer/chat-composer.js', import.meta.url), 'utf8');
+assert.match(composer, /id="composerStatus"/);
 assert.doesNotMatch(sendBlock, /bubble.*error\.message/);
 assert.doesNotMatch(sendBlock, /<article class="bubble"><small>TimeSyncher<\/small><span class="error">/);
 
