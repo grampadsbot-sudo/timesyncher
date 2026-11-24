@@ -47,8 +47,27 @@ function dollars(bag) {
 }
 
 function mcpUsage(bag) {
-  const tokens = firstNumber(bag.bot_tokens, bag.botTokens, bag.total_tokens, bag.totalTokens, bag.tokens);
-  const percent = firstNumber(bag.usage_percent_delta, bag.usagePercentDelta, bag.percent_delta);
+  const nested = storedCost(bag);
+  const tokens = firstNumber(
+    bag.bot_tokens,
+    bag.botTokens,
+    bag.total_tokens,
+    bag.totalTokens,
+    bag.tokens,
+    nested?.bot_tokens,
+    nested?.botTokens,
+    nested?.total_tokens,
+    nested?.totalTokens,
+    nested?.tokens,
+  );
+  const percent = firstNumber(
+    bag.usage_percent_delta,
+    bag.usagePercentDelta,
+    bag.percent_delta,
+    nested?.usage_percent_delta,
+    nested?.usagePercentDelta,
+    nested?.percent_delta,
+  );
   if (tokens != null && percent != null) return { mismatch: true };
   if (tokens != null) return { amount: tokens, unit: 'tokens' };
   if (percent != null) return { amount: percent, unit: 'percent' };
@@ -92,6 +111,10 @@ export function readStoredCost(turn, backend) {
         return { state: 'measured', amount: usage.amount, unit: 'percent', gap: '', ...percentEstimate(usage.amount) };
       }
       return { state: 'measured', amount: usage.amount, unit: usage.unit, gap: '', ...unmeasuredEstimate() };
+    }
+    for (const bag of bags) {
+      const amount = dollars(bag);
+      if (amount != null) return { state: 'measured', amount, unit: 'usd', gap: '', ...unmeasuredEstimate() };
     }
     return { state: 'missing', amount: null, unit: '', gap: 'stored-cost-missing', ...unmeasuredEstimate() };
   }

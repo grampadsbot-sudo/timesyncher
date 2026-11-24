@@ -271,13 +271,13 @@ export function liveTurnRecord({
     record.model = model
       ? {
         called: Boolean(model.called),
-        via: model.via || null, backend: model.backend || backend || null,
+        via: model.via || null, backend: backend || model.backend || null,
         responseModel: model.responseModel || null, cost: model.cost || model.log?.cost || null,
         modelTier: model.modelTier ?? null,
         genLatencyMs: record.genLatencyMs,
       }
       : null;
-    record.qualityLine = formatQualityLine(record.quality); applyStoredTurnRoute(record, model ? { ...model, backend: model.backend || backend || null } : model);
+    record.qualityLine = formatQualityLine(record.quality); applyStoredTurnRoute(record, model ? { ...model, backend: backend || model.backend || null } : model);
     record.heldRewriteLine = heldRewriteLine(record);
     record.rewriteCredit = rewriteCreditLabel(record.rewriteModel || record.quality?.rewriteModel, record.rewriterChange || record.quality?.rewriterChange);
   }

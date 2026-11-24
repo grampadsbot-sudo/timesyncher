@@ -166,8 +166,9 @@ function visibleVkBotCost(record, cost) {
   }
   if (record?.model && typeof record.model === 'object') {
     if (hasTokens) {
+      const totalTokens = next.totalTokens ?? (next.promptTokens != null && next.completionTokens != null ? next.promptTokens + next.completionTokens : null);
       record.model.usage = {
-        total_tokens: next.totalTokens ?? null,
+        total_tokens: totalTokens,
         prompt_tokens: next.promptTokens ?? null,
         completion_tokens: next.completionTokens ?? null,
       };
