@@ -144,7 +144,7 @@ assert.throws(() => assertCouponCode('TS-NOTMINTED'), /VK-TEST/);
 let couponFetched = false;
 const blocked = httpLiveOptions({ HARNESS_STAGING_ORIGIN: origin, HARNESS_FRESH_COUPON: 'TS-VKEU80GGELCF' }, {
   fetchImpl: async () => { couponFetched = true; throw new Error('fetched'); },
-  pickLane: () => ({ lane: 'gemini-ubuntu', model: 'gemini-4-neon-high' }),
+  pickLane: () => ({ lane: 'host', model: 'picked' }),
 });
 const held = await blocked.play({ ...story, story_id: 'vk-001', coupon: { code: 'VK-TEST-001' } }, { runId: 'vk-test-001' });
 assert.equal(couponFetched, false);
