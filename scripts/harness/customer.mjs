@@ -4,6 +4,9 @@ import { rollupCost } from './cost.mjs';
 import { assertThrowaway, cleanupCommand, harnessTag } from './protected.mjs';
 import { redactText } from './redact.mjs';
 import { buildScorecard } from './scorecard.mjs';
+import { couponCheck, publicCouponResult } from './coupon.mjs';
+import { abArmLabel } from './dry.mjs';
+import { mediaLoad } from './media-plan.mjs';
 import { confirmStoredTurns } from './stored-turn.mjs';
 import { noteUnstoredRows } from './unstored-turn.mjs';
 import { extractLegacyDlrComparison } from '../customer_suite/ssr/aggregate.mjs';
@@ -92,6 +95,7 @@ export async function runCustomer(story, options) {
       if (played.dialogRefused) gaps = [...new Set([...gaps, 'dialog-renderer-refused'])];
       if (played.dialogRefused && !reason) reason = 'dialog-renderer-refused';
       checks = artifactChecks(played);
+      if (story.coupon) checks.push(couponCheck(played.couponRedemption));
       if (reason === 'payment-required' || reason === 'credit-exhausted') {
         checks.push({ id: 'app-billing', pass: false, detail: reason, artifact: '' });
       }
@@ -192,6 +196,14 @@ export async function runCustomer(story, options) {
     ...(dialogPdfStatus ? { dialog_pdf_status: dialogPdfStatus } : {}),
     ...(reason === 'turn-not-stored' || reason === 'first-intake-reply-flagged' ? { turn_http: played?.exchange || null } : {}),
   });
+  if (story.coupon) card.coupon_redemption = publicCouponResult(played?.couponRedemption) || { status: 'not-run', pass: false, detail: reason || 'not-run' };
+  if (story.roster) {
+    card.roster = story.roster;
+    card.ab_arm = abArmLabel(story);
+  }
+  if (played && Number.isFinite(Number(played.itineraryCount))) {
+    card.media = mediaLoad({ itineraryItems: Number(played.itineraryCount), hasHotel: true, source: 'estimate-live (itinerary items counted; bytes per file assumed)' });
+  }
   fs.writeFileSync(path.join(options.outDir, 'scorecard.json'), `${JSON.stringify(card, null, 2)}\n`);
   if (keep) process.stdout.write(`${cleanup.command}\n`);
   return card;

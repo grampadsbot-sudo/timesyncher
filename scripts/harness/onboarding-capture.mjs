@@ -4,6 +4,7 @@ import { chromeHits } from './chrome.mjs';
 import { purchaseEmail } from '../../src/vacation/email.mjs';
 import { resolvePlaywright } from './live-outputs.mjs';
 import { buildCustomerPdf } from './onboarding-pdf.mjs';
+import { assertCouponCode, isNonCouponPayment } from './coupon.mjs';
 import {
   ONBOARDING_ENGINE,
   ONBOARDING_SCREENS,
@@ -118,6 +119,31 @@ export async function submitTestCard(page) {
   await page.click('#payBtn');
 }
 
+// Coupon checkout for roster customers (no real payment). The coupon was already redeemed once
+// through /api/checkout-coupon (coupon.mjs). Each width shows step two with the customer's coupon
+// entered and the Redeem coupon button, then opens the redeemed session's order-success link instead
+// of redeeming again. Every non-coupon payment request from the page (PaymentIntent, Stripe API) is
+// aborted, so this walk can never reach a card charge, live key or not.
+export function couponPaymentSteps({ code, sessionToken, origin }) {
+  const coupon = assertCouponCode(code);
+  return {
+    mode: 'coupon',
+    async showPayment(page) {
+      if (typeof page.route === 'function') {
+        await page.route('**/*', (route) => (isNonCouponPayment(route.request().url()) ? route.abort() : route.continue()));
+      }
+      await page.click('#continueBtn');
+      await page.waitForSelector('#couponCode', { state: 'visible', timeout: 25000 });
+      await page.fill('#couponCode', coupon);
+      await page.waitForSelector('#couponPayBtn', { state: 'visible', timeout: 25000 });
+    },
+    async submitPayment(page) {
+      if (!sessionToken) throw new Error('coupon-redemption: no redeemed session');
+      await page.goto(new URL(`/order-success.html?session=${encodeURIComponent(sessionToken)}`, origin).href, { waitUntil: 'domcontentloaded', timeout: 45000 });
+    },
+  };
+}
+
 export async function walkOnboardingWidth({
   page,
   origin,
@@ -202,7 +228,7 @@ function resultFrom(shots, termsClick, laterFiles, outPath) {
   return { ...assessed, shots, termsClick: click, outPath };
 }
 
-export async function captureOnboardingPdf({ origin, outDir, customer, runId, pageFactory }) {
+export async function captureOnboardingPdf({ origin, outDir, customer, runId, pageFactory, payment = null }) {
   const email = customer.email || `harness+${runId}@harness.invalid`;
   const person = { ...customer, email };
   try {
@@ -246,6 +272,7 @@ export async function captureOnboardingPdf({ origin, outDir, customer, runId, pa
         customer: { ...person, email: person.email.includes('@') ? person.email.replace('@', `+w${width}@`) : `${person.email}+w${width}@harness.invalid` },
         width,
         outDir,
+        ...(payment ? { showPayment: payment.showPayment, submitPayment: payment.submitPayment } : {}),
       });
       shots.push(...walked.shots);
       clicks.push(walked.termsClick === 'ui');
