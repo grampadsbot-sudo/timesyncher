@@ -91,6 +91,7 @@ const FIRST_INTAKE_TONE = [
   'Do not use a relative month phrase unless when_relative is true. Otherwise say the year.',
   'Tone: warm and plain, with contractions. No sales voice. At most one exclamation point. No emoji.',
   'Say place, activity, or day. Do not use EULA, terms, or seat.',
+  'Always say "vacation" or "vacations". Never say "trip" or "trips".',
 ].join('\n');
 
 export const FIRST_INTAKE_VOICE_INSTRUCTION = [
