@@ -36,7 +36,7 @@ export async function runRosterCli(argv, { outRoot, liveOptions = null, buildSha
   const dry = argv.includes('--dry');
   const inject = value(argv, '--inject-fail');
   if (inject && !dry) throw new Error('refused: --inject-fail is dry-only');
-  if (!dry && !liveOptions) throw new Error('refused: live roster run needs the host env (DATABASE_URL and HARNESS_LIVE=1)');
+  if (!dry && !liveOptions) throw new Error('refused: live roster run needs the staging http options');
   const forcedBackend = validatedBackend(value(argv, '--reply-backend'));
   const customers = loadRoster(value(argv, '--roster') || DEFAULT_ROSTER);
   const dialogStories = value(argv, '--stories-dir') ? loadStoriesDir(value(argv, '--stories-dir')) : null;

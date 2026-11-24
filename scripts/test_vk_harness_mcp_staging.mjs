@@ -5,7 +5,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { customerLane, personaSeed, speakCustomer } from './harness/customer-live.mjs';
 import { mcpRouteIsFailClosed, runCustomer } from './harness/customer.mjs';
-import { assertStagingHarnessTarget, loadStagingHarnessDatabase, STAGING_HARNESS_ORIGIN, STAGING_PROJECT_NAME } from './harness/env.mjs';
+import { assertStagingHarnessTarget, httpHarnessEnv, loadStagingHarnessDatabase, STAGING_HARNESS_ORIGIN, STAGING_PROJECT_NAME } from './harness/env.mjs';
+import { httpLiveOptions } from './harness/http-live.mjs';
 
 const story = JSON.parse(fs.readFileSync(new URL('./fixtures/harness/story-dry-run.json', import.meta.url), 'utf8'));
 story.reply_backend = 'vk_bot_mcp';
@@ -113,14 +114,42 @@ await assert.rejects(() => loadStagingHarnessDatabase({
   tokenFileExists: () => false,
 }), /staging project/);
 assert.equal(fetched, 0);
-const missing = await loadStagingHarnessDatabase({
+const unread = await loadStagingHarnessDatabase({
   env: {},
   projectName: STAGING_PROJECT_NAME,
   origin,
   readFile: () => '',
   tokenFileExists: () => false,
 });
-assert.equal(missing.ok, false);
-assert.equal(missing.missing, 'DATABASE_URL');
-assert.equal(missing.environment, 'timesyncher-vacation-staging production');
+assert.equal(unread.ok, false);
+assert.equal(unread.hostOnly, 'DATABASE_URL');
+assert.equal(unread.where, 'ubuntu-host');
+assert.equal(unread.missing, undefined);
+assert.equal(unread.environment, undefined);
+const http = httpHarnessEnv({
+  DATABASE_URL: 'postgres://local.example/db',
+  NEON_DATABASE_URL: 'postgres://neon.example/db',
+  OPENROUTER_API_KEY: 'secret',
+  HARNESS_STAGING_ORIGIN: origin,
+});
+assert.equal(http.ok, true);
+assert.equal(http.env.DATABASE_URL, undefined);
+assert.equal(http.env.NEON_DATABASE_URL, undefined);
+assert.equal(http.env.OPENROUTER_API_KEY, undefined);
+assert.equal(http.env.HARNESS_LIVE, '1');
+assert.equal(http.origin, origin);
+assert.throws(() => httpHarnessEnv({ HARNESS_STAGING_ORIGIN: 'https://www.timesyncher.com' }), /vacation-staging/);
+const calls = [];
+const live = httpLiveOptions({ HARNESS_STAGING_ORIGIN: origin }, {
+  fetchImpl: async (url) => {
+    calls.push(String(url));
+    return { status: 200, json: async () => ({ ok: true }) };
+  },
+});
+assert.equal(live.env.DATABASE_URL, undefined);
+const held = await live.play({ ...story, coupon: { code: 'VK-TEST-001' } }, { runId: 'vk-test-001' });
+assert.equal(held.hostOnly, 'DATABASE_URL');
+assert.equal(held.reason, 'host-only-database');
+assert.equal(calls.some((url) => url.includes('/api/vacation-itinerary')), false);
+assert.equal(calls.some((url) => url.includes('/api/checkout-coupon')), true);
 console.log('test_vk_harness_mcp_staging: ok');

@@ -56,12 +56,29 @@ export async function loadStagingHarnessDatabase({
     tokenFileExists,
   });
   if (!loaded.url) {
-    return { ok: false, missing: 'DATABASE_URL', environment: 'timesyncher-vacation-staging production', flag: 'HARNESS_LIVE' };
+    return { ok: false, hostOnly: 'DATABASE_URL', where: 'ubuntu-host' };
   }
   return {
     ok: true,
     env: { ...env, DATABASE_URL: loaded.url, HARNESS_LIVE: '1' },
   };
+}
+
+export function httpHarnessEnv(env = process.env) {
+  const origin = stagingOrigin({ ...env, HARNESS_STAGING_ORIGIN: env.HARNESS_STAGING_ORIGIN || STAGING_HARNESS_ORIGIN });
+  const projectId = String(env.VERCEL_PROJECT_ID || '');
+  if (projectId && projectId !== STAGING_PROJECT_NAME) {
+    throw new Error('refused: harness project id is not the staging project');
+  }
+  assertStagingHarnessTarget({ projectName: STAGING_PROJECT_NAME, origin });
+  const next = withHarnessEnvDefaults(env);
+  delete next.DATABASE_URL;
+  delete next.NEON_DATABASE_URL;
+  delete next.OPENROUTER_API_KEY;
+  next.HARNESS_LIVE = '1';
+  next.HARNESS_STAGING_ORIGIN = origin;
+  next.TIMESYNCHER_TRAVEL_BASE_URL = origin;
+  return { ok: true, env: next, origin };
 }
 
 export function withHarnessEnvDefaults(env = process.env) {

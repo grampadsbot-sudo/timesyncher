@@ -1,6 +1,6 @@
 import { hostIsBanned, loadBannedHosts } from './fetch-guard.mjs';
 
-export const CUSTOMER_LANE_ORDER = ['gemini', 'claude', 'codex'];
+const CUSTOMER_LANE_ORDER = ['gemini', 'claude', 'codex'];
 
 export function personaSeed(story) {
   const turns = Array.isArray(story?.turns) ? story.turns : [];
@@ -18,7 +18,7 @@ export function customerLane(order = CUSTOMER_LANE_ORDER) {
   return list[0];
 }
 
-export function oddCustomerTurn(index) {
+function oddCustomerTurn(index) {
   const kinds = ['change-mind', 'off-topic', 'impossible', 'nonsense'];
   const kind = kinds[index % kinds.length];
   const lines = {
