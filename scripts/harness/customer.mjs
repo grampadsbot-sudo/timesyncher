@@ -38,6 +38,19 @@ function artifactChecks(played) {
   ];
 }
 
+export function mcpRouteIsFailClosed(route) {
+  if (!route || route.backend !== 'vk_bot_mcp' || route.openRouter !== false) return false;
+  if (route.guard !== 'staging-fetch' || typeof route.play !== 'function') return false;
+  return String(route.origin || '') === 'https://vacation-staging.timesyncher.com';
+}
+
+function verifiedMcpPlay(replyBackend, options) {
+  if (replyBackend !== 'vk_bot_mcp') return null;
+  const route = options.mcpRoute;
+  if (!mcpRouteIsFailClosed(route) || route.play !== options.play) return null;
+  return options.play;
+}
+
 function blankTurn(index, replyBackend) {
   return {
     n: index,
@@ -75,7 +88,8 @@ export async function runCustomer(story, options) {
   let played = null;
   let steps = [];
   try {
-    if (replyBackend === 'vk_bot_mcp') {
+    const mcpPlay = verifiedMcpPlay(replyBackend, options);
+    if (replyBackend === 'vk_bot_mcp' && !mcpPlay) {
       reason = 'backend-not-available';
       turns = (story.turns || []).map((turn, index) => blankTurn(index + 1, replyBackend));
       checks = [
@@ -84,7 +98,7 @@ export async function runCustomer(story, options) {
         { id: 'stored-cost', pass: true, detail: 'not-run', artifact: '' },
       ];
     } else {
-      played = await options.play(story, options);
+      played = await (mcpPlay || options.play)(story, options);
       reason = played.reason || '';
       const snapshot = JSON.stringify(played.transcript || null);
       const confirmed = played.transcript ? confirmStoredTurns(played.transcript, played.pdfText || '', replyBackend) : { rows: [], gaps: [] };
@@ -105,11 +119,12 @@ export async function runCustomer(story, options) {
     checks.push({ id: 'harness-error', pass: false, detail: redactText(error?.message || error, secrets), artifact: '' });
   }
   const billed = reason === 'payment-required' || reason === 'credit-exhausted';
-  const cost = replyBackend === 'vk_bot_mcp' || billed
+  const playedMcp = replyBackend === 'vk_bot_mcp' && played;
+  const cost = (replyBackend === 'vk_bot_mcp' && !playedMcp) || billed
     ? { state: 'not-run', amount: null, unit: '', gap: '', per_customer: null }
     : rollupCost(turns);
   if (cost.gap) gaps = [...new Set([...gaps, cost.gap])];
-  if (replyBackend === 'openrouter' && !billed) {
+  if ((replyBackend === 'openrouter' || playedMcp) && !billed) {
     const stored = !cost.gap && (cost.state === 'measured' || cost.state === 'unmeasured' || cost.state === 'mixed' || cost.state === 'not-run');
     checks.push({ id: 'stored-cost', pass: stored, detail: cost.gap || cost.state, artifact: '' });
   }

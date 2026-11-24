@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { deleteTaggedRows } from './harness/cleanup.mjs';
-import { defaultRunRoot, hostEnvReady } from './harness/env.mjs';
+import { defaultRunRoot, hostEnvReady, loadStagingHarnessDatabase, STAGING_PROJECT_NAME } from './harness/env.mjs';
 import { harnessTag } from './harness/protected.mjs';
 import { liveOptions } from './harness/runtime.mjs';
 import { loadStorySchema, validateStory, validateWave } from './harness/schema.mjs';
@@ -37,11 +37,29 @@ if (!runId) {
   process.exit(2);
 }
 
+async function stagingLiveEnv() {
+  const prepared = await loadStagingHarnessDatabase({
+    env: process.env,
+    roots: [process.env.TSV_DISPATCH_ROOT || '', `${process.env.HOME || ''}/tsv-dispatch`],
+    projectName: STAGING_PROJECT_NAME,
+    projectId: '',
+    stagingProjectId: '',
+  });
+  if (!prepared.ok) {
+    process.stderr.write(`SKIP harness: host env absent (${prepared.missing} on ${prepared.environment}; ${prepared.flag} is not set). Live run was not executed.\n`);
+    process.exit(1);
+  }
+  return prepared.env;
+}
+
 if (isRosterMode(process.argv)) {
   const dry = has('--dry');
-  if (!dry && !hostEnvReady()) {
-    process.stderr.write('SKIP harness: host env absent (DATABASE_URL and HARNESS_LIVE=1). Live run was not executed.\n');
-    process.exit(1);
+  if (!dry) {
+    const liveEnv = await stagingLiveEnv();
+    delete process.env.NEON_DATABASE_URL;
+    delete process.env.OPENROUTER_API_KEY;
+    process.env.DATABASE_URL = liveEnv.DATABASE_URL;
+    process.env.HARNESS_LIVE = liveEnv.HARNESS_LIVE;
   }
   const sha = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' });
   try {
@@ -81,8 +99,11 @@ if (value('--wave')) {
 }
 
 if (!hostEnvReady()) {
-  process.stderr.write('SKIP harness: host env absent (DATABASE_URL and HARNESS_LIVE=1). Live run was not executed.\n');
-  process.exit(1);
+  const liveEnv = await stagingLiveEnv();
+  delete process.env.NEON_DATABASE_URL;
+  delete process.env.OPENROUTER_API_KEY;
+  process.env.DATABASE_URL = liveEnv.DATABASE_URL;
+  process.env.HARNESS_LIVE = liveEnv.HARNESS_LIVE;
 }
 
 const sha = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' });

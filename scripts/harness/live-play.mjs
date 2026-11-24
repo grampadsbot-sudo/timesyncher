@@ -1,4 +1,5 @@
 import { classifyAppFailure } from './backends.mjs';
+import { personaSeed, speakCustomer, tripSurvey } from './customer-live.mjs';
 import { hostIsBanned } from './fetch-guard.mjs';
 import { redactExchangeBody } from './redact.mjs';
 
@@ -92,7 +93,7 @@ function tripFields(body) {
   };
 }
 
-export async function playCustomerTurns(story, { origin, token, tripId, fetchImpl, hosts, waitMs = 0, secrets = [] }) {
+export async function playCustomerTurns(story, { origin, token, tripId, fetchImpl, hosts, waitMs = 0, secrets = [], liveCustomer = false, customerAsk = null, customerLanes = null, maxTurns = 0 }) {
   const allowed = new URL(origin).origin;
   const send = async (url, body) => {
     const href = String(url);
@@ -135,8 +136,21 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
   let shareToken = tripFields(opened.body).shareToken;
   let items = itineraryCount(opened.body);
   const timings = [];
-  for (let index = 0; index < story.turns.length; index += 1) {
-    const turn = story.turns[index];
+  const persona = personaSeed(story);
+  const customerTurns = [];
+  let lastReply = '';
+  const limit = liveCustomer ? Math.max(1, Number(maxTurns) || persona.goals.length || 4) : story.turns.length;
+  for (let index = 0; index < limit; index += 1) {
+    let turn = story.turns[index];
+    let customerCost = null;
+    let customerModel = '';
+    if (liveCustomer) {
+      const spoken = await speakCustomer({ persona, appReply: lastReply, index, ask: customerAsk, order: customerLanes });
+      customerCost = spoken.cost;
+      customerModel = spoken.model;
+      turn = { speaker: persona.name, modality: 'text', text: spoken.text, odd: spoken.kind !== 'goal' };
+      customerTurns.push({ role: 'customer', text: spoken.text, model: customerModel, cost: customerCost, odd: turn.odd === true });
+    }
     const turnStarted = Date.now();
     const timeline = [];
     const note = (kind, sent) => {
@@ -186,6 +200,8 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
     items = Math.max(items, itineraryCount(final.body), itineraryCount(draft.body), itineraryCount(history.body));
     shareToken = tripFields(history.body).shareToken || shareToken;
     if (tripFields(history.body).tripId) currentTrip = tripFields(history.body).tripId;
+    lastReply = reply || lastReply;
+    customerTurns.push({ role: 'app', text: reply, model: stamp.modelId || stamp.responseModel, cost: final.body?.cost || draft.body?.cost || null });
     if (reply && !stamp.modelId && !stamp.responseModel) {
       return finish('reply-not-from-rules', { timings, storedTurns: count, itineraryCount: items, tripId: currentTrip, shareToken, detail: 'scripted line reply had no modelId from vacation-app-reply-rules' });
     }
@@ -207,5 +223,8 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
     shareToken,
     detail: '',
     exchange: null,
+    customerTurns,
+    survey: liveCustomer ? tripSurvey(persona, customerTurns) : null,
+    qaRating: 'slot',
   };
 }

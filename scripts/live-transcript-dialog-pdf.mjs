@@ -28,24 +28,19 @@ import { DIALOG_TEST_FINGERPRINT, INTERIM_MODEL, bakeoffTierModels, isBakeoffMod
 import { pdfTextHasSha, readTipSha } from './void-stale-build.mjs';
 import { buildUsedVsTipLine, driveBanner, driveShaFromTranscript, isUntrustedPack } from './build-used-vs-tip.mjs';
 import { attachSsrToDialogPack } from './customer_suite/ssr/dialog-hook.mjs';
-
 const V6_GPT5_MINI_P50_MS = 28834;
 const V6_GPT5_MINI_P95_MS = 39693;
 const ROSTER_NAMES = ['Kimberly', 'Tyler', 'Lauren'];
-
 const BANNED_GENERATORS = /dialog_vacation_test_turn|dialog-pdf-openrouter-selfcall|openrouter-selfcall/i;
 const CANNED_APP_REPLY = 'Got it. I saved that';
-
 function fail(error) {
   const message = error?.message || String(error);
   process.stderr.write(`${message}\n`);
   process.exitCode = 1;
 }
-
 function storedNoteIsScript(note) {
   return /the reply (covers|misses) this turn\b|\bkeep the reply\b|^(?:answers?|name the price|take out the place|name the seats)\b|stays with that wording/i.test(String(note || '').trim());
 }
-
 export function assertLiveTranscript(doc) {
   if (!doc || typeof doc !== 'object' || Array.isArray(doc)) {
     throw new Error('refused: Dialog PDF needs a live transcript document');
@@ -746,6 +741,11 @@ function producerLogLine(turn) {
     `rewriteFactCheck: ${turn.rewriteFactCheck || 'none'}`,
     `rejudgeMs: ${turn.rejudgeMs == null ? 'null' : Number(turn.rejudgeMs)}`,
     `savedTrip: ${turn.savedTrip ? JSON.stringify(turn.savedTrip) : 'null'}`,
+    `appModel: ${turn.modelId || turn.model?.responseModel || 'none'}`,
+    `appCost: ${turn.appCost == null ? 'none' : turn.appCost}`,
+    `customerCost: ${turn.customerCost == null ? 'none' : turn.customerCost}`,
+    `qaRating: ${turn.qaRating || 'slot'}`,
+    `survey: ${turn.survey ? JSON.stringify(turn.survey) : 'none'}`,
   ].join(' | ');
 }
 
