@@ -360,7 +360,7 @@ window.tsVacationAppChrome = {
           quickFailures = 0;
           if (messageText) {
             messageText.value = joinText(committedText, text);
-            window.tsVacationAppChrome.resizeComposer(messageText);
+            window.tsChatComposer.resizeComposer(messageText);
           }
           getState().voiceArmed = true;
           showStatus('');
@@ -706,59 +706,48 @@ window.tsVacationAppChrome = {
     startReadyPoll();
     armTimeout(generation);
   },
-  resizeComposer(target) {
-    const el = target || document.getElementById('messageText');
-    if (!el || !el.style) return;
-    const cs = typeof window.getComputedStyle === 'function' ? window.getComputedStyle(el) : null;
-    const minHeight = Number.parseFloat(cs?.minHeight) || 42;
-    const parsedMax = Number.parseFloat(cs?.maxHeight);
-    const maxHeight = Number.isFinite(parsedMax) && parsedMax > 0 ? parsedMax : 150;
-    const borderY = (Number.parseFloat(cs?.borderTopWidth) || 0) + (Number.parseFloat(cs?.borderBottomWidth) || 0);
-    const prevScrollTop = Number(el.scrollTop || 0);
-    const prevOverflow = Number(el.scrollHeight || 0) > Number(el.clientHeight || 0) + 1;
-    const wasAtBottom = prevOverflow && prevScrollTop + Number(el.clientHeight || 0) >= Number(el.scrollHeight || 0) - 2;
-    const valLen = String(el.value || '').length;
-    const atEnd = typeof el.selectionStart === 'number'
-      && el.selectionStart === el.selectionEnd
-      && el.selectionEnd === valLen;
-    el.style.overflowY = 'hidden';
-    el.style.height = 'auto';
-    const measured = Number(el.scrollHeight || 0);
-    const rawHeight = measured > 0 ? measured + borderY : minHeight;
-    const nextHeight = Math.min(maxHeight, Math.max(minHeight, Math.ceil(rawHeight)));
-    const overflowing = rawHeight > maxHeight + 0.5;
-    el.style.height = `${nextHeight}px`;
-    el.style.overflowY = overflowing ? 'auto' : 'hidden';
-    if (overflowing) {
-      if (wasAtBottom || (!prevOverflow && (atEnd || document.activeElement !== el))) {
-        el.scrollTop = el.scrollHeight;
-      } else if (prevScrollTop > 0) {
-        el.scrollTop = prevScrollTop;
-      }
-    } else {
-      el.scrollTop = 0;
-    }
-  },
-  bindComposerAutosize() {
-    const textarea = document.getElementById('messageText');
-    if (!textarea) return;
-    const sync = () => window.tsVacationAppChrome.resizeComposer(textarea);
-    textarea.addEventListener('input', sync);
-    textarea.addEventListener('change', sync);
-    const form = textarea.form || textarea.closest?.('form') || null;
-    form?.addEventListener?.('reset', () => queueMicrotask(sync));
-    if (window.__tsComposerResizeListener) {
-      window.removeEventListener('resize', window.__tsComposerResizeListener);
-    }
-    const onWindowResize = () => {
-      if (textarea.isConnected === false) {
-        window.removeEventListener('resize', onWindowResize);
-        return;
-      }
-      sync();
-    };
-    window.__tsComposerResizeListener = onWindowResize;
-    window.addEventListener('resize', onWindowResize);
-    sync();
-  },
 };
+
+window.tsVacationAppWelcome = (() => {
+  const SITE_PHRASES = ['your vacation already has its own website', "Here's the vacation website"];
+  const OPENER_RE = /^(?:Welcome, [^\n]+?! You're all set|Hi [^\n]+?, welcome! )/;
+  const HOME_SCREEN_TIP = 'Tip: tap Share, then Add to Home Screen to keep it like an app.';
+  const escapeRe = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const LINK_RE = new RegExp(`(${SITE_PHRASES.map(escapeRe).join('|')}): (\\S+?)(?=[.,;:!?)]*(?:\\s|$))`, 'g');
+  const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const siteHref = (raw) => {
+    try {
+      const parsed = new URL(raw, window.location.href);
+      if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return '';
+      if (parsed.username || parsed.password || !/^\/shared\/[^/]+(?:\/|$)/.test(parsed.pathname)) return '';
+      return parsed.href;
+    } catch {
+      return '';
+    }
+  };
+  const isWelcome = (text) => OPENER_RE.test(String(text || ''));
+  const isIosSafari = (nav = window.navigator) => {
+    const ua = String(nav?.userAgent || '');
+    const ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && Number(nav?.maxTouchPoints || 0) > 1);
+    if (!ios || nav?.standalone === true) return false;
+    return /Safari\//.test(ua) && /Version\//.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|OPT\/|GSA\/|DuckDuckGo|YaBrowser|Brave/.test(ua);
+  };
+  const linkSitePhrase = (text, renderText) => {
+    const value = String(text || '');
+    let out = '';
+    let last = 0;
+    for (const m of value.matchAll(LINK_RE)) {
+      const href = siteHref(m[2]);
+      out += renderText(value.slice(last, m.index));
+      out += href ? `<a class="chat-link welcome-site-link" href="${escapeHtml(href)}" target="_blank" rel="noopener">${escapeHtml(m[1])}</a>` : escapeHtml(m[1]);
+      last = m.index + m[0].length;
+    }
+    return out + renderText(value.slice(last));
+  };
+  const tipHtml = () => `\n\n<span class="welcome-home-tip" data-home-screen-tip="1">${escapeHtml(HOME_SCREEN_TIP)}</span>`;
+  const turnHtml = (text, renderText, { ios = isIosSafari(), welcome = false } = {}) => {
+    if (!welcome && !isWelcome(text)) return renderText(text);
+    return linkSitePhrase(text, renderText) + (ios ? tipHtml() : '');
+  };
+  return { SITE_PHRASES, HOME_SCREEN_TIP, isWelcome, isIosSafari, linkSitePhrase, turnHtml };
+})();

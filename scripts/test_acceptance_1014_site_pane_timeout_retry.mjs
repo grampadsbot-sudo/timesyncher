@@ -141,6 +141,8 @@ const embedHtml = '<!doctype html><html><head><title>accept1014 embed</title></h
 
 const publicJs = [
   '/vacation-app-request.js',
+  '/chat-composer/chat-composer.js',
+  '/chat-composer/chat-composer.css',
   '/vacation-app-shell.css',
   '/brand/vk-book-logo.svg',
   '/ts-timeline-icon-patch.js',

@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import vm from 'node:vm';
 
 import { ensureOnboardingOpener } from '../routes/vacation-itinerary.mjs';
 import { onboardingWelcomeTranscriptCustomerId } from '../src/vacation/onboarding-welcome-turn.mjs';
@@ -11,6 +13,12 @@ const collabCustomerId = '5c930191-3c60-4bd1-bc00-eb4b401ea407';
 const ownerSessionId = 'bc4b3aa2-b427-47fd-94ef-83d262dd35cf';
 const collabSessionId = 'cd351b2f-1dff-4681-b25b-0d107c05e194';
 const tripId = '716d3a1f-60be-4bca-8993-dbe8bcb3196a';
+
+const chatSandbox = { window: { location: { href: 'https://vacation-staging.timesyncher.com/vacation-app.html' }, navigator: { userAgent: '' }, fetch: async () => ({}), addEventListener() {} }, document: {}, navigator: {}, console, URL };
+vm.runInNewContext(readFileSync(new URL('../public/vacation-app-request.js', import.meta.url), 'utf8'), chatSandbox);
+const chatWelcome = chatSandbox.window.tsVacationAppWelcome;
+const chatSafe = (value) => String(value || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const chatVisible = (html) => html.replace(/<[^>]+>/g, '').replace(/&#39;/g, "'").replace(/&amp;/g, '&');
 
 function sqlText(strings) {
   return strings.join(' ').replace(/\s+/g, ' ').trim();
@@ -117,6 +125,15 @@ async function runScenario({ label, session, tripArg, audience }) {
     ...(audience === 'owner_no_site' ? { firstName: 'Owner' } : {}),
   });
   assert.equal(welcomeTurns[0].payload.liveTranscript.text, expected, `${label} welcome body`);
+  const chatHtml = chatWelcome.turnHtml(welcomeTurns[0].payload.liveTranscript.text, chatSafe, { ios: false });
+  assert.ok(!chatVisible(chatHtml).includes('/shared/'), `${label} chat shows no raw /shared/ URL`);
+  const phrase = { owner: 'your vacation already has its own website', collaborator: "Here's the vacation website" }[audience];
+  if (phrase) {
+    const anchor = chatHtml.match(/<a class="chat-link welcome-site-link" href="([^"]+)"[^>]*>([^<]+)<\/a>/);
+    assert.ok(anchor, `${label} chat welcome links the website phrase`);
+    assert.equal(chatVisible(anchor[2]), phrase, `${label} phrase is the link text`);
+    assert.equal(anchor[1], trip.publicUrl, `${label} link goes to the vacation website`);
+  }
 }
 
 await runScenario({

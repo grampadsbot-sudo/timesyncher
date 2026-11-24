@@ -177,6 +177,8 @@ export async function startServer() {
     ['/vacation-app-shell.css', path.join(root, 'public/vacation-app-shell.css')],
     ['/brand/vk-wordmark.css', path.join(root, 'public/brand/vk-wordmark.css')],
     ['/vacation-app-request.js', path.join(root, 'public/vacation-app-request.js')],
+    ['/chat-composer/chat-composer.js', path.join(root, 'public/chat-composer/chat-composer.js')],
+    ['/chat-composer/chat-composer.css', path.join(root, 'public/chat-composer/chat-composer.css')],
     ['/ts-timeline-icon-patch.js', path.join(root, 'public/ts-timeline-icon-patch.js')],
     ['/ts-car-brand-filter.js', path.join(root, 'public/ts-car-brand-filter.js')],
     ['/ts-thing-media-overlay.js', path.join(root, 'public/ts-thing-media-overlay.js')],

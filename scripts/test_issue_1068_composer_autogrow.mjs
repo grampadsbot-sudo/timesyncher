@@ -37,7 +37,7 @@ function resolveChromeExecutable() {
 }
 
 async function runStaticAndUnitChecks() {
-  const html = await readFile(new URL('../vacation-app.html', import.meta.url), 'utf8');
+  const html = await readFile(new URL('../vacation-app.html', import.meta.url), 'utf8') + await readFile(new URL('../public/chat-composer/chat-composer.js', import.meta.url), 'utf8') + await readFile(new URL('../public/chat-composer/chat-composer.css', import.meta.url), 'utf8');
   assert.match(html, /bindComposerAutosize\s*\(\s*\)/);
   assert.match(html, /resizeComposer\s*\(\s*textarea\s*\)/);
   assert.match(html, /resize:\s*none/);
@@ -90,8 +90,9 @@ async function runStaticAndUnitChecks() {
   sandbox.globalThis = sandbox;
   vm.createContext(sandbox);
   vm.runInContext(source, sandbox);
+  vm.runInContext(await readFile(new URL('../public/chat-composer/chat-composer.js', import.meta.url), 'utf8'), sandbox);
 
-  sandbox.tsVacationAppChrome.bindComposerAutosize();
+  sandbox.tsChatComposer.bindComposerAutosize();
   assert.equal(textarea.style.height, '42px');
   assert.equal(textarea.style.overflowY, 'hidden');
 

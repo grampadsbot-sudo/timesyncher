@@ -1,0 +1,2 @@
+scripts/test_chat_composer_shared.mjs
+scripts/test_welcome_site_link_chat.mjs
