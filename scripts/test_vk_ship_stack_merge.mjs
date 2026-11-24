@@ -2,7 +2,8 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { exactHeadMergeReady } from './host/vk_ship_round_core.mjs';
-import { mergeOrder, mergePull, needsAsyncMerge, noteMergeFailure, stackBaseRef } from './host/vk_ship_merge.mjs';
+import { planCycle } from './host/vk_ship_round_core.mjs';
+import { mergeOrder, mergePull, needsAsyncMerge, noteMergeFailure, rebaseOntoVk, stackBaseRef } from './host/vk_ship_merge.mjs';
 
 function green(sha) {
   return {
@@ -118,5 +119,53 @@ await mergePull({ pr: 1122, sha: 'childhead' }, { merges: [] }, {
 assert.equal(retargetCalls.length, 1);
 assert.equal(retargetCalls[0].path.endsWith('/1122/merge'), true);
 assert.equal(retargetCalls[0].path.includes('merge-async'), false);
+
+const traced = { errors: [], skipped: [] };
+noteMergeFailure(traced, 'skip: #1122 retargeted onto vk\nError: stack', { type: 'merge' });
+noteMergeFailure(traced, 'The "path" argument must be of type string. Received undefined\nError: at runHarness', { type: 'dry-run-after-deploy' });
+assert.deepEqual(traced.skipped, ['skip: #1122 retargeted onto vk']);
+assert.match(traced.errors[0], /^dry-run-after-deploy: The "path" argument must be of type string\. Received undefined\nError: at runHarness/);
+
+const plannedDry = planCycle({
+  pulls: [{
+    number: 1122,
+    head: 'be253380',
+    headNow: 'be253380',
+    issue: 1041,
+    body: '```acceptance\n{"issue":1041,"assertions":[{"id":"a"}]}\n```\n',
+    prLabels: ['project:tsv', 'base:vk', 'craig-asked'],
+    issueLabels: ['project:tsv', 'base:vk', 'craig-asked'],
+    mergeableState: 'clean',
+    conflictFiles: [],
+    files: ['scripts/harness/http-live.mjs'],
+    baseRef: 'claude/vk-harness-100-r1',
+  }],
+  checksBySha: { be253380: green('be253380') },
+  acceptanceFiles: { 1041: true },
+  acceptanceSpecs: { 1041: { issue: 1041, assertions: [{ id: 'a' }] } },
+  tipLive: { tip: 'db943aef', live: 'db943aef', liveAccept: 'pass' },
+  state: {},
+  storyText: '{"destination":"Hilo"}',
+  databaseUrl: '',
+  runId: '2026-11-24T21:03:00Z',
+});
+const dryAction = plannedDry.actions.find((action) => action.type === 'dry-run-after-deploy');
+assert.equal(dryAction.runId, '2026-11-24T21:03:00Z');
+
+const rebasedCalls = [];
+await assert.rejects(() => mergePull({ pr: 1122, sha: 'childhead' }, { merges: [] }, {
+  repo: 'grampadsbot-sudo/timesyncher',
+  getPull: (number) => moved[number],
+  reportFor: () => green('childhead'),
+  retarget: () => moved[1122],
+  rebase: () => rebaseOntoVk(moved[1122], (args) => {
+    rebasedCalls.push(args.join(' '));
+    if (args[0] === 'rev-parse') return { status: 0, stdout: 'newhead\n' };
+    return { status: 0, stdout: '' };
+  }),
+  request() { throw new Error('merged after a moved head'); },
+}), /retargeted onto vk/);
+assert.match(rebasedCalls[1], /^rebase --onto origin\/vk origin\/claude\/vk-harness-100-r1 /);
+assert.equal(rebasedCalls.some((line) => line.startsWith('request')), false);
 
 console.log('test_vk_ship_stack_merge: ok');
