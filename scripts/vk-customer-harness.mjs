@@ -8,6 +8,7 @@ import { harnessTag } from './harness/protected.mjs';
 import { liveOptions } from './harness/runtime.mjs';
 import { loadStorySchema, validateStory, validateWave } from './harness/schema.mjs';
 import { runWave } from './harness/wave.mjs';
+import { isRosterMode, runRosterCli } from './harness/roster-cli.mjs';
 import { createHarnessSsrHook } from './customer_suite/ssr/hooks.mjs';
 
 function value(flag) {
@@ -34,6 +35,26 @@ if (has('--cleanup-only')) {
 if (!runId) {
   process.stderr.write('refused: --run-id is required\n');
   process.exit(2);
+}
+
+if (isRosterMode(process.argv)) {
+  const dry = has('--dry');
+  if (!dry && !hostEnvReady()) {
+    process.stderr.write('SKIP harness: host env absent (DATABASE_URL and HARNESS_LIVE=1). Live run was not executed.\n');
+    process.exit(1);
+  }
+  const sha = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' });
+  try {
+    const result = await runRosterCli(process.argv, {
+      outRoot: value('--out-root') || defaultRunRoot(),
+      liveOptions: dry ? null : liveOptions(process.env),
+      buildSha: String(sha.stdout || '').trim(),
+    });
+    process.exit(result.stopped_at == null ? 0 : 1);
+  } catch (error) {
+    process.stderr.write(`${String(error?.message || error)}\n`);
+    process.exit(2);
+  }
 }
 
 const schema = loadStorySchema();

@@ -54,6 +54,34 @@
         "then": { "type": "object", "required": ["voice_fixture"] }
       }
     },
+    "coupon": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code"],
+      "properties": {
+        "code": { "type": "string", "pattern": "^VK-TEST-(0\\d{2}|100)$" },
+        "misuse": { "type": "boolean" },
+        "misuse_kind": { "enum": ["", "reuse", "stack", "expired-promo"] }
+      }
+    },
+    "roster": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "party_type", "source"],
+      "properties": {
+        "id": { "type": "number" },
+        "label": { "type": "string" },
+        "party_type": { "type": "string", "minLength": 1 },
+        "length_days": { "type": "number" },
+        "budget": { "type": "string" },
+        "tech_comfort": { "type": "string" },
+        "planner": { "type": "string" },
+        "edge_case": { "enum": ["", "confused", "impatient", "changes mind", "coupon misuse", "quits partway"] },
+        "edge_case_note": { "type": "string" },
+        "source": { "enum": ["templated", "stories-dir"] }
+      }
+    },
+    "media_plan": { "enum": ["11-18-spec"] },
     "steps": { "type": "array", "items": { "type": "string", "minLength": 1 } },
     "media": {
       "type": "array",

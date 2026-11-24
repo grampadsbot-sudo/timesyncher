@@ -8,6 +8,8 @@ import { captureOnboardingPdf, rebuildCustomerPdf } from './onboarding-capture.m
 import { shortHash } from './redact.mjs';
 import { transcriptForScorecard, writeRedactedLiveTranscript } from './redacted-transcript.mjs';
 import { deleteTaggedRows } from './cleanup.mjs';
+import { createCouponLedger, redeemRosterCoupon } from './coupon.mjs';
+import { couponPaymentSteps } from './onboarding-capture.mjs';
 
 function appEndpoint(origin, token, tripId) {
   const url = new URL('/api/vacation-itinerary', origin);
@@ -47,6 +49,15 @@ export function liveOptions(env = process.env) {
       const db = sql(ready);
       const created = await provisionThrowaway(db, story, { tag: options.tag, runId: options.runId, env: ready });
       const secrets = secretValues(ready, [created.token]);
+      let couponRedemption = null;
+      if (story.coupon) {
+        try {
+          couponRedemption = await redeemRosterCoupon({ story, runId: options.runId, origin, fetchImpl, ledger: options.ledger || createCouponLedger() });
+          if (couponRedemption.session_token) secrets.push(couponRedemption.session_token);
+        } catch (error) {
+          couponRedemption = { status: 'error', pass: false, detail: String(error?.message || error).replace(/session=[^&\s]+/gi, 'session=[redacted]').slice(0, 200) };
+        }
+      }
       let onboard = { ok: false, detail: 'missing' };
       try {
         onboard = await captureOnboardingPdf({
@@ -57,6 +68,7 @@ export function liveOptions(env = process.env) {
             name: story.customer.name,
             email: `harness+${options.runId}+${story.customer.email_alias}@harness.invalid`,
           },
+          ...(story.coupon ? { payment: couponPaymentSteps({ code: story.coupon.code, sessionToken: couponRedemption?.session_token || '', origin }) } : {}),
         });
       } catch (error) {
         onboard = { ok: false, detail: String(error?.message || error).replace(/session=[^&\s]+/gi, 'session=[redacted]').slice(0, 240) };
@@ -64,6 +76,7 @@ export function liveOptions(env = process.env) {
       const onboardingFields = () => ({
         onboardingPdfOk: onboard.ok === true,
         onboardingPdfDetail: onboard.detail || 'missing',
+        couponRedemption,
       });
       try {
         await acceptAndConfirmEula({
