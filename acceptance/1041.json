@@ -59,6 +59,13 @@
       "script": "scripts/test_checkout_stripe_mode.mjs",
       "timeout_ms": 60000,
       "note": "Staging checkout with a test publishable key returns test mode and the same price. A live key is refused and is not returned. The harness accepts checkout only when the key is pk_test_ and the payment intent livemode is false."
+    },
+    {
+      "id": "vk-mcp-staging-only",
+      "type": "unit_script",
+      "script": "scripts/test_vk_harness_mcp_staging.mjs",
+      "timeout_ms": 60000,
+      "note": "An unverified vk_bot_mcp story does not play. A fail-closed staging route may play and still cannot call OpenRouter. A production project or origin is refused before any database value is read."
     }
   ]
 }

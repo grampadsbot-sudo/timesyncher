@@ -2,6 +2,7 @@ import { preflightHarnessEnv, secretValues, stagingOrigin } from './env.mjs';
 import { loadBannedHosts, guardedFetch } from './fetch-guard.mjs';
 import { acceptAndConfirmEula } from './eula-accept.mjs';
 import { provisionThrowaway } from './live-provision.mjs';
+import { customerAskFromEnv } from './customer-live.mjs';
 import { playCustomerTurns } from './live-play.mjs';
 import { attachMedia, captureScreens, fetchKeepsake, renderDialog, runSteps, writeVideoCheck } from './live-outputs.mjs';
 import { captureOnboardingPdf, rebuildCustomerPdf } from './onboarding-capture.mjs';
@@ -10,6 +11,19 @@ import { transcriptForScorecard, writeRedactedLiveTranscript } from './redacted-
 import { deleteTaggedRows } from './cleanup.mjs';
 import { createCouponLedger, redeemRosterCoupon } from './coupon.mjs';
 import { couponPaymentSteps } from './onboarding-capture.mjs';
+
+function stampLivePdf(doc, played) {
+  if (!doc || !Array.isArray(doc.turns)) return doc;
+  const last = [...doc.turns].reverse().find((turn) => turn.role === 'app');
+  if (!last) return doc;
+  last.qaRating = played?.qaRating || 'slot';
+  last.survey = played?.survey || null;
+  const appCosts = (played?.customerTurns || []).filter((turn) => turn.role === 'app').map((turn) => turn.cost).filter(Boolean);
+  const customerCosts = (played?.customerTurns || []).filter((turn) => turn.role === 'customer').map((turn) => turn.cost).filter(Boolean);
+  last.appCost = appCosts.length ? appCosts : 'none';
+  last.customerCost = customerCosts.length ? customerCosts : 'none';
+  return doc;
+}
 
 function appEndpoint(origin, token, tripId) {
   const url = new URL('/api/vacation-itinerary', origin);
@@ -38,13 +52,7 @@ export function liveOptions(env = process.env) {
   const bannedHosts = loadBannedHosts();
   const fetchImpl = guardedFetch(globalThis.fetch.bind(globalThis), bannedHosts);
   const origin = stagingOrigin(ready);
-  return {
-    env: ready,
-    origin,
-    bannedHosts,
-    fetchImpl,
-    secrets: secretValues(env),
-    async play(story, options) {
+  const play = async (story, options) => {
       const { sql } = await import('../../src/vacation/db.mjs');
       const db = sql(ready);
       const created = await provisionThrowaway(db, story, { tag: options.tag, runId: options.runId, env: ready });
@@ -126,6 +134,9 @@ export function liveOptions(env = process.env) {
         hosts: bannedHosts,
         waitMs: 20000,
         secrets,
+        liveCustomer: story.reply_backend === 'vk_bot_mcp',
+        customerAsk: customerAskFromEnv(ready, bannedHosts),
+        maxTurns: 4,
       });
       const base = {
         ...played,
@@ -176,7 +187,16 @@ export function liveOptions(env = process.env) {
         });
         if (response.status >= 400) throw new Error('collaborator step failed');
       });
-      const dialog = await renderDialog({ token: created.token, outDir: options.outDir, secrets, buildSha: played.liveShaStart, origin, fetchImpl, replyBackend: story.reply_backend });
+      const dialog = await renderDialog({
+        token: created.token,
+        outDir: options.outDir,
+        secrets,
+        buildSha: played.liveShaStart,
+        origin,
+        fetchImpl,
+        replyBackend: story.reply_backend,
+        loadTranscript: async () => stampLivePdf(await storedLiveTranscript(db, created.token), played),
+      });
       const transcript = transcriptForScorecard(dialog.transcript, storedTranscript);
       if (chatLeftNoThing(played)) {
         const video = await writeVideoCheck({ origin, attachment: { ok: false, detail: 'no-thing-after-chat', bindings: [] }, fetchImpl, outDir: options.outDir });
@@ -224,6 +244,20 @@ export function liveOptions(env = process.env) {
         chromeDetail: (screens.hits || []).join(','),
         ...onboardingFields(),
       };
+  };
+  return {
+    env: ready,
+    origin,
+    bannedHosts,
+    fetchImpl,
+    secrets: secretValues(env),
+    play,
+    mcpRoute: {
+      backend: 'vk_bot_mcp',
+      openRouter: false,
+      guard: 'staging-fetch',
+      origin,
+      play,
     },
     async cleanup(tag) {
       const { sql } = await import('../../src/vacation/db.mjs');

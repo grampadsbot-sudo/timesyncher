@@ -8,10 +8,14 @@ const PAYMENT_BODY_KEYS = ['paymentMethod', 'payment_method', 'paymentIntent', '
 const NON_COUPON_PAYMENT = [/\/api\/create-payment-intent/i, /\/api\/checkout-session/i, /(^|\.)stripe\.com$/i, /\/v1\/payment_intents/i, /\/v1\/charges/i];
 const EXPIRED_PROMO_PATTERN = /^VK-EXPIRED-(0\d{2}|100)$/;
 
-export function assertCouponCode(code) {
+const MINTED_COUPON = /^TS-[A-Z0-9_-]{8,}$/;
+
+export function assertCouponCode(code, minted = '') {
   const value = String(code || '').trim().toUpperCase();
-  if (!COUPON_PATTERN.test(value)) throw new Error('refused: coupon is not a VK-TEST roster coupon');
-  return value;
+  const fresh = String(minted || '').trim().toUpperCase();
+  if (COUPON_PATTERN.test(value)) return value;
+  if (fresh && value === fresh && MINTED_COUPON.test(fresh)) return value;
+  throw new Error('refused: coupon is not a VK-TEST roster coupon');
 }
 
 export function isNonCouponPayment(url) {
@@ -24,7 +28,7 @@ export function isNonCouponPayment(url) {
   return NON_COUPON_PAYMENT.some((rule) => rule.test(parsed.pathname) || rule.test(parsed.hostname));
 }
 
-export function assertCouponOnlyRequest(url, body = {}) {
+export function assertCouponOnlyRequest(url, body = {}, minted = '') {
   const parsed = new URL(String(url));
   if (parsed.pathname !== COUPON_ROUTE) throw new Error('refused: non-coupon payment path');
   if (isNonCouponPayment(parsed.href)) throw new Error('refused: non-coupon payment path');
@@ -32,7 +36,7 @@ export function assertCouponOnlyRequest(url, body = {}) {
     if (Object.hasOwn(body, key)) throw new Error(`refused: payment field ${key} on a coupon request`);
   }
   const probe = body.action === 'validate_coupon' && EXPIRED_PROMO_PATTERN.test(String(body.couponCode || ''));
-  if (!probe) assertCouponCode(body.couponCode);
+  if (!probe) assertCouponCode(body.couponCode, minted);
   return parsed;
 }
 
@@ -79,12 +83,15 @@ function contactFor(story, runId) {
 }
 
 export function couponRequestBody(story, runId, extra = {}) {
-  return { ...contactFor(story, runId), couponCode: assertCouponCode(story.coupon?.code), orderBump: false, photoMemories: false, ...extra };
+  const minted = extra.mintedCode || story?.coupon?.mintedCode || '';
+  const fields = { ...extra };
+  delete fields.mintedCode;
+  return { ...contactFor(story, runId), couponCode: assertCouponCode(story.coupon?.code, minted), orderBump: false, photoMemories: false, ...fields };
 }
 
-async function post(fetchImpl, origin, body) {
+async function post(fetchImpl, origin, body, minted = '') {
   const url = new URL(COUPON_ROUTE, origin);
-  assertCouponOnlyRequest(url, body);
+  assertCouponOnlyRequest(url, body, minted);
   const response = await fetchImpl(url, {
     method: 'POST',
     headers: { accept: 'application/json', 'content-type': 'application/json' },
@@ -105,7 +112,8 @@ function publicError(data) {
 }
 
 export async function redeemRosterCoupon({ story, runId, origin, fetchImpl, ledger }) {
-  const code = assertCouponCode(story.coupon?.code);
+  const minted = story.coupon?.mintedCode || '';
+  const code = assertCouponCode(story.coupon?.code, minted);
   const result = {
     code_hint: `${code.slice(0, 3)}...${code.slice(-3)}`,
     route: COUPON_ROUTE,
@@ -136,7 +144,7 @@ export async function redeemRosterCoupon({ story, runId, origin, fetchImpl, ledg
     ledger.record(code, { story_id: story.story_id, redeemed: false, status: result.status, at: new Date().toISOString() });
     return result;
   }
-  const first = await post(fetchImpl, origin, couponRequestBody(story, runId));
+  const first = await post(fetchImpl, origin, couponRequestBody(story, runId), minted);
   result.http_status = first.status;
   result.amount_cents = first.data?.order?.amountCents ?? null;
   if (first.status >= 200 && first.status < 300 && first.data?.ok === true && first.data?.status === 'coupon_redeemed') {
@@ -157,7 +165,7 @@ export async function redeemRosterCoupon({ story, runId, origin, fetchImpl, ledg
   ledger.record(code, { story_id: story.story_id, redeemed: result.status === 'redeemed', status: result.status, at: new Date().toISOString() });
   if (result.status === 'redeemed' && result.misuse) {
     if (!ledger.allowReuse(story)) throw new Error('refused: coupon reuse without the coupon-misuse flag');
-    const again = await post(fetchImpl, origin, couponRequestBody(story, runId));
+    const again = await post(fetchImpl, origin, couponRequestBody(story, runId), minted);
     const accepted = again.status < 400 && again.data?.ok === true;
     result.reuse = { kind: result.misuse_kind === 'stack' ? 'stack-second-coupon' : 'reuse-same-coupon', http_status: again.status, rejected: !accepted, detail: publicError(again.data) };
     result.status = accepted ? 'reuse_accepted' : 'reuse_rejected';
