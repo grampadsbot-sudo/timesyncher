@@ -102,6 +102,7 @@ async function boot() {
   const source = await readFile(new URL('../public/vacation-app-request.js', import.meta.url), 'utf8');
   vm.createContext(h.sandbox);
   vm.runInContext(source, h.sandbox);
+  vm.runInContext(await readFile(new URL('../public/chat-composer/chat-composer.js', import.meta.url), 'utf8'), h.sandbox);
   const state = { voiceMode: false, voiceArmed: false };
   h.sandbox.tsVacationAppChrome.bindVoice(() => state);
   return { ...h, state };
