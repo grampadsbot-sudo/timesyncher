@@ -61,6 +61,7 @@ if (rosterMode) {
       liveOptions: dry ? null : await liveHarnessOptions(),
       buildSha: String(sha.stdout || '').trim(),
     });
+    if (String(result.reason || '').includes('coupon-not-minted')) process.stderr.write('TIMESYNCHER_ADMIN_TOKEN is not set. Fresh coupon was not minted.\n');
     if (String(result.reason || '').includes('host-only-database')) process.stderr.write('HOST ONLY: DATABASE_URL\n');
     process.exit(result.stopped_at == null ? 0 : 1);
   } catch (error) {

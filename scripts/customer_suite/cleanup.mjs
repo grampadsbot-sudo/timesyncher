@@ -43,10 +43,10 @@ export function assertThrowawayEmail(email) {
   return clean;
 }
 
-export async function createThrowawayCoupon(origin, adminToken, { tag, plan = 'unlimited', label = 'VK customer suite throwaway' }) {
+export async function createThrowawayCoupon(origin, adminToken, { tag, plan = 'unlimited', label = 'VK customer suite throwaway', fetchImpl = fetch }) {
   if (!adminToken) throw new Error('TIMESYNCHER_ADMIN_TOKEN is required to mint a throwaway checkout coupon');
   if (!isHarnessTag(tag)) throw new Error('refused: invalid harness tag for coupon');
-  const res = await fetch(`${origin}/api/admin-onboardings?action=create-coupon`, {
+  const res = await fetchImpl(`${origin}/api/admin-onboardings?action=create-coupon`, {
     method: 'POST',
     headers: {
       authorization: `Bearer ${adminToken}`,
