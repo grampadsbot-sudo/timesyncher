@@ -14,13 +14,13 @@ export const MANIFEST = 'public/chat-composer/SHA256SUMS';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const defaultRoot = path.dirname(here);
 
-export const sha256 = (buf) => createHash('sha256').update(buf).digest('hex');
+const sha256 = (buf) => createHash('sha256').update(buf).digest('hex');
 
 export function manifestText(root = defaultRoot) {
   return SHARED_FILES.map((rel) => `${sha256(fs.readFileSync(path.join(root, rel)))}  ${rel}\n`).join('');
 }
 
-export function parseManifest(text) {
+function parseManifest(text) {
   const rows = new Map();
   for (const line of String(text || '').split('\n')) {
     const m = line.match(/^([0-9a-f]{64}) {2}(\S+)$/);
