@@ -211,7 +211,7 @@ function runPy(file, args) {
   const result = spawnSync('python3', [bin, ...args], { encoding: 'utf8', env: process.env });
   if (result.status !== 0) throw new Error(scrub(runPyFailure(file, result.status, result.stderr), secrets).slice(0, 240));
 }
-async function runHarness(round, runId, sha) {
+async function runHarness(round, runId, sha) { if (typeof runId !== 'string' || !runId) throw new Error('dry-run missing runId');
   const block = ensureShipRepoDeps({ repo: repoDir(), stateDir: path.join(root, 'state'), spawn: (cmd, args, opts) => spawnSync(cmd, args, { ...opts, encoding: 'utf8' }) });
   if (block) { round.errors.push(block); round.dryRun = markEnvBlocked(round.dryRun, sha, runId, block); return; }
   const roots = [root, process.env.TSV_REPO || '', repoDir(), path.join(root, 'ship-repo')];
