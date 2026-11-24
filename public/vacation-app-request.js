@@ -730,7 +730,7 @@ window.tsVacationAppWelcome = (() => {
     const ua = String(nav?.userAgent || '');
     const ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && Number(nav?.maxTouchPoints || 0) > 1);
     if (!ios || nav?.standalone === true) return false;
-    return /Safari\//.test(ua) && /Version\//.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|OPT\/|GSA\/|DuckDuckGo|YaBrowser|Brave/.test(ua);
+    return /\(KHTML, like Gecko\) Version\/[\d.]+ (?:Mobile\/\S+ )?Safari\/[\d.]+$/.test(ua);
   };
   const linkSitePhrase = (text, renderText) => {
     const value = String(text || '');
