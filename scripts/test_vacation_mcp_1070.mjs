@@ -91,6 +91,8 @@ async function test_C1_intent_recognition() {
     'Invite sam@example.test to collaborate',
     'Move our kayak tour to Sunday morning',
     'Please revoke AI access for this vacation',
+    "we're not ready to connect an AI for bookings — keep building the itinerary",
+    'set up my AI for reservations',
   ];
   for (const phrase of negatives) {
     assert.equal(isAiImportChatRequest(phrase), false, `should not match: ${phrase}`);

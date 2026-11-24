@@ -156,12 +156,36 @@ export function vkBotUsageCost(payload, wallMs) {
   return unmeasuredTurnCost(tokens, extra);
 }
 
+function visibleVkBotCost(record, cost) {
+  if (!cost || typeof cost !== 'object') return cost;
+  const hasTokens = cost.totalTokens != null || cost.promptTokens != null || cost.completionTokens != null;
+  const hasPercent = cost.usagePercentDelta != null;
+  let next = cost;
+  if (next.status === 'measured' && next.dollars == null && !hasTokens && !hasPercent) {
+    next = { ...next, status: 'unmeasured', dollars: null, currency: null, source: 'unmeasured' };
+  }
+  if (record?.model && typeof record.model === 'object') {
+    if (hasTokens) {
+      record.model.usage = {
+        total_tokens: next.totalTokens ?? null,
+        prompt_tokens: next.promptTokens ?? null,
+        completion_tokens: next.completionTokens ?? null,
+      };
+    } else if (hasPercent) {
+      record.model.usagePercentDelta = next.usagePercentDelta;
+    }
+  }
+  return next;
+}
+
 export function applyStoredTurnRoute(record, model) {
   if (!record || record.role !== 'app' || record.fixedOpener) return record;
   const backend = model?.backend
     || (model?.via === 'vk_bot_mcp' ? 'vk_bot_mcp' : (model?.via === 'openrouter-chat' ? 'openrouter' : null));
-  const cost = model?.cost || model?.log?.cost || null;
+  let cost = model?.cost || model?.log?.cost || null;
+  if (!cost && backend === 'vk_bot_mcp') cost = vkBotUsageCost(model || {});
   if (!backend && !cost) return record;
+  if (backend === 'vk_bot_mcp') cost = visibleVkBotCost(record, cost);
   record.backend = backend;
   record.cost = cost;
   if (record.model && typeof record.model === 'object') {

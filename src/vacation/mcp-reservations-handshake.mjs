@@ -4,6 +4,9 @@ import { validateWebhookUrl } from './mcp-reservations-store.mjs';
 import { RESERVATION_HOW_TO_URI } from './mcp-reservations-tools.mjs';
 
 const RESERVATION_ASK_RE = /\b(book|reserve|make\s+(?:a|me\s+a|us\s+a)?\s*reservation|need\s+a\s+reservation|get\s+(?:a|me\s+a|us\s+a)\s+(?:table|reservation)|book\s+(?:a\s+table|us|me))\b/i;
+const DEDICATED_RESERVATION_RE = /\b(?:set\s*up(?:\s+(?:my|your|an)\s+ai(?:\s+for)?)?\s+reservations?|make\s+(?:a\s+|me\s+a\s+|us\s+a\s+)?reservations?|need\s+a\s+reservation|get\s+(?:a\s+|me\s+a\s+|us\s+a\s+)?(?:table|reservation)|book\s+(?:a\s+table|us|me)|reserve\s+(?:a\s+)?(?:table|reservation))\b/i;
+const PLANNING_BOOK_ASIDE_RE = /\b(?:flag|note|mention|list|suggest)\b[\s\S]{0,80}\bbook\b|\b(?:want|wanted|like|need|would|we'?d)\s+to\s+book\b|\bbook\s+(?:early|later|ahead|in advance|soon)\b|\bkeep building\b|\bday-by-day\b|\bday by day\b|\bitinerary\b/i;
+const BOOKED_PLACE_RE = /\bbook\s+[A-Z][A-Za-z'’.-]*/;
 export const YES_REPLY_RE = /^(?:yes|yeah|yep|yup|sure|ok|okay|please|go\s+ahead|do\s+it|sounds\s+good|set\s+(?:it|that)\s+up|yes[\s,!.-]+(?:please|set|let'?s|connect|go).*|let'?s\s+(?:set|do|connect).*|connect\s+my\s+ai.*)$/i;
 const HANDSHAKE_HINT_RE = /\b(handshake|vk_reservations_handshake|poll_interval_minutes|webhook_url|option\s*\(?[a-d]\)?|mode\s*[:=]\s*["']?(?:webhook|polling|manual|a|b|c))\b/i;
 const PENDING_HANDSHAKE_WORD_RE = /\b(option|mode|webhook|poll|manual|handshake|https?:\/\/|minutes?)\b/i;
@@ -13,6 +16,8 @@ export function isReservationAsk(rawText = '') {
   if (!text) return false;
   if (isAiImportChatRequest(text)) return false;
   if (/\b(cancel|revoke|remove|delete)\b/i.test(text) && !/\b(book|reserve)\b/i.test(text)) return false;
+  if (DEDICATED_RESERVATION_RE.test(text)) return true;
+  if (PLANNING_BOOK_ASIDE_RE.test(text)) return BOOKED_PLACE_RE.test(text);
   return RESERVATION_ASK_RE.test(text);
 }
 
