@@ -23,7 +23,7 @@ function pause(ms) {
 
 function assertReady(io, number, sha) {
   if (!exactHeadMergeReady(io.reportFor(sha), sha)) {
-    throw new Error(`refused: #${number} is not accept=success and CI green on ${sha}`);
+    throw new Error(`skip: #${number} is not accept=success and CI green on ${sha}`);
   }
 }
 
@@ -57,7 +57,7 @@ async function mergeOne(io, number, sha) {
   const head = pullHeadSha(fresh);
   const state = String(fresh.state || '').toUpperCase();
   if (fresh.merged === true || state === 'MERGED') return confirmMerged(io, number);
-  if (head !== sha || state !== 'OPEN') throw new Error(`refused: #${number} head moved`);
+  if (head !== sha || state !== 'OPEN') throw new Error(`skip: #${number} head moved`);
   assertReady(io, number, head);
   if (!needsAsyncMerge(fresh)) {
     const done = io.request('PUT', `/repos/${io.repo}/pulls/${number}/merge`, { merge_method: 'merge', sha: head });
@@ -83,13 +83,65 @@ function parentsOf(pull, io) {
   return chain;
 }
 
+async function retargetOntoVk(io, pull) {
+  if (!io.retarget) return pull;
+  try {
+    const next = await io.retarget(pull.number, 'vk');
+    if (next && pullHeadSha(next)) return next;
+  } catch { return pull; }
+  return pull;
+}
+
+export function noteMergeFailure(round, message) {
+  const text = String(message || '');
+  if (text.startsWith('skip:')) {
+    round.skipped = [...(round.skipped || []), text];
+    console.log(text);
+    return;
+  }
+  round.errors.push(text);
+}
+
+function mergeRank(action) {
+  if (action.shipFix) return 0;
+  return String(action.baseRef || 'vk') === 'vk' ? 1 : 2;
+}
+
+export function mergeOrder(actions) {
+  const early = [];
+  const merges = [];
+  for (const action of actions || []) {
+    if (action.type === 'batch-deploy' || action.type === 'live-accept' || action.type === 'dry-run-after-deploy') continue;
+    if (action.type === 'merge') merges.push(action);
+    else early.push(action);
+  }
+  merges.sort((left, right) => mergeRank(left) - mergeRank(right));
+  return early.concat(merges);
+}
+
 export async function mergePull(action, round, io) {
   const fresh = io.getPull(action.pr);
   const head = pullHeadSha(fresh);
   const state = String(fresh.state || '').toUpperCase();
   if (fresh.merged === true || state === 'MERGED') return confirmMerged(io, action.pr).then(() => true);
-  if (head !== action.sha || state !== 'OPEN') throw new Error(`refused: #${action.pr} head moved`);
-  const below = parentsOf(fresh, io);
+  if (head !== action.sha || state !== 'OPEN') throw new Error(`skip: #${action.pr} head moved`);
+  const current = stackBaseRef(fresh) ? await retargetOntoVk(io, fresh) : fresh;
+  const now = pullHeadSha(current);
+  if (now !== action.sha) throw new Error(`skip: #${action.pr} retargeted onto vk`);
+  if (!stackBaseRef(current)) {
+    assertReady(io, action.pr, now);
+    try {
+      const done = io.request('PUT', `/repos/${io.repo}/pulls/${action.pr}/merge`, { merge_method: 'merge', sha: now });
+      if (done?.merged !== true || !done?.sha) throw new Error(`merge not completed: ${action.pr}`);
+      await confirmMerged(io, action.pr);
+      return true;
+    } catch (error) {
+      if (!needsAsyncMerge(current)) throw error;
+    }
+    await mergeAsync(io, action.pr, now);
+    return true;
+  }
+  const below = parentsOf(current, io);
   for (const parent of below) {
     if (parent.merged === true || String(parent.state || '').toUpperCase() === 'MERGED') continue;
     const parentHead = pullHeadSha(parent);
@@ -104,7 +156,7 @@ export async function mergePull(action, round, io) {
   const again = io.getPull(action.pr);
   const againHead = pullHeadSha(again);
   if (again.merged === true) return confirmMerged(io, action.pr).then(() => true);
-  if (againHead !== action.sha) throw new Error(`refused: #${action.pr} head moved`);
+  if (againHead !== action.sha) throw new Error(`skip: #${action.pr} head moved`);
   await mergeOne(io, action.pr, againHead);
   return true;
 }

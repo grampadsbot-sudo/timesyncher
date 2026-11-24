@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { exactHeadMergeReady } from './host/vk_ship_round_core.mjs';
-import { mergePull, needsAsyncMerge, stackBaseRef } from './host/vk_ship_merge.mjs';
+import { mergeOrder, mergePull, needsAsyncMerge, noteMergeFailure, stackBaseRef } from './host/vk_ship_merge.mjs';
 
 function green(sha) {
   return {
@@ -66,5 +66,57 @@ assert.deepEqual(round.merges, [1121]);
 assert.equal(pulls[1122].merged, true);
 assert.equal(calls[0].path.endsWith('/1121/merge'), true);
 assert.equal(calls.some((call) => call.path.endsWith('/1122/merge-async')), true);
+
+const ordered = mergeOrder([
+  { type: 'accept', pr: 1122 },
+  { type: 'merge', pr: 1122, baseRef: 'claude/vk-harness-100-r1' },
+  { type: 'merge', pr: 1124, baseRef: 'vk', shipFix: true },
+  { type: 'batch-deploy' },
+]);
+assert.deepEqual(ordered.map((action) => action.pr), [1122, 1124, 1122]);
+assert.equal(ordered[0].type, 'accept');
+assert.equal(ordered[1].pr, 1124);
+
+const skipped = { errors: [], skipped: [] };
+noteMergeFailure(skipped, 'skip: #1122 retargeted onto vk');
+noteMergeFailure(skipped, 'merge not completed: 1122');
+assert.deepEqual(skipped.skipped, ['skip: #1122 retargeted onto vk']);
+assert.deepEqual(skipped.errors, ['merge not completed: 1122']);
+
+const moved = {
+  1122: { number: 1122, state: 'open', merged: false, head: { sha: 'childhead', ref: 'cursor/vk-mcp-lopez-a5f5' }, base: { ref: 'claude/vk-harness-100-r1' }, stack: { position: 2 } },
+};
+const movedCalls = [];
+await assert.rejects(() => mergePull({ pr: 1122, sha: 'childhead' }, { merges: [] }, {
+  repo: 'grampadsbot-sudo/timesyncher',
+  getPull: (number) => moved[number],
+  reportFor: () => green('childhead'),
+  retarget: () => ({ number: 1122, state: 'open', merged: false, head: { sha: 'newhead' }, base: { ref: 'vk' } }),
+  request(method, apiPath) { movedCalls.push(`${method} ${apiPath}`); },
+}), /retargeted onto vk/);
+assert.equal(movedCalls.length, 0);
+
+const retargeted = {
+  1122: { number: 1122, state: 'open', merged: false, head: { sha: 'childhead', ref: 'cursor/vk-mcp-lopez-a5f5' }, base: { ref: 'claude/vk-harness-100-r1' }, stack: { position: 2 }, merge_commit_sha: '' },
+};
+const retargetCalls = [];
+await mergePull({ pr: 1122, sha: 'childhead' }, { merges: [] }, {
+  repo: 'grampadsbot-sudo/timesyncher',
+  getPull: (number) => retargeted[number],
+  reportFor: () => green('childhead'),
+  retarget: () => {
+    retargeted[1122] = { ...retargeted[1122], base: { ref: 'vk' }, stack: null };
+    return retargeted[1122];
+  },
+  request(method, apiPath, data) {
+    retargetCalls.push({ method, path: apiPath, sha: data?.sha || '' });
+    retargeted[1122].merged = true;
+    retargeted[1122].merge_commit_sha = 'merge1122';
+    return { merged: true, sha: 'merge1122' };
+  },
+});
+assert.equal(retargetCalls.length, 1);
+assert.equal(retargetCalls[0].path.endsWith('/1122/merge'), true);
+assert.equal(retargetCalls[0].path.includes('merge-async'), false);
 
 console.log('test_vk_ship_stack_merge: ok');

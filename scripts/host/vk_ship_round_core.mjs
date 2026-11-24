@@ -306,7 +306,17 @@ export function planPull(pull, world, pinSha = '') {
       description: `#${issue}: ${count}/${count} PASS`,
     });
   }
-  if (canMerge(pull)) actions.push({ type: 'merge', pr: pull.number, issue, sha: pull.head });
+  if (canMerge(pull)) {
+    const files = pull.files || [];
+    actions.push({
+      type: 'merge',
+      pr: pull.number,
+      issue,
+      sha: pull.head,
+      baseRef: pull.baseRef || 'vk',
+      shipFix: files.some((file) => /vk_ship_(round|merge)/.test(String(file))),
+    });
+  }
   return { actions, errors, needsRebase };
 }
 

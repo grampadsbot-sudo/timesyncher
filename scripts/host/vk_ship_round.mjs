@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { applyMissingScorecard, dryRunId, ensureMediaBindDeployed, ensureShipRepoDeps, harnessEnvSkipped, loadStagingDatabaseUrl, markEnvBlocked } from './vk_ship_dry_env.mjs';
-import { mergePull } from './vk_ship_merge.mjs';
+import { mergeOrder, mergePull, noteMergeFailure } from './vk_ship_merge.mjs';
 import {
   BOOTSTRAP_PULLS,
   applyDryRunCard,
@@ -92,6 +92,7 @@ function shapePull(full) {
     issueLabels,
     state,
     merged: full.merged === true || state === 'MERGED',
+    baseRef: String(full.base?.ref || 'vk'),
     mergeableState: dirty || conflict.files.length ? 'dirty' : 'clean',
     conflictFiles: conflict.files,
     conflictDeletions: conflict.deletions,
@@ -266,6 +267,7 @@ async function perform(action, round) {
       getPull: (number) => api('GET', `/repos/${REPO}/pulls/${number}`),
       reportFor: (sha) => checksFor(sha),
       request: (method, apiPath, data, version) => api(method, apiPath, data, version),
+      retarget: (number, base) => api('PATCH', `/repos/${REPO}/pulls/${number}`, { base }),
       listByHead: (ref) => api('GET', `/repos/${REPO}/pulls?state=open&per_page=50&head=${encodeURIComponent(`grampadsbot-sudo:${ref}`)}`),
     });
   }
@@ -324,7 +326,7 @@ async function runBootstrap(stamp) {
         }
       }
     } catch (error) {
-      round.errors.push(scrub(error.message, secrets));
+      noteMergeFailure(round, scrub(error.message, secrets));
     }
   }
   const live = tipLive();
@@ -470,16 +472,15 @@ async function runGeneral(pulls, stamp) {
     if (row.error) round.errors.push(row.error);
   }
   let merged = 0;
-  for (const action of planned.actions) {
-    if (action.type === 'batch-deploy' || action.type === 'live-accept' || action.type === 'dry-run-after-deploy') continue;
+  for (const action of mergeOrder(planned.actions)) {
     try {
       const ok = await perform(action, round);
       if (action.type === 'merge' && ok) {
         merged += 1;
-        round.merges.push(action.pr);
+        if (!round.merges.includes(action.pr)) round.merges.push(action.pr);
       }
     } catch (error) {
-      round.errors.push(scrub(error.message, secrets));
+      noteMergeFailure(round, scrub(error.message, secrets));
     }
   }
   const tail = merged
