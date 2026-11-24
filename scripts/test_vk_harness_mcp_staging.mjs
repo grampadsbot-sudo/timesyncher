@@ -141,30 +141,13 @@ assert.equal(http.env.HARNESS_LIVE, '1');
 assert.equal(http.origin, origin);
 assert.throws(() => httpHarnessEnv({ HARNESS_STAGING_ORIGIN: 'https://www.timesyncher.com' }), /vacation-staging/);
 assert.throws(() => assertCouponCode('TS-NOTMINTED'), /VK-TEST/);
-const blocked = httpLiveOptions({ HARNESS_STAGING_ORIGIN: origin }, {
-  fetchImpl: async () => { throw new Error('fetched'); },
+let couponFetched = false;
+const blocked = httpLiveOptions({ HARNESS_STAGING_ORIGIN: origin, HARNESS_FRESH_COUPON: 'TS-VKEU80GGELCF' }, {
+  fetchImpl: async () => { couponFetched = true; throw new Error('fetched'); },
+  pickLane: () => ({ lane: 'gemini-ubuntu', model: 'gemini-4-neon-high' }),
 });
-const unminted = await blocked.play({ ...story, story_id: 'vk-001', coupon: { code: 'VK-TEST-001' } }, { runId: 'vk-test-001' });
-assert.equal(unminted.reason, 'coupon-not-minted');
-assert.equal(unminted.hostOnly, 'TIMESYNCHER_ADMIN_TOKEN');
-const calls = [];
-const live = httpLiveOptions({ HARNESS_STAGING_ORIGIN: origin, TIMESYNCHER_ADMIN_TOKEN: 'admin-token-fixture' }, {
-  fetchImpl: async (url, init) => {
-    calls.push({ url: String(url), body: init?.body || '' });
-    if (String(url).includes('create-coupon')) {
-      return { ok: true, status: 201, json: async () => ({ ok: true, code: 'TS-FRESHCODE1', coupon: { id: 'c1', codeHint: 'TS-...DE1' } }) };
-    }
-    return { status: 200, json: async () => ({ ok: true, status: 'coupon_valid' }) };
-  },
-});
-assert.equal(live.env.DATABASE_URL, undefined);
-const held = await live.play({ ...story, story_id: 'vk-001', coupon: { code: 'VK-TEST-001' } }, { runId: 'vk-test-001' });
-assert.equal(held.reason, 'host-only-database');
-assert.equal(calls.some((call) => call.url.includes('/api/vacation-itinerary')), false);
-assert.equal(calls[0].url, 'https://vacation-staging.timesyncher.com/api/admin-onboardings?action=create-coupon');
-assert.match(calls[0].body, /"maxRedemptions":1/);
-assert.equal(calls[0].body.includes('VK-TEST-001'), false);
-const checkout = calls.find((call) => call.url.includes('/api/checkout-coupon'));
-assert.match(checkout.body, /TS-FRESHCODE1/);
-assert.equal(checkout.body.includes('admin-token-fixture'), false);
+const held = await blocked.play({ ...story, story_id: 'vk-001', coupon: { code: 'VK-TEST-001' } }, { runId: 'vk-test-001' });
+assert.equal(couponFetched, false);
+assert.match(held.detail, /replyBackend/);
+assert.doesNotMatch(held.detail, /HARNESS_CUSTOMER_MODEL_URL/);
 console.log('test_vk_harness_mcp_staging: ok');

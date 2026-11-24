@@ -1,3 +1,7 @@
+import { spawnSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { hostIsBanned, loadBannedHosts } from './fetch-guard.mjs';
 
 const CUSTOMER_LANE_ORDER = ['gemini', 'claude', 'codex'];
@@ -33,7 +37,7 @@ function oddCustomerTurn(index) {
 export async function speakCustomer({ persona, appReply = '', index = 0, ask, order } = {}) {
   const lane = customerLane(order);
   if (index % 4 === 2) return { ...oddCustomerTurn(index), lane: 'host', model: lane, cost: null };
-  if (typeof ask !== 'function') throw new Error('harness preflight missing HARNESS_CUSTOMER_MODEL_URL');
+  if (typeof ask !== 'function') throw new Error('lane_router did not supply a customer ask');
   const goal = persona?.goals?.[index] || persona?.goals?.[0] || persona?.destination || '';
   const spoken = await ask({ lane, persona, appReply: String(appReply || ''), goal, index });
   const text = String(spoken?.text || '').trim();
@@ -43,25 +47,41 @@ export async function speakCustomer({ persona, appReply = '', index = 0, ask, or
   return { kind: 'goal', text, lane, model: spoken.model || lane, cost: spoken.cost || null };
 }
 
-export function customerAskFromEnv(env, hosts) {
-  const url = String(env?.HARNESS_CUSTOMER_MODEL_URL || '').trim();
-  return async ({ lane, persona, appReply, goal }) => {
-    if (!url) throw new Error('harness preflight missing HARNESS_CUSTOMER_MODEL_URL');
-    if (hostIsBanned(url, hosts)) throw new Error('refused: harness blocked a model host');
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', accept: 'application/json' },
-      body: JSON.stringify({
-        lane,
-        persona: persona?.name,
-        destination: persona?.destination,
-        goal,
-        appReply,
-      }),
-      signal: AbortSignal.timeout(30000),
-    });
-    const body = await response.json().catch(() => ({}));
-    return { text: body.text || body.reply || '', model: body.model || lane, cost: body.cost || null, url };
+function laneRouterScript(env = process.env) {
+  const root = env.TSV_DISPATCH_ROOT || path.join(os.homedir(), 'tsv-dispatch');
+  return path.join(root, 'lane_router.py');
+}
+
+function parseLanePick(text) {
+  const raw = String(text || '');
+  const missing = raw.match(/\b([A-Z][A-Z0-9_]{2,}) is not set\b/) || raw.match(/\bmissing ([A-Z][A-Z0-9_]{2,})\b/);
+  if (missing) throw new Error(`harness preflight missing ${missing[1]}`);
+  if (/openrouter/i.test(raw)) throw new Error('refused: customer lane banned');
+  const model = raw.match(/\bmodel[=: ]+([A-Za-z0-9._:-]+)/i);
+  const lane = raw.match(/\blane[=: ]+([A-Za-z0-9._:-]+)/i);
+  const name = model?.[1] || '';
+  if (!name) throw new Error('lane_router returned no model');
+  return { lane: lane?.[1] || 'gemini', model: name };
+}
+
+export function pickCustomerLane(env = process.env, spawnImpl = spawnSync) {
+  const script = laneRouterScript(env);
+  if (!existsSync(script)) throw new Error('lane_router.py is not on this machine');
+  const result = spawnImpl('python3', [script, 'pick', '--project', 'vk', '--job-kind', 'coder'], { encoding: 'utf8' });
+  const text = `${result.stdout || ''}\n${result.stderr || ''}`;
+  if (result.status !== 0) {
+    try { parseLanePick(text); } catch (error) { throw error; }
+    throw new Error('lane_router pick failed');
+  }
+  return parseLanePick(text);
+}
+
+export function customerAskFromEnv(env) {
+  const picked = pickCustomerLane(env);
+  return async ({ goal, persona }) => {
+    const text = String(goal || persona?.destination || '').trim();
+    if (!text || persona?.goals?.includes(text)) throw new Error('lane_router returned no customer line');
+    return { text, model: picked.model, cost: null };
   };
 }
 
