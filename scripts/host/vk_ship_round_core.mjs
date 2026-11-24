@@ -146,6 +146,10 @@ function alreadyAccepted(report, sha) {
   return (report?.statuses || []).some((row) => (!row.sha || row.sha === sha) && row.context === 'accept' && OK.has(row.state));
 }
 
+export function exactHeadMergeReady(report, sha) {
+  return Boolean(sha) && headIsGreen(report, sha) && alreadyAccepted(report, sha);
+}
+
 function rebaseFile(pull) {
   if (pull.mergeableState !== 'dirty') return '';
   const files = pull.conflictFiles || [];
