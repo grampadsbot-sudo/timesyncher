@@ -22,6 +22,7 @@ import { producedDemoLockedChatEditReply } from '../src/vacation/chat-itinerary-
 import { replyActionClaimReason } from '../src/vacation/reply-action-claim.mjs';
 import { createBoundedReplyShipGate, createBoundedRewriteClaim } from '../src/vacation/vacation-app-chat-postgen.mjs';
 import { sessionReplyBackend } from '../src/vacation/vk-bot-mcp-reply.mjs';
+import { isOrdinaryPlanningTurn, recoverOrdinaryPlanningReply } from '../src/vacation/chat-plan-persist.mjs';
 export async function queueVacationAppTurn(db, session, trip, body, hooks, intake = {}) {
   const env = process.env;
   const tripId = trip?.id ?? null;
@@ -452,6 +453,9 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     produced.reply = await rewriteClaim(produced.reply);
   }
   await applyReplyQuality(produced, { customerTurn: requestText, env, previousReply: claimedFrom });
+  if (!String(produced?.reply || '').trim() && isOrdinaryPlanningTurn(requestText)) {
+    Object.assign(produced, recoverOrdinaryPlanningReply(produced, requestText, { backend: sessionReplyBackend(session), previousReply: claimedFrom }));
+  }
   if (!produced.reply) {
     const failure = applyLiveAppReplyFailureToPayload(payload, customerLive, produced);
     logBlockedReplyReasons(produced.blockedReasons);

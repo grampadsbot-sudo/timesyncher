@@ -13,6 +13,8 @@ const REVOKE_ONLY_RE = /\b(revoke|remove|delete|disable|turn\s+off)\b/i;
 export function isAiImportChatRequest(rawText = '') {
   const text = cleanText(rawText, 2000);
   if (!text) return false;
+  if (/\b(?:not ready to|don'?t want to|do not want to|won'?t|would rather not|no thanks)\b[\s\S]{0,120}\b(?:connect|import|set\s*up|setup)\b|\bkeep building (?:the |our |my )?itinerary\b/i.test(text)) return false;
+  if (/\breservations?\b/i.test(text) && /\b(?:set\s*up|setup|book|reserve)\b/i.test(text) && !/\b(?:import|itinerary|vacation\s+details)\b/i.test(text)) return false;
   if (REVOKE_ONLY_RE.test(text) && !/\b(import|connect|new\s+token|handoff)\b/i.test(text)) return false;
   if (DIRECT_IMPORT_FROM_AI_RE.test(text)) return true;
   if (AI_ACTOR_RE.test(text) && IMPORT_ACTION_RE.test(text)) return true;

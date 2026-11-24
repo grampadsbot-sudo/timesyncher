@@ -1,4 +1,5 @@
-import { readCookie, requireWebEditAccess, webAccessCookieName } from './web-access.mjs';
+import { readCookie, webAccessCookieName } from './web-access.mjs';
+import { isOrdinaryPlanningTurn, resolveWebEditAccessForChat } from './chat-plan-persist.mjs';
 import { invalidateSharedUpstreamCacheForSlug as dropSharedUpstreamCacheForSlug } from './shared-trip-upstream-cache.mjs';
 import {
   coalesceChatItineraryEditIntent,
@@ -293,6 +294,8 @@ export async function runChatItineraryEditTurn({
   fetchPayload = fetchFreshSharedTripPayload, putOverrides = null, putAssignmentMove = null,
   postDayAssignment = null, extractIntent = extractItineraryEditIntent,
 } = {}) {
+  const offlineIntent = offlineParseItineraryEditIntent(customerTurn);
+  if (offlineIntent.op === 'none' && isOrdinaryPlanningTurn(customerTurn)) return editSkip('no_intent');
   const slug = tripShareSlug(trip);
   if (!slug) return editSkip('no_share_slug');
   const guard = shareSlugEditGuardDecision(slug);
@@ -302,18 +305,10 @@ export async function runChatItineraryEditTurn({
       : guard.reason === 'demo_locked' ? '' : 'Tell the customer this demo vacation cannot be edited via chat.';
     return editSkip(guard.reason, replyContext, { applied: false, reason: guard.reason });
   }
-  const webAccessToken = readCookie(httpReq, webAccessCookieName())
-    || clean(httpReq?.headers?.['x-timesyncher-web-access-token'], 400) || '';
-  if (!webAccessToken) {
-    return editSkip('web_edit_access_required', 'The customer needs website edit access before chat can change the itinerary.', { applied: false, reason: 'web_edit_access_required' });
-  }
-  try {
-    await requireWebEditAccess(db, httpReq || { headers: { cookie: `${webAccessCookieName()}=${webAccessToken}` } }, { tripId: trip.id, env });
-  } catch {
-    return editSkip('web_edit_denied', 'Website edit access is required to change the itinerary from chat.', { applied: false, reason: 'web_edit_denied' });
-  }
+  const access = await resolveWebEditAccessForChat(db, httpReq, trip.id, env);
+  if (access.skip) return access.skip;
+  const webAccessToken = access.token;
   await ensureChatItineraryEditsSchema(db);
-  const offlineIntent = offlineParseItineraryEditIntent(customerTurn);
   const intentRaw = await extractIntent({ customerTurn, env });
   const intent = coalesceChatItineraryEditIntent(
     intentRaw && typeof intentRaw === 'object' ? intentRaw : { op: 'none' },

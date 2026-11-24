@@ -59,6 +59,7 @@ import {
   resolveIntakePlace,
   tripIntakeJobFields,
 } from '../src/vacation/trip-intake-classify.mjs';
+import { keepPlannedDays, plannedCustomerThings } from '../src/vacation/chat-plan-persist.mjs';
 import {
   intakeExtractedThings,
   runVacationAppInTurnSearch,
@@ -547,15 +548,15 @@ async function queueVacationAppTurn(db, session, trip, body, intakePrefill = nul
   return runQueueVacationAppTurn(db, session, trip, body, queueVacationAppHooks(), { requestText, ...intake, welcomeMs, httpReq });
 }
 
-function chatSaveMetadata(thing, scheduled) {
+export function chatSaveMetadata(thing, scheduled) {
   const meta = {
     source: thing.source || 'chat_extraction',
     who: thing.who || '',
     whenLabel: scheduled.whenLabel || thing.whenLabel || '',
     customerWhen: scheduled.customerWhen || thing.customerWhen || '',
     askWhichDay: scheduled.askWhichDay === true,
-    notes: thing.notes || [],
-    collaboratorNotes: thing.collaboratorNotes || [],
+    notes: thing.notes || [], collaboratorNotes: thing.collaboratorNotes || [],
+    ...(Number(thing.dayNumber) > 0 ? { dayNumber: Number(thing.dayNumber) } : {}),
   };
   if (scheduled.candidateDates?.length) meta.candidateDates = scheduled.candidateDates;
   return meta;
@@ -752,7 +753,7 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
       await persistIntakeLodgingLookupOnCustomerTurn(db, customerTurnId, lodgingLookups);
     }
   }
-  const wanted = namedCustomerActivities(text, intakeActivityThings(extracted));
+  const wanted = await plannedCustomerThings(db, tripId, text, appReply, namedCustomerActivities(text, intakeActivityThings(extracted)));
   if (!current.length && !wanted.length) return current;
   if (!String(text || '').trim() && !wanted.length) return current;
   const tripRows = await db`
@@ -765,7 +766,7 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
   const end = tripRows[0]?.end_date || null;
   const year = start ? new Date(start).getUTCFullYear() : null;
   const tripDatesRow = { start_date: start, end_date: end };
-  let next = mergeWantedThings(current, wanted);
+  let next = keepPlannedDays(mergeWantedThings(current, wanted), wanted);
   let commits = null;
   try {
     commits = await activityCommitDecisions(text);
