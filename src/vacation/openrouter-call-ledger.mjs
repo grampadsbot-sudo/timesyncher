@@ -24,9 +24,17 @@ export function withOpenRouterLedger(work, tripId = null) {
       return await work();
     } finally {
       turn.closed = true;
+      stampTurnIds(turn);
       flushCalls(turn);
     }
   });
+}
+
+function stampTurnIds(turn) {
+  for (const row of turn.calls) {
+    if (row.tripId == null && turn.tripId != null) row.tripId = turn.tripId;
+    if (row.requestId == null && turn.requestId != null) row.requestId = turn.requestId;
+  }
 }
 
 export function bindOpenRouterLedger({ tripId, requestId, openrouterCalls }) {
@@ -34,8 +42,13 @@ export function bindOpenRouterLedger({ tripId, requestId, openrouterCalls }) {
   if (!turn) return;
   if (tripId != null) turn.tripId = tripId;
   if (requestId != null) turn.requestId = requestId;
+  stampTurnIds(turn);
   if (Array.isArray(openrouterCalls) && turn.calls.length === 0) {
-    turn.calls.push(...openrouterCalls);
+    turn.calls.push(...openrouterCalls.map((row) => ({
+      ...row,
+      tripId: row.tripId ?? turn.tripId ?? null,
+      requestId: row.requestId ?? turn.requestId ?? null,
+    })));
     turn.logged = turn.calls.length;
   }
   if (turn.requestId != null) flushCalls(turn);
@@ -137,6 +150,7 @@ async function performOpenRouterCall(url, {
         completion_tokens: usageNumber(usage?.completion_tokens ?? usage?.output_tokens),
         prompt_tokens_details: usage?.prompt_tokens_details ?? usage?.input_tokens_details,
       } }, model, price);
+      const turn = turnContext.getStore();
       const row = {
         purpose, endpoint, model,
         promptTokens: priced.promptTokens,
@@ -148,10 +162,12 @@ async function performOpenRouterCall(url, {
         latencyMs,
         ok: response?.ok === true && !parsed?.unreadable && !!body && typeof body === 'object' && body.ok !== false && !body.error,
         httpStatus: tokenCount(response?.status),
+        tripId: turn?.tripId ?? null,
+        requestId: turn?.requestId ?? null,
       };
-      const turn = turnContext.getStore();
       if (turn) {
         turn.calls.push(row);
+        stampTurnIds(turn);
         if (turn.requestId != null || turn.closed) flushCalls(turn);
       } else {
         logCall(row, null);

@@ -132,6 +132,7 @@ export async function runCustomer(story, options) {
   const preview = buildScorecard({
     run_id: options.runId,
     story_id: story.story_id,
+    tripId: played?.tripId || '',
     reply_backend: replyBackend,
     checks: [...checks, { id: 'cleanup', pass: true, detail: 'pending', artifact: '' }, { id: 'scorecard', pass: true, detail: 'pending', artifact: 'scorecard.json' }],
     gaps,
@@ -193,6 +194,7 @@ export async function runCustomer(story, options) {
   const card = buildScorecard({
     run_id: options.runId,
     story_id: story.story_id,
+    tripId: played?.tripId || '',
     reply_backend: replyBackend,
     build_sha: options.buildSha || '',
     live_sha_start: played?.liveShaStart || '',
