@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { openRouterChatVisibleText } from './openrouter-tier-provider.mjs';
 import assert from 'node:assert/strict';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -268,7 +269,7 @@ async function runProviderEnvRouteTest(blobMode) {
         return { ok: true, json: async () => ({ answers: { relevance: { choice: 5 } } }) };
       }
       if (questions.trip_intake) {
-        return { ok: true, json: async () => ({ answers: { trip_intake: { noul: 0.1 } } }) };
+        return { ok: true, json: async () => ({ answers: { trip_intake: { noul: 0.1 }, model_tier: { score: 0 }, route_type: { choice: 'general' } } }) };
       }
       if (questions.overall_quality) {
         return { ok: true, json: async () => ({ ok: true, answers: { overall_quality: { score: 4 }, disposition: { choice: 'keep' }, fix_focus: { choice: 'keep' } } }) };
@@ -287,7 +288,7 @@ async function runProviderEnvRouteTest(blobMode) {
     if (href.includes(OPENROUTER_HOST)) {
       const raw = options.body ? JSON.parse(String(options.body)) : {};
       const user = raw.messages?.find((row) => row.role === 'user')?.content || '';
-      if (String(raw.messages?.[0]?.content || '').includes('turnKind')) {
+      if (raw.response_format?.type === 'json_schema') {
         const turnKind = /weather/i.test(String(user)) ? 'web_research' : 'place_search';
         const body = {
           turnKind,
@@ -311,7 +312,7 @@ async function runProviderEnvRouteTest(blobMode) {
       if (/tags from the allowed list/i.test(String(raw.messages?.[0]?.content || ''))) {
         return { ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify({ tags: ['activities_experiences'], ask: false }) } }] }) };
       }
-      if (/Starter facts/i.test(String(raw.messages?.[1]?.content || raw.messages?.[0]?.content || ''))) {
+      if (/Starter facts/i.test(openRouterChatVisibleText(raw.messages?.[0]?.content))) {
         return { ok: true, json: async () => ({ choices: [{ message: { content: 'Here are a few nearby options to consider.' } }] }) };
       }
       return { ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify({ asksPrice: false, asksAccess: false, pullsAccess: false, seats: [], ask: false }) } }] }) };

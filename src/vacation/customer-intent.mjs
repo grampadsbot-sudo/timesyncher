@@ -25,6 +25,10 @@ export const emptyIntent = () => ({ asksPrice: false, asksAccess: false, pullsAc
 
 const CUSTOMER_INTENT_KEYS = ['asksPrice', 'asksAccess', 'pullsAccess', 'ask'];
 
+export function splitCustomerSentences(text) {
+  return String(text || '').split(/(?<=[.!?])\s+/).map((part) => part.replace(/\s+/g, ' ').trim()).filter(Boolean);
+}
+
 export function customerIntentFromBody(body) {
   if (!body || typeof body !== 'object' || Array.isArray(body)) return emptyIntent();
   for (const key of CUSTOMER_INTENT_KEYS) {
@@ -61,7 +65,8 @@ async function askModelJson(purpose, instructions, state, { fetchImpl = fetch, e
   return parseJson(json?.choices?.[0]?.message?.content || '');
 }
 
-export async function customerIntent(text, options) {
+export async function customerIntent(text, options = {}) {
+  if (options.understanding) return customerIntentFromBody(options.understanding.intent);
   const body = await askModelJson(
     'intent',
     'asksPrice, asksAccess, and pullsAccess are true only when the turn asks that. Otherwise false or []. ask is true when you cannot tell.',
@@ -74,7 +79,9 @@ export async function customerIntent(text, options) {
 export async function activityCommits(sentences, options) {
   const list = (Array.isArray(sentences) ? sentences : []).map((sentence) => String(sentence || '').trim()).filter(Boolean);
   if (!list.length) return {};
-  const body = await askModelJson(
+  const body = options?.understanding
+    ? { sentences: (options.understanding.committedSentenceIndexes || []).map((index) => ({ text: list[index], commits: true })) }
+    : await askModelJson(
     'activity_commits',
     'For each sentence, commits is true only when the customer is putting that activity on the plan. Otherwise commits is false and ask is true. Return {"sentences":[{"text":"","commits":false,"ask":true}]}.',
     { sentences: list },
@@ -89,9 +96,9 @@ export async function activityCommits(sentences, options) {
   return decisions;
 }
 
-export async function contentTags(text, allowed, options) {
+export async function contentTags(text, allowed, options = {}) {
   const names = Array.isArray(allowed) ? allowed : [];
-  const body = await askModelJson(
+  const body = options.understanding ? (options.understanding.contentTags || {}) : await askModelJson(
     'content_tags',
     'Choose tags from the allowed list only. If none apply, tags [] and ask true.',
     { allowed: names, customerTurn: String(text || '').slice(0, 4000) },

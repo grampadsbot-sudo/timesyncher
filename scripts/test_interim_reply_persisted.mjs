@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { openRouterChatVisibleText } from './openrouter-tier-provider.mjs';
 import assert from 'node:assert/strict';
 import { INTERIM_MODEL } from './vacation-app-reply-rules.mjs';
 import { interimProblems, liveTranscriptFromRows, produceLiveAppReply } from '../src/vacation/live-app-turn.mjs';
@@ -34,7 +35,7 @@ async function produce(templateInterim) {
       });
     }
     const user = body.messages?.find((message) => message.role === 'user')?.content || '';
-    const system = body.messages?.find((message) => message.role === 'system')?.content || '';
+    const system = openRouterChatVisibleText(body.messages?.find((message) => message.role === 'system')?.content);
     const model = body.model;
     if (system.includes('"template":boolean')) {
       const verdict = templateInterim ? '{"template":true,"canShip":false}' : '{"template":false,"canShip":false}';

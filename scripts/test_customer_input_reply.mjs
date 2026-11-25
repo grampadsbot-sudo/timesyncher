@@ -1,3 +1,4 @@
+import { openRouterChatVisibleText } from './openrouter-tier-provider.mjs';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
@@ -76,7 +77,7 @@ try {
   });
   assert.equal(asked.called, true);
   assert.equal(asked.responseModel, MODEL);
-  const system = calls[0].body.messages.find((message) => message.role === 'system').content;
+  const system = openRouterChatVisibleText(calls[0].body.messages.find((message) => message.role === 'system').content);
   const user = calls[0].body.messages.find((message) => message.role === 'user').content;
   assert.match(system, /"needsCustomerInput":\["lodging"\]/);
   assert.match(user, /"needsCustomerInput":\["lodging"\]/);

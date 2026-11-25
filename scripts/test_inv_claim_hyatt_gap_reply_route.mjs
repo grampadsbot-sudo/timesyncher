@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { openRouterChatVisibleText } from './openrouter-tier-provider.mjs';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -82,7 +83,6 @@ const env = {
   OPENROUTER_API_KEY: 'test-key',
   TIMESYNCHER_JEV_CLASSIFY_URL: 'https://jev.example/api/alpha/decisions',
 };
-const TIER_REASONING_EFFORT = 'medium';
 
 const originalFetch = globalThis.fetch;
 let capturedSystem = '';
@@ -106,14 +106,11 @@ globalThis.fetch = async (url, init = {}) => {
   }
   if (href.includes('/chat/completions')) {
     const model = body.model;
-    const system = body.messages?.find((message) => message.role === 'system')?.content || '';
+    const system = openRouterChatVisibleText(body.messages?.find((message) => message.role === 'system')?.content);
     if (/Do not write a customer reply/.test(system)) {
       return { ok: true, json: async () => ({ model, choices: [{ message: { content: '{"asksPrice":false,"asksAccess":false,"pullsAccess":false,"seats":[],"ask":false}' } }] }) };
     }
-    if (body.reasoning?.effort === TIER_REASONING_EFFORT || model === env.TIMESYNCHER_REPLY_TIER2_MODEL) {
-      capturedSystem = system;
-      return { ok: true, json: async () => ({ model, choices: [{ message: { content: INVITE_REPLY } }] }) };
-    }
+    capturedSystem = system;
     return { ok: true, json: async () => ({ model, choices: [{ message: { content: INVITE_REPLY } }] }) };
   }
   return { ok: false, status: 404, json: async () => ({ error: 'unexpected' }) };

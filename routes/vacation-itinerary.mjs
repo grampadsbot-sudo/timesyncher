@@ -547,7 +547,7 @@ async function queueVacationAppTurn(db, session, trip, body, intakePrefill = nul
   if (aiMcpReply) return aiMcpReply;
   const pendingPreviewReply = await tryHandlePendingPreviewChatTurn(db, { session, trip, requestText });
   if (pendingPreviewReply) return pendingPreviewReply;
-  const intake = await resolveVacationAppQueueIntake(requestText, intakePrefill, process.env);
+  const intake = await resolveVacationAppQueueIntake(requestText, intakePrefill, process.env, session);
   return runQueueVacationAppTurn(db, session, trip, body, queueVacationAppHooks(), { requestText, ...intake, welcomeMs, httpReq, postStartedMs: httpReq ? postStartedByRequest.get(httpReq) : null });
 }
 
@@ -604,7 +604,7 @@ async function loadTripThings(db, tripId) {
   return rows.map(thingView);
 }
 
-async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch, customerTurnId = null, wantedThings = [], work = null } = {}) {
+async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch, customerTurnId = null, wantedThings = [], work = null, understanding = null } = {}) {
   const planned = namedCustomerActivities(text, intakeActivityThings(extracted));
   const lodgingWanted = intakeLodgingWanted(extracted, wantedThings);
   const priorRows = await db`select title, destination, metadata from trips where id = ${tripId} limit 1`;
@@ -623,7 +623,7 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
     : await resolveTripDestination({
       saved: '',
       texts: [text],
-      complete: (corpus) => openRouterDestinationComplete(corpus, process.env),
+      complete: (corpus) => understanding ? understanding.destination || 'none' : openRouterDestinationComplete(corpus, env),
     });
   const priorParty = priorMeta.dialogParty && typeof priorMeta.dialogParty === 'object' ? priorMeta.dialogParty : {};
   const party = completeRosterParty({
@@ -726,12 +726,12 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
   return loadTripThings(db, tripId);
 }
 
-async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '', appReply = '', roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch, customerTurnId = null, wantedThings = [], requestId = null, postStartedMs = null, postBudgetMs = null, activityCommitDecisionsImpl = null } = {}, intakeText = '', extracted = []) {
+async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '', appReply = '', roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch, customerTurnId = null, wantedThings = [], requestId = null, postStartedMs = null, postBudgetMs = null, activityCommitDecisionsImpl = null, understanding = null } = {}, intakeText = '', extracted = []) {
   const work = createPostReplyWork({ db, tripId, requestId, postStartedMs, postBudgetMs, env, fetchImpl });
   if (intakeText) {
     await ensureIntakeItinerary(db, tripId, intakeText, extracted, {
       roster, rosterError, askRoster, extractedDestination, extractedTitle, destinationError, titleError,
-      searchImpl, searchPlacesImpl, env, fetchImpl, customerTurnId, wantedThings, work,
+      searchImpl, searchPlacesImpl, env, fetchImpl, customerTurnId, wantedThings, work, understanding,
     });
   }
   let current = await loadTripThings(db, tripId);
@@ -773,7 +773,7 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
   let next = keepPlannedDays(mergeWantedThings(current, wanted), wanted);
   let commits = null;
   try {
-    commits = await work.activityCommits(next, text, activityCommitDecisionsImpl || activityCommitDecisions);
+    commits = await work.activityCommits(next, text, activityCommitDecisionsImpl || activityCommitDecisions, activityCommitDecisionsImpl ? null : understanding);
   } catch (error) {
     commits = { __ask: true, error: String(error?.message || error) };
   }

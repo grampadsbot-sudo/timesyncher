@@ -192,7 +192,7 @@ function intakeFetchMock({ title, things, destination, hasDates, startDate = '20
         return {
           ok: true,
           json: async () => ({
-            answers: { trip_intake: { noul: intake === false ? 0.1 : 0.92 } },
+            answers: { trip_intake: { noul: intake === false ? 0.1 : 0.92 }, model_tier: { score: 1 }, route_type: { choice: 'general' } },
           }),
         };
       }

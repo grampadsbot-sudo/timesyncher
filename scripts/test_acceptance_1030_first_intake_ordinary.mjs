@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { openRouterChatVisibleText } from './openrouter-tier-provider.mjs';
 import assert from 'node:assert/strict';
 import { INTERIM_MODEL } from './vacation-app-reply-rules.mjs';
 import { intakeFactsGrounded, intakeReplyBlock, intakeReplyBlockReasons } from '../src/vacation/first-intake-gate.mjs';
@@ -121,7 +122,7 @@ globalThis.fetch = async (url, init) => {
     return { ok: true, json: async () => ({ ok: true, answers: { model_tier: { score: 1 }, route_type: { choice: 'general' } } }) };
   }
   if (target.includes('/chat/completions')) {
-    systems.push(body.messages?.find((message) => message.role === 'system')?.content || '');
+    systems.push(openRouterChatVisibleText(body.messages?.find((message) => message.role === 'system')?.content));
     const content = drafts[chat] || inventedDay;
     chat += 1;
     return { ok: true, json: async () => ({ model: body.model, choices: [{ message: { content } }] }) };

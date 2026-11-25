@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { openRouterChatVisibleText } from './openrouter-tier-provider.mjs';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 
@@ -106,7 +107,7 @@ globalThis.fetch = async (url, init = {}) => {
   }
   if (href.includes('/chat/completions')) {
     const model = body.model;
-    const system = body.messages?.find((message) => message.role === 'system')?.content || '';
+    const system = openRouterChatVisibleText(body.messages?.find((message) => message.role === 'system')?.content);
     if (system.includes('Do not write a customer reply')) {
       return json({ model, choices: [{ message: { content: '{"asksPrice":false,"asksAccess":false,"pullsAccess":false,"seats":[],"ask":false}' } }] });
     }

@@ -256,7 +256,7 @@ globalThis.fetch = async (url, init) => {
   if (target.includes('/api/alpha/decisions')) return decisionsResponse(init);
   if (target.includes('/chat/completions')) {
     chatCalls.push(body);
-    const system = body.messages?.find((message) => message.role === 'system')?.content || '';
+    const system = body.messages?.find((message) => message.role === 'system')?.content?.at(-1)?.text || '';
     assert.equal(system, voicePrompt);
     assert.equal(body.model, tiers[1]);
     assert.doesNotMatch(body.model, /gpt-.*mini/i);
@@ -327,7 +327,7 @@ try {
     if (target.includes('/api/alpha/decisions')) return decisionsResponse(init);
     if (target.includes('/chat/completions')) {
       chatCalls.push(body);
-      const system = body.messages?.find((message) => message.role === 'system')?.content || '';
+      const system = body.messages?.find((message) => message.role === 'system')?.content?.at(-1)?.text || '';
       assert.equal(system, gapPrompt);
       const user = JSON.parse(body.messages.find((message) => message.role === 'user')?.content || '{}');
       assert.equal(user.customer_name, 'Ada');
@@ -370,7 +370,7 @@ try {
     if (target.includes('/api/alpha/decisions')) return decisionsResponse(init);
     if (target.includes('/chat/completions')) {
       chatCalls.push(body);
-      const system = body.messages?.find((message) => message.role === 'system')?.content || '';
+      const system = body.messages?.find((message) => message.role === 'system')?.content?.at(-1)?.text || '';
       const user = JSON.parse(body.messages.find((message) => message.role === 'user')?.content || '{}');
       assert.equal(system, questionPrompt);
       assert.equal(user.view_without_sign_in, VIEW_WITHOUT_SIGN_IN);
@@ -435,7 +435,7 @@ try {
       chatCalls.push(body);
       assert.equal(body.model, INTERIM_MODEL);
       assert.doesNotMatch(body.model, /gpt-.*mini/i);
-      const system = body.messages?.find((message) => message.role === 'system')?.content || '';
+      const system = body.messages?.find((message) => message.role === 'system')?.content?.at(-1)?.text || '';
       assert.doesNotMatch(system, leakWord);
       return {
         ok: true,

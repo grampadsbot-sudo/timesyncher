@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { openRouterChatVisibleText } from './openrouter-tier-provider.mjs';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { liveTurnRecord, produceLiveAppReply } from '../src/vacation/live-app-turn.mjs';
@@ -48,7 +49,7 @@ await withFetch(async (url, init = {}) => {
   }
   if (href.includes('/chat/completions')) {
     const model = body.model;
-    const system = body.messages?.find((message) => message.role === 'system')?.content || '';
+    const system = openRouterChatVisibleText(body.messages?.find((message) => message.role === 'system')?.content);
     const user = body.messages?.find((message) => message.role === 'user')?.content || '';
     if (/"template"/.test(system) && /canShip/.test(system)) {
       return json({ model, choices: [{ message: { content: '{"template":false,"canShip":true}' } }] });
@@ -56,10 +57,10 @@ await withFetch(async (url, init = {}) => {
     if (/Do not write a customer reply/.test(system)) {
       return json({ model, choices: [{ message: { content: '{"asksPrice":false,"asksAccess":false,"pullsAccess":false,"seats":[],"ask":false}' } }] });
     }
-    if (model === HOLDING_MODEL && body.reasoning?.enabled === false) {
+    if (model === HOLDING_MODEL && system.includes('one or two sentence holding line')) {
       return json({ model, choices: [{ message: { content: HOLDING } }] });
     }
-    if (model === TIER_MODEL && body.reasoning?.effort === 'medium') {
+    if (model === TIER_MODEL) {
       const text = user.includes('WHAT_I_CHANGED') ? REWRITE : DRAFT;
       return json({ model, choices: [{ message: { content: text } }] });
     }
@@ -99,8 +100,10 @@ await withFetch(async (url, init = {}) => {
   assert.equal(produced.jev.responseModel, TIER_MODEL);
   const chats = tierCalls.filter((call) => call.href.includes('/chat/completions'));
   assert.equal(chats.some((call) => call.body.model === TIER_MODEL), true);
-  assert.equal(chats.some((call) => call.body.reasoning?.effort === 'medium' && call.body.max_tokens === 4608), true);
-  assert.equal(chats.some((call) => call.body.reasoning?.enabled === false && call.body.max_tokens === 900), true);
+  for (const { body } of chats) {
+    assert.deepEqual(body.reasoning, { effort: 'none' });
+    if (body.max_tokens != null) assert.ok(body.max_tokens <= 900);
+  }
   assert.equal(chats.some((call) => call.body.model !== TIER_MODEL && call.body.model !== HOLDING_MODEL), false);
 });
 
@@ -111,7 +114,7 @@ await withFetch(async (url, init = {}) => {
   jevCalls.push({ href, body });
   if (href.includes('/api/alpha/decisions')) return json({}, 503);
   if (href.includes('/chat/completions')) {
-    const system = body.messages?.find((message) => message.role === 'system')?.content || '';
+    const system = openRouterChatVisibleText(body.messages?.find((message) => message.role === 'system')?.content);
     if (/Do not write a customer reply/.test(system)) {
       return json({ model: body.model, choices: [{ message: { content: '{"asksPrice":false,"asksAccess":false,"seats":[],"ask":false}' } }] });
     }
@@ -129,7 +132,7 @@ await withFetch(async (url, init = {}) => {
   const decisions = jevCalls.filter((call) => call.href.includes('/api/alpha/decisions'));
   const tierChats = jevCalls.filter((call) => {
     if (!call.href.includes('/chat/completions')) return false;
-    const system = call.body.messages?.find((message) => message.role === 'system')?.content || '';
+    const system = openRouterChatVisibleText(call.body.messages?.find((message) => message.role === 'system')?.content);
     return !/Do not write a customer reply/.test(system);
   });
   assert.equal(decisions.length, 1);

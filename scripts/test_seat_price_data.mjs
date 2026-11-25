@@ -1,3 +1,4 @@
+import { openRouterChatVisibleText } from './openrouter-tier-provider.mjs';
 import assert from 'node:assert/strict';
 import { configuredSeatDollars } from '../src/vacation/seat-price.mjs';
 import { produceLiveAppReply } from '../src/vacation/live-app-turn.mjs';
@@ -35,7 +36,7 @@ globalThis.fetch = async (url, init = {}) => {
   if (href.includes('/api/alpha/decisions')) {
     return json({ answers: { model_tier: { score: 1 }, route_type: { choice: 'general' }, overall_quality: { score: 0 }, disposition: { choice: 'rewrite' }, fix_focus: { choice: 'missing_price' } } });
   }
-  const system = String(body.messages?.find((message) => message.role === 'system')?.content || '');
+  const system = openRouterChatVisibleText(body.messages?.find((message) => message.role === 'system')?.content);
   const user = String(body.messages?.find((message) => message.role === 'user')?.content || '');
   if (system.includes('Return one JSON object') || user.includes('asksPrice')) {
     return json({ choices: [{ message: { content: '{"asksPrice":true,"asksAccess":false,"pullsAccess":false,"seats":[{"name":"Ada","payer":"you"}],"ask":false}' } }] });
@@ -46,7 +47,7 @@ globalThis.fetch = async (url, init = {}) => {
   if (user.includes('PRICE UNSET')) {
     return json({ model: body.model, choices: [{ message: { content: 'Thursday stays open.' } }] });
   }
-  if (body.reasoning?.enabled === false) {
+  if (system.includes('one or two sentence holding line')) {
     return json({ model: body.model, choices: [{ message: { content: 'The plan for Ada is $19, paid by you.' } }] });
   }
   return json({ model: body.model, choices: [{ message: { content: 'Thursday draft stays open for the plan.' } }] });
@@ -55,10 +56,10 @@ globalThis.fetch = async (url, init = {}) => {
 function dollarHits(predicate) {
   return calls.filter((call) => {
     if (!String(call.href).includes('/chat/completions')) return false;
-    const system = String(call.body?.messages?.find((message) => message.role === 'system')?.content || '');
+    const system = openRouterChatVisibleText(call.body?.messages?.find((message) => message.role === 'system')?.content);
     return predicate(call, system);
   }).map((call) => {
-    const system = String(call.body?.messages?.find((message) => message.role === 'system')?.content || '');
+    const system = openRouterChatVisibleText(call.body?.messages?.find((message) => message.role === 'system')?.content);
     const match = system.match(/\$(\d+)/);
     return match ? Number(match[1]) : null;
   });
@@ -76,7 +77,7 @@ try {
   });
   assert.equal(priced.reply, 'Thursday draft stays open for the plan.');
   const mainDollars = dollarHits((call, system) => system.includes('vacation-app producer'));
-  const interimDollars = dollarHits((call, system) => system.includes('State this line exactly') && call.body?.reasoning?.enabled === false);
+  const interimDollars = dollarHits((call, system) => system.includes('State this line exactly') && system.includes('one or two sentence holding line'));
   assert.ok(mainDollars.length > 0, 'main reply path received no price');
   assert.ok(interimDollars.length > 0, 'interim reply path received no price');
   assert.equal(mainDollars[0], 19);

@@ -8,7 +8,7 @@ import { liveTranscriptFromRows } from '../src/vacation/live-app-turn.mjs';
 import { bindOpenRouterLedger, openRouterTurnTelemetry, withOpenRouterLedger } from '../src/vacation/openrouter-call-ledger.mjs';
 import { jevRelevanceScore } from '../src/vacation/place-relevance-judge.mjs';
 import { persistVacationAppOutboundReply } from '../src/vacation/reply-ship.mjs';
-import { DEFAULT_JEV_DECISIONS_URL, INTERIM_MODEL, JEV_QUALITY_MODEL } from './vacation-app-reply-rules.mjs';
+import { openRouterChatVisibleText, DEFAULT_JEV_DECISIONS_URL, INTERIM_MODEL, JEV_QUALITY_MODEL } from './vacation-app-reply-rules.mjs';
 import { customerSection } from './harness/findings.mjs';
 import { renderDialog } from './harness/live-outputs.mjs';
 import { confirmStoredTurns } from './harness/stored-turn.mjs';
@@ -58,8 +58,10 @@ async function mockFetch(url, init = {}) {
   if (String(url) === DEFAULT_JEV_DECISIONS_URL) {
     fetches.push('decisions');
     const questions = body.questions;
-    if (questions.trip_intake) return decision({ trip_intake: { noul: body.state.current_turn === intake ? 0.95 : 0.04 } });
-    if (questions.model_tier) return decision({ model_tier: { score: 1 }, route_type: { choice: 'general' } });
+    if (questions.model_tier) return decision({
+      model_tier: { score: 1 }, route_type: { choice: 'general' },
+      trip_intake: { noul: body.state.current_turn === intake ? 0.95 : 0.04 },
+    });
     if (questions.relevance) return decision({ relevance: { type: 'score', score: 3.2 } });
     assert.ok(questions.overall_quality);
     const low = String(body.state.draft).includes('neighborhood');
@@ -73,10 +75,10 @@ async function mockFetch(url, init = {}) {
   fetches.push('chat');
   assert.equal(init.headers.authorization, `Bearer ${fakeKey}`);
   assert.deepEqual(body.usage, { include: true });
-  const [system, user] = body.messages.map((part) => part.content);
+  const [system, user] = body.messages.map((part) => openRouterChatVisibleText(part.content));
   const chat = (content, reportedUsage = usage) => json({ model: body.model, usage: reportedUsage, choices: [{ finish_reason: 'stop', message: { content } }] });
   if (body.response_format) {
-    const first = user === intake;
+    const first = JSON.parse(user).sentences.join(' ') === intake;
     return chat(JSON.stringify({
       turnKind: first ? 'trip_intake' : 'itinerary_advice', things: [], roster: [], target: '', anchor: '',
       destination: 'Bend', title: 'Bend spring vacation', hasDates: true, startDate: '2027-03-04', endDate: '2027-03-08',
@@ -168,12 +170,12 @@ try {
 
   const first = await queueVacationAppTurnForTests(db, session, trip, { text: intake });
   assert.equal(first.ok, true, first.error);
-  checkRows(first, ['intake_classify_jev', 'intake_extract', 'jev_precall', 'reply_draft', 'jev_quality', 'destination'], 0);
+  checkRows(first, ['jev_precall', 'turn_understanding', 'reply_draft', 'jev_quality'], 0);
   const afterFirst = fetches.length;
   const second = await queueVacationAppTurnForTests(db, session, trip, { text: followup });
   assert.equal(second.ok, true, second.error);
   assert.equal(second.reply, rewrite);
-  checkRows(second, ['intake_classify_jev', 'intake_extract', 'content_tags', 'intent', 'jev_precall', 'reply_draft', 'jev_quality', 'reply_interim', 'interim_judge', 'reply_rewrite', 'jev_quality_rewrite'], afterFirst);
+  checkRows(second, ['jev_precall', 'turn_understanding', 'reply_draft', 'jev_quality', 'reply_interim', 'interim_judge', 'reply_rewrite', 'jev_quality_rewrite'], afterFirst);
 
   const doc = liveTranscriptFromRows({ session: { ...session, trip_id: trip.id }, rows: stored });
   await renderDialog({
@@ -195,7 +197,7 @@ try {
   assert.equal(app[1].cost.dollars, 0.00026);
   const { rows: scoreRows } = confirmStoredTurns(written, '', 'openrouter');
   assert.deepEqual(scoreRows.filter((row) => row.role === 'app').map((row) => row.openrouterTotals), [first.openrouterTotals, second.openrouterTotals]);
-  assert.match(customerSection({ turns: scoreRows, verdict: 'PASS' }, { wave: 'fixture' }), /OpenRouter per app turn: T2 \$0\.000390 measured, \$0\.000000 estimated, 3 unpriced calls/);
+  assert.match(customerSection({ turns: scoreRows, verdict: 'PASS' }, { wave: 'fixture' }), /OpenRouter per app turn: T2 \$0\.000260 measured, \$0\.000000 estimated, 2 unpriced calls/);
 
   const [extras, failures] = await Promise.all([
     withOpenRouterLedger(async () => {

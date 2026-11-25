@@ -128,10 +128,11 @@ export function createPostReplyWork({
     };
   }
 
-  async function activityCommits(things, text, commitFn) {
+  async function activityCommits(things, text, commitFn, understanding) {
     const started = Date.now();
     try {
       if (!needsActivityCommitDecisions(things, text)) return {};
+      if (understanding) return await commitFn(text, { understanding });
       const timeoutMs = Math.min(DEFAULT_ACTIVITY_COMMIT_TIMEOUT_MS, budget.remainingMs() - Math.floor(budget.finalizeReserveMs / 2));
       if (timeoutMs < 200) {
         deferredSteps.push('activity_commit_decisions');

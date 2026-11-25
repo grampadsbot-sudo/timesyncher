@@ -116,7 +116,16 @@ async function loadOpenRouterListedPrices(modelsUrl, key, fetchImpl) {
   for (const row of Array.isArray(body?.data) ? body.data : []) {
     const prompt = Number(row?.pricing?.prompt);
     const completion = Number(row?.pricing?.completion);
-    if (row?.id && Number.isFinite(prompt) && Number.isFinite(completion)) map.set(row.id, { prompt, completion });
+    if (row?.id && Number.isFinite(prompt) && Number.isFinite(completion)) {
+      const cacheRead = finite(row.pricing.input_cache_read);
+      const cacheWrite = finite(row.pricing.input_cache_write);
+      map.set(row.id, {
+        prompt,
+        completion,
+        ...(cacheRead != null ? { cacheRead } : {}),
+        ...(cacheWrite != null ? { cacheWrite } : {}),
+      });
+    }
   }
   return map.size ? map : null;
 }
@@ -136,7 +145,13 @@ export async function openRouterReplyCost(body, modelId, lookupPrice) {
   const prompt = finite(price?.prompt);
   const completion = finite(price?.completion);
   if (prompt == null || completion == null) return unmeasuredTurnCost(tokens);
-  const amount = dollars(tokens.promptTokens * prompt + tokens.completionTokens * completion);
+  const promptDetails = usage.prompt_tokens_details ?? usage.input_tokens_details;
+  const read = Math.min(tokens.promptTokens, whole(promptDetails?.cached_tokens) ?? 0);
+  const written = Math.min(tokens.promptTokens - read, whole(promptDetails?.cache_write_tokens) ?? 0);
+  const amount = dollars(
+    (tokens.promptTokens - read - written) * prompt + read * (finite(price.cacheRead) ?? prompt)
+    + written * (finite(price.cacheWrite) ?? prompt) + tokens.completionTokens * completion,
+  );
   if (amount == null) return unmeasuredTurnCost(tokens);
   return measuredTurnCost('openrouter_listed_price', amount, tokens);
 }

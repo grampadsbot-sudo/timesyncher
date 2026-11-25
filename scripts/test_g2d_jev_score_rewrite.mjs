@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { openRouterChatVisibleText } from './openrouter-tier-provider.mjs';
 import assert from 'node:assert/strict';
 import { qualityFromDecisions } from './vacation-app-reply-rules.mjs';
 import {
@@ -94,14 +95,14 @@ globalThis.fetch = async (url, init = {}) => {
   if (href.includes('/chat/completions')) {
     const user = body.messages?.find((message) => message.role === 'user')?.content || '';
     const model = body.model;
-    const system = body.messages?.find((message) => message.role === 'system')?.content || '';
+    const system = openRouterChatVisibleText(body.messages?.find((message) => message.role === 'system')?.content);
     if (/"template"/.test(system) && /canShip/.test(system)) {
       return json({
         model,
         choices: [{ message: { content: '{"template":false,"canShip":true}' } }],
       });
     }
-    if (body.reasoning?.enabled === false) {
+    if (system.includes('one or two sentence holding line')) {
       return json({
         model,
         choices: [{ message: { content: 'Thursday town walk can wait a moment.\nBEAT: holding the walk' } }],
@@ -148,7 +149,7 @@ try {
   assert.match(low.log.interimReply.text, /Thursday town walk/);
   const rewriteCall = calls.find((call) => String(call.body?.messages?.find((message) => message.role === 'user')?.content || '').includes('WHAT_I_CHANGED'));
   assert.equal(rewriteCall.body.model, 'anthropic/claude-haiku-5.5');
-  assert.deepEqual(rewriteCall.body.reasoning, { effort: 'low' });
+  assert.deepEqual(rewriteCall.body.reasoning, { effort: 'none' });
 
   calls.length = 0;
   const held = await produceLiveAppReply({
@@ -185,9 +186,8 @@ try {
   assert.equal(high.log.rewriteModel, null);
   assert.equal(high.quality.jevNote, null);
   assert.equal(calls.some((call) => {
-    if (call.body?.reasoning?.enabled !== false) return false;
-    const system = String(call.body?.messages?.find((message) => message.role === 'system')?.content || '');
-    return !/reply none/.test(system) && !/Do not write a customer reply/.test(system);
+    const system = openRouterChatVisibleText(call.body?.messages?.find((message) => message.role === 'system')?.content);
+    return system.includes('one or two sentence holding line');
   }), false);
   assert.equal(calls.some((call) => String(call.body?.model || '').includes('gpt')), false);
 } finally {

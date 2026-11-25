@@ -9,7 +9,7 @@ import {
   loadVacationAppReplyRules,
 } from '../../scripts/vacation-app-reply-rules.mjs';
 import { DESTINATION_ASK, resolveTripDestination } from './trip-destination.mjs';
-import { activityCommits, customerIntent, emptyIntent } from './customer-intent.mjs';
+import { activityCommits, customerIntent, emptyIntent, splitCustomerSentences as splitSentences } from './customer-intent.mjs';
 import { tripIsoDay } from './intake-shared-trip.mjs';
 import {
   annotateLiveTurnGapAnswer,
@@ -508,10 +508,6 @@ const DAY_WORDS = {
   'twenty-ninth': 29, thirtieth: 30, 'thirty-first': 31,
 };
 const WEEKDAY_ABBR = { sunday: 'Sun', monday: 'Mon', tuesday: 'Tue', wednesday: 'Wed', thursday: 'Thu', friday: 'Fri', saturday: 'Sat' };
-
-function splitSentences(text) {
-  return String(text || '').split(/(?<=[.!?])\s+/).map((part) => part.replace(/\s+/g, ' ').trim()).filter(Boolean);
-}
 
 function parseYear(text) {
   const digits = String(text || '').match(/\b(20\d{2})\b/);
@@ -1402,7 +1398,11 @@ function mergeSavedTurn(saved, priorTurns, customerTurn, session, extraction = {
     ...mergeSavedTripGapFields(saved),
   };
 }
-export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, placeResults = [], placeSearchTurn = false, webResearchTurn = false, env = process.env, seatDollars: suppliedSeatDollars = null, intake = false, wantedThings = [], roster = null, rosterError = null, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, savedStart = '', savedEnd = '', loadOwnerPlan = null, loadSavedTripRecordFn = loadSavedTripRecord, turnActionResults = null,   placeSearchReplyFacts = null } = {}) {
+export async function produceLiveAppReply({
+  customerTurn, session, priorTurns, tripTitle, placeResults = [], placeSearchTurn = false, webResearchTurn = false, env = process.env,
+  seatDollars: suppliedSeatDollars = null, intake = false, wantedThings = [], roster = null, rosterError = null, extractedDestination = '', extractedTitle = '',
+  destinationError = null, titleError = null, savedStart = '', savedEnd = '', loadOwnerPlan = null, loadSavedTripRecordFn = loadSavedTripRecord,
+  turnActionResults = null, placeSearchReplyFacts = null, understanding = null, turnJev = null } = {}) {
   const vkBotReply = await routeVkBotMcpReply({ customerTurn, session, priorTurns, tripTitle, env });
   if (vkBotReply) return requireReplyQuality(vkBotReply, { customerTurn, env });
   const rules = await loadVacationAppReplyRules(env);
@@ -1410,10 +1410,10 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const memory = memoryTurns(history);
   const intakeTurn = { text: customerTurn, intake: intake === true };
   const postIntake = firstMarkedIntake(intakeTurn, history);
-  if (postIntake) return produceFirstIntakeReply({ customerTurn, session, tripTitle, env, rules, wantedThings, roster, extractedDestination, savedStart, savedEnd, turnActionResults, ...(loadOwnerPlan ? { loadOwnerPlan } : {}) });
+  if (postIntake) return produceFirstIntakeReply({ customerTurn, session, tripTitle, env, rules, wantedThings, roster, extractedDestination, savedStart, savedEnd, turnActionResults, turnJev, ...(loadOwnerPlan ? { loadOwnerPlan } : {}) });
   let intent = emptyIntent();
   try {
-    intent = await customerIntent(customerTurn, { env });
+    intent = await customerIntent(customerTurn, { env, understanding });
   } catch (error) {
     intent = { ...emptyIntent(), error: String(error?.message || error) };
   }
@@ -1469,14 +1469,14 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const seatDollars = commerce.seatDollars;
   const pricedSeat = commerce.pricedSeat;
   const jevStarted = Date.now();
-  const jev = await jevPrecall({
+  const jev = turnJev || await jevPrecall({
     customerTurn,
     stage: 'vacation_conversation',
     screen: 'vacation-app',
     session: { seed_id: session?.token || null },
     env,
   });
-  if (jev && typeof jev === 'object') jev.jevLatencyMs = Math.max(0, Date.now() - jevStarted);
+  if (!turnJev && jev && typeof jev === 'object') jev.jevLatencyMs = Math.max(0, Date.now() - jevStarted);
   if (!rules?.ok) {
     return {
       reply: null,
