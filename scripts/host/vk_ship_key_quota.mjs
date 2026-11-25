@@ -98,6 +98,12 @@ export function providerQuotaReason(card) {
   return keyLimitReason(resetFromQuotaText(text));
 }
 
+export function stripeEnvBlockReason(card) {
+  const text = [card?.reason, quotaBlob(card)].filter(Boolean).join(' ');
+  if (!/stripe is not test mode|does not match STRIPE_MODE=test/.test(text)) return '';
+  return 'blocked: env STRIPE_PUBLISHABLE_KEY production';
+}
+
 export function dryRunQuotaGate(quota, measuredPerCustomer) {
   if (!quota || quota.block) return { skip: true, reason: quota?.block || 'blocked: env key-quota unread' };
   const needed = customerBudgetUsd(measuredPerCustomer);

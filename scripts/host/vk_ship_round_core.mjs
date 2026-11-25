@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { providerQuotaReason } from './vk_ship_key_quota.mjs';
+import { providerQuotaReason, stripeEnvBlockReason } from './vk_ship_key_quota.mjs';
 
 const REQUIRED_LABELS = ['project:tsv', 'base:vk', 'craig-asked'];
 const OFFLINE_TESTS = 'scripts/offline-tests.txt';
@@ -486,7 +486,7 @@ export function applyDryRunCard(round, card) {
     round.dryRun.verdict = 'FAIL';
     round.dryRun.reason = 'cleanup-remaining';
   }
-  const quotaReason = providerQuotaReason(card);
+  const quotaReason = providerQuotaReason(card) || stripeEnvBlockReason(card);
   if (quotaReason) {
     round.dryRun.blockedEnv = true;
     round.dryRun.verdict = '';
