@@ -73,7 +73,7 @@
   "functions": {
     "api/[...route].mjs": {
       "maxDuration": 60,
-      "includeFiles": "{scripts/vacation-app-reply-rules-snapshot.json,content/onboarding-welcome.json,dialog-runners/tier_models.json,scripts/fixtures/vk-search-census/results/*.json,scripts/fixtures/vk-admin-review/*.json,config/chat-itinerary-edit-trips.json,vacation-app-admin.html,public/vk-admin-review.js,public/vk-admin-review.css}"
+      "includeFiles": "{scripts/vacation-app-reply-rules-snapshot.json,content/onboarding-welcome.json,dialog-runners/tier_models.json,scripts/fixtures/vk-search-census/results/*.json,scripts/fixtures/vk-admin-review/*.json,config/chat-itinerary-edit-trips.json,vacation-app.html}"
     }
   },
   "headers": [

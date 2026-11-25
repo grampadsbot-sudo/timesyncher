@@ -1,22 +1,14 @@
-.vacation-dropdown[data-admin-switcher] { z-index: 41; }
-.vacation-dropdown[data-admin-switcher].open .trip-list { background: var(--panel, #fff); }
-.admin-switch-group-bar { margin: 6px 10px 2px; font-size: 12px; font-weight: 800; color: var(--muted); }
-.admin-clear-all { margin: 4px 8px 8px; border: 0; background: transparent; color: var(--blue, #2f6f9f); font-weight: 750; width: calc(100% - 16px); text-align: left; padding: 8px; }
-.admin-customers { padding: 8px 12px 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-.admin-group { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #fff; }
-.admin-group-head { padding: 8px 10px; font-size: 13px; font-weight: 800; background: var(--soft, #eef2f6); }
-.admin-group-head time { display: block; font-size: 11px; font-weight: 650; color: var(--muted); margin-top: 2px; }
-.admin-customer-list { list-style: none; margin: 0; padding: 0; }
-.admin-customer-row + .admin-customer-row { border-top: 1px solid var(--line); }
-.admin-customer { width: 100%; border: 0; background: transparent; text-align: left; padding: 10px 12px; display: grid; gap: 2px; }
-.admin-customer strong { font-size: 14px; }
-.admin-customer small { color: var(--muted); font-size: 12px; }
-.admin-customer .coupon { color: var(--gold-strong, #8b6518); font-weight: 700; font-size: 11px; }
-.admin-login { max-width: 360px; margin: 24px auto; display: grid; gap: 10px; padding: 16px; }
-.admin-login input { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
-.admin-login button { border: 0; border-radius: 8px; padding: 10px 12px; background: var(--blue); color: #fff; font-weight: 800; }
-.admin-unavailable { margin: 24px; text-align: center; color: var(--muted); }
-.site-pane .admin-chat, .site-pane .admin-trip-shell { padding: 12px; min-height: 100%; box-sizing: border-box; }
-.site-pane .admin-chat .messages { padding: 0; overflow: auto; max-height: 100%; }
-.site-pane .admin-trip-shell iframe { width: 100%; height: 100%; min-height: 320px; border: 0; display: block; }
-.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+.admin-customers { padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+.admin-group { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 10px 12px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: start; }
+.admin-group header { display: grid; gap: 2px; min-width: 0; }
+.admin-group header small, .admin-group li small { color: var(--muted); }
+.admin-group ul { grid-column: 1; list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 14px; }
+.admin-group li { display: inline-flex; gap: 6px; align-items: baseline; }
+.admin-coupon { font-size: 12px; font-weight: 700; color: var(--gold-strong); }
+.admin-open { grid-column: 2; grid-row: 1 / span 2; border: 1px solid var(--line); border-radius: 8px; background: var(--soft); color: var(--ink); font-weight: 750; padding: 8px 12px; }
+.admin-empty { margin: 16px; color: var(--muted); }
+.site-pane[data-kind="customers"], .site-pane[data-kind="chat"], .site-pane[data-kind="trip"] { background: var(--panel); }
+.admin-clear-all b { color: var(--blue); }
+.app[data-admin] .topbar .brand { flex: 0 0 auto; }
+.app[data-admin] .trip-button .trip-trigger-text { overflow: hidden; }
+.app[data-admin] .trip-button .trip-trigger-title { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; overflow-wrap: normal; }

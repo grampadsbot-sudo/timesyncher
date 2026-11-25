@@ -78,6 +78,10 @@ function publicApiRequest(req) {
     if (!params.get('action')) params.set('action', 'accept-page');
     parts = ['eula'];
   }
+  if (parts[0] === 'vacation-app' && parts[1] === 'admin' && parts.length === 2) {
+    parts = ['admin'];
+    params.set('adminPage', '1');
+  }
   for (const key of ROUTING_QUERY_KEYS) params.delete(key);
   const path = `/api/${parts.map((part) => encodeURIComponent(part)).join('/')}`;
   const qs = params.toString();
