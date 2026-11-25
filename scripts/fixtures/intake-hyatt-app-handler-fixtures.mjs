@@ -330,7 +330,7 @@ export function createHyattHandlerFetch(state, envKeys) {
       const raw = options.body ? JSON.parse(String(options.body)) : {};
       const questions = raw?.questions || raw?.input?.questions || {};
       if (questions.trip_intake) {
-        return { ok: true, json: async () => ({ answers: { trip_intake: { noul: 0.92 } } }) };
+        return { ok: true, json: async () => ({ ok: true, answers: { trip_intake: { noul: 0.92 }, model_tier: { score: 0 }, route_type: { choice: 'general' } } }) };
       }
       if (questions.relevance) {
         return { ok: true, json: async () => ({ answers: { relevance: { choice: 5 } } }) };
@@ -343,9 +343,14 @@ export function createHyattHandlerFetch(state, envKeys) {
     if (href.includes(OPENROUTER_HOST)) {
       const raw = options.body ? JSON.parse(String(options.body)) : {};
       const user = raw.messages?.find((row) => row.role === 'user')?.content || '';
-      if (String(raw.messages?.[0]?.content || '').includes('turnKind')) {
+      if (raw.response_format?.type === 'json_schema') {
         const payload = classifierPayloadForText(user, state);
-        return { ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify(payload) } }] }) };
+        return { ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify({
+          ...payload,
+          intent: { asksPrice: false, asksAccess: false, pullsAccess: false, seats: [], ask: false },
+          contentTags: { tags: payload.things?.some((thing) => thing.kind === 'hotel') ? ['lodging'] : [], ask: !payload.things?.some((thing) => thing.kind === 'hotel') },
+          committedSentenceIndexes: [],
+        }) } }] }) };
       }
       if (String(user).includes('score')) {
         return { ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify({ score: 0.95 }) } }] }) };
