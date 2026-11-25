@@ -17,7 +17,7 @@ import {
 import { intakePlaceSearchTargetKindError, normalizePlaceSearchTargetKind } from './place-search-target-kind.mjs';
 import { tripIntakeExtractionJsonSchema } from './trip-intake-extraction-schema.mjs';
 import { intakeJobFieldsFromSavedTrip } from './trip-intake-job-saved-trip.mjs';
-import { turnIntakePrecheck, turnUnderstandingRequest } from './turn-understanding.mjs';
+import { turnUnderstandingRequest } from './turn-understanding.mjs';
 
 export { intakeThingHasProperName } from './intake-thing-name.mjs';
 
@@ -423,19 +423,16 @@ export async function classifyTripIntake({
   const key = apiKey ?? config.apiKey;
   if (!key) return failed('trip intake classifier needs an OpenRouter key');
   try {
-    const precheck = await turnIntakePrecheck({ turnSession, apiKey, model, env, fetchImpl, customerTurn: message });
-    const turnJev = precheck?.turnJev;
-    let intakeAnswer = precheck?.tripIntakeAnswer;
-    if (!precheck) {
+    let score = 1;
+    if (!turnSession) {
       const decision = await postJson(fetchImpl, DEFAULT_JEV_DECISIONS_URL, key, {
         model,
         state: { channel: 'vacation-app', current_turn: message },
         questions: { trip_intake: TRIP_INTAKE_JEV_QUESTION },
       }, 'intake_classify_jev', 'decisions');
-      intakeAnswer = decision?.answers?.trip_intake;
+      score = decisionScore(decision?.answers?.trip_intake);
     }
-    const score = decisionScore(intakeAnswer);
-    if (score == null) return failed(turnJev?.error || 'trip intake classifier returned no decision');
+    if (score == null) return failed('trip intake classifier returned no decision');
     const extractionModel = bakeoffTierModels()[1];
     const request = tripIntakeExtractionChatRequest({ message, model: extractionModel });
     const extracted = await postJson(
@@ -479,7 +476,6 @@ export async function classifyTripIntake({
       title: clean(extractedFields.title, 180),
       routerModel: model,
       error: null,
-      ...(turnJev ? { turnJev } : {}),
       ...(turnSession ? { understanding: {
         intent: extractedFields.intent,
         contentTags: extractedFields.contentTags,

@@ -36,11 +36,10 @@ await withFetch(async (url, init = {}) => {
   const body = init.body ? JSON.parse(init.body) : {};
   tierCalls.push({ href, body });
   if (href.includes('/api/alpha/decisions')) {
-    if (body.questions?.model_tier) {
-      return json({ answers: { model_tier: { score: 2 }, route_type: { choice: 'general' } } });
-    }
     return json({
       answers: {
+        model_tier: { score: 2 },
+        route_type: { choice: 'general' },
         overall_quality: { score: 0 },
         disposition: { choice: 'rewrite' },
         fix_focus: { choice: 'misses_ask' },
@@ -118,7 +117,7 @@ await withFetch(async (url, init = {}) => {
     if (/Do not write a customer reply/.test(system)) {
       return json({ model: body.model, choices: [{ message: { content: '{"asksPrice":false,"asksAccess":false,"seats":[],"ask":false}' } }] });
     }
-    return json({ error: 'tier model must not run' }, 500);
+    return json({ model: body.model, choices: [{ message: { content: DRAFT } }] });
   }
   return json({ error: 'unexpected url' }, 404);
 }, async () => {
@@ -136,9 +135,9 @@ await withFetch(async (url, init = {}) => {
     return !/Do not write a customer reply/.test(system);
   });
   assert.equal(decisions.length, 1);
-  assert.equal(tierChats.length, 0);
+  assert.equal(tierChats.length, 1, 'the draft runs once before the single Jev judge fails');
   assert.equal(produced.reply, null);
-  assert.equal(produced.reason, 'Jev HTTP 503');
+  assert.equal(produced.reason, 'quality HTTP 503');
 });
 
 const vercel = JSON.parse(await readFile(new URL('../vercel.json', import.meta.url), 'utf8'));

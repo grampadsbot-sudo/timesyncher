@@ -1,4 +1,3 @@
-import { DEFAULT_JEV_DECISIONS_URL, JEV_QUALITY_MODEL, jevPrecall } from '../../scripts/vacation-app-reply-rules.mjs';
 import { splitCustomerSentences } from './customer-intent.mjs';
 import { CONTENT_TAGS } from './turn-tags.mjs';
 
@@ -37,16 +36,4 @@ export function turnUnderstandingRequest(request, message) {
     { role: 'user', content: JSON.stringify({ sentences }) },
   ];
   return request;
-}
-
-export async function turnIntakePrecheck({ turnSession, apiKey, model, env, fetchImpl, customerTurn }) {
-  if (!turnSession || apiKey != null || model !== JEV_QUALITY_MODEL) return null;
-  const url = String(env.TIMESYNCHER_JEV_CLASSIFY_URL || '').trim();
-  if (url && url !== DEFAULT_JEV_DECISIONS_URL) return null;
-  const started = Date.now();
-  const { tripIntakeAnswer, ...jev } = await jevPrecall({
-    customerTurn, stage: 'vacation_conversation', screen: 'vacation-app',
-    session: { seed_id: turnSession.token || null }, includeTripIntake: true, env, fetchImpl,
-  });
-  return { turnJev: { ...jev, jevLatencyMs: Date.now() - started }, tripIntakeAnswer };
 }

@@ -120,7 +120,7 @@ export function openRouterAppKey(env = process.env) {
   return appOpenRouterKey(env);
 }
 
-function openRouterChatModelForTier(tier) {
+export function openRouterChatModelForTier(tier) {
   return OPENROUTER_TIER_CHAT_MODELS[tier] || '';
 }
 
@@ -425,21 +425,19 @@ function isOpenRouterDecisionsUrl(url) {
   return URL.canParse(url) && new URL(url).origin === new URL(DEFAULT_JEV_DECISIONS_URL).origin;
 }
 
+function decisionRouting(answers, via) {
+  const routeType = text(answers.route_type?.choice || answers.routeType?.choice, 80) || null;
+  return { via, routeType, extraContext: { routeType, needsDayForNote: probabilityValue(answers.needs_day_for_note) } };
+}
 function normalizeDecisions(body, via = 'openrouter-decisions') {
   const answers = body?.answers && typeof body.answers === 'object' ? body.answers : {};
   const tierAnswer = answers.model_tier || answers.modelTier || {};
   const score = Number(tierAnswer.score);
-  let modelTier = null;
-  if (Number.isFinite(score)) {
-    modelTier = Math.round(score) + 1;
-  } else {
-    const direct = Number(tierAnswer.choice ?? tierAnswer.value ?? body?.model_tier ?? body?.modelTier);
-    if (Number.isInteger(direct)) modelTier = direct;
-  }
-  const routeType = text(answers.route_type?.choice || answers.routeType?.choice, 80) || null;
+  const directTier = Number(tierAnswer.choice ?? tierAnswer.value ?? body?.model_tier ?? body?.modelTier);
+  const modelTier = Number.isFinite(score) ? Math.round(score) + 1 : directTier;
+  const routing = decisionRouting(answers, via);
   const extraContext = {
-    routeType,
-    needsDayForNote: probabilityValue(answers.needs_day_for_note),
+    ...routing.extraContext,
     modelTierScore: Number.isFinite(score) ? score : null,
     modelTierConfidence: Number.isFinite(Number(tierAnswer.confidence)) ? Number(tierAnswer.confidence) : null,
   };
@@ -447,11 +445,10 @@ function normalizeDecisions(body, via = 'openrouter-decisions') {
     return { jevRan: false, via, modelTier: null, responseModel: null, extraContext, error: 'tier_outside_bakeoff_map' };
   }
   return {
+    ...routing,
     jevRan: true,
-    via,
     modelTier,
     responseModel: openRouterChatModelForTier(modelTier),
-    routeType,
     extraContext,
   };
 }
@@ -750,7 +747,7 @@ export function qualityFromDecisions(body) {
   };
 }
 
-export async function jevQualityRewrite({ customerTurn, draft, tripContext = null, planLine = '', env = process.env, purpose = 'jev_quality' } = {}) {
+export async function jevQualityRewrite({ customerTurn, draft, tripContext = null, planLine = '', env = process.env, purpose = 'jev_quality', routeContext = null } = {}) {
   const key = appOpenRouterKey(env);
   const url = text(env.TIMESYNCHER_JEV_CLASSIFY_URL, 500) || DEFAULT_JEV_DECISIONS_URL;
   if (!JEV_DECISIONS_PATH.test(url)) return { judged: false, reason: 'quality_decisions_url_required', model: JEV_DECISIONS_MODEL };
@@ -794,6 +791,11 @@ export async function jevQualityRewrite({ customerTurn, draft, tripContext = nul
       },
     },
   };
+  if (routeContext) {
+    const { route_type, needs_day_for_note } = decisionsPayload({}).questions;
+    payload.state = { ...vacationAppContext(routeContext), ...payload.state, current_turn: undefined };
+    payload.questions = { route_type, needs_day_for_note, ...payload.questions };
+  }
   try {
     const { response, body } = await fetchOpenRouterJson(url, {
       purpose, endpoint: 'decisions', observe: isOpenRouterDecisionsUrl(url), key, payload,
@@ -810,7 +812,7 @@ export async function jevQualityRewrite({ customerTurn, draft, tripContext = nul
     if (!response.ok || body.ok === false) {
       return { judged: false, reason: text(body.error?.message || body.error || `quality HTTP ${response.status}`, 300), model: JEV_DECISIONS_MODEL };
     }
-    return qualityFromDecisions(body);
+    return routeContext ? { ...qualityFromDecisions(body), routing: decisionRouting(body?.answers || {}, decisionsVia(url)) } : qualityFromDecisions(body);
   } catch (error) {
     return { judged: false, reason: text(error?.message || error, 300), model: JEV_DECISIONS_MODEL };
   }

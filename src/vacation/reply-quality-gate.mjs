@@ -46,14 +46,14 @@ export function heldJudgedDraft({ shippedDraft, enforceInTurnPlaces, finished, p
   };
 }
 
-export async function requireReplyQuality(produced, { customerTurn = '', env = process.env } = {}) {
+export async function requireReplyQuality(produced, { customerTurn = '', env = process.env, judge = null } = {}) {
   if (!produced?.reply) return produced;
   const already = produced.model?.quality?.judged === true
     ? produced.model.quality
     : (produced.quality?.judged === true ? produced.quality : null);
   if (already) return produced;
   const started = Date.now();
-  const quality = await jevQualityRewrite({ customerTurn, draft: produced.reply, env, purpose: 'jev_quality_rewrite' });
+  const quality = judge ? await judge() : await jevQualityRewrite({ customerTurn, draft: produced.reply, env, purpose: 'jev_quality_rewrite' });
   const judgeMs = Math.max(0, Date.now() - started);
   if (quality?.judged !== true) {
     const reason = quality?.reason || 'quality_not_judged';
