@@ -1,7 +1,16 @@
+import { isPlanningErrorReply } from '../../src/vacation/chat-plan-persist.mjs';
 import { classifyAppFailure } from './backends.mjs';
 import { personaSeed, speakCustomer, tripSurvey } from './customer-live.mjs';
 import { hostIsBanned } from './fetch-guard.mjs';
 import { redactExchangeBody } from './redact.mjs';
+
+export const PLANNING_FALLBACK_ABORT_LIMIT = 3;
+
+export function isPlanningFallbackTurn(reply, body = null) {
+  if (isPlanningErrorReply(reply)) return true;
+  const disposition = String(body?.quality?.disposition || body?.jevDisposition || '').trim().toLowerCase();
+  return disposition === 'planning_error_stored';
+}
 
 function appUrl(origin, token, tripId, method) {
   const url = new URL('/api/vacation-itinerary', origin);
@@ -93,14 +102,30 @@ function itineraryCount(body) {
   return Array.isArray(body?.itinerary) ? body.itinerary.length : 0;
 }
 
-const PRICE_TALK_RE = /\$\s*\d|\b(?:price|pricing|cost|coupon|per year|unlimited vacations|household plan)\b/i;
-const PRICE_REACT_RE = /\$\s*\d|\b(?:price|pricing|cost|coupon|worth it|too (?:much|expensive)|works for us|sounds (?:good|fair)|we(?:'ll| will) (?:take|pass|think)|household plan|unlimited vacations)\b/i;
+const DOLLAR_AMOUNT_RE = /\$\s*\d+(?:,\d{3})*(?:\.\d{1,2})?\b/;
+const PLAN_PRICE_CONTEXT_RE = /\b(?:plan|household(?:\s+plan)?|seat|collaborator|per\s+year|annual(?:ly)?|yearly|subscription|membership|unlimited\s+vacations|upgrade|pricing|price|one[\s-]time|per\s+vacation)\b/i;
+const CUSTOMER_PRICE_REF_RE = /\$\s*\d|\b(?:price|pricing|fee|plan|household\s+plan|per\s+year|annual|yearly|subscription|coupon|unlimited\s+vacations)\b/i;
+const CUSTOMER_PRICE_STANCE_RE = /\b(?:sounds?\s+(?:good|fair|reasonable|steep|high|great|doable|affordable|fine)|works?\s+for\s+us|too\s+(?:much|expensive|steep|high|pricey)|reasonable|affordable|steep|expensive|pricey|fair|good\s+value|makes?\s+sense|sign(?:ing)?\s+up|go\s+(?:for|with)|we(?:'ll| will)\s+(?:take|pass|skip|think|stick|go|buy|upgrade)|i(?:'ll| will)\s+(?:take|pass|skip|think|stick|go|buy|upgrade)|no\s+thanks|not\s+right\s+now|maybe\s+later|hold\s+off|skip\s+(?:it|that|the\s+plan)|happy\s+to\s+pay|ready\s+to\s+pay)\b/i;
+
+export function appStatedPlanPricing(text) {
+  const body = String(text || '');
+  return DOLLAR_AMOUNT_RE.test(body) && PLAN_PRICE_CONTEXT_RE.test(body);
+}
+
+function customerPriceReaction(text) {
+  const body = String(text || '');
+  if (!body.trim()) return false;
+  if (DOLLAR_AMOUNT_RE.test(body) && CUSTOMER_PRICE_STANCE_RE.test(body)) return true;
+  return CUSTOMER_PRICE_REF_RE.test(body) && CUSTOMER_PRICE_STANCE_RE.test(body);
+}
 
 export function pricingReactionCaptured(customerTurns) {
   const turns = Array.isArray(customerTurns) ? customerTurns : [];
-  const appMentioned = turns.some((turn) => turn?.role === 'app' && PRICE_TALK_RE.test(String(turn.text || '')));
-  const customerReacted = turns.some((turn) => turn?.role === 'customer' && turn?.odd !== true && PRICE_REACT_RE.test(String(turn.text || '')));
-  return Boolean(appMentioned && customerReacted);
+  const appPriceIndex = turns.findIndex((turn) => turn?.role === 'app' && appStatedPlanPricing(turn.text));
+  if (appPriceIndex < 0) return false;
+  return turns
+    .slice(appPriceIndex + 1)
+    .some((turn) => turn?.role === 'customer' && turn?.odd !== true && customerPriceReaction(turn.text));
 }
 
 export function chatGoalsReached({ itineraryCount: items, customerTurns, index, maxTurns, pricing } = {}) {
@@ -117,6 +142,33 @@ function tripFields(body) {
     tripId: String(trip.id || body?.tripId || ''),
     shareToken: String(trip.shareToken || trip.publicSlug || ''),
   };
+}
+
+function latestStoredAppTurn(body) {
+  if (!Array.isArray(body?.turns)) return null;
+  for (let i = body.turns.length - 1; i >= 0; i -= 1) {
+    const turn = body.turns[i];
+    const speaker = String(turn?.speaker || turn?.role || '');
+    if (speaker !== 'app' || openerClientTurn(turn)) continue;
+    const live = turn?.payload?.liveTranscript && typeof turn.payload.liveTranscript === 'object' ? turn.payload.liveTranscript : {};
+    return {
+      text: String(turn?.body ?? turn?.text ?? live.text ?? '').trim(),
+      model: String(turn?.modelId || turn?.responseModel || live.modelId || live.model?.responseModel || '').trim(),
+      cost: turn?.cost || live.cost || live.model?.cost || null,
+      turnIndex: Number(live.turnIndex || turn?.turnIndex) || null,
+      quality: turn?.quality || live.quality || null,
+      jevDisposition: turn?.jevDisposition || live.jevDisposition || '',
+    };
+  }
+  return null;
+}
+
+function initialOpenerTurns(body) {
+  if (!Array.isArray(body?.turns)) return [];
+  return body.turns
+    .filter((turn) => String(turn?.speaker || turn?.role || '') === 'app')
+    .map((turn) => ({ role: 'app', text: String(turn?.body ?? turn?.text ?? '').trim() }))
+    .filter((turn) => Boolean(turn.text));
 }
 
 export async function playCustomerTurns(story, { origin, token, tripId, fetchImpl, hosts, waitMs = 0, secrets = [], liveCustomer = false, customerAsk = null, customerLanes = null, maxTurns = 0 }) {
@@ -158,6 +210,9 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
   const versionUrl = new URL('/api/version', allowed);
   const start = await send(versionUrl);
   const liveShaStart = String(start.body?.sha || '');
+  const planningFallbackTurns = [];
+  let consecutiveFallbacks = 0;
+  const fallbackSummary = () => ({ count: planningFallbackTurns.length, turns: [...planningFallbackTurns] });
   const finish = async (reason, extra) => {
     const end = await send(versionUrl);
     const turns = extra.customerTurns || [];
@@ -177,6 +232,7 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
       customerTurns: turns,
       customerTurnCount: turns.filter((turn) => turn.role === 'customer').length,
       pricingReactionCaptured: pricingReactionCaptured(turns),
+      planningFallbacks: fallbackSummary(),
     };
   };
   let endpoint = appUrl(allowed, token, tripId, 'GET');
@@ -185,20 +241,23 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
   if (openedFailure) return finish(openedFailure, { detail: opened.body?.error || openedFailure });
   const openedRuled = ruledReplyCount(opened.body);
   let seen = openedRuled == null ? storedTurns(opened.body) : openedRuled;
+  let seenTotal = storedTurns(opened.body);
+  const openerTurns = initialOpenerTurns(opened.body);
   let currentTrip = tripFields(opened.body).tripId || tripId || '';
   let shareToken = tripFields(opened.body).shareToken;
   let items = itineraryCount(opened.body);
   const timings = [];
   const persona = personaSeed(story);
   const customerTurns = [];
-  let lastReply = '';
+  let lastReply = openerTurns.at(-1)?.text || '';
   const limit = liveCustomer ? Math.max(1, Number(maxTurns) || persona.goals.length || 4) : story.turns.length;
   for (let index = 0; index < limit; index += 1) {
     let turn = story.turns[index];
     let customerCost = null;
     let customerModel = '';
     if (liveCustomer) {
-      const spoken = await speakCustomer({ persona, appReply: lastReply, index, ask: customerAsk, order: customerLanes });
+      const priorForModel = [...openerTurns, ...customerTurns];
+      const spoken = await speakCustomer({ persona, appReply: lastReply, index, transcript: priorForModel, ask: customerAsk, order: customerLanes });
       customerCost = spoken.cost;
       customerModel = spoken.model;
       turn = { speaker: persona.name, modality: 'text', text: spoken.text, odd: spoken.kind !== 'goal' };
@@ -229,7 +288,40 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
       polls: timeline.filter((entry) => entry.kind === 'poll'),
       timeline,
     };
-    if (failure) return finish(failure, { timings, storedTurns: seen, itineraryCount: items, tripId: currentTrip, shareToken, detail: final.body?.error || draft.body?.error || failure, exchange: failure === 'turn-not-stored' || failure === 'first-intake-reply-flagged' ? exchange : null, customerTurns });
+    if (failure) {
+      if (failure === 'turn-not-stored') {
+        const probe = await send(appUrl(allowed, token, currentTrip, 'GET'));
+        const probeRuled = ruledReplyCount(probe.body);
+        const probeCount = probeRuled == null ? storedTurns(probe.body) : probeRuled;
+        const probeTotal = storedTurns(probe.body);
+        const storedApp = latestStoredAppTurn(probe.body);
+        const storedReplyGrew = (probeRuled != null ? probeCount > seen : (Array.isArray(probe.body?.turns) && probeCount > seen))
+          || (Array.isArray(probe.body?.turns) && probeTotal > seenTotal && Boolean(storedApp?.text));
+        if (storedReplyGrew && storedApp?.text) {
+          seen = probeRuled != null ? probeCount : probeTotal;
+          seenTotal = probeTotal;
+          items = Math.max(items, itineraryCount(probe.body));
+          shareToken = tripFields(probe.body).shareToken || shareToken;
+          if (tripFields(probe.body).tripId) currentTrip = tripFields(probe.body).tripId;
+          lastReply = storedApp.text;
+          const isFallback = isPlanningFallbackTurn(storedApp.text, storedApp);
+          customerTurns.push({ role: 'app', text: storedApp.text, model: storedApp.model, cost: storedApp.cost, planningFallback: isFallback });
+          if (isFallback) {
+            planningFallbackTurns.push(storedApp.turnIndex || (index + 1));
+            consecutiveFallbacks += 1;
+            if (consecutiveFallbacks >= PLANNING_FALLBACK_ABORT_LIMIT) {
+              return finish('planning-fallback-x3', { timings, storedTurns: seen, itineraryCount: items, tripId: currentTrip, shareToken, detail: '3 consecutive planning fallback replies', customerTurns });
+            }
+          } else {
+            consecutiveFallbacks = 0;
+          }
+          const reachedAfterStored = chatGoalsReached({ itineraryCount: items, customerTurns, index, maxTurns: limit });
+          if (liveCustomer && reachedAfterStored.done) break;
+          continue;
+        }
+      }
+      return finish(failure, { timings, storedTurns: seen, itineraryCount: items, tripId: currentTrip, shareToken, detail: final.body?.error || draft.body?.error || failure, exchange: failure === 'turn-not-stored' || failure === 'first-intake-reply-flagged' ? exchange : null, customerTurns });
+    }
     let reply = replyText(final.body) || replyText(draft.body);
     const stamp = replyModelStamp(final.body?.reply ? final.body : draft.body);
     const nextTrip = tripFields(final.body).tripId || tripFields(draft.body).tripId;
@@ -250,24 +342,38 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
     const history = await send(appUrl(allowed, token, currentTrip, 'GET'));
     const ruled = ruledReplyCount(history.body);
     const count = ruled == null ? storedTurns(history.body) : ruled;
+    const totalNow = storedTurns(history.body);
     items = Math.max(items, itineraryCount(final.body), itineraryCount(draft.body), itineraryCount(history.body));
     shareToken = tripFields(history.body).shareToken || shareToken;
     if (tripFields(history.body).tripId) currentTrip = tripFields(history.body).tripId;
     lastReply = reply || lastReply;
-    customerTurns.push({ role: 'app', text: reply, model: stamp.modelId || stamp.responseModel, cost: final.body?.cost || draft.body?.cost || null });
+    const replyBody = final.body?.reply ? final.body : draft.body;
+    const isFallback = isPlanningFallbackTurn(reply, replyBody);
+    customerTurns.push({ role: 'app', text: reply, model: stamp.modelId || stamp.responseModel, cost: final.body?.cost || draft.body?.cost || null, planningFallback: isFallback });
     const upsell = isScriptedProductReply(reply);
-    if (reply && !stamp.modelId && !stamp.responseModel && !upsell) {
+    if (reply && !stamp.modelId && !stamp.responseModel && !upsell && !isFallback) {
       return finish('reply-not-from-rules', { timings, storedTurns: count, itineraryCount: items, tripId: currentTrip, shareToken, detail: 'scripted line reply had no modelId from vacation-app-reply-rules', customerTurns });
     }
     const storedGrew = ruled != null ? count > seen : (!Array.isArray(history.body?.turns) || count > seen);
     if (!reply || !storedGrew) {
-      if (reply && upsell) {
+      if (reply && (upsell || isFallback)) {
         lastReply = reply;
       } else {
         return finish('reply-not-stored', { timings, storedTurns: count, itineraryCount: items, tripId: currentTrip, shareToken, detail: 'scripted line produced no stored reply', customerTurns });
       }
     } else {
       seen = ruled != null || Array.isArray(history.body?.turns) ? count : seen + 1;
+      seenTotal = Math.max(seenTotal, totalNow);
+    }
+    if (isFallback) {
+      const fallbackTurnIndex = Number(replyBody?.appTurnIndex || latestStoredAppTurn(history.body)?.turnIndex) || (index + 1);
+      planningFallbackTurns.push(fallbackTurnIndex);
+      consecutiveFallbacks += 1;
+      if (consecutiveFallbacks >= PLANNING_FALLBACK_ABORT_LIMIT) {
+        return finish('planning-fallback-x3', { timings, storedTurns: seen, itineraryCount: items, tripId: currentTrip, shareToken, detail: '3 consecutive planning fallback replies', customerTurns });
+      }
+    } else {
+      consecutiveFallbacks = 0;
     }
     const reached = chatGoalsReached({ itineraryCount: items, customerTurns, index, maxTurns: limit });
     if (liveCustomer && reached.done) break;
@@ -314,6 +420,7 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
     webAccessCookie: Boolean(webAccessToken),
     customerTurnCount,
     pricingReactionCaptured: pricingReactionCaptured(customerTurns),
+    planningFallbacks: fallbackSummary(),
     hitTurnCap: liveCustomer && customerTurnCount >= limit,
   };
 }

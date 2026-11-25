@@ -12,19 +12,30 @@ export function waveFailed(result) {
   return (result.cards || []).some((card) => card.verdict === 'FAIL');
 }
 
+function cardUsd(card) {
+  const cost = card?.cost || {};
+  const unit = String(cost.unit || '').trim().toLowerCase();
+  if (cost.state === 'measured' && Number.isFinite(Number(cost.amount)) && (!unit || unit === 'usd')) return Number(cost.amount);
+  if (cost.usd_state === 'priced' && Number.isFinite(Number(cost.usd_amount))) return Number(cost.usd_amount);
+  if (cost.estimate_state === 'estimate' && Number.isFinite(Number(cost.estimate_amount))) return Number(cost.estimate_amount);
+  return null;
+}
+
 function measuredPerCustomer(waves) {
-  const cards = waves.flatMap((wave) => wave.result?.cards || []).filter((card) => card.cost?.state === 'measured' && Number.isFinite(Number(card.cost.amount)));
-  if (!cards.length) return null;
-  return Math.max(...cards.map((card) => Number(card.cost.amount)));
+  const amounts = waves.flatMap((wave) => wave.result?.cards || []).map(cardUsd).filter((n) => n != null);
+  if (!amounts.length) return null;
+  return Math.max(...amounts);
 }
 
 function spent(cards) {
-  return cards.reduce((sum, card) => sum + (card.cost?.state === 'measured' ? Number(card.cost.amount) || 0 : 0), 0);
+  return cards.reduce((sum, card) => sum + (cardUsd(card) ?? 0), 0);
 }
 
 function costLine(cards) {
-  const total = spent(cards);
-  return cards.some((card) => card.cost?.state === 'measured') ? `$${total.toFixed(4)} replies measured` : 'replies not measured';
+  const priced = cards.map(cardUsd).filter((n) => n != null);
+  if (priced.length) return `$${spent(cards).toFixed(4)} replies measured`;
+  if (cards.some((card) => card.cost?.state === 'measured')) return 'unpriced replies';
+  return 'replies not measured';
 }
 
 export async function runRamp(customers, options) {

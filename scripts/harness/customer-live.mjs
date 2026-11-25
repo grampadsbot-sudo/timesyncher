@@ -5,6 +5,21 @@ import path from 'node:path';
 import { hostIsBanned, loadBannedHosts } from './fetch-guard.mjs';
 
 const CUSTOMER_LANE_ORDER = ['gemini', 'claude', 'codex'];
+const TRANSCRIPT_MAX_TURNS = 12;
+const TRANSCRIPT_MAX_CHARS = 1200;
+
+export function formatCustomerTranscript(turns, { maxTurns = TRANSCRIPT_MAX_TURNS, maxChars = TRANSCRIPT_MAX_CHARS } = {}) {
+  if (!Array.isArray(turns)) return [];
+  const capTurns = Math.max(1, Number(maxTurns) || TRANSCRIPT_MAX_TURNS);
+  const capChars = Math.max(40, Number(maxChars) || TRANSCRIPT_MAX_CHARS);
+  return turns
+    .map((turn) => ({
+      role: turn?.role === 'app' ? 'app' : 'customer',
+      text: String(turn?.text ?? turn?.body ?? '').trim().slice(0, capChars),
+    }))
+    .filter((turn) => Boolean(turn.text))
+    .slice(-capTurns);
+}
 
 export function personaSeed(story) {
   const turns = Array.isArray(story?.turns) ? story.turns : [];
@@ -45,12 +60,14 @@ export function isOddCustomerIndex(index, every = oddEvery()) {
   return Number(index) % every === every - 1;
 }
 
-export async function speakCustomer({ persona, appReply = '', index = 0, ask, order, env = process.env } = {}) {
+export async function speakCustomer({ persona, appReply = '', index = 0, transcript = [], ask, order, env = process.env } = {}) {
   const lane = customerLane(order);
   if (isOddCustomerIndex(index, oddEvery(env))) return { ...oddCustomerTurn(index), lane: 'host', model: lane, cost: null };
   if (typeof ask !== 'function') throw new Error('harness preflight missing HARNESS_CUSTOMER_MODEL_URL');
   const goal = persona?.goals?.[index] || persona?.goals?.[0] || persona?.destination || '';
-  const spoken = await ask({ lane, persona, appReply: String(appReply || ''), goal, index });
+  const priorTranscript = formatCustomerTranscript(transcript);
+  const isFirstTurn = Number(index) === 0 && !priorTranscript.some((turn) => turn.role === 'customer');
+  const spoken = await ask({ lane, persona, appReply: String(appReply || ''), goal, index, transcript: priorTranscript, isFirstTurn });
   const text = String(spoken?.text || '').trim();
   if (!text) throw new Error('refused: customer model returned no line');
   if (spoken?.url && hostIsBanned(spoken.url, loadBannedHosts())) throw new Error('refused: harness blocked a model host');
@@ -89,10 +106,14 @@ export function pickCustomerLane(env = process.env, spawnImpl = spawnSync) {
 
 export function customerAskFromEnv(env = process.env, hosts = loadBannedHosts(), fetchImpl = globalThis.fetch) {
   const url = String(env?.HARNESS_CUSTOMER_MODEL_URL || '').trim();
-  return async ({ lane, persona, appReply, goal, index } = {}) => {
+  return async ({ lane, persona, appReply, goal, index, transcript = [], isFirstTurn } = {}) => {
     if (!url) throw new Error('harness preflight missing HARNESS_CUSTOMER_MODEL_URL');
     const banned = Array.isArray(hosts) ? hosts : loadBannedHosts();
     if (hostIsBanned(url, banned)) throw new Error('refused: harness blocked a model host');
+    const priorTranscript = formatCustomerTranscript(transcript);
+    const firstTurn = typeof isFirstTurn === 'boolean'
+      ? isFirstTurn
+      : (Number(index) === 0 && !priorTranscript.some((turn) => turn.role === 'customer'));
     const response = await fetchImpl(url, {
       method: 'POST',
       headers: { 'content-type': 'application/json', accept: 'application/json' },
@@ -103,6 +124,8 @@ export function customerAskFromEnv(env = process.env, hosts = loadBannedHosts(),
         goal,
         appReply,
         index,
+        transcript: priorTranscript,
+        isFirstTurn: firstTurn,
       }),
       signal: AbortSignal.timeout(180000),
     });
