@@ -448,10 +448,10 @@ function normalizeDecisions(body, via = 'openrouter-decisions') {
   };
 }
 
-export async function postJevDecisions({ payload, apiKey, fetchImpl = fetch, title = 'TimeSyncher Vacation POI', timeoutMs = 20000, readBody = readDecisionCopy } = {}) {
+export async function postJevDecisions({ payload, apiKey, fetchImpl = fetch, title = 'TimeSyncher Vacation POI', timeoutMs = 20000, purpose = 'jev_decisions', readBody = readDecisionCopy } = {}) {
   const init = { method: 'POST', headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json', accept: 'application/json', 'HTTP-Referer': 'https://timesyncher.com', 'X-Title': title }, signal: AbortSignal.timeout(Math.max(1, Number(timeoutMs) || 20000)) };
   const result = await fetchOpenRouterJson(DEFAULT_JEV_DECISIONS_URL, {
-    ...init, purpose: 'place_relevance_jev', endpoint: 'decisions', key: apiKey, payload, fetchImpl, readBody,
+    ...init, purpose, endpoint: 'decisions', key: apiKey, payload, fetchImpl, readBody,
   });
   return readBody === readDecisionCopy ? result.response : result;
 }

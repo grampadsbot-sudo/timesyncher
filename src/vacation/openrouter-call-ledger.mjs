@@ -17,7 +17,7 @@ function flushCalls(turn) {
 }
 
 export function withOpenRouterLedger(work, tripId = null) {
-  const turn = { calls: [], logged: 0, closed: false, tripId, requestId: null };
+  const turn = { calls: [], pending: new Set(), logged: 0, closed: false, tripId, requestId: null };
   return turnContext.run(turn, async () => {
     try {
       return await work();
@@ -68,6 +68,14 @@ export function openRouterTurnTelemetry() {
   return { openrouterCalls, openrouterTotals };
 }
 
+export function pendingOpenRouterCalls() {
+  const pending = turnContext.getStore()?.pending;
+  if (!pending?.size) return null;
+  return (async () => {
+    while (pending.size) await Promise.allSettled(pending);
+  })();
+}
+
 function modelId(value, key) {
   if (typeof value !== 'string' || (key && value.includes(key))) return null;
   return /^[a-z\d][a-z\d._-]{0,79}\/[a-z\d][a-z\d._:-]{0,149}$/i.test(value) ? value : null;
@@ -85,7 +93,16 @@ async function readJson(response) {
   return { body: typeof response?.json === 'function' ? await response.json().catch(() => null) : null };
 }
 
-export async function fetchOpenRouterJson(url, {
+export function fetchOpenRouterJson(url, options) {
+  const pending = turnContext.getStore()?.pending;
+  if (!pending || options.observe === false) return performOpenRouterCall(url, options);
+  const result = performOpenRouterCall(url, options)
+    .finally(() => pending.delete(result));
+  pending.add(result);
+  return result;
+}
+
+async function performOpenRouterCall(url, {
   purpose, endpoint = 'chat', payload, key, fetchImpl = fetch, readBody = readJson, replyCost = false, observe = true, ...init
 }) {
   const requestBody = endpoint === 'chat' ? { ...payload, usage: { include: true } } : payload;

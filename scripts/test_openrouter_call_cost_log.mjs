@@ -7,6 +7,7 @@ import { customerIntent, activityCommits } from '../src/vacation/customer-intent
 import { liveTranscriptFromRows } from '../src/vacation/live-app-turn.mjs';
 import { bindOpenRouterLedger, openRouterTurnTelemetry, withOpenRouterLedger } from '../src/vacation/openrouter-call-ledger.mjs';
 import { jevRelevanceScore } from '../src/vacation/place-relevance-judge.mjs';
+import { persistVacationAppOutboundReply } from '../src/vacation/reply-ship.mjs';
 import { DEFAULT_JEV_DECISIONS_URL, INTERIM_MODEL, JEV_QUALITY_MODEL, jevChooseRewrite } from './vacation-app-reply-rules.mjs';
 import { customerSection } from './harness/findings.mjs';
 import { renderDialog } from './harness/live-outputs.mjs';
@@ -94,6 +95,7 @@ async function mockFetch(url, init = {}) {
 const session = { customer_id: 'fixture-owner', first_name: 'Avery', display_name: 'Avery', metadata: { replyBackend: 'openrouter' } };
 const trip = { id: 'trip-1148', title: 'Bend spring vacation', start_date: '2027-03-04', end_date: '2027-03-08', destination: '', metadata: {} };
 const stored = [];
+const lateWrite = Promise.withResolvers();
 const db = async (strings, ...values) => {
   const query = strings.join(' ? ').replace(/\s+/g, ' ').trim();
   if (/select count\(\*\)::int as n.*from transcript_turns/i.test(query)) return [{ n: stored.length }];
@@ -107,6 +109,7 @@ const db = async (strings, ...values) => {
   if (query.startsWith('update transcript_turns set payload = jsonb_set')) {
     const app = stored.find((row) => row.request_id === values[1] && row.speaker === 'app');
     Object.assign(app.payload.liveTranscript, structuredClone(values[0]));
+    if (app.request_id === 'late-request') lateWrite.resolve(app.payload.liveTranscript);
     return [];
   }
   if (/insert into worker_jobs/i.test(query)) return [{ id: `job-${stored.length}` }];
@@ -211,6 +214,34 @@ try {
   assert.equal(extras.openrouterTotals.unpricedCalls, 2);
   assert.deepEqual(failures.openrouterCalls.map((row) => [row.ok, row.httpStatus, row.costSource]), [[false, null, 'unpriced'], [false, 429, 'unpriced']]);
   assert.equal(failures.openrouterTotals.unpricedCalls, 2);
+
+  const finishFetch = Promise.withResolvers();
+  let lateCall;
+  await withOpenRouterLedger(async () => {
+    bindOpenRouterLedger({ tripId: trip.id, requestId: 'late-request' });
+    const shipped = await persistVacationAppOutboundReply({
+      db, tripId: trip.id, requestId: 'late-request', transcriptOwnerId: session.customer_id,
+      produced: { reply: rewrite, quality: { judged: true } },
+      classification: {}, jobFields: {}, customerTurnIndex: 5,
+      vacationAppTripSummary: (row) => row,
+      recordCustomerThingNotes: async () => {
+        lateCall = customerIntent(followup, { env, fetchImpl: async (...args) => {
+          await finishFetch.promise;
+          return mockFetch(...args);
+        } });
+        return [];
+      },
+    });
+    assert.equal(shipped.ok, true);
+    assert.equal(openRouterTurnTelemetry().openrouterTotals.calls, 0);
+  });
+  finishFetch.resolve();
+  await lateCall;
+  const lateTurn = await lateWrite.promise;
+  assert.deepEqual(lateTurn.openrouterCalls.map((row) => row.purpose), ['intent']);
+  assert.equal(lateTurn.openrouterTotals.measuredUsd, usage.cost);
+  assert.equal(logs.at(-1).requestId, 'late-request');
+
   assert.equal(logs.length, fetches.length, 'one structured event per attempted inference call');
   const output = JSON.stringify([first.openrouterCalls, second.openrouterCalls, extras, failures, logs]);
   for (const privateText of [fakeKey, intake, followup, 'fixture transport failure']) assert.ok(!output.includes(privateText));

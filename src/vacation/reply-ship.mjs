@@ -15,16 +15,39 @@ import { replyClaimContextFromIntent } from './reply-action-claim.mjs';
 import { rewriteBlockedActionClaim } from './reply-action-claim-rewrite.mjs';
 import { savedThingFieldsForTurn } from './turn-saved-thing-ids.mjs';
 import { sessionReplyBackend } from './vk-bot-mcp-reply.mjs';
-import { openRouterTurnTelemetry } from './openrouter-call-ledger.mjs';
+import { openRouterTurnTelemetry, pendingOpenRouterCalls } from './openrouter-call-ledger.mjs';
+import { scheduleBackgroundWork } from './deferred-work.mjs';
 
-async function storePostReplyCallTelemetry(db, requestId, appLive) {
-  const telemetry = openRouterTurnTelemetry();
-  if (telemetry.openrouterTotals?.calls === appLive.openrouterTotals?.calls) return;
-  await db`
-    update transcript_turns
-    set payload = jsonb_set(payload, '{liveTranscript}', (payload->'liveTranscript') || ${telemetry}::jsonb)
-    where request_id = ${requestId} and speaker = 'app' and channel = 'vacation-app' and direction = 'outbound'
-  `.catch(() => console.error('vacation_app_openrouter_telemetry_store_failed'));
+async function withPostReplyCallTelemetry(db, requestId, appLive, work) {
+  let storedCalls = appLive.openrouterTotals?.calls ?? 0;
+  const save = async () => {
+    const telemetry = openRouterTurnTelemetry();
+    const calls = telemetry.openrouterTotals?.calls ?? 0;
+    if (calls <= storedCalls) return;
+    try {
+      await db`
+        update transcript_turns
+        set payload = jsonb_set(payload, '{liveTranscript}', (payload->'liveTranscript') || ${telemetry}::jsonb)
+        where request_id = ${requestId} and speaker = 'app' and channel = 'vacation-app' and direction = 'outbound'
+          and coalesce(jsonb_array_length(payload->'liveTranscript'->'openrouterCalls'), 0) < ${calls}
+      `;
+      storedCalls = calls;
+    } catch (error) {
+      console.error('vacation_app_openrouter_telemetry_store_failed');
+    }
+  };
+  try {
+    return await work();
+  } finally {
+    const pending = pendingOpenRouterCalls();
+    await save();
+    if (pending) {
+      void scheduleBackgroundWork(async () => {
+        await pending;
+        await save();
+      });
+    }
+  }
 }
 
 export async function outboundAppReplyForRequest(db, requestId) {
@@ -169,7 +192,7 @@ export async function persistVacationAppOutboundReply({
       'outbound', now(), ${exchangeLatency}
     )
   `;
-  const itinerary = await recordCustomerThingNotes(
+  const itinerary = await withPostReplyCallTelemetry(db, requestId, appLive, () => recordCustomerThingNotes(
     db,
     tripId,
     requestText,
@@ -193,9 +216,8 @@ export async function persistVacationAppOutboundReply({
     },
     firstIntake ? requestText : '',
     intakeThings,
-  );
+  ));
   if (itinerary.length) await publishIntakeShare(db, tripId);
-  await storePostReplyCallTelemetry(db, requestId, appLive);
   const savedFields = await savedThingFieldsForTurn(db, tripId, itinerary?.savedThingIds || []);
   const deferredWork = itinerary?.deferredWork?.deferred ? itinerary.deferredWork : null;
   const postReplyTimings = itinerary?.postReplyTimings || null;
@@ -305,7 +327,7 @@ export async function commitShippedRewrite(db, session, pending, finished, { rec
       'outbound', now(), ${wallMs}
     )
   `;
-  const itinerary = await recordCustomerThingNotes(
+  const itinerary = await withPostReplyCallTelemetry(db, pending.requestId, appLive, () => recordCustomerThingNotes(
     db,
     pending.tripId,
     pending.customerTurn,
@@ -327,9 +349,8 @@ export async function commitShippedRewrite(db, session, pending, finished, { rec
     },
     pending.postIntake === true ? pending.customerTurn : '',
     pending.wantedThings || [],
-  );
+  ));
   if (itinerary.length) await publishIntakeShare(db, pending.tripId);
-  await storePostReplyCallTelemetry(db, pending.requestId, appLive);
   const savedFields = await savedThingFieldsForTurn(db, pending.tripId, itinerary?.savedThingIds || []);
   const deferredWork = itinerary?.deferredWork?.deferred ? itinerary.deferredWork : null;
   const postReplyTimings = itinerary?.postReplyTimings || null;

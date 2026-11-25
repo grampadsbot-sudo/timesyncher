@@ -63,6 +63,7 @@ export async function jevRelevanceScore(poi, { fetchImpl = fetch, apiKey = '', t
       apiKey,
       fetchImpl,
       title: 'TimeSyncher Vacation POI',
+      purpose: 'place_relevance_jev',
       timeoutMs: judgeTimeoutMs,
       readBody: async (response) => {
         const responseText = typeof response.text === 'function' ? await response.text() : '';

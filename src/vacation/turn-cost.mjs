@@ -90,24 +90,35 @@ export function sumModelCost(previous, next) {
 }
 
 let listedPriceCache = null;
+let listedPriceLoad = null;
 export function resetOpenRouterListedPriceCache() {
   listedPriceCache = null;
+  listedPriceLoad = null;
 }
+
 export async function openRouterListedPrices(modelId, modelsUrl, key, fetchImpl = fetch) {
   if (listedPriceCache) return listedPriceCache.get(modelId) || null;
   if (!key) return null;
-  const response = await fetchImpl(modelsUrl, { headers: { authorization: `Bearer ${key}`, accept: 'application/json' }, signal: AbortSignal.timeout(8000) }).catch(() => null);
+  const pending = listedPriceLoad ??= loadOpenRouterListedPrices(modelsUrl, key, fetchImpl).catch(() => null);
+  const prices = await pending;
+  if (listedPriceLoad === pending) {
+    listedPriceCache = prices;
+    listedPriceLoad = null;
+  }
+  return prices?.get(modelId) || null;
+}
+
+async function loadOpenRouterListedPrices(modelsUrl, key, fetchImpl) {
+  const response = await fetchImpl(modelsUrl, { headers: { authorization: `Bearer ${key}`, accept: 'application/json' }, signal: AbortSignal.timeout(8000) });
   if (!response?.ok) return null;
-  const body = await response.json().catch(() => ({}));
+  const body = await response.json();
   const map = new Map();
-  for (const row of body.data || []) {
+  for (const row of Array.isArray(body?.data) ? body.data : []) {
     const prompt = Number(row?.pricing?.prompt);
     const completion = Number(row?.pricing?.completion);
     if (row?.id && Number.isFinite(prompt) && Number.isFinite(completion)) map.set(row.id, { prompt, completion });
   }
-  if (!map.size) return null;
-  listedPriceCache = map;
-  return map.get(modelId) || null;
+  return map.size ? map : null;
 }
 
 export async function openRouterReplyCost(body, modelId, lookupPrice) {
