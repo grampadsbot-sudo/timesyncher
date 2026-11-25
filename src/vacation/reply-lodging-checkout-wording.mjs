@@ -1,22 +1,19 @@
-const LODGING_CHECKOUT_TIME = /\bcheckout\s+times?\b/gi;
-const LODGING_CHECK_OUT_TIME = /\bcheck\s+out\s+times?\b/gi;
-const ARRIVAL_OR_CHECKOUT = /\b(arrival|check-in)\s+or\s+checkout\b/gi;
-const HOTEL_ARRIVAL_OR_CHECKOUT = /\bhotel\s+arrival\s+or\s+checkout\b/gi;
-const AFTER_LODGING_CHECKOUT = /\bafter\s+checkout\b/gi;
-const LODGING_CONTEXT_CHECKOUT = /(?<=(?:\bhotel\b|\blodging\b|\bstay\b|\barrival\b|\bcheck-in\b)[^.!?]{0,72}\s)checkout\b/gi;
+const BARE_CHECKOUT = /(?<![\w/.-])checkout(?![\w/-]|\.\w)/gi;
+const CHECK_OUT_TIME = /\bcheck\s+out(?=\s+times?\b)/gi;
+const LODGING_CONTEXT = /\b(?:hotel|lodging|resort|motel|inn|room|suite|stay|rental|condo|villa|house|airbnb|check-in|check in|arrival|arrive|departure|depart|late|early|morning|afternoon|days?|times?|monday|tuesday|wednesday|thursday|friday|saturday|sunday|noon)\b|\bat\s+\d|\d\s*(?:a\.?m|p\.?m)\b/i;
+const PAYMENT_CONTEXT = /\b(?:stripe|purchase|cart|billing|payments?|pay|card|coupon|subscription|order|page|link|buy|price|checkout\s+modules?)\b/i;
+const SENTENCE = /[^.!?\n]+(?:[.!?]+|\n|$)/g;
 
-const PAYMENT_CHECKOUT_PAGE = /\b(?:the\s+)?checkout\s+page\b/i;
-const STRIPE_CHECKOUT = /\bstripe\s+checkout\b/i;
+function hyphenate(word) {
+  return word[0] === 'C' ? 'Check-out' : 'check-out';
+}
 
 export function normalizeLodgingCheckoutWording(text) {
-  let value = String(text || '');
-  if (!/\bcheckout\b/i.test(value) && !/\bcheck\s+out\s+time/i.test(value)) return value;
-  if (PAYMENT_CHECKOUT_PAGE.test(value) || STRIPE_CHECKOUT.test(value)) return value;
-  value = value.replace(LODGING_CHECK_OUT_TIME, (match) => match.replace(/\bcheck\s+out\b/i, 'check-out'));
-  value = value.replace(LODGING_CHECKOUT_TIME, (match) => match.replace(/\bcheckout\b/i, 'check-out'));
-  value = value.replace(HOTEL_ARRIVAL_OR_CHECKOUT, (match) => match.replace(/\bcheckout\b/i, 'check-out'));
-  value = value.replace(ARRIVAL_OR_CHECKOUT, (match) => match.replace(/\bcheckout\b/i, 'check-out'));
-  value = value.replace(LODGING_CONTEXT_CHECKOUT, 'check-out');
-  value = value.replace(AFTER_LODGING_CHECKOUT, 'after check-out');
-  return value;
+  const value = String(text || '');
+  if (!/checkout|check\s+out\s+time/i.test(value)) return value;
+  return value.replace(SENTENCE, (sentence) => {
+    const timed = sentence.replace(CHECK_OUT_TIME, hyphenate);
+    if (!LODGING_CONTEXT.test(timed) || PAYMENT_CONTEXT.test(timed)) return timed;
+    return timed.replace(BARE_CHECKOUT, hyphenate);
+  });
 }

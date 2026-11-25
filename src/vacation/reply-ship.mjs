@@ -156,7 +156,8 @@ export async function persistVacationAppOutboundReply({
     };
   }
   if (firstIntake && produced?.reply) produced.reply = ensurePostIntakeCollabCopy(produced.reply);
-  if (produced?.reply) produced.reply = finalizeCustomerReplyText(sayVacationNotTrip(produced.reply));
+  if (produced?.reply) produced.reply = sayVacationNotTrip(produced.reply);
+  if (produced?.reply) produced.reply = finalizeCustomerReplyText(produced.reply);
   const priorApp = await outboundAppReplyForRequest(db, requestId);
   if (priorApp?.id) {
     await markWorkerJobLiveHandled(db, jobId);
@@ -296,6 +297,7 @@ export async function commitShippedRewrite(db, session, pending, finished, { rec
     return { ok: false, status: 'reply_unavailable', reply: null, error: String(finished?.quality?.reason || finished?.reason || 'quality_not_judged') };
   }
   finished = { ...finished, reply: sayVacationNotTrip(finished.reply) };
+  finished.reply = finalizeCustomerReplyText(finished.reply);
   const wallMs = Math.max(1, Date.now() - (Number(pending.wallStarted) || Date.now()));
   const appLive = liveTurnRecord({
     turnIndex: Number(pending.customerTurnIndex) + 1,
