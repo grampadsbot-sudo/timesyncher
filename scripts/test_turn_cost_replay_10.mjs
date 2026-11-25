@@ -7,8 +7,6 @@ assert.equal(fixture.turns.length, 10);
 assert.equal(Number(fixture.turns.reduce((sum, turn) => sum + turn.baseline.replyUsd, 0).toFixed(8)), fixture.preChangeReplySubtotalUsd);
 
 function replayUsage({ body, purpose, content, index }, baseline) {
-  // r9 records aggregate generation usage. Keep the per-generation share of its input
-  // and bound the reported completion by the request's output budget.
   const generations = baseline.triedRewrite ? 2 : 1;
   const prompt = purpose === 'reply_interim' ? baseline.interimPromptTokens
     : Math.ceil((baseline.promptTokens - baseline.interimPromptTokens) / generations);
