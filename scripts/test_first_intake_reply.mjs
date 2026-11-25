@@ -237,6 +237,21 @@ function jevOk(score = 0) {
 
 function decisionsResponse(init, score = 0) {
   const body = init?.body ? JSON.parse(init.body) : {};
+  if (body.questions?.model_tier && body.questions?.overall_quality) {
+    return {
+      ok: true,
+      json: async () => ({
+        ok: true,
+        answers: {
+          model_tier: { score },
+          route_type: { choice: 'general' },
+          overall_quality: { score: 4 },
+          disposition: { choice: 'keep' },
+          fix_focus: { choice: 'keep' },
+        },
+      }),
+    };
+  }
   if (body.questions?.overall_quality) {
     return {
       ok: true,
@@ -454,22 +469,31 @@ try {
   assert.equal(tierThree.model.responseModel, INTERIM_MODEL);
 
   chatCalls.length = 0;
-  globalThis.fetch = async (url) => {
+  globalThis.fetch = async (url, init) => {
     const target = String(url);
+    if (target.includes('/get_page') || target.includes('/page?')) {
+      return { ok: true, json: async () => ({ frontmatter: { smoke_bar_phrase: 'Fixture rules loaded' } }) };
+    }
     if (target.includes('/api/alpha/decisions')) {
       return { ok: false, status: 503, json: async () => ({ error: { message: 'jev down' } }) };
     }
     if (target.includes('/chat/completions')) {
-      chatCalls.push({});
-      throw new Error('fallback model was called');
+      chatCalls.push(init?.body ? JSON.parse(init.body) : {});
+      return {
+        ok: true,
+        json: async () => ({
+          model: tiers[1],
+          choices: [{ message: { content: `${voiceReply}\nBEAT: reflected the intake` } }],
+        }),
+      };
     }
     throw new Error(`unexpected ${target}`);
   };
   const jevFailed = await produceLiveAppReply({ ...voiceInput, ...intakeLive });
-  assert.equal(chatCalls.length, 0);
+  assert.equal(chatCalls.length, 1, 'intake draft runs before the merged Jev judge fails');
   assert.equal(jevFailed.reply, null);
   assert.equal(jevFailed.reason, 'jev down');
-  assert.equal(jevFailed.model, null);
+  assert.ok(jevFailed.model);
 
   chatCalls.length = 0;
   globalThis.fetch = async (url, init) => {

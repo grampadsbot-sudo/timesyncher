@@ -1107,7 +1107,12 @@ export async function publishTripIntakeShare(db, tripId) {
 }
 
 export async function queueVacationAppTurnForTests(db, session, trip, body) {
-  return withOpenRouterLedger(async () => ({ ...await queueVacationAppTurn(db, session, trip, body), ...openRouterTurnTelemetry() }), trip?.id);
+  const requestText = cleanText(body.text || body.message, 12000);
+  const intakePrefill = await resolveVacationAppQueueIntake(requestText, null, process.env, session);
+  return withOpenRouterLedger(async () => ({
+    ...await queueVacationAppTurn(db, session, trip, body, intakePrefill),
+    ...openRouterTurnTelemetry(),
+  }), trip?.id);
 }
 
 export default async function handler(req, res) {

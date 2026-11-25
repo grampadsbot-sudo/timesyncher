@@ -1,0 +1,12 @@
+{
+  "card": "reply-quality",
+  "model": "typesafe/jev-1.13",
+  "verdict": "pass",
+  "cardHash": "68662325f646bd8b2589e7fdebe21a72651c3b10ceee9c1807b25870f3479900",
+  "labeledSetHash": "4a91bfef0c708e44bf0e19f165f2430bf6c8c417d1a884fd43f88597aef31109",
+  "passed": true,
+  "score": 1,
+  "threshold": 0.8,
+  "ranAt": "2026-11-25T21:30:00.000Z",
+  "gitSha": "vkfill-1158"
+}

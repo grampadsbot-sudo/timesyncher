@@ -1,4 +1,4 @@
-import { callTieredModel, jevPrecall } from '../../scripts/vacation-app-reply-rules.mjs';
+import { callTieredModel, jevBootstrapForDraft, jevTurn } from '../../scripts/vacation-app-reply-rules.mjs';
 import { requireReplyQuality } from './reply-quality-gate.mjs';
 import { sumModelCost } from './turn-cost.mjs';
 import { routeVkBotMcpReply } from './vk-bot-mcp-reply.mjs';
@@ -85,14 +85,8 @@ export async function produceNoTripStarterReply({
     return { reply: null, rules, jev: null, model: null, reason: rules?.error || 'reply_rules_unloaded' };
   }
   const jevStarted = Date.now();
-  const jev = turnJev || await jevPrecall({
-    customerTurn,
-    stage: 'vacation_conversation',
-    screen: 'vacation-app',
-    session: { seed_id: session?.token || null },
-    env,
-  });
-  if (!turnJev && jev && typeof jev === 'object') jev.jevLatencyMs = Math.max(0, Date.now() - jevStarted);
+  const jev = jevBootstrapForDraft({ turnJev, customerTurn });
+  if (jev && typeof jev === 'object') jev.jevLatencyMs = Math.max(0, Date.now() - jevStarted);
   if (!jev?.jevRan) {
     return { reply: null, rules, jev, model: null, reason: jev?.error || 'jev_skipped' };
   }
@@ -152,5 +146,61 @@ export async function produceNoTripStarterReply({
       blockedReasons: [String(error.reason || 'reply_action_claim_blocked')],
     };
   }
-  return requireReplyQuality({ reply, rules, jev, model, reason: null }, { customerTurn, env });
+  const judgeStarted = Date.now();
+  const jevTurnResult = await jevTurn({
+    customerTurn,
+    draft: reply,
+    stage: 'vacation_conversation',
+    screen: 'vacation-app',
+    session: { seed_id: session?.token || null },
+    env,
+  });
+  const judgeMs = Math.max(0, Date.now() - judgeStarted);
+  if (jevTurnResult?.jevRan) {
+    jev.modelTier = jevTurnResult.modelTier ?? jev.modelTier;
+    jev.responseModel = jevTurnResult.responseModel ?? jev.responseModel;
+    jev.routeType = jevTurnResult.routeType ?? jev.routeType;
+    jev.extraContext = jevTurnResult.extraContext ?? jev.extraContext;
+    jev.via = jevTurnResult.via ?? jev.via;
+    jev.jevRan = true;
+    jev.jevLatencyMs = Math.max(0, Number(jev.jevLatencyMs) || 0) + judgeMs;
+  } else if (jevTurnResult?.error) {
+    jev.error = jevTurnResult.error;
+    jev.jevRan = false;
+  }
+  const quality = jevTurnResult?.quality;
+  if (quality?.judged !== true) {
+    const reason = quality?.reason || jevTurnResult?.error || 'quality_not_judged';
+    return {
+      reply: null,
+      rules,
+      jev,
+      model,
+      quality: quality || { judged: false, reason },
+      reason,
+      blockedReasons: [reason],
+    };
+  }
+  quality.judgeMs = judgeMs;
+  const latency = model?.log?.latencyMs && typeof model.log.latencyMs === 'object' ? model.log.latencyMs : {};
+  return {
+    reply,
+    rules,
+    jev,
+    model: {
+      ...(model || {}),
+      quality,
+      log: {
+        ...(model?.log || {}),
+        jevScoreDraft: quality.score,
+        latencyMs: {
+          ...latency,
+          jevDraft: judgeMs,
+          total: (Number(latency.draft) || Number(model?.genLatencyMs) || 0) + judgeMs,
+        },
+      },
+    },
+    quality,
+    reason: null,
+  };
 }

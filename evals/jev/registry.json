@@ -3,14 +3,14 @@
     {
       "id": "reply-model-tier",
       "file": "scripts/vacation-app-reply-rules.mjs",
-      "anchor": "function decisionsPayload",
+      "anchor": "function precallDecisionQuestions",
       "extract": "questions",
       "consts": ["JEV_MODEL_TIER_CRITERIA"]
     },
     {
       "id": "reply-quality",
       "file": "scripts/vacation-app-reply-rules.mjs",
-      "anchor": "export async function jevQualityRewrite",
+      "anchor": "function draftQualityQuestions",
       "extract": "questions"
     },
     {

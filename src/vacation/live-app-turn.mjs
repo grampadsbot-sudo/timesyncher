@@ -3,7 +3,8 @@ import {
   callTieredModel,
   INTERIM_MODEL,
   isBakeoffModelId,
-  jevPrecall,
+  jevBootstrapForDraft,
+  jevTurn,
   jevQualityRewrite,
   JEV_QUALITY_MODEL,
   loadVacationAppReplyRules,
@@ -1469,14 +1470,8 @@ export async function produceLiveAppReply({
   const seatDollars = commerce.seatDollars;
   const pricedSeat = commerce.pricedSeat;
   const jevStarted = Date.now();
-  const jev = turnJev || await jevPrecall({
-    customerTurn,
-    stage: 'vacation_conversation',
-    screen: 'vacation-app',
-    session: { seed_id: session?.token || null },
-    env,
-  });
-  if (!turnJev && jev && typeof jev === 'object') jev.jevLatencyMs = Math.max(0, Date.now() - jevStarted);
+  const jev = jevBootstrapForDraft({ turnJev, understanding, customerTurn });
+  if (jev && typeof jev === 'object') jev.jevLatencyMs = Math.max(0, Date.now() - jevStarted);
   if (!rules?.ok) {
     return {
       reply: null,
@@ -1564,8 +1559,34 @@ export async function produceLiveAppReply({
   const draftLatencyMs = Number(model?.genLatencyMs) || Math.max(0, Date.now() - genStarted);
   const draftFlags = hardQualityFlags(originalDraft, intakeTurn, corpus, modelPlaceSources, intent);
   const qualityStarted = Date.now();
-  let quality = await jevQualityRewrite({ customerTurn, draft: originalDraft, tripContext, planLine, env });
+  const jevTurnResult = await jevTurn({
+    customerTurn,
+    draft: originalDraft,
+    tripContext,
+    planLine,
+    stage: 'vacation_conversation',
+    screen: 'vacation-app',
+    session: { seed_id: session?.token || null },
+    env,
+  });
   const draftQualityMs = Math.max(0, Date.now() - qualityStarted);
+  if (jevTurnResult?.jevRan) {
+    jev.modelTier = jevTurnResult.modelTier ?? jev.modelTier;
+    jev.responseModel = jevTurnResult.responseModel ?? jev.responseModel;
+    jev.routeType = jevTurnResult.routeType ?? jev.routeType;
+    jev.extraContext = jevTurnResult.extraContext ?? jev.extraContext;
+    jev.via = jevTurnResult.via ?? jev.via;
+    jev.jevRan = true;
+    jev.jevLatencyMs = Math.max(0, Number(jev.jevLatencyMs) || 0) + draftQualityMs;
+    if (model && typeof model === 'object') {
+      model.modelTier = jev.modelTier;
+      model.responseModel = jev.responseModel;
+    }
+  } else if (jevTurnResult?.error) {
+    jev.error = jevTurnResult.error;
+    jev.jevRan = false;
+  }
+  let quality = jevTurnResult?.quality;
   const factErrors = draftFactErrors(originalDraft, tripFacts);
   if (quality?.judged) {
     quality = correctFalsePriceMiss(dockQuality(quality, draftFlags), originalDraft, customerTurn, intent);
