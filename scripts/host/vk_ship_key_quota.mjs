@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { isSpendLimitReason } from '../harness/backends.mjs';
 import { DRY_RUN_KEY_DAILY_CAP_USD } from '../harness/cost.mjs';
+import { OPENROUTER_KEY_URL } from '../vacation-app-reply-rules.mjs';
 import { PULLED_ENV_FILES, defaultVercelTokenFile } from './vk_ship_dry_env.mjs';
 
 const KEY_NAMES = ['OPENROUTER_API_KEY', 'TIMESYNCHER_OPENROUTER_API_KEY'];
@@ -233,7 +234,6 @@ export async function readDryRunKeyQuota({
   if (!secret) return publicQuota({ block: 'blocked: env key-quota unread' });
   let response;
   try {
-    const { OPENROUTER_KEY_URL } = await import('../vacation-app-reply-rules.mjs');
     response = await fetchImpl(OPENROUTER_KEY_URL, {
       method: 'GET',
       headers: { Authorization: `Bearer ${secret}` },
