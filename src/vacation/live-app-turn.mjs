@@ -40,52 +40,6 @@ import { routeVkBotMcpReply } from './vk-bot-mcp-reply.mjs';
 import { judgedInterimOrNull, readInterimJudge } from './interim-judge.mjs';
 export { judgeInterimReply } from './interim-judge.mjs';
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 export const LIVE_TRANSCRIPT_CAPTURE = 'live-vacation-app';
 export const LIVE_REPLY_PRODUCER = 'vacation-app-reply-rules';
 export const LIVE_OPENER_PRODUCER = 'vacation-app-onboarding-opener';
@@ -241,7 +195,6 @@ export function liveTurnRecord({
       record.rewriteModel = log.rewriteModel || record.rewriteModel || null;
       if (log.rewriteText) record.rewriteText = String(log.rewriteText);
       if (log.draftText && record.quality) record.quality.draft = String(log.draftText);
-      record.shippedModel = [log.shippedModel, record.shippedModel, model.responseModel].find((id) => isBakeoffModelId(id)) || null; if (!record.rewriteModel && !log.rewriteModel && !isBakeoffModelId(record.draftModel)) record.draftModel = record.shippedModel;
       record.jevScoreDraft = scored(log.jevScoreDraft);
       record.jevScoreRewrite = scored(log.jevScoreRewrite);
       record.jevScoreRaw = rawScore(log.jevScoreRaw);
@@ -267,6 +220,16 @@ export function liveTurnRecord({
       record.modelLatency = log.latencyMs || null;
       record.flagged = log.flagged === true;
       record.held = log.held === true;
+    }
+    if (!record.fixedOpener) {
+      const shipped = [log?.shippedModel, record.shippedModel, model?.responseModel, record.modelId].find((id) => isBakeoffModelId(id)) || null;
+      if (shipped || log) record.shippedModel = shipped;
+      if (!record.rewriteModel && !log?.rewriteModel && !isBakeoffModelId(record.draftModel)) record.draftModel = shipped;
+      if (record.jevScoreDraft == null && record.quality?.judged === true) record.jevScoreDraft = scored(record.quality.score);
+      if (!record.jevNote && !record.jevNoteReason && record.quality?.judged === true) {
+        record.jevNote = null;
+        record.jevNoteReason = record.quality.jevNoteReason || 'jev_no_free_text';
+      }
     }
     record.model = model
       ? {
@@ -2199,6 +2162,13 @@ export function liveTranscriptFromRows({ session, rows }) {
     const payload = payloadObject(row.payload);
     const live = payload.liveTranscript && typeof payload.liveTranscript === 'object' ? payload.liveTranscript : {};
     const text = String(row.body || '');
+    const generatedApp = live.role === 'app' && live.fixedOpener !== true && live.replyProducer !== LIVE_OPENER_PRODUCER;
+    const fallbackModel = generatedApp
+      ? [live.shippedModel, live.quality?.shippedModel, live.model?.responseModel, live.modelId].find((id) => isBakeoffModelId(id)) || null
+      : null;
+    const rewriteModel = live.rewriteModel || live.quality?.rewriteModel || null;
+    const shippedModel = live.shippedModel || live.quality?.shippedModel || fallbackModel;
+    const draftModel = live.draftModel || live.quality?.draftModel || (!rewriteModel ? fallbackModel : null);
     return {
       turnIndex: Number(live.turnIndex),
       role: live.role,
@@ -2223,10 +2193,10 @@ export function liveTranscriptFromRows({ session, rows }) {
       jevBeforeModel: live.jevBeforeModel === true || live.jev?.jevBeforeModel === true,
       beats: Array.isArray(live.beats) ? live.beats : null,
       quality: live.quality && typeof live.quality === 'object' ? live.quality : null,
-      shippedModel: live.shippedModel || live.quality?.shippedModel || null,
-      draftModel: live.draftModel || live.quality?.draftModel || null,
-      rewriteModel: live.rewriteModel || live.quality?.rewriteModel || null,
-      jevScoreDraft: scored(live.jevScoreDraft),
+      shippedModel,
+      draftModel,
+      rewriteModel,
+      jevScoreDraft: scored(live.jevScoreDraft ?? (generatedApp && live.quality?.judged === true ? live.quality.score : null)),
       jevScoreRewrite: scored(live.jevScoreRewrite),
       jevScoreRaw: rawScore(live.jevScoreRaw),
       jevDisposition: live.jevDisposition || live.quality?.disposition || null,
@@ -2247,7 +2217,7 @@ export function liveTranscriptFromRows({ session, rows }) {
       rewriteFailReason: live.rewriteFailReason || '',
       rewriteAttempts: Array.isArray(live.rewriteAttempts) ? live.rewriteAttempts : null,
       jevNote: live.jevNote || null,
-      jevNoteReason: live.jevNoteReason || live.quality?.jevNoteReason || null,
+      jevNoteReason: live.jevNoteReason || live.quality?.jevNoteReason || (generatedApp && live.quality?.judged === true && !live.jevNote ? 'jev_no_free_text' : null),
       interimReply: live.interimReply || null,
       qualityLine: live.qualityLine != null ? String(live.qualityLine) : formatQualityLine(live.quality),
       heldRewriteLine: live.heldRewriteLine != null ? String(live.heldRewriteLine) : heldRewriteLine(live),

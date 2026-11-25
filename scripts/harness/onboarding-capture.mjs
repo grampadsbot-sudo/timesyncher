@@ -17,13 +17,14 @@ import {
 
 const IPHONE = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
 
-export function purchaseEmailSurface(contact, sessionToken) {
+export function purchaseEmailSurface(contact, sessionToken, origin = '') {
   if (typeof purchaseEmail !== 'function') return { html: '', launchUrl: '', gap: 'purchase-email: no email surface' };
   try {
     const mail = purchaseEmail({
       contact,
       sessionToken,
       token: sessionToken,
+      ...(origin ? { env: { ...process.env, TIMESYNCHER_SITE_BASE_URL: origin } } : {}),
     });
     const html = String(mail?.htmlBody || '');
     const launchUrl = String(mail?.launchUrl || '');
@@ -147,7 +148,7 @@ export async function walkOnboardingWidth({
   outDir,
   showPayment = showPaymentStep,
   submitPayment = submitTestCard,
-  emailFor = (session, contact) => purchaseEmailSurface(contact, session),
+  emailFor = (session, contact) => purchaseEmailSurface(contact, session, origin),
   readText = async (current) => current.locator('body').innerText(),
 }) {
   assertOnboardingCustomer(customer);
@@ -194,8 +195,8 @@ export async function walkOnboardingWidth({
     await page.setContent(mail.html, { waitUntil: 'domcontentloaded' });
     shots.push(await shoot(page, dir, 'purchase-email', width, readText));
     await page.goto(mail.launchUrl, { waitUntil: 'domcontentloaded', timeout: 45000 });
+    await page.waitForSelector('#eulaScreen', { state: 'visible', timeout: 20000 });
     shots.push(await shoot(page, dir, 'app-entry', width, readText));
-    await page.waitForSelector('#eulaScreen', { timeout: 20000 });
     await page.fill('#eulaName', customer.name);
     shots.push(await shoot(page, dir, 'terms-gate', width, readText));
     await page.click('#eulaAgree');

@@ -229,6 +229,7 @@ export function recoverOrdinaryPlanningReply(produced, requestText, { backend = 
     score: 4,
     disposition: kept ? 'planning_draft_kept' : 'planning_error_stored',
     comment: kept ? 'planning draft kept' : 'planning error stored',
+    jevNoteReason: 'jev_no_free_text',
   };
   const model = {
     ...(source.model && typeof source.model === 'object' ? source.model : {}),
