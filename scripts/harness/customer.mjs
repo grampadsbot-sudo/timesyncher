@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { rollupCost } from './cost.mjs';
+import { rollupCost, withDryRunCapShare } from './cost.mjs';
 import { assertThrowaway, cleanupCommand, harnessTag } from './protected.mjs';
 import { redactText } from './redact.mjs';
 import { buildScorecard } from './scorecard.mjs';
@@ -121,9 +121,9 @@ export async function runCustomer(story, options) {
   }
   const billed = isSpendLimitReason(reason);
   const playedMcp = replyBackend === 'vk_bot_mcp' && played;
-  const cost = (replyBackend === 'vk_bot_mcp' && !playedMcp) || billed
+  const cost = withDryRunCapShare((replyBackend === 'vk_bot_mcp' && !playedMcp) || billed
     ? { state: 'not-run', amount: null, unit: '', gap: '', per_customer: null }
-    : rollupCost(turns);
+    : rollupCost(turns), story.story_id);
   if (cost.gap) gaps = [...new Set([...gaps, cost.gap])];
   if ((replyBackend === 'openrouter' || playedMcp) && !billed) {
     const stored = !cost.gap && (cost.state === 'measured' || cost.state === 'unmeasured' || cost.state === 'mixed' || cost.state === 'not-run');

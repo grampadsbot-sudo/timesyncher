@@ -16,17 +16,16 @@ import {
   formatDry,
   needsLiveDryRun,
   planCycle,
-  planPull,
-  runPyFailure,
+  planPull, rememberCustomerCost, runPyFailure,
   scrub,
   stampRound,
   tipLiveRecord,
 } from './vk_ship_round_core.mjs';
+import { dryRunQuotaGate, readDryRunKeyQuota } from './vk_ship_key_quota.mjs';
 
 const dry = process.argv.includes('--dry');
 const root = process.env.TSV_DISPATCH_ROOT || path.join(process.env.HOME || '', 'tsv-dispatch');
 const secrets = [process.env.GH_TOKEN, process.env.DATABASE_URL, process.env.NEON_DATABASE_URL].filter((value) => String(value || '').length > 6);
-
 function repoDir() {
   if (process.env.TSV_REPO) return process.env.TSV_REPO;
   return fileURLToPath(new URL('../..', import.meta.url));
@@ -224,6 +223,7 @@ async function runHarness(round, runId, sha) { if (typeof runId !== 'string' || 
     return;
   }
   if (loaded.url.length > 6) secrets.push(loaded.url); if (ready.token) secrets.push(ready.token);
+  const quota = await readDryRunKeyQuota({ env: process.env, roots, fetchImpl: fetch }); if (quota.secret) secrets.push(quota.secret); const gate = dryRunQuotaGate(quota, readState().perCustomerUsd); if (gate.skip) { if (quota.block) round.errors.push(gate.reason); round.dryRun = markEnvBlocked(round.dryRun, sha, runId, gate.reason); return; }
   const out = path.join(root, 'harness-runs');
   const run = spawnSync('node', ['scripts/vk-customer-harness.mjs', '--story', 'scripts/fixtures/harness/story-dry-run.json', '--run-id', runId, '--out-root', out], { cwd: repoDir(), encoding: 'utf8', env: { ...process.env, DATABASE_URL: loaded.url, NEON_DATABASE_URL: loaded.url, TIMESYNCHER_MEDIA_BIND_TOKEN: ready.token, HARNESS_LIVE: '1' } });
   const output = scrub(`${run.stderr || ''}\n${run.stdout || ''}`, secrets);
@@ -299,7 +299,7 @@ async function perform(action, round) {
 }
 
 function blankRound() {
-  const round = { merges: [], tip: '', live: '', tip_eq_live: false, live_accept: '', dryRun: { ran: false, sha: '', id: '', verdict: '', reason: '', turns: [], outputs: {}, outputsPass: false, per_customer: null, per_100: null, cleanup_remaining: null }, needsRebase: [], accepts: [], errors: [], heads: [], doorbell: [] };
+  const round = { merges: [], tip: '', live: '', tip_eq_live: false, live_accept: '', dryRun: { ran: false, sha: '', id: '', verdict: '', reason: '', turns: [], outputs: {}, outputsPass: false, per_customer: null, per_100: null, cleanup_remaining: null, cost_unit: '', daily_cap_usd: null, daily_cap_fraction: null }, needsRebase: [], accepts: [], errors: [], heads: [], doorbell: [] };
   return stampRound(round, tipLive());
 }
 
@@ -399,7 +399,7 @@ function publish(round, state, stamp) {
   if (track) api('POST', `/repos/${REPO}/issues/${track}/comments`, { body });
   const next = {
     ...state,
-    lastDrySha: dryRunRecorded(round.dryRun) ? round.dryRun.sha : state.lastDrySha,
+    lastDrySha: dryRunRecorded(round.dryRun) ? round.dryRun.sha : state.lastDrySha, perCustomerUsd: rememberCustomerCost(state.perCustomerUsd, round.dryRun),
     reason: round.dryRun?.blockedEnv ? (round.dryRun.reason || 'blocked: env') : (dryRunRecorded(round.dryRun) ? round.dryRun.reason : state.reason),
     error: round.errors.join('|'),
     errorHash: errorStateHash(round.errors, round.heads),

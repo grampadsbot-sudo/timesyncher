@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { providerQuotaReason } from './vk_ship_key_quota.mjs';
 
 const REQUIRED_LABELS = ['project:tsv', 'base:vk', 'craig-asked'];
 const OFFLINE_TESTS = 'scripts/offline-tests.txt';
@@ -251,7 +252,18 @@ function blankDry(sha) {
     per_customer: null,
     per_100: null,
     cleanup_remaining: null,
+    cost_unit: '',
+    daily_cap_usd: null,
+    daily_cap_fraction: null,
   };
+}
+
+export function rememberCustomerCost(previous, dryRun) {
+  const amount = Number(dryRun?.per_customer);
+  const usd = dryRun?.cost_unit === 'usd' || Number.isFinite(Number(dryRun?.daily_cap_usd));
+  if (dryRun && dryRun.blockedEnv !== true && usd && Number.isFinite(amount) && amount > 0) return amount;
+  const kept = Number(previous);
+  return Number.isFinite(kept) && kept > 0 ? kept : null;
 }
 
 export function planPull(pull, world, pinSha = '') {
@@ -450,6 +462,7 @@ export function applyDryRunCard(round, card) {
   round.dryRun = {
     ...round.dryRun,
     ran: true,
+    blockedEnv: false,
     verdict: remaining !== 0 && remaining != null ? 'FAIL' : (card?.verdict || 'FAIL'),
     reason,
     turns: (card?.turns || []).map((turn) => ({
@@ -464,10 +477,21 @@ export function applyDryRunCard(round, card) {
     per_customer: card?.cost?.per_customer ?? null,
     per_100: card?.cost?.per_100 ?? null,
     cleanup_remaining: remaining ?? null,
+    cost_unit: card?.cost?.unit || '',
+    daily_cap_usd: card?.cost?.daily_cap_usd ?? null,
+    daily_cap_fraction: card?.cost?.daily_cap_fraction ?? null,
   };
   if (round.dryRun.cleanup_remaining !== 0 && round.dryRun.cleanup_remaining != null) {
     round.dryRun.outputsPass = false;
     round.dryRun.verdict = 'FAIL';
+    round.dryRun.reason = 'cleanup-remaining';
+  }
+  const quotaReason = providerQuotaReason(card);
+  if (quotaReason) {
+    round.dryRun.blockedEnv = true;
+    round.dryRun.verdict = '';
+    round.dryRun.reason = quotaReason;
+    round.dryRun.outputsPass = false;
   }
   return round;
 }

@@ -1,5 +1,18 @@
 export const VK_BOT_USAGE_DOLLARS_PER_PERCENT = 2;
 
+export const DRY_RUN_KEY_DAILY_CAP_USD = 1;
+
+export function withDryRunCapShare(cost, storyId) {
+  if (storyId !== 'dry-run' || !cost || cost.state !== 'measured' || cost.unit !== 'usd') return cost;
+  const per = Number(cost.per_customer);
+  if (!Number.isFinite(per) || per < 0) return cost;
+  return {
+    ...cost,
+    daily_cap_usd: DRY_RUN_KEY_DAILY_CAP_USD,
+    daily_cap_fraction: Math.round((per / DRY_RUN_KEY_DAILY_CAP_USD) * 1e8) / 1e8,
+  };
+}
+
 export const MODEL_TOKEN_RATES_USD_PER_M = Object.freeze([
   { match: /(?:^|\/)claude-haiku-5\.5/i, rates: { input: 0.10, output: 0.50, thinking: 0.50, cache_read: 0.01 } },
   { match: /(?:^|\/)claude-haiku/i, rates: { input: 0.80, output: 4.00, thinking: 4.00, cache_read: 0.08 } },
