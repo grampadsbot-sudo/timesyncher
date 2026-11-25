@@ -1,5 +1,5 @@
 import { isPlanningErrorReply } from '../../src/vacation/chat-plan-persist.mjs';
-import { classifyAppFailure } from './backends.mjs';
+import { classifyAppFailure, isSpendLimitReason, redactUrls, spendLimitDetail } from './backends.mjs';
 import { personaSeed, speakCustomer, tripSurvey } from './customer-live.mjs';
 import { hostIsBanned } from './fetch-guard.mjs';
 import { redactExchangeBody } from './redact.mjs';
@@ -64,6 +64,16 @@ export function replyModelStamp(body) {
 }
 
 export { ruledReplyCount };
+
+function redactExchangeUrls(value, depth = 0) {
+  if (depth > 8) return value;
+  if (typeof value === 'string') return redactUrls(value);
+  if (Array.isArray(value)) return value.map((item) => redactExchangeUrls(item, depth + 1));
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, redactExchangeUrls(item, depth + 1)]));
+  }
+  return value;
+}
 
 export function turnFailure(status, body) {
   const billing = classifyAppFailure(status, body);
@@ -203,7 +213,7 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
     const turns = extra.customerTurns || [];
     return {
       reason,
-      waveStop: reason === 'payment-required' || reason === 'credit-exhausted',
+      waveStop: isSpendLimitReason(reason),
       timings: extra.timings || [],
       liveShaStart,
       liveShaEnd: String(end.body?.sha || ''),
@@ -224,7 +234,10 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
   let endpoint = appUrl(allowed, token, tripId, 'GET');
   const opened = await send(endpoint);
   const openedFailure = turnFailure(opened.status, opened.body);
-  if (openedFailure) return finish(openedFailure, { detail: opened.body?.error || openedFailure });
+  if (openedFailure) {
+    const spend = isSpendLimitReason(openedFailure);
+    return finish(openedFailure, { detail: spend ? spendLimitDetail(openedFailure, opened.body) : opened.body?.error || openedFailure });
+  }
   const openedRuled = ruledReplyCount(opened.body);
   let seen = openedRuled == null ? storedTurns(opened.body) : openedRuled;
   let seenRuledApp = latestStoredAppTurn(opened.body, { ruledOnly: true });
@@ -339,6 +352,10 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
           if (liveCustomer && reachedAfterStored.done) break;
           continue;
         }
+      }
+      if (isSpendLimitReason(failure)) {
+        const wallBody = classifyAppFailure(final.status, final.body) ? final.body : draft.body;
+        return finish(failure, { timings, storedTurns: seen, itineraryCount: items, tripId: currentTrip, shareToken, detail: spendLimitDetail(failure, wallBody), exchange: redactExchangeUrls(exchange), customerTurns });
       }
       return finish(failure, { timings, storedTurns: seen, itineraryCount: items, tripId: currentTrip, shareToken, detail: final.body?.error || draft.body?.error || failure, exchange: failure === 'turn-not-stored' || failure === 'first-intake-reply-flagged' ? exchange : null, customerTurns });
     }

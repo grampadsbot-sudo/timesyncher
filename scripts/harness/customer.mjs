@@ -5,6 +5,7 @@ import { assertThrowaway, cleanupCommand, harnessTag } from './protected.mjs';
 import { redactText } from './redact.mjs';
 import { buildScorecard } from './scorecard.mjs';
 import { couponCheck, publicCouponResult } from './coupon.mjs';
+import { isSpendLimitReason, redactUrls } from './backends.mjs';
 import { abArmLabel } from './dry.mjs';
 import { mediaLoad } from './media-plan.mjs';
 import { confirmStoredTurns } from './stored-turn.mjs';
@@ -110,15 +111,15 @@ export async function runCustomer(story, options) {
       if (played.dialogRefused && !reason) reason = 'dialog-renderer-refused';
       checks = artifactChecks(played);
       if (story.coupon) checks.push(couponCheck(played.couponRedemption));
-      if (reason === 'payment-required' || reason === 'credit-exhausted') {
-        checks.push({ id: 'app-billing', pass: false, detail: reason, artifact: '' });
+      if (isSpendLimitReason(reason)) {
+        checks.push({ id: 'app-billing', pass: false, detail: redactUrls(played.detail && played.detail !== reason ? played.detail : `app hit a spend/quota limit (${reason})`).slice(0, 300), artifact: '' });
       }
     }
   } catch (error) {
     reason = reason || 'harness-error';
     checks.push({ id: 'harness-error', pass: false, detail: redactText(error?.message || error, secrets), artifact: '' });
   }
-  const billed = reason === 'payment-required' || reason === 'credit-exhausted';
+  const billed = isSpendLimitReason(reason);
   const playedMcp = replyBackend === 'vk_bot_mcp' && played;
   const cost = (replyBackend === 'vk_bot_mcp' && !playedMcp) || billed
     ? { state: 'not-run', amount: null, unit: '', gap: '', per_customer: null }
@@ -211,7 +212,7 @@ export async function runCustomer(story, options) {
     ...(dialogPdfStatus ? { dialog_pdf_status: dialogPdfStatus } : {}),
     ...(played?.planningFallbacks?.count ? { planning_fallbacks: played.planningFallbacks } : {}),
     ...(played?.rescuedTimeouts?.count ? { rescued_timeouts: { count: played.rescuedTimeouts.count, turns: played.rescuedTimeouts.turns || [], timeouts: played.rescuedTimeouts.timeouts || 0 } } : {}),
-    ...(reason === 'turn-not-stored' || reason === 'first-intake-reply-flagged' ? { turn_http: played?.exchange || null } : {}),
+    ...(reason === 'turn-not-stored' || reason === 'first-intake-reply-flagged' || reason === 'key-limit' ? { turn_http: played?.exchange || null } : {}),
   });
   if (story.coupon) card.coupon_redemption = publicCouponResult(played?.couponRedemption) || { status: 'not-run', pass: false, detail: reason || 'not-run' };
   if (story.roster) {
