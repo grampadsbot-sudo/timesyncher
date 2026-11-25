@@ -18,9 +18,11 @@ import { buildCustomerPdf } from './harness/onboarding-pdf.mjs';
 import { purchaseEmailSurface, walkOnboardingWidth } from './harness/onboarding-capture.mjs';
 import { ONBOARDING_WIDTHS, assessOnboardingScreens, shotBlank } from './harness/onboarding-screens.mjs';
 import { waitForCaptureSurface } from './harness/live-outputs.mjs';
+import { readTipSha } from './void-stale-build.mjs';
 
 const APPROVED = 'anthropic/claude-haiku-5.5';
 const OUTSIDE = 'qwen/qwen3-max';
+const TIP_SHA = readTipSha();
 assert.equal(isBakeoffModelId(APPROVED), true);
 assert.equal(isBakeoffModelId(OUTSIDE), false);
 
@@ -51,7 +53,7 @@ const openerRecord = liveTurnRecord({
   jev: { jevRan: false, reason: 'fixed_onboarding_opener' },
   replyProducer: LIVE_OPENER_PRODUCER,
   model: null,
-  buildSha: '535d2b73b3bf098e71204b6244e9a2e29b06cb0a',
+  buildSha: TIP_SHA,
   backend: 'vk_bot_mcp',
 });
 
@@ -74,7 +76,7 @@ const customerRecord = liveTurnRecord({
   },
   speakerName: 'Sofia Lopez',
   intake: true,
-  buildSha: '535d2b73b3bf098e71204b6244e9a2e29b06cb0a',
+  buildSha: TIP_SHA,
 });
 
 const firstIntakeText = [
@@ -117,7 +119,7 @@ const turn3NoLog = liveTurnRecord({
     },
   },
   rules: { ok: true, via: 'bundled-get_page', slug: 'bot-admin/skills/time-syncher/vacation-app-reply-rules' },
-  buildSha: '535d2b73b3bf098e71204b6244e9a2e29b06cb0a',
+  buildSha: TIP_SHA,
   backend: 'vk_bot_mcp',
 });
 
