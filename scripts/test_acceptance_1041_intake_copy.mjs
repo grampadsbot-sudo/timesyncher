@@ -15,7 +15,7 @@ function intakeOk(text) {
     && /\bview access\b/i.test(text)
     && /\bedit access\b/i.test(text)
     && /email invite/i.test(text)
-    && /unlimited vacations for the whole year/i.test(text);
+    && /covers the family's vacations for the whole year/i.test(text);
 }
 
 const hilo = 'Hilo from March 4 to March 8 can stay light. Where are you staying?';

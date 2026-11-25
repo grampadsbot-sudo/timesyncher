@@ -39,6 +39,7 @@ import { applyStoredTurnRoute, sumModelCost, sumTurnCost } from './turn-cost.mjs
 import { routeVkBotMcpReply } from './vk-bot-mcp-reply.mjs';
 import { judgedInterimOrNull, readInterimJudge } from './interim-judge.mjs';
 export { judgeInterimReply } from './interim-judge.mjs';
+import { finalizeCustomerReplyText, HOUSEHOLD_PLAN_YEAR_LINE, HOUSEHOLD_PLAN_YEAR_PATTERN } from './reply-customer-wording.mjs';
 
 export const LIVE_TRANSCRIPT_CAPTURE = 'live-vacation-app';
 export const LIVE_REPLY_PRODUCER = 'vacation-app-reply-rules';
@@ -254,9 +255,8 @@ export function liveTurnRecord({
   }
   return record;
 }
-const UNLIMITED_PATTERN = /unlimited vacations for the whole year/i;
-export const POST_INTAKE_COLLAB_COPY = 'I am building the itinerary from what you told me. View access lets family and friends see the days. Edit access lets them add notes after you approve an email invite. Welcome them onto this vacation as collaborators. The household plan is unlimited vacations for the whole year.';
-const COLLAB_WELCOME = /welcome\b[^.\n]{0,180}\bcollaborat|\bcollaborat\w*[^.\n]{0,180}(?:add notes|help shape the days|whole household|whole family|unlimited vacations)/i;
+export const POST_INTAKE_COLLAB_COPY = `I am building the itinerary from what you told me. View access lets family and friends see the days. Edit access lets them add notes after you approve an email invite. Welcome them onto this vacation as collaborators. ${HOUSEHOLD_PLAN_YEAR_LINE}`;
+const COLLAB_WELCOME = /welcome\b[^.\n]{0,180}\bcollaborat|\bcollaborat\w*[^.\n]{0,180}(?:add notes|help shape the days|whole household|whole family|vacations for the whole year)/i;
 
 export function customerTurnText(turn) {
   if (turn && typeof turn === 'object') return String(turn.text || '');
@@ -287,7 +287,7 @@ export function isCollabWelcome(text) {
 
 export function isFullUpsell(text) {
   const value = String(text || '');
-  return UNLIMITED_PATTERN.test(value) && /collaborat/i.test(value);
+  return HOUSEHOLD_PLAN_YEAR_PATTERN.test(value) && /collaborat/i.test(value);
 }
 
 function openerTurn(turn) {
@@ -295,7 +295,7 @@ function openerTurn(turn) {
 }
 
 function sentenceIsUpsell(sentence) {
-  return UNLIMITED_PATTERN.test(sentence) || COLLAB_WELCOME.test(sentence);
+  return HOUSEHOLD_PLAN_YEAR_PATTERN.test(sentence) || COLLAB_WELCOME.test(sentence);
 }
 
 export const ITEM34_BAN = /\b(?:split|splitting)\b/i;
@@ -354,7 +354,7 @@ export function upsellAudit(turns) {
     if (openerTurn(turn)) continue;
     const pulled = customerPullsAccess(lastCustomer, lastIntent)
       || firstMarkedIntake(lastCustomerTurn, priorCustomers.slice(0, -1));
-    const phrase = UNLIMITED_PATTERN.test(text);
+    const phrase = HOUSEHOLD_PLAN_YEAR_PATTERN.test(text);
     const welcome = isCollabWelcome(text);
     const fullBlock = isFullUpsell(text);
     if (fullBlock) {
@@ -916,7 +916,7 @@ function rangeEndRe() {
   const weekday = 'sun|mon|tue|tues|wed|thu|thur|thurs|fri|sat|sunday|monday|tuesday|wednesday|thursday|friday|saturday';
   return new RegExp(`\\b(?:(?:${weekday})\\s+)?(?:${month})\\.?\\s+\\d{1,2}(?:st|nd|rd|th)?\\s*(?:[\\u2013\\-]|to|through)\\s*(?:the\\s+)?(?:(?:${weekday})\\s+)?(?:(?:${month})\\.?\\s+)?(\\d{1,2})(?:st|nd|rd|th)?`, 'gi');
 }
-const DEPARTURE = /\blast day\b|\blast evening\b|\blast morning\b|\bpack(?:ing)? up\b|\bpacked and\b|\bpack(?:ing|ed)?\b(?!\s+schedule)(?!\s+(?:a |the )?(?:cooler|water|snack|snacks|lunch|towel|bag))|\bafter checkout\b|\bone last time\b/i;
+const DEPARTURE = /\blast day\b|\blast evening\b|\blast morning\b|\bpack(?:ing)? up\b|\bpacked and\b|\bpack(?:ing|ed)?\b(?!\s+schedule)(?!\s+(?:a |the )?(?:cooler|water|snack|snacks|lunch|towel|bag))|\bafter check-out\b|\bone last time\b/i;
 
 export function draftFactErrors(reply, facts = {}) {
   const body = String(reply || '');
@@ -1337,14 +1337,14 @@ export function dockQuality(quality, flags) {
 }
 
 function applyUpsellPolicy(reply) {
-  return stripChatMarkdown(String(reply || '').trim());
+  return finalizeCustomerReplyText(stripChatMarkdown(String(reply || '').trim()));
 }
 
 function rewriteBreaksUpsell(text, upsell, customerTurn, intent) {
   if (upsell !== 'forbidden') return false;
   if (isCollabWelcome(text)) return true;
   if (customerAsksPrice(customerTurn, intent)) return false;
-  return isFullUpsell(text) || UNLIMITED_PATTERN.test(text);
+  return isFullUpsell(text) || HOUSEHOLD_PLAN_YEAR_PATTERN.test(text);
 }
 
 function item34Reason(text) {
@@ -1901,7 +1901,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
         'Never invent a place or id.',
         'Do not copy the draft and do not put a lead line in front of it. Do not insert a sentence the draft did not earn. Do not repeat a paragraph. The account holder stays the account holder. Do not call a joining collaborator the account holder. Keep only people the customer already named in chat. Never invent people. If the customer stated a party size, do not list more people than that size. Address the person who is speaking. Do not give that person an activity the saved vacation record assigns to someone else. Do not say an activity is saved, now set, or on the list unless it is already saved. Do not say we have corrected that or I have corrected that. Do not call a saved preference rule locked and do not rename it. If you add or remove a person or a saved claim, the WHAT_I_CHANGED sentence must name it.',
         [pending?.tripContext?.roster && `Saved roster: ${pending.tripContext.roster}`, pending?.tripFacts?.rule && `Saved preference rule: ${pending.tripFacts.rule}`].filter(Boolean).join(' '),
-        'Use the saved vacation dates. Do not shorten the vacation. Do not call a day the last day, the last evening, after checkout, or one last time, and do not say pack or head out, unless that day is the saved vacation end.',
+        'Use the saved vacation dates. Do not shorten the vacation. Do not call a day the last day, the last evening, after check-out, or one last time, and do not say pack or head out, unless that day is the saved vacation end. Write hotel and lodging times as check-in and check-out, with the hyphen.',
         'Do not offer an activity on a day that is not already that activity on the saved vacation. Do not put viewers or editors on the vacation.', 'Item34 ban: never say "splitting payments", split payment, split-payer, splitting payment, or splitting anything up. If one seat is already covered and another person has their own seat, say that.',
         placeResultExtra(pending?.placeResults),
         pending?.planTable?.payer_line && Number(pending.planTable.dollars_per_collaborator_seat) > 0

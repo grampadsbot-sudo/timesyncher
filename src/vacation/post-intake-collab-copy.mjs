@@ -1,4 +1,5 @@
 import { POST_INTAKE_COLLAB_COPY } from './live-app-turn.mjs';
+import { finalizeCustomerReplyText, HOUSEHOLD_PLAN_YEAR_PATTERN } from './reply-customer-wording.mjs';
 
 export function postIntakeCollabCopyMissing(text) {
   const value = String(text || '');
@@ -7,11 +8,11 @@ export function postIntakeCollabCopyMissing(text) {
     || !/\bview access\b/i.test(value)
     || !/\bedit access\b/i.test(value)
     || !/email invite/i.test(value)
-    || !/unlimited vacations for the whole year/i.test(value);
+    || !HOUSEHOLD_PLAN_YEAR_PATTERN.test(value);
 }
 
 export function ensurePostIntakeCollabCopy(text) {
-  let value = String(text || '').trim().replace(/\byou also have unlimited\b/gi, 'the plan includes');
+  const value = finalizeCustomerReplyText(String(text || '').trim().replace(/\byou also have unlimited\b/gi, 'the plan includes'));
   if (!value) return value;
   if (!postIntakeCollabCopyMissing(value)) return value;
   return `${value} ${POST_INTAKE_COLLAB_COPY}`;
