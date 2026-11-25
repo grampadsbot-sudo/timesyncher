@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { createCouponLedger } from './coupon.mjs';
 import { creditHeadroom, readCreditSnapshot } from './credit-guard.mjs';
-import { appendSection, customerSection, waveSection } from './findings.mjs';
+import { appendSection, customerSection, openRouterCostLabel, waveSection } from './findings.mjs';
 import { RAMP_SIZES, waveStories } from './roster.mjs';
 import { runWave } from './wave.mjs';
 
@@ -32,6 +32,16 @@ function spent(cards) {
 }
 
 function costLine(cards) {
+  const totals = cards.flatMap((card) => card.turns || []).flatMap((turn) => turn.openrouterTotals ? [turn.openrouterTotals] : []);
+  if (totals.length) {
+    const sum = { measuredUsd: 0, estimatedUsd: 0, unpricedCalls: 0 };
+    for (const turn of totals) {
+      sum.measuredUsd += turn.measuredUsd;
+      sum.estimatedUsd += turn.estimatedUsd;
+      sum.unpricedCalls += turn.unpricedCalls;
+    }
+    return `OpenRouter across ${totals.length} app turns: ${openRouterCostLabel(sum)}`;
+  }
   const priced = cards.map(cardUsd).filter((n) => n != null);
   if (priced.length) return `$${spent(cards).toFixed(4)} replies measured`;
   if (cards.some((card) => card.cost?.state === 'measured')) return 'unpriced replies';

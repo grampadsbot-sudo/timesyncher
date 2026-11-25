@@ -15,6 +15,17 @@ import { replyClaimContextFromIntent } from './reply-action-claim.mjs';
 import { rewriteBlockedActionClaim } from './reply-action-claim-rewrite.mjs';
 import { savedThingFieldsForTurn } from './turn-saved-thing-ids.mjs';
 import { sessionReplyBackend } from './vk-bot-mcp-reply.mjs';
+import { openRouterTurnTelemetry } from './openrouter-call-ledger.mjs';
+
+async function storePostReplyCallTelemetry(db, requestId, appLive) {
+  const telemetry = openRouterTurnTelemetry();
+  if (telemetry.openrouterTotals?.calls === appLive.openrouterTotals?.calls) return;
+  await db`
+    update transcript_turns
+    set payload = jsonb_set(payload, '{liveTranscript}', (payload->'liveTranscript') || ${telemetry}::jsonb)
+    where request_id = ${requestId} and speaker = 'app' and channel = 'vacation-app' and direction = 'outbound'
+  `.catch(() => console.error('vacation_app_openrouter_telemetry_store_failed'));
+}
 
 export async function outboundAppReplyForRequest(db, requestId) {
   const id = String(requestId || '').trim();
@@ -139,6 +150,7 @@ export async function persistVacationAppOutboundReply({
     model: produced.model?.quality?.judged === true ? produced.model : { ...(produced.model || {}), quality: judgedQuality },
     rules: produced.rules, backend: replyBackend,
   });
+  Object.assign(appLive, openRouterTurnTelemetry());
   logVacationAppReplyTelemetry(appLive);
   await db`
     insert into transcript_turns (
@@ -183,6 +195,7 @@ export async function persistVacationAppOutboundReply({
     intakeThings,
   );
   if (itinerary.length) await publishIntakeShare(db, tripId);
+  await storePostReplyCallTelemetry(db, requestId, appLive);
   const savedFields = await savedThingFieldsForTurn(db, tripId, itinerary?.savedThingIds || []);
   const deferredWork = itinerary?.deferredWork?.deferred ? itinerary.deferredWork : null;
   const postReplyTimings = itinerary?.postReplyTimings || null;
@@ -273,6 +286,7 @@ export async function commitShippedRewrite(db, session, pending, finished, { rec
     rules: finished.rules, backend: sessionReplyBackend(session),
     speakerName: pending.speakerName || null,
   });
+  Object.assign(appLive, openRouterTurnTelemetry());
   logVacationAppReplyTelemetry(appLive);
   await db`
     insert into transcript_turns (
@@ -315,6 +329,7 @@ export async function commitShippedRewrite(db, session, pending, finished, { rec
     pending.wantedThings || [],
   );
   if (itinerary.length) await publishIntakeShare(db, pending.tripId);
+  await storePostReplyCallTelemetry(db, pending.requestId, appLive);
   const savedFields = await savedThingFieldsForTurn(db, pending.tripId, itinerary?.savedThingIds || []);
   const deferredWork = itinerary?.deferredWork?.deferred ? itinerary.deferredWork : null;
   const postReplyTimings = itinerary?.postReplyTimings || null;

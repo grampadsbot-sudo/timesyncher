@@ -94,6 +94,15 @@ function replyCost(card) {
   return replyCostLabel(card.cost || {});
 }
 
+export function openRouterCostLabel({ measuredUsd, estimatedUsd, unpricedCalls }) {
+  return `$${measuredUsd.toFixed(6)} measured, $${estimatedUsd.toFixed(6)} estimated, ${unpricedCalls} unpriced calls`;
+}
+
+function openRouterTurnCosts(card) {
+  return (card.turns || []).filter((turn) => turn.role === 'app' && turn.openrouterTotals)
+    .map((turn) => `T${turn.n} ${openRouterCostLabel(turn.openrouterTotals)}`).join(' | ');
+}
+
 function mediaCost(card) {
   const media = card.media || {};
   if (media.storage_dollars_per_month != null) return `$${media.storage_dollars_per_month}/mo media`;
@@ -147,11 +156,13 @@ export function customerSection(card, { wave, at = new Date() } = {}) {
   const broke = fbNote
     ? (brokeBase === 'nothing' ? fbNote : clean(`${brokeBase}; ${fbNote}`))
     : brokeBase;
+  const openRouter = openRouterTurnCosts(card);
   return [
     `### ${wave} / customer ${card.roster?.id ?? card.story_id} / ${hst(at)}`,
     `- Arm (A/B): ${card.ab_arm || card.reply_backend} | Coupon: ${clean(coupon.code_hint)} ${clean(coupon.status)} | Edge case: ${clean(card.roster?.edge_case)} | Result: ${card.verdict}${card.mode === 'dry' ? ' (dry)' : ''}`,
     `- What broke or confused: ${broke}`,
     `- Time per turn: ${turnTimes(card)} | Cost ($ replies / $ media): ${replyCost(card)} / ${mediaCost(card)} | Media GB: ${card.media?.gb ?? 'not measured'}${card.media?.source ? ` (${card.media.source})` : ''}`,
+    ...(openRouter ? [`- OpenRouter per app turn: ${openRouter}`] : []),
     `- Severity (blocker/major/minor): ${severityOf(card)}`,
     `- Redesign implication (one line): ${implicationOf(card)}`,
   ].join('\n');
@@ -166,7 +177,7 @@ export function waveSection(summary, { at = new Date() } = {}) {
     `### ${summary.wave} / wave summary / ${hst(at)}`,
     `- Arm (A/B): ${['openrouter', 'vk_bot_mcp'].map((arm) => `${arm} ${cards.filter((card) => card.reply_backend === arm).length}`).join(', ')} | Coupon: ${cards.filter((card) => /redeemed|reuse_rejected|dry-not-sent/.test(card.coupon_redemption?.status || '')).length}/${cards.length} ok | Edge case: ${cards.filter((card) => card.roster?.edge_case).length} | Result: ${summary.failed ? 'FAIL' : summary.mode === 'dry' ? 'DRY_PASS' : 'PASS'}${summary.stopped ? ` (ramp stopped: ${clean(summary.stopped, 120)})` : ''}`,
     `- What broke or confused: ${fails.length ? clean(fails.map((card) => `${card.roster?.id ?? card.story_id} ${card.reason}`).join('; ')) : 'nothing'}`,
-    `- Time per turn: see customer sections | Cost ($ replies / $ media): ${clean(summary.cost)} | Media GB: ${gb.toFixed(3)} total`,
+    `- Time per turn: see customer sections | Cost: ${clean(summary.cost)} | Media GB: ${gb.toFixed(3)} total`,
     `- Severity (blocker/major/minor): ${blocker ? 'blocker' : fails.length ? 'major' : 'minor'}`,
     `- Redesign implication (one line): ${fails.length ? implicationOf(fails[0]) : 'No redesign change from this wave.'}`,
   ].join('\n');

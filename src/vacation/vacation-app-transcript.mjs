@@ -39,7 +39,13 @@ function mapVacationAppTurnRows(rows, { session, customerId, tripKey, people }) 
       console.error(JSON.stringify(missing));
       throw Object.assign(new Error('transcript_author_missing'), { code: 'transcript_author_missing', details: missing });
     }
-    if (row.speaker === 'app' || live.role === 'app') Object.assign(turn, appReplyTelemetry(live));
+    if (row.speaker === 'app' || live.role === 'app') {
+      Object.assign(turn, appReplyTelemetry(live));
+      if (Array.isArray(live.openrouterCalls)) {
+        turn.openrouterCalls = live.openrouterCalls;
+        turn.openrouterTotals = live.openrouterTotals;
+      }
+    }
     return turn;
   });
 }

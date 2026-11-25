@@ -116,7 +116,7 @@ export async function extractItineraryEditIntent({ customerTurn, env = process.e
     if (!rules?.ok) return offline.op !== 'none' ? offline : { op: 'none' };
     const model = await callTieredModel({
       rules, jev: { jevRan: true, modelTier: 1 }, customerTurn, stage: 'vacation_conversation', screen: 'vacation-app',
-      destination: '', memory: [], upsell: 'forbidden', postIntake: false, env, timeoutMs: 20000,
+      destination: '', memory: [], upsell: 'forbidden', postIntake: false, env, timeoutMs: 20000, purpose: 'itinerary_edit_intent',
       systemExtra: 'JSON only {op,placeQuery,dayNumber,time} with op set_time|add_bar_before|undo|none. placeQuery must be an exact saved place name from the trip.',
     });
     return coalesceChatItineraryEditIntent(parseIntentJson(model?.text || ''), offline);

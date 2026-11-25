@@ -60,6 +60,7 @@ export function confirmStoredTurns(transcript, pdfText, replyBackend) {
       estimate_label: cost.estimate_label || '',
       usd_state: cost.usd_state || '',
       usd_amount: cost.usd_amount ?? null,
+      ...(turn.role === 'app' && turn.openrouterTotals ? { openrouterTotals: turn.openrouterTotals } : {}),
       gap: gap.join(','),
     });
     gaps.push(...gap);

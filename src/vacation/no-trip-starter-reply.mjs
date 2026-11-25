@@ -117,7 +117,7 @@ export async function produceNoTripStarterReply({
       intakeReplyTurn: true,
       replyFacts: facts,
       env,
-      systemExtra: prompt,
+      systemExtra: prompt, purpose: attempt ? 'reply_rewrite' : 'reply_draft',
     }));
     if (model && typeof model === 'object') model.genLatencyMs = Math.max(0, Date.now() - genStarted);
     reply = model?.called && model.text ? String(model.text).trim() : '';

@@ -4,6 +4,7 @@ import { assignReplyBackends, clampConcurrency } from './backends.mjs';
 import { blindExport, compareBackends, comparisonMarkdown, storyMarkdown } from './comparison.mjs';
 import { runCustomer } from './customer.mjs';
 import { aggregateSsrWave, ssrScoreboardMarkdown } from '../customer_suite/ssr/aggregate.mjs';
+import { openRouterCostLabel } from './findings.mjs';
 
 export async function runWave(stories, options) {
   const assigned = assignReplyBackends(stories);
@@ -60,7 +61,10 @@ export async function runWave(stories, options) {
     }).join('\n')}\n`
     : '';
   const stoppedLine = stopped ? `\nStopped: ${stopped}\n` : '';
-  fs.writeFileSync(path.join(dir, 'scoreboard.md'), `# Wave ${options.runId}\n${stoppedLine}\n${ssrSection}${comparisonMarkdown(comparison)}\n\n${storyMarkdown(ordered)}\n${couponSection}`);
+  const callCosts = ordered.flatMap((card) => (card.turns || []).filter((turn) => turn.role === 'app' && turn.openrouterTotals)
+    .map((turn) => `- ${card.story_id} T${turn.n}: ${openRouterCostLabel(turn.openrouterTotals)}`));
+  const callSection = callCosts.length ? `\n## OpenRouter cost per app turn\n\n${callCosts.join('\n')}\n` : '';
+  fs.writeFileSync(path.join(dir, 'scoreboard.md'), `# Wave ${options.runId}\n${stoppedLine}\n${ssrSection}${comparisonMarkdown(comparison)}\n\n${storyMarkdown(ordered)}\n${callSection}${couponSection}`);
   fs.writeFileSync(path.join(dir, 'blind-sample.json'), `${JSON.stringify(blind.sample, null, 2)}\n`);
   fs.writeFileSync(path.join(dir, 'blind-key.json'), `${JSON.stringify(blind.key, null, 2)}\n`);
   return { cards: ordered, comparison, ssr, blind, dir, stopped, planned: assigned.length };
