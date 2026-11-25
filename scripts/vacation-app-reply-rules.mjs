@@ -598,7 +598,7 @@ export async function jevTurn({
         request: payload,
       };
     }
-  const tier = normalizeDecisions(body, via);
+    const tier = normalizeDecisions(body, via);
     const quality = qualityFromDecisions(body);
     return { ...tier, quality, request: payload };
   } catch (error) {
