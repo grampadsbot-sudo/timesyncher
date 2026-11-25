@@ -226,7 +226,8 @@ export function assertLiveTranscript(doc) {
   const intakeCustomer = turns.find((turn) => turn.role === 'customer' && turn.intake === true);
   if (intakeCustomer) {
     const intakeReply = turns.find((turn) => turn.role === 'app' && turn.turnIndex === intakeCustomer.turnIndex + 1);
-    const intakeOk = !postIntakeCollabCopyMissing(String(intakeReply?.text || ''));
+    const intakeText = String(intakeReply?.text || '');
+    const intakeOk = /build(?:ing)? (?:the|your) itinerary/i.test(intakeText) && !postIntakeCollabCopyMissing(intakeText);
     if (!intakeOk) contentFails.push('FAIL. post_intake_itinerary_collab_upsell');
   }
   const commentCounts = {};
