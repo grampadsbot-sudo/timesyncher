@@ -306,6 +306,14 @@ function defaultPlaywrightLoad() {
   };
 }
 
+export async function waitForCaptureSurface(page, surface) {
+  if (typeof page?.waitForSelector !== 'function') return;
+  const selector = surface === 'app' || surface === 'trip-switcher'
+    ? '#messageText, #eulaScreen, #sessionForm, main.app'
+    : 'main, header, h1, #root > *';
+  await page.waitForSelector(selector, { state: 'visible', timeout: 20000 }).catch(() => null);
+}
+
 export async function captureScreens({ origin, shareToken, sessionToken, outDir }) {
   const dir = path.join(outDir, 'screens');
   fs.mkdirSync(dir, { recursive: true });
@@ -323,6 +331,7 @@ export async function captureScreens({ origin, shareToken, sessionToken, outDir 
         const page = await context.newPage();
         for (const surface of SURFACES) {
           await page.goto(surfaceUrl(origin, shareToken, sessionToken, surface), { waitUntil: 'domcontentloaded', timeout: 45000 });
+          await waitForCaptureSurface(page, surface);
           const file = path.join(dir, `${surface}-${engine}-${width}.png`);
           await page.screenshot({ path: file });
           texts.push(await page.locator('body').innerText());

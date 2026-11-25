@@ -49,6 +49,28 @@ const unstamped = liveTurnRecord({
 assert.equal(isBakeoffModelId(unstamped.shippedModel || ''), false);
 assert.equal(unstamped.draftModel, null);
 
+const noLogFirstIntake = liveTurnRecord({
+  turnIndex: 3,
+  role: 'app',
+  modality: 'text',
+  text: 'Where will you be staying during the vacation?',
+  at: '2026-11-25T00:55:02.614Z',
+  latencyMs: 2619,
+  sessionE2eMs: 23115,
+  jev: { jevRan: true, jevBeforeModel: true, modelTier: 3, responseModel: approved, jevLatencyMs: 151 },
+  model: {
+    called: true,
+    responseModel: approved,
+    genLatencyMs: 1214,
+    quality: { judged: true, score: 4, disposition: 'planning_draft_kept', comment: 'planning draft kept' },
+  },
+});
+assert.equal(noLogFirstIntake.modelId, approved);
+assert.equal(noLogFirstIntake.shippedModel, approved);
+assert.equal(noLogFirstIntake.draftModel, approved);
+assert.equal(noLogFirstIntake.jevScoreDraft, 4);
+assert.equal(noLogFirstIntake.jevNoteReason, 'jev_no_free_text');
+
 const renderer = fs.readFileSync(new URL('./live-transcript-dialog-pdf.mjs', import.meta.url), 'utf8');
 assert.match(renderer, /shipped model is not a bake-off tier/);
 assert.match(renderer, /isBakeoffModelId\(shippedModel\)/);
