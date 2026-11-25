@@ -8,7 +8,7 @@ import { liveTranscriptFromRows } from '../src/vacation/live-app-turn.mjs';
 import { bindOpenRouterLedger, openRouterTurnTelemetry, withOpenRouterLedger } from '../src/vacation/openrouter-call-ledger.mjs';
 import { jevRelevanceScore } from '../src/vacation/place-relevance-judge.mjs';
 import { persistVacationAppOutboundReply } from '../src/vacation/reply-ship.mjs';
-import { DEFAULT_JEV_DECISIONS_URL, INTERIM_MODEL, JEV_QUALITY_MODEL, jevChooseRewrite } from './vacation-app-reply-rules.mjs';
+import { DEFAULT_JEV_DECISIONS_URL, INTERIM_MODEL, JEV_QUALITY_MODEL } from './vacation-app-reply-rules.mjs';
 import { customerSection } from './harness/findings.mjs';
 import { renderDialog } from './harness/live-outputs.mjs';
 import { confirmStoredTurns } from './harness/stored-turn.mjs';
@@ -61,7 +61,6 @@ async function mockFetch(url, init = {}) {
     if (questions.trip_intake) return decision({ trip_intake: { noul: body.state.current_turn === intake ? 0.95 : 0.04 } });
     if (questions.model_tier) return decision({ model_tier: { score: 1 }, route_type: { choice: 'general' } });
     if (questions.relevance) return decision({ relevance: { type: 'score', score: 3.2 } });
-    if (questions.replacement) return decision({ replacement: { choice: Object.keys(questions.replacement.criteria)[0] } });
     assert.ok(questions.overall_quality);
     const low = String(body.state.draft).includes('neighborhood');
     return decision({
@@ -203,7 +202,6 @@ try {
       bindOpenRouterLedger({ tripId: trip.id, requestId: 'extras' });
       await activityCommits([followup], { env });
       await jevRelevanceScore({ name: 'Town walk' }, { apiKey: fakeKey, env });
-      await jevChooseRewrite({ customerTurn: followup, draft, options: [rewrite], env });
       return openRouterTurnTelemetry();
     }),
     withOpenRouterLedger(async () => {
@@ -213,11 +211,11 @@ try {
       return openRouterTurnTelemetry();
     }),
   ]);
-  assert.deepEqual(extras.openrouterCalls.map((row) => row.purpose), ['activity_commits', 'place_relevance_jev', 'jev_choose_rewrite']);
+  assert.deepEqual(extras.openrouterCalls.map((row) => row.purpose), ['activity_commits', 'place_relevance_jev']);
   assert.equal(extras.openrouterCalls[0].costSource, 'openrouter_listed_price');
   assert.equal(extras.openrouterCalls[0].costUsd, 0.0002);
   assert.equal(extras.openrouterTotals.estimatedUsd, 0.0002);
-  assert.equal(extras.openrouterTotals.unpricedCalls, 2);
+  assert.equal(extras.openrouterTotals.unpricedCalls, 1);
   assert.deepEqual(failures.openrouterCalls.map((row) => [row.ok, row.httpStatus, row.costSource]), [[false, null, 'unpriced'], [false, 429, 'unpriced']]);
   assert.equal(failures.openrouterTotals.unpricedCalls, 2);
 
