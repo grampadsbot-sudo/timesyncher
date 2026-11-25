@@ -25,6 +25,59 @@ function pageMap(pair) {
   return { 'iphone-390': pair['iphone-390'].page, 'desktop-1280': pair['desktop-1280'].page };
 }
 
+export async function submitCollaboratorTerms(page, sc, { origin, sessionId, name }) {
+  const trace = [];
+  sc.meta.acceptTrace = trace;
+  const isAccept = (request) => {
+    const url = new URL(request.url());
+    return request.method() === 'POST' && url.origin === origin && url.pathname === '/api/eula'
+      && url.searchParams.get('action') === 'accept' && url.searchParams.get('sessionId') === sessionId;
+  };
+  const record = (event, request, status = null) => {
+    const url = new URL(request.url());
+    if (request.method() !== 'POST' || url.origin !== origin || url.pathname !== '/api/eula') return;
+    trace.push({ event, method: 'POST', path: '/api/eula', status, at: new Date().toISOString() });
+  };
+  const onRequest = (request) => record('request', request);
+  const onResponse = (response) => record('response', response.request(), response.status());
+  const onFailure = (request) => record('requestfailed', request);
+  page.on('request', onRequest);
+  page.on('response', onResponse);
+  page.on('requestfailed', onFailure);
+  try {
+    await page.fill('#name', name);
+    await page.check('#agree');
+    const button = page.locator('#form button.btn:enabled');
+    await button.waitFor({ timeout: 30000 });
+    const [response] = await Promise.all([
+      page.waitForResponse((candidate) => isAccept(candidate.request()), { timeout: 30000 }),
+      button.click(),
+    ]);
+    const status = response.status();
+    if (status !== 201) {
+      sc.check('collab-accept', 'collaborator terms accept POST returned 201', false, `http ${status}`);
+      throw new Error('Collaborator terms POST did not return 201');
+    }
+
+    await page.waitForURL((url) => url.origin === origin && url.pathname === '/vacation-app.html',
+      { timeout: 30000 });
+    // The redirect follows successful JSON, and the receipt is durable across navigation.
+    const receiptUrl = new URL('/api/eula', origin);
+    receiptUrl.searchParams.set('action', 'receipt');
+    receiptUrl.searchParams.set('sessionId', sessionId);
+    const receipt = await page.request.get(receiptUrl.href, { timeout: 30000 })
+      .then(async (res) => res.ok() ? res.json() : null)
+      .catch(() => null);
+    const accepted = receipt?.ok === true && Boolean(receipt.receipt?.receiptSha256)
+      && receipt.receipt.eula?.status === 'accepted' && receipt.receipt.eula.onboardingSessionId === sessionId;
+    sc.check('collab-accept', 'collaborator terms accept POST returned 201', accepted, accepted ? 'http 201 ok' : 'http 201 without an accepted receipt');
+  } finally {
+    page.off('request', onRequest);
+    page.off('response', onResponse);
+    page.off('requestfailed', onFailure);
+  }
+}
+
 export async function s4CollaboratorInvite(run, ctx) {
   const sc = new Scenario(run, 'S4', 'Collaborator invite');
   if (!ctx.ownerSessionToken || !ctx.trip1?.id) {
@@ -57,7 +110,9 @@ export async function s4CollaboratorInvite(run, ctx) {
     sc.check('invite-sent', 'owner invited second throwaway collaborator', inviteRes.ok && Boolean(inviteId), inviteId ? 'invite-created' : JSON.stringify(inviteBody).slice(0, 180));
     if (!inviteId) return;
 
-    const acceptUrl = `${ctx.base}/accept/vacation-collaborator-${encodeURIComponent(inviteId)}`;
+    registerSecret(inviteId);
+    const sessionId = `vacation-collaborator-${inviteId}`;
+    const acceptUrl = `${ctx.base}/accept/${encodeURIComponent(sessionId)}`;
     const pair = await openPair(ctx.browser);
     try {
       const pages = pageMap(pair);
@@ -78,30 +133,7 @@ export async function s4CollaboratorInvite(run, ctx) {
       await sc.shoot('collab-accept', pages);
 
       if (await mobile.locator('#form').count()) {
-        const dialogMessages = [];
-        mobile.on('dialog', async (dialog) => {
-          dialogMessages.push(dialog.message());
-          await dialog.dismiss().catch(() => null);
-        });
-        await mobile.fill('#name', collabName);
-        await mobile.check('#agree');
-        const btn = mobile.locator('#form button.btn');
-        await btn.scrollIntoViewIfNeeded();
-        const acceptRespPromise = mobile.waitForResponse(
-          (res) => res.url().includes('/api/eula') && res.request().method() === 'POST',
-          { timeout: 30000 },
-        );
-        await btn.click({ force: true });
-        const acceptResp = await acceptRespPromise;
-        const acceptJson = await acceptResp.json().catch(() => ({}));
-        sc.check('collab-accept', 'collaborator terms accept POST returned 201', acceptResp.status() === 201 && acceptJson.ok !== false, `http ${acceptResp.status()} ${acceptJson.error || dialogMessages.join('; ') || 'ok'}`);
-        if (acceptJson.redirectUrl) {
-          await mobile.waitForURL(/\/vacation-app\.html/, { timeout: 30000 }).catch(async () => {
-            await mobile.goto(acceptJson.redirectUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
-          });
-        } else {
-          await mobile.waitForURL(/\/vacation-app\.html/, { timeout: 30000 });
-        }
+        await submitCollaboratorTerms(mobile, sc, { origin: ctx.base, sessionId, name: collabName });
       }
       await mobile.waitForSelector('#messageText', { timeout: 35000 });
       const collabToken = new URL(mobile.url()).searchParams.get('session') || '';
@@ -143,7 +175,7 @@ export async function s4CollaboratorInvite(run, ctx) {
       await sc.expectCleanCopy(mobile, 'collab-edit', { viewport: '390', selector: '.chat-pane', requireVacation: true, forbidTrip: true });
       await sc.expectCleanCopy(desktop, 'collab-edit', { viewport: '1280', selector: '.chat-pane', requireVacation: true, forbidTrip: true });
       await sc.shoot('collab-edit', pages);
-      sc.meta = { inviteId, collaboratorEdited: true };
+      sc.meta.collaboratorEdited = true;
     } finally {
       await closePair(pair);
     }
