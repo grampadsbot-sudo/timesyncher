@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { DRY_RUN_KEY_DAILY_CAP_USD, withDryRunCapShare } from './harness/cost.mjs';
 import { runCustomer } from './harness/customer.mjs';
+import { OPENROUTER_KEY_URL } from './vacation-app-reply-rules.mjs';
 import { applyDryRunCard, doorbellReasons, dryRunRecorded, rememberCustomerCost } from './host/vk_ship_round_core.mjs';
 import { markEnvBlocked } from './host/vk_ship_dry_env.mjs';
 import {
@@ -158,7 +159,8 @@ const exhausted = await readDryRunKeyQuota({
   },
 });
 assert.equal(calls.length, 1);
-assert.equal(calls[0].url, 'https://openrouter.ai/api/v1/key');
+assert.equal(calls[0].url, OPENROUTER_KEY_URL);
+assert.equal(new URL(OPENROUTER_KEY_URL).pathname, '/api/v1/key');
 assert.equal(calls[0].method, 'GET');
 assert.equal(calls[0].authorization, `Bearer ${FIXTURE_KEY}`);
 const { secret, ...pub } = exhausted;
@@ -185,7 +187,7 @@ const fromVercel = await readDryRunKeyQuota({
     vercelUrls.push(target);
     assert.equal(target.includes(vercelKey), false);
     assert.equal(String(init.body || '').includes(vercelKey), false);
-    if (target.includes('openrouter.ai')) {
+    if (target === OPENROUTER_KEY_URL) {
       return { ok: true, status: 200, json: async () => ({ data: { limit: 1, limit_remaining: 0.9, limit_reset: 'daily', effective_budget: { resets_at: '2026-11-27T00:00:00.000Z' } } }) };
     }
     if (target.includes('/v9/')) return { ok: true, status: 200, json: async () => ({ envs: [{ id: 'env_or', key: 'OPENROUTER_API_KEY' }] }) };
@@ -219,7 +221,8 @@ assert.equal(http402.block, '');
 assert.equal(dryRunQuotaGate(http402, 0.04).reason, `blocked: env key-limit resets ${RESET}`);
 
 const quotaSource = fs.readFileSync(new URL('./host/vk_ship_key_quota.mjs', import.meta.url), 'utf8');
-assert.equal(quotaSource.includes('https://openrouter.ai/api/v1/key'), true);
+assert.equal(quotaSource.includes(new URL(OPENROUTER_KEY_URL).host), false);
+assert.match(quotaSource, /OPENROUTER_KEY_URL/);
 assert.equal(quotaSource.includes('PATCH'), false);
 assert.equal(quotaSource.includes("method: 'POST'"), false);
 assert.equal(quotaSource.includes('console.'), false);

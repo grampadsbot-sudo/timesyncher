@@ -3,7 +3,6 @@ import { isSpendLimitReason } from '../harness/backends.mjs';
 import { DRY_RUN_KEY_DAILY_CAP_USD } from '../harness/cost.mjs';
 import { PULLED_ENV_FILES, defaultVercelTokenFile } from './vk_ship_dry_env.mjs';
 
-const KEY_URL = 'https://openrouter.ai/api/v1/key';
 const KEY_NAMES = ['OPENROUTER_API_KEY', 'TIMESYNCHER_OPENROUTER_API_KEY'];
 const PROJECT = 'timesyncher-vacation-staging';
 const RESET_RE = /resets\s+(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z)/i;
@@ -84,7 +83,7 @@ function quotaStatus(card) {
   return Number.isFinite(code) ? code : 0;
 }
 
-export function resetFromQuotaText(text) {
+function resetFromQuotaText(text) {
   const match = String(text || '').match(RESET_RE);
   return match ? isoInstant(match[1]) : '';
 }
@@ -234,7 +233,8 @@ export async function readDryRunKeyQuota({
   if (!secret) return publicQuota({ block: 'blocked: env key-quota unread' });
   let response;
   try {
-    response = await fetchImpl(KEY_URL, {
+    const { OPENROUTER_KEY_URL } = await import('../vacation-app-reply-rules.mjs');
+    response = await fetchImpl(OPENROUTER_KEY_URL, {
       method: 'GET',
       headers: { Authorization: `Bearer ${secret}` },
       redirect: 'error',
