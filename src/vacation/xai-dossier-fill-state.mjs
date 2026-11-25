@@ -131,10 +131,20 @@ export function dossierEmptyGatherReason(dossier = {}) {
   if (tavilySearches.length) {
     const last = tavilySearches.at(-1);
     const brave = terminal.find((row) => row.kind === 'brave' && row.status === 'failed');
-    const status = Number(brave?.httpStatus);
-    const reason = last.status !== 'ok' ? last.error || 'tavily_request_failed'
-      : tavilySearches.some((row) => row.results > 0) ? 'tavily_hits_not_materialized' : 'tavily_zero_hits';
-    return `${brave ? status ? `brave_http_${status}` : brave.error || 'brave_request_failed' : 'brave_missing_key'}+${reason}`;
+    const searchHttpFail = tavilySearches.findLast((row) => row.status !== 'ok' && Number(row.httpStatus) > 0);
+    const extractFail = terminal.findLast((row) => row.provider === 'Tavily' && row.stage === 'extract' && row.status === 'failed');
+    const extractStatus = Number(extractFail?.httpStatus) || Number(String(extractFail?.error || '').match(/(?:http[_ ]|HTTP\s+)(\d{3})/i)?.[1]);
+    const reason = last.status !== 'ok'
+      ? (last.error === 'tavily_missing_key'
+        ? (searchHttpFail?.error || (extractStatus ? `tavily_http_${extractStatus}` : 'tavily_missing_key'))
+        : (last.error || 'tavily_request_failed'))
+      : tavilySearches.some((row) => row.results > 0) ? 'tavily_hits_not_materialized'
+      : extractStatus ? `tavily_http_${extractStatus}` : 'tavily_zero_hits';
+    if (brave) {
+      const status = Number(brave?.httpStatus);
+      return `${status ? `brave_http_${status}` : brave.error || 'brave_request_failed'}+${reason}`;
+    }
+    return reason;
   }
   const searches = terminal.filter((row) => row.kind === 'brave');
   const errors = terminal.filter((row) => row.status === 'failed' && (row.kind === 'brave' || /tavily/i.test(row.provider || row.via || '')));

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { braveQueryString } from '../src/vacation/brave-place-query.mjs';
+import { vkSearchQueryString } from '../src/vacation/vk-search-place-identity.mjs';
 import { intakeLodgingLookupQuery } from '../src/vacation/intake-lodging-lookup.mjs';
 
 assert.equal(
@@ -12,7 +12,6 @@ assert.equal(
   'Hyatt Regency Maui, Kaanapali',
 );
 
-const center = { lat: 20.9250419, lng: -156.6899009 };
 const lookupQuery = intakeLodgingLookupQuery('Hyatt Regency Maui', 'Kaanapali');
 const intakeItem = {
   category: 'hotel',
@@ -22,14 +21,14 @@ const intakeItem = {
   propertyName: 'Hyatt Regency Maui',
   intakeLodgingLookup: true,
 };
-assert.equal(braveQueryString(intakeItem, 'Kaanapali', center), lookupQuery);
+assert.equal(vkSearchQueryString(intakeItem, 'Kaanapali', 'Kaanapali'), lookupQuery);
 assert.equal(
-  braveQueryString({
+  vkSearchQueryString({
     category: 'hotel',
     q: lookupQuery,
     target: 'Hyatt Regency Maui',
     targetKind: 'named_place',
-  }, 'Kaanapali, Maui County, Hawaii, United States', center, 'Kaanapali'),
+  }, 'Kaanapali, Maui County, Hawaii, United States', 'Kaanapali'),
   lookupQuery,
 );
 

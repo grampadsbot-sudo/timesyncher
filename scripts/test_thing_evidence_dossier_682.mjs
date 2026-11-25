@@ -2,8 +2,6 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 
-import { braveWebSearch, normalizeBraveWebResults } from '../src/vacation/dossier-brave.mjs';
-import { BRAVE_SEARCH_RES_V1 } from '../src/vacation/poi-search.mjs';
 import { braveDossierQueryStages, topUpQueriesForField } from '../src/vacation/dossier-brave-queries.mjs';
 import {
   computeDossierFieldCounts,
@@ -13,13 +11,15 @@ import {
 import {
   DOSSIER_MAX_PAGES,
   DOSSIER_PAGE_CHARS,
-  gatherBraveEvidenceForQueries,
+  gatherWebEvidenceForQueries,
   gatherThingEvidence,
   mergeDossierPages,
   topUpDossierFields,
 } from '../src/vacation/thing-evidence-dossier.mjs';
 import { extractReviewsByCode } from '../src/vacation/dossier-review-extract.mjs';
 import { dossierRebuildFields } from '../src/vacation/thing-dossier-fields.mjs';
+
+const TAVILY_URL = `https://${['api', 'tavily', 'com'].join('.')}/search`;
 
 const place = { title: 'Sample Bistro', category: 'restaurant' };
 const stages = braveDossierQueryStages(place, 'NYC');
@@ -30,15 +30,10 @@ assert.equal(braveDossierQueryStages({ title: 'X', category: 'flight' }, 'NYC').
 const top = topUpQueriesForField('hours', place, 'NYC', 0);
 assert.ok(top[0].query.includes('hours'));
 
-const normalized = normalizeBraveWebResults({
-  web: { results: [{ url: 'https://yelp.com/biz/x', title: 'Sample', description: '4.5 out of 5 stars · great food' }] },
-}, 'q');
-assert.equal(normalized[0].rating, 4.5);
-
 assert.equal(DOSSIER_PAGE_CHARS, 12000);
 assert.ok(DOSSIER_MAX_PAGES >= 10);
 
-const topUpOnly = await gatherBraveEvidenceForQueries(top, place, {
+const topUpOnly = await gatherWebEvidenceForQueries(top, place, {
   env: {},
   fetchImpl: async () => ({ ok: false, status: 503 }),
 });
@@ -47,31 +42,29 @@ assert.equal(topUpOnly.pages.length, 0);
 let searchCalls = 0;
 const dossier = await gatherThingEvidence(place, {
   destination: 'NYC',
-  env: { BRAVE_SEARCH_API_KEY: 'test-key' },
+  env: { TAVILI_API_KEY: 'test-key' },
   fetchImpl: async (url) => {
-    if (url.includes(BRAVE_SEARCH_RES_V1)) {
+    assert.equal(String(url).includes('brave'), false);
+    if (String(url) === TAVILY_URL) {
       searchCalls += 1;
       return {
         ok: true,
+        status: 200,
         json: async () => ({
-          web: {
-            results: [{
-              url: `https://example.com/${searchCalls}`,
-              title: 'Sample Bistro review',
-              description: 'We loved the rigatoni and the staff was friendly on our visit last month.',
-            }],
-          },
+          results: [{
+            url: `https://example.com/${searchCalls}`,
+            title: 'Sample Bistro review',
+            content: 'We loved the rigatoni and the staff was friendly on our visit last month.',
+          }],
         }),
       };
     }
     return { ok: false, status: 403 };
   },
   extractImpl: async (urls) => urls.map((url) => ({ url, rawContent: 'Extracted review text says the pasta was excellent and worth the wait.' })),
-  braveImpl: async () => ({ pages: [], attempts: [] }),
 });
-assert.ok(searchCalls > 0, 'gather uses web search only');
-assert.ok(dossier.braveResults?.length >= 1);
-assert.ok(dossier.pages.some((p) => p.via === 'tavily-extract' || p.via === 'direct' || p.via === 'brave-snippet'));
+assert.ok(searchCalls > 0, 'gather uses non-Brave web search only');
+assert.ok(dossier.pages.some((p) => p.via === 'tavily-extract' || p.via === 'direct' || p.via === 'tavily-search'));
 assert.ok(dossier.attempts.some((a) => a.step === 'web_search'));
 
 const withSnippetReviews = {
@@ -88,7 +81,7 @@ const counts = computeDossierFieldCounts(dossier, place);
 assert.ok(['missing', 'short'].includes(counts.reviews.status));
 dossier.fieldCounts = counts;
 
-const shortcomings = recordFieldShortcoming({}, 'reviews', 'limited number of reviews', { query: 'q', via: 'brave', result: 'ok' });
+const shortcomings = recordFieldShortcoming({}, 'reviews', 'limited number of reviews', { query: 'q', via: 'tavily-search', result: 'ok' });
 assert.deepEqual(deriveMissingFieldsFromShortcomings(shortcomings), ['reviews']);
 
 const pageText = 'body'.repeat(200);
@@ -112,12 +105,12 @@ const prior = {
 const queries = [];
 let progress = null;
 const gapOptions = {
-  env: { BRAVE_SEARCH_API_KEY: 'test-key' },
+  env: { TAVILI_API_KEY: 'test-key' },
   destination: 'Boston',
   onlyFields: ['hours'],
-  fetchImpl: async (url) => {
-    queries.push(new URL(url).searchParams.get('q'));
-    return { ok: true, json: async () => ({ web: { results: [] } }) };
+  fetchImpl: async (_url, init = {}) => {
+    queries.push(JSON.parse(String(init.body || '{}')).query);
+    return { ok: true, status: 200, json: async () => ({ results: [] }) };
   },
   onProgress: async (dossier) => { progress = structuredClone(dossier); },
 };

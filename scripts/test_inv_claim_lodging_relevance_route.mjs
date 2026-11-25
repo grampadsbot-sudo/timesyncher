@@ -14,7 +14,7 @@ import { installNoopNominatimStore } from './fixtures/nominatim-store-test-doubl
 installNoopNominatimStore();
 
 const OPENROUTER_HOST = ['openrouter', 'ai'].join('.');
-const BRAVE_HOST = ['api', 'search', 'brave', 'com'].join('.');
+const VK_SEARCH_WAKE_URL = 'https://vk-search.example/wake';
 
 const queueSource = readFileSync(
   fileURLToPath(new URL('../routes/vacation-app-chat-queue.mjs', import.meta.url)),
@@ -98,7 +98,7 @@ const lodgingFetch = async (url) => {
       }],
     };
   }
-  if (href.includes(BRAVE_HOST)) {
+  if (href === VK_SEARCH_WAKE_URL) {
     placeProviderCalls += 1;
     return { ok: true, json: async () => ({ results: [] }) };
   }
@@ -113,7 +113,7 @@ await searchIntakeLodgingPlaces({
   destination: 'Maui',
   areaHint: 'Kaanapali',
   propertyName: 'Hyatt Regency Maui',
-  env: { BRAVE_SEARCH_API_KEY: 'test-brave' },
+  env: { VK_SEARCH_WAKE_URL },
   fetchImpl: lodgingFetch,
 });
 assert.equal(placeProviderCalls, 1);

@@ -6,8 +6,8 @@ import { createHash } from 'node:crypto';
 import { lookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
 import { extractTavily } from './poi-search.mjs';
-import { braveLocalEvidence, runBraveQueries } from './dossier-brave.mjs';
-import { braveDossierQueryStages, dossierSearchIdentity, flightEvidenceMatchesTarget, placeSupportsDossierReviews, stageQueriesForFields, topUpQueriesForField } from './dossier-brave-queries.mjs';
+import { runDossierWebQueries } from './dossier-web-search.mjs';
+import { braveDossierQueryStages, dossierSearchIdentity, flightEvidenceMatchesTarget, placeSupportsDossierReviews, topUpQueriesForField } from './dossier-brave-queries.mjs';
 import { normalizeDossierEvidence, syncDossierRequiredShortcomings } from './dossier-evidence-hydrate.mjs';
 import { descriptionNamesThing } from './thing-dossier-fields.mjs';
 import {
@@ -278,7 +278,7 @@ async function fetchEvidencePages(url, options) {
       ].filter(Boolean))];
       let query, pages = [];
       for (query of queries) {
-        const fallback = await runBraveQueries([query], { env, fetchImpl, deadline: options.deadline, bravePace: options.bravePace, sleepImpl: options.sleepImpl });
+        const fallback = await runDossierWebQueries([query], { env, fetchImpl, deadline: options.deadline });
         const host = target.hostname.replace(/^www\./, '');
         pages = fallback.pages.filter((page) => {
           try {
@@ -289,15 +289,15 @@ async function fetchEvidencePages(url, options) {
           } catch { return false; }
         });
         attempts.push(...fallback.attempts.map((attempt) => ({
-          ...attempt, provider: attempt.provider || 'Brave', stage: attempt.provider === 'Tavily' ? 'search' : 'extract_fallback', searchStage: 'extract_fallback', url,
+          ...attempt, provider: attempt.provider || 'Tavily', stage: 'search', searchStage: 'extract_fallback', url,
         })));
         if (pages.length || outOfTime(options)) break;
       }
       attempts.push({
-        kind: 'page', provider: 'Brave', stage: 'extract_fallback', query, url,
-        startedAt: new Date().toISOString(), via: 'brave-snippet',
+        kind: 'page', provider: 'Tavily', stage: 'extract_fallback', query, url,
+        startedAt: new Date().toISOString(), via: 'tavily-search',
         status: pages.length ? 'ok' : 'failed',
-        error: pages.length ? undefined : 'brave_extract_fallback_no_pages',
+        error: pages.length ? undefined : 'web_extract_fallback_no_pages',
         pages: pages.length,
       });
       return pages;
@@ -314,10 +314,10 @@ async function fetchEvidencePages(url, options) {
   }];
 }
 
-async function materializeBraveHits(braveBundle = {}, options = {}) {
-  const dossier = { pages: [...(braveBundle.pages || [])], attempts: [...(braveBundle.attempts || [])], braveResults: [...(braveBundle.braveResults || [])] };
+async function materializeWebHits(webBundle = {}, options = {}) {
+  const dossier = { pages: [...(webBundle.pages || [])], attempts: [...(webBundle.attempts || [])], webResults: [...(webBundle.webResults || [])] };
   const urls = new Set();
-  for (const row of dossier.braveResults) if (row.url) urls.add(row.url);
+  for (const row of dossier.webResults) if (row.url) urls.add(row.url);
   const existing = new Set(dossier.pages.map((p) => p.url));
   for (const url of urls) {
     if (outOfTime(options)) break;
@@ -341,24 +341,22 @@ function stageQueries(place, destination) {
   return flat;
 }
 
-export async function gatherBraveEvidenceForQueries(queries = [], place = {}, options = {}) {
-  options = { ...options, bravePace: options.bravePace || { nextAt: 0 } };
-  const braveBundle = await runBraveQueries(queries, options);
-  return materializeBraveHits(braveBundle, { ...options, place });
+export async function gatherWebEvidenceForQueries(queries = [], place = {}, options = {}) {
+  const webBundle = await runDossierWebQueries(queries, options);
+  return materializeWebHits(webBundle, { ...options, place });
 }
 
 export async function gatherDossierWithEscalation(place, gatherImpl, options) {
-  options = { ...options, bravePace: options.bravePace || { nextAt: 0 } };
   let gathered = await gatherImpl(place, options);
   if (gathered.pages?.length || outOfTime(options)) return gathered;
   const query = dossierSearchIdentity(place, options.destination);
   const startedAt = new Date().toISOString();
-  const escalated = await gatherBraveEvidenceForQueries([query], place, {
+  const escalated = await gatherWebEvidenceForQueries([query], place, {
     ...options, resolveImpl: options.resolveImpl || lookup, extractImpl: options.extractImpl || extractTavily,
   });
   gathered = mergeDossierPages(gathered, escalated);
   gathered.attempts.push({
-    kind: 'brave', provider: 'Brave', stage: 'general', step: 'empty_gather_escalation',
+    kind: 'page', provider: 'Tavily', stage: 'general', step: 'empty_gather_escalation',
     query, url: '', startedAt, status: escalated.pages?.length ? 'ok' : 'empty',
   });
   return gathered;
@@ -366,11 +364,11 @@ export async function gatherDossierWithEscalation(place, gatherImpl, options) {
 
 export async function topUpDossierFields(dossier = {}, place = {}, {
   destination = '', env = process.env, fetchImpl = globalThis.fetch,
-  resolveImpl = lookup, extractImpl = extractTavily, braveImpl = braveLocalEvidence, center = null,
+  resolveImpl = lookup, extractImpl = extractTavily,
   onlyFields = null, onProgress,
-  deadline = 0, bravePace = { nextAt: 0 }, sleepImpl,
+  deadline = 0,
 } = {}) {
-  const options = { env, fetchImpl: dossierDeadlineFetch(fetchImpl, deadline), resolveImpl, extractImpl, deadline, bravePace, sleepImpl };
+  const options = { env, fetchImpl: dossierDeadlineFetch(fetchImpl, deadline), resolveImpl, extractImpl, deadline };
   let merged = normalizeDossierEvidence({ ...dossier }, place);
   const needs = Array.isArray(onlyFields) && onlyFields.length
     ? onlyFields
@@ -389,7 +387,7 @@ export async function topUpDossierFields(dossier = {}, place = {}, {
       const entry = { kind: 'gap_top_up', field, attempt: attempt + 1, query: queries[0].query, startedAt: new Date().toISOString(), status: 'started' };
       merged.attempts = [...(merged.attempts || []), entry];
       if (onProgress) await onProgress(merged);
-      const gathered = await gatherBraveEvidenceForQueries(queries, place, options);
+      const gathered = await gatherWebEvidenceForQueries(queries, place, options);
       merged = mergeDossierPages(merged, gathered);
       merged = normalizeDossierEvidence(merged, place);
       const status = merged.fieldCounts[field]?.status;
@@ -402,8 +400,8 @@ export async function topUpDossierFields(dossier = {}, place = {}, {
           field,
           field === 'reviews' && merged.fieldCounts.reviews?.status === 'short'
             ? 'limited number of reviews'
-            : 'still missing after brave top-up',
-          { query: queries[0].query, via: att.via || 'brave', result: att.status || 'no_change' },
+            : 'still missing after web top-up',
+          { query: queries[0].query, via: att.via || 'tavily-search', result: att.status || 'no_change' },
         );
       }
       merged.shortcomings = shortcomings;
@@ -424,23 +422,23 @@ export async function topUpDossierFields(dossier = {}, place = {}, {
 }
 
 export async function gatherThingEvidence(place = {}, {
-  destination = '', center = null, env = process.env, fetchImpl = globalThis.fetch,
-  resolveImpl = lookup, extractImpl = extractTavily, braveImpl = braveLocalEvidence,
-  deadline = 0, onProgress, bravePace = { nextAt: 0 }, sleepImpl,
+  destination = '', env = process.env, fetchImpl = globalThis.fetch,
+  resolveImpl = lookup, extractImpl = extractTavily,
+  deadline = 0, onProgress,
   botPrimary = env.VK_SEARCH_BOT_PRIMARY !== '0', vkSearchImpl,
 } = {}) {
   const name = String(place.title || place.name || '').trim();
   if (!name) throw new Error('evidence_thing_name_required');
   const options = {
-    env, fetchImpl: dossierDeadlineFetch(fetchImpl, deadline), resolveImpl, extractImpl, deadline, place, bravePace, sleepImpl,
+    env, fetchImpl: dossierDeadlineFetch(fetchImpl, deadline), resolveImpl, extractImpl, deadline, place,
     onProgress: onProgress ? (dossier) => onProgress({ ...dossier, thing: name }) : undefined,
   };
   const bot = botPrimary && !outOfTime(options)
     ? await gatherVkSearchEvidence(place, { env, fetchImpl: options.fetchImpl, vkSearchImpl }) : null;
   const botDiscovery = Boolean(bot?.pages.length);
-  let dossier = botDiscovery ? bot : await gatherBraveEvidenceForQueries(stageQueries(place, destination), place, options);
+  let dossier = botDiscovery ? bot : await gatherWebEvidenceForQueries(stageQueries(place, destination), place, options);
   if (bot && !botDiscovery) dossier.attempts.unshift(...bot.attempts, {
-    provider: VK_SEARCH_PROVIDER, kind: VK_SEARCH_PROVIDER, status: 'fallback_brave',
+    provider: VK_SEARCH_PROVIDER, kind: VK_SEARCH_PROVIDER, status: 'fallback_web',
     reason: ['thin', 'claim_support_failed'].includes(bot.attempts[0]?.status) ? bot.attempts[0].status : 'empty',
   });
   dossier.thing = name;
@@ -459,17 +457,6 @@ export async function gatherThingEvidence(place = {}, {
   }
 
   if (onProgress) await onProgress(dossier);
-  if (!botDiscovery && braveImpl && placeSupportsDossierReviews(place) && !outOfTime(options)) {
-    try {
-      const brave = await braveImpl(place, { destination, center, env, fetchImpl: options.fetchImpl, deadline, bravePace, sleepImpl });
-      dossier.attempts.push(...(brave.attempts || []));
-      for (const page of brave.pages || []) {
-        if (!dossier.pages.some((p) => p.url === page.url)) dossier.pages.push(page);
-      }
-    } catch {
-      dossier.attempts.push({ kind: 'brave', step: 'local', status: 'failed' });
-    }
-  }
 
   const record = dossier.pages.length ? flightRecordEvidence(place) : null;
   if (record && !dossier.pages.some((page) => page.url === record.url)) dossier.pages.push(record);

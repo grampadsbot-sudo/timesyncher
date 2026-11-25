@@ -12,23 +12,23 @@ import { useVacationDatabase } from '../src/vacation/db.mjs';
 import { installNoopNominatimStore, resetNominatimStore } from './fixtures/nominatim-store-test-double.mjs';
 import { handleEulaStoreDbSql } from './fixtures/eula-store-db-sql.mjs';
 import {
-  BRAVE_DUMMY,
   BRAVE_HOST,
   classifierPayloadForTurn,
   NOMINATIM_HOST,
   OPENROUTER_DUMMY,
   OPENROUTER_HOST,
   OVERPASS_HOST,
-  ROUTER_MODEL,
   TAVILY_DUMMY,
   TAVILY_HOST,
 } from './fixtures/place-intent-brave-fallback-fixtures.mjs';
+
+const VK_SEARCH_WAKE_URL = 'https://vk-search.example/wake';
 
 async function runAnyProviderOkRouteTests() {
   const storeDir = await mkdtemp(path.join(tmpdir(), 'place-any-provider-ok-'));
   const saved = {};
   for (const key of [
-    'BRAVE_SEARCH_API_KEY',
+    'VK_SEARCH_WAKE_URL',
     'TAVILI_API_KEY',
     'OPENROUTER_API_KEY',
     'TIMESYNCHER_EULA_VERSION',
@@ -44,7 +44,7 @@ async function runAnyProviderOkRouteTests() {
   }
 
   Object.assign(process.env, {
-    BRAVE_SEARCH_API_KEY: BRAVE_DUMMY,
+    VK_SEARCH_WAKE_URL,
     TAVILI_API_KEY: TAVILY_DUMMY,
     OPENROUTER_API_KEY: OPENROUTER_DUMMY,
     TIMESYNCHER_EULA_VERSION: 'test-eula-any-provider-ok',
@@ -157,7 +157,7 @@ async function runAnyProviderOkRouteTests() {
     }
     if (/insert into worker_jobs/i.test(text)) return [{ id: 'job-any-provider-ok' }];
     if (/insert into trip_things/i.test(text)) {
-      const source = values.find((value) => value === 'brave' || value === 'osm') || values.at(-1);
+      const source = values.find((value) => value === 'vk-search' || value === 'osm') || values.at(-1);
       const metaRaw = parseMetadataValue(values);
       const metadata = typeof metaRaw === 'string' ? JSON.parse(metaRaw) : (metaRaw || {});
       state.tripThings.push({ source, metadata, id: `trip-thing-${state.tripThings.length + 1}` });
@@ -222,8 +222,10 @@ async function runAnyProviderOkRouteTests() {
       }
       return { ok: true, json: async () => ({ elements: [] }) };
     }
-    if (href.includes(BRAVE_HOST) && href.includes('local')) {
-      assert.equal(options.headers['X-Subscription-Token'], BRAVE_DUMMY);
+    if (href.includes(BRAVE_HOST)) {
+      throw new Error(`Brave must never be called at runtime: ${href}`);
+    }
+    if (href === VK_SEARCH_WAKE_URL) {
       if (state.braveMode === 'fail') {
         return { ok: false, status: 503, json: async () => ({}), text: async () => 'fail' };
       }
@@ -235,9 +237,9 @@ async function runAnyProviderOkRouteTests() {
           ok: true,
           json: async () => ({
             results: [
-              { id: 'brave-taco-1', title: 'Kaanapali Taco Cart', latitude: 20.921, longitude: -156.691, url: 'https://example.com/taco-1' },
-              { id: 'brave-taco-2', title: 'Maui Fish Taco', latitude: 20.922, longitude: -156.692, url: 'https://example.com/taco-2' },
-              { id: 'brave-taco-3', title: 'Sunset Taco Shack', latitude: 20.923, longitude: -156.693, url: 'https://example.com/taco-3' },
+              { id: 'vk-taco-1', title: 'Kaanapali Taco Cart', latitude: 20.921, longitude: -156.691, address: '101 Kaanapali Pkwy, Lahaina, HI', url: 'https://example.com/taco-1' },
+              { id: 'vk-taco-2', title: 'Maui Fish Taco', latitude: 20.922, longitude: -156.692, address: '102 Kaanapali Pkwy, Lahaina, HI', url: 'https://example.com/taco-2' },
+              { id: 'vk-taco-3', title: 'Sunset Taco Shack', latitude: 20.923, longitude: -156.693, address: '103 Kaanapali Pkwy, Lahaina, HI', url: 'https://example.com/taco-3' },
             ],
           }),
         };
@@ -318,13 +320,13 @@ async function runAnyProviderOkRouteTests() {
     state.nominatimMode = 'fail';
     state.osmMode = 'fail';
     state.braveMode = 'triple';
-    const braveOk = await postTurn('best tacos near our hotel');
-    assert.equal(braveOk.status, 201, JSON.stringify(braveOk.body));
+    const vkOk = await postTurn('best tacos near our hotel');
+    assert.equal(vkOk.status, 201, JSON.stringify(vkOk.body));
     assert.equal(state.tripThings.length, 3);
-    assert.ok(state.tripThings.every((row) => row.source === 'brave'));
+    assert.ok(state.tripThings.every((row) => row.source === 'vk-search'));
     assert.deepEqual(
       state.tripThings.map((row) => row.metadata?.sourceRef?.id).sort(),
-      ['brave-taco-1', 'brave-taco-2', 'brave-taco-3'].sort(),
+      ['vk-taco-1', 'vk-taco-2', 'vk-taco-3'].sort(),
     );
     const okPayload = state.turnPayloads.at(-1);
     assert.equal(okPayload.placeSearch?.status, 'ok');
@@ -332,9 +334,9 @@ async function runAnyProviderOkRouteTests() {
     assert.ok(nominatimRow && (nominatimRow.status === 'error' || nominatimRow.status === 'skipped'));
     const osmRow = okPayload.placeSearch.providers.find((row) => row.provider === 'osm');
     assert.equal(osmRow?.status, 'error');
-    const braveRow = okPayload.placeSearch.providers.find((row) => row.provider === 'brave');
-    assert.equal(braveRow?.status, 'ok');
-    assert.equal(Number(braveRow?.resultCount), 3);
+    const vkRow = okPayload.placeSearch.providers.find((row) => row.provider === 'vk-search');
+    assert.equal(vkRow?.status, 'ok');
+    assert.equal(Number(vkRow?.resultCount), 3);
 
     state.relevanceMode = 'reject';
     state.braveMode = 'triple';
@@ -347,21 +349,21 @@ async function runAnyProviderOkRouteTests() {
     const relevancePayload = state.turnPayloads.at(-1);
     assert.equal(relevancePayload.placeSearch?.status, 'no_results');
     assert.equal(relevancePayload.placeSearch?.reason, 'relevance_rejected_all');
-    const braveRejected = relevancePayload.placeSearch.providers.find((row) => row.provider === 'brave');
-    assert.equal(braveRejected?.status, 'ok');
-    assert.equal(Number(braveRejected?.relevanceRejected), 3);
+    const vkRejected = relevancePayload.placeSearch.providers.find((row) => row.provider === 'vk-search');
+    assert.equal(vkRejected?.status, 'ok');
+    assert.equal(Number(vkRejected?.relevanceRejected), 3);
 
     state.relevanceMode = 'accept';
     state.braveMode = 'empty';
     state.nominatimMode = 'fail';
     state.osmMode = 'fail';
-    const osmFailBraveEmpty = await postTurn('best tacos near our hotel');
-    assert.equal(osmFailBraveEmpty.status, 201, JSON.stringify(osmFailBraveEmpty.body));
-    assert.equal(osmFailBraveEmpty.body.ok, true);
+    const osmFailVkEmpty = await postTurn('best tacos near our hotel');
+    assert.equal(osmFailVkEmpty.status, 201, JSON.stringify(osmFailVkEmpty.body));
+    assert.equal(osmFailVkEmpty.body.ok, true);
     const partialPayload = state.turnPayloads.at(-1);
     assert.equal(partialPayload.placeSearch?.status, 'no_results');
     assert.ok(partialPayload.placeSearch.providers.some((row) => row.provider === 'osm' && row.status === 'error'));
-    assert.ok(partialPayload.placeSearch.providers.some((row) => row.provider === 'brave' && row.status === 'empty'));
+    assert.ok(partialPayload.placeSearch.providers.some((row) => row.provider === 'vk-search' && row.status === 'empty'));
     assert.ok(Array.isArray(partialPayload.placeSearch.providerErrors) && partialPayload.placeSearch.providerErrors.some((row) => row.provider === 'osm'));
 
     state.braveMode = 'fail';
@@ -371,7 +373,7 @@ async function runAnyProviderOkRouteTests() {
     const liveFailPayload = state.turnPayloads.at(-1);
     assert.equal(liveFailPayload.placeSearch?.status, 'no_results');
     assert.ok(liveFailPayload.placeSearch.providers.some((row) => row.provider === 'osm' && row.status === 'error'));
-    assert.ok(liveFailPayload.placeSearch.providers.some((row) => row.provider === 'brave' && row.status === 'error'));
+    assert.ok(liveFailPayload.placeSearch.providers.some((row) => row.provider === 'vk-search' && row.status === 'error'));
     assert.ok(Array.isArray(liveFailPayload.placeSearch.providerErrors) && liveFailPayload.placeSearch.providerErrors.length >= 2);
 
     state.lodgingCoords = false;

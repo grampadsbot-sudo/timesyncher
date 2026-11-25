@@ -17,9 +17,9 @@ function jsonResponse(body, status = 200) {
 
 const low = JEV_RELEVANCE_MINIMUM - 1;
 const high = JEV_RELEVANCE_MINIMUM;
+const VK_SEARCH_WAKE_URL = 'https://vk-search.example/wake';
 const searchEnv = {
-  brave: 'brave-test-key',
-  braveName: 'BRAVE_SEARCH_API_KEY',
+  VK_SEARCH_WAKE_URL,
 };
 
 let fetched = false;
@@ -42,7 +42,7 @@ await assert.rejects(
   () => runPublicResearch({
     wantedThings: [{ name: 'River Lantern', kind: 'restaurant' }],
     artifacts: { destination: 'Lisbon', requestText: 'a restaurant in Lisbon' },
-    env: { BRAVE_SEARCH_API_KEY: 'brave-test-key' },
+    env: { VK_SEARCH_WAKE_URL },
     priorPlaces: [],
     fetchImpl: async () => {
       fetched = true;
@@ -56,7 +56,7 @@ assert.equal(fetched, false);
 const scoredHosts = [];
 const allowedHosts = new Set([
   'overpass-api.de',
-  'api.search.brave.com',
+  'vk-search.example',
   'openrouter.ai',
   'nominatim.openstreetmap.org',
 ]);
@@ -74,11 +74,11 @@ const scored = await fillTripIntake({
       return jsonResponse([{ lat: '38.7223', lon: '-9.1393', display_name: 'Lisbon' }]);
     }
     if (value.includes('overpass-api.de')) return jsonResponse({ elements: [] });
-    if (value.includes('api.search.brave.com')) {
+    if (value === VK_SEARCH_WAKE_URL) {
       return jsonResponse({
         results: [
-          { id: 'low-cafe', title: 'Low Cafe', coordinates: [38.72, -9.14], categories: [{ name: 'Cafe' }] },
-          { id: 'high-cafe', title: 'High Cafe', coordinates: [38.73, -9.15], categories: [{ name: 'Cafe' }] },
+          { id: 'low-cafe', title: 'Low Cafe', url: 'https://example.test/low-cafe', address: '10 Rua Low, Lisbon', coordinates: [38.72, -9.14], categories: [{ name: 'Cafe' }] },
+          { id: 'high-cafe', title: 'High Cafe', url: 'https://example.test/high-cafe', address: '20 Rua High, Lisbon', coordinates: [38.73, -9.15], categories: [{ name: 'Cafe' }] },
         ],
       });
     }
@@ -92,14 +92,14 @@ const scored = await fillTripIntake({
 });
 
 assert.deepEqual([...new Set(scoredHosts)].sort(), [
-  'api.search.brave.com',
   'nominatim.openstreetmap.org',
   'openrouter.ai',
   'overpass-api.de',
+  'vk-search.example',
 ]);
 assert.deepEqual(scored.things.map((thing) => thing.title), ['High Cafe']);
 assert.equal(scored.things[0].metadata.jevScore, high);
-assert.deepEqual(scored.things[0].metadata.sourceRef, { source: 'brave', id: 'high-cafe' });
+assert.deepEqual(scored.things[0].metadata.sourceRef, { source: 'vk-search', id: 'high-cafe' });
 assert.equal(scored.things.some((thing) => thing.title === 'Low Cafe'), false);
 assert.equal(scored.search.places.some((place) => place.title === 'Low Cafe'), false);
 

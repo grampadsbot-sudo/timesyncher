@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { braveQueryString } from '../src/vacation/brave-place-query.mjs';
+import { vkSearchQueryString } from '../src/vacation/vk-search-place-identity.mjs';
 import { compactLocalityText, resolvedAreaText } from '../src/vacation/place-search-geocode.mjs';
 import { queriesFromPlaceClassification } from '../src/vacation/place-search-query-plan.mjs';
-import { searchPlaces } from '../src/vacation/place-search.mjs';
-import { placeToTripThing } from '../src/vacation/place-search.mjs';
+import { searchPlaces, placeToTripThing } from '../src/vacation/place-search.mjs';
 import {
   KIHEI_LODGING_GEOCODE,
   MAUI_D2_GEOCODE,
@@ -16,11 +15,16 @@ import { installNoopNominatimStore } from './fixtures/nominatim-store-test-doubl
 installNoopNominatimStore();
 
 const NOMINATIM_HOST = ['nominatim', 'openstreetmap', 'org'].join('.');
-const BRAVE_HOST = ['api', 'search', 'brave', 'com'].join('.');
+const VK_WAKE_URL = 'https://vk-search.test/wake';
 const OPENROUTER_HOST = ['openrouter', 'ai'].join('.');
 const OVERPASS_HOST = ['overpass-api', 'de'].join('.');
 
-const env = { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key', DATABASE_URL: '' };
+const env = { OPENROUTER_API_KEY: 'test', VK_SEARCH_WAKE_URL: VK_WAKE_URL, DATABASE_URL: '' };
+
+const paiaVkRows = PAIA_FISH_MARKET_BRAVE.map((row) => ({
+  ...row,
+  url: row.url || 'https://paiafishmarket.com/',
+}));
 
 function nominatimStub() {
   return async (url) => {
@@ -54,14 +58,12 @@ const verboseArea = resolvedAreaText(MAUI_D2_GEOCODE, 'Maui');
 assert.match(verboseArea, /Maui County/);
 assert.equal(compactLocalityText(MAUI_D2_GEOCODE, 'Maui'), 'Maui');
 
-const center = { lat: 20.8029568, lng: -156.3106833, label: verboseArea, compactLocality: 'Maui' };
 assert.equal(
-  braveQueryString(plan.queries[0], verboseArea, center, 'Maui'),
+  vkSearchQueryString(plan.queries[0], verboseArea, 'Maui'),
   'Paia Fish Market, Maui',
 );
 
-let braveQuery = '';
-let braveEndpoint = '';
+let vkQuery = '';
 const search = await searchPlaces({
   destination: 'Maui',
   queries: plan.queries,
@@ -69,17 +71,16 @@ const search = await searchPlaces({
   relevanceArea: 'Maui',
   searchAnchor: { text: 'Maui', source: 'destination' },
   env,
-  fetchImpl: async (url) => {
+  fetchImpl: async (url, init = {}) => {
     const href = String(url);
     if (href.includes(NOMINATIM_HOST)) return nominatimStub()(url);
     if (href.includes(OVERPASS_HOST)) {
       return { ok: false, status: 504, text: async () => 'Gateway Timeout', json: async () => ({}) };
     }
-    if (href.includes(BRAVE_HOST)) {
-      const parsed = new URL(href);
-      braveQuery = parsed.searchParams.get('q') || '';
-      braveEndpoint = parsed.pathname.includes('local/place_search') ? 'local' : 'web';
-      return { ok: true, json: async () => ({ results: PAIA_FISH_MARKET_BRAVE }) };
+    if (href === VK_WAKE_URL) {
+      const body = JSON.parse(String(init.body || '{}'));
+      vkQuery = String(body.place?.query || '');
+      return { ok: true, json: async () => ({ results: paiaVkRows }) };
     }
     if (href.includes(OPENROUTER_HOST)) {
       return { ok: true, json: async () => ({ answers: { relevance: { type: 'score', score: 3.5 } } }) };
@@ -88,12 +89,10 @@ const search = await searchPlaces({
   },
 });
 
-assert.equal(braveQuery, 'Paia Fish Market, Maui');
-assert.equal(braveEndpoint, 'local');
-const braveProvider = search.providers.find((row) => row.provider === 'brave');
-assert.equal(braveProvider?.query, 'Paia Fish Market, Maui');
-assert.equal(braveProvider?.endpoint, 'local');
-assert.deepEqual(search.braveLookups, [{ query: 'Paia Fish Market, Maui', endpoint: 'local' }]);
+assert.equal(vkQuery, 'Paia Fish Market, Maui');
+const vkProvider = search.providers.find((row) => row.provider === 'vk-search');
+assert.equal(vkProvider?.query, 'Paia Fish Market, Maui');
+assert.equal(vkProvider?.status, 'ok');
 
 const d2Classification = {
   ok: true,
@@ -114,7 +113,7 @@ const d2Plan = queriesFromPlaceClassification(
 assert.equal(d2Plan.destination, 'Maui');
 assert.equal(d2Plan.queries[0].q, 'Paia Fish Market, Maui');
 
-let d2BraveQuery = '';
+let d2VkQuery = '';
 const d2Search = await searchPlaces({
   destination: 'Maui',
   queries: d2Plan.queries,
@@ -122,16 +121,16 @@ const d2Search = await searchPlaces({
   relevanceArea: 'Maui',
   searchAnchor: { text: 'Kihei', source: 'lodging' },
   env,
-  fetchImpl: async (url) => {
+  fetchImpl: async (url, init = {}) => {
     const href = String(url);
     if (href.includes(NOMINATIM_HOST)) return nominatimStub()(url);
     if (href.includes(OVERPASS_HOST)) {
       return { ok: false, status: 504, text: async () => 'Gateway Timeout', json: async () => ({}) };
     }
-    if (href.includes(BRAVE_HOST)) {
-      const parsed = new URL(href);
-      d2BraveQuery = parsed.searchParams.get('q') || '';
-      return { ok: true, json: async () => ({ results: PAIA_FISH_MARKET_BRAVE }) };
+    if (href === VK_WAKE_URL) {
+      const body = JSON.parse(String(init.body || '{}'));
+      d2VkQuery = String(body.place?.query || '');
+      return { ok: true, json: async () => ({ results: paiaVkRows }) };
     }
     if (href.includes(OPENROUTER_HOST)) {
       return { ok: true, json: async () => ({ answers: { relevance: { type: 'score', score: 3.5 } } }) };
@@ -140,7 +139,7 @@ const d2Search = await searchPlaces({
   },
 });
 
-assert.equal(d2BraveQuery, 'Paia Fish Market, Maui');
+assert.equal(d2VkQuery, 'Paia Fish Market, Maui');
 assert.equal(d2Search.places[0]?.title, 'Paia Fish Market');
 assert.equal(d2Search.anchorRadiusPolicy?.scope, 'destination');
 assert.equal(d2Search.anchorRadiusPolicy?.radiusMeters, 40000);
@@ -158,9 +157,10 @@ const categoryPlan = queriesFromPlaceClassification({
 assert.match(categoryPlan.queries[0].q, /near Kihei/i);
 assert.equal(categoryPlan.queries[0].targetKind, 'category');
 
-const kaanapaliBrave = [{
+const kaanapaliVk = [{
   id: 'loc-kaanapali-taco',
   title: 'Kaanapali Taco Cart',
+  url: 'https://kaanapali-tacos.example/',
   latitude: 20.9212,
   longitude: -156.6941,
   categories: ['restaurant'],
@@ -180,8 +180,8 @@ const categorySearch = await searchPlaces({
     if (href.includes(OVERPASS_HOST)) {
       return { ok: true, json: async () => ({ elements: [] }) };
     }
-    if (href.includes(BRAVE_HOST)) {
-      return { ok: true, json: async () => ({ results: kaanapaliBrave }) };
+    if (href === VK_WAKE_URL) {
+      return { ok: true, json: async () => ({ results: kaanapaliVk }) };
     }
     if (href.includes(OPENROUTER_HOST)) {
       return { ok: true, json: async () => ({ answers: { relevance: { type: 'score', score: 3.5 } } }) };

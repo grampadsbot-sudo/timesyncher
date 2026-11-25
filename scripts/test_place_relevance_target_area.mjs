@@ -12,8 +12,6 @@ import { useVacationDatabase } from '../src/vacation/db.mjs';
 import { installNoopNominatimStore, resetNominatimStore } from './fixtures/nominatim-store-test-double.mjs';
 import { handleEulaStoreDbSql } from './fixtures/eula-store-db-sql.mjs';
 import {
-  BRAVE_DUMMY,
-  BRAVE_HOST,
   classifierPayloadForTurn,
   NOMINATIM_HOST,
   OPENROUTER_DUMMY,
@@ -22,7 +20,7 @@ import {
   TAVILY_DUMMY,
   TAVILY_HOST,
 } from './fixtures/place-intent-brave-fallback-fixtures.mjs';
-import { braveAddress } from '../src/vacation/brave-place-query.mjs';
+import { resolveVkSearchPlaceIdentity } from '../src/vacation/vk-search-place-identity.mjs';
 import { resolvedAreaText } from '../src/vacation/place-search-geocode.mjs';
 import {
   KAANAPALI_GEOCODE,
@@ -33,11 +31,24 @@ import {
   STAGING_HOTEL_BRAVE_REJECTIONS,
 } from './fixtures/place-relevance-kaanapali-brave.mjs';
 
+const VK_SEARCH_WAKE_URL = 'https://vk-search.example/wake';
+const BRAVE_HOST = ['api', 'search', 'brave', 'com'].join('.');
+
+function withVkIdentity(rows) {
+  return rows.map((row, idx) => ({
+    ...row,
+    url: row.url || `https://vk-candidate.example/place-${idx + 1}`,
+    postal_address: row.postal_address && Object.keys(row.postal_address).length
+      ? row.postal_address
+      : { displayAddress: `${100 + idx} Kaanapali Pkwy, Lahaina, HI 96761` },
+  }));
+}
+
 async function runPlaceRelevanceTargetAreaTests() {
   const storeDir = await mkdtemp(path.join(tmpdir(), 'place-relevance-target-'));
   const saved = {};
   for (const key of [
-    'BRAVE_SEARCH_API_KEY',
+    'VK_SEARCH_WAKE_URL',
     'TAVILI_API_KEY',
     'OPENROUTER_API_KEY',
     'TIMESYNCHER_EULA_VERSION',
@@ -53,7 +64,7 @@ async function runPlaceRelevanceTargetAreaTests() {
   }
 
   Object.assign(process.env, {
-    BRAVE_SEARCH_API_KEY: BRAVE_DUMMY,
+    VK_SEARCH_WAKE_URL,
     TAVILI_API_KEY: TAVILY_DUMMY,
     OPENROUTER_API_KEY: OPENROUTER_DUMMY,
     TIMESYNCHER_EULA_VERSION: 'test-eula-place-relevance',
@@ -106,6 +117,7 @@ async function runPlaceRelevanceTargetAreaTests() {
     turnPayloads: [],
     relevanceCalls: [],
     fetchCalls: [],
+    vkQueries: [],
     lastResponse: null,
   };
 
@@ -157,7 +169,7 @@ async function runPlaceRelevanceTargetAreaTests() {
     }
     if (/insert into worker_jobs/i.test(text)) return [{ id: 'job-place-relevance' }];
     if (/insert into trip_things/i.test(text)) {
-      const source = values.find((value) => value === 'brave' || value === 'osm') || values.at(-1);
+      const source = values.find((value) => value === 'vk-search' || value === 'osm') || values.at(-1);
       const metaRaw = parseMetadataValue(values);
       const metadata = typeof metaRaw === 'string' ? JSON.parse(metaRaw) : (metaRaw || {});
       state.tripThings.push({ source, metadata, id: `trip-thing-${state.tripThings.length + 1}` });
@@ -243,10 +255,14 @@ async function runPlaceRelevanceTargetAreaTests() {
     if (href.includes(OVERPASS_HOST)) {
       return { ok: true, json: async () => ({ elements: [] }) };
     }
-    if (href.includes(BRAVE_HOST) && href.includes('local')) {
-      assert.equal(options.headers['X-Subscription-Token'], BRAVE_DUMMY);
+    if (href.includes(BRAVE_HOST)) {
+      throw new Error(`Brave must never be called at runtime: ${href}`);
+    }
+    if (href === VK_SEARCH_WAKE_URL) {
+      const parsed = options.body ? JSON.parse(String(options.body)) : {};
+      state.vkQueries.push(String(parsed?.place?.query || ''));
       const results = state.braveMode === 'kaanapali'
-        ? [...KAANAPALI_TACO_BRAVE_RESULTS, KAANAPALI_OFF_TARGET_BRAVE]
+        ? withVkIdentity([...KAANAPALI_TACO_BRAVE_RESULTS, KAANAPALI_OFF_TARGET_BRAVE])
         : [];
       return { ok: true, json: async () => ({ results }) };
     }
@@ -291,6 +307,7 @@ async function runPlaceRelevanceTargetAreaTests() {
     state.tripThings = [];
     state.turnPayloads = [];
     state.fetchCalls = [];
+    state.vkQueries = [];
     state.relevanceCalls = [];
     const req = {
       method: 'POST',
@@ -325,19 +342,17 @@ async function runPlaceRelevanceTargetAreaTests() {
     const kaanapali = await postTurn('recommend taco spots near Kaanapali Maui');
     assert.equal(kaanapali.status, 201, JSON.stringify(kaanapali.body));
     assert.ok(state.tripThings.length >= 1);
-    assert.ok(state.tripThings.every((row) => row.source === 'brave'));
+    assert.ok(state.tripThings.every((row) => row.source === 'vk-search'));
     const savedIds = state.tripThings.map((row) => row.metadata?.sourceRef?.id);
     assert.ok(savedIds.includes(KAANAPALI_ON_TARGET_BRAVE[0].id));
     assert.ok(!savedIds.includes(KAANAPALI_OFF_TARGET_BRAVE.id));
     const kaanapaliPayload = state.turnPayloads.at(-1);
     assert.equal(kaanapaliPayload.placeSearch?.status, 'ok');
-    const kaanapaliBrave = kaanapaliPayload.placeSearch.providers.find((row) => row.provider === 'brave');
-    assert.equal(kaanapaliBrave.endpoint, 'local');
-    assert.match(kaanapaliBrave.query, /tacos/);
-    assert.match(kaanapaliBrave.query, new RegExp(resolvedArea.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
-    assert.doesNotMatch(kaanapaliBrave.query, /near Kaanapali Maui$/);
-    const kaanapaliUrl = state.fetchCalls.find((url) => url.includes(BRAVE_HOST) && url.includes('local'));
-    assert.equal(new URL(kaanapaliUrl).searchParams.get('q'), kaanapaliBrave.query);
+    const kaanapaliVk = kaanapaliPayload.placeSearch.providers.find((row) => row.provider === 'vk-search');
+    assert.equal(kaanapaliVk.endpoint, 'vk-search');
+    assert.match(kaanapaliVk.query, /tacos/);
+    assert.match(kaanapaliVk.query, /Kaanapali/i);
+    assert.equal(state.vkQueries[0], kaanapaliVk.query);
     assert.ok(
       state.relevanceCalls.length > 0
       && state.relevanceCalls.every((row) => row.searchArea === 'Kaanapali Maui'),
@@ -347,33 +362,37 @@ async function runPlaceRelevanceTargetAreaTests() {
     for (const candidate of STAGING_HOTEL_BRAVE_REJECTIONS) {
       const row = rejections.find((item) => item.title === candidate.title);
       assert.ok(row, JSON.stringify(rejections));
-      assert.equal(row.address, candidate.address);
+      assert.ok(String(row.address || '').includes('Kaanapali'));
     }
 
     const hotel = await postTurn('best tacos near our hotel');
     assert.equal(hotel.status, 201, JSON.stringify(hotel.body));
     assert.ok(state.tripThings.length >= 1);
-    assert.ok(state.tripThings.every((row) => row.source === 'brave'));
+    assert.ok(state.tripThings.every((row) => row.source === 'vk-search'));
     const hotelPayload = state.turnPayloads.at(-1);
-    const hotelBrave = hotelPayload.placeSearch.providers.find((row) => row.provider === 'brave');
-    assert.equal(hotelBrave.endpoint, 'local');
-    assert.match(hotelBrave.query, new RegExp(`tacos near ${LODGING_LOCALITY.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
-    assert.doesNotMatch(hotelBrave.query, /our hotel/i);
-    const hotelUrl = state.fetchCalls.find((url) => url.includes(BRAVE_HOST) && url.includes('local'));
-    assert.equal(new URL(hotelUrl).searchParams.get('q'), hotelBrave.query);
+    const hotelVk = hotelPayload.placeSearch.providers.find((row) => row.provider === 'vk-search');
+    assert.equal(hotelVk.endpoint, 'vk-search');
+    assert.match(hotelVk.query, new RegExp(LODGING_LOCALITY.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+    assert.doesNotMatch(hotelVk.query, /our hotel/i);
+    assert.equal(state.vkQueries[0], hotelVk.query);
     const hotelCall = state.relevanceCalls.find((row) => String(row.searchArea || '').includes(LODGING_LOCALITY));
     assert.ok(hotelCall, JSON.stringify(state.relevanceCalls[0]));
 
-    assert.equal(braveAddress({ description: 'A page snippet, not a street address.', url: 'https://example.com/snippet' }), '');
+    const snippetOnly = await resolveVkSearchPlaceIdentity(
+      { title: 'Snippet Only', description: 'A page snippet, not a street address.', url: 'https://example.com/snippet' },
+      { category: 'restaurant', env: {} },
+    );
+    assert.equal(snippetOnly.ok, false);
     state.omitLodging = true;
     const savedDestination = state.trip.destination;
     state.trip.destination = 'Kaanapali, Maui';
     const noLodging = await postTurn('best tacos near our hotel');
     assert.equal(noLodging.status, 201, JSON.stringify(noLodging.body));
-    const noLodgingBrave = state.turnPayloads.at(-1).placeSearch.providers.find((row) => row.provider === 'brave');
-    assert.equal(noLodgingBrave.query, 'tacos near Kaanapali, Maui');
-    assert.equal(noLodgingBrave.endpoint, 'local');
-    assert.doesNotMatch(noLodgingBrave.query, /our hotel/i);
+    const noLodgingVk = state.turnPayloads.at(-1).placeSearch.providers.find((row) => row.provider === 'vk-search');
+    assert.match(noLodgingVk.query, /tacos/i);
+    assert.match(noLodgingVk.query, /Kaanapali, Maui/);
+    assert.equal(noLodgingVk.endpoint, 'vk-search');
+    assert.doesNotMatch(noLodgingVk.query, /our hotel/i);
     const nominatimUrls = state.fetchCalls.filter((href) => href.includes(NOMINATIM_HOST));
     assert.ok(nominatimUrls.length > 0);
     for (const href of nominatimUrls) {

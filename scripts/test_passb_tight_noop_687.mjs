@@ -38,7 +38,7 @@ function memoryStore(dossier) {
     async putDossier(key, value) { rows.set(key, stored(value)); },
   };
 }
-const env = { XAI_API_KEY: 'unit-test', BRAVE_SEARCH_API_KEY: 'unit-test' };
+const env = { XAI_API_KEY: 'unit-test', TAVILI_API_KEY: 'unit-test' };
 const judgeImpl = async (_dossier, claims) => claims.map(({ id }) => ({ id, supported: true }));
 const extractReviewsImpl = async () => ({ reviews: [], keep: [] });
 const noNetwork = async () => { throw new Error('unexpected provider request'); };
@@ -126,11 +126,11 @@ test('rule 3: one broader search can recover empty gather and build only from it
   let builds = 0;
   const result = await fetchXaiPlaceRatings(place, {
     env, storeImpl, dossierKey, destination: 'Boston', gatherImpl: async () => emptyGather(),
-    fetchImpl: async (url) => {
+    fetchImpl: async (url, init = {}) => {
       const parsed = new URL(url);
-      assert.ok(parsed.pathname.endsWith('/web/search'));
-      queries.push(parsed.searchParams.get('q'));
-      return { ok: true, json: async () => ({ web: { results: [{ url: evidence.url, title: place.title, description: text }] } }) };
+      assert.equal(parsed.pathname, '/search');
+      queries.push(JSON.parse(String(init.body || '{}')).query);
+      return { ok: true, status: 200, json: async () => ({ results: [{ url: evidence.url, title: place.title, content: text }] }) };
     },
     buildImpl: async (dossier) => {
       builds += 1;
@@ -146,7 +146,7 @@ test('rule 3: one broader search can recover empty gather and build only from it
   assert.equal(result.parsed.evidenceDossier.emptySource, null);
   const attempt = result.parsed.evidenceDossier.attempts.find((row) => row.step === 'empty_gather_escalation');
   assert.equal(attempt.status, 'ok');
-  assert.equal(attempt.provider, 'Brave');
+  assert.equal(attempt.provider, 'Tavily');
   assert.ok(attempt.startedAt);
 });
 
@@ -154,13 +154,13 @@ test('rules 1 and 3: exhausted broader search returns a hard operator failure', 
   let searches = 0;
   const result = await runThingEvidenceDossierStagingTargets([target], {
     env, storeImpl: memoryStore(), operatorFill: true, gatherImpl: async () => emptyGather(),
-    fetchImpl: async () => { searches += 1; return { ok: true, json: async () => ({ web: { results: [] } }) }; },
+    fetchImpl: async () => { searches += 1; return { ok: true, status: 200, json: async () => ({ results: [] }) }; },
     buildImpl: async () => { assert.fail('no builder without pages'); },
   });
   assert.equal(searches, 1);
   assert.equal(result.results[0].failed, true);
   assert.equal(result.results[0].status, 'failed');
-  assert.equal(result.results[0].emptySource, 'brave_zero_hits');
+  assert.equal(result.results[0].emptySource, 'tavily_zero_hits');
   assert.equal(result.results[0].pagesAdded, 0);
 });
 
@@ -170,14 +170,14 @@ test('rule 3: an empty web gather without a local no-match still escalates once'
     env, storeImpl: memoryStore(), dossierKey,
     gatherImpl: async () => ({
       thing: place.title, pages: [], braveResults: [],
-      attempts: [{ kind: 'brave', step: 'web_search', status: 'ok', results: 0 }],
+      attempts: [{ kind: 'page', provider: 'Tavily', stage: 'search', step: 'web_search', status: 'ok', results: 0 }],
     }),
-    fetchImpl: async () => { searches += 1; return { ok: true, json: async () => ({ web: { results: [] } }) }; },
+    fetchImpl: async () => { searches += 1; return { ok: true, status: 200, json: async () => ({ results: [] }) }; },
     buildImpl: async () => { assert.fail('no pages to build from'); },
   });
   assert.equal(searches, 1);
   assert.equal(result.failed, true);
-  assert.equal(result.emptySource, 'brave_zero_hits');
+  assert.equal(result.emptySource, 'tavily_zero_hits');
 });
 
 test('rule 2: the default saved-page path cannot return after a reviews-only rebuild with bad text', async () => {

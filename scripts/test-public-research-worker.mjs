@@ -26,7 +26,7 @@ assert.doesNotMatch(runnerText, /function fixtureRecentTravelerSentiment/);
 assert.doesNotMatch(runnerText, /disabled_google_places_seed_removed/);
 assert.doesNotMatch(runnerText, /TIMESYNCHER_GROK_BIN/);
 assert.match(runnerText, /adapter\.fixtureOnly/);
-assert.match(runnerText, /export async function searchBraveAndTavily/);
+assert.match(runnerText, /async function searchTavilyWeb/);
 
 const artifacts = { destination: 'Tokyo', dates: { dateText: 'October' }, requestText: 'Plan Tokyo hotels ramen museums shopping flights and transport.' };
 assert.ok(buildResearchQueries(artifacts).some((item) => item.category === 'flight'));

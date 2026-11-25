@@ -54,7 +54,7 @@ function shouldApplyAutoDetailFields(thing = {}) {
   if (detailBagHasExplicitFields(bag)) return true;
   const meta = thing.metadata && typeof thing.metadata === 'object' ? thing.metadata : {};
   const source = text(thing.source || meta.source, 80).toLowerCase();
-  if (['brave', 'osm', 'tavily', 'google-places'].includes(source)) return true;
+  if (['vk-search', 'brave', 'osm', 'tavily', 'google-places'].includes(source)) return true;
   const record = sourceRecordFrom(thing);
   if (!record) return false;
   return Boolean(

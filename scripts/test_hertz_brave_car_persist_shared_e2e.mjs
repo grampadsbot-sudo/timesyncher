@@ -7,7 +7,8 @@ import { HERTZ_KAHULUI_BRAVE } from './fixtures/place-search-brave-hertz-kahului
 import { applyCapturedLogos } from '../src/vacation/thing-logo-capture.mjs';
 import { sharedTripFromIntake, thingRecordFromTripRow } from '../src/vacation/intake-shared-trip.mjs';
 import { insertTripThing } from '../src/vacation/trip-things.mjs';
-import { mergePlaces, placeToTripThing, queryBravePlaceSearch } from '../src/vacation/place-search.mjs';
+import { mergePlaces, placeToTripThing } from '../src/vacation/place-search.mjs';
+import { queryVkSearchPlaces } from '../src/vacation/vk-search-place-identity.mjs';
 import { finalizeServedSharedTripPayload } from '../src/vacation/shared-trip-served-page.mjs';
 
 process.env.TIMESYNCHER_TRAVEL_BASE_URL = process.env.TIMESYNCHER_TRAVEL_BASE_URL || 'https://travel.example';
@@ -44,9 +45,9 @@ const tripEnv = {
 };
 
 const center = { lat: 20.8913266, lng: -156.4410129, label: 'Kahului, Maui' };
-const { places } = await queryBravePlaceSearch(
+const { places } = await queryVkSearchPlaces(
   async () => ({ ok: true, json: async () => ({ results: HERTZ_KAHULUI_BRAVE }) }),
-  { brave: 'brave-test-key' },
+  { VK_SEARCH_WAKE_URL: 'https://vk-search.example/wake' },
   { center, locationText: 'Kahului', compactLocality: 'Kahului', namedPlaceLookup: true },
   [{ category: 'store', q: 'Hertz Kahului, Kahului', limit: 5, place: true, targetKind: 'named_place', target: 'Hertz Kahului', intakeLodgingLookup: true }],
 );

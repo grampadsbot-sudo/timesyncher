@@ -3,21 +3,12 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import {
-  braveAddress,
-  braveCategoryName,
-  braveLocalPlaceResult,
-  bravePlaceSearchRows,
-  bravePoint,
-  braveProviderCategories,
-  braveTitle,
-} from '../src/vacation/brave-place-query.mjs';
-import {
   intakeLodgingNameSimilarity,
   normalizePlaceName,
   pickIntakeLodgingCandidate,
   rankIntakeLodgingCandidates,
 } from '../src/vacation/intake-lodging-candidate.mjs';
-import { braveResultHasLodgingTag, isLodgingProviderPlace } from '../src/vacation/intake-lodging-category.mjs';
+import { placeRecordHasLodgingTag, isLodgingProviderPlace } from '../src/vacation/intake-lodging-category.mjs';
 import { persistIntakeLodgingThings } from '../src/vacation/intake-lodging-thing.mjs';
 
 const FIXTURE_DIR = fileURLToPath(new URL('./fixtures/intake-lodging-brave/', import.meta.url));
@@ -31,27 +22,38 @@ function loadFixture(name) {
   return JSON.parse(readFileSync(`${FIXTURE_DIR}${name}`, 'utf8'));
 }
 
-function bravePlacesFromFixture(fixture, category = 'hotel') {
+function addressOf(result = {}) {
+  if (typeof result.address === 'string' && result.address.trim()) return result.address.trim();
+  const p = result.postal_address || {};
+  if (p.displayAddress) return String(p.displayAddress).trim();
+  return [p.streetAddress, p.addressLocality, p.addressRegion, p.postalCode, p.addressCountry].filter(Boolean).join(', ');
+}
+
+function placesFromFixture(fixture) {
   const rows = [];
-  const braveRows = bravePlaceSearchRows(fixture, 'local');
-  for (let providerRank = 0; providerRank < braveRows.length; providerRank += 1) {
-    const result = braveRows[providerRank];
-    if (!braveLocalPlaceResult(result)) continue;
-    const point = bravePoint(result);
-    const title = braveTitle(result?.title || result?.name);
-    const address = braveAddress(result);
+  const raw = Array.isArray(fixture?.results) ? fixture.results : [];
+  for (let providerRank = 0; providerRank < raw.length; providerRank += 1) {
+    const result = raw[providerRank];
+    const coords = Array.isArray(result?.coordinates) ? result.coordinates : [];
+    const lat = Number(coords[0] ?? result?.latitude ?? result?.lat);
+    const lng = Number(coords[1] ?? result?.longitude ?? result?.lng);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+    const title = String(result?.title || result?.name || '').split(/\s+\|\s+/)[0].trim();
     if (!title) continue;
+    const cats = [
+      ...(Array.isArray(result?.categories) ? result.categories.map((c) => (typeof c === 'string' ? c : c?.name)).filter(Boolean) : []),
+      ...(result?.icon_category ? [result.icon_category] : []),
+    ];
     rows.push({
-      source: 'brave',
+      source: 'vk-search',
       title,
-      category,
-      lat: point.lat,
-      lng: point.lng,
-      address,
-      url: String(result?.url || ''),
-      externalId: String(result?.id || result?.url || ''),
-      categoryName: braveCategoryName(result),
-      providerCategories: braveProviderCategories(result),
+      category: placeRecordHasLodgingTag(result) ? 'hotel' : 'store',
+      lat,
+      lng,
+      address: addressOf(result),
+      url: String(result?.url || 'https://example.org/lodging'),
+      externalId: String(result?.id || result?.url || title),
+      providerCategories: [...new Set(cats)],
       providerRank,
       sourceRecord: result,
     });
@@ -66,8 +68,8 @@ assert.ok(
   < intakeLodgingNameSimilarity('Kihei Kai Nani', 'Kihei Kai Nani Condo'),
 );
 
-const hyattPlaces = bravePlacesFromFixture(loadFixture('hyatt-live-h.json'));
-const kiheiPlaces = bravePlacesFromFixture(loadFixture('kihei-live-h2.json'));
+const hyattPlaces = placesFromFixture(loadFixture('hyatt-live-h.json'));
+const kiheiPlaces = placesFromFixture(loadFixture('kihei-live-h2.json'));
 assert.equal(hyattPlaces.length, 5);
 assert.equal(kiheiPlaces.length, 3);
 
@@ -97,9 +99,9 @@ const kiheiPick = pickIntakeLodgingCandidate(kiheiPlaces, {
   areaCenter: kiheiCenter,
 });
 assert.ok(KIHEI_IDS.has(kiheiPick.externalId));
-assert.match(kiheiPick.address || braveAddress(kiheiPick.sourceRecord), /2495 S Kihei Rd/i);
+assert.match(kiheiPick.address, /2495 S Kihei Rd/i);
 
-const giftOnly = hyattPlaces.filter((place) => !braveResultHasLodgingTag(place.sourceRecord));
+const giftOnly = hyattPlaces.filter((place) => !placeRecordHasLodgingTag(place.sourceRecord));
 assert.equal(giftOnly.length, 2);
 const giftMiss = rankIntakeLodgingCandidates(giftOnly, {
   propertyName: 'Hyatt Regency Maui',
@@ -134,10 +136,10 @@ function mockTripDb() {
 const { db: hyattDb, tripThings: hyattThings } = mockTripDb();
 const hyattOutcome = await persistIntakeLodgingThings(hyattDb, 'trip-h', 'req-h', [{ title: 'Hyatt Regency Maui', category: 'hotel' }], {
   areaHint: 'Kaanapali',
-  env: { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key' },
+  env: { OPENROUTER_API_KEY: 'test' },
   searchImpl: async () => ({
     places: hyattPlaces,
-    providers: [{ provider: 'brave', status: 'ok', resultCount: hyattPlaces.length }],
+    providers: [{ provider: 'vk-search', status: 'ok', resultCount: hyattPlaces.length }],
     center: kaanapaliCenter,
   }),
 });
@@ -147,10 +149,10 @@ assert.equal(hyattOutcome.lookups[0].pickRanking.winner.externalId, HYATT_ID);
 const { db: kiheiDb, tripThings: kiheiThings } = mockTripDb();
 const kiheiOutcome = await persistIntakeLodgingThings(kiheiDb, 'trip-k', 'req-k', [{ title: 'Kihei Kai Nani', category: 'hotel' }], {
   areaHint: 'Kihei',
-  env: { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key' },
+  env: { OPENROUTER_API_KEY: 'test' },
   searchImpl: async () => ({
     places: kiheiPlaces,
-    providers: [{ provider: 'brave', status: 'ok', resultCount: kiheiPlaces.length }],
+    providers: [{ provider: 'vk-search', status: 'ok', resultCount: kiheiPlaces.length }],
     center: kiheiCenter,
   }),
 });
@@ -162,9 +164,9 @@ assert.ok(kiheiOutcome.lookups[0].pickRanking.winner.similarityScore > 0.4);
 
 assert.equal(
   isLodgingProviderPlace({
-    source: 'brave',
+    source: 'vk-search',
     title: 'Accents Hyatt Regency Maui',
-    category: 'hotel',
+    category: 'store',
     sourceRecord: hyattPlaces.find((row) => row.title.startsWith('Accents')).sourceRecord,
   }),
   false,

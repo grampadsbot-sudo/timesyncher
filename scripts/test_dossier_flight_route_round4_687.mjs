@@ -6,7 +6,7 @@ import { runThingEvidenceDossierStagingTargets } from '../src/vacation/thing-evi
 import { dossierPresented } from '../src/vacation/passb-dossier-presented.mjs';
 import { normalizeDossierEvidence } from '../src/vacation/dossier-evidence-hydrate.mjs';
 import { memoryStore } from './lib/passb-text-builder-test-support.mjs';
-import { field, judge, webResponse, noSleep } from './lib/dossier-round4-test-support.mjs';
+import { field, judge } from './lib/dossier-round4-test-support.mjs';
 
 const target = { tripId: 'offline-trip', placeId: 'coastal-route', category: 'flight',
   title: 'Flight option: Coastal Air SEA-BOS 2026-06-23 08:20-16:40', website: 'https://coastal.example/routes',
@@ -15,6 +15,10 @@ const target = { tripId: 'offline-trip', placeId: 'coastal-route', category: 'fl
 const summary = 'Coastal Air SEA-BOS 2026-06-23 08:20-16:40 connects Seattle and Boston nonstop between the two airports.';
 const description = 'Coastal Air SEA-BOS 2026-06-23 08:20-16:40 links Seattle and Boston on a nonstop route. The airline destination page identifies both SEA and BOS as the airports served by this connection. The supplied trip record places departure in the morning and arrival in the afternoon. Those times describe the proposed itinerary, while the airline route page establishes the airport pair.';
 const facts = 'Coastal Air connects SEA and BOS nonstop. SEA is the Seattle airport and BOS is the Boston airport. The airline destination page lists this nonstop route between Seattle and Boston.';
+
+function tavilyResponse(rows = [], status = 200) {
+  return { ok: status >= 200 && status < 300, status, json: async () => ({ results: rows }) };
+}
 
 test('candidate flight queries target airline and both airports, without date/time/status or duplicate airline', () => {
   const identity = dossierSearchIdentity(target, target.destination);
@@ -30,31 +34,32 @@ test('candidate flight queries target airline and both airports, without date/ti
   assert.equal(flightEvidenceMatchesTarget({ text: 'Coastal Air SEA-LAX nonstop route' }, target), false);
 });
 
-for (const recover429 of [false, true]) test(`FL0 route pages become presented flight text, 429 recovery=${recover429}`, async () => {
+for (const firstFailed of [false, true]) test(`FL0 route pages become presented flight text, firstFailed=${firstFailed}`, async () => {
   const storeImpl = memoryStore();
   const key = `trip:${target.tripId}:place:${target.placeId}`;
-  storeImpl.rows.set(key, { thing: target.title, pages: [], fields: {}, emptySource: 'brave_extract_fallback_no_pages', attempts: [
+  storeImpl.rows.set(key, { thing: target.title, pages: [], fields: {}, emptySource: 'web_extract_fallback_no_pages', attempts: [
     { kind: 'gather', step: 'operator_empty_gather_retry', gatherVersion: 4, status: 'failed' },
   ] });
   let requests = 0;
   const options = {
     env: {}, storeImpl, operatorFill: true, skipExisting: true,
     gatherImpl: (place, opts) => gatherThingEvidence(place, {
-      ...opts, sleepImpl: noSleep, braveImpl: () => assert.fail('flights do not need local reviews'),
-      env: { BRAVE_SEARCH_API_KEY: 'offline-fixture' },
-      fetchImpl: async (url) => {
+      ...opts,
+      env: { TAVILI_API_KEY: 'offline-fixture' },
+      fetchImpl: async (url, init = {}) => {
         const parsed = new URL(url);
-        assert.ok(parsed.pathname.endsWith('/web/search'), 'snippets suffice without an extract');
+        assert.equal(parsed.pathname, '/search', 'snippets suffice without an extract');
         requests += 1;
-        if (recover429 && requests === 1) return webResponse([], 429, '0.1');
-        assert.ok(!/status|2026|08:20/.test(parsed.searchParams.get('q')));
-        return webResponse([{ url: target.website, title: 'Coastal Air SEA to BOS nonstop route', description: facts }]);
+        const q = JSON.parse(String(init.body || '{}')).query;
+        assert.ok(!/status|2026|08:20/.test(q));
+        if (firstFailed && requests === 1) return tavilyResponse([], 429);
+        return tavilyResponse([{ url: target.website, title: 'Coastal Air SEA to BOS nonstop route', content: facts }]);
       },
     }),
     fetchImpl: async () => assert.fail('offline only'),
     buildImpl: async (dossier, { prompt }) => {
       const model = JSON.parse(prompt.split('\n').at(-1));
-      const web = model.pages.find((row) => row.via === 'brave-snippet');
+      const web = model.pages.find((row) => row.via === 'tavily-search');
       const record = model.pages.find((row) => row.via === 'thing-record');
       assert.ok(web.text.includes(facts));
       assert.ok(record.text.includes('Candidate only; not booked'));
@@ -68,7 +73,7 @@ for (const recover429 of [false, true]) test(`FL0 route pages become presented f
   assert.equal(result.trace.gather.path, 'retry');
   assert.equal(result.trace.builder.blankedBy, null);
   assert.equal(result.trace.builder.judgeSupported, 2);
-  assert.equal(result.trace.attempts.some((row) => row.httpStatus === 429), recover429);
+  assert.equal(result.trace.attempts.some((row) => row.httpStatus === 429), firstFailed);
   const saved = normalizeDossierEvidence(await storeImpl.getDossier(key), target);
   assert.equal(dossierPresented(saved, target), true, 'unchanged presented judge');
   assert.ok(!/reviews/i.test(saved.fields.description.value));
@@ -76,14 +81,14 @@ for (const recover429 of [false, true]) test(`FL0 route pages become presented f
 
 test('FL0 all-query zero hits returns a named hard reason and no invented record-only payload', async () => {
   const result = (await runThingEvidenceDossierStagingTargets([target], {
-    env: { BRAVE_SEARCH_API_KEY: 'offline-fixture' }, storeImpl: memoryStore(), operatorFill: true,
+    env: { TAVILI_API_KEY: 'offline-fixture' }, storeImpl: memoryStore(), operatorFill: true,
     gatherImpl: (place, opts) => gatherThingEvidence({ ...place, url: undefined, website: undefined, sourceRecord: {} }, {
-      ...opts, sleepImpl: noSleep, braveImpl: null, fetchImpl: async () => webResponse(),
+      ...opts, fetchImpl: async () => tavilyResponse(),
     }),
-    fetchImpl: async () => webResponse(), buildImpl: async () => assert.fail('no sources'),
+    fetchImpl: async () => tavilyResponse(), buildImpl: async () => assert.fail('no sources'),
   })).results[0];
   assert.equal(result.failed, true);
-  assert.equal(result.emptySource, 'brave_zero_hits');
+  assert.equal(result.emptySource, 'tavily_zero_hits');
   assert.equal(result.pageCount, 0);
   assert.equal(result.trace.builder.ran, false);
   assert.ok(result.trace.attempts.every((row) => row.results === 0));

@@ -1,6 +1,5 @@
 import { readFileSync } from 'node:fs';
 
-const BRAVE_KEY_PARTS = ['BRAVE', 'SEARCH', 'API', 'KEY'];
 const TAVILI_KEY_PARTS = ['TAVILI', 'API', 'KEY'];
 
 const REQUIRED_ENV_ROWS = JSON.parse(
@@ -12,12 +11,8 @@ function requiredEnvName(matcher) {
   return row ? row.name : '';
 }
 
-export const BRAVE_PROVIDER_KEY_NAME = requiredEnvName((name) => name.startsWith('BRAVE_') && name.endsWith('_API_KEY'));
 export const TAVILI_PROVIDER_KEY_NAME = requiredEnvName((name) => name.startsWith('TAVILI') && name.endsWith('_API_KEY'));
 
-if (BRAVE_PROVIDER_KEY_NAME !== BRAVE_KEY_PARTS.join('_')) {
-  throw new Error('deploy-required-env.json brave search key name drifted');
-}
 if (TAVILI_PROVIDER_KEY_NAME !== TAVILI_KEY_PARTS.join('_')) {
   throw new Error('deploy-required-env.json tavily key name drifted');
 }
@@ -29,10 +24,11 @@ function keyFromEnv(processEnv = process.env, envName = '', shortAlias = '') {
 
 export function buildProviderEnv(processEnv = process.env) {
   return {
-    brave: keyFromEnv(processEnv, BRAVE_PROVIDER_KEY_NAME, 'brave'),
     tavily: keyFromEnv(processEnv, TAVILI_PROVIDER_KEY_NAME, 'tavily'),
-    braveName: BRAVE_PROVIDER_KEY_NAME,
     tavilyName: TAVILI_PROVIDER_KEY_NAME,
+    VK_SEARCH_WAKE_URL: String(processEnv.VK_SEARCH_WAKE_URL || '').trim(),
+    VK_SEARCH_CENSUS_DIR: String(processEnv.VK_SEARCH_CENSUS_DIR || '').trim(),
+    VK_SEARCH_BOT_PRIMARY: processEnv.VK_SEARCH_BOT_PRIMARY,
     OPENROUTER_API_KEY: String(processEnv.OPENROUTER_API_KEY || processEnv.JEV_API_KEY || '').trim(),
     JEV_RELEVANCE_MINIMUM: processEnv.JEV_RELEVANCE_MINIMUM,
     JEV_RELEVANCE_JUDGE_TIMEOUT_MS: processEnv.JEV_RELEVANCE_JUDGE_TIMEOUT_MS,
@@ -44,11 +40,8 @@ export function buildProviderEnv(processEnv = process.env) {
   };
 }
 
-export function missingSearchKeys(processEnv = process.env) {
-  const providerEnv = buildProviderEnv(processEnv);
-  const missing = [];
-  if (!String(providerEnv.brave || '').trim()) missing.push(String(providerEnv.braveName || 'brave'));
-  return missing;
+export function missingSearchKeys() {
+  return [];
 }
 
 export function xaiPlaceSearchModelId(processEnv = process.env) {

@@ -4,11 +4,11 @@ import { searchPlaces } from '../src/vacation/place-search.mjs';
 import { useNominatimStore } from '../src/vacation/nominatim-store.mjs';
 
 const NOMINATIM_HOST = ['nominatim', 'openstreetmap', 'org'].join('.');
-const BRAVE_HOST = ['api', 'search', 'brave', 'com'].join('.');
+const VK_SEARCH_WAKE_URL = 'https://vk-search.example/wake';
 const OPENROUTER_HOST = ['openrouter', 'ai'].join('.');
 const OVERPASS_HOST = ['overpass-api', 'de'].join('.');
 
-const env = { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key', DATABASE_URL: '' };
+const env = { OPENROUTER_API_KEY: 'test', VK_SEARCH_WAKE_URL, DATABASE_URL: '' };
 const placeQueries = [{
   category: 'restaurant',
   q: 'taco spots near Kaanapali Maui',
@@ -47,7 +47,7 @@ async function brave429() {
       if (href.includes(OVERPASS_HOST)) {
         return { ok: true, json: async () => ({ elements: [] }) };
       }
-      if (href.includes(BRAVE_HOST)) {
+      if (href === VK_SEARCH_WAKE_URL) {
         return { ok: false, status: 429, text: async () => 'rate limited', json: async () => ({}) };
       }
       if (href.includes(OPENROUTER_HOST)) {
@@ -56,10 +56,10 @@ async function brave429() {
       throw new Error(`unexpected ${href}`);
     },
   });
-  const brave = result.providers?.find((row) => row.provider === 'brave');
-  assert.equal(brave?.status, 'error');
-  assert.equal(brave?.httpStatus, 429);
-  assert.notEqual(brave?.reason, 'no_results');
+  const vk = result.providers?.find((row) => row.provider === 'vk-search');
+  assert.equal(vk?.status, 'error');
+  assert.equal(vk?.httpStatus, 429);
+  assert.notEqual(vk?.reason, 'no_results');
 }
 
 async function brave401() {
@@ -78,7 +78,7 @@ async function brave401() {
       if (href.includes(OVERPASS_HOST)) {
         return { ok: true, json: async () => ({ elements: [] }) };
       }
-      if (href.includes(BRAVE_HOST)) {
+      if (href === VK_SEARCH_WAKE_URL) {
         return { ok: false, status: 401, text: async () => 'unauthorized', json: async () => ({}) };
       }
       if (href.includes(OPENROUTER_HOST)) {
@@ -87,13 +87,13 @@ async function brave401() {
       throw new Error(`unexpected ${href}`);
     },
   });
-  const brave = result.providers?.find((row) => row.provider === 'brave');
-  assert.equal(brave?.status, 'error');
-  assert.equal(brave?.httpStatus, 401);
+  const vk = result.providers?.find((row) => row.provider === 'vk-search');
+  assert.equal(vk?.status, 'error');
+  assert.equal(vk?.httpStatus, 401);
 }
 
 async function nominatim429GeocodeFailed() {
-  const braveCalls = [];
+  const vkCalls = [];
   let caught = null;
   try {
     await searchPlaces({
@@ -109,8 +109,8 @@ async function nominatim429GeocodeFailed() {
         if (href.includes(NOMINATIM_HOST)) {
           return { ok: false, status: 429, text: async () => 'Too Many Requests', json: async () => ({}) };
         }
-        if (href.includes(BRAVE_HOST)) {
-          braveCalls.push(href);
+        if (href === VK_SEARCH_WAKE_URL) {
+          vkCalls.push(href);
           return { ok: true, json: async () => ({ results: [] }) };
         }
         throw new Error(`unexpected ${href}`);
@@ -120,9 +120,9 @@ async function nominatim429GeocodeFailed() {
     caught = error;
   }
   assert.equal(caught?.code, 'geocode_failed');
-  assert.equal(braveCalls.length, 0, 'Brave must not run without coordinates');
-  const brave = caught?.providers?.find((row) => row.provider === 'brave');
-  assert.equal(brave, undefined);
+  assert.equal(vkCalls.length, 0, 'VK Search must not run without coordinates');
+  const vk = caught?.providers?.find((row) => row.provider === 'vk-search');
+  assert.equal(vk, undefined);
   const nominatim = caught?.providers?.filter((row) => row.provider === 'nominatim') || [];
   assert.ok(nominatim.some((row) => row.status === 'error' && row.httpStatus === 429));
   assert.ok(Array.isArray(caught?.providerErrors));

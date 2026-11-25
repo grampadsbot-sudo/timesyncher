@@ -4,11 +4,11 @@ import { searchPlaces } from '../src/vacation/place-search.mjs';
 import { KAANAPALI_GEOCODE, KAANAPALI_ON_TARGET_BRAVE } from './fixtures/place-relevance-kaanapali-brave.mjs';
 
 const NOMINATIM_HOST = ['nominatim', 'openstreetmap', 'org'].join('.');
-const BRAVE_HOST = ['api', 'search', 'brave', 'com'].join('.');
+const VK_SEARCH_WAKE_URL = 'https://vk-search.example/wake';
 const OPENROUTER_HOST = ['openrouter', 'ai'].join('.');
 const OVERPASS_HOST = ['overpass-api', 'de'].join('.');
 
-const env = { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key', DATABASE_URL: '' };
+const env = { OPENROUTER_API_KEY: 'test', VK_SEARCH_WAKE_URL, DATABASE_URL: '' };
 const CENTER = { lat: 20.92, lng: -156.69, label: 'Kaanapali, Maui' };
 const placeQueries = [{
   category: 'restaurant',
@@ -34,7 +34,7 @@ const osm504BraveRows = await searchPlaces({
     if (href.includes(OVERPASS_HOST)) {
       return { ok: false, status: 504, text: async () => 'Gateway Timeout', json: async () => ({}) };
     }
-    if (href.includes(BRAVE_HOST)) {
+    if (href === VK_SEARCH_WAKE_URL) {
       return { ok: true, json: async () => ({ results: KAANAPALI_ON_TARGET_BRAVE }) };
     }
     if (href.includes(OPENROUTER_HOST)) {
@@ -44,7 +44,7 @@ const osm504BraveRows = await searchPlaces({
   },
 });
 assert.equal(osm504BraveRows.places.length, 1);
-assert.equal(osm504BraveRows.places[0].source, 'brave');
+assert.equal(osm504BraveRows.places[0].source, 'vk-search');
 assert.ok(Array.isArray(osm504BraveRows.providerErrors));
 assert.deepEqual(
   osm504BraveRows.providerErrors.filter((row) => row.provider === 'osm').map((row) => row.httpStatus),
@@ -66,7 +66,7 @@ const osm504BraveEmpty = await searchPlaces({
     if (href.includes(OVERPASS_HOST)) {
       return { ok: false, status: 504, text: async () => 'Gateway Timeout', json: async () => ({}) };
     }
-    if (href.includes(BRAVE_HOST)) {
+    if (href === VK_SEARCH_WAKE_URL) {
       return { ok: true, json: async () => ({ results: [] }) };
     }
     if (href.includes(OPENROUTER_HOST)) {
@@ -94,7 +94,7 @@ try {
       if (href.includes(OVERPASS_HOST)) {
         return { ok: false, status: 504, text: async () => 'Gateway Timeout', json: async () => ({}) };
       }
-      if (href.includes(BRAVE_HOST)) {
+      if (href === VK_SEARCH_WAKE_URL) {
         return { ok: false, status: 503, text: async () => 'unavailable', json: async () => ({}) };
       }
       throw new Error(`unexpected ${href}`);
@@ -106,7 +106,7 @@ try {
 assert.equal(everyProviderError?.code, 'geocode_failed');
 assert.match(String(everyProviderError?.message || ''), /Place search geocode failed/i);
 
-const braveCallsOnOsmError = [];
+const vkCallsOnOsmError = [];
 await searchPlaces({
   destination: 'Kaanapali Maui',
   lodgingPoint: CENTER,
@@ -122,8 +122,8 @@ await searchPlaces({
     if (href.includes(OVERPASS_HOST)) {
       return { ok: false, status: 504, text: async () => 'Gateway Timeout', json: async () => ({}) };
     }
-    if (href.includes(BRAVE_HOST)) {
-      braveCallsOnOsmError.push(href);
+    if (href === VK_SEARCH_WAKE_URL) {
+      vkCallsOnOsmError.push(href);
       return { ok: true, json: async () => ({ results: [] }) };
     }
     if (href.includes(OPENROUTER_HOST)) {
@@ -132,7 +132,7 @@ await searchPlaces({
     throw new Error(`unexpected ${href}`);
   },
 });
-assert.ok(braveCallsOnOsmError.some((href) => href.includes(BRAVE_HOST)), 'brave runs after osm 504');
+assert.ok(vkCallsOnOsmError.includes(VK_SEARCH_WAKE_URL), 'vk-search runs after osm 504');
 
 console.log(JSON.stringify({
   ok: true,

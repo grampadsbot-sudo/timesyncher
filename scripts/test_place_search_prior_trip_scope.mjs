@@ -8,13 +8,12 @@ import {
   searchPlaces,
   selectPriorPlaces,
 } from '../src/vacation/place-search.mjs';
-import { braveLocalPlaceResult, bravePlaceSearchRows } from '../src/vacation/brave-place-query.mjs';
+import { resolveVkSearchPlaceIdentity } from '../src/vacation/vk-search-place-identity.mjs';
 import { installNoopNominatimStore } from './fixtures/nominatim-store-test-double.mjs';
 
 installNoopNominatimStore();
 
 const CENTER = { lat: 20.737, lng: -156.446 };
-const TRIP_A = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 const TRIP_B = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
 const HYATT_ROW = {
   id: 'trip-a-hyatt',
@@ -55,12 +54,10 @@ assert.deepEqual(hotelPrior.map((place) => place.title), ['Near Cafe']);
 
 const env = {
   OPENROUTER_API_KEY: 'test-openrouter',
-  BRAVE_SEARCH_API_KEY: 'test-brave',
   DATABASE_URL: '',
 };
 const OPENROUTER_HOST = ['openrouter', 'ai'].join('.');
 const NOMINATIM_HOST = ['nominatim', 'openstreetmap', 'org'].join('.');
-const BRAVE_HOST = ['api', 'search', 'brave', 'com'].join('.');
 const OVERPASS_HOST = ['overpass-api', 'de'].join('.');
 
 let judgedPrior = false;
@@ -94,9 +91,6 @@ const scopedSearch = await searchPlaces({
         }),
       };
     }
-    if (href.includes(BRAVE_HOST)) {
-      return { ok: true, json: async () => ({ results: [] }) };
-    }
     if (href.includes(OPENROUTER_HOST)) {
       const raw = options.body ? JSON.parse(String(options.body)) : {};
       const name = String(raw.state?.name || '');
@@ -116,8 +110,9 @@ const webListing = {
   url: 'https://www.getyourguide.com/example',
   id: 'https://www.getyourguide.com/example',
 };
-assert.equal(bravePlaceSearchRows({ results: [], web: { results: [webListing] } }, 'local').length, 0);
-assert.equal(braveLocalPlaceResult(webListing), false);
+const unresolvedWebListing = await resolveVkSearchPlaceIdentity(webListing, { category: 'activity', env: {} });
+assert.equal(unresolvedWebListing.ok, false);
+assert.equal(unresolvedWebListing.place, null);
 
 const relevance = await attachPlaceRelevance(
   [{ source: 'prior_db', title: 'Saved Grill', category: 'restaurant', externalId: 'p1', address: 'Kihei' }],
@@ -130,7 +125,7 @@ const relevance = await attachPlaceRelevance(
   },
   { OPENROUTER_API_KEY: 'test' },
   { target: 'grill', area: 'Kihei' },
-  { requireOpenRouterKey: (env) => String(env.OPENROUTER_API_KEY || '') },
+  { requireOpenRouterKey: (e) => String(e.OPENROUTER_API_KEY || '') },
 );
 assert.equal(relevance.places.length, 0);
 assert.equal(relevance.rejections[0].source, 'prior_db');
@@ -149,9 +144,9 @@ const deduped = await insertTripThing(db, {
   thing: {
     title: 'Monkeypod Kitchen',
     category: 'restaurant',
-    source: 'brave',
+    source: 'vk-search',
     location: { lat: 20.6801, lng: -156.4401 },
-    metadata: { sourceRef: { source: 'brave', id: 'brave-mp' } },
+    metadata: { sourceRef: { source: 'vk-search', id: 'vk-mp' } },
   },
 });
 assert.equal(deduped.deduped, true);

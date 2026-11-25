@@ -13,8 +13,3 @@ export const page = (text = `${summary} ${description}`, index = 0) => ({
 export const field = (value, pages = ['p1']) => ({ value, claims: [{ text: value, pages }] });
 export const findings = () => ({ summary: field(summary), description: field(description) });
 export const judge = async (_dossier, claims) => claims.map(({ id }) => ({ id, supported: true, reason: 'Offline paraphrase supported by the saved fixture.' }));
-export const webResponse = (rows = [], status = 200, retryAfter = null) => ({
-  ok: status === 200, status, headers: { get: (key) => key === 'retry-after' ? retryAfter : null },
-  json: async () => ({ web: { results: rows } }),
-});
-export const noSleep = async () => {};

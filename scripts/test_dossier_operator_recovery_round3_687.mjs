@@ -21,7 +21,7 @@ for (const extract of ['432', 'empty']) for (const hits of [true, false]) for (c
   const rowSummary = summary.replaceAll('Harbor Bistro', target.title);
   const rowDescription = description.replaceAll('Harbor Bistro', target.title);
   const storeImpl = memoryStore();
-  storeImpl.rows.set(key, { thing: target.title, pages: [], fields: {}, emptySource: 'brave_extract_fallback_no_pages', attempts: [{ kind: 'gather', step: 'operator_empty_gather_retry', gatherVersion: previous, status: 'failed' }] });
+  storeImpl.rows.set(key, { thing: target.title, pages: [], fields: {}, emptySource: 'web_extract_fallback_no_pages', attempts: [{ kind: 'gather', step: 'operator_empty_gather_retry', gatherVersion: previous, status: 'failed' }] });
   let gathers = 0;
   assert.equal(batch.offset, offset);
   assert.equal(targets.length, 1);
@@ -30,16 +30,22 @@ for (const extract of ['432', 'empty']) for (const hits of [true, false]) for (c
     fetchImpl: async () => assert.fail('no unmocked fetch'),
     gatherImpl: async (place, options) => {
       gathers += 1;
-      return gatherThingEvidence(place, { ...options, env: { BRAVE_SEARCH_API_KEY: 'offline-fixture', VK_SEARCH_BOT_PRIMARY: '0' }, sleepImpl: async () => {}, braveImpl: null,
+      return gatherThingEvidence(place, { ...options, env: { TAVILI_API_KEY: 'offline-fixture', VK_SEARCH_BOT_PRIMARY: '0' },
         resolveImpl: async () => [{ address: '93.184.216.34' }],
         extractImpl: async () => { if (extract === '432') throw new Error('Tavily extract failed with HTTP 432.'); return []; },
-        fetchImpl: async (url) => {
+        fetchImpl: async (url, init = {}) => {
           const parsed = new URL(url);
-          if (!parsed.pathname.endsWith('/web/search')) return { ok: false, status: 403 };
-          const q = parsed.searchParams.get('q');
-          return { ok: true, json: async () => ({ web: { results: hits && q === target.title ? [
-            { url: 'https://guide.example/harbor', title: target.title, description: `${rowSummary} ${rowDescription}` },
-          ] : [] } }) };
+          if (parsed.pathname !== '/search') return { ok: false, status: 403 };
+          const q = JSON.parse(String(init.body || '{}')).query;
+          return {
+            ok: true,
+            status: 200,
+            json: async () => ({
+              results: hits && q === target.title ? [
+                { url: 'https://guide.example/harbor', title: target.title, content: `${rowSummary} ${rowDescription}` },
+              ] : [],
+            }),
+          };
         },
       });
     },
@@ -54,8 +60,8 @@ for (const extract of ['432', 'empty']) for (const hits of [true, false]) for (c
   if (hits) {
     assert.equal(dossierPagesVerified(saved), true);
     assert.equal(dossierPresented(saved, target), true);
-    assert.equal(saved.pages[0].via, 'brave-snippet');
-  } else assert.equal(result.error, extract === '432' ? 'tavily_http_432' : 'brave_missing_key');
+    assert.equal(saved.pages[0].via, 'tavily-search');
+  } else assert.equal(result.error, extract === '432' ? 'tavily_http_432' : 'tavily_missing_key');
   await run();
   assert.equal(gathers, hits ? 1 : 2, 'next call retries empty evidence and reuses a successful recovery');
 });

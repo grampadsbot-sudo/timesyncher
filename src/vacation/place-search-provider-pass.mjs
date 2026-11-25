@@ -30,7 +30,7 @@ import {
   resolveNamedPlaceTieBreakLabel,
 } from './place-search-named-select.mjs';
 import { normalizePlaceSearchTargetKind } from './place-search-target-kind.mjs';
-import { resolveBraveCompactLocality, resolvePlaceSearchQueryCenter } from './place-search-query-center.mjs';
+import { resolvePlaceCompactLocality, resolvePlaceSearchQueryCenter } from './place-search-query-center.mjs';
 
 export { placeSearchProvidersAllEmpty } from './place-search-provider-log-helpers.mjs';
 
@@ -55,7 +55,8 @@ export async function runPlaceProviderPass({
   selectPriorPlaces,
   priorRowsFromInput,
   queryOsm,
-  queryBrave,
+  queryVkSearch = null,
+  vkSearchImpl = null,
   mergePlaces,
   attachRelevance,
   readJson,
@@ -68,7 +69,7 @@ export async function runPlaceProviderPass({
     anchorGeocodeMs: 0,
     priorDbMs: 0,
     osmMs: 0,
-    braveMs: 0,
+    vkSearchMs: 0,
     relevanceMs: 0,
   };
   const contextStarted = Date.now();
@@ -95,14 +96,13 @@ export async function runPlaceProviderPass({
   const locationText = context.locationText || dest;
   const namedPlaceLookup = namedPlaceLookupFromQueries(placeQueries);
   const namedArea = String(relevanceContext?.area || '').trim();
-  const braveCompactLocality = resolveBraveCompactLocality({
+  const placeCompactLocality = resolvePlaceCompactLocality({
     namedPlaceLookup,
     searchAnchor,
     context,
     relevanceContext,
     dest,
   });
-  let braveLookups = [];
   let anchorGeocode = null;
   if (anchorText && !namedPlaceLookup) {
     const anchorStarted = Date.now();
@@ -212,19 +212,22 @@ export async function runPlaceProviderPass({
   const osmQuery = osmFilter.length
     ? queryOsm(fetchImpl, queryCenter, osmFilter).then((places) => ({ places })).catch((error) => ({ error }))
     : Promise.resolve({ skipped: 'no_osm_category' });
-  const braveQuery = queryBrave(fetchImpl, env, {
-    center: queryCenter,
-    locationText,
-    compactLocality: braveCompactLocality,
-    namedPlaceLookup,
-  }, placeQueries).then((found) => ({ found })).catch((error) => ({ error }));
+  const vkQuery = typeof queryVkSearch === 'function'
+    ? queryVkSearch(fetchImpl, env, {
+      center: queryCenter,
+      locationText,
+      compactLocality: placeCompactLocality,
+      namedPlaceLookup,
+      vkSearchImpl,
+    }, placeQueries).then((found) => ({ found })).catch((error) => ({ error }))
+    : Promise.resolve({ skipped: 'vk_search_not_configured' });
   const providersStarted = Date.now();
-  const [osmSettled, braveSettled] = await Promise.all([osmQuery, braveQuery]);
+  const [osmSettled, vkSettled] = await Promise.all([osmQuery, vkQuery]);
   const providersElapsed = Date.now() - providersStarted;
   if (osmSettled.skipped) providerTimings.osmMs = 0;
   else providerTimings.osmMs = providersElapsed;
-  if (braveSettled.skipped) providerTimings.braveMs = 0;
-  else providerTimings.braveMs = providersElapsed;
+  if (vkSettled.skipped || vkSettled.found?.skipped) providerTimings.vkSearchMs = 0;
+  else providerTimings.vkSearchMs = providersElapsed;
 
   let osm = [];
   if (osmSettled.skipped) {
@@ -255,59 +258,48 @@ export async function runPlaceProviderPass({
     });
   }
 
-  let brave = [];
-  if (braveSettled.skipped) {
+  let vkSearch = [];
+  if (vkSettled.skipped || vkSettled.found?.skipped) {
     providerLog.push({
-      provider: 'brave',
+      provider: 'vk-search',
       status: 'skipped',
-      reason: braveSettled.skipped,
+      reason: vkSettled.skipped || vkSettled.found?.skipped,
       resultCount: 0,
     });
-  } else if (braveSettled.error) {
-    const error = braveSettled.error;
-    const reason = String(error?.message || error || 'brave failed').trim();
+  } else if (vkSettled.error) {
+    const error = vkSettled.error;
+    const reason = String(error?.message || error || 'vk-search failed').trim();
     const httpStatus = httpStatusFromError(error, reason);
-    const query = String(error?.braveQuery || '').trim();
-    const endpoint = String(error?.braveEndpoint || '').trim();
-    if (query && endpoint) braveLookups = [{ query, endpoint }];
-    console.error(`place search provider brave failed: ${reason}`);
+    console.error(`place search provider vk-search failed: ${reason}`);
     providerLog.push({
-      provider: 'brave',
+      provider: 'vk-search',
       status: 'error',
       reason,
       ...(Number.isFinite(httpStatus) ? { httpStatus } : {}),
       resultCount: 0,
-      ...(query ? { query } : {}),
-      ...(endpoint ? { endpoint } : {}),
     });
   } else {
-    const found = braveSettled.found;
+    const found = vkSettled.found;
     if (Number(found?.anchorRadiusRejected) > 0) {
       anchorRadiusRejected += Number(found.anchorRadiusRejected);
     }
     if (Array.isArray(found?.anchorRadiusRejections) && found.anchorRadiusRejections.length) {
       anchorRadiusRejections.push(...found.anchorRadiusRejections);
     }
-    brave = dropOutsideAnchorRadius(Array.isArray(found) ? found : (found?.places || []));
+    vkSearch = dropOutsideAnchorRadius(Array.isArray(found) ? found : (found?.places || []));
     const query = String(found?.query || '').trim();
-    const endpoint = String(found?.endpoint || '').trim();
-    if (Array.isArray(found?.braveLookups) && found.braveLookups.length) {
-      braveLookups = found.braveLookups;
-    } else if (query && endpoint) {
-      braveLookups = [{ query, endpoint }];
-    }
     providerLog.push({
-      provider: 'brave',
-      status: brave.length ? 'ok' : 'empty',
-      ...(brave.length ? {} : { reason: 'no_results' }),
-      resultCount: brave.length,
+      provider: 'vk-search',
+      endpoint: 'vk-search',
+      status: vkSearch.length ? 'ok' : 'empty',
+      ...(vkSearch.length ? {} : { reason: found?.unresolvedReasons?.[0] || 'no_results' }),
+      resultCount: vkSearch.length,
       ...(query ? { query } : {}),
-      ...(endpoint ? { endpoint } : {}),
     });
   }
 
   const dedupeMerges = [];
-  const merged = mergePlaces([prior, osm, brave], { dedupeMerges });
+  const merged = mergePlaces([prior, osm, vkSearch], { dedupeMerges });
   const diagnosticsBase = (rejections = [], survivingPriorDbTitles = []) => {
     const providerErrors = providerErrorsFromProviderLog(providerLog);
     return buildPlaceSearchFailureDiagnostics({
@@ -322,7 +314,6 @@ export async function runPlaceProviderPass({
       survivingPriorDbTitles,
       dedupeMerges,
       ...(providerErrors.length ? { providerErrors } : {}),
-      ...(braveLookups.length ? { braveLookups } : {}),
       providerTimings,
     });
   };

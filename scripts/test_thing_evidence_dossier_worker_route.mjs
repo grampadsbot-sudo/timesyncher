@@ -201,10 +201,10 @@ await store.putDossier(emptyKey, { thing: emptyTarget.title, pages: [], attempts
 let gapCalls = 0;
 const emptyOptions = {
   ...rebuildOpts,
-  env: { XAI_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'test' },
+  env: { XAI_API_KEY: 'test', TAVILI_API_KEY: 'test' },
   fetchImpl: async () => {
     gapCalls += 1;
-    return { ok: true, json: async () => ({ web: { results: [] } }) };
+    return { ok: true, status: 200, json: async () => ({ results: [] }) };
   },
 };
 await runThingEvidenceDossierStagingTargets([emptyTarget], emptyOptions);
@@ -233,7 +233,7 @@ const budgetRun = await runThingEvidenceDossierStagingTargets([budgetTarget], {
   ...emptyOptions,
   fetchImpl: async () => {
     reviewGapCalls += 1;
-    return { ok: true, json: async () => ({ web: { results: [] } }) };
+    return { ok: true, status: 200, json: async () => ({ results: [] }) };
   },
 });
 const afterReview = await store.getDossier(budgetKey);

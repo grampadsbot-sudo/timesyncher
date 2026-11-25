@@ -52,7 +52,7 @@ await assert.rejects(
 assert.equal(openRouterCalls, 1);
 
 const NOMINATIM_HOST = ['nominatim', 'openstreetmap', 'org'].join('.');
-const BRAVE_HOST = ['api', 'search', 'brave', 'com'].join('.');
+const VK_SEARCH_WAKE_URL = 'https://vk-search.example/wake';
 const OPENROUTER_HOST = ['openrouter', 'ai'].join('.');
 const OVERPASS_HOST = ['overpass-api', 'de'].join('.');
 
@@ -68,7 +68,7 @@ function stagingFetch({ perCallDelayMs = 8 }) {
     if (href.includes(OVERPASS_HOST)) {
       return { ok: true, json: async () => ({ elements: [] }) };
     }
-    if (href.includes(BRAVE_HOST)) {
+    if (href === VK_SEARCH_WAKE_URL) {
       return { ok: true, json: async () => ({ results: KAANAPALI_ON_TARGET_BRAVE }) };
     }
     if (href.includes(OPENROUTER_HOST)) {
@@ -86,8 +86,8 @@ function stagingFetch({ perCallDelayMs = 8 }) {
 
 const fortyRows = Array.from({ length: 40 }, (_, index) => ({
   title: `Candidate ${index}`,
-  source: 'brave',
-  externalId: `b-${index}`,
+  source: 'vk-search',
+  externalId: `vk-${index}`,
   category: 'restaurant',
   address: 'Kaanapali',
 }));
@@ -110,7 +110,7 @@ assert.ok(stageBudget < VACATION_ITINERARY_ROUTE_MAX_MS);
 
 const check6Env = {
   OPENROUTER_API_KEY: 'test-key',
-  BRAVE_SEARCH_API_KEY: 'test-brave',
+  VK_SEARCH_WAKE_URL,
 };
 const check6Mock = stagingFetch({ perCallDelayMs: 6 });
 const check6Started = Date.now();

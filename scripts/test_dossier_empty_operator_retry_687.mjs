@@ -13,7 +13,7 @@ const target = {
   category: 'restaurant', website: 'https://harbor.example/', destination: 'Boston',
 };
 const key = tripPlaceDossierKey(target.tripId, target.placeId);
-const env = { XAI_API_KEY: 'offline-fixture', BRAVE_SEARCH_API_KEY: 'offline-fixture' };
+const env = { XAI_API_KEY: 'offline-fixture', TAVILI_API_KEY: 'offline-fixture' };
 const staleReason = 'gather_failed:Tavily extract failed with HTTP 432.';
 const summary = 'Harbor Bistro serves grilled fish and seasonal vegetables beside the waterfront, with a daily lunch dish.';
 const description = 'Harbor Bistro serves grilled fish and seasonal vegetables in a waterfront dining room. Its lunch menu includes a daily fish dish alongside the seasonal plates. Diners can choose lunch by the harbor or settle into the dining room for a meal built around fish and vegetables. No reviews found.';
@@ -43,29 +43,30 @@ function fixture(initial, { hits = true, status = 200, official = true } = {}) {
       saved = structuredClone({ ...merged, fieldHashes: hashes, fieldSources: sources });
     },
   };
-  const fetchImpl = async (url) => {
+  const fetchImpl = async (url, init = {}) => {
     const parsed = new URL(url);
-    if (parsed.pathname.endsWith('/web/search')) {
-      assert.ok(parsed.hostname.endsWith('search.brave.com'));
-      const query = parsed.searchParams.get('q');
+    if (parsed.pathname === '/search') {
+      const query = JSON.parse(String(init.body || '{}')).query;
       queries.push(query);
       return {
         ok: status === 200, status,
-        json: async () => ({ web: { results: hits && query === 'site:harbor.example' ? [{
-          url: target.website, title: target.title, description: text,
-          extra_snippets: ['The lunch menu includes a daily fish dish.'],
-        }] : [] } }),
+        json: async () => ({
+          results: hits && query === 'site:harbor.example' ? [{
+            url: target.website, title: target.title,
+            content: `${text} The lunch menu includes a daily fish dish.`,
+          }] : [],
+        }),
       };
     }
     assert.equal(url, target.website, 'only the official page may be fetched directly');
     return { ok: false, status: 403 };
   };
   const options = {
-    env, storeImpl, operatorFill: true, skipExisting: true, fetchImpl, sleepImpl: async () => {},
+    env, storeImpl, operatorFill: true, skipExisting: true, fetchImpl,
     gatherImpl: async (place, gatherOptions) => {
       gathers += 1;
       return gatherThingEvidence(place, {
-        ...gatherOptions, sleepImpl: async () => {}, braveImpl: null,
+        ...gatherOptions,
         resolveImpl: async () => [{ address: '93.184.216.34' }],
         extractImpl: async () => { extracts += 1; throw new Error(oldAttempt.error); },
       });
@@ -98,7 +99,7 @@ function emptySaved(extra = {}) {
   };
 }
 
-test('operator limit 1 retries a saved Tavily 432 once, saves Brave fallback pages, and builds supported text', async () => {
+test('operator limit 1 retries a saved Tavily 432 once, saves fallback web pages, and builds supported text', async () => {
   const f = fixture(emptySaved());
   const result = await f.run();
   assert.equal(f.counts().gathers, 1);
@@ -109,7 +110,7 @@ test('operator limit 1 retries a saved Tavily 432 once, saves Brave fallback pag
   assert.equal(result.pagesAdded, 1);
   assert.ok(f.queries.includes('site:harbor.example'));
   const saved = f.saved();
-  assert.ok(saved.pages.some((row) => row.via === 'brave-snippet' && row.text.includes('daily fish dish')));
+  assert.ok(saved.pages.some((row) => row.via === 'tavily-search' && row.text.includes('daily fish dish')));
   assert.ok(saved.attempts.some((row) => row.startedAt === oldAttempt.startedAt));
   assert.ok(saved.attempts.some((row) => row.stage === 'extract_fallback' && row.status === 'ok'));
   assert.equal(saved.emptySource, null);
@@ -119,17 +120,17 @@ test('operator limit 1 retries a saved Tavily 432 once, saves Brave fallback pag
   assert.equal(f.counts().extracts, 1);
 });
 
-for (const status of [200, 429]) test(`empty operator recovery names fresh Brave failure at HTTP ${status} and permits the next bounded call`, async () => {
+for (const status of [200, 429]) test(`empty operator recovery names fresh web failure at HTTP ${status} and permits the next bounded call`, async () => {
   const f = fixture(emptySaved(), { hits: false, status });
   const result = await f.run();
   assert.equal(f.counts().gathers, 1);
   assert.equal(f.counts().builds, 0);
   assert.equal(result.failed, true);
-  assert.equal(result.error, status === 429 ? 'brave_http_429+tavily_missing_key' : 'tavily_http_432');
+  assert.equal(result.error, status === 429 ? 'tavily_http_429' : 'tavily_http_432');
   assert.notEqual(result.error, staleReason);
   assert.equal(result.emptySource, f.saved().emptySource);
   assert.equal(result.pageCount, 0);
-  assert.equal(f.queries.filter((query) => query === 'Harbor Bistro Boston').length, status === 429 ? 3 : 1, 'one broader recovery query with at most two HTTP retries');
+  assert.equal(f.queries.filter((query) => query === 'Harbor Bistro Boston').length, 1);
   const before = { ...f.counts(), searches: f.queries.length };
   const repeated = await f.run();
   assert.equal(repeated.failed, true);
@@ -145,7 +146,7 @@ test('a historical no-match cannot override the fresh zero-hit recovery reason',
   }), { hits: false, official: false });
   const result = await f.run();
   assert.equal(f.counts().gathers, 1);
-  assert.equal(result.error, 'brave_zero_hits');
+  assert.equal(result.error, 'tavily_zero_hits');
 });
 
 test('a saved page rejected as another venue triggers bounded gather instead of returning zero pages', async () => {

@@ -1,4 +1,4 @@
-import { BRAVE_SEARCH_RES_V1 } from '../../src/vacation/poi-search.mjs';
+const MOCK_SEARCH_RES_V1 = 'https://mock-search.invalid/res/v1';
 
 const TAVILY_SEARCH_URL = `https://${['api', 'tavily', 'com'].join('.')}/search`;
 const XAI_RESPONSES_URL = `https://${['api', 'x', 'ai'].join('.')}/v1/responses`;
@@ -14,7 +14,7 @@ export function createDossierProviderMockFetch({
     const href = String(url);
     contacted.push(href);
     if (onRequest) onRequest(href, options);
-    if (href.startsWith(BRAVE_SEARCH_RES_V1)) {
+    if (href.startsWith(MOCK_SEARCH_RES_V1)) {
       if (braveStatus >= 400) {
         return { ok: false, status: braveStatus, json: async () => ({ message: 'search error' }) };
       }
@@ -70,5 +70,5 @@ export function createDossierProviderMockFetch({
     }
     throw new Error(`unexpected_fetch_url:${href}`);
   };
-  return { fetchImpl, contacted, braveSearchUrl: `${BRAVE_SEARCH_RES_V1}/web/search?q=test` };
+  return { fetchImpl, contacted, braveSearchUrl: `${MOCK_SEARCH_RES_V1}/web/search?q=test` };
 }

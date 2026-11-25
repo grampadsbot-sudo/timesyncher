@@ -8,6 +8,7 @@ export const DESTINATION = 'Neutral Bay';
 export const TRIP_ID = '01234567-89ab-4cde-8f01-23456789abcd';
 export const TRIP_ID_B = '01234567-89ab-4cde-8f02-23456789abcd';
 export const BRAVE_HOST = ['api', 'search', 'brave', 'com'].join('.');
+export const VK_SEARCH_WAKE_URL = 'https://vk-search.example/wake';
 export const TAVILY_HOST = ['api', 'tavily', 'com'].join('.');
 const OPENROUTER_HOST = ['openrouter', 'ai'].join('.');
 const NOMINATIM_HOST = ['nominatim', 'openstreetmap', 'org'].join('.');
@@ -215,7 +216,7 @@ export function dbFor(state) {
     if (/update transcript_turns/i.test(text)) return [];
     if (/insert into worker_jobs/i.test(text)) return [{ id: 'job-e2e' }];
     if (/insert into trip_things/i.test(text)) {
-      const source = values.find((v) => v === 'brave' || v === 'tavily') || 'brave';
+      const source = values.find((v) => v === 'vk-search' || v === 'tavily') || 'vk-search';
       state.tripThings.push({ source });
       return [{ id: `trip-thing-${state.tripThings.length}` }];
     }
@@ -368,15 +369,17 @@ export function providerFetchMock(state, env, originalFetch, intakeOptions = {
     if (href.includes(OVERPASS_HOST)) {
       return { ok: true, json: async () => ({ elements: [] }) };
     }
-    if (!href.includes(OPENROUTER_HOST) && !href.includes(BRAVE_HOST) && !href.includes(TAVILY_HOST)) {
+    if (href.includes(BRAVE_HOST)) {
+      throw new Error(`Brave must never be called at runtime: ${href}`);
+    }
+    if (!href.includes(OPENROUTER_HOST) && href !== VK_SEARCH_WAKE_URL && !href.includes(TAVILY_HOST)) {
       return originalFetch(url, init);
     }
-    if (href.includes(BRAVE_HOST) && href.includes('local')) {
-      assert.equal(init.headers['X-Subscription-Token'], env.BRAVE_SEARCH_API_KEY);
+    if (href === VK_SEARCH_WAKE_URL) {
       return {
         ok: true,
         json: async () => ({
-          results: [{ id: 'brave-e2e-1', title: 'Neutral taco counter', latitude: 47.61, longitude: -122.34, url: 'https://example.com/taco' }],
+          results: [{ id: 'vk-e2e-1', title: 'Neutral taco counter', latitude: 47.61, longitude: -122.34, address: '1500 Pike Pl, Seattle, WA', url: 'https://example.com/taco' }],
         }),
       };
     }

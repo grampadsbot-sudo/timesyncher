@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 
+import { placeToTripThing } from '../src/vacation/place-search.mjs';
 import {
-  bravePlaceDisplayTitle,
-  preferBraveUrlDuplicates,
-} from '../src/vacation/brave-place-query.mjs';
-import { placeToTripThing, queryBravePlaceSearch } from '../src/vacation/place-search.mjs';
+  preferVkUrlDuplicates,
+  queryVkSearchPlaces,
+  resolveVkSearchPlaceIdentity,
+} from '../src/vacation/vk-search-place-identity.mjs';
 import {
   KIHEI_CAFFE_BRAVE_HOTEL_TITLE_DUPE,
   KIHEI_CAFFE_BRAVE_LIVE,
@@ -14,23 +15,25 @@ import {
 const liveRow = KIHEI_CAFFE_BRAVE_LIVE[0];
 const dupeRow = KIHEI_CAFFE_BRAVE_HOTEL_TITLE_DUPE[0];
 
-assert.equal(bravePlaceDisplayTitle(liveRow), 'Kihei Caffe');
-assert.equal(bravePlaceDisplayTitle(dupeRow), 'Kihei Caffe Maui Coast Hotel');
+const liveResolved = await resolveVkSearchPlaceIdentity(liveRow, { category: 'restaurant', env: {} });
+const dupeResolved = await resolveVkSearchPlaceIdentity(dupeRow, { category: 'restaurant', env: {} });
+assert.equal(liveResolved.place.title, 'Kihei Caffe');
+assert.equal(dupeResolved.place.title, 'Kihei Caffe Maui Coast Hotel');
 assert.equal(Object.hasOwn(liveRow, 'name'), false);
 
-const deduped = preferBraveUrlDuplicates([
-  { source: 'brave', title: dupeRow.title, url: dupeRow.url, providerRank: 4, sourceRecord: dupeRow },
-  { source: 'brave', title: liveRow.title, url: liveRow.url, providerRank: 0, sourceRecord: liveRow },
+const deduped = preferVkUrlDuplicates([
+  { source: 'vk-search', title: dupeRow.title, url: dupeRow.url, providerRank: 4, sourceRecord: dupeRow },
+  { source: 'vk-search', title: liveRow.title, url: liveRow.url, providerRank: 0, sourceRecord: liveRow },
 ]);
 assert.equal(deduped.length, 1);
 assert.equal(deduped[0].title, 'Kihei Caffe');
 assert.equal(deduped[0].providerRank, 0);
 
 const center = { lat: 20.7312953, lng: -156.4517898, label: 'Kihei, Maui' };
-const env = { brave: 'brave-test-key' };
+const env = { VK_SEARCH_WAKE_URL: 'https://vk-search.example/wake' };
 const combinedResults = [...KIHEI_CAFFE_BRAVE_LIVE, ...KIHEI_CAFFE_BRAVE_HOTEL_TITLE_DUPE];
 
-const { places } = await queryBravePlaceSearch(
+const { places } = await queryVkSearchPlaces(
   async () => ({ ok: true, json: async () => ({ results: combinedResults }) }),
   env,
   { center, locationText: 'Kihei', compactLocality: 'Kihei' },

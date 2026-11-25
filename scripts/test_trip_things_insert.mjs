@@ -5,8 +5,8 @@ import { insertTripThing, TripThingInsertError } from '../src/vacation/trip-thin
 const thing = {
   title: 'Harbor Cafe',
   category: 'restaurant',
-  source: 'brave',
-  metadata: { sourceRef: { source: 'brave', id: 'brave-1' } },
+  source: 'vk-search',
+  metadata: { sourceRef: { source: 'vk-search', id: 'vk-1' } },
 };
 
 await assert.rejects(
@@ -19,7 +19,7 @@ const written = await insertTripThing(
   { tripId: 'trip-1', requestId: 'req-1', thing },
 );
 assert.equal(written.id, 'trip-thing-42');
-assert.equal(written.source, 'brave');
+assert.equal(written.source, 'vk-search');
 
 console.log(JSON.stringify({
   ok: true,

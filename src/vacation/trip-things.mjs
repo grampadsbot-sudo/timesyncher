@@ -3,7 +3,7 @@ import { assignTripSiteUrlWhenThingsPresent } from './trip-site-url-after-insert
 import { loadTripSearchProgress, recordSearchProgressPlaces } from './search-progress.mjs';
 import { samePlace } from './place-search-same-place.mjs';
 
-const PLACE_SOURCES = new Set(['prior_db', 'osm', 'brave', 'tavily']);
+const PLACE_SOURCES = new Set(['prior_db', 'osm', 'vk-search', 'tavily']);
 
 export class TripThingInsertError extends Error {
   constructor(message) {
@@ -119,7 +119,7 @@ export async function insertTripThing(db, { tripId, requestId, thing, env = proc
       select id, title, location, source, metadata
       from trip_things
       where trip_id = ${normalizedTripId}::uuid
-        and (source is null or source in ('prior_db', 'osm', 'brave', 'tavily'))
+        and (source is null or source in ('prior_db', 'osm', 'vk-search', 'brave', 'tavily'))
     `;
     const candidate = { title: item.title, ...locationPoint(item.location) };
     for (const row of existingRows) {
@@ -134,7 +134,7 @@ export async function insertTripThing(db, { tripId, requestId, thing, env = proc
         }
         return { ...item, source: item.source, id: String(row.id), deduped: true };
       }
-      if (item.source && ['prior_db', 'osm', 'brave', 'tavily'].includes(rowSource)) {
+      if (item.source && ['prior_db', 'osm', 'vk-search', 'brave', 'tavily'].includes(rowSource)) {
         return { ...item, source: item.source, id: String(row.id), deduped: true };
       }
       if (item.source) continue;

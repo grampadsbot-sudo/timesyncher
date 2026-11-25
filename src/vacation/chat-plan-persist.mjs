@@ -205,7 +205,7 @@ export async function persistFollowupLodgingSafely(persistFn, db, tripId, lodgin
   try {
     return await persistFn(db, tripId, null, lodgingWanted, options);
   } catch (error) {
-    if (error?.name === 'IntakeLodgingResolveError' || /Brave Place Search|HTTP 402|Place search/i.test(String(error?.message || error))) {
+    if (error?.name === 'IntakeLodgingResolveError' || /VK Search|HTTP 402|Place search/i.test(String(error?.message || error))) {
       console.error('followup_lodging_lookup_nonfatal', String(error?.message || error).slice(0, 240));
       return null;
     }

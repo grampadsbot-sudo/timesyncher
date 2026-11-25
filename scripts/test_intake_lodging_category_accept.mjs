@@ -2,15 +2,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import {
-  braveAddress,
-  braveCategoryName,
-  braveLocalPlaceResult,
-  bravePlaceSearchRows,
-  bravePoint,
-  braveProviderCategories,
-  braveTitle,
-} from '../src/vacation/brave-place-query.mjs';
 import { isLodgingProviderPlace } from '../src/vacation/intake-lodging-category.mjs';
 import { persistIntakeLodgingThings } from '../src/vacation/intake-lodging-thing.mjs';
 import { urlIsNominatim } from './intake-lodging-test-hosts.mjs';
@@ -21,28 +12,38 @@ function loadFixture(name) {
   return JSON.parse(readFileSync(`${FIXTURE_DIR}${name}`, 'utf8'));
 }
 
-function bravePlacesFromFixture(fixture, category = 'hotel') {
+function addressOf(result = {}) {
+  if (typeof result.address === 'string' && result.address.trim()) return result.address.trim();
+  const p = result.postal_address || {};
+  if (p.displayAddress) return String(p.displayAddress).trim();
+  return [p.streetAddress, p.addressLocality, p.addressRegion, p.postalCode, p.addressCountry].filter(Boolean).join(', ');
+}
+
+function vkPlacesFromFixture(fixture, category = 'hotel') {
   const rows = [];
-  const braveRows = bravePlaceSearchRows(fixture, 'local');
-  for (let providerRank = 0; providerRank < braveRows.length; providerRank += 1) {
-    const result = braveRows[providerRank];
-    if (!braveLocalPlaceResult(result)) continue;
-    const point = bravePoint(result);
-    const title = braveTitle(result?.title || result?.name);
-    const address = braveAddress(result);
+  const raw = Array.isArray(fixture?.results) ? fixture.results : [];
+  for (let providerRank = 0; providerRank < raw.length; providerRank += 1) {
+    const result = raw[providerRank];
+    const coords = Array.isArray(result?.coordinates) ? result.coordinates : [];
+    const lat = Number(coords[0] ?? result?.latitude ?? result?.lat);
+    const lng = Number(coords[1] ?? result?.longitude ?? result?.lng);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+    const title = String(result?.title || result?.name || '').split(/\s+\|\s+/)[0].trim();
     if (!title) continue;
-    const providerCategories = braveProviderCategories(result);
+    const cats = [
+      ...(Array.isArray(result?.categories) ? result.categories.map((c) => (typeof c === 'string' ? c : c?.name)).filter(Boolean) : []),
+      ...(result?.icon_category ? [result.icon_category] : []),
+    ];
     rows.push({
-      source: 'brave',
+      source: 'vk-search',
       title,
       category,
-      lat: point.lat,
-      lng: point.lng,
-      address,
-      url: String(result?.url || ''),
-      externalId: String(result?.id || result?.url || ''),
-      categoryName: braveCategoryName(result),
-      providerCategories,
+      lat,
+      lng,
+      address: addressOf(result),
+      url: String(result?.url || 'https://example.org/lodging'),
+      externalId: String(result?.id || result?.url || title),
+      providerCategories: [...new Set(cats)],
       providerRank,
       sourceRecord: result,
     });
@@ -75,25 +76,19 @@ function mockTripDb() {
   return { db, tripThings };
 }
 
-const hyattFixture = loadFixture('hyatt-regency-maui.json');
-const kiheiFixture = loadFixture('kihei-kai-nani.json');
-const hyattPlaces = bravePlacesFromFixture(hyattFixture);
-const kiheiPlaces = bravePlacesFromFixture(kiheiFixture);
+const hyattPlaces = vkPlacesFromFixture(loadFixture('hyatt-regency-maui.json'));
+const kiheiPlaces = vkPlacesFromFixture(loadFixture('kihei-kai-nani.json'));
 assert.equal(hyattPlaces.length, 1);
 assert.equal(kiheiPlaces.length, 1);
 assert.ok(hyattPlaces[0].providerCategories.some((tag) => /resort/i.test(tag)));
 assert.ok(kiheiPlaces[0].providerCategories.some((tag) => /condominium|vacation rental/i.test(tag)));
 assert.equal(
   isLodgingProviderPlace({
-    source: 'brave',
+    source: 'vk-search',
     title: 'Beach Grill',
     category: 'restaurant',
     categoryName: 'Restaurant',
-    providerCategories: braveProviderCategories({
-      title: 'Beach Grill',
-      categories: ['Restaurant'],
-      description: 'Casual dining inside the Hyatt hotel',
-    }),
+    providerCategories: ['Restaurant'],
   }),
   false,
 );
@@ -102,10 +97,10 @@ const { db: hyattDb, tripThings: hyattThings } = mockTripDb();
 const hyattOutcome = await persistIntakeLodgingThings(hyattDb, 'trip-hyatt', 'req-hyatt', [{ title: 'Hyatt Regency Maui', category: 'hotel' }], {
   areaHint: 'Kaanapali',
   destinationHint: 'Maui',
-  env: { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key' },
+  env: { OPENROUTER_API_KEY: 'test' },
   searchImpl: async () => ({
     places: hyattPlaces,
-    providers: [{ provider: 'brave', status: 'ok', resultCount: 1 }],
+    providers: [{ provider: 'vk-search', status: 'ok', resultCount: 1 }],
     center: { lat: 20.92, lng: -156.69 },
   }),
 });
@@ -122,10 +117,10 @@ const { db: kiheiDb, tripThings: kiheiThings } = mockTripDb();
 const kiheiOutcome = await persistIntakeLodgingThings(kiheiDb, 'trip-kihei', 'req-kihei', [{ title: 'Kihei Kai Nani', category: 'hotel' }], {
   areaHint: 'Kihei',
   destinationHint: 'Maui',
-  env: { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key' },
+  env: { OPENROUTER_API_KEY: 'test' },
   searchImpl: async () => ({
     places: kiheiPlaces,
-    providers: [{ provider: 'brave', status: 'ok', resultCount: 1 }],
+    providers: [{ provider: 'vk-search', status: 'ok', resultCount: 1 }],
     center: { lat: 20.75, lng: -156.45 },
   }),
 });
@@ -146,11 +141,11 @@ const { db: missDb, tripThings: missThings } = mockTripDb();
 const wrongAreaOutcome = await persistIntakeLodgingThings(missDb, 'trip-miss', 'req-miss', [{ title: 'Kihei Kai Nani', category: 'hotel' }], {
   areaHint: 'Kihei',
   destinationHint: 'Maui',
-  env: { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key' },
+  env: { OPENROUTER_API_KEY: 'test' },
   fetchImpl: emptyNominatimFetch,
   searchImpl: async () => ({
     places: [{
-      source: 'brave',
+      source: 'vk-search',
       title: 'Kihei Kai Nani Resort',
       category: 'activity',
       categoryName: 'Condominium',
@@ -159,7 +154,7 @@ const wrongAreaOutcome = await persistIntakeLodgingThings(missDb, 'trip-miss', '
       sourceRecord: {
         id: 'fixture-wrong-area',
         title: 'Kihei Kai Nani Resort',
-        categories: [],
+        categories: ['lodging'],
         icon_category: 'lodging',
         coordinates: [21.2793, -157.8293],
         postal_address: { displayAddress: '2552 Kalakaua Ave, Honolulu, HI 96815' },
@@ -169,7 +164,7 @@ const wrongAreaOutcome = await persistIntakeLodgingThings(missDb, 'trip-miss', '
       address: '2552 Kalakaua Ave, Honolulu, HI 96815',
       externalId: 'fixture-wrong-area',
     }],
-    providers: [{ provider: 'brave', status: 'ok', resultCount: 1 }],
+    providers: [{ provider: 'vk-search', status: 'ok', resultCount: 1 }],
     center: { lat: 20.75, lng: -156.45 },
   }),
 });
@@ -184,11 +179,11 @@ const { db: shortTitleDb, tripThings: shortTitleThings } = mockTripDb();
 const shortTitleOutcome = await persistIntakeLodgingThings(shortTitleDb, 'trip-short', 'req-short', [{ title: 'Hyatt Regency Maui', category: 'hotel' }], {
   areaHint: 'Kaanapali',
   destinationHint: 'Maui',
-  env: { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key' },
+  env: { OPENROUTER_API_KEY: 'test' },
   fetchImpl: emptyNominatimFetch,
   searchImpl: async () => ({
     places: [{
-      source: 'brave',
+      source: 'vk-search',
       title: 'Coastal Lookout Point',
       category: 'hotel',
       categoryName: 'Hotel',
@@ -208,7 +203,7 @@ const shortTitleOutcome = await persistIntakeLodgingThings(shortTitleDb, 'trip-s
       externalId: 'fixture-unrelated-lodging-title',
     }],
     center: { lat: 20.92, lng: -156.69 },
-    providers: [{ provider: 'brave', status: 'ok', resultCount: 1 }],
+    providers: [{ provider: 'vk-search', status: 'ok', resultCount: 1 }],
   }),
 });
 assert.equal(shortTitleOutcome.misses.length, 1);

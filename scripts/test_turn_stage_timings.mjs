@@ -70,12 +70,12 @@ const pass = await runPlaceProviderPass({
     osmFinished = true;
     throw new Error('OpenStreetMap Overpass failed: HTTP 504');
   },
-  queryBrave: async () => {
+  queryVkSearch: async () => {
     braveStartedAfterOsm = osmFinished;
     return {
-      places: [{ title: 'Maui Taco', source: 'brave', lat: center.lat, lng: center.lng, category: 'restaurant' }],
+      places: [{ title: 'Maui Taco', source: 'vk-search', lat: center.lat, lng: center.lng, category: 'restaurant' }],
       query: 'taco spots near Kaanapali',
-      endpoint: 'local',
+      endpoint: 'vk-search',
     };
   },
   mergePlaces: (groups) => groups.flat(),
@@ -88,13 +88,13 @@ assert.equal(braveStartedAfterOsm, false);
 assert.equal(pass.status, 'ok');
 const providers = pass.providerLog.map((row) => row.provider);
 const osmAt = providers.indexOf('osm');
-const braveAt = providers.indexOf('brave');
-assert.ok(osmAt >= 0 && braveAt > osmAt);
+const vkAt = providers.indexOf('vk-search');
+assert.ok(osmAt >= 0 && vkAt > osmAt);
 const osm = pass.providerLog.find((row) => row.provider === 'osm');
 assert.equal(osm.status, 'error');
 assert.equal(osm.httpStatus, 504);
-const brave = pass.providerLog.find((row) => row.provider === 'brave');
-assert.equal(brave.status, 'ok');
-assert.equal(brave.resultCount, 1);
+const vk = pass.providerLog.find((row) => row.provider === 'vk-search');
+assert.equal(vk.status, 'ok');
+assert.equal(vk.resultCount, 1);
 
 console.log(JSON.stringify({ ok: true, checked: 'turn-stage-timings', replyTimeoutMs: TIERED_REPLY_TIMEOUT_MS }));

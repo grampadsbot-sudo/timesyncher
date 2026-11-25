@@ -91,15 +91,15 @@ const childMissing = await runDossierFetchTask('gather', { ...place, website: ''
   env: { VK_SEARCH_CENSUS_DIR: '/missing' }, deadline: Date.now() + 5000,
 });
 assert.equal(childMissing.yelpRating, undefined, 'worker respects census directory override');
-assert.ok(childMissing.attempts.some((row) => row.status === 'fallback_brave'));
+assert.ok(childMissing.attempts.some((row) => row.status === 'fallback_web'));
 
 const thin = await gatherThingEvidence({ ...place, website: '' }, { ...options, vkSearchImpl: async () => ({ sources: [] }) });
-assert.equal(braveCalls, 1);
-assert.ok(thin.attempts.some((row) => row.status === 'fallback_brave' && row.reason === 'thin'));
+assert.equal(braveCalls, 0);
+assert.ok(thin.attempts.some((row) => row.status === 'fallback_web' && row.reason === 'thin'));
 const failedSupport = await gatherThingEvidence(place, {
   ...options, vkSearchImpl: async () => ({ ...result, voicePass: { claimSupportOk: false } }),
 });
-assert.equal(braveCalls, 1);
+assert.equal(braveCalls, 0);
 assert.ok(failedSupport.pages.length);
 assert.equal(failedSupport.itineraryNote, undefined);
 assert.equal(failedSupport.fields.itineraryNote, undefined);
@@ -147,7 +147,7 @@ assert.equal(unavailable.attempts[0].error, 'unavailable');
 const disabled = await gatherThingEvidence({ ...place, website: '' }, {
   ...options, env: { VK_SEARCH_BOT_PRIMARY: '0' }, vkSearchImpl: async () => { throw new Error('disabled'); },
 });
-assert.equal(braveCalls, 2);
+assert.equal(braveCalls, 0);
 assert.equal(disabled.attempts.some((row) => row.kind === 'vk-search'), false);
 let censusChecked = 0;
 let censusExpected = 0;

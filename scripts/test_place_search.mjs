@@ -18,12 +18,13 @@ import { installNoopNominatimStore } from './fixtures/nominatim-store-test-doubl
 
 installNoopNominatimStore();
 
+const VK_SEARCH_WAKE_URL = 'https://vk-search.example/wake';
 const ENV = {
-  BRAVE_SEARCH_API_KEY: 'brave-test-key',
+  VK_SEARCH_WAKE_URL,
 };
 const ALLOWED_HOSTS = new Set([
   'overpass-api.de',
-  'api.search.brave.com',
+  'vk-search.example',
   'openrouter.ai',
   'nominatim.openstreetmap.org',
   'api.tavily.com',
@@ -31,9 +32,8 @@ const ALLOWED_HOSTS = new Set([
 
 function placeEnv(env = ENV) {
   return {
-    brave: env.BRAVE_SEARCH_API_KEY || env.brave || '',
-    braveName: 'BRAVE_SEARCH_API_KEY',
-    OPENROUTER_API_KEY: env.OPENROUTER_API_KEY || 'test-openrouter-key',
+    ...(env.VK_SEARCH_WAKE_URL ? { VK_SEARCH_WAKE_URL: env.VK_SEARCH_WAKE_URL } : {}),
+    OPENROUTER_API_KEY: env.OPENROUTER_API_KEY ?? 'test-openrouter-key',
   };
 }
 
@@ -68,13 +68,13 @@ function callKind(url) {
   const value = String(url);
   if (value.includes('nominatim.openstreetmap.org')) return 'nominatim';
   if (value.includes('overpass-api.de')) return 'osm';
-  if (value.includes('api.search.brave.com/res/v1/local/place_search')) return 'brave';
+  if (value === VK_SEARCH_WAKE_URL) return 'vk-search';
   if (value.includes('api.tavily.com')) return 'tavily';
   if (value.includes('googleapis.com') || value.includes('places.google')) return 'google';
   return value;
 }
 
-function lisbonRoutes(url) {
+function lisbonRoutes(url, options = {}) {
   const value = String(url);
   if (value.includes('nominatim.openstreetmap.org')) {
     return jsonResponse([{ lat: '38.7223', lon: '-9.1393', display_name: 'Lisbon, Portugal' }]);
@@ -87,26 +87,14 @@ function lisbonRoutes(url) {
       ],
     });
   }
-  if (value.includes('api.search.brave.com/res/v1/local/place_search')) {
-    const q = new URL(value).searchParams.get('q') || '';
+  if (value === VK_SEARCH_WAKE_URL) {
+    const parsed = options.body ? JSON.parse(String(options.body)) : {};
+    const q = String(parsed?.place?.query || '');
     if (q === 'Paper Shop' || q === 'Paper Shop, Lisbon') {
-      return jsonResponse({
-        results: [{
-          title: 'Paper Shop',
-          url: 'https://example.test/paper',
-          coordinates: [38.71, -9.15],
-        }],
-      });
+      return jsonResponse({ results: [{ title: 'Paper Shop', url: 'https://example.test/paper', address: '10 Paper Ln, Lisbon', coordinates: [38.71, -9.15] }] });
     }
     if (q === 'River Walk' || q === 'River Walk, Lisbon') {
-      return jsonResponse({
-        results: [{
-          title: 'River Walk | Listing',
-          url: 'https://example.test/walk',
-          coordinates: [38.75, -9.16],
-          postal_address: { streetAddress: 'River Road', addressLocality: 'Lisbon' },
-        }],
-      });
+      return jsonResponse({ results: [{ title: 'River Walk', url: 'https://example.test/walk', coordinates: [38.75, -9.16], postal_address: { streetAddress: 'River Road', addressLocality: 'Lisbon' } }] });
     }
     if (q === 'Louise Cafe' || q === 'Louise Cafe, Lisbon') return jsonResponse({ results: [] });
     return jsonResponse({ results: [] });
@@ -138,20 +126,20 @@ function recordingFetch(routes, events) {
 const merged = mergePlaces([
   [{ title: 'Harbor Cafe', source: 'prior_db', category: 'restaurant', lat: 38.7223, lng: -9.1393 }],
   [{ title: 'City Museum', source: 'osm', category: 'activity', lat: 38.74, lng: -9.15 }],
-  [{ title: 'North Market', source: 'brave', category: 'store', lat: 10, lng: 10 }],
+  [{ title: 'North Market', source: 'vk-search', category: 'store', lat: 10, lng: 10 }],
   [{ title: 'North Market', source: 'osm', category: 'store', lat: 11, lng: 11 }],
 ]);
 assert.deepEqual(merged.map((place) => [place.title, place.source]), [
   ['Harbor Cafe', 'prior_db'],
   ['City Museum', 'osm'],
-  ['North Market', 'brave'],
+  ['North Market', 'vk-search'],
   ['North Market', 'osm'],
 ]);
 
 const events = [];
 const prior = [{
   title: 'Harbor Cafe',
-  source: 'brave',
+  source: 'vk-search',
   category: 'restaurant',
   lat: 38.7224,
   lng: -9.1394,
@@ -172,30 +160,27 @@ assert.deepEqual(events, [
   'nominatim',
   'prior_db',
   'osm',
-  'brave',
-  'brave',
-  'brave',
+  'vk-search',
+  'vk-search',
+  'vk-search',
 ]);
 assert.deepEqual([...new Set(recorded.hosts)].sort(), [
-  'api.search.brave.com',
   'nominatim.openstreetmap.org',
   'openrouter.ai',
   'overpass-api.de',
+  'vk-search.example',
 ]);
 assert.deepEqual(found.places.map((place) => [place.title, place.source]), [
   ['Harbor Cafe', 'osm'],
   ['City Museum', 'osm'],
-  ['Paper Shop', 'brave'],
-  ['River Walk', 'brave'],
+  ['Paper Shop', 'vk-search'],
+  ['River Walk', 'vk-search'],
 ]);
 assert.equal(found.places.some((place) => /google/i.test(place.source)), false);
 assert.equal(recorded.calls.some((call) => callKind(call.url) === 'google'), false);
-const braveCall = recorded.calls.find((call) => callKind(call.url) === 'brave');
-assert.equal(braveCall.options.headers['X-Subscription-Token'], 'brave-test-key');
-assert.equal(braveCall.url.includes('brave-test-key'), false);
 assert.equal(found.sourceCounts.prior_db, 0);
 assert.equal(found.sourceCounts.osm, 2);
-assert.equal(found.sourceCounts.brave, 2);
+assert.equal(found.sourceCounts['vk-search'], 2);
 const river = found.places.find((place) => place.title === 'River Walk');
 assert.equal(river.address, 'River Road, Lisbon');
 const museum = found.places.find((place) => place.title === 'City Museum');
@@ -208,13 +193,13 @@ await assert.rejects(
   () => searchPlaces({
     destination: 'Lisbon',
     wantedThings: PLACE_WANTED,
-    env: placeEnv({}),
+    env: { OPENROUTER_API_KEY: '' },
     fetchImpl: blockedFetch,
   }),
   (error) => {
     assert.equal(error instanceof PlaceSearchError, true);
     assert.equal(error.code, 'missing_key');
-    assert.match(error.message, /BRAVE_SEARCH_API_KEY/);
+    assert.match(error.message, /OPENROUTER_API_KEY/);
     return true;
   },
 );
@@ -247,19 +232,19 @@ const allEmpty = await searchPlaces({
 assert.equal(allEmpty.outcomeStatus, 'no_results');
 assert.equal(allEmpty.places.length, 0);
 assert.ok(Array.isArray(allEmpty.providers));
-assert.ok(allEmpty.providers.filter((row) => ['prior_db', 'osm', 'brave'].includes(String(row.provider || ''))).every((row) => row.status === 'empty' || row.status === 'skipped'));
+assert.ok(allEmpty.providers.filter((row) => ['prior_db', 'osm', 'vk-search'].includes(String(row.provider || ''))).every((row) => row.status === 'empty' || row.status === 'skipped'));
 
 const geocodeCalls = [];
 const nowhereFetch = async (url) => {
   recordHost(url, geocodeCalls);
   const value = String(url);
-  return value.includes('openrouter.ai') ? jevOk(5) : jsonResponse(value.includes('api.search.brave.com') ? { results: [] } : []);
+  return value.includes('openrouter.ai') ? jevOk(5) : jsonResponse(value === VK_SEARCH_WAKE_URL ? { results: [] } : []);
 };
 await assert.rejects(
   () => searchPlaces({ destination: 'Nowhereville', wantedThings: PLACE_WANTED, env: placeEnv(), priorPlaces: [], fetchImpl: nowhereFetch }),
   (error) => error.code === 'geocode_failed' && /Nowhereville/.test(error.message),
 );
-assert.ok(geocodeCalls.includes('nominatim.openstreetmap.org') && !geocodeCalls.includes('api.search.brave.com'));
+assert.ok(geocodeCalls.includes('nominatim.openstreetmap.org') && !geocodeCalls.includes('vk-search.example'));
 const fill = await fillTripIntake({
   destination: 'Lisbon',
   wantedThings: PLACE_WANTED,
@@ -270,8 +255,8 @@ const fill = await fillTripIntake({
 assert.deepEqual(fill.things.map((thing) => thing.source), [
   'osm',
   'osm',
-  'brave',
-  'brave',
+  'vk-search',
+  'vk-search',
 ]);
 assert.equal(fill.things[0].metadata.source, 'osm');
 assert.equal(fill.researchedThings[1].source, 'osm');
@@ -279,7 +264,7 @@ assert.equal(fill.researchedThings[1].lat, 38.74);
 assert.equal(fill.researchedThings[1].title, 'City Museum');
 
 const keptPrior = selectPriorPlaces([
-  { id: 'near', title: 'Harbor Cafe', category: 'restaurant', source: 'brave', location: { lat: 38.7224, lng: -9.1394, address: '1 Dock' } },
+  { id: 'near', title: 'Harbor Cafe', category: 'restaurant', source: 'vk-search', location: { lat: 38.7224, lng: -9.1394, address: '1 Dock' } },
   { id: 'far', title: 'Far Market', category: 'store', location: { lat: 41.15, lng: -8.61 } },
   { id: 'note', title: 'Planning brief', category: 'note', location: { lat: 38.7223, lng: -9.1393 } },
 ], CENTER);
@@ -354,7 +339,7 @@ const lodgingSearch = await searchPlaces({
   wantedThings: POKE_WANTED,
   env: placeEnv(),
   priorPlaces: [],
-  fetchImpl: async (url) => {
+  fetchImpl: async (url, options = {}) => {
     const value = String(url);
     recordHost(url, lodgingHosts);
     if (isOpenRouter(value)) return jevOk(5);
@@ -364,10 +349,11 @@ const lodgingSearch = await searchPlaces({
     }
     if (value.includes('nominatim')) throw new Error(`destination geocode ran before lodging: ${value}`);
     if (value.includes('overpass-api.de')) return jsonResponse({ elements: [] });
-    if (value.includes('api.search.brave.com')) {
-      const query = new URL(value).searchParams.get('q');
+    if (value === VK_SEARCH_WAKE_URL) {
+      const parsed = options.body ? JSON.parse(String(options.body)) : {};
+      const query = String(parsed?.place?.query || '');
       return jsonResponse({
-        results: [{ title: `Brave ${query}`, coordinates: [36.112, -115.172] }],
+        results: [{ title: `VK ${query}`, url: 'https://example.test/vk-lodging', address: '3700 S Las Vegas Blvd, Las Vegas, NV', coordinates: [36.112, -115.172] }],
       });
     }
     throw new Error(`unexpected lodging search ${value}`);
@@ -375,52 +361,54 @@ const lodgingSearch = await searchPlaces({
 });
 assert.equal(lodgingEvents[0], 'nominatim');
 assert.equal(lodgingEvents.filter((kind) => kind === 'nominatim').length, 1);
-assert.equal(lodgingEvents.includes('brave'), true);
+assert.equal(lodgingEvents.includes('vk-search'), true);
 assert.equal(lodgingSearch.center.geocoded, 'lodging');
 assert.deepEqual(lodgingSearch.queries.map((query) => query.q), ['Poke Harbor', 'North Market', 'River Lantern']);
 assert.equal(
-  lodgingSearch.places.some((place) => place.title === 'Brave Poke Harbor, Jockey Club' && place.source === 'brave'),
+  lodgingSearch.places.some((place) => place.title === 'VK Poke Harbor, Jockey Club' && place.source === 'vk-search'),
   true,
 );
 assert.equal(lodgingSearch.places.length < DEFAULT_FIRST_PASS_MINIMUMS.restaurant, true);
 assert.equal(lodgingSearch.places.some((place) => /huggo|bellagio|catch las vegas/i.test(place.title)), false);
 assert.deepEqual([...new Set(lodgingHosts)].sort(), [
-  'api.search.brave.com',
   'nominatim.openstreetmap.org',
   'openrouter.ai',
   'overpass-api.de',
+  'vk-search.example',
 ]);
 
-const braveCalls = [];
+const vkCalls = [];
 const emptyHosts = [];
 const emptyLiveSearch = await searchPlaces({
   destination: 'Lisbon',
   wantedThings: PLACE_WANTED,
   env: placeEnv(),
   priorPlaces: [],
-  fetchImpl: async (url) => {
+  fetchImpl: async (url, options = {}) => {
     const value = String(url);
     recordHost(url, emptyHosts);
     if (isOpenRouter(value)) return jevOk(5);
-    braveCalls.push(`${callKind(value)}:${new URL(value).searchParams.get('q') || ''}`);
+    const kind = callKind(value);
+    const q = kind === 'vk-search' ? String(JSON.parse(String(options.body || '{}'))?.place?.query || '') : (new URL(value).searchParams.get('q') || '');
+    vkCalls.push(`${kind}:${q}`);
     if (value.includes('nominatim')) return jsonResponse([{ lat: '38.7223', lon: '-9.1393', display_name: 'Lisbon' }]);
     if (value.includes('overpass-api.de')) return jsonResponse({ elements: [] });
-    if (value.includes('api.search.brave.com')) return jsonResponse({ results: [] });
+    if (value === VK_SEARCH_WAKE_URL) return jsonResponse({ results: [] });
     throw new Error(`unexpected search ${value}`);
   },
 });
 assert.equal(emptyLiveSearch.outcomeStatus, 'no_results');
 assert.equal(emptyLiveSearch.places.length, 0);
-assert.equal(braveCalls.filter((entry) => entry.startsWith('brave:')).length, 3);
-assert.deepEqual(braveCalls.filter((entry) => entry.startsWith('brave:')), [
-  'brave:Louise Cafe, Lisbon',
-  'brave:Paper Shop, Lisbon',
-  'brave:River Walk, Lisbon',
+assert.equal(vkCalls.filter((entry) => entry.startsWith('vk-search:')).length, 3);
+assert.deepEqual(vkCalls.filter((entry) => entry.startsWith('vk-search:')), [
+  'vk-search:Louise Cafe, Lisbon',
+  'vk-search:Paper Shop, Lisbon',
+  'vk-search:River Walk, Lisbon',
 ]);
 assert.deepEqual([...new Set(emptyHosts)].sort(), [
-  'api.search.brave.com',
   'nominatim.openstreetmap.org',
   'overpass-api.de',
+  'vk-search.example',
 ]);
 
 const fallbackEvents = [];
@@ -431,7 +419,7 @@ const lodgingMiss = await searchPlaces({
   wantedThings: PLACE_WANTED,
   env: placeEnv(),
   priorPlaces: [],
-  fetchImpl: async (url) => {
+  fetchImpl: async (url, options = {}) => {
     const value = String(url);
     recordHost(url, fallbackHosts);
     if (isOpenRouter(value)) return jevOk(5);
@@ -440,32 +428,28 @@ const lodgingMiss = await searchPlaces({
       if (value.includes('Missing')) return jsonResponse([]);
       return jsonResponse([{ lat: '38.7223', lon: '-9.1393', display_name: 'Lisbon' }]);
     }
-    if (value.includes('api.search.brave.com') && value.includes('q=Louise')) {
-      return jsonResponse({
-        results: [{
-          id: 'brave-lisbon',
-          title: 'Lisbon Cafe',
-          coordinates: [38.7225, -9.1395],
-          category: 'Café',
-        }],
-      });
+    if (value === VK_SEARCH_WAKE_URL) {
+      const q = String((options.body ? JSON.parse(String(options.body)) : {})?.place?.query || '');
+      if (q.includes('Louise')) {
+        return jsonResponse({ results: [{ id: 'vk-lisbon', title: 'Lisbon Cafe', url: 'https://example.test/lisbon-cafe', address: '12 Rua Cafe, Lisbon', coordinates: [38.7225, -9.1395], category: 'Café' }] });
+      }
+      return jsonResponse({ results: [] });
     }
-    if (value.includes('api.search.brave.com')) return jsonResponse({ results: [] });
     if (value.includes('overpass-api.de')) return jsonResponse({ elements: [] });
     throw new Error(`unexpected lodging miss ${value}`);
   },
 });
 assert.deepEqual([...new Set(fallbackHosts)].sort(), [
-  'api.search.brave.com',
   'nominatim.openstreetmap.org',
   'openrouter.ai',
   'overpass-api.de',
+  'vk-search.example',
 ]);
 assert.match(fallbackEvents[0], /Missing House/);
 assert.match(fallbackEvents[1], /Lisbon/);
 assert.equal(lodgingMiss.center.geocoded, 'destination');
 assert.equal(lodgingMiss.places[0].title, 'Lisbon Cafe');
-assert.equal(lodgingMiss.places[0].externalId, 'brave-lisbon');
+assert.equal(lodgingMiss.places[0].externalId, 'vk-lisbon');
 assert.equal(lodgingMiss.places[0].categoryName, 'Café');
 assert.equal(lodgingMiss.places[0].jevScore, 5);
 const savedCafe = placeToTripThing({
@@ -473,8 +457,8 @@ const savedCafe = placeToTripThing({
   rating: 4.4,
   ratingCount: 12,
 });
-assert.deepEqual(savedCafe.metadata.sourceRef, { source: 'brave', id: 'brave-lisbon' });
-assert.equal(savedCafe.ratings.source, 'brave');
+assert.deepEqual(savedCafe.metadata.sourceRef, { source: 'vk-search', id: 'vk-lisbon' });
+assert.equal(savedCafe.ratings.source, 'vk-search');
 assert.equal(savedCafe.ratings.rating, '4.4');
 assert.equal(savedCafe.ratings.count, 12);
 assert.equal(savedCafe.ratings.googleRating, undefined);
@@ -496,22 +480,22 @@ assert.equal(research.provider, 'place-search');
 assert.deepEqual(workerEvents, [
   'nominatim',
   'osm',
-  'brave',
-  'brave',
-  'brave',
+  'vk-search',
+  'vk-search',
+  'vk-search',
 ]);
-assert.equal(research.things.some((thing) => thing.source === 'brave' && thing.title === 'River Walk'), true);
+assert.equal(research.things.some((thing) => thing.source === 'vk-search' && thing.title === 'River Walk'), true);
 assert.equal(research.things.some((thing) => thing.source === 'osm'), true);
 assert.deepEqual([...new Set(workerFetch.hosts)].sort(), [
-  'api.search.brave.com',
   'nominatim.openstreetmap.org',
   'openrouter.ai',
   'overpass-api.de',
+  'vk-search.example',
 ]);
 assert.equal(workerFetch.calls.some((call) => /googleapis|places\.google/.test(call.url)), false);
-const braveQuery = decodeURIComponent(workerFetch.calls.find((call) => call.url.includes('place_search')).url);
-assert.match(braveQuery, /q=Louise(\+|%20)Cafe/);
-assert.doesNotMatch(braveQuery, /near /);
+const vkWorkerBody = JSON.parse(String(workerFetch.calls.find((call) => call.url === VK_SEARCH_WAKE_URL).options.body || '{}'));
+assert.match(String(vkWorkerBody?.place?.query || ''), /Louise Cafe/);
+assert.doesNotMatch(String(vkWorkerBody?.place?.query || ''), /near /);
 
 await assert.rejects(
   () => runPublicResearch({

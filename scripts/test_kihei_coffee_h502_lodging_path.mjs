@@ -6,15 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { attachPlaceSearchTurnScope } from '../src/vacation/place-search-reply-facts.mjs';
 import { anchorRadiusPolicySnapshot, ANCHOR_RADIUS_SCOPE_LODGING } from '../src/vacation/place-search-radius-filter.mjs';
 import { persistIntakeLodgingThings } from '../src/vacation/intake-lodging-thing.mjs';
-import {
-  braveAddress,
-  braveCategoryName,
-  braveLocalPlaceResult,
-  bravePlaceSearchRows,
-  bravePoint,
-  braveProviderCategories,
-  braveTitle,
-} from '../src/vacation/brave-place-query.mjs';
+import { resolveVkSearchPlaceIdentity } from '../src/vacation/vk-search-place-identity.mjs';
 import { enrichDraftingTripContext } from '../src/vacation/reply-trip-context-facts.mjs';
 import {
   modelVisibleTripContext,
@@ -28,26 +20,16 @@ const FIXTURE = JSON.parse(readFileSync(
   'utf8',
 ));
 
-function bravePlacesFromFixture(fixture) {
+async function vkPlacesFromFixture(fixture) {
   const rows = [];
-  for (let providerRank = 0; providerRank < bravePlaceSearchRows(fixture, 'local').length; providerRank += 1) {
-    const result = bravePlaceSearchRows(fixture, 'local')[providerRank];
-    if (!braveLocalPlaceResult(result)) continue;
-    const point = bravePoint(result);
-    const title = braveTitle(result?.title || result?.name);
-    if (!title) continue;
-    rows.push({
-      source: 'brave',
-      title,
-      category: 'hotel',
-      lat: point.lat,
-      lng: point.lng,
-      address: braveAddress(result),
-      categoryName: braveCategoryName(result),
-      providerCategories: braveProviderCategories(result),
-      providerRank,
-      sourceRecord: result,
-    });
+  const raw = Array.isArray(fixture?.results) ? fixture.results : [];
+  for (let providerRank = 0; providerRank < raw.length; providerRank += 1) {
+    const result = raw[providerRank];
+    const outcome = await resolveVkSearchPlaceIdentity(
+      { ...result, url: result?.url || `https://lodging.example/hotel-${providerRank}` },
+      { category: 'hotel', providerRank, env: {} },
+    );
+    if (outcome.ok && outcome.place) rows.push(outcome.place);
   }
   return rows;
 }
@@ -69,7 +51,7 @@ function mockTripDb(tripId) {
       const title = values.find((value) => typeof value === 'string' && /Westin|Hyatt/i.test(value));
       const category = values.find((value) => value === 'hotel') ? 'hotel' : values[2];
       const location = values.find((value) => value && typeof value === 'object' && ('lat' in value || 'address' in value)) || {};
-      const metadata = values.find((value) => value && typeof value === 'object' && value.source === 'brave') || {};
+      const metadata = values.find((value) => value && typeof value === 'object' && value.source === 'vk-search') || {};
       tripThings.push({
         id: `thing-${tripThings.length + 1}`,
         trip_id: tripId,
@@ -77,7 +59,7 @@ function mockTripDb(tripId) {
         title,
         location,
         metadata,
-        source: metadata.source || 'brave',
+        source: metadata.source || 'vk-search',
       });
       return [{ id: tripThings.at(-1).id }];
     }
@@ -99,17 +81,17 @@ function mockTripDb(tripId) {
 
 const tripId = 'trip-h502';
 const { db, tripThings } = mockTripDb(tripId);
-const bravePlaces = bravePlacesFromFixture(FIXTURE);
+const vkPlaces = await vkPlacesFromFixture(FIXTURE);
 const outcome = await persistIntakeLodgingThings(db, tripId, 'req-h502', [{
   title: 'The Westin Maui',
   category: 'hotel',
 }], {
   areaHint: 'Kaanapali',
   destinationHint: 'Maui',
-  env: { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key' },
+  env: { OPENROUTER_API_KEY: 'test' },
   searchImpl: async () => ({
-    places: bravePlaces,
-    providers: [{ provider: 'brave', status: 'ok', resultCount: bravePlaces.length }],
+    places: vkPlaces,
+    providers: [{ provider: 'vk-search', status: 'ok', resultCount: vkPlaces.length }],
   }),
 });
 assert.equal(outcome.saved.length, 1);
@@ -120,8 +102,8 @@ assert.match(tripThings[0].title, /Westin Maui/i);
 const KIHEI_CENTER = { lat: 20.763395, lng: -156.4463997, label: 'Kihei' };
 const areaScope = anchorRadiusPolicySnapshot(KIHEI_CENTER, ANCHOR_RADIUS_SCOPE_LODGING, 'restaurant');
 const inTurnRows = [
-  { title: 'Kihei Caffe', lat: 20.7313, lng: -156.4518, category: 'restaurant', source: 'brave' },
-  { title: 'Cafe Kula', lat: 20.7905, lng: -156.3267, category: 'restaurant', source: 'brave' },
+  { title: 'Kihei Caffe', lat: 20.7313, lng: -156.4518, category: 'restaurant', source: 'vk-search' },
+  { title: 'Cafe Kula', lat: 20.7905, lng: -156.3267, category: 'restaurant', source: 'vk-search' },
 ];
 const placeSearchReplyFacts = attachPlaceSearchTurnScope(
   { chatPlaceSearch: { scheduled: [], unscheduled: [] } },

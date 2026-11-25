@@ -140,7 +140,7 @@ export function rowNeedsPlaceSearch(row = {}) {
   if (meta.needsDetails === true) return true;
   const source = String(row?.source || meta.source || '').trim().toLowerCase();
   if (source === 'customer_stated') return true;
-  if (['prior_db', 'osm', 'brave', 'tavily'].includes(source)) return false;
+  if (['prior_db', 'osm', 'vk-search', 'tavily'].includes(source)) return false;
   const intakeSource = String(meta.intakeSource || '').trim().toLowerCase();
   const metaSource = String(meta.source || '').trim().toLowerCase();
   const fromChatIntake = metaSource === 'chat_extraction'
