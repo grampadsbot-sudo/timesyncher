@@ -77,12 +77,38 @@ function replyText(body) {
   return String(body?.reply || '').trim();
 }
 
+function isScriptedProductReply(reply) {
+  const text = String(reply || '');
+  return /doesn'?t book reservations directly/i.test(text)
+    || /set up your AI for reservations/i.test(text)
+    || /ready to import into/i.test(text)
+    || /from your AI/i.test(text);
+}
+
 function storedTurns(body) {
   return Array.isArray(body?.turns) ? body.turns.length : 0;
 }
 
 function itineraryCount(body) {
   return Array.isArray(body?.itinerary) ? body.itinerary.length : 0;
+}
+
+const PRICE_TALK_RE = /\$\s*\d|\b(?:price|pricing|cost|coupon|per year|unlimited vacations|household plan)\b/i;
+const PRICE_REACT_RE = /\$\s*\d|\b(?:price|pricing|cost|coupon|worth it|too (?:much|expensive)|works for us|sounds (?:good|fair)|we(?:'ll| will) (?:take|pass|think)|household plan|unlimited vacations)\b/i;
+
+export function pricingReactionCaptured(customerTurns) {
+  const turns = Array.isArray(customerTurns) ? customerTurns : [];
+  const appMentioned = turns.some((turn) => turn?.role === 'app' && PRICE_TALK_RE.test(String(turn.text || '')));
+  const customerReacted = turns.some((turn) => turn?.role === 'customer' && turn?.odd !== true && PRICE_REACT_RE.test(String(turn.text || '')));
+  return Boolean(appMentioned && customerReacted);
+}
+
+export function chatGoalsReached({ itineraryCount: items, customerTurns, index, maxTurns, pricing } = {}) {
+  const cap = Math.max(1, Number(maxTurns) || 100);
+  const atCap = Number(index) + 1 >= cap;
+  const pricingOk = pricing === true || pricingReactionCaptured(customerTurns);
+  const itineraryOk = Number(items) > 0;
+  return { itineraryOk, pricingOk, atCap, done: itineraryOk && pricingOk };
 }
 
 function tripFields(body) {
@@ -95,16 +121,38 @@ function tripFields(body) {
 
 export async function playCustomerTurns(story, { origin, token, tripId, fetchImpl, hosts, waitMs = 0, secrets = [], liveCustomer = false, customerAsk = null, customerLanes = null, maxTurns = 0 }) {
   const allowed = new URL(origin).origin;
+  let webAccessToken = '';
+  const rememberWebAccess = (response) => {
+    const headers = response?.headers;
+    if (!headers) return;
+    const listed = typeof headers.getSetCookie === 'function'
+      ? headers.getSetCookie()
+      : [headers.get('set-cookie')].filter(Boolean);
+    for (const raw of listed) {
+      const match = String(raw || '').match(/ts_vacation_web_access=([^;]+)/i);
+      if (!match) continue;
+      const value = decodeURIComponent(match[1]);
+      if (!value) continue;
+      webAccessToken = value;
+      if (Array.isArray(secrets) && !secrets.includes(value)) secrets.push(value);
+    }
+  };
   const send = async (url, body) => {
     const href = String(url);
     if (hostIsBanned(href, hosts) || new URL(href).origin !== allowed) throw new Error('refused: harness fetch left staging');
     const started = Date.now();
+    const headers = { accept: 'application/json', ...(body ? { 'content-type': 'application/json' } : {}) };
+    if (webAccessToken) {
+      headers.cookie = `ts_vacation_web_access=${encodeURIComponent(webAccessToken)}`;
+      headers['x-timesyncher-web-access-token'] = webAccessToken;
+    }
     const response = await fetchImpl(href, {
       method: body ? 'POST' : 'GET',
-      headers: { accept: 'application/json', ...(body ? { 'content-type': 'application/json' } : {}) },
+      headers,
       ...(body ? { body: JSON.stringify(body) } : {}),
       signal: AbortSignal.timeout(180000),
     });
+    rememberWebAccess(response);
     return { status: response.status, body: await readJson(response), wall_ms: Date.now() - started };
   };
   const versionUrl = new URL('/api/version', allowed);
@@ -112,6 +160,7 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
   const liveShaStart = String(start.body?.sha || '');
   const finish = async (reason, extra) => {
     const end = await send(versionUrl);
+    const turns = extra.customerTurns || [];
     return {
       reason,
       waveStop: reason === 'payment-required' || reason === 'credit-exhausted',
@@ -124,6 +173,10 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
       shareToken: extra.shareToken || '',
       detail: extra.detail || reason,
       exchange: extra.exchange || null,
+      webAccessCookie: Boolean(webAccessToken),
+      customerTurns: turns,
+      customerTurnCount: turns.filter((turn) => turn.role === 'customer').length,
+      pricingReactionCaptured: pricingReactionCaptured(turns),
     };
   };
   let endpoint = appUrl(allowed, token, tripId, 'GET');
@@ -176,7 +229,7 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
       polls: timeline.filter((entry) => entry.kind === 'poll'),
       timeline,
     };
-    if (failure) return finish(failure, { timings, storedTurns: seen, itineraryCount: items, tripId: currentTrip, shareToken, detail: final.body?.error || draft.body?.error || failure, exchange: failure === 'turn-not-stored' || failure === 'first-intake-reply-flagged' ? exchange : null });
+    if (failure) return finish(failure, { timings, storedTurns: seen, itineraryCount: items, tripId: currentTrip, shareToken, detail: final.body?.error || draft.body?.error || failure, exchange: failure === 'turn-not-stored' || failure === 'first-intake-reply-flagged' ? exchange : null, customerTurns });
     let reply = replyText(final.body) || replyText(draft.body);
     const stamp = replyModelStamp(final.body?.reply ? final.body : draft.body);
     const nextTrip = tripFields(final.body).tripId || tripFields(draft.body).tripId;
@@ -202,15 +255,47 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
     if (tripFields(history.body).tripId) currentTrip = tripFields(history.body).tripId;
     lastReply = reply || lastReply;
     customerTurns.push({ role: 'app', text: reply, model: stamp.modelId || stamp.responseModel, cost: final.body?.cost || draft.body?.cost || null });
-    if (reply && !stamp.modelId && !stamp.responseModel) {
-      return finish('reply-not-from-rules', { timings, storedTurns: count, itineraryCount: items, tripId: currentTrip, shareToken, detail: 'scripted line reply had no modelId from vacation-app-reply-rules' });
+    const upsell = isScriptedProductReply(reply);
+    if (reply && !stamp.modelId && !stamp.responseModel && !upsell) {
+      return finish('reply-not-from-rules', { timings, storedTurns: count, itineraryCount: items, tripId: currentTrip, shareToken, detail: 'scripted line reply had no modelId from vacation-app-reply-rules', customerTurns });
     }
-    if (!reply || (ruled != null ? count <= seen : (Array.isArray(history.body?.turns) && count <= seen))) {
-      return finish('reply-not-stored', { timings, storedTurns: count, itineraryCount: items, tripId: currentTrip, shareToken, detail: 'scripted line produced no stored reply' });
+    const storedGrew = ruled != null ? count > seen : (!Array.isArray(history.body?.turns) || count > seen);
+    if (!reply || !storedGrew) {
+      if (reply && upsell) {
+        lastReply = reply;
+      } else {
+        return finish('reply-not-stored', { timings, storedTurns: count, itineraryCount: items, tripId: currentTrip, shareToken, detail: 'scripted line produced no stored reply', customerTurns });
+      }
+    } else {
+      seen = ruled != null || Array.isArray(history.body?.turns) ? count : seen + 1;
     }
-    seen = ruled != null || Array.isArray(history.body?.turns) ? count : seen + 1;
+    const reached = chatGoalsReached({ itineraryCount: items, customerTurns, index, maxTurns: limit });
+    if (liveCustomer && reached.done) break;
+  }
+  if (liveCustomer && items === 0) {
+    const confirm = {
+      speaker: persona.name,
+      modality: 'text',
+      text: 'Yes, please import or save that plan onto our itinerary. Give my family edit access to the website. Do not set up booking.',
+    };
+    endpoint = appUrl(allowed, token, currentTrip, 'POST');
+    const draft = await send(endpoint, buildTurnPayload(confirm, currentTrip));
+    const final = draft.body?.status === 'interim' ? await send(endpoint, { action: 'finish-rewrite', tripId: currentTrip }) : draft;
+    if (waitMs > 0) {
+      const deadline = Date.now() + waitMs;
+      while (Date.now() < deadline) {
+        await new Promise((resolve) => { setTimeout(resolve, 250); });
+        const history = await send(appUrl(allowed, token, currentTrip, 'GET'));
+        items = Math.max(items, itineraryCount(history.body), itineraryCount(final.body), itineraryCount(draft.body));
+        if (items > 0) break;
+      }
+    } else {
+      const history = await send(appUrl(allowed, token, currentTrip, 'GET'));
+      items = Math.max(items, itineraryCount(history.body), itineraryCount(final.body), itineraryCount(draft.body));
+    }
   }
   const end = await send(versionUrl);
+  const customerTurnCount = customerTurns.filter((turn) => turn.role === 'customer').length;
   return {
     reason: '',
     waveStop: false,
@@ -226,5 +311,9 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
     customerTurns,
     survey: liveCustomer ? tripSurvey(persona, customerTurns) : null,
     qaRating: 'slot',
+    webAccessCookie: Boolean(webAccessToken),
+    customerTurnCount,
+    pricingReactionCaptured: pricingReactionCaptured(customerTurns),
+    hitTurnCap: liveCustomer && customerTurnCount >= limit,
   };
 }

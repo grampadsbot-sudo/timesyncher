@@ -120,8 +120,8 @@ export async function submitTestCard(page) {
   await page.click('#payBtn');
 }
 
-export function couponPaymentSteps({ code, sessionToken, origin }) {
-  const coupon = assertCouponCode(code);
+export function couponPaymentSteps({ code, sessionToken, origin, minted = '' }) {
+  const coupon = assertCouponCode(code, minted);
   return {
     mode: 'coupon',
     async showPayment(page) {
