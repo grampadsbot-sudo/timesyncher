@@ -66,8 +66,8 @@ import {
 } from '../src/vacation/chat-place-search.mjs';
 import {
   detailTextFromChatTurn,
-  refreshUnresolvedChatIntakePlaces,
 } from '../src/vacation/chat-intake-place-persist.mjs';
+import { POST_STEP_SKIPPED, boundedPostStep, createPostReplyWork } from '../src/vacation/turn-post-reply-work.mjs';
 import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
 import { mergeTripCreateServerTiming } from '../src/vacation/trip-create-server-timing.mjs';
 import {
@@ -535,6 +535,8 @@ function queueVacationAppHooks() {
   };
 }
 
+const postStartedByRequest = new WeakMap();
+
 async function queueVacationAppTurn(db, session, trip, body, intakePrefill = null, httpReq = null) {
   const welcomeStarted = Date.now();
   if (!seatFromSession(session)) await ensureOnboardingOpener(db, session, trip || null);
@@ -545,7 +547,7 @@ async function queueVacationAppTurn(db, session, trip, body, intakePrefill = nul
   const pendingPreviewReply = await tryHandlePendingPreviewChatTurn(db, { session, trip, requestText });
   if (pendingPreviewReply) return pendingPreviewReply;
   const intake = await resolveVacationAppQueueIntake(requestText, intakePrefill, process.env);
-  return runQueueVacationAppTurn(db, session, trip, body, queueVacationAppHooks(), { requestText, ...intake, welcomeMs, httpReq });
+  return runQueueVacationAppTurn(db, session, trip, body, queueVacationAppHooks(), { requestText, ...intake, welcomeMs, httpReq, postStartedMs: httpReq ? postStartedByRequest.get(httpReq) : null });
 }
 
 export function chatSaveMetadata(thing, scheduled) {
@@ -601,14 +603,14 @@ async function loadTripThings(db, tripId) {
   return rows.map(thingView);
 }
 
-async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch, customerTurnId = null, wantedThings = [] } = {}) {
+async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch, customerTurnId = null, wantedThings = [], work = null } = {}) {
   const planned = namedCustomerActivities(text, intakeActivityThings(extracted));
   const lodgingWanted = intakeLodgingWanted(extracted, wantedThings);
   const priorRows = await db`select title, destination, metadata from trips where id = ${tripId} limit 1`;
   const existing = await db`select count(*)::int as n from trip_things where trip_id = ${tripId}`;
   if (Number(existing[0]?.n) > 0) {
     return intakeItineraryExistingThings(db, tripId, text, extracted, wantedThings, {
-      extractedDestination, extractedTitle, destinationError, titleError, searchImpl, searchPlacesImpl, env, fetchImpl, customerTurnId,
+      extractedDestination, extractedTitle, destinationError, titleError, searchImpl, searchPlacesImpl: work ? work.lodgingSearch(searchPlacesImpl) : searchPlacesImpl, env, fetchImpl: work ? work.fetchImpl : fetchImpl, customerTurnId,
       savedTripTitle: priorRows[0]?.title,
     }, loadTripThings);
   }
@@ -686,7 +688,7 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
   for (const thing of planned) {
     const scheduled = scheduleChatThing(thing, tripDatesRow);
     const metadata = chatSaveMetadata(thing, scheduled);
-    await insertIntakeTripThingRow(db, {
+    await (work ? work.insertThing : insertIntakeTripThingRow)(db, {
       tripId,
       category: thing.category,
       title: thing.title,
@@ -702,7 +704,7 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
   }
   if (lodgingWanted.length) {
     const current = await loadTripThings(db, tripId);
-    const lodgingOutcome = await persistIntakeLodgingThings(db, tripId, null, lodgingWanted, {
+    const lodgingOutcome = await (work ? work.lodging(persistIntakeLodgingThings) : persistIntakeLodgingThings)(db, tripId, null, lodgingWanted, {
       destinationHint: extractedDestination,
       areaHint: extractedDestination,
       env,
@@ -723,11 +725,12 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
   return loadTripThings(db, tripId);
 }
 
-async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '', appReply = '', roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch, customerTurnId = null, wantedThings = [] } = {}, intakeText = '', extracted = []) {
+async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '', appReply = '', roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch, customerTurnId = null, wantedThings = [], requestId = null, postStartedMs = null, postBudgetMs = null, activityCommitDecisionsImpl = null } = {}, intakeText = '', extracted = []) {
+  const work = createPostReplyWork({ db, tripId, requestId, postStartedMs, postBudgetMs, env, fetchImpl });
   if (intakeText) {
     await ensureIntakeItinerary(db, tripId, intakeText, extracted, {
       roster, rosterError, askRoster, extractedDestination, extractedTitle, destinationError, titleError,
-      searchImpl, searchPlacesImpl, env, fetchImpl, customerTurnId, wantedThings,
+      searchImpl, searchPlacesImpl, env, fetchImpl, customerTurnId, wantedThings, work,
     });
   }
   let current = await loadTripThings(db, tripId);
@@ -735,7 +738,7 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
   if (!intakeText) {
     const lodgingWanted = intakeLodgingWanted(extracted, wantedThings);
     if (lodgingWanted.length) {
-      const lodgingOutcome = await persistFollowupLodgingSafely(persistIntakeLodgingThings, db, tripId, lodgingWanted, {
+      const lodgingOutcome = await persistFollowupLodgingSafely(work.lodging(persistIntakeLodgingThings), db, tripId, lodgingWanted, {
         destinationHint: extractedDestination,
         areaHint: extractedDestination,
         env,
@@ -754,8 +757,8 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
     }
   }
   const wanted = await plannedCustomerThings(db, tripId, text, appReply, namedCustomerActivities(text, intakeActivityThings(extracted)));
-  if (!current.length && !wanted.length) return current;
-  if (!String(text || '').trim() && !wanted.length) return current;
+  if (!current.length && !wanted.length) return work.finish(current);
+  if (!String(text || '').trim() && !wanted.length) return work.finish(current);
   const tripRows = await db`
     select start_date, end_date
     from trips
@@ -769,7 +772,7 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
   let next = keepPlannedDays(mergeWantedThings(current, wanted), wanted);
   let commits = null;
   try {
-    commits = await activityCommitDecisions(text);
+    commits = await work.activityCommits(next, text, activityCommitDecisionsImpl || activityCommitDecisions);
   } catch (error) {
     commits = { __ask: true, error: String(error?.message || error) };
   }
@@ -798,7 +801,7 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
         candidateDates: thing.candidateDates,
         starts_at: thing.starts_at,
       });
-      const insertedId = await insertIntakeTripThingRow(db, {
+      const insertedId = await work.insertThing(db, {
         tripId,
         category: thing.category || 'activity',
         title: thing.title,
@@ -836,22 +839,13 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
       where id = ${thing.id}
       returning id
     `;
-    if (updated[0]?.id) savedThingIds.push(updated[0].id);
+    if (updated[0]?.id) savedThingIds.push(work.changed(thing, updated[0].id));
   }
-  await refreshUnresolvedChatIntakePlaces(db, {
-    tripId,
-    requestId: null,
-    text,
-    things: next,
-    destinationHint: extractedDestination,
-    env,
-    fetchImpl,
-    searchImpl: searchPlacesImpl,
-  });
+  await work.refreshPlaces({ text, current, next, destinationHint: extractedDestination, searchPlacesImpl });
   await assignTripSiteUrlWhenThingsPresent(db, tripId, env);
   const itinerary = await loadTripThings(db, tripId);
   itinerary.savedThingIds = savedThingIds;
-  return itinerary;
+  return work.finish(itinerary);
 }
 
 async function vacationAppEula(db, session, env = process.env) {
@@ -969,7 +963,7 @@ async function handleVacationApp(req, res, db, url) {
       if (!finished.reply) return sendJson(res, 502, { ok: false, error: finished.reason || 'The rewrite did not produce a reply.' });
       const shipped = await commitShippedRewrite(db, sessionWithTripSeat(session, rewriteSeat), pending, finished, {
         recordCustomerThingNotes,
-        publishIntakeShare,
+        publishIntakeShare, postStartedMs: postStarted,
       });
       return sendJson(res, 200, shipped);
     }
@@ -1062,6 +1056,7 @@ async function handleVacationApp(req, res, db, url) {
     if (!seat && selected?.id) await setVacationAppOwnerWebAccessCookie(db, req, res, { session, tripId: selected.id });
     if (seat && selected?.id) await setVacationAppCollaboratorWebAccessCookie(db, req, res, { session, seat, tripId: selected.id });
     const queueStarted = Date.now();
+    postStartedByRequest.set(req, postStarted);
     const queued = await queueVacationAppTurn(db, session, selected, body, intakePrefill, req);
     const queueTurnMs = Date.now() - queueStarted;
     const postStatus = queued.ok ? (selected ? 201 : 200) : 502;
@@ -1076,8 +1071,8 @@ async function handleVacationApp(req, res, db, url) {
     });
     let searchProgress = null;
     if (selected?.id) {
-      const synced = await syncSearchProgressStage(db, selected.id, { publicUrl: selected?.publicUrl || '' });
-      searchProgress = searchProgressForClient(synced);
+      const synced = await boundedPostStep(() => syncSearchProgressStage(db, selected.id, { publicUrl: selected?.publicUrl || '' }), postStarted);
+      searchProgress = synced === POST_STEP_SKIPPED ? null : searchProgressForClient(synced);
     }
     return sendJson(res, postStatus, {
       trip: selected,

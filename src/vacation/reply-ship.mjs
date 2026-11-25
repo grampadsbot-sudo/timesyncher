@@ -104,6 +104,9 @@ export async function persistVacationAppOutboundReply({
   recordCustomerThingNotes,
   publishIntakeShare,
   vacationAppTripSummary, replyBackend = '',
+  postStartedMs = null,
+  postBudgetMs = null,
+  activityCommitDecisionsImpl = null,
 }) {
   const judgedQuality = produced?.model?.quality?.judged === true
     ? produced.model.quality
@@ -171,12 +174,18 @@ export async function persistVacationAppOutboundReply({
       titleError: jobFields.titleError,
       customerTurnId,
       wantedThings: Array.isArray(jobFields.wantedThings) ? jobFields.wantedThings : [],
+      requestId,
+      postStartedMs,
+      postBudgetMs,
+      activityCommitDecisionsImpl,
     },
     firstIntake ? requestText : '',
     intakeThings,
   );
   if (itinerary.length) await publishIntakeShare(db, tripId);
   const savedFields = await savedThingFieldsForTurn(db, tripId, itinerary?.savedThingIds || []);
+  const deferredWork = itinerary?.deferredWork?.deferred ? itinerary.deferredWork : null;
+  const postReplyTimings = itinerary?.postReplyTimings || null;
   if (customerTurnId) {
     await db`
       update transcript_turns
@@ -184,6 +193,8 @@ export async function persistVacationAppOutboundReply({
         thingId: savedFields.thingId,
         sharedDayIds: savedFields.sharedDayIds,
         savedThings: savedFields.savedThings,
+        ...(deferredWork ? { deferredWork } : {}),
+        ...(postReplyTimings ? { postReplyTimings } : {}),
       }}
       where id = ${customerTurnId}
     `;
@@ -206,12 +217,14 @@ export async function persistVacationAppOutboundReply({
     thingId: savedFields.thingId,
     sharedDayIds: savedFields.sharedDayIds,
     savedThings: savedFields.savedThings,
+    ...(deferredWork ? { deferredWork } : {}),
+    ...(postReplyTimings ? { postReplyTimings } : {}),
     vacation: vacationRows[0] ? vacationAppTripSummary(vacationRows[0]) : null,
     error: null,
   };
 }
 
-export async function commitShippedRewrite(db, session, pending, finished, { recordCustomerThingNotes, publishIntakeShare }) {
+export async function commitShippedRewrite(db, session, pending, finished, { recordCustomerThingNotes, publishIntakeShare, postStartedMs = null, postBudgetMs = null }) {
   const claimContext = replyClaimContextFromIntent({
     ...(pending.intent && typeof pending.intent === 'object' ? pending.intent : {}),
     turnActionResults: pending.turnActionResults || null,
@@ -294,12 +307,17 @@ export async function commitShippedRewrite(db, session, pending, finished, { rec
       destinationError: pending.destinationError || null,
       titleError: pending.titleError || null,
       customerTurnId: pending.customerTurnId || null,
+      requestId: pending.requestId || null,
+      postStartedMs,
+      postBudgetMs,
     },
     pending.postIntake === true ? pending.customerTurn : '',
     pending.wantedThings || [],
   );
   if (itinerary.length) await publishIntakeShare(db, pending.tripId);
   const savedFields = await savedThingFieldsForTurn(db, pending.tripId, itinerary?.savedThingIds || []);
+  const deferredWork = itinerary?.deferredWork?.deferred ? itinerary.deferredWork : null;
+  const postReplyTimings = itinerary?.postReplyTimings || null;
   if (pending.customerTurnId) {
     await db`
       update transcript_turns
@@ -307,6 +325,8 @@ export async function commitShippedRewrite(db, session, pending, finished, { rec
         thingId: savedFields.thingId,
         sharedDayIds: savedFields.sharedDayIds,
         savedThings: savedFields.savedThings,
+        ...(deferredWork ? { deferredWork } : {}),
+        ...(postReplyTimings ? { postReplyTimings } : {}),
       }}
       where id = ${pending.customerTurnId}
     `;
@@ -327,6 +347,8 @@ export async function commitShippedRewrite(db, session, pending, finished, { rec
     thingId: savedFields.thingId,
     sharedDayIds: savedFields.sharedDayIds,
     savedThings: savedFields.savedThings,
+    ...(deferredWork ? { deferredWork } : {}),
+    ...(postReplyTimings ? { postReplyTimings } : {}),
     error: null,
   };
 }

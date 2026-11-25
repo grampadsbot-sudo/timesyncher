@@ -210,6 +210,7 @@ export async function runCustomer(story, options) {
     ...(dlrComparison && dlrComparison.n > 0 ? { dlr_comparison: dlrComparison } : {}),
     ...(dialogPdfStatus ? { dialog_pdf_status: dialogPdfStatus } : {}),
     ...(played?.planningFallbacks?.count ? { planning_fallbacks: played.planningFallbacks } : {}),
+    ...(played?.rescuedTimeouts?.count ? { rescued_timeouts: { count: played.rescuedTimeouts.count, turns: played.rescuedTimeouts.turns || [], timeouts: played.rescuedTimeouts.timeouts || 0 } } : {}),
     ...(reason === 'turn-not-stored' || reason === 'first-intake-reply-flagged' ? { turn_http: played?.exchange || null } : {}),
   });
   if (story.coupon) card.coupon_redemption = publicCouponResult(played?.couponRedemption) || { status: 'not-run', pass: false, detail: reason || 'not-run' };

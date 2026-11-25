@@ -491,6 +491,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     publishIntakeShare: hooks.publishIntakeShare,
     vacationAppTripSummary: hooks.vacationAppTripSummary,
     replyBackend: sessionReplyBackend(session),
+    postStartedMs: Number(intake.postStartedMs) > 0 ? Number(intake.postStartedMs) : started, postBudgetMs: intake.postBudgetMs ?? null, activityCommitDecisionsImpl: intake.activityCommitDecisionsImpl ?? null,
   });
   if (itineraryEditResult?.client) {
     return { ...shipped, itineraryEdit: itineraryEditResult.client };

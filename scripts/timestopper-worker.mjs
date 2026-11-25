@@ -76,7 +76,68 @@ function findSupportNoWriteDecision(value, depth = 0) {
   return null;
 }
 
+async function handleChatPlaceRefreshJob(job, {
+  env = process.env,
+  openDb = null,
+  refreshImpl = null,
+} = {}) {
+  const tripId = cleanText(job?.trip_id || job?.input?.tripId, 80);
+  const dbUrl = String(env.DATABASE_URL || env.NEON_DATABASE_URL || '').trim();
+  const base = {
+    handledBy: WORKER_ID,
+    requestId: job?.request_id || job?.input?.requestId || null,
+    jobId: job?.id || null,
+    jobType: 'chat_place_refresh',
+    tripId: tripId || null,
+  };
+  if (!tripId || (!dbUrl && typeof openDb !== 'function')) {
+    return {
+      customerResponse: '',
+      result: {
+        ...base,
+        refreshedCount: 0,
+        skipped: true,
+        skipReason: tripId ? 'worker_has_no_database' : 'missing_trip_id',
+        pendingFor: 'next_chat_turn_rotation',
+      },
+      toolingUsed: ['timestopper-worker-chat-place-refresh'],
+    };
+  }
+  const db = typeof openDb === 'function' ? await openDb(env) : (await import('../src/vacation/db.mjs')).sql(env);
+  const refresh = typeof refreshImpl === 'function'
+    ? refreshImpl
+    : (await import('../src/vacation/chat-intake-place-persist.mjs')).refreshUnresolvedChatIntakePlaces;
+  const rows = await db`
+    select id, category, title, description, metadata, location, source, starts_at
+    from trip_things
+    where trip_id = ${tripId}
+    order by created_at asc
+  `;
+  const targetIds = new Set(Array.isArray(job?.input?.thingIds) ? job.input.thingIds.map(String) : []);
+  const candidates = targetIds.size ? rows.filter((row) => targetIds.has(String(row.id))) : rows;
+  const saved = await refresh(db, {
+    tripId,
+    requestId: null,
+    text: '',
+    things: candidates,
+    destinationHint: cleanText(job?.input?.destinationHint, 180),
+    env,
+  });
+  return {
+    customerResponse: '',
+    result: {
+      ...base,
+      candidateCount: candidates.length,
+      refreshedCount: Array.isArray(saved) ? saved.length : 0,
+    },
+    toolingUsed: ['timestopper-worker-chat-place-refresh'],
+  };
+}
+
 async function handleJob(job) {
+  if (job?.job_type === 'chat_place_refresh') {
+    return handleChatPlaceRefreshJob(job);
+  }
   const supportNoWrite = findSupportNoWriteDecision(job);
   if (supportNoWrite) {
     return {
