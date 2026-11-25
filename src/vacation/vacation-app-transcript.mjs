@@ -16,6 +16,7 @@ function mapVacationAppTurnRows(rows, { session, customerId, tripKey, people }) 
     const live = clientPayload.liveTranscript && typeof clientPayload.liveTranscript === 'object' ? clientPayload.liveTranscript : {};
     const inbound = row.speaker === 'customer' || row.direction === 'inbound';
     const turn = {
+      tripId: tripKey,
       speaker: row.speaker || 'customer',
       body: row.body || '',
       channel: row.channel || '',

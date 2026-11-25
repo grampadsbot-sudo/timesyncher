@@ -81,6 +81,7 @@ export function buildScorecard(input) {
     cost: input.cost || { state: 'not-run', amount: null, unit: '', gap: '', per_customer: null },
     cleanup: input.cleanup || { deleted: {}, remaining: null },
     session_ref: input.session_ref || '',
+    ...(input.tripId ? { tripId: String(input.tripId) } : {}),
     ...(Object.prototype.hasOwnProperty.call(input, 'turn_http') ? { turn_http: input.turn_http } : {}),
     ...(input.ssr ? { primary_rating_method: 'ssr', ssr: input.ssr } : {}),
     ...(input.dlr_comparison ? { dlr_comparison: input.dlr_comparison } : {}),

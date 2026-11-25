@@ -156,6 +156,8 @@ function checkRows(turn, expectedPurposes, start) {
     assert.equal(row.httpStatus, 200);
     assert.ok(row.latencyMs >= 0);
     assert.equal(totals.byPurpose[row.purpose].calls, rows.filter((r) => r.purpose === row.purpose).length);
+    assert.equal(row.tripId, trip.id);
+    assert.ok(row.requestId != null && String(row.requestId).length > 0);
   }
 }
 
@@ -191,7 +193,11 @@ try {
     assert.deepEqual(logs.filter((row) => row.requestId === returned.requestId).map(({ event, tripId, requestId, ...row }) => {
       assert.equal(tripId, trip.id);
       return row;
-    }), returned.openrouterCalls);
+    }), returned.openrouterCalls.map(({ tripId, requestId, ...row }) => {
+      assert.equal(tripId, trip.id);
+      assert.equal(requestId, returned.requestId);
+      return row;
+    }));
   }
   assert.equal(app[0].cost.dollars, usage.cost);
   assert.equal(app[1].cost.dollars, 0.00026);
