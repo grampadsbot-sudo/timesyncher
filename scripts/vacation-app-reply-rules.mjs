@@ -1,4 +1,5 @@
-import { openRouterListedPrices, openRouterReplyCost, sumTurnCost } from '../src/vacation/turn-cost.mjs';
+import { sumTurnCost } from '../src/vacation/turn-cost.mjs';
+import { fetchOpenRouterJson } from '../src/vacation/openrouter-call-ledger.mjs';
 import { planFactsForReply } from '../src/vacation/reply-plan-entitlement.mjs';
 import { modelVisibleTripContext, namedSearchAreaAwayFromLodgingReplyLine } from '../src/vacation/provider-result-context.mjs';
 import { gapAskReplyPromptTripRaw, perFactGapAskRuleLines } from '../src/vacation/gap-ask-reply-context.mjs';
@@ -416,6 +417,10 @@ function decisionsVia(url) {
   return OPENROUTER_HOST.test(String(url || '')) ? 'openrouter-decisions' : 'http-decisions';
 }
 
+function isOpenRouterDecisionsUrl(url) {
+  return URL.canParse(url) && new URL(url).origin === new URL(DEFAULT_JEV_DECISIONS_URL).origin;
+}
+
 function normalizeDecisions(body, via = 'openrouter-decisions') {
   const answers = body?.answers && typeof body.answers === 'object' ? body.answers : {};
   const tierAnswer = answers.model_tier || answers.modelTier || {};
@@ -447,8 +452,16 @@ function normalizeDecisions(body, via = 'openrouter-decisions') {
   };
 }
 
-export async function postJevDecisions({ payload, apiKey, fetchImpl = fetch, title = 'TimeSyncher Vacation POI', timeoutMs = 20000 } = {}) {
-  return fetchImpl(DEFAULT_JEV_DECISIONS_URL, { method: 'POST', headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json', accept: 'application/json', 'HTTP-Referer': 'https://timesyncher.com', 'X-Title': title }, body: JSON.stringify(payload), signal: AbortSignal.timeout(Math.max(1, Number(timeoutMs) || 20000)) });
+export async function postJevDecisions({ payload, apiKey, fetchImpl = fetch, title = 'TimeSyncher Vacation POI', timeoutMs = 20000, purpose = 'jev_decisions', readBody = readDecisionCopy } = {}) {
+  const init = { method: 'POST', headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json', accept: 'application/json', 'HTTP-Referer': 'https://timesyncher.com', 'X-Title': title }, signal: AbortSignal.timeout(Math.max(1, Number(timeoutMs) || 20000)) };
+  const result = await fetchOpenRouterJson(DEFAULT_JEV_DECISIONS_URL, {
+    ...init, purpose, endpoint: 'decisions', key: apiKey, payload, fetchImpl, readBody,
+  });
+  return readBody === readDecisionCopy ? result.response : result;
+}
+
+async function readDecisionCopy(response) {
+  return { body: await response?.clone?.().json().catch(() => null) };
 }
 
 export const XAI_PLACE_SEARCH_MODEL_ENV = 'XAI_PLACE_SEARCH_MODEL';
@@ -502,13 +515,12 @@ export async function jevPrecall({ customerTurn, stage, gate, screen, session, e
       ...(decisions && key ? { authorization: `Bearer ${key}` } : {}),
       ...(decisions ? { 'HTTP-Referer': 'https://timesyncher.com', 'X-Title': 'TimeSyncher Vacation App Jev' } : {}),
     };
-    const response = await fetch(url, {
+    const { response, body } = await fetchOpenRouterJson(url, {
+      purpose: 'jev_precall', endpoint: 'decisions', observe: decisions && isOpenRouterDecisionsUrl(url), key, payload,
       method: 'POST',
       headers,
-      body: JSON.stringify(payload),
       signal: AbortSignal.timeout(20000),
     });
-    const body = await response.json().catch(() => ({}));
     if (!response.ok || body.ok === false) {
       return {
         jevRan: false,
@@ -718,7 +730,7 @@ export function qualityFromDecisions(body) {
   };
 }
 
-export async function jevQualityRewrite({ customerTurn, draft, tripContext = null, planLine = '', env = process.env } = {}) {
+export async function jevQualityRewrite({ customerTurn, draft, tripContext = null, planLine = '', env = process.env, purpose = 'jev_quality' } = {}) {
   const key = appOpenRouterKey(env);
   const url = text(env.TIMESYNCHER_JEV_CLASSIFY_URL, 500) || DEFAULT_JEV_DECISIONS_URL;
   if (!JEV_DECISIONS_PATH.test(url)) return { judged: false, reason: 'quality_decisions_url_required', model: JEV_DECISIONS_MODEL };
@@ -763,7 +775,8 @@ export async function jevQualityRewrite({ customerTurn, draft, tripContext = nul
     },
   };
   try {
-    const response = await fetch(url, {
+    const { response, body } = await fetchOpenRouterJson(url, {
+      purpose, endpoint: 'decisions', observe: isOpenRouterDecisionsUrl(url), key, payload,
       method: 'POST',
       headers: {
         authorization: `Bearer ${key}`,
@@ -772,10 +785,8 @@ export async function jevQualityRewrite({ customerTurn, draft, tripContext = nul
         'HTTP-Referer': 'https://timesyncher.com',
         'X-Title': 'TimeSyncher Vacation App Jev Quality',
       },
-      body: JSON.stringify(payload),
       signal: AbortSignal.timeout(20000),
     });
-    const body = await response.json().catch(() => ({}));
     if (!response.ok || body.ok === false) {
       return { judged: false, reason: text(body.error?.message || body.error || `quality HTTP ${response.status}`, 300), model: JEV_DECISIONS_MODEL };
     }
@@ -811,7 +822,8 @@ export async function jevChooseRewrite({ customerTurn, draft, options, env = pro
     },
   };
   try {
-    const response = await fetch(url, {
+    const { response, body } = await fetchOpenRouterJson(url, {
+      purpose: 'jev_choose_rewrite', endpoint: 'decisions', observe: isOpenRouterDecisionsUrl(url), key, payload,
       method: 'POST',
       headers: {
         authorization: `Bearer ${key}`,
@@ -820,10 +832,8 @@ export async function jevChooseRewrite({ customerTurn, draft, options, env = pro
         'HTTP-Referer': 'https://timesyncher.com',
         'X-Title': 'TimeSyncher Vacation App Jev Quality',
       },
-      body: JSON.stringify(payload),
       signal: AbortSignal.timeout(20000),
     });
-    const body = await response.json().catch(() => ({}));
     if (!response.ok || body.ok === false) {
       return { ok: false, text: '', reason: text(body.error?.message || body.error || `quality HTTP ${response.status}`, 300), model: JEV_DECISIONS_MODEL };
     }
@@ -839,14 +849,14 @@ export async function jevChooseRewrite({ customerTurn, draft, options, env = pro
 export const INTERIM_MODEL = OPENROUTER_TIER_CHAT_MODELS[1];
 export const TIERED_REPLY_TIMEOUT_MS = 20000;
 
-export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = null, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null, tier1CompactReasoning = false }) {
+export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = null, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null, tier1CompactReasoning = false, purpose = 'reply_draft' }) {
   const modelTier = Number(jev?.modelTier);
   const responseModel = forceModel || openRouterChatModelForTier(modelTier);
   if ((!forceModel && !jev?.jevRan) || !isBakeoffModelId(responseModel)) {
     return { called: false, via: null, modelTier: Number.isInteger(modelTier) ? modelTier : null, responseModel: responseModel || null, reason: 'model_not_in_bakeoff_map' };
   }
   const effectiveTier = forceModel ? (Number.isInteger(modelTier) ? modelTier : 1) : modelTier;
-  const args = { rules, jev, customerTurn, stage, screen, modelTier: effectiveTier, responseModel, destination, memory, upsell, postIntake, env, timeoutMs, systemExtra, tripContext, planTable, planLine, seatDollars, seat, planOwned, intakeReplyTurn, replyFacts, tier1CompactReasoning };
+  const args = { rules, jev, customerTurn, stage, screen, modelTier: effectiveTier, responseModel, destination, memory, upsell, postIntake, env, timeoutMs, systemExtra, tripContext, planTable, planLine, seatDollars, seat, planOwned, intakeReplyTurn, replyFacts, tier1CompactReasoning, purpose };
   const first = await callOpenRouterTieredChat(args);
   if (!openRouterShouldCompactRetry({ modelTier: effectiveTier, tier1CompactReasoning, result: first })) return first;
   const retry = await callOpenRouterTieredChat({ ...args, tier1CompactReasoning: true, timeoutMs: timeoutMs > 0 ? timeoutMs : TIERED_REPLY_TIMEOUT_MS });
@@ -856,7 +866,7 @@ export async function callTieredModel({ rules, jev, customerTurn, stage, screen,
   return { ...retry, modelTier: effectiveTier, compactRetry: true, cost: combinedCost, genLatencyMs: combinedMs };
 }
 
-async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env, timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = null, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null, tier1CompactReasoning = false }) {
+async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env, timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = null, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null, tier1CompactReasoning = false, purpose = 'reply_draft' }) {
   const key = appOpenRouterKey(env);
   if (!key) {
     return {
@@ -872,7 +882,8 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
   const userContent = intakeReplyTurn ? JSON.stringify(replyFacts && typeof replyFacts === 'object' ? replyFacts : {}) : JSON.stringify(request);
   const genStarted = Date.now();
   try {
-    const response = await fetch(OPENROUTER_CHAT_COMPLETIONS_URL, {
+    const { response, body, cost } = await fetchOpenRouterJson(OPENROUTER_CHAT_COMPLETIONS_URL, {
+      purpose, key, replyCost: true,
       method: 'POST',
       headers: {
         authorization: `Bearer ${key}`,
@@ -881,7 +892,7 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
         'HTTP-Referer': 'https://timesyncher.com',
         'X-Title': 'TimeSyncher Vacation App Shared Reply',
       },
-      body: JSON.stringify({
+      payload: {
         model: responseModel,
         usage: { include: true },
         ...openRouterTemperatureSpread(responseModel, 0.55),
@@ -895,11 +906,9 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
           },
           { role: 'user', content: userContent },
         ],
-      }),
+      },
       signal: AbortSignal.timeout(openRouterTierReplyTimeoutMs(tier1CompactReasoning ? 1 : modelTier, timeoutMs, TIERED_REPLY_TIMEOUT_MS)),
     });
-    const body = await response.json().catch(() => ({}));
-    const cost = await openRouterReplyCost(body, responseModel, (id) => openRouterListedPrices(id, `${new URL(OPENROUTER_CHAT_COMPLETIONS_URL).origin}/api/v1/models`, appOpenRouterKey(env)));
     const elapsed = Math.max(0, Date.now() - genStarted);
     if (!response.ok || body.ok === false) {
       return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: text(body.error?.message || body.error || `tiered model HTTP ${response.status}`, 300), genLatencyMs: elapsed, cost };

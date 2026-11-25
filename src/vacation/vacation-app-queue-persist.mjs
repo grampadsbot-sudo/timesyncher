@@ -1,4 +1,5 @@
 import { initTripSearchProgress } from './search-progress.mjs';
+import { bindOpenRouterLedger } from './openrouter-call-ledger.mjs';
 
 export async function persistVacationAppCustomerTurn(db, {
   transcriptOwnerId,
@@ -23,6 +24,7 @@ export async function persistVacationAppCustomerTurn(db, {
     returning id, received_at, queued_at
   `;
   const requestId = requestRows[0].id;
+  bindOpenRouterLedger({ tripId, requestId });
   const turnRows = await db`
     insert into transcript_turns (
       customer_id, trip_id, request_id, speaker, channel, body, payload, direction,

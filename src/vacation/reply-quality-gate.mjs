@@ -53,7 +53,7 @@ export async function requireReplyQuality(produced, { customerTurn = '', env = p
     : (produced.quality?.judged === true ? produced.quality : null);
   if (already) return produced;
   const started = Date.now();
-  const quality = await jevQualityRewrite({ customerTurn, draft: produced.reply, env });
+  const quality = await jevQualityRewrite({ customerTurn, draft: produced.reply, env, purpose: 'jev_quality_rewrite' });
   const judgeMs = Math.max(0, Date.now() - started);
   if (quality?.judged !== true) {
     const reason = quality?.reason || 'quality_not_judged';

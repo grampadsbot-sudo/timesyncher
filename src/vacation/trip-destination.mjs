@@ -1,3 +1,4 @@
+import { fetchOpenRouterJson } from './openrouter-call-ledger.mjs';
 import { openRouterTier1BakeoffModelId, openRouterTier1CompactCallSpread } from '../../scripts/openrouter-tier-provider.mjs';
 
 const NONE = /^(none|missing|unknown)$/i;
@@ -65,17 +66,17 @@ export function destinationExtractionChatRequest(corpus) {
 export async function openRouterDestinationComplete(corpus, env = process.env) {
   const key = String(env?.OPENROUTER_API_KEY || env?.TIMESYNCHER_OPENROUTER_API_KEY || '').trim();
   if (!key) throw new Error('destination_extraction_unavailable');
-  const response = await fetch(CHAT_URL, {
+  const { response, body } = await fetchOpenRouterJson(CHAT_URL, {
+    key, purpose: 'destination',
     method: 'POST',
     headers: {
       authorization: `Bearer ${key}`,
       'content-type': 'application/json',
       accept: 'application/json',
     },
-    body: JSON.stringify(destinationExtractionChatRequest(corpus)),
+    payload: destinationExtractionChatRequest(corpus),
     signal: AbortSignal.timeout(20000),
   });
-  const body = await response.json().catch(() => ({}));
   if (!response.ok || body.ok === false) {
     throw new Error(`destination_extraction_failed: ${body.error?.message || body.error || response.status}`);
   }

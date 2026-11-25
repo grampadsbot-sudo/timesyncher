@@ -42,6 +42,7 @@ import {
 } from '../src/vacation/onboarding-welcome-turn.mjs';
 import { authorPeopleFromTrip, transcriptAuthorMissingError, turnAuthorLabel } from '../src/vacation/turn-author.mjs';
 import { appReplyTelemetry, logVacationAppReplyTelemetry } from '../src/vacation/reply-telemetry.mjs';
+import { bindOpenRouterLedger, openRouterTurnTelemetry, withOpenRouterLedger } from '../src/vacation/openrouter-call-ledger.mjs';
 import {
   applyLiveAppReplyFailureToPayload,
   commitShippedRewrite,
@@ -956,16 +957,17 @@ async function handleVacationApp(req, res, db, url) {
       const meta = session.metadata && typeof session.metadata === 'object' ? session.metadata : {};
       const pending = meta.pendingRewrite;
       if (!pending?.draft || !pending?.tripId) return sendJson(res, 409, { ok: false, error: 'No rewrite is waiting.' });
+      bindOpenRouterLedger(pending);
       const rewriteSeat = await seatForSessionTrip(db, session, pending.tripId);
       const finished = pending.resolved?.reply
         ? pending.resolved
         : await finishTierRewrite({ pending, env: process.env });
-      if (!finished.reply) return sendJson(res, 502, { ok: false, error: finished.reason || 'The rewrite did not produce a reply.' });
+      if (!finished.reply) return sendJson(res, 502, { ok: false, error: finished.reason || 'The rewrite did not produce a reply.', ...openRouterTurnTelemetry() });
       const shipped = await commitShippedRewrite(db, sessionWithTripSeat(session, rewriteSeat), pending, finished, {
         recordCustomerThingNotes,
         publishIntakeShare, postStartedMs: postStarted,
       });
-      return sendJson(res, 200, shipped);
+      return sendJson(res, 200, { ...shipped, ...openRouterTurnTelemetry() });
     }
     if (body.action === 'record-party') {
       const partyTripId = cleanText(body.tripId || body.trip_id, 80) || session.trip_id || '';
@@ -1055,6 +1057,7 @@ async function handleVacationApp(req, res, db, url) {
     }
     if (!seat && selected?.id) await setVacationAppOwnerWebAccessCookie(db, req, res, { session, tripId: selected.id });
     if (seat && selected?.id) await setVacationAppCollaboratorWebAccessCookie(db, req, res, { session, seat, tripId: selected.id });
+    bindOpenRouterLedger({ tripId: selected?.id });
     const queueStarted = Date.now();
     postStartedByRequest.set(req, postStarted);
     const queued = await queueVacationAppTurn(db, session, selected, body, intakePrefill, req);
@@ -1078,7 +1081,7 @@ async function handleVacationApp(req, res, db, url) {
       trip: selected,
       ...queued,
       searchProgress,
-      serverTiming,
+      serverTiming, ...openRouterTurnTelemetry(),
     });
   }
 
@@ -1104,14 +1107,14 @@ export async function publishTripIntakeShare(db, tripId) {
 }
 
 export async function queueVacationAppTurnForTests(db, session, trip, body) {
-  return queueVacationAppTurn(db, session, trip, body);
+  return withOpenRouterLedger(async () => ({ ...await queueVacationAppTurn(db, session, trip, body), ...openRouterTurnTelemetry() }), trip?.id);
 }
 
 export default async function handler(req, res) {
   try {
     const url = new URL(req.url || '/', 'https://timesyncher.com');
     if (url.searchParams.get('app') === '1') {
-      return await handleVacationApp(req, res, openVacationAppDb(), url);
+      return await withOpenRouterLedger(() => handleVacationApp(req, res, openVacationAppDb(), url));
     }
     if (url.searchParams.get('trekBundle') === '1') {
       return await trekStyle2BundleHandler(req, res);

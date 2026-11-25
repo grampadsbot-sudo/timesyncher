@@ -53,36 +53,42 @@ export async function jevRelevanceScore(poi, { fetchImpl = fetch, apiKey = '', t
       },
     },
   };
-  let response;
-  let responseText = '';
+  let result;
   const judgeTimeoutMs = Number.isFinite(Number(timeoutMs)) && Number(timeoutMs) > 0
     ? Number(timeoutMs)
     : jevRelevanceJudgeTimeoutMs(env);
   try {
-    response = await postJevDecisions({
+    result = await postJevDecisions({
       payload,
       apiKey,
       fetchImpl,
       title: 'TimeSyncher Vacation POI',
+      purpose: 'place_relevance_jev',
       timeoutMs: judgeTimeoutMs,
+      readBody: async (response) => {
+        const responseText = typeof response.text === 'function' ? await response.text() : '';
+        try {
+          const body = responseText ? JSON.parse(responseText) : (response.ok ? await response.json() : null);
+          return { responseText, body };
+        } catch (error) {
+          return { responseText, parseError: error };
+        }
+      },
     });
-    responseText = typeof response.text === 'function' ? await response.text() : '';
   } catch (error) {
     throwRelevanceJudgeFailed(
       `Jev relevance judge request failed: ${capSnippet(error?.message || error)}`,
       judgeFailureExtra(error, { judgeTimeoutMs }),
     );
   }
+  const { response, responseText, body, parseError } = result;
   if (!response?.ok) {
     throwRelevanceJudgeFailed(
       `Jev relevance judge HTTP ${response?.status || 'no status'}: ${capSnippet(responseText)}`,
       { judgeHttpStatus: Number(response?.status) || null, judgeBodySnippet: capSnippet(responseText) },
     );
   }
-  let body;
-  try {
-    body = responseText ? JSON.parse(responseText) : await response.json();
-  } catch (error) {
+  if (parseError) {
     throwRelevanceJudgeFailed(
       `Jev relevance judge returned invalid JSON: ${capSnippet(responseText)}`,
       { judgeHttpStatus: Number(response?.status) || null, judgeBodySnippet: capSnippet(responseText) },

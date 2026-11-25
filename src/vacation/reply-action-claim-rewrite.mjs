@@ -42,7 +42,7 @@ export async function rewriteBlockedActionClaim({
     upsell: 'forbidden',
     postIntake: postIntake === true,
     env,
-    systemExtra: request.systemExtra,
+    systemExtra: request.systemExtra, purpose: 'reply_rewrite',
   });
   const modelText = called?.called && called.text ? String(called.text).trim() : '';
   const rewritten = modelText ? String(splitRewriteChange(modelText).reply || '').trim() : '';

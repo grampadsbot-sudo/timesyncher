@@ -1545,7 +1545,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   let reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
   if (rewriteBreaksUpsell(reply, upsell, customerTurn, intent)) {
     const nudge = commerce.collaboratorSeat ? `${customerTurn}\n\nAnswer the travel question only. Stay on itinerary and dates; omit billing and product access topics.` : customerAsksPrice(customerTurn, intent) ? `${customerTurn}\n\nAnswer with who pays: ${planLine || 'the dollar amount for each person and who pays'}. Do not add a second collaborator welcome.` : `${customerTurn}\n\nDo not welcome collaborators. Do not mention price or access. Answer the day only.`;
-    model = sumModelCost(model, await callTieredModel(modelArgs(nudge, 'forbidden')));
+    model = sumModelCost(model, await callTieredModel({ ...modelArgs(nudge, 'forbidden'), purpose: 'reply_rewrite' }));
     reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
   }
   if (model && typeof model === 'object') model.genLatencyMs = Math.max(0, Date.now() - genStarted);
@@ -1798,7 +1798,7 @@ async function interimFromTierOne({ rules, customerTurn, destination, env, facts
     postIntake: false,
     env,
     forceModel: INTERIM_MODEL,
-    timeoutMs: intake === true ? 20000 : 8000,
+    timeoutMs: intake === true ? 20000 : 8000, purpose: 'reply_interim',
     seat,
     systemExtra,
   });
@@ -1888,7 +1888,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
       upsell: pending?.upsell || 'forbidden',
       postIntake: pending?.postIntake === true,
       env,
-      forceModel: pending?.draftModel || '',
+      forceModel: pending?.draftModel || '', purpose: 'reply_rewrite',
       timeoutMs: pending?.enforceInTurnPlaces ? placeSearchTieredReplyTimeoutMs(env) : 20000,
       tripContext: pending?.tripContext || null,
       planTable: pending?.planTable || null,
@@ -1934,7 +1934,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
   let rewriteQuality = null;
   const rewriteQualityStarted = Date.now();
   if (rewriteCanShip) {
-    rewriteQuality = await jevQualityRewrite({ customerTurn: pending.customerTurn, draft: judgedText, tripContext: pending.tripContext, planLine: pending.planLine, env });
+    rewriteQuality = await jevQualityRewrite({ customerTurn: pending.customerTurn, draft: judgedText, tripContext: pending.tripContext, planLine: pending.planLine, env, purpose: 'jev_quality_rewrite' });
     if (rewriteQuality?.judged) {
       const rewriteFlags = hardQualityFlags(judgedText, pending.intake === true ? { text: pending.customerTurn, intake: true } : pending.customerTurn, pending.corpus, pending.placeResults, pending.intent);
       rewriteQuality = correctFalsePriceMiss(
@@ -1992,7 +1992,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
   }
   let holdingQuality = null;
   if (choice.holding && choice.text) {
-    holdingQuality = await jevQualityRewrite({ customerTurn: pending.customerTurn, draft: choice.text, tripContext: pending.tripContext, planLine: pending.planLine, env });
+    holdingQuality = await jevQualityRewrite({ customerTurn: pending.customerTurn, draft: choice.text, tripContext: pending.tripContext, planLine: pending.planLine, env, purpose: 'jev_quality_rewrite' });
     if (holdingQuality?.judged) {
       holdingQuality.jevNote = null;
       holdingQuality.comment = null;
@@ -2226,7 +2226,7 @@ export function liveTranscriptFromRows({ session, rows }) {
       flagged: live.flagged === true,
       held: live.held === true,
       model: live.model || null, backend: live.backend || live.model?.backend || null, cost: live.cost || live.model?.cost || null,
-      rules: live.rules || null,
+      rules: live.rules || null, ...(Array.isArray(live.openrouterCalls) ? { openrouterCalls: live.openrouterCalls, openrouterTotals: live.openrouterTotals } : {}),
     };
   });
   const last = turns[turns.length - 1] || null;

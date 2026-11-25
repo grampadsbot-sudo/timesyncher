@@ -1,3 +1,4 @@
+import { fetchOpenRouterJson } from './openrouter-call-ledger.mjs';
 import {
   DEFAULT_JEV_DECISIONS_URL,
   JEV_QUALITY_MODEL,
@@ -208,20 +209,19 @@ function cleanThings(list) {
   return things;
 }
 
-async function postJson(fetchImpl, url, key, body, title) {
-  const response = await fetchImpl(url, {
+async function postJson(fetchImpl, url, key, body, purpose, endpoint) {
+  const { response, body: payload } = await fetchOpenRouterJson(url, {
+    fetchImpl, key, payload: body, purpose, endpoint,
     method: 'POST',
     headers: {
       authorization: `Bearer ${key}`,
       'content-type': 'application/json',
       accept: 'application/json',
       'HTTP-Referer': 'https://timesyncher.com',
-      'X-Title': title,
+      'X-Title': 'TimeSyncher Vacation trip intake',
     },
-    body: JSON.stringify(body),
     signal: AbortSignal.timeout(20000),
   });
-  const payload = await response.json().catch(() => ({}));
   if (!response.ok || payload?.ok === false) {
     const message = payload?.error?.message || payload?.error || `HTTP ${response.status}`;
     throw new Error(clean(message, 300) || `HTTP ${response.status}`);
@@ -426,7 +426,7 @@ export async function classifyTripIntake({
           instructions: 'Is this customer message a trip intake? True when they are describing a vacation to plan: where, when, who is going, or what they want to do. False for a short follow-up, a price or access question, or a small change that is not a trip description.',
         },
       },
-    }, 'TimeSyncher Vacation trip intake');
+    }, 'intake_classify_jev', 'decisions');
     const score = decisionScore(decision?.answers?.trip_intake);
     if (score == null) return failed('trip intake classifier returned no decision');
     const extractionModel = bakeoffTierModels()[1];
@@ -435,7 +435,7 @@ export async function classifyTripIntake({
       OPENROUTER_CHAT_COMPLETIONS_URL,
       key,
       tripIntakeExtractionChatRequest({ message, model: extractionModel }),
-      'TimeSyncher Vacation trip intake',
+      'intake_extract',
     );
     const extractedFields = parseExtraction(chatText(extracted));
     const categoryError = intakePlaceSearchCategoryError(extractedFields);

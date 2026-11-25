@@ -23,6 +23,7 @@ import { replyActionClaimReason } from '../src/vacation/reply-action-claim.mjs';
 import { createBoundedReplyShipGate, createBoundedRewriteClaim } from '../src/vacation/vacation-app-chat-postgen.mjs';
 import { sessionReplyBackend } from '../src/vacation/vk-bot-mcp-reply.mjs';
 import { isOrdinaryPlanningTurn, recoverOrdinaryPlanningReply } from '../src/vacation/chat-plan-persist.mjs';
+import { openRouterTurnTelemetry } from '../src/vacation/openrouter-call-ledger.mjs';
 export async function queueVacationAppTurn(db, session, trip, body, hooks, intake = {}) {
   const env = process.env;
   const tripId = trip?.id ?? null;
@@ -39,9 +40,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
       note: cleanText(item?.note, 240) || null,
     }))
     : [];
-  if (!text && attachments.length === 0) {
-    throw Object.assign(new Error('Message text or an attachment is required.'), { statusCode: 400 });
-  }
+  if (!text && attachments.length === 0) throw Object.assign(new Error('Message text or an attachment is required.'), { statusCode: 400 });
   const requestText = text || `Uploaded ${attachments.length} vacation file${attachments.length === 1 ? '' : 's'}.`;
   const modality = customerModality(body);
   const seat = seatFromSession(session);
@@ -421,7 +420,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
       tripId,
       turnActionResults,
       sessionStartedMs,
-      wallStarted: started,
+      wallStarted: started, ...openRouterTurnTelemetry(),
     };
     await db`
       update onboarding_sessions

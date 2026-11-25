@@ -1,3 +1,4 @@
+import { fetchOpenRouterJson } from './openrouter-call-ledger.mjs';
 import { INTERIM_MODEL, OPENROUTER_CHAT_COMPLETIONS_URL, openRouterChatVisibleText, openRouterTemperatureSpread } from '../../scripts/vacation-app-reply-rules.mjs';
 import { openRouterTier1CompactCallSpread } from '../../scripts/openrouter-tier-provider.mjs';
 
@@ -46,10 +47,11 @@ async function judgeInterimReplyOnce({ text, customerTurn, facts = {}, env = pro
   }
   const key = String(env?.TIMESYNCHER_JEV_CLASSIFY_TOKEN || env?.TIMESYNCHER_OPENROUTER_API_KEY || env?.OPENROUTER_API_KEY || '').trim();
   if (!key) throw interimJudgeError('INTERIM_JUDGE_CREDENTIALS_MISSING');
-  const response = await (fetchImpl || fetch)(OPENROUTER_CHAT_COMPLETIONS_URL, {
+  const { response, body } = await fetchOpenRouterJson(OPENROUTER_CHAT_COMPLETIONS_URL, {
+    fetchImpl: fetchImpl || fetch, key, purpose: 'interim_judge',
     method: 'POST',
     headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json', accept: 'application/json' },
-    body: JSON.stringify({
+    payload: {
       model: INTERIM_MODEL,
       ...openRouterTemperatureSpread(INTERIM_MODEL, 0),
       ...openRouterTier1CompactCallSpread(1),
@@ -58,10 +60,9 @@ async function judgeInterimReplyOnce({ text, customerTurn, facts = {}, env = pro
         { role: 'system', content: 'Return only JSON {"template":boolean,"canShip":boolean}. template means a stock acknowledgement or a reply that misses the customer. canShip means it answers this turn. Do not write a reply.' },
         { role: 'user', content: JSON.stringify({ customer: String(customerTurn || '').slice(0, 4000), reply: value.slice(0, 2000) }) },
       ],
-    }),
+    },
     signal: AbortSignal.timeout(8000),
   });
-  const body = typeof response?.json === 'function' ? await response.json().catch(() => ({})) : {};
   if (!response?.ok) throw interimJudgeError('INTERIM_JUDGE_HTTP');
   const parsed = verdictFromBody(body);
   if (!parsed) throw interimJudgeError('INTERIM_JUDGE_UNUSABLE');

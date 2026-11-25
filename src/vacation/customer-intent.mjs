@@ -1,5 +1,4 @@
-
-
+import { fetchOpenRouterJson } from './openrouter-call-ledger.mjs';
 import { bakeoffTierModels } from '../../scripts/vacation-app-reply-rules.mjs';
 import { openRouterTier1CompactCallSpread } from '../../scripts/openrouter-tier-provider.mjs';
 
@@ -40,14 +39,15 @@ export function customerIntentFromBody(body) {
   };
 }
 
-async function askModelJson(instructions, state, { fetchImpl = fetch, env = process.env, signal } = {}) {
+async function askModelJson(purpose, instructions, state, { fetchImpl = fetch, env = process.env, signal } = {}) {
   const key = env.OPENROUTER_API_KEY || env.TIMESYNCHER_OPENROUTER_API_KEY || env.JEV_OPENROUTER_API_KEY || '';
   if (!key) throw Object.assign(new Error('OPENROUTER_API_KEY missing'), { code: 'model_unavailable' });
-  const response = await fetchImpl('https://openrouter.ai/api/v1/chat/completions', {
+  const { response, body: json } = await fetchOpenRouterJson('https://openrouter.ai/api/v1/chat/completions', {
+    fetchImpl, key, purpose,
     method: 'POST',
     signal,
     headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
-    body: JSON.stringify({
+    payload: {
       model: env.TIMESYNCHER_INTENT_MODEL || bakeoffTierModels()[1],
       ...(env.TIMESYNCHER_INTENT_MODEL ? {} : openRouterTier1CompactCallSpread(1)),
       temperature: 0,
@@ -55,15 +55,15 @@ async function askModelJson(instructions, state, { fetchImpl = fetch, env = proc
         { role: 'system', content: 'Return one JSON object. Do not write a customer reply.' },
         { role: 'user', content: `${instructions}\n\n${JSON.stringify(state)}` },
       ],
-    }),
+    },
   });
-  const json = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(json?.error?.message || `intent model HTTP ${response.status}`);
   return parseJson(json?.choices?.[0]?.message?.content || '');
 }
 
 export async function customerIntent(text, options) {
   const body = await askModelJson(
+    'intent',
     'asksPrice, asksAccess, and pullsAccess are true only when the turn asks that. Otherwise false or []. ask is true when you cannot tell.',
     { customerTurn: String(text || '').slice(0, 4000) },
     options,
@@ -75,6 +75,7 @@ export async function activityCommits(sentences, options) {
   const list = (Array.isArray(sentences) ? sentences : []).map((sentence) => String(sentence || '').trim()).filter(Boolean);
   if (!list.length) return {};
   const body = await askModelJson(
+    'activity_commits',
     'For each sentence, commits is true only when the customer is putting that activity on the plan. Otherwise commits is false and ask is true. Return {"sentences":[{"text":"","commits":false,"ask":true}]}.',
     { sentences: list },
     options,
@@ -91,6 +92,7 @@ export async function activityCommits(sentences, options) {
 export async function contentTags(text, allowed, options) {
   const names = Array.isArray(allowed) ? allowed : [];
   const body = await askModelJson(
+    'content_tags',
     'Choose tags from the allowed list only. If none apply, tags [] and ask true.',
     { allowed: names, customerTurn: String(text || '').slice(0, 4000) },
     options,

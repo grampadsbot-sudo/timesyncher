@@ -113,7 +113,7 @@ export async function produceFirstIntakeReply({
       forceModel: INTERIM_MODEL,
       tier1CompactReasoning: true,
       timeoutMs: FIRST_INTAKE_REPLY_TIMEOUT_MS,
-      systemExtra: `${prompt}${feedback}`,
+      systemExtra: `${prompt}${feedback}`, purpose: attempt ? 'reply_rewrite' : 'reply_draft',
     }));
     if (model && typeof model === 'object') model.genLatencyMs = Math.max(0, Date.now() - genStarted);
     reply = model?.called && model.text ? String(model.text).trim() : '';
