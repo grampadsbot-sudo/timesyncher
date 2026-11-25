@@ -37,7 +37,7 @@ const spoken = await speakCustomer({
   },
 });
 assert.equal(spoken.text.includes(seed.goals[0]), false);
-const odd = await speakCustomer({ persona: seed, index: 2 });
+const odd = await speakCustomer({ persona: seed, index: 9 });
 assert.equal(odd.kind === 'goal', false);
 
 const origin = STAGING_HARNESS_ORIGIN;

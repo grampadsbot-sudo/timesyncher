@@ -34,10 +34,21 @@ function oddCustomerTurn(index) {
   return { kind, text: lines[kind] };
 }
 
-export async function speakCustomer({ persona, appReply = '', index = 0, ask, order } = {}) {
+export function oddEvery(env = process.env) {
+  if (env?.VK_TEST_NO_ODD === '1') return 0;
+  const n = Number(env?.VK_TEST_ODD_EVERY);
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 10;
+}
+
+export function isOddCustomerIndex(index, every = oddEvery()) {
+  if (!every || every < 2) return false;
+  return Number(index) % every === every - 1;
+}
+
+export async function speakCustomer({ persona, appReply = '', index = 0, ask, order, env = process.env } = {}) {
   const lane = customerLane(order);
-  if (index % 4 === 2) return { ...oddCustomerTurn(index), lane: 'host', model: lane, cost: null };
-  if (typeof ask !== 'function') throw new Error('lane_router did not supply a customer ask');
+  if (isOddCustomerIndex(index, oddEvery(env))) return { ...oddCustomerTurn(index), lane: 'host', model: lane, cost: null };
+  if (typeof ask !== 'function') throw new Error('harness preflight missing HARNESS_CUSTOMER_MODEL_URL');
   const goal = persona?.goals?.[index] || persona?.goals?.[0] || persona?.destination || '';
   const spoken = await ask({ lane, persona, appReply: String(appReply || ''), goal, index });
   const text = String(spoken?.text || '').trim();
@@ -76,12 +87,27 @@ export function pickCustomerLane(env = process.env, spawnImpl = spawnSync) {
   return parseLanePick(text);
 }
 
-export function customerAskFromEnv(env) {
-  const picked = pickCustomerLane(env);
-  return async ({ goal, persona }) => {
-    const text = String(goal || persona?.destination || '').trim();
-    if (!text || persona?.goals?.includes(text)) throw new Error('lane_router returned no customer line');
-    return { text, model: picked.model, cost: null };
+export function customerAskFromEnv(env = process.env, hosts = loadBannedHosts(), fetchImpl = globalThis.fetch) {
+  const url = String(env?.HARNESS_CUSTOMER_MODEL_URL || '').trim();
+  return async ({ lane, persona, appReply, goal, index } = {}) => {
+    if (!url) throw new Error('harness preflight missing HARNESS_CUSTOMER_MODEL_URL');
+    const banned = Array.isArray(hosts) ? hosts : loadBannedHosts();
+    if (hostIsBanned(url, banned)) throw new Error('refused: harness blocked a model host');
+    const response = await fetchImpl(url, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', accept: 'application/json' },
+      body: JSON.stringify({
+        lane,
+        persona: persona?.name,
+        destination: persona?.destination,
+        goal,
+        appReply,
+        index,
+      }),
+      signal: AbortSignal.timeout(180000),
+    });
+    const body = await response.json().catch(() => ({}));
+    return { text: body.text || body.reply || '', model: body.model || lane, cost: body.cost || null, url };
   };
 }
 

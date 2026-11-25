@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { preflightHarnessEnv, secretValues, stagingOrigin } from './env.mjs';
 import { loadBannedHosts, guardedFetch } from './fetch-guard.mjs';
 import { acceptAndConfirmEula } from './eula-accept.mjs';
@@ -35,6 +37,39 @@ function appEndpoint(origin, token, tripId) {
 
 export function chatLeftNoThing(played) {
   return !Number(played?.itineraryCount);
+}
+
+export function maxTurnsFromEnv(env = process.env) {
+  const raw = Number(env?.VK_TEST_MAX_TURNS);
+  if (!Number.isFinite(raw) || raw === 0) return 4;
+  return Math.max(1, Math.floor(raw));
+}
+
+export function writeOutcomes(outDir, payload) {
+  if (!outDir) return payload;
+  try {
+    const costs = [];
+    const turns = Array.isArray(payload?.customerTurns) ? payload.customerTurns : [];
+    for (const turn of turns) {
+      if (turn?.cost) costs.push(turn.cost);
+    }
+    const rec = {
+      itineraryCount: Number(payload?.itineraryCount) || 0,
+      keepsakeOk: payload?.keepsakeOk === true,
+      pricingReactionCaptured: payload?.pricingReactionCaptured === true,
+      customerTurnCount: Number(payload?.customerTurnCount) || turns.filter((turn) => turn.role === 'customer').length,
+      hitTurnCap: payload?.hitTurnCap === true,
+      reason: payload?.reason || '',
+      costs,
+      liveShaStart: payload?.liveShaStart || '',
+      liveShaEnd: payload?.liveShaEnd || '',
+    };
+    fs.mkdirSync(outDir, { recursive: true });
+    fs.writeFileSync(path.join(outDir, 'outcomes.json'), `${JSON.stringify(rec, null, 2)}\n`);
+  } catch {
+    return payload;
+  }
+  return payload;
 }
 
 async function storedLiveTranscript(db, token) {
@@ -76,7 +111,7 @@ export function liveOptions(env = process.env) {
             name: story.customer.name,
             email: `harness+${options.runId}+${story.customer.email_alias}@harness.invalid`,
           },
-          ...(story.coupon ? { payment: couponPaymentSteps({ code: story.coupon.code, sessionToken: couponRedemption?.session_token || '', origin }) } : {}),
+          ...(story.coupon ? { payment: couponPaymentSteps({ code: story.coupon.code, sessionToken: couponRedemption?.session_token || '', origin, minted: story.coupon.mintedCode || '' }) } : {}),
         });
       } catch (error) {
         onboard = { ok: false, detail: String(error?.message || error).replace(/session=[^&\s]+/gi, 'session=[redacted]').slice(0, 240) };
@@ -126,6 +161,7 @@ export function liveOptions(env = process.env) {
           ...onboardingFields(),
         };
       }
+      const liveCustomer = story.reply_backend === 'vk_bot_mcp';
       const played = await playCustomerTurns(story, {
         origin,
         token: created.token,
@@ -134,9 +170,9 @@ export function liveOptions(env = process.env) {
         hosts: bannedHosts,
         waitMs: 20000,
         secrets,
-        liveCustomer: story.reply_backend === 'vk_bot_mcp',
+        liveCustomer,
         customerAsk: customerAskFromEnv(ready, bannedHosts),
-        maxTurns: 4,
+        maxTurns: maxTurnsFromEnv(ready.VK_TEST_MAX_TURNS != null ? ready : process.env),
       });
       const base = {
         ...played,
@@ -175,7 +211,13 @@ export function liveOptions(env = process.env) {
             loadTranscript: async () => stamped,
           });
         }
-        return { ...base, transcript: stamped };
+        return writeOutcomes(options.outDir, {
+          ...base,
+          transcript: stamped,
+          pricingReactionCaptured: played.pricingReactionCaptured === true,
+          customerTurnCount: played.customerTurnCount || 0,
+          hitTurnCap: played.hitTurnCap === true,
+        });
       }
       const tripId = played.tripId || created.tripId;
       const shareToken = played.shareToken || created.shareToken;
@@ -200,7 +242,7 @@ export function liveOptions(env = process.env) {
       const transcript = transcriptForScorecard(dialog.transcript, storedTranscript);
       if (chatLeftNoThing(played)) {
         const video = await writeVideoCheck({ origin, attachment: { ok: false, detail: 'no-thing-after-chat', bindings: [] }, fetchImpl, outDir: options.outDir });
-        return {
+        return writeOutcomes(options.outDir, {
           ...base,
           steps,
           transcript,
@@ -212,8 +254,12 @@ export function liveOptions(env = process.env) {
           videoPass: false,
           videoDetail: video.detail,
           reason: 'no-thing-after-chat',
+          pricingReactionCaptured: played.pricingReactionCaptured === true,
+          customerTurnCount: played.customerTurnCount || 0,
+          hitTurnCap: played.hitTurnCap === true,
+          keepsakeOk: false,
           ...onboardingFields(),
-        };
+        });
       }
       const attachment = await attachMedia({ origin, shareToken, story, fetchImpl, env: ready });
       const video = await writeVideoCheck({ origin, attachment, fetchImpl, outDir: options.outDir });
@@ -224,7 +270,21 @@ export function liveOptions(env = process.env) {
       } catch (error) {
         onboard = { ...onboard, ok: false, detail: String(error?.message || error).slice(0, 240) };
       }
-      return {
+      const pricingOk = played.pricingReactionCaptured === true;
+      const itineraryOk = Number(played.itineraryCount) > 0;
+      const keepsakeOk = keepsake.ok === true;
+      let reason = '';
+      if (liveCustomer && (!itineraryOk || !keepsakeOk || !pricingOk)) {
+        const missing = [
+          itineraryOk ? null : 'itinerary',
+          keepsakeOk ? null : 'keepsake',
+          pricingOk ? null : 'pricing-reaction',
+        ].filter(Boolean);
+        reason = played.hitTurnCap
+          ? `cap-without-required:${missing.join(',')}`
+          : `missing-required:${missing.join(',')}`;
+      }
+      return writeOutcomes(options.outDir, {
         ...base,
         steps,
         transcript,
@@ -233,8 +293,12 @@ export function liveOptions(env = process.env) {
         dialogDetail: dialog.detail,
         dialogRefused: dialog.ok !== true,
         refusals: dialog.refusals || [],
-        keepsakeOk: keepsake.ok === true,
+        keepsakeOk,
         keepsakeDetail: keepsake.detail || '',
+        pricingReactionCaptured: pricingOk,
+        customerTurnCount: played.customerTurnCount || 0,
+        hitTurnCap: played.hitTurnCap === true,
+        reason,
         screensOk: screens.ok === true,
         screensDetail: screens.error || '',
         videoExists: !String(video.detail || '').startsWith('video-missing'),
@@ -243,7 +307,7 @@ export function liveOptions(env = process.env) {
         chromeOk: screens.ok === true && !(screens.hits || []).length,
         chromeDetail: (screens.hits || []).join(','),
         ...onboardingFields(),
-      };
+      });
   };
   return {
     env: ready,

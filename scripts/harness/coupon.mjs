@@ -52,20 +52,20 @@ export function createCouponLedger(file = '') {
   };
   return {
     rows,
-    claim(code, storyId) {
-      const value = assertCouponCode(code);
+    claim(code, storyId, minted = '') {
+      const value = assertCouponCode(code, minted);
       const prior = rows.get(value);
       if (prior) throw new Error(`refused: coupon ${value} already redeemed by ${prior.story_id} in this run`);
       rows.set(value, { code: value, story_id: storyId, redeemed: false, at: '' });
       save();
     },
-    record(code, fields) {
-      const value = assertCouponCode(code);
+    record(code, fields, minted = '') {
+      const value = assertCouponCode(code, minted);
       rows.set(value, { ...(rows.get(value) || { code: value }), ...fields });
       save();
     },
-    redeemed(code) {
-      return rows.get(assertCouponCode(code))?.redeemed === true;
+    redeemed(code, minted = '') {
+      return rows.get(assertCouponCode(code, minted))?.redeemed === true;
     },
     allowReuse(story) {
       return story?.coupon?.misuse === true;
@@ -130,7 +130,7 @@ export async function redeemRosterCoupon({ story, runId, origin, fetchImpl, ledg
     pass: false,
     detail: '',
   };
-  ledger.claim(code, story.story_id);
+  ledger.claim(code, story.story_id, minted);
   if (result.misuse && result.misuse_kind === 'expired-promo') {
     for (let attempt = 1; attempt <= 2; attempt += 1) {
       const fake = { ...couponRequestBody(story, runId), action: 'validate_coupon', couponCode: code.replace('VK-TEST-', 'VK-EXPIRED-') };
@@ -141,7 +141,7 @@ export async function redeemRosterCoupon({ story, runId, origin, fetchImpl, ledg
   if (result.pre_attempts.some((row) => row.rejected !== true)) {
     result.status = 'expired-promo-accepted';
     result.detail = 'app accepted a made-up expired promo code';
-    ledger.record(code, { story_id: story.story_id, redeemed: false, status: result.status, at: new Date().toISOString() });
+    ledger.record(code, { story_id: story.story_id, redeemed: false, status: result.status, at: new Date().toISOString() }, minted);
     return result;
   }
   const first = await post(fetchImpl, origin, couponRequestBody(story, runId), minted);
@@ -162,7 +162,7 @@ export async function redeemRosterCoupon({ story, runId, origin, fetchImpl, ledg
     result.status = 'rejected';
     result.detail = publicError(first.data) || `http ${first.status}`;
   }
-  ledger.record(code, { story_id: story.story_id, redeemed: result.status === 'redeemed', status: result.status, at: new Date().toISOString() });
+  ledger.record(code, { story_id: story.story_id, redeemed: result.status === 'redeemed', status: result.status, at: new Date().toISOString() }, minted);
   if (result.status === 'redeemed' && result.misuse) {
     if (!ledger.allowReuse(story)) throw new Error('refused: coupon reuse without the coupon-misuse flag');
     const again = await post(fetchImpl, origin, couponRequestBody(story, runId), minted);
@@ -171,17 +171,18 @@ export async function redeemRosterCoupon({ story, runId, origin, fetchImpl, ledg
     result.status = accepted ? 'reuse_accepted' : 'reuse_rejected';
     result.pass = !accepted;
     result.detail = accepted ? 'app accepted a reused coupon' : 'app rejected the reused coupon';
-    ledger.record(code, { reuse_rejected: !accepted });
+    ledger.record(code, { reuse_rejected: !accepted }, minted);
   }
   return result;
 }
 
 export function dryRosterCoupon({ story, runId, origin, ledger }) {
-  const code = assertCouponCode(story.coupon?.code);
-  ledger.claim(code, story.story_id);
+  const minted = story.coupon?.mintedCode || '';
+  const code = assertCouponCode(story.coupon?.code, minted);
+  ledger.claim(code, story.story_id, minted);
   const url = new URL(COUPON_ROUTE, origin);
-  assertCouponOnlyRequest(url, couponRequestBody(story, runId));
-  ledger.record(code, { story_id: story.story_id, redeemed: false, status: 'dry-not-sent', at: new Date().toISOString() });
+  assertCouponOnlyRequest(url, couponRequestBody(story, runId), minted);
+  ledger.record(code, { story_id: story.story_id, redeemed: false, status: 'dry-not-sent', at: new Date().toISOString() }, minted);
   return {
     code_hint: `${code.slice(0, 3)}...${code.slice(-3)}`,
     route: COUPON_ROUTE,
