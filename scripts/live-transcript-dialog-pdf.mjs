@@ -231,7 +231,7 @@ export function assertLiveTranscript(doc) {
       && /\bview access\b/i.test(intakeText)
       && /\bedit access\b/i.test(intakeText)
       && /email invite/i.test(intakeText)
-      && /unlimited vacations for the whole year/i.test(intakeText);
+      && /covers the family's vacations for the whole year/i.test(intakeText);
     if (!intakeOk) contentFails.push('FAIL. post_intake_itinerary_collab_upsell');
   }
   const commentCounts = {};

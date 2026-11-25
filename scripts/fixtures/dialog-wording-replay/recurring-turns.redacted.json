@@ -1,0 +1,32 @@
+[
+  {
+    "id": "cost10-turn-3",
+    "firstIntake": true,
+    "customerTurn": "Orlando theme parks, four nights in April, two kids ages six and nine.",
+    "modelReply": "Hi Sofia, your Orlando theme parks vacation is being built now. Since you have not picked a hotel yet, where are you planning to stay during your vacation? I am building the itinerary from what you told me. View access lets family and friends see the days. Edit access lets them add notes after you approve an email invite. Welcome them onto this vacation as collaborators. The household plan is unlimited vacations for the whole year."
+  },
+  {
+    "id": "cost10-turn-7",
+    "firstIntake": false,
+    "customerTurn": "What hotel times do you have for us?",
+    "modelReply": "I do not have hotel arrival or checkout times on the record yet."
+  },
+  {
+    "id": "lopez-r9-turn-3",
+    "firstIntake": true,
+    "customerTurn": "Big Island voice dump with dates, house in Kailua-Kona, Kimberly gardens, Tyler swim.",
+    "modelReply": "I am building the itinerary from what you told me. View access lets family and friends see the days. Edit access lets them add notes after you approve an email invite. Welcome them onto this vacation as collaborators. The household plan is unlimited vacations for the whole year."
+  },
+  {
+    "id": "lopez-r8-hotel",
+    "firstIntake": false,
+    "customerTurn": "Did the hotel send check-in details?",
+    "modelReply": "Not yet. I still need the hotel check-in and checkout times before I can place them on the day."
+  },
+  {
+    "id": "lopez-r7-turn-3",
+    "firstIntake": true,
+    "customerTurn": "First intake for Orlando with partner and two kids.",
+    "modelReply": "Welcome them onto this vacation as collaborators. The household plan is unlimited vacations for the whole year."
+  }
+]

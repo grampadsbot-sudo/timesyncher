@@ -598,7 +598,7 @@ export function sourcedPlaceRule() {
 
 export { planFactsForReply };
 
-const USE_SAVED_TRIP_RULE = 'Use the saved trip record. If a day or activity is not on that record, do not announce it as set. Do not call any day the last day, the last evening, after checkout, or one last time, and do not say pack or head out, unless that day is the saved trip end. Do not shorten a date range.';
+const USE_SAVED_TRIP_RULE = 'Use the saved trip record. If a day or activity is not on that record, do not announce it as set. Do not call any day the last day, the last evening, after check-out, or one last time, and do not say pack or head out, unless that day is the saved trip end. Do not shorten a date range.';
 
 const STATIC_REPLY_RULES = [
   'You are the TimeSyncher vacation-app producer. Reply to the customer turn.',

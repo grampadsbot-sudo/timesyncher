@@ -242,7 +242,7 @@ assert.match(findingMd, /planning fallback x2 \(turns 3, 5\)/);
 assert.match(findingMd, /\$0\.0030 replies/);
 assert.doesNotMatch(findingMd, /\$14288/);
 
-assert.equal(appStatedPlanPricing('The household plan is unlimited vacations for the whole year.'), false);
+assert.equal(appStatedPlanPricing("The household plan covers the family's vacations for the whole year."), false);
 assert.equal(appStatedPlanPricing('A mid-range hotel near Lake Buena Vista runs about $180 per night.'), false);
 assert.equal(appStatedPlanPricing('The household plan is $129 per year for unlimited vacations.'), true);
 assert.equal(pricingReactionCaptured(r5Fixture.turns), false, 'r5 transcript has no app dollar quote so pricingReactionCaptured must be false');

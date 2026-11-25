@@ -1,6 +1,6 @@
 {
   "version": "1",
-  "canonicalPlan": "unlimited vacations for the whole year",
+  "canonicalPlan": "covers the family's vacations for the whole year",
   "allow": [
     {
       "id": "stripe-product-subscription",
@@ -163,7 +163,7 @@
       "banned payment word",
       "${customerTurn}\\n\\nAnswer with who pays: ${planLine || 'the dollar amount for each person and who pays'}. Do not add a second collaborator welcome.",
       "Do not offer an activity on a day that is not already that activity on the saved trip. Do not put viewers or editors on the trip. Never say \"splitting payments\" or splitting anything up.",
-      "I am building the itinerary from what you told me. View access lets family and friends see the days. Edit access lets them add notes after you approve an email invite. Welcome them onto this vacation as collaborators. The household plan is unlimited vacations for the whole year."
+      "I am building the itinerary from what you told me. View access lets family and friends see the days. Edit access lets them add notes after you approve an email invite. Welcome them onto this vacation as collaborators. The household plan covers the family's vacations for the whole year."
     ]
   }
 }

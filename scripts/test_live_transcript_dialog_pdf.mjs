@@ -44,10 +44,10 @@ assert.equal(customerPullsAccess('How much if they join as collaborators?', pric
 assert.equal(upsellModeForTurn('Friday dinner on the Big Island.', []), 'forbidden');
 assert.equal(upsellModeForTurn('How much if Kimberly joins as a collaborator?', []), 'forbidden');
 assert.equal(upsellModeForTurn('How much if Kimberly joins as a collaborator?', [], priceIntent), 'allow-once');
-const dayWithCloser = 'Thursday is a town walk in Kailua-Kona. Welcome the whole family as collaborators with unlimited vacations for the whole year.';
+const dayWithCloser = "Thursday is a town walk in Kailua-Kona. Welcome the whole family as collaborators with the household plan that covers the family's vacations for the whole year.";
 assert.equal(isFullUpsell(dayWithCloser), true);
 assert.equal(sessionHasFullUpsell([{ role: 'app', text: 'Where are you headed?' }]), false);
-const splitWelcome = 'With all three of you joining as collaborators, the household plan is unlimited vacations for the whole year. Since you are splitting payments, Kimberly is covered by you and Tyler and Lauren have their own seats. Fallon still gets a quiet afternoon.';
+const splitWelcome = "With all three of you joining as collaborators, the household plan covers the family's vacations for the whole year. Since you are splitting payments, Kimberly is covered by you and Tyler and Lauren have their own seats. Fallon still gets a quiet afternoon.";
 assert.equal(item34BanHit(splitWelcome), true);
 assert.equal(item34BanHit('Kimberly\'s seat is already covered. Tyler has his own seat.'), false);
 assert.equal(item34BanHit('Collaborators: Kimberly Davidson (payer=owner)'), false);
@@ -67,7 +67,7 @@ assert.equal(hardQualityFlags('You can choose view access or edit access.', acce
 assert.equal(dockQuality({ judged: true, score: 5, comment: 'kept', wantsRewrite: false }, hardQualityFlags('Thursday is a garden.', accessAsk, 'gardens', priceIntent), accessAsk).wantsRewrite, true);
 assert.equal(item34BanHit('without stacking costs or splitting anything up'), true);
 assert.equal(item34BanHit('Do not split the payment across seats.'), true);
-assert.equal(upsellModeForTurn('What is the price for collaborators?', [{ role: 'app', text: 'Welcome them as collaborators. The plan is unlimited vacations for the whole year.' }]), 'forbidden');
+assert.equal(upsellModeForTurn('What is the price for collaborators?', [{ role: 'app', text: "Welcome them as collaborators. The household plan covers the family's vacations for the whole year." }]), 'forbidden');
 const longIntake = `${'okay voice note dumping. Big Island Hawaii, gardens, swim, groceries, dinner, family, April. '.repeat(8)}Kimberly wants gardens.`;
 const intakeTurn = { text: longIntake, intake: true };
 assert.equal(firstMarkedIntake(longIntake, []), false);
@@ -81,14 +81,14 @@ assert.equal(firstMarkedIntake(intakeTurn, [
 assert.equal(upsellModeForTurn(intakeTurn, []), 'allow-once');
 assert.equal(upsellModeForTurn('How much if they join as collaborators?', [
   { role: 'customer', text: longIntake },
-  { role: 'app', text: 'I am building the itinerary from that dump. Welcome them as collaborators. The household plan is unlimited vacations for the whole year.' },
+  { role: 'app', text: "I am building the itinerary from that dump. Welcome them as collaborators. The household plan covers the family's vacations for the whole year." },
 ]), 'forbidden');
-const intakeReply = 'I am building the itinerary from that dump. View access lets family and friends see the days. Edit access lets them add notes after you approve an email invite. They join from that email. Welcome them onto this vacation as collaborators. The household plan is unlimited vacations for the whole year.';
+const intakeReply = "I am building the itinerary from that dump. View access lets family and friends see the days. Edit access lets them add notes after you approve an email invite. They join from that email. Welcome them onto this vacation as collaborators. The household plan covers the family's vacations for the whole year.";
 assert.match(intakeReply, /building the itinerary/);
 assert.match(intakeReply, /view access/i);
 assert.match(intakeReply, /edit access/i);
 assert.match(intakeReply, /email invite/i);
-assert.match(intakeReply, /unlimited vacations for the whole year/);
+assert.match(intakeReply, /covers the family's vacations for the whole year/);
 assert.match(intakeReply, /view access/i);
 assert.doesNotMatch(intakeReply, /you've got unlimited/);
 const sourcedMarket = [{ id: 'osm:way/11', name: 'Harbor Market' }];
@@ -129,7 +129,7 @@ assert.equal(acceptQualityRewrite('Draft stays.', 'Draft stays.').rewritten, fal
 assert.equal(acceptQualityRewrite('Draft stays.', 'The rewrite the customer sees.').rewritten, true);
 assert.equal(acceptQualityRewrite('Draft stays.', 'The rewrite the customer sees.').text, 'The rewrite the customer sees.');
 assert.equal(rewriteReplacesDraft('The draft stays here.', 'The draft stays here. Extra paragraph about a cruise.'), false);
-assert.equal(rewriteReplacesDraft('The draft stays here.', 'Monday is the beach or the house pool. The household plan is unlimited vacations for the whole year.'), true);
+assert.equal(rewriteReplacesDraft('The draft stays here.', "Monday is the beach or the house pool. The household plan covers the family's vacations for the whole year."), true);
 assert.equal(nearIdenticalRewrite('Thursday is a town walk.', 'The plan stays on the days and places you named. Thursday is a town walk.'), true);
 assert.equal(nearIdenticalRewrite('Thursday is a town walk in Kailua-Kona.', 'The town walk stays on Thursday in Kailua-Kona, and the afternoon is not a second big activity.'), false);
 const scoredOnly = qualityFromDecisions({
@@ -641,7 +641,7 @@ assert.deepEqual(upsellAudit([
 assert.deepEqual(upsellAudit([
   { turnIndex: 1, role: 'app', text: 'Where are you headed?', replyProducer: LIVE_OPENER_PRODUCER },
   { turnIndex: 2, role: 'customer', text: 'How much if they join as collaborators?', intent: priceIntent },
-  { turnIndex: 3, role: 'app', text: 'Welcome them onto this vacation as collaborators. The household plan is unlimited vacations for the whole year.' },
+  { turnIndex: 3, role: 'app', text: "Welcome them onto this vacation as collaborators. The household plan covers the family's vacations for the whole year." },
   { turnIndex: 4, role: 'customer', text: 'Read the week back on the Big Island.' },
   { turnIndex: 5, role: 'app', text: 'Monday starts in Kailua-Kona.' },
 ]).unsolicitedFull, []);
