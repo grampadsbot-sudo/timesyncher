@@ -17,6 +17,7 @@ import {
   parseKeyPayload,
   providerQuotaReason,
   readDryRunKeyQuota,
+  stripeEnvBlockReason,
 } from './host/vk_ship_key_quota.mjs';
 
 const OUTPUTS = ['dialog-pdf', 'keepsake-pdf', 'screens', 'video-check', 'scorecard'];
@@ -288,5 +289,37 @@ const other = withDryRunCapShare({ state: 'measured', unit: 'usd', per_customer:
 assert.equal(other.daily_cap_usd, undefined);
 const notRun = withDryRunCapShare({ state: 'not-run', unit: '', per_customer: null }, 'dry-run');
 assert.equal(notRun.daily_cap_usd, undefined);
+
+const stripeCard = {
+  verdict: 'FAIL',
+  reason: 'checkout-payment: stripe is not test mode',
+  checks: [
+    ...OUTPUTS.map((id) => ({ id, pass: true })),
+    { id: 'onboarding-screens-in-pdf', pass: false, detail: 'checkout-payment: stripe is not test mode' },
+  ],
+  turns: [],
+  cost: { state: 'measured', unit: 'usd', per_customer: 0.00044606, per_100: 0.044606 },
+  cleanup: { remaining: 0 },
+};
+assert.equal(stripeEnvBlockReason(stripeCard), 'blocked: env STRIPE_PUBLISHABLE_KEY production');
+const stripeRound = applyDryRunCard({ dryRun: { ran: true, sha: 'fc988958' }, needsRebase: [], errors: [] }, stripeCard);
+assert.equal(stripeRound.dryRun.blockedEnv, true);
+assert.equal(stripeRound.dryRun.verdict, '');
+assert.equal(stripeRound.dryRun.reason, 'blocked: env STRIPE_PUBLISHABLE_KEY production');
+assert.equal(stripeRound.dryRun.outputs['dialog-pdf'], true);
+assert.equal(stripeRound.dryRun.outputs['keepsake-pdf'], true);
+assert.equal(stripeRound.dryRun.outputs.screens, true);
+assert.equal(stripeRound.dryRun.outputs['video-check'], true);
+assert.equal(stripeRound.dryRun.outputs.scorecard, true);
+assert.equal(doorbellReasons(stripeRound, {}).includes('new-failure'), false);
+assert.equal(doorbellReasons(stripeRound, {}).includes('blocked: env'), true);
+assert.equal(doorbellReasons(stripeRound, { reason: stripeRound.dryRun.reason }).includes('blocked: env'), false);
+assert.equal(doorbellReasons(stripeRound, { reason: stripeRound.dryRun.reason }).includes('new-failure'), false);
+assert.equal(stripeEnvBlockReason({ reason: 'stored-cost-missing', checks: [], turns: [] }), '');
+const guard = fs.readFileSync(new URL('./harness/onboarding-capture.mjs', import.meta.url), 'utf8');
+assert.match(guard, /throw new Error\('checkout-payment: stripe is not test mode'\)/);
+const stripeEnv = fs.readFileSync(new URL('./../src/vacation/stripe-env.mjs', import.meta.url), 'utf8');
+assert.match(stripeEnv, /ALLOW_LIVE_STRIPE !== 'true'/);
+assert.match(stripeEnv, /Live Stripe is disabled/);
 
 console.log('test_acceptance_1041_ship_round_key_quota: ok');
