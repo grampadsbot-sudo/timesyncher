@@ -1,6 +1,3 @@
-// Local QA server for the VK admin review app: admin page and APIs, fixture shared trips, static public files.
-// ownerAppPayload lets a test open the real owner vacation-app.html on the same fixture turns.
-// Non-admin API writes are refused and recorded so tests can prove admin review never writes customer data.
 import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';

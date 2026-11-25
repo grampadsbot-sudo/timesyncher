@@ -9,6 +9,21 @@
 .admin-empty { margin: 16px; color: var(--muted); }
 .site-pane[data-kind="customers"], .site-pane[data-kind="chat"], .site-pane[data-kind="trip"] { background: var(--panel); }
 .admin-clear-all b { color: var(--blue); }
-.app[data-admin] .topbar .brand { flex: 0 0 auto; }
+.app[data-admin].site-fullscreen {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+.app[data-admin].site-fullscreen .topbar { display: flex; }
+.app[data-admin].site-fullscreen .workspace {
+  grid-row: 2;
+  grid-template-rows: minmax(0, var(--site-height, 52fr)) auto minmax(0, var(--chat-height, 48fr));
+}
+.app[data-admin].site-fullscreen .chat-pane { display: grid; }
+.app[data-admin].site-fullscreen .splitter-row .splitter { display: block; }
+.app[data-admin].site-fullscreen .splitter-row { min-height: 44px; width: 100%; }
+.app[data-admin] .topbar { min-width: 0; }
+.app[data-admin] .topbar .brand { flex: 0 1 auto; min-width: 0; max-width: 58%; }
+.app[data-admin] .topbar .vk-print-wordmark { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.app[data-admin] .topbar .vacation-dropdown { flex: 1 1 auto; min-width: 0; max-width: min(52vw, 280px); }
+.app[data-admin] .topbar .trip-button { min-width: 0; max-width: 100%; }
 .app[data-admin] .trip-button .trip-trigger-text { overflow: hidden; }
 .app[data-admin] .trip-button .trip-trigger-title { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; overflow-wrap: normal; }

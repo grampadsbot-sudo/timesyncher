@@ -1,9 +1,6 @@
-// Signed httpOnly VK admin session for preview, local and staging. Production never serves admin.
-// Credential names only: VK_ADMIN_LOGIN, VK_ADMIN_SESSION_SECRET. Never log their values.
-
 import crypto from 'node:crypto';
 
-export const VK_ADMIN_COOKIE = 'vk_admin';
+const VK_ADMIN_COOKIE = 'vk_admin';
 const MAX_AGE_SEC = 12 * 60 * 60;
 
 export function isVkAdminProduction(env = process.env) {

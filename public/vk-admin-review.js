@@ -1,4 +1,3 @@
-// VK admin review, part A: customer list, Chat (read-only) and Trip (view-only) on the owner vacation-app shell.
 window.startVkAdminReview = (() => {
   const safe = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const chatText = (value) => safe(String(value || '').replace(/\*\*([^*\n]+)\*\*/g, '$1').replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s).,!?;:]|$)/g, '$1$2'));

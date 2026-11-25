@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-// #1160 VK admin review app, part A: auth, newest-first fixture list grouped by tripId, Chat (real renderer, read-only),
-// Trip (real TREK UI, view-only), All Customers / several open / Clear all only, shared composer that never writes.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
