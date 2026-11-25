@@ -658,6 +658,18 @@ function activitySentenceCommits(_hit, decision) {
   return decision?.commits === true;
 }
 
+export function needsActivityCommitDecisions(things, text) {
+  const sentences = splitSentences(text);
+  if (!sentences.length) return false;
+  const list = Array.isArray(things) ? things : [];
+  if (!list.length) return false;
+  for (const sentence of sentences) {
+    if (!datedMentions(sentence).length) continue;
+    if (list.some((thing) => mentionsThing(thing?.title, sentence))) return true;
+  }
+  return false;
+}
+
 export async function activityCommitDecisions(text, options) {
   const sentences = splitSentences(text);
   if (!sentences.length) return {};

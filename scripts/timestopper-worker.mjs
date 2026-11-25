@@ -77,6 +77,46 @@ function findSupportNoWriteDecision(value, depth = 0) {
 }
 
 async function handleJob(job) {
+  if (job?.job_type === 'chat_place_refresh') {
+    let refreshedCount = 0;
+    const dbUrl = String(process.env.DATABASE_URL || process.env.NEON_DATABASE_URL || '').trim();
+    const tripId = cleanText(job.trip_id || job?.input?.tripId, 80);
+    if (dbUrl && tripId) {
+      const { sql } = await import('../src/vacation/db.mjs');
+      const { refreshUnresolvedChatIntakePlaces } = await import('../src/vacation/chat-intake-place-persist.mjs');
+      const db = sql(process.env);
+      const rows = await db`
+        select id, category, title, description, metadata, location, source, starts_at
+        from trip_things
+        where trip_id = ${tripId}
+        order by created_at asc
+      `;
+      const targetIds = new Set(Array.isArray(job?.input?.thingIds) ? job.input.thingIds.map(String) : []);
+      const candidates = targetIds.size
+        ? rows.filter((row) => targetIds.has(String(row.id)))
+        : rows;
+      const saved = await refreshUnresolvedChatIntakePlaces(db, {
+        tripId,
+        requestId: job.request_id || null,
+        text: '',
+        things: candidates,
+        destinationHint: cleanText(job?.input?.destinationHint, 180),
+        env: process.env,
+      });
+      refreshedCount = Array.isArray(saved) ? saved.length : 0;
+    }
+    return {
+      customerResponse: '',
+      result: {
+        handledBy: WORKER_ID,
+        requestId: job.request_id,
+        jobId: job.id,
+        jobType: 'chat_place_refresh',
+        refreshedCount,
+      },
+      toolingUsed: ['timestopper-worker-chat-place-refresh'],
+    };
+  }
   const supportNoWrite = findSupportNoWriteDecision(job);
   if (supportNoWrite) {
     return {
