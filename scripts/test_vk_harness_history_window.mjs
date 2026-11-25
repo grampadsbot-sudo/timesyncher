@@ -4,10 +4,11 @@ import fs from 'node:fs';
 import {
   APP_HISTORY_WINDOW_ROWS,
   historyWindowFull,
-  playCustomerTurns,
+  latestStoredAppTurn,
   ruledReplyCount,
   storedAppTurnChanged,
-} from './harness/live-play.mjs';
+} from './harness/app-history.mjs';
+import { playCustomerTurns } from './harness/live-play.mjs';
 
 const story = JSON.parse(fs.readFileSync(new URL('./fixtures/harness/story-dry-run.json', import.meta.url), 'utf8'));
 const origin = 'https://vacation-staging.timesyncher.com';
@@ -115,18 +116,19 @@ async function play(server, maxTurns, token) {
   const app = (n, text) => ({ speaker: 'app', body: text, modelId: MODEL, at: `t${n}`, payload: { liveTranscript: { turnIndex: n } } });
   const before = { turns: [opener, { speaker: 'customer', body: 'hi' }, app(2, 'one')] };
   assert.equal(storedAppTurnChanged(before, null), true, 'first ruled app turn is new');
-  const seenFor = (body) => {
-    const turns = body.turns.filter((t) => t.speaker === 'app' && t.modelId);
-    const last = turns.at(-1);
-    return { key: JSON.stringify([last.payload.liveTranscript.turnIndex, last.at, last.body, last.modelId]), turnIndex: last.payload.liveTranscript.turnIndex };
-  };
-  const seen = seenFor(before);
+  const seen = latestStoredAppTurn(before, { ruledOnly: true });
   assert.equal(storedAppTurnChanged(before, seen), false, 'same newest app turn: not stored');
   assert.equal(storedAppTurnChanged({ turns: [...before.turns, { speaker: 'customer', body: 'q' }] }, seen), false, 'customer row only: not stored');
   assert.equal(storedAppTurnChanged({ turns: [{ speaker: 'customer', body: 'q' }, app(4, 'two')] }, seen), true, 'new newest app turn even though the count is unchanged');
   assert.equal(storedAppTurnChanged({ turns: [{ speaker: 'customer', body: 'q' }, app(4, 'two'), { speaker: 'app', body: 'unruled' }] }, seen), true, 'un-ruled tail does not hide the new ruled turn');
-  assert.equal(storedAppTurnChanged(before, seen, { appTurnIndex: 2 }), false, 'POST index of an old turn does not count');
-  assert.equal(storedAppTurnChanged(before, seen, { appTurnIndex: 4 }), false, 'POST index absent from the GET does not count');
+  assert.equal(storedAppTurnChanged({ turns: [app(1, 'older')] }, seen), false, 'an older visible app turn does not count');
+  assert.equal(storedAppTurnChanged(before, seen, { replyBody: { appTurnIndex: 2 } }), false, 'POST index of an old turn does not count');
+  assert.equal(storedAppTurnChanged(before, seen, { replyBody: { appTurnIndex: 4 } }), false, 'POST index absent from the GET does not count');
+  assert.equal(storedAppTurnChanged({ turns: [app(4, 'two'), app(2, 'one')] }, seen, { replyBody: { appTurnIndex: 4 } }), true, 'the POST index can identify a stored reply if display order differs');
+  const unindexed = (at) => ({ turns: [{ speaker: 'app', body: 'same text', at, modelId: MODEL }] });
+  const previous = latestStoredAppTurn(unindexed('t1'));
+  assert.equal(storedAppTurnChanged(unindexed('t1'), previous), false, 'same timestamp and text do not count');
+  assert.equal(storedAppTurnChanged(unindexed('t2'), previous), true, 'a new timestamp identifies an unindexed reply with repeated text');
   assert.equal(historyWindowFull({ turns: new Array(119).fill({}) }), false);
   assert.equal(historyWindowFull({ turns: new Array(120).fill({}) }), true);
   assert.equal(historyWindowFull({}), false);
@@ -204,6 +206,14 @@ async function play(server, maxTurns, token) {
   const played = await play(server, 3, 'tok-small-missing');
   assert.equal(played.reason, 'reply-not-stored');
   assert.equal(played.customerTurnCount, 2);
+  assert.equal(played.storedTurns, 1);
+}
+
+{
+  const server = makeServer((n) => (n === 2 ? { timeout: true } : undefined));
+  const played = await play(server, 3, 'tok-small-504-missing');
+  assert.equal(played.reason, 'turn-not-stored', 'a customer row alone cannot rescue a 504');
+  assert.equal(server.log.getsAfterPost[1], 3);
   assert.equal(played.storedTurns, 1);
 }
 

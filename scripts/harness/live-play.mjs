@@ -3,14 +3,10 @@ import { classifyAppFailure } from './backends.mjs';
 import { personaSeed, speakCustomer, tripSurvey } from './customer-live.mjs';
 import { hostIsBanned } from './fetch-guard.mjs';
 import { redactExchangeBody } from './redact.mjs';
+import { historyWindowFull, latestStoredAppTurn, ruledReplyCount, storedAppTurnChanged } from './app-history.mjs';
 
 export const PLANNING_FALLBACK_ABORT_LIMIT = 3;
 export const STORED_TURN_PROBE_DELAYS_MS = Object.freeze([0, 10000, 20000]);
-export const APP_HISTORY_WINDOW_ROWS = 120;
-
-export function historyWindowFull(body) {
-  return Array.isArray(body?.turns) && body.turns.length >= APP_HISTORY_WINDOW_ROWS;
-}
 
 export function storedTurnProbeDelays(value) {
   const list = Array.isArray(value) ? value : STORED_TURN_PROBE_DELAYS_MS;
@@ -67,26 +63,7 @@ export function replyModelStamp(body) {
   };
 }
 
-function openerClientTurn(turn) {
-  const live = turn?.payload?.liveTranscript && typeof turn.payload.liveTranscript === 'object' ? turn.payload.liveTranscript : {};
-  return live.fixedOpener === true
-    || turn?.fixedOpener === true
-    || live.replyProducer === 'vacation-app-onboarding-opener'
-    || turn?.replyProducer === 'vacation-app-onboarding-opener'
-    || live?.jev?.reason === 'fixed_onboarding_opener'
-    || turn?.jev?.reason === 'fixed_onboarding_opener';
-}
-
-export function ruledReplyCount(body) {
-  if (!Array.isArray(body?.turns)) return null;
-  return body.turns.filter((turn) => {
-    if (openerClientTurn(turn)) return false;
-    const live = turn?.payload?.liveTranscript && typeof turn.payload.liveTranscript === 'object' ? turn.payload.liveTranscript : {};
-    const modelId = String(turn?.modelId || turn?.responseModel || live.modelId || live.model?.responseModel || '').trim();
-    const speaker = String(turn?.speaker || turn?.role || '');
-    return speaker === 'app' && Boolean(modelId);
-  }).length;
-}
+export { ruledReplyCount };
 
 export function turnFailure(status, body) {
   const billing = classifyAppFailure(status, body);
@@ -160,52 +137,6 @@ function tripFields(body) {
     tripId: String(trip.id || body?.tripId || ''),
     shareToken: String(trip.shareToken || trip.publicSlug || ''),
   };
-}
-
-function latestStoredAppTurn(body, { ruledOnly = false } = {}) {
-  if (!Array.isArray(body?.turns)) return null;
-  for (let i = body.turns.length - 1; i >= 0; i -= 1) {
-    const turn = body.turns[i];
-    const speaker = String(turn?.speaker || turn?.role || '');
-    if (speaker !== 'app' || openerClientTurn(turn)) continue;
-    const live = turn?.payload?.liveTranscript && typeof turn.payload.liveTranscript === 'object' ? turn.payload.liveTranscript : {};
-    const model = String(turn?.modelId || turn?.responseModel || live.modelId || live.model?.responseModel || '').trim();
-    if (ruledOnly && !model) continue;
-    const text = String(turn?.body ?? turn?.text ?? live.text ?? '').trim();
-    const turnIndex = Number(live.turnIndex || turn?.turnIndex) || null;
-    const at = String(turn?.at || turn?.received_at || turn?.sent_at || turn?.created_at || live.at || '');
-    return {
-      text,
-      model,
-      cost: turn?.cost || live.cost || live.model?.cost || null,
-      turnIndex,
-      quality: turn?.quality || live.quality || null,
-      jevDisposition: turn?.jevDisposition || live.jevDisposition || '',
-      key: JSON.stringify([turnIndex, at, text, model]),
-    };
-  }
-  return null;
-}
-
-function storedAppTurnIndexes(body) {
-  if (!Array.isArray(body?.turns)) return new Set();
-  const out = new Set();
-  for (const turn of body.turns) {
-    if (String(turn?.speaker || turn?.role || '') !== 'app' || openerClientTurn(turn)) continue;
-    const live = turn?.payload?.liveTranscript && typeof turn.payload.liveTranscript === 'object' ? turn.payload.liveTranscript : {};
-    const model = String(turn?.modelId || turn?.responseModel || live.modelId || live.model?.responseModel || '').trim();
-    const n = Number(live.turnIndex || turn?.turnIndex) || 0;
-    if (model && n) out.add(n);
-  }
-  return out;
-}
-
-export function storedAppTurnChanged(body, before, replyBody = null) {
-  const newest = latestStoredAppTurn(body, { ruledOnly: true });
-  if (newest && newest.key !== (before?.key ?? null)) return true;
-  const posted = Number(replyBody?.appTurnIndex) || 0;
-  if (!posted || (before?.turnIndex && posted <= before.turnIndex)) return false;
-  return storedAppTurnIndexes(body).has(posted);
 }
 
 function initialOpenerTurns(body) {
@@ -296,7 +227,6 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
   if (openedFailure) return finish(openedFailure, { detail: opened.body?.error || openedFailure });
   const openedRuled = ruledReplyCount(opened.body);
   let seen = openedRuled == null ? storedTurns(opened.body) : openedRuled;
-  let seenTotal = storedTurns(opened.body);
   let seenRuledApp = latestStoredAppTurn(opened.body, { ruledOnly: true });
   let seenApp = latestStoredAppTurn(opened.body);
   const openerTurns = initialOpenerTurns(opened.body);
@@ -351,23 +281,18 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
         const probes = [];
         exchange.probes = probes;
         let probe = null;
-        let probeRuled = null;
         let probeCount = 0;
-        let probeTotal = 0;
         let storedApp = null;
         let storedReplyGrew = false;
         for (let attempt = 0; attempt < probeDelays.length; attempt += 1) {
           if (probeDelays[attempt] > 0) await sleep(probeDelays[attempt]);
           probe = await send(appUrl(allowed, token, currentTrip, 'GET'));
-          probeRuled = ruledReplyCount(probe.body);
-          probeCount = probeRuled == null ? storedTurns(probe.body) : probeRuled;
-          probeTotal = storedTurns(probe.body);
+          probeCount = ruledReplyCount(probe.body) ?? 0;
           storedApp = latestStoredAppTurn(probe.body);
-          const probeIdentity = (probeRuled != null && storedAppTurnChanged(probe.body, seenRuledApp))
-            || (Boolean(storedApp?.text) && storedApp.key !== (seenApp?.key ?? null));
-          const probeCountGrew = (probeRuled != null ? probeCount > seen : (Array.isArray(probe.body?.turns) && probeCount > seen))
-            || (Array.isArray(probe.body?.turns) && probeTotal > seenTotal && Boolean(storedApp?.text));
-          storedReplyGrew = probeIdentity || (!historyWindowFull(probe.body) && probeCountGrew);
+          storedReplyGrew = Boolean(storedApp?.text) && (
+            storedAppTurnChanged(probe.body, seenApp, { ruledOnly: false })
+            || (!historyWindowFull(probe.body) && probeCount > seen)
+          );
           probes.push({
             kind: 'probe',
             attempt: attempt + 1,
@@ -392,10 +317,7 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
           timings[timings.length - 1].rescued_by_probe = probes.length;
         }
         if (storedReplyGrew && storedApp?.text) {
-          const probeFull = historyWindowFull(probe.body);
-          const nextSeen = probeRuled != null ? probeCount : probeTotal;
-          seen = probeFull && nextSeen <= seen ? seen + 1 : nextSeen;
-          seenTotal = probeTotal;
+          seen = historyWindowFull(probe.body) ? Math.max(seen + 1, probeCount) : probeCount;
           seenRuledApp = latestStoredAppTurn(probe.body, { ruledOnly: true }) || seenRuledApp;
           seenApp = storedApp;
           items = Math.max(items, itineraryCount(probe.body));
@@ -442,7 +364,6 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
     const history = await send(appUrl(allowed, token, currentTrip, 'GET'));
     const ruled = ruledReplyCount(history.body);
     const count = ruled == null ? storedTurns(history.body) : ruled;
-    const totalNow = storedTurns(history.body);
     items = Math.max(items, itineraryCount(final.body), itineraryCount(draft.body), itineraryCount(history.body));
     shareToken = tripFields(history.body).shareToken || shareToken;
     if (tripFields(history.body).tripId) currentTrip = tripFields(history.body).tripId;
@@ -456,18 +377,14 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
     }
     const windowFull = historyWindowFull(history.body);
     const countGrew = ruled != null ? count > seen : (!Array.isArray(history.body?.turns) || count > seen);
-    const identityStored = ruled != null && storedAppTurnChanged(history.body, seenRuledApp, replyBody);
+    const identityStored = ruled != null && storedAppTurnChanged(history.body, seenRuledApp, { replyBody });
     const storedGrew = identityStored || (!windowFull && countGrew);
     if (!reply || !storedGrew) {
-      if (reply && (upsell || isFallback)) {
-        lastReply = reply;
-      } else {
-        return finish('reply-not-stored', { timings, storedTurns: count, itineraryCount: items, tripId: currentTrip, shareToken, detail: 'scripted line produced no stored reply', customerTurns });
+      if (!reply || (!upsell && !isFallback)) {
+        return finish('reply-not-stored', { timings, storedTurns: windowFull ? seen : count, itineraryCount: items, tripId: currentTrip, shareToken, detail: 'scripted line produced no stored reply', customerTurns });
       }
     } else {
-      if (windowFull && count <= seen) seen += 1;
-      else seen = ruled != null || Array.isArray(history.body?.turns) ? count : seen + 1;
-      seenTotal = Math.max(seenTotal, totalNow);
+      seen = windowFull ? Math.max(seen + 1, count) : (ruled != null ? count : seen + 1);
     }
     seenRuledApp = latestStoredAppTurn(history.body, { ruledOnly: true }) || seenRuledApp;
     seenApp = latestStoredAppTurn(history.body) || seenApp;
