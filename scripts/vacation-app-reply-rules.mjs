@@ -417,6 +417,10 @@ function decisionsVia(url) {
   return OPENROUTER_HOST.test(String(url || '')) ? 'openrouter-decisions' : 'http-decisions';
 }
 
+function isOpenRouterDecisionsUrl(url) {
+  return URL.canParse(url) && new URL(url).origin === new URL(DEFAULT_JEV_DECISIONS_URL).origin;
+}
+
 function normalizeDecisions(body, via = 'openrouter-decisions') {
   const answers = body?.answers && typeof body.answers === 'object' ? body.answers : {};
   const tierAnswer = answers.model_tier || answers.modelTier || {};
@@ -512,7 +516,7 @@ export async function jevPrecall({ customerTurn, stage, gate, screen, session, e
       ...(decisions ? { 'HTTP-Referer': 'https://timesyncher.com', 'X-Title': 'TimeSyncher Vacation App Jev' } : {}),
     };
     const { response, body } = await fetchOpenRouterJson(url, {
-      purpose: 'jev_precall', endpoint: 'decisions', observe: via === 'openrouter-decisions', key, payload,
+      purpose: 'jev_precall', endpoint: 'decisions', observe: decisions && isOpenRouterDecisionsUrl(url), key, payload,
       method: 'POST',
       headers,
       signal: AbortSignal.timeout(20000),
@@ -772,7 +776,7 @@ export async function jevQualityRewrite({ customerTurn, draft, tripContext = nul
   };
   try {
     const { response, body } = await fetchOpenRouterJson(url, {
-      purpose, endpoint: 'decisions', observe: decisionsVia(url) === 'openrouter-decisions', key, payload,
+      purpose, endpoint: 'decisions', observe: isOpenRouterDecisionsUrl(url), key, payload,
       method: 'POST',
       headers: {
         authorization: `Bearer ${key}`,
@@ -819,7 +823,7 @@ export async function jevChooseRewrite({ customerTurn, draft, options, env = pro
   };
   try {
     const { response, body } = await fetchOpenRouterJson(url, {
-      purpose: 'jev_choose_rewrite', endpoint: 'decisions', observe: decisionsVia(url) === 'openrouter-decisions', key, payload,
+      purpose: 'jev_choose_rewrite', endpoint: 'decisions', observe: isOpenRouterDecisionsUrl(url), key, payload,
       method: 'POST',
       headers: {
         authorization: `Bearer ${key}`,

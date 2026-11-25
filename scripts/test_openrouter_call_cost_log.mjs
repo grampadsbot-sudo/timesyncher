@@ -42,6 +42,12 @@ const fetches = [];
 const json = (body, status = 200) => new Response(JSON.stringify(body), { status });
 const decision = (answers) => json({ answers });
 
+function deferred() {
+  let resolve;
+  const promise = new Promise((done) => { resolve = done; });
+  return { promise, resolve };
+}
+
 async function mockFetch(url, init = {}) {
   if (String(url) === rulesUrl) return json({ frontmatter: { smoke_bar_phrase: 'Fixture rules loaded' } });
   const route = new URL(url).pathname;
@@ -95,7 +101,7 @@ async function mockFetch(url, init = {}) {
 const session = { customer_id: 'fixture-owner', first_name: 'Avery', display_name: 'Avery', metadata: { replyBackend: 'openrouter' } };
 const trip = { id: 'trip-1148', title: 'Bend spring vacation', start_date: '2027-03-04', end_date: '2027-03-08', destination: '', metadata: {} };
 const stored = [];
-const lateWrite = Promise.withResolvers();
+const lateWrite = deferred();
 const db = async (strings, ...values) => {
   const query = strings.join(' ? ').replace(/\s+/g, ' ').trim();
   if (/select count\(\*\)::int as n.*from transcript_turns/i.test(query)) return [{ n: stored.length }];
@@ -215,7 +221,7 @@ try {
   assert.deepEqual(failures.openrouterCalls.map((row) => [row.ok, row.httpStatus, row.costSource]), [[false, null, 'unpriced'], [false, 429, 'unpriced']]);
   assert.equal(failures.openrouterTotals.unpricedCalls, 2);
 
-  const finishFetch = Promise.withResolvers();
+  const finishFetch = deferred();
   let lateCall;
   await withOpenRouterLedger(async () => {
     bindOpenRouterLedger({ tripId: trip.id, requestId: 'late-request' });

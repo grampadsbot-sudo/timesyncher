@@ -90,7 +90,12 @@ function usageNumber(value) {
 }
 
 async function readJson(response) {
-  return { body: typeof response?.json === 'function' ? await response.json().catch(() => null) : null };
+  if (typeof response?.json !== 'function') return { body: {}, unreadable: true };
+  try {
+    return { body: await response.json() };
+  } catch (error) {
+    return { body: {}, unreadable: true };
+  }
 }
 
 export function fetchOpenRouterJson(url, options) {
@@ -139,7 +144,7 @@ async function performOpenRouterCall(url, {
         costUsd: priced.dollars,
         costSource: priced.source === 'unmeasured' ? 'unpriced' : priced.source,
         latencyMs,
-        ok: response?.ok === true && Boolean(body) && body.ok !== false && !body.error,
+        ok: response?.ok === true && !parsed?.unreadable && !!body && typeof body === 'object' && body.ok !== false && !body.error,
         httpStatus: tokenCount(response?.status),
       };
       const turn = turnContext.getStore();
@@ -152,5 +157,5 @@ async function performOpenRouterCall(url, {
       if (replyCost && parsed) cost = await openRouterReplyCost(body, payload?.model, price);
     }
   }
-  return { ...parsed, response, body: parsed?.body ?? {}, cost };
+  return { ...parsed, response, cost };
 }
