@@ -29,7 +29,7 @@ export function turnUnderstandingRequest(request, message) {
         request.messages[0].content,
         'Return the fields above and all the additional fields defined in the supplied JSON schema.',
         'The input lists one customer turn as ordered sentences. Read them together for the extraction. For destination, report the trip location in the customer’s words only when they name it. Distinguish where they are going or staying from where they are leaving and from a venue or search anchor. Leave destination empty when they did not name a trip location.',
-        'For intent, asksPrice, asksAccess, and pullsAccess are true only when the customer asks that. seats lists people whose requested access or price has an identified payer. Leave seats empty when there is no such request. ask is true when you cannot tell.',
+        'For intent, asksPrice, asksAccess, and pullsAccess are true only when the customer asks that. In seats, list people from an access or price request when the customer identifies who covers the cost. Otherwise leave seats empty. ask is true when you cannot tell.',
         'For contentTags, choose only applicable tags from the schema. Use an empty list and ask true when none apply.',
         'For committedSentenceIndexes, list zero-based sentence indexes only when that sentence puts an activity on the plan. Leave out requests for suggestions, possibilities, and questions that do not commit to an activity.',
       ].join('\n'),
