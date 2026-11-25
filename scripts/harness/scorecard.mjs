@@ -15,6 +15,7 @@ const REQUIRED_CHECK_IDS = [
 const RANK = [
   'payment-required',
   'credit-exhausted',
+  'key-limit',
   'backend-not-available',
   'stored-model-missing',
   'stored-backend-missing',
@@ -28,7 +29,7 @@ const RANK = [
   'first-intake-reply-flagged',
 ];
 
-const WAVE_STOP = new Set(['payment-required', 'credit-exhausted', 'backend-not-available']);
+const WAVE_STOP = new Set(['payment-required', 'credit-exhausted', 'key-limit', 'backend-not-available']);
 
 export function buildScorecard(input) {
   const checks = [];

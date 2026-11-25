@@ -103,13 +103,14 @@ function mediaCost(card) {
 export function severityOf(card) {
   if (card.mode === 'dry' && card.verdict !== 'FAIL') return 'minor';
   if (card.verdict === 'PASS') return 'minor';
-  if (card.wave_stop || /payment|credit|coupon|harness-error/.test(String(card.reason || ''))) return 'blocker';
+  if (card.wave_stop || /payment|credit|key-limit|coupon|harness-error/.test(String(card.reason || ''))) return 'blocker';
   return 'major';
 }
 
 export function implicationOf(card) {
   const reason = String(card.reason || '');
   const edge = card.roster?.edge_case || '';
+  if (reason === 'key-limit') return 'The app hit a spend/quota limit on its model key, so no reply was generated; the wave stopped. Re-run after the limit resets.';
   if (reason === 'planning-fallback-x3') return 'Fix the planning reply pipeline so itinerary turns produce a real plan instead of repeated fallbacks.';
   if (/coupon/.test(reason)) return 'Checkout must make the coupon step obvious and explain a rejected code in plain words.';
   if (reason === 'no-thing-after-chat') return 'Chat must turn the first answer into a visible plan item, or show why it did not.';
@@ -142,7 +143,7 @@ export function customerSection(card, { wave, at = new Date() } = {}) {
   const coupon = card.coupon_redemption || {};
   const fbNote = [fallbackFinding(card), rescuedTimeoutFinding(card)].filter(Boolean).join('; ');
   const brokeBase = card.verdict === 'FAIL'
-    ? clean(`${card.reason}; ${(card.checks || []).filter((check) => !check.pass).map((check) => `${check.id}: ${check.detail}`).slice(0, 3).join('; ')}`)
+    ? clean(`${card.reason}; ${(card.checks || []).filter((check) => !check.pass).sort((a, b) => Number(b.id === 'app-billing') - Number(a.id === 'app-billing')).map((check) => `${check.id}: ${check.detail}`).slice(0, 3).join('; ')}`)
     : card.mode === 'dry' ? 'dry run: live steps not run' : 'nothing';
   const broke = fbNote
     ? (brokeBase === 'nothing' ? fbNote : clean(`${brokeBase}; ${fbNote}`))
