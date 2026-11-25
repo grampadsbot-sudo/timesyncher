@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import fs, { existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
@@ -9,15 +10,75 @@ import { startVkAdminLocalServer } from './qa/vk-admin-local-server.mjs';
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const require = createRequire(import.meta.url);
-function loadPlaywright() {
-  for (const candidate of ['playwright', path.join(os.homedir(), 'tsv-dispatch/capture/node_modules/playwright')]) {
-    try {
-      return require(candidate);
-    } catch {
-      continue;
+const PW_PREFIX = '/tmp/pw';
+const PW_BROWSERS_PATH = '/tmp/pw-browsers-chromium';
+const PW_PLAYWRIGHT_VERSION = '1.65.0';
+
+function tryRequirePlaywright(candidate) {
+  if (candidate.includes('node_modules') && !existsSync(path.join(candidate, 'package.json'))) {
+    return null;
+  }
+  try {
+    return require(candidate);
+  } catch {
+    return null;
+  }
+}
+
+function bootstrapPlaywrightForCi() {
+  const bundled = path.join(PW_PREFIX, 'node_modules/playwright');
+  const pkgInstall = spawnSync('npm', ['install', '--prefix', PW_PREFIX, `playwright@${PW_PLAYWRIGHT_VERSION}`], {
+    stdio: 'inherit',
+  });
+  if (pkgInstall.status !== 0) {
+    throw new Error(`playwright npm install failed (status ${pkgInstall.status ?? 'null'})`);
+  }
+  if (!existsSync(bundled)) {
+    throw new Error(`playwright missing after install at ${bundled}`);
+  }
+  process.env.PLAYWRIGHT_BROWSERS_PATH = PW_BROWSERS_PATH;
+  const installEnv = { ...process.env, PLAYWRIGHT_BROWSERS_PATH: PW_BROWSERS_PATH };
+  const browserInstall = spawnSync(
+    'npx',
+    ['--prefix', PW_PREFIX, 'playwright', 'install', '--with-deps', 'chromium'],
+    { stdio: 'inherit', env: installEnv },
+  );
+  if (browserInstall.status !== 0) {
+    const depsOnly = spawnSync(
+      'sudo',
+      ['-n', 'npx', '--prefix', PW_PREFIX, 'playwright', 'install-deps', 'chromium'],
+      { stdio: 'inherit', env: installEnv },
+    );
+    const browserOnly = spawnSync(
+      'npx',
+      ['--prefix', PW_PREFIX, 'playwright', 'install', 'chromium'],
+      { stdio: 'inherit', env: installEnv },
+    );
+    if (browserOnly.status !== 0) {
+      throw new Error(
+        `playwright chromium install failed (with-deps=${browserInstall.status ?? 'null'}, `
+        + `install-deps=${depsOnly.status ?? 'null'}, chromium=${browserOnly.status ?? 'null'})`,
+      );
     }
   }
-  throw new Error('Playwright is required for the VK admin review test');
+  return require(bundled);
+}
+
+function loadPlaywright() {
+  for (const candidate of [
+    'playwright',
+    'playwright-core',
+    path.join(ROOT, 'node_modules/playwright'),
+    path.join(os.homedir(), 'tsv-dispatch/capture/node_modules/playwright'),
+    path.join(PW_PREFIX, 'node_modules/playwright'),
+    path.join(os.homedir(), '.npm/_npx/e41f203b7505f1fb/node_modules/playwright'),
+  ]) {
+    const mod = tryRequirePlaywright(candidate);
+    if (!mod?.chromium) continue;
+    if (candidate.startsWith(PW_PREFIX)) process.env.PLAYWRIGHT_BROWSERS_PATH = PW_BROWSERS_PATH;
+    return mod;
+  }
+  return bootstrapPlaywrightForCi();
 }
 const { chromium } = loadPlaywright();
 
