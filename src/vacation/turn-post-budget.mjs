@@ -1,10 +1,43 @@
 import { boundedAwait } from './bounded-await.mjs';
+import { datedMentions } from './live-app-turn.mjs';
 
 export const VERCEL_FUNCTION_LIMIT_MS = 60_000;
 export const DEFAULT_TURN_POST_BUDGET_MS = 45_000;
-export const DEFAULT_POST_REPLY_RESERVE_MS = 3_000;
-export const DEFAULT_MIN_SEARCH_SLICE_MS = 1_500;
-export const DEFAULT_ACTIVITY_COMMIT_TIMEOUT_MS = 4_000;
+const DEFAULT_POST_REPLY_RESERVE_MS = 3_000;
+const DEFAULT_MIN_SEARCH_SLICE_MS = 1_500;
+export const DEFAULT_ACTIVITY_COMMIT_TIMEOUT_MS = 8_000;
+const DEFAULT_PLACE_REFRESH_UNTOUCHED_MAX = 12;
+const DEFAULT_PLACE_REFRESH_UNTOUCHED_SLICE_MS = 12_000;
+const CHAT_PLACE_REFRESH_JOB_TYPE = 'chat_place_refresh';
+
+function positiveIntFromEnv(env, key, fallback, { min = 0, max = Number.MAX_SAFE_INTEGER } = {}) {
+  const raw = env?.[key];
+  if (raw == null || String(raw).trim() === '') return fallback;
+  const value = Number(raw);
+  if (!Number.isFinite(value)) return fallback;
+  return Math.min(max, Math.max(min, Math.round(value)));
+}
+
+export function placeRefreshUntouchedMax(env = process.env) {
+  return positiveIntFromEnv(env, 'VK_TURN_REFRESH_UNTOUCHED_MAX', DEFAULT_PLACE_REFRESH_UNTOUCHED_MAX, { min: 0, max: 100 });
+}
+
+export function placeRefreshUntouchedSliceMs(env = process.env) {
+  return positiveIntFromEnv(env, 'VK_TURN_REFRESH_UNTOUCHED_SLICE_MS', DEFAULT_PLACE_REFRESH_UNTOUCHED_SLICE_MS, { min: 0, max: 40_000 });
+}
+
+function attemptedAtMs(thing) {
+  const raw = thing?.metadata?.placeRefreshAttemptedAt;
+  const ms = raw ? Date.parse(String(raw)) : NaN;
+  return Number.isFinite(ms) ? ms : -Infinity;
+}
+
+export function orderPlaceRefreshRotation(things = []) {
+  return (Array.isArray(things) ? things : [])
+    .map((thing, index) => ({ thing, index, at: attemptedAtMs(thing) }))
+    .sort((a, b) => (a.at === b.at ? a.index - b.index : a.at - b.at))
+    .map((row) => row.thing);
+}
 
 export function turnPostBudgetMs(env = process.env, explicitMs = null) {
   const explicit = Number(explicitMs);
@@ -25,7 +58,7 @@ export function createTurnPostBudget({
   minSearchSliceMs = null,
   env = process.env,
 } = {}) {
-  const start = Number.isFinite(Number(startedAt)) ? Number(startedAt) : Date.now();
+  const start = Number(startedAt) > 0 && Number.isFinite(Number(startedAt)) ? Number(startedAt) : Date.now();
   const totalBudgetMs = turnPostBudgetMs(env, budgetMs);
   const finalizeReserveMs = reserveMs != null && Number.isFinite(Number(reserveMs))
     ? Math.max(0, Math.min(Math.round(Number(reserveMs)), Math.floor(totalBudgetMs * 0.5)))
@@ -86,7 +119,7 @@ export function wrapBoundedPlaceSearch(searchImpl, budget, { onDeferred = null }
       };
     }
     return boundedAwait(
-      Promise.resolve().then(() => searchImpl(args)),
+      (async () => searchImpl(args))(),
       remaining,
       () => {
         onDeferred?.({ title: label, reason: 'search_budget_timeout', remainingMs: 0 });
@@ -123,7 +156,7 @@ export function wrapBoundedFetch(fetchImpl, budget) {
     }
     const nextInit = { ...init, ...(signal ? { signal } : {}) };
     const result = await boundedAwait(
-      Promise.resolve().then(() => fetchImpl(url, nextInit)),
+      (async () => fetchImpl(url, nextInit))(),
       remaining + 25,
       () => ({ __budgetTimedOut: true }),
     );
@@ -206,32 +239,24 @@ export async function recordDeferredPlaceRefresh(db, {
         select id, input
         from worker_jobs
         where trip_id = ${tripId}
-          and job_type = 'chat_place_refresh'
+          and job_type = ${CHAT_PLACE_REFRESH_JOB_TYPE}
           and status in ('pending', 'retry')
         order by created_at desc
         limit 1
       `;
       if (existing?.[0]?.id) {
         const prevInput = existing[0].input && typeof existing[0].input === 'object' ? existing[0].input : {};
-        const mergedIds = [...new Set([...(Array.isArray(prevInput.thingIds) ? prevInput.thingIds : []), ...jobInput.thingIds])].slice(0, 100);
-        const mergedTitles = [...new Set([...(Array.isArray(prevInput.titles) ? prevInput.titles : []), ...jobInput.titles])].slice(0, 50);
-        const mergedInput = {
-          ...prevInput,
-          ...jobInput,
-          thingIds: mergedIds,
-          titles: mergedTitles,
-        };
         await db`
           update worker_jobs
-          set input = ${mergedInput},
+          set input = ${{ ...prevInput, ...jobInput }},
               updated_at = now()
           where id = ${existing[0].id}
         `;
         workerJobId = String(existing[0].id);
       } else {
         const inserted = await db`
-          insert into worker_jobs (request_id, trip_id, job_type, input)
-          values (${requestId || null}, ${tripId}, 'chat_place_refresh', ${jobInput})
+          insert into worker_jobs (request_id, trip_id, job_type, priority, input)
+          values (${null}, ${tripId}, ${CHAT_PLACE_REFRESH_JOB_TYPE}, ${200}, ${jobInput})
           returning id
         `;
         if (inserted?.[0]?.id) workerJobId = String(inserted[0].id);
@@ -281,4 +306,41 @@ export async function recordDeferredPlaceRefresh(db, {
     workerJobId,
     recordedAt,
   };
+}
+
+export async function clearDeferredPlaceRefresh(db, tripId) {
+  if (typeof db !== 'function' || !tripId) return;
+  try {
+    await db`
+      update trips
+      set metadata = coalesce(metadata, '{}'::jsonb) || ${{
+        deferredPlaceRefresh: { pending: false, totalPendingCount: 0, thingIds: [], titles: [], updatedAt: new Date().toISOString() },
+      }},
+          updated_at = now()
+      where id = ${tripId}
+        and metadata->'deferredPlaceRefresh'->>'pending' = 'true'
+    `;
+  } catch (error) {
+    if (!unsupportedTestSql(error)) {
+      console.error('deferred_place_refresh_clear_failed', String(error?.message || error).slice(0, 240));
+    }
+  }
+}
+
+function commitSentences(text) {
+  return String(text || '').split(/(?<=[.!?])\s+/).map((part) => part.replace(/\s+/g, ' ').trim()).filter(Boolean);
+}
+
+function sentenceNamesThing(title, sentence) {
+  const name = String(title || '').trim();
+  if (name.length < 2) return false;
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`\\b${escaped}\\b`, 'i').test(String(sentence || ''));
+}
+
+export function needsActivityCommitDecisions(things, text) {
+  const list = Array.isArray(things) ? things : [];
+  if (!list.length) return false;
+  return commitSentences(text).some((sentence) => datedMentions(sentence).length > 0
+    && list.some((thing) => sentenceNamesThing(thing?.title, sentence)));
 }

@@ -130,9 +130,17 @@ function fallbackFinding(card) {
   return `planning fallback x${count}${turns}`;
 }
 
+export function rescuedTimeoutFinding(card) {
+  const rescued = card.rescued_timeouts || card.rescuedTimeouts || null;
+  const count = Number(rescued?.count) || 0;
+  if (!count) return '';
+  const turns = Array.isArray(rescued?.turns) && rescued.turns.length ? ` (turns ${rescued.turns.join(', ')})` : '';
+  return `POST failed/timed out but reply was stored x${count}${turns}`;
+}
+
 export function customerSection(card, { wave, at = new Date() } = {}) {
   const coupon = card.coupon_redemption || {};
-  const fbNote = fallbackFinding(card);
+  const fbNote = [fallbackFinding(card), rescuedTimeoutFinding(card)].filter(Boolean).join('; ');
   const brokeBase = card.verdict === 'FAIL'
     ? clean(`${card.reason}; ${(card.checks || []).filter((check) => !check.pass).map((check) => `${check.id}: ${check.detail}`).slice(0, 3).join('; ')}`)
     : card.mode === 'dry' ? 'dry run: live steps not run' : 'nothing';

@@ -5,6 +5,19 @@ import { hostIsBanned } from './fetch-guard.mjs';
 import { redactExchangeBody } from './redact.mjs';
 
 export const PLANNING_FALLBACK_ABORT_LIMIT = 3;
+export const STORED_TURN_PROBE_DELAYS_MS = Object.freeze([0, 10000, 20000]);
+
+export function storedTurnProbeDelays(value) {
+  const list = Array.isArray(value) ? value : STORED_TURN_PROBE_DELAYS_MS;
+  const delays = list.map((ms) => Math.max(0, Number(ms) || 0)).slice(0, 6);
+  return delays.length ? delays : [0];
+}
+
+function timeoutLikeFailure(status, body) {
+  const code = String(body?.error?.code ?? body?.code ?? '').trim();
+  const message = String(body?.error?.message ?? body?.error ?? '').trim();
+  return status === 504 || code === '504' || /timed? ?out|aborted|FUNCTION_INVOCATION_TIMEOUT|An error occurred with your deployment/i.test(message);
+}
 
 export function isPlanningFallbackTurn(reply, body = null) {
   if (isPlanningErrorReply(reply)) return true;
@@ -171,7 +184,9 @@ function initialOpenerTurns(body) {
     .filter((turn) => Boolean(turn.text));
 }
 
-export async function playCustomerTurns(story, { origin, token, tripId, fetchImpl, hosts, waitMs = 0, secrets = [], liveCustomer = false, customerAsk = null, customerLanes = null, maxTurns = 0 }) {
+export async function playCustomerTurns(story, { origin, token, tripId, fetchImpl, hosts, waitMs = 0, secrets = [], liveCustomer = false, customerAsk = null, customerLanes = null, maxTurns = 0, probeDelaysMs = null, sleepImpl = null }) {
+  const probeDelays = storedTurnProbeDelays(probeDelaysMs);
+  const sleep = typeof sleepImpl === 'function' ? sleepImpl : (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
   const allowed = new URL(origin).origin;
   let webAccessToken = '';
   const rememberWebAccess = (response) => {
@@ -213,6 +228,13 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
   const planningFallbackTurns = [];
   let consecutiveFallbacks = 0;
   const fallbackSummary = () => ({ count: planningFallbackTurns.length, turns: [...planningFallbackTurns] });
+  const rescuedTurns = [];
+  const rescuedSummary = () => ({
+    count: rescuedTurns.length,
+    turns: rescuedTurns.map((row) => row.n),
+    timeouts: rescuedTurns.filter((row) => row.timeout).length,
+    details: rescuedTurns.map((row) => ({ ...row })),
+  });
   const finish = async (reason, extra) => {
     const end = await send(versionUrl);
     const turns = extra.customerTurns || [];
@@ -233,6 +255,7 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
       customerTurnCount: turns.filter((turn) => turn.role === 'customer').length,
       pricingReactionCaptured: pricingReactionCaptured(turns),
       planningFallbacks: fallbackSummary(),
+      rescuedTimeouts: rescuedSummary(),
     };
   };
   let endpoint = appUrl(allowed, token, tripId, 'GET');
@@ -290,13 +313,47 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
     };
     if (failure) {
       if (failure === 'turn-not-stored') {
-        const probe = await send(appUrl(allowed, token, currentTrip, 'GET'));
-        const probeRuled = ruledReplyCount(probe.body);
-        const probeCount = probeRuled == null ? storedTurns(probe.body) : probeRuled;
-        const probeTotal = storedTurns(probe.body);
-        const storedApp = latestStoredAppTurn(probe.body);
-        const storedReplyGrew = (probeRuled != null ? probeCount > seen : (Array.isArray(probe.body?.turns) && probeCount > seen))
-          || (Array.isArray(probe.body?.turns) && probeTotal > seenTotal && Boolean(storedApp?.text));
+        const failedSent = final.body?.ok === false || final.status >= 400 ? final : draft;
+        const probes = [];
+        exchange.probes = probes;
+        let probe = null;
+        let probeRuled = null;
+        let probeCount = 0;
+        let probeTotal = 0;
+        let storedApp = null;
+        let storedReplyGrew = false;
+        for (let attempt = 0; attempt < probeDelays.length; attempt += 1) {
+          if (probeDelays[attempt] > 0) await sleep(probeDelays[attempt]);
+          probe = await send(appUrl(allowed, token, currentTrip, 'GET'));
+          probeRuled = ruledReplyCount(probe.body);
+          probeCount = probeRuled == null ? storedTurns(probe.body) : probeRuled;
+          probeTotal = storedTurns(probe.body);
+          storedApp = latestStoredAppTurn(probe.body);
+          storedReplyGrew = (probeRuled != null ? probeCount > seen : (Array.isArray(probe.body?.turns) && probeCount > seen))
+            || (Array.isArray(probe.body?.turns) && probeTotal > seenTotal && Boolean(storedApp?.text));
+          probes.push({
+            kind: 'probe',
+            attempt: attempt + 1,
+            delay_ms: probeDelays[attempt],
+            offset_ms: Math.max(0, Date.now() - turnStarted),
+            status: probe.status,
+            wall_ms: probe.wall_ms,
+            stored_reply: Boolean(storedReplyGrew && storedApp?.text),
+          });
+          if (storedReplyGrew && storedApp?.text) break;
+        }
+        if (storedReplyGrew && storedApp?.text) {
+          rescuedTurns.push({
+            n: index + 1,
+            http_status: failedSent.status,
+            post_wall_ms: draft.wall_ms + (final === draft ? 0 : final.wall_ms),
+            timeout: timeoutLikeFailure(failedSent.status, failedSent.body),
+            probe_attempts: probes.length,
+            app_turn_index: storedApp.turnIndex || null,
+            probes: probes.map((row) => ({ ...row })),
+          });
+          timings[timings.length - 1].rescued_by_probe = probes.length;
+        }
         if (storedReplyGrew && storedApp?.text) {
           seen = probeRuled != null ? probeCount : probeTotal;
           seenTotal = probeTotal;
@@ -421,6 +478,7 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
     customerTurnCount,
     pricingReactionCaptured: pricingReactionCaptured(customerTurns),
     planningFallbacks: fallbackSummary(),
+    rescuedTimeouts: rescuedSummary(),
     hitTurnCap: liveCustomer && customerTurnCount >= limit,
   };
 }

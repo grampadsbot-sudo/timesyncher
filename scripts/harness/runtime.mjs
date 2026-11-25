@@ -46,6 +46,16 @@ export function maxTurnsFromEnv(env = process.env) {
   return Math.max(1, Math.floor(raw));
 }
 
+export function rescuedTimeoutsSummary(raw) {
+  const value = raw && typeof raw === 'object' ? raw : {};
+  const turns = Array.isArray(value.turns) ? value.turns.map((n) => Number(n)).filter(Number.isFinite) : [];
+  return {
+    count: Number(value.count) || turns.length,
+    turns,
+    timeouts: Number(value.timeouts) || 0,
+  };
+}
+
 export function writeOutcomes(outDir, payload) {
   if (!outDir) return payload;
   try {
@@ -67,6 +77,7 @@ export function writeOutcomes(outDir, payload) {
       hitTurnCap: payload?.hitTurnCap === true,
       reason: payload?.reason || '',
       planningFallbacks: { count: Number(rawFallbacks.count) || fallbackTurns.length, turns: fallbackTurns },
+      rescuedTimeouts: rescuedTimeoutsSummary(payload?.rescuedTimeouts),
       costs,
       costUsd,
       liveShaStart: payload?.liveShaStart || '',

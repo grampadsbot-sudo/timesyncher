@@ -26,11 +26,11 @@ import { configuredSeatDollars } from '../src/vacation/seat-price.mjs';
 import { storePreCollaboratorSnapshot } from '../src/vacation/pre-collaborator-snapshot.mjs';
 import { assignTripSiteUrl } from '../src/vacation/onboarding.mjs';
 import { assignTripSiteUrlWhenThingsPresent } from '../src/vacation/trip-site-url-after-insert.mjs';
-import { insertIntakeTripThingRow, insertTripThing } from '../src/vacation/trip-things.mjs';
+import { insertIntakeTripThingRow } from '../src/vacation/trip-things.mjs';
 import { createVacationFromChatMessage } from '../src/vacation/vacation-from-chat-intake.mjs';
 import { onboardingWelcomeFailure, welcomeFailureBody } from '../src/vacation/welcome-failure.mjs';
 import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-store.mjs';
-import { customerModality, jevStamp, liveTurnRecord, intakeSpan, firstMarkedIntake, produceLiveAppReply, finishTierRewrite, activityCommitDecisions, needsActivityCommitDecisions, applyAgreedAppSwim, applyCustomerNotes, completeRosterParty } from '../src/vacation/live-app-turn.mjs';
+import { customerModality, jevStamp, liveTurnRecord, intakeSpan, firstMarkedIntake, produceLiveAppReply, finishTierRewrite, activityCommitDecisions, applyAgreedAppSwim, applyCustomerNotes, completeRosterParty } from '../src/vacation/live-app-turn.mjs';
 import { queueVacationAppTurn as runQueueVacationAppTurn } from './vacation-app-chat-queue.mjs';
 import { cannedWelcomeLiveTurn, missingWelcomeFields, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
 import {
@@ -51,7 +51,6 @@ import {
   vacationAppTurnPayloadForClient,
 } from '../src/vacation/reply-ship.mjs';
 import { persistIntakeLodgingLookupOnCustomerTurn, persistIntakeLodgingThings } from '../src/vacation/intake-lodging-thing.mjs';
-import { searchIntakeLodgingPlaces } from '../src/vacation/intake-lodging-search.mjs';
 import { intakeItineraryExistingThings } from '../src/vacation/intake-itinerary-existing-things.mjs';
 import {
   intakeActivityThings, namedCustomerActivities,
@@ -67,20 +66,8 @@ import {
 } from '../src/vacation/chat-place-search.mjs';
 import {
   detailTextFromChatTurn,
-  isChatIntakeGeocodableThing,
-  refreshUnresolvedChatIntakePlaces,
-  rowNeedsPlaceSearch,
-  unresolvedChatIntakePlaceThing,
 } from '../src/vacation/chat-intake-place-persist.mjs';
-import { boundedAwait } from '../src/vacation/bounded-await.mjs';
-import {
-  DEFAULT_ACTIVITY_COMMIT_TIMEOUT_MS,
-  createTurnPostBudget,
-  recordDeferredPlaceRefresh,
-  wrapBoundedFetch,
-  wrapBoundedPlaceSearch,
-} from '../src/vacation/turn-post-budget.mjs';
-import { searchPlaces } from '../src/vacation/place-search.mjs';
+import { POST_STEP_SKIPPED, boundedPostStep, createPostReplyWork } from '../src/vacation/turn-post-reply-work.mjs';
 import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
 import { mergeTripCreateServerTiming } from '../src/vacation/trip-create-server-timing.mjs';
 import {
@@ -548,7 +535,9 @@ function queueVacationAppHooks() {
   };
 }
 
-async function queueVacationAppTurn(db, session, trip, body, intakePrefill = null, httpReq = null, budgetOpts = null) {
+const postStartedByRequest = new WeakMap();
+
+async function queueVacationAppTurn(db, session, trip, body, intakePrefill = null, httpReq = null) {
   const welcomeStarted = Date.now();
   if (!seatFromSession(session)) await ensureOnboardingOpener(db, session, trip || null);
   const welcomeMs = Date.now() - welcomeStarted;
@@ -558,13 +547,7 @@ async function queueVacationAppTurn(db, session, trip, body, intakePrefill = nul
   const pendingPreviewReply = await tryHandlePendingPreviewChatTurn(db, { session, trip, requestText });
   if (pendingPreviewReply) return pendingPreviewReply;
   const intake = await resolveVacationAppQueueIntake(requestText, intakePrefill, process.env);
-  return runQueueVacationAppTurn(db, session, trip, body, queueVacationAppHooks(), {
-    requestText,
-    ...intake,
-    welcomeMs,
-    httpReq,
-    ...(budgetOpts && typeof budgetOpts === 'object' ? budgetOpts : {}),
-  });
+  return runQueueVacationAppTurn(db, session, trip, body, queueVacationAppHooks(), { requestText, ...intake, welcomeMs, httpReq, postStartedMs: httpReq ? postStartedByRequest.get(httpReq) : null });
 }
 
 export function chatSaveMetadata(thing, scheduled) {
@@ -620,22 +603,14 @@ async function loadTripThings(db, tripId) {
   return rows.map(thingView);
 }
 
-async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch, customerTurnId = null, wantedThings = [], budget = null, deferredThings = null, requestId = null } = {}) {
+async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch, customerTurnId = null, wantedThings = [], work = null } = {}) {
   const planned = namedCustomerActivities(text, intakeActivityThings(extracted));
   const lodgingWanted = intakeLodgingWanted(extracted, wantedThings);
   const priorRows = await db`select title, destination, metadata from trips where id = ${tripId} limit 1`;
   const existing = await db`select count(*)::int as n from trip_things where trip_id = ${tripId}`;
   if (Number(existing[0]?.n) > 0) {
-    const boundedLodgingSearch = budget
-      ? wrapBoundedPlaceSearch(searchPlacesImpl || searchIntakeLodgingPlaces, budget)
-      : searchPlacesImpl;
-    const boundedFetch = budget ? wrapBoundedFetch(fetchImpl, budget) : fetchImpl;
     return intakeItineraryExistingThings(db, tripId, text, extracted, wantedThings, {
-      extractedDestination, extractedTitle, destinationError, titleError, searchImpl,
-      searchPlacesImpl: boundedLodgingSearch,
-      env,
-      fetchImpl: boundedFetch,
-      customerTurnId,
+      extractedDestination, extractedTitle, destinationError, titleError, searchImpl, searchPlacesImpl: work ? work.lodgingSearch(searchPlacesImpl) : searchPlacesImpl, env, fetchImpl: work ? work.fetchImpl : fetchImpl, customerTurnId,
       savedTripTitle: priorRows[0]?.title,
     }, loadTripThings);
   }
@@ -710,88 +685,40 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
     start_date: datedRows[0]?.start_date || span?.start || null,
     end_date: datedRows[0]?.end_date || span?.end || null,
   };
-  const effectivePlaceSearch = searchPlacesImpl || searchPlaces;
-  const boundedFetch = budget ? wrapBoundedFetch(fetchImpl, budget) : fetchImpl;
-  const destinationForPlanned = extractedDestination || tripDestination;
   for (const thing of planned) {
     const scheduled = scheduleChatThing(thing, tripDatesRow);
     const metadata = chatSaveMetadata(thing, scheduled);
-    const needsSearch = Boolean(destinationForPlanned) && isChatIntakeGeocodableThing({ category: thing.category });
-    if (budget && needsSearch && !budget.hasEnrichmentBudget()) {
-      const unresolved = unresolvedChatIntakePlaceThing({
-        title: thing.title,
-        category: thing.category,
-        description: thing.description,
-        metadata: { ...metadata, source: metadata.source, placeRefreshDeferred: true },
-        startsAt: scheduled.starts_at,
-      });
-      const written = unresolved
-        ? await insertTripThing(db, { tripId, requestId, thing: unresolved, env })
-        : null;
-      if (Array.isArray(deferredThings)) {
-        deferredThings.push({ thingId: written?.id || null, title: thing.title, category: thing.category, reason: 'budget_exhausted' });
-      }
-      continue;
-    }
-    let deferred = false;
-    const boundedSearch = budget
-      ? wrapBoundedPlaceSearch(effectivePlaceSearch, budget, { onDeferred: () => { deferred = true; } })
-      : searchPlacesImpl;
-    const insertedId = await insertIntakeTripThingRow(db, {
+    await (work ? work.insertThing : insertIntakeTripThingRow)(db, {
       tripId,
       category: thing.category,
       title: thing.title,
       description: thing.description,
       metadata: { ...metadata, source: metadata.source },
       startsAt: scheduled.starts_at,
-      destinationHint: destinationForPlanned,
+      destinationHint: extractedDestination || tripDestination,
       detailText: detailTextFromChatTurn(text, thing),
-      searchPlacesImpl: boundedSearch,
-      fetchImpl: boundedFetch,
+      searchPlacesImpl,
+      fetchImpl,
       env,
     });
-    if (deferred && Array.isArray(deferredThings)) {
-      deferredThings.push({ thingId: insertedId || null, title: thing.title, category: thing.category, reason: 'search_budget_timeout' });
-    }
   }
   if (lodgingWanted.length) {
     const current = await loadTripThings(db, tripId);
-    if (budget && !budget.hasEnrichmentBudget()) {
-      for (const stay of lodgingWanted) {
-        const title = cleanText(stay?.name || stay?.title, 240);
-        if (!title || current.some((item) => String(item.title || '').toLowerCase() === title.toLowerCase())) continue;
-        const unresolved = unresolvedChatIntakePlaceThing({
-          title,
-          category: 'hotel',
-          metadata: { source: 'chat_extraction', placeRefreshDeferred: true },
-        });
-        const written = unresolved
-          ? await insertTripThing(db, { tripId, requestId, thing: unresolved, env })
-          : null;
-        if (Array.isArray(deferredThings)) {
-          deferredThings.push({ thingId: written?.id || null, title, category: 'hotel', reason: 'budget_exhausted' });
-        }
-      }
-    } else {
-      const boundedLodgingSearch = budget
-        ? wrapBoundedPlaceSearch(searchPlacesImpl || searchIntakeLodgingPlaces, budget)
-        : searchPlacesImpl;
-      const lodgingOutcome = await persistIntakeLodgingThings(db, tripId, null, lodgingWanted, {
-        destinationHint: extractedDestination,
-        areaHint: extractedDestination,
-        env,
-        fetchImpl: boundedFetch,
-        searchImpl: boundedLodgingSearch,
-        existingThings: current,
-      });
-      if (customerTurnId && (lodgingOutcome?.lodgingOutcome || lodgingOutcome?.lookups?.length)) {
-        await persistIntakeLodgingLookupOnCustomerTurn(
-          db,
-          customerTurnId,
-          lodgingOutcome.lookups || [],
-          lodgingOutcome.lodgingOutcome || null,
-        );
-      }
+    const lodgingOutcome = await (work ? work.lodging(persistIntakeLodgingThings) : persistIntakeLodgingThings)(db, tripId, null, lodgingWanted, {
+      destinationHint: extractedDestination,
+      areaHint: extractedDestination,
+      env,
+      fetchImpl,
+      searchImpl: searchPlacesImpl,
+      existingThings: current,
+    });
+    if (customerTurnId && (lodgingOutcome?.lodgingOutcome || lodgingOutcome?.lookups?.length)) {
+      await persistIntakeLodgingLookupOnCustomerTurn(
+        db,
+        customerTurnId,
+        lodgingOutcome.lookups || [],
+        lodgingOutcome.lodgingOutcome || null,
+      );
     }
   }
   await assignTripSiteUrlWhenThingsPresent(db, tripId, env);
@@ -799,101 +726,39 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
 }
 
 async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '', appReply = '', roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch, customerTurnId = null, wantedThings = [], requestId = null, postStartedMs = null, postBudgetMs = null, activityCommitDecisionsImpl = null } = {}, intakeText = '', extracted = []) {
-  const postReplyStarted = Date.now();
-  const budget = createTurnPostBudget({
-    startedAt: Number.isFinite(Number(postStartedMs)) ? Number(postStartedMs) : postReplyStarted,
-    budgetMs: postBudgetMs,
-    env,
-  });
-  const timings = {
-    intakeMs: 0,
-    loadThingsMs: 0,
-    lodgingMs: 0,
-    plannedMs: 0,
-    activityCommitsMs: 0,
-    thingWritesMs: 0,
-    placeRefreshMs: 0,
-    deferredRecordMs: 0,
-    siteUrlMs: 0,
-    reloadMs: 0,
-    totalMs: 0,
-    budgetMs: budget.totalBudgetMs,
-  };
-  const deferredThings = [];
-  const deferredSteps = [];
-  const boundedFetch = wrapBoundedFetch(fetchImpl, budget);
-
+  const work = createPostReplyWork({ db, tripId, requestId, postStartedMs, postBudgetMs, env, fetchImpl });
   if (intakeText) {
-    const t = Date.now();
     await ensureIntakeItinerary(db, tripId, intakeText, extracted, {
       roster, rosterError, askRoster, extractedDestination, extractedTitle, destinationError, titleError,
-      searchImpl, searchPlacesImpl, env, fetchImpl, customerTurnId, wantedThings,
-      budget, deferredThings, requestId,
+      searchImpl, searchPlacesImpl, env, fetchImpl, customerTurnId, wantedThings, work,
     });
-    timings.intakeMs = Date.now() - t;
   }
-  const loadStart = Date.now();
   let current = await loadTripThings(db, tripId);
-  timings.loadThingsMs = Date.now() - loadStart;
   const lodgingLookups = [];
   if (!intakeText) {
     const lodgingWanted = intakeLodgingWanted(extracted, wantedThings);
     if (lodgingWanted.length) {
-      const lodgingStart = Date.now();
-      if (!budget.hasEnrichmentBudget()) {
-        for (const stay of lodgingWanted) {
-          const title = cleanText(stay?.name || stay?.title, 240);
-          if (!title || current.some((item) => String(item.title || '').toLowerCase() === title.toLowerCase())) continue;
-          const unresolved = unresolvedChatIntakePlaceThing({
-            title,
-            category: 'hotel',
-            metadata: { source: 'chat_extraction', placeRefreshDeferred: true },
-          });
-          const written = unresolved
-            ? await insertTripThing(db, { tripId, requestId, thing: unresolved, env })
-            : null;
-          deferredThings.push({ thingId: written?.id || null, title, category: 'hotel', reason: 'budget_exhausted' });
-        }
-        current = await loadTripThings(db, tripId);
-      } else {
-        const boundedLodgingSearch = wrapBoundedPlaceSearch(
-          searchPlacesImpl || searchIntakeLodgingPlaces,
-          budget,
-          { onDeferred: (info) => deferredThings.push({ thingId: null, title: info.title, category: 'hotel', reason: info.reason }) },
-        );
-        const lodgingOutcome = await persistFollowupLodgingSafely(persistIntakeLodgingThings, db, tripId, lodgingWanted, {
-          destinationHint: extractedDestination,
-          areaHint: extractedDestination,
-          env,
-          fetchImpl: boundedFetch,
-          searchImpl: boundedLodgingSearch,
-          existingThings: current,
-        });
-        if (Array.isArray(lodgingOutcome?.lookups)) lodgingLookups.push(...lodgingOutcome.lookups);
-        if (lodgingOutcome?.lodgingOutcome) {
-          await persistIntakeLodgingLookupOnCustomerTurn(db, customerTurnId, lodgingOutcome.lookups || [], lodgingOutcome.lodgingOutcome);
-        }
-        current = await loadTripThings(db, tripId);
+      const lodgingOutcome = await persistFollowupLodgingSafely(work.lodging(persistIntakeLodgingThings), db, tripId, lodgingWanted, {
+        destinationHint: extractedDestination,
+        areaHint: extractedDestination,
+        env,
+        fetchImpl,
+        searchImpl: searchPlacesImpl,
+        existingThings: current,
+      });
+      if (Array.isArray(lodgingOutcome?.lookups)) lodgingLookups.push(...lodgingOutcome.lookups);
+      if (lodgingOutcome?.lodgingOutcome) {
+        await persistIntakeLodgingLookupOnCustomerTurn(db, customerTurnId, lodgingOutcome.lookups || [], lodgingOutcome.lodgingOutcome);
       }
-      timings.lodgingMs = Date.now() - lodgingStart;
+      current = await loadTripThings(db, tripId);
     }
     if (customerTurnId && lodgingLookups.length) {
       await persistIntakeLodgingLookupOnCustomerTurn(db, customerTurnId, lodgingLookups);
     }
   }
-  const plannedStart = Date.now();
   const wanted = await plannedCustomerThings(db, tripId, text, appReply, namedCustomerActivities(text, intakeActivityThings(extracted)));
-  timings.plannedMs = Date.now() - plannedStart;
-  if (!current.length && !wanted.length) {
-    timings.totalMs = Date.now() - postReplyStarted;
-    current.postReplyTimings = timings;
-    return current;
-  }
-  if (!String(text || '').trim() && !wanted.length) {
-    timings.totalMs = Date.now() - postReplyStarted;
-    current.postReplyTimings = timings;
-    return current;
-  }
+  if (!current.length && !wanted.length) return work.finish(current);
+  if (!String(text || '').trim() && !wanted.length) return work.finish(current);
   const tripRows = await db`
     select start_date, end_date
     from trips
@@ -906,37 +771,11 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
   const tripDatesRow = { start_date: start, end_date: end };
   let next = keepPlannedDays(mergeWantedThings(current, wanted), wanted);
   let commits = null;
-  const commitStart = Date.now();
-  if (needsActivityCommitDecisions(next, text)) {
-    const commitTimeoutMs = budget.stepTimeoutMs(DEFAULT_ACTIVITY_COMMIT_TIMEOUT_MS);
-    if (commitTimeoutMs < 200) {
-      commits = { __ask: true, error: 'activity_commit_budget_exhausted' };
-      deferredSteps.push('activity_commit_decisions');
-    } else {
-      const commitFn = typeof activityCommitDecisionsImpl === 'function' ? activityCommitDecisionsImpl : activityCommitDecisions;
-      try {
-        let signal;
-        try {
-          signal = AbortSignal.timeout(commitTimeoutMs);
-        } catch {
-          signal = undefined;
-        }
-        const decided = await boundedAwait(
-          Promise.resolve().then(() => commitFn(text, { env, fetchImpl, signal })),
-          commitTimeoutMs,
-          () => ({ __ask: true, __timedOut: true, error: 'activity_commit_budget_timeout' }),
-        );
-        if (decided?.__timedOut) deferredSteps.push('activity_commit_decisions');
-        commits = decided;
-      } catch (error) {
-        commits = { __ask: true, error: String(error?.message || error) };
-        if (/timeout|abort|budget/i.test(String(error?.name || error?.message || ''))) {
-          deferredSteps.push('activity_commit_decisions');
-        }
-      }
-    }
+  try {
+    commits = await work.activityCommits(next, text, activityCommitDecisionsImpl || activityCommitDecisions);
+  } catch (error) {
+    commits = { __ask: true, error: String(error?.message || error) };
   }
-  timings.activityCommitsMs = Date.now() - commitStart;
   next = applyCustomerNotes(next, text, { collaborator, speakerName, commits });
   next = applyAgreedAppSwim(next, text, appReply, { start, end, year: Number.isFinite(year) ? year : null });
   next = next.map((thing) => {
@@ -951,10 +790,6 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
     };
   });
   const savedThingIds = [];
-  const updatedThingIds = new Set();
-  const updatedThings = [];
-  const effectivePlaceSearch = searchPlacesImpl || searchPlaces;
-  const writeStart = Date.now();
   for (const thing of next) {
     const prior = current.find((item) => item.id && item.id === thing.id);
     if (!prior) {
@@ -966,44 +801,19 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
         candidateDates: thing.candidateDates,
         starts_at: thing.starts_at,
       });
-      const category = thing.category || 'activity';
-      const needsSearch = Boolean(cleanText(extractedDestination, 180)) && isChatIntakeGeocodableThing({ category });
-      let insertedId = null;
-      if (needsSearch && !budget.hasEnrichmentBudget()) {
-        const unresolved = unresolvedChatIntakePlaceThing({
-          title: thing.title,
-          category,
-          description: thing.description || '',
-          metadata: { ...metadata, source: metadata.source, placeRefreshDeferred: true },
-          startsAt: thing.starts_at || null,
-        });
-        const written = unresolved
-          ? await insertTripThing(db, { tripId, requestId, thing: unresolved, env })
-          : null;
-        insertedId = written?.id || null;
-        deferredThings.push({ thingId: insertedId, title: thing.title, category, reason: 'budget_exhausted' });
-      } else {
-        let deferred = false;
-        const boundedSearch = wrapBoundedPlaceSearch(effectivePlaceSearch, budget, {
-          onDeferred: () => { deferred = true; },
-        });
-        insertedId = await insertIntakeTripThingRow(db, {
-          tripId,
-          category,
-          title: thing.title,
-          description: thing.description || '',
-          metadata: { ...metadata, source: metadata.source },
-          startsAt: thing.starts_at || null,
-          destinationHint: extractedDestination,
-          detailText: detailTextFromChatTurn(text, thing),
-          searchPlacesImpl: boundedSearch,
-          fetchImpl: boundedFetch,
-          env,
-        });
-        if (deferred) {
-          deferredThings.push({ thingId: insertedId, title: thing.title, category, reason: 'search_budget_timeout' });
-        }
-      }
+      const insertedId = await work.insertThing(db, {
+        tripId,
+        category: thing.category || 'activity',
+        title: thing.title,
+        description: thing.description || '',
+        metadata: { ...metadata, source: metadata.source },
+        startsAt: thing.starts_at || null,
+        destinationHint: extractedDestination,
+        detailText: detailTextFromChatTurn(text, thing),
+        searchPlacesImpl,
+        fetchImpl,
+        env,
+      });
       if (insertedId) savedThingIds.push(insertedId);
       continue;
     }
@@ -1029,69 +839,13 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
       where id = ${thing.id}
       returning id
     `;
-    if (updated[0]?.id) {
-      savedThingIds.push(updated[0].id);
-      updatedThingIds.add(String(updated[0].id));
-      updatedThings.push(thing);
-    }
+    if (updated[0]?.id) savedThingIds.push(work.changed(thing, updated[0].id));
   }
-  timings.thingWritesMs = Date.now() - writeStart;
-
-  const refreshStart = Date.now();
-  const changedUnresolved = updatedThings.filter((thing) => rowNeedsPlaceSearch(thing));
-  const untouchedUnresolved = current.filter((thing) => !updatedThingIds.has(String(thing.id || '')) && rowNeedsPlaceSearch(thing));
-  for (const thing of changedUnresolved) {
-    if (!budget.hasEnrichmentBudget()) {
-      deferredThings.push({ thingId: thing.id || null, title: thing.title, category: thing.category || 'activity', reason: 'budget_exhausted' });
-      continue;
-    }
-    let deferred = false;
-    const boundedSearch = wrapBoundedPlaceSearch(effectivePlaceSearch, budget, {
-      onDeferred: () => { deferred = true; },
-    });
-    await refreshUnresolvedChatIntakePlaces(db, {
-      tripId,
-      requestId: null,
-      text,
-      things: [thing],
-      destinationHint: extractedDestination,
-      env,
-      fetchImpl: boundedFetch,
-      searchImpl: boundedSearch,
-    });
-    if (deferred) {
-      deferredThings.push({ thingId: thing.id || null, title: thing.title, category: thing.category || 'activity', reason: 'search_budget_timeout' });
-    }
-  }
-  timings.placeRefreshMs = Date.now() - refreshStart;
-
-  let deferredWork = { deferred: false, deferredThisTurnCount: 0, untouchedUnresolvedCount: 0, totalPendingCount: 0, thingIds: [], titles: [], deferredSteps: [], workerJobId: null };
-  if (deferredThings.length > 0 || deferredSteps.length > 0 || untouchedUnresolved.length > 0) {
-    const deferStart = Date.now();
-    deferredWork = await recordDeferredPlaceRefresh(db, {
-      tripId,
-      requestId,
-      destinationHint: extractedDestination,
-      deferredThings,
-      untouchedUnresolved,
-      deferredSteps,
-      reason: deferredThings.length || deferredSteps.length ? 'turn_post_budget' : 'untouched_unresolved_deferred',
-    });
-    timings.deferredRecordMs = Date.now() - deferStart;
-  }
-
-  const siteStart = Date.now();
+  await work.refreshPlaces({ text, current, next, destinationHint: extractedDestination, searchPlacesImpl });
   await assignTripSiteUrlWhenThingsPresent(db, tripId, env);
-  timings.siteUrlMs = Date.now() - siteStart;
-
-  const reloadStart = Date.now();
   const itinerary = await loadTripThings(db, tripId);
-  timings.reloadMs = Date.now() - reloadStart;
-  timings.totalMs = Date.now() - postReplyStarted;
   itinerary.savedThingIds = savedThingIds;
-  itinerary.deferredWork = deferredWork;
-  itinerary.postReplyTimings = timings;
-  return itinerary;
+  return work.finish(itinerary);
 }
 
 async function vacationAppEula(db, session, env = process.env) {
@@ -1209,8 +963,7 @@ async function handleVacationApp(req, res, db, url) {
       if (!finished.reply) return sendJson(res, 502, { ok: false, error: finished.reason || 'The rewrite did not produce a reply.' });
       const shipped = await commitShippedRewrite(db, sessionWithTripSeat(session, rewriteSeat), pending, finished, {
         recordCustomerThingNotes,
-        publishIntakeShare,
-        postStartedMs: postStarted,
+        publishIntakeShare, postStartedMs: postStarted,
       });
       return sendJson(res, 200, shipped);
     }
@@ -1303,8 +1056,8 @@ async function handleVacationApp(req, res, db, url) {
     if (!seat && selected?.id) await setVacationAppOwnerWebAccessCookie(db, req, res, { session, tripId: selected.id });
     if (seat && selected?.id) await setVacationAppCollaboratorWebAccessCookie(db, req, res, { session, seat, tripId: selected.id });
     const queueStarted = Date.now();
-    const postBudget = createTurnPostBudget({ startedAt: postStarted, env: process.env });
-    const queued = await queueVacationAppTurn(db, session, selected, body, intakePrefill, req, { postStartedMs: postStarted });
+    postStartedByRequest.set(req, postStarted);
+    const queued = await queueVacationAppTurn(db, session, selected, body, intakePrefill, req);
     const queueTurnMs = Date.now() - queueStarted;
     const postStatus = queued.ok ? (selected ? 201 : 200) : 502;
     const serverTiming = mergeTripCreateServerTiming({
@@ -1316,15 +1069,10 @@ async function handleVacationApp(req, res, db, url) {
       latencyMs: queued.latencyMs,
       sessionE2eMs: queued.sessionE2eMs,
     });
-    if (queued.postReplyTimings) serverTiming.postReplyTimings = queued.postReplyTimings;
     let searchProgress = null;
-    if (selected?.id && postBudget.remainingMs() > 200) {
-      const synced = await boundedAwait(
-        syncSearchProgressStage(db, selected.id, { publicUrl: selected?.publicUrl || '' }),
-        Math.min(2000, postBudget.remainingMs()),
-        () => null,
-      );
-      if (synced) searchProgress = searchProgressForClient(synced);
+    if (selected?.id) {
+      const synced = await boundedPostStep(() => syncSearchProgressStage(db, selected.id, { publicUrl: selected?.publicUrl || '' }), postStarted);
+      searchProgress = synced === POST_STEP_SKIPPED ? null : searchProgressForClient(synced);
     }
     return sendJson(res, postStatus, {
       trip: selected,
