@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { openRouterChatVisibleText } from './openrouter-tier-provider.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { attachIntakeItineraryFromReply } from '../routes/vacation-itinerary.mjs';
@@ -132,7 +133,7 @@ async function runScenario(tier4FailureMode) {
       }
     }
     if (href.includes('/api/v1/chat/completions')) {
-      const sys = String(body.messages?.[0]?.content || '');
+      const sys = openRouterChatVisibleText(body.messages?.[0]?.content);
       if (sys.includes('Return one JSON object. Do not write a customer reply.')) {
         return jsonResponse({
           model: 'anthropic/claude-haiku-5.5',
@@ -142,8 +143,8 @@ async function runScenario(tier4FailureMode) {
       chatRequests.push(body);
       chatAttempt += 1;
       if (chatAttempt === 1) {
-        assert.deepEqual(body.reasoning, { effort: 'high' });
-        assert.equal(body.max_tokens, 6144);
+        assert.deepEqual(body.reasoning, { effort: 'none' });
+        assert.equal(body.max_tokens, 900);
         if (tier4FailureMode === 'timeout') {
           const timeoutErr = new Error('The operation was aborted due to timeout');
           timeoutErr.name = 'TimeoutError';
@@ -151,12 +152,12 @@ async function runScenario(tier4FailureMode) {
         }
         return jsonResponse({
           model: 'anthropic/claude-haiku-5.5',
-          choices: [{ finish_reason: 'length', message: { content: '', reasoning: 'deep chain of thought that filled max_tokens' } }],
-          usage: { prompt_tokens: 4800, completion_tokens: 6144, total_tokens: 10944, cost: 0.0035 },
+          choices: [{ finish_reason: 'length', message: { content: '' } }],
+          usage: { prompt_tokens: 4800, completion_tokens: 900, total_tokens: 10944, cost: 0.0035 },
         });
       }
       if (chatAttempt === 2) {
-        assert.deepEqual(body.reasoning, { enabled: false, effort: 'low' });
+        assert.deepEqual(body.reasoning, { effort: 'none' });
         assert.equal(body.max_tokens, 900);
       }
       return jsonResponse({
@@ -183,12 +184,12 @@ async function runScenario(tier4FailureMode) {
   }
 }
 
-for (const mode of ['timeout', 'empty-reasoning']) {
+for (const mode of ['timeout', 'empty-output']) {
   const { produced, chatRequests } = await runScenario(mode);
   assert.ok(chatRequests.length >= 2, `${mode}: expected tier-4 attempt + compact retry`);
-  assert.deepEqual(chatRequests[0].reasoning, { effort: 'high' });
-  assert.equal(chatRequests[0].max_tokens, 6144);
-  assert.deepEqual(chatRequests[1].reasoning, { enabled: false, effort: 'low' });
+  assert.deepEqual(chatRequests[0].reasoning, { effort: 'none' });
+  assert.equal(chatRequests[0].max_tokens, 900);
+  assert.deepEqual(chatRequests[1].reasoning, { effort: 'none' });
   assert.equal(chatRequests[1].max_tokens, 900);
   assert.equal(produced.jev?.modelTier, 4, `${mode}: tier 4 preserved`);
   assert.equal(produced.jev?.routeType, 'itinerary_advice');
@@ -275,7 +276,7 @@ try {
       });
     }
     if (href.includes('/api/v1/chat/completions')) {
-      const sys = String(body.messages?.[0]?.content || '');
+      const sys = openRouterChatVisibleText(body.messages?.[0]?.content);
       if (sys.includes('Return one JSON object. Do not write a customer reply.')) {
         return jsonResponse({
           model: 'anthropic/claude-haiku-5.5',

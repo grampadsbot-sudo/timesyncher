@@ -72,7 +72,7 @@ function intakeFetchMock({ title, destination, hasDates, startDate = '2026-10-07
       if (questions.trip_intake) {
         return {
           ok: true,
-          json: async () => ({ answers: { trip_intake: { noul: intake ? 0.94 : 0.08 } } }),
+          json: async () => ({ answers: { trip_intake: { noul: intake ? 0.94 : 0.08 }, model_tier: { score: 0 }, route_type: { choice: 'general' } } }),
         };
       }
       return { ok: true, json: async () => ({ ok: true, answers: { model_tier: { score: 0 }, route_type: { choice: 'general' } } }) };

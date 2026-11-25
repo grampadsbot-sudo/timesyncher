@@ -21,7 +21,7 @@ const retried = await judgeInterimReply({
   fetchImpl: async (_url, init) => {
     calls += 1;
     const body = JSON.parse(init.body);
-    assert.equal(body.reasoning.enabled, false);
+    assert.equal(body.reasoning.effort, 'none');
     assert.equal(body.max_tokens, 256);
     return { ok: true, status: 200, json: async () => (calls === 1 ? bad : good) };
   },

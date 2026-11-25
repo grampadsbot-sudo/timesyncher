@@ -1,5 +1,6 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { openRouterListedPrices, openRouterReplyCost } from './turn-cost.mjs';
+import { openRouterHaikuRequest } from '../../scripts/openrouter-tier-provider.mjs';
 
 const turnContext = new AsyncLocalStorage();
 const MEASURED = 'openrouter_usage_cost';
@@ -110,7 +111,7 @@ export function fetchOpenRouterJson(url, options) {
 async function performOpenRouterCall(url, {
   purpose, endpoint = 'chat', payload, key, fetchImpl = fetch, readBody = readJson, replyCost = false, observe = true, ...init
 }) {
-  const requestBody = endpoint === 'chat' ? { ...payload, usage: { include: true } } : payload;
+  const requestBody = endpoint === 'chat' ? { ...openRouterHaikuRequest(payload, purpose), usage: { include: true } } : payload;
   let response;
   let parsed;
   let cost;
@@ -134,6 +135,7 @@ async function performOpenRouterCall(url, {
         cost: usageNumber(usage?.cost),
         prompt_tokens: usageNumber(usage?.prompt_tokens ?? usage?.input_tokens),
         completion_tokens: usageNumber(usage?.completion_tokens ?? usage?.output_tokens),
+        prompt_tokens_details: usage?.prompt_tokens_details ?? usage?.input_tokens_details,
       } }, model, price);
       const row = {
         purpose, endpoint, model,

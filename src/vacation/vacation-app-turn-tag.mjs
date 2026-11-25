@@ -41,7 +41,7 @@ export async function classifyVacationAppCustomerTurnTag({
       direction: 'inbound',
       channel: 'vacation-app',
       payload,
-    });
+    }, { understanding: classification?.understanding });
   const stageTimings = turnStageTimings({
     ...(payload?.stageTimings || {}),
     turnTagMs: Date.now() - turnTagStarted,

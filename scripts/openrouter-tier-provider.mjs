@@ -103,3 +103,25 @@ export function openRouterTier1CompactCallSpread(modelTier) {
     ...openRouterTier1CompactReasoningSpread(modelTier),
   };
 }
+
+function isOpenRouterHaiku(modelId) {
+  return /^anthropic\/claude-haiku-[\w.-]+$/i.test(modelId || '');
+}
+
+export function openRouterHaikuRequest(payload, purpose) {
+  if (!isOpenRouterHaiku(payload.model)) return payload;
+  const reply = purpose === 'reply_draft' || purpose === 'reply_rewrite';
+  return {
+    ...payload,
+    reasoning: { effort: 'none' },
+    ...(reply ? { max_tokens: Math.min(payload.max_tokens ?? 900, 900) } : {}),
+    messages: payload.messages.map((message) => {
+      if (message.role !== 'system' || typeof message.content !== 'string') return message;
+      return { ...message, content: [openRouterCachedSystemPart(message.content)] };
+    }),
+  };
+}
+
+export function openRouterCachedSystemPart(text) {
+  return { type: 'text', text, cache_control: { type: 'ephemeral' } };
+}

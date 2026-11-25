@@ -8,7 +8,7 @@ function unique(values) {
   return [...new Set(values.filter(Boolean))];
 }
 
-const CONTENT_TAGS = Object.freeze([
+export const CONTENT_TAGS = Object.freeze([
   'onboarding_start',
   'approval_continue',
   'change_request',

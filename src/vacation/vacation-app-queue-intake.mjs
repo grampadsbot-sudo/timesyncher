@@ -1,7 +1,7 @@
 import { classifyVacationAppCustomerTurn } from './chat-place-search.mjs';
 import { classifyTripIntake } from './trip-intake-classify.mjs';
 
-export async function resolveVacationAppQueueIntake(requestText, intakePrefill = null, env = process.env) {
+export async function resolveVacationAppQueueIntake(requestText, intakePrefill = null, env = process.env, turnSession = null) {
   if (intakePrefill?.classification?.ok === true) {
     const classification = intakePrefill.classification;
     return {
@@ -16,7 +16,7 @@ export async function resolveVacationAppQueueIntake(requestText, intakePrefill =
   const classified = await classifyVacationAppCustomerTurn(
     requestText,
     env,
-    (opts) => classifyTripIntake({ ...opts, requireExtractedTripDates: false }),
+    (opts) => classifyTripIntake({ ...opts, requireExtractedTripDates: false, turnSession }),
   );
   return {
     classification: classified.classification,

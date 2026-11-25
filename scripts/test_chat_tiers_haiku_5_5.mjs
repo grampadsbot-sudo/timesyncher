@@ -155,20 +155,14 @@ function ask(extra) {
 }
 
 try {
-  const expected = {
-    1: { reasoning: { enabled: false, effort: 'low' }, maxTokens: 900 },
-    2: { reasoning: { effort: 'low' }, maxTokens: 3072 },
-    3: { reasoning: { effort: 'medium' }, maxTokens: 4608 },
-    4: { reasoning: { effort: 'high' }, maxTokens: 6144 },
-  };
   for (const tier of [1, 2, 3, 4]) {
     const reply = await ask({ jev: { jevRan: true, modelTier: tier }, tripContext: groundedContext });
     assert.equal(reply.called, true, reply.reason);
     assert.equal(reply.maxTokens, 900);
     assert.equal(reply.responseModel, HAIKU);
     assert.equal(calls[0].model, HAIKU);
-    assert.equal(calls[0].max_tokens, expected[tier].maxTokens);
-    assert.deepEqual(calls[0].reasoning, expected[tier].reasoning);
+    assert.equal(calls[0].max_tokens, 900);
+    assert.deepEqual(calls[0].reasoning, { effort: 'none' });
     assert.equal('temperature' in calls[0], false);
     const prompt = JSON.parse(calls[0].messages.find((message) => message.role === 'user').content);
     assert.ok(prompt.trip_context.itinerary.some((line) => line.includes('Carbone')));
@@ -179,13 +173,13 @@ try {
   assert.equal(interim.called, true, interim.reason);
   assert.equal(interim.maxTokens, 900);
   assert.equal(calls[0].max_tokens, 900);
-  assert.deepEqual(calls[0].reasoning, { enabled: false, effort: 'low' });
+  assert.deepEqual(calls[0].reasoning, { effort: 'none' });
 
   const rewrite = await ask({ jev: { jevRan: true, modelTier: 3 }, forceModel: HAIKU });
   assert.equal(rewrite.called, true, rewrite.reason);
   assert.equal(rewrite.maxTokens, 900);
-  assert.equal(calls[0].max_tokens, 4608);
-  assert.deepEqual(calls[0].reasoning, { effort: 'medium' });
+  assert.equal(calls[0].max_tokens, 900);
+  assert.deepEqual(calls[0].reasoning, { effort: 'none' });
 
   returnedModel = () => CANONICAL;
   const canonical = await ask({ jev: { jevRan: true, modelTier: 2 } });

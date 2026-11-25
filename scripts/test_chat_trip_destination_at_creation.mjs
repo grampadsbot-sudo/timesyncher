@@ -170,7 +170,7 @@ function intakeFetchMock({ failIntakeReply = false, placeSearch = false } = {}) 
     if (href.includes('/decisions')) {
       const questions = body?.questions || body?.input?.questions || {};
       if (questions.trip_intake) {
-        return { ok: true, json: async () => ({ answers: { trip_intake: { noul: 0.92 } } }) };
+        return { ok: true, json: async () => ({ answers: { trip_intake: { noul: 0.92 }, model_tier: { score: 0 }, route_type: { choice: 'general' } } }) };
       }
       return {
         ok: true,
@@ -228,7 +228,7 @@ try {
   const missingDatesFetch = async (url, init) => {
     const href = String(url);
     if (href.includes('/decisions')) {
-      return { ok: true, json: async () => ({ answers: { trip_intake: { noul: 0.92 } } }) };
+      return { ok: true, json: async () => ({ answers: { trip_intake: { noul: 0.92 }, model_tier: { score: 0 }, route_type: { choice: 'general' } } }) };
     }
     return {
       ok: true,
@@ -265,7 +265,7 @@ try {
   const noDatesFetch = async (url, init) => {
     const href = String(url);
     if (href.includes('/decisions')) {
-      return { ok: true, json: async () => ({ answers: { trip_intake: { noul: 0.1 } } }) };
+      return { ok: true, json: async () => ({ answers: { trip_intake: { noul: 0.1 }, model_tier: { score: 0 }, route_type: { choice: 'general' } } }) };
     }
     return {
       ok: true,

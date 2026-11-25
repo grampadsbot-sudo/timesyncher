@@ -39,6 +39,7 @@ export async function produceFirstIntakeReply({
   savedEnd = '',
   loadOwnerPlan = loadTripOwnerReplyPlan,
   turnActionResults = null,
+  turnJev = null,
 } = {}) {
   if (!rules?.ok) {
     return { reply: null, rules, jev: null, model: null, reason: rules?.error || 'reply_rules_unloaded' };
@@ -50,14 +51,14 @@ export async function produceFirstIntakeReply({
   const customerInput = firstIntakeLodgingCustomerInput(saved?.things || [], wantedThings);
   await persistTripLodgingCustomerInputGap(env, tripId, customerInput);
   const jevStarted = Date.now();
-  const jev = await jevPrecall({
+  const jev = turnJev || await jevPrecall({
     customerTurn,
     stage: 'vacation_conversation',
     screen: 'vacation-app',
     session: { seed_id: session?.token || null },
     env,
   });
-  if (jev && typeof jev === 'object') jev.jevLatencyMs = Math.max(0, Date.now() - jevStarted);
+  if (!turnJev && jev && typeof jev === 'object') jev.jevLatencyMs = Math.max(0, Date.now() - jevStarted);
   if (!jev?.jevRan) {
     return { reply: null, rules, jev, model: null, customerInput, reason: jev?.error || 'jev_skipped' };
   }

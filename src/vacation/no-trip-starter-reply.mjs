@@ -77,6 +77,7 @@ export async function produceNoTripStarterReply({
   rules = null,
   loadOwnerPlan = loadSessionOwnerReplyPlan,
   turnActionResults = null,
+  turnJev = null,
 } = {}) {
   const vkBotReply = await routeVkBotMcpReply({ customerTurn, session, priorTurns: [], tripTitle: '', env });
   if (vkBotReply) return requireReplyQuality(vkBotReply, { customerTurn, env });
@@ -84,14 +85,14 @@ export async function produceNoTripStarterReply({
     return { reply: null, rules, jev: null, model: null, reason: rules?.error || 'reply_rules_unloaded' };
   }
   const jevStarted = Date.now();
-  const jev = await jevPrecall({
+  const jev = turnJev || await jevPrecall({
     customerTurn,
     stage: 'vacation_conversation',
     screen: 'vacation-app',
     session: { seed_id: session?.token || null },
     env,
   });
-  if (jev && typeof jev === 'object') jev.jevLatencyMs = Math.max(0, Date.now() - jevStarted);
+  if (!turnJev && jev && typeof jev === 'object') jev.jevLatencyMs = Math.max(0, Date.now() - jevStarted);
   if (!jev?.jevRan) {
     return { reply: null, rules, jev, model: null, reason: jev?.error || 'jev_skipped' };
   }

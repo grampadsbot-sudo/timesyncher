@@ -118,7 +118,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     };
   });
   const classification = intake.classification;
-  const placeSearchTurn = intake.placeSearchTurn, webResearchTurn = intake.webResearchTurn;
+  const { placeSearchTurn, webResearchTurn } = intake;
   if (!classification) throw new Error('vacation app queue intake classification is required');
   const firstIntake = firstMarkedIntake({ text: requestText, intake: classification.ok === true && classification.intake === true }, priorTurns);
   const queuedJobType = tripIntakeJobKind();
@@ -299,7 +299,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
         env: env,
         rules,
         loadOwnerPlan,
-        turnActionResults,
+        turnActionResults, turnJev: classification.turnJev,
       });
     } else {
       produced = await produceLiveAppReply({
@@ -324,7 +324,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
         savedEnd: jobFields.endDate,
         loadOwnerPlan,
         turnActionResults: itineraryEditAuthoritative ? { ...(turnActionResults || {}), itineraryEditAuthoritative } : turnActionResults,
-        placeSearchReplyFacts,
+        placeSearchReplyFacts, understanding: classification.understanding, turnJev: classification.turnJev,
       });
     }
   } catch (error) {
@@ -417,6 +417,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
       requestId,
       speakerName,
       collaborator: Boolean(seat),
+      understanding: classification.understanding,
       tripId,
       turnActionResults,
       sessionStartedMs,

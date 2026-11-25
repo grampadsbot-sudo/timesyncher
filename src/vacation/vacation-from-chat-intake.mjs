@@ -25,10 +25,11 @@ export function intakeTripReadyForCreation(jobFields = {}) {
   return Boolean(title && destination && hasDates);
 }
 
-export async function classifyVacationChatIntake(requestText, env = process.env) {
+export async function classifyVacationChatIntake(requestText, env = process.env, turnSession = null) {
   const { classification } = await classifyVacationAppCustomerTurn(requestText, env, (opts) => classifyTripIntake({
     ...opts,
     requireExtractedTripDates: true,
+    turnSession,
   }));
   const jobFields = tripIntakeJobFields({
     requestText,
@@ -86,7 +87,7 @@ export async function createVacationFromChatMessage(db, session, body, loadTrips
     };
   }
   const classifyStarted = Date.now();
-  const { classification, jobFields } = await classifyVacationChatIntake(requestText, env);
+  const { classification, jobFields } = await classifyVacationChatIntake(requestText, env, session);
   const classifierMs = Date.now() - classifyStarted;
   if (classification.ok !== true) {
     return {

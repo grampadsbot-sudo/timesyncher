@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { openRouterChatVisibleText } from './openrouter-tier-provider.mjs';
 import assert from 'node:assert/strict';
 import { produceLiveAppReply } from '../src/vacation/live-app-turn.mjs';
 import { testPlanEnv, testSingleOwnerPlan } from './fixtures/reply-plan-test-fixtures.mjs';
@@ -64,7 +65,7 @@ try {
 assert.equal(produced.reason, null);
 assert.equal(calls.length, 1);
 const messages = calls[0].messages;
-const system = messages.find((message) => message.role === 'system')?.content || '';
+const system = openRouterChatVisibleText(messages.find((message) => message.role === 'system')?.content);
 const user = messages.find((message) => message.role === 'user')?.content || '';
 const stored = `${system}\n${user}`;
 const facts = JSON.parse(user);

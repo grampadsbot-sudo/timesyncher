@@ -259,7 +259,7 @@ async function runAnyProviderOkRouteTests() {
         return { ok: true, json: async () => ({ answers: { relevance: { choice: 5 } } }) };
       }
       if (questions.trip_intake) {
-        return { ok: true, json: async () => ({ answers: { trip_intake: { noul: 0.1 } } }) };
+        return { ok: true, json: async () => ({ answers: { trip_intake: { noul: 0.1 }, model_tier: { score: 0 }, route_type: { choice: 'general' } } }) };
       }
       if (questions.overall_quality) {
         return { ok: true, json: async () => ({ ok: true, answers: { overall_quality: { score: 4 }, disposition: { choice: 'keep' }, fix_focus: { choice: 'keep' } } }) };
@@ -275,7 +275,7 @@ async function runAnyProviderOkRouteTests() {
     if (href.includes(OPENROUTER_HOST)) {
       const raw = options.body ? JSON.parse(String(options.body)) : {};
       const user = raw.messages?.find((row) => row.role === 'user')?.content || '';
-      if (String(raw.messages?.[0]?.content || '').includes('turnKind')) {
+      if (raw.response_format?.type === 'json_schema') {
         const payload = classifierPayloadForTurn(user, state);
         return { ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify(payload) } }] }) };
       }
