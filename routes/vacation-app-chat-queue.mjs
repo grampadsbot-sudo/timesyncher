@@ -14,7 +14,7 @@ import { seatFromSession, transcriptCustomerId } from '../src/vacation/collabora
 import { vacationAppReplyClaimContext } from '../src/vacation/chat-place-search-when.mjs';
 import { runVacationAppTurnActions } from '../src/vacation/vacation-app-turn-actions.mjs';
 import { loadOwnerReplyPlanForTurn } from '../src/vacation/reply-plan-entitlement.mjs';
-import { placeSearchClientError } from '../src/vacation/place-search-reply-facts.mjs';
+import { placeSearchClientError, recoverSoftSearchReply } from '../src/vacation/place-search-reply-facts.mjs';
 import { failedInTurnSearchTurn, replyStageMillis, turnStageTimings } from '../src/vacation/turn-stage-timings.mjs';
 import { persistVacationAppCustomerTurn } from '../src/vacation/vacation-app-queue-persist.mjs';
 import { prepareChatItineraryEditForQueueTurn } from '../src/vacation/chat-itinerary-edit.mjs';
@@ -456,6 +456,8 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
   if (!String(produced?.reply || '').trim() && isOrdinaryPlanningTurn(requestText)) {
     Object.assign(produced, recoverOrdinaryPlanningReply(produced, requestText, { backend: sessionReplyBackend(session), previousReply: claimedFrom }));
   }
+  const softSearchRecovered = recoverSoftSearchReply(produced, placeSearchReplyFacts, { backend: sessionReplyBackend(session), destination: cleanText(trip?.destination || '', 180) });
+  if (softSearchRecovered) Object.assign(produced, softSearchRecovered);
   if (!produced.reply) {
     const failure = applyLiveAppReplyFailureToPayload(payload, customerLive, produced);
     logBlockedReplyReasons(produced.blockedReasons);

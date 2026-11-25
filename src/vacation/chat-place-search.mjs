@@ -9,6 +9,8 @@ import { loadTripPlaceSearchContext } from './place-search-anchor.mjs';
 import {
   attachPlaceSearchTurnScope,
   inTurnPlaceSearchSoftNoResults,
+  inTurnWebResearchSoftFail,
+  isOffTopicVacationSearch,
   placeSearchClientError,
 } from './place-search-reply-facts.mjs';
 import { tripOwnedPlaceAllowRows, unsourcedAgainstInTurnResults } from './provider-result-context.mjs';
@@ -274,6 +276,8 @@ export async function runVacationAppInTurnSearch({
   placeSearchTurn,
   webResearchTurn,
   searchImpl = searchPlaces,
+  fetchImpl = globalThis.fetch,
+  tavilyImpl,
 } = {}) {
   stampTurnClassifier(payload, customerLive, classification);
   const categoryGateFailure = await failTurnClassifierCategoryGate({
@@ -333,7 +337,7 @@ export async function runVacationAppInTurnSearch({
     publishShare,
     workerJobId,
     workerJobContext,
-    searchImpl: searchPlaces,
+    searchImpl,
   });
   if (searchTurn.kind === 'failed') {
     const soft = inTurnPlaceSearchSoftNoResults({
@@ -367,6 +371,31 @@ export async function runVacationAppInTurnSearch({
       ...(searchTurn.placeSearchReplyFacts ? { placeSearchReplyFacts: searchTurn.placeSearchReplyFacts } : {}),
     };
   }
+  if (searchTurn.kind === 'skip' && webResearchTurn && isOffTopicVacationSearch(customerTurn, classification)) {
+    const webSearch = {
+      status: 'skipped_off_topic',
+      reason: 'off_topic_query',
+      turnKind: classification?.turnKind || 'web_research',
+      classifierModel: classification?.routerModel || null,
+    };
+    payload.webSearch = webSearch;
+    customerLive.webSearch = webSearch;
+    await db`
+      update transcript_turns
+      set payload = ${payload}
+      where id = ${turnId}
+    `;
+    return {
+      ok: true,
+      ...inTurnWebResearchSoftFail({
+        customerTurn,
+        classification,
+        tripDestination,
+        webSearch,
+        offTopic: true,
+      }),
+    };
+  }
   const webTurn = searchTurn.kind === 'skip'
     ? await applyChatWebResearchForVacationTurn({
       db,
@@ -379,10 +408,20 @@ export async function runVacationAppInTurnSearch({
       customerLive,
       turnId,
       env: providerEnv,
+      fetchImpl,
+      tavilyImpl,
     })
     : { kind: 'skip', webResults: [], webResearchTurn: false };
   if (webTurn.kind === 'failed') {
-    return { ok: false, status: 'web_search_failed', error: webTurn.error, webSearch: webTurn.webSearch };
+    return {
+      ok: true,
+      ...inTurnWebResearchSoftFail({
+        customerTurn,
+        classification,
+        tripDestination,
+        webSearch: webTurn.webSearch,
+      }),
+    };
   }
   const inTurnProviderResults = [...(searchTurn.placeResults || []), ...(webTurn.webResults || [])];
   return {
