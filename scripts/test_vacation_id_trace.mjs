@@ -11,6 +11,7 @@ import { renderDialog } from './harness/live-outputs.mjs';
 import { confirmStoredTurns } from './harness/stored-turn.mjs';
 import { buildScorecard } from './harness/scorecard.mjs';
 import { writeOutcomes } from './harness/runtime.mjs';
+import { runWave } from './harness/wave.mjs';
 
 const fakeKey = 'fixture-key-private-1156';
 const intake = 'We are planning a short Bend stay from March 4 to March 8 2027. Keep the days light.';
@@ -195,6 +196,52 @@ try {
   const scorecard = JSON.parse(fs.readFileSync(path.join(dir, 'scorecard.json'), 'utf8'));
   assert.equal(scorecard.tripId, tripA.id);
 
+  const docB = liveTranscriptFromRows({ session: { ...session, trip_id: tripB.id }, rows: harnessB.stored });
+  const dirB = path.join(dir, 'dialog-b');
+  await renderDialog({
+    outDir: dirB, secrets: [fakeKey], loadTranscript: async () => docB,
+    spawnImpl: () => ({ status: 0, stdout: '{"ok":false}' }),
+  });
+  const writtenB = JSON.parse(fs.readFileSync(path.join(dirB, 'dialog-transcript.json'), 'utf8'));
+  const byStory = {
+    'vk-trace-a': { trip: tripA, transcript: written },
+    'vk-trace-b': { trip: tripB, transcript: writtenB },
+  };
+  const stories = Object.keys(byStory).map((storyId) => ({
+    story_id: storyId,
+    reply_backend: 'openrouter',
+    customer: { name: 'Harness Fixture', email_alias: `${storyId}@example.test` },
+    turns: [],
+  }));
+  const wave = await runWave(stories, {
+    runId: 'trace-1156-wave',
+    outRoot: path.join(dir, 'wave'),
+    concurrency: 2,
+    continueOnFail: true,
+    play: async (story, opts) => {
+      const { trip, transcript } = byStory[story.story_id];
+      return writeOutcomes(opts.outDir, { tripId: trip.id, transcript, pdfText: '', liveShaStart: 'fixture', liveShaEnd: 'fixture' });
+    },
+  });
+  assert.equal(wave.cards.length, 2);
+  const waveIds = [];
+  for (const [storyId, { trip }] of Object.entries(byStory)) {
+    const storyDir = path.join(dir, 'wave', 'trace-1156-wave', storyId);
+    const storyOutcomes = JSON.parse(fs.readFileSync(path.join(storyDir, 'outcomes.json'), 'utf8'));
+    const storyCard = JSON.parse(fs.readFileSync(path.join(storyDir, 'scorecard.json'), 'utf8'));
+    assert.equal(storyOutcomes.tripId, trip.id);
+    assert.equal(storyCard.tripId, trip.id);
+    const cardCalls = storyCard.turns.filter((turn) => turn.role === 'app').flatMap((turn) => turn.openrouterCalls || []);
+    assert.ok(cardCalls.length > 0);
+    for (const row of cardCalls) {
+      assert.equal(row.tripId, trip.id);
+      assert.ok(row.requestId != null && String(row.requestId).length > 0);
+    }
+    waveIds.push(storyCard.tripId);
+  }
+  assert.equal(new Set(waveIds).size, 2);
+
+  console.log = originalLog;
   console.log('test_vacation_id_trace: ok');
 } finally {
   globalThis.fetch = originalFetch;
