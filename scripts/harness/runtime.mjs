@@ -5,6 +5,7 @@ import { loadBannedHosts, guardedFetch } from './fetch-guard.mjs';
 import { acceptAndConfirmEula } from './eula-accept.mjs';
 import { provisionThrowaway } from './live-provision.mjs';
 import { customerAskFromEnv } from './customer-live.mjs';
+import { sumUsageUsd } from './cost.mjs';
 import { playCustomerTurns } from './live-play.mjs';
 import { attachMedia, captureScreens, fetchKeepsake, renderDialog, runSteps, writeVideoCheck } from './live-outputs.mjs';
 import { captureOnboardingPdf, rebuildCustomerPdf } from './onboarding-capture.mjs';
@@ -53,6 +54,11 @@ export function writeOutcomes(outDir, payload) {
     for (const turn of turns) {
       if (turn?.cost) costs.push(turn.cost);
     }
+    const rawFallbacks = payload?.planningFallbacks && typeof payload.planningFallbacks === 'object'
+      ? payload.planningFallbacks
+      : { count: 0, turns: [] };
+    const fallbackTurns = Array.isArray(rawFallbacks.turns) ? rawFallbacks.turns : [];
+    const costUsd = sumUsageUsd(turns.filter((turn) => turn?.cost).map((turn) => ({ usage: turn.cost, model: turn.model || '' })));
     const rec = {
       itineraryCount: Number(payload?.itineraryCount) || 0,
       keepsakeOk: payload?.keepsakeOk === true,
@@ -60,7 +66,9 @@ export function writeOutcomes(outDir, payload) {
       customerTurnCount: Number(payload?.customerTurnCount) || turns.filter((turn) => turn.role === 'customer').length,
       hitTurnCap: payload?.hitTurnCap === true,
       reason: payload?.reason || '',
+      planningFallbacks: { count: Number(rawFallbacks.count) || fallbackTurns.length, turns: fallbackTurns },
       costs,
+      costUsd,
       liveShaStart: payload?.liveShaStart || '',
       liveShaEnd: payload?.liveShaEnd || '',
     };

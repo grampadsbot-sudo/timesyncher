@@ -84,6 +84,7 @@ export function buildScorecard(input) {
     ...(input.ssr ? { primary_rating_method: 'ssr', ssr: input.ssr } : {}),
     ...(input.dlr_comparison ? { dlr_comparison: input.dlr_comparison } : {}),
     ...(input.dialog_pdf_status ? { dialog_pdf_status: input.dialog_pdf_status } : {}),
+    ...(input.planning_fallbacks ? { planning_fallbacks: input.planning_fallbacks } : {}),
     reason: verdict === 'PASS' ? '' : reason,
     wave_stop: verdict === 'FAIL' && WAVE_STOP.has(reason),
     verdict,

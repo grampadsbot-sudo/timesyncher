@@ -7,9 +7,17 @@ import { readCookie, requireWebEditAccess, webAccessCookieName } from './web-acc
 const PLANNING_TURN_RE = /\b(?:itinerary|day-by-day|day by day|keep building|family plan|book early|want to book|we'?d want to book)\b|\bplan (?:the|our|a|my)\b|\bday\s+\d{1,2}\b/i;
 const PLAN_CONFIRM_RE = /\b(?:yes|lock it in|lock that in|save that plan|save this plan|save the plan|that plan works|confirm the plan|go with that)\b/i;
 const DAY_LINE_RE = /^(?:#{1,3}\s*)?(?:\*\*)?\s*day\s*(\d{1,2})\s*(?:\*\*)?\s*[:.)\-\u2013\u2014]*\s*(.*)$/i;
+const WEEKDAY_LINE_RE = /^(?:[-*•]\s*)?(?:#{1,3}\s*)?(?:\*\*)?\s*(sunday|monday|tuesday|wednesday|thursday|friday|saturday)(?:\s*,?\s*[a-z]{3,9}\.?\s+\d{1,2}(?:,?\s*\d{4})?)?\s*(?:\*\*)?\s*[:\-\u2013\u2014]\s*(.+)$/i;
+const WEEKDAY_INDEX = { sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 };
 const CANNED_RESERVATION_RE = /doesn't book reservations directly/i;
 const CANNED_IMPORT_RE = /Ready to import into/i;
-const PLANNING_ERROR_REPLY = 'I could not finish that planning reply on this turn. Your message is saved; tell me the days to keep and I will put them on this vacation.';
+export const PLANNING_ERROR_REPLY = 'I could not finish that planning reply on this turn. Your message is saved; tell me the days to keep and I will put them on this vacation.';
+
+export function isPlanningErrorReply(text = '') {
+  const value = String(text || '').trim();
+  if (!value) return false;
+  return value === PLANNING_ERROR_REPLY || /I could not finish that planning reply on this turn/i.test(value);
+}
 
 function asText(raw, max = 4000) {
   const value = raw && typeof raw === 'object' ? (raw.customerTurn ?? raw.text ?? raw.message ?? '') : raw;
@@ -55,6 +63,7 @@ function categoryForPlanTitle(title) {
 function itemFromLine(line, dayNumber, startDate) {
   const trimmed = String(line || '').replace(/^[-*•]\s+/, '').replace(/^\d+[.)]\s+/, '').trim();
   if (!trimmed) return [];
+  if (trimmed.split(/\s+/).length > 14 && /[.!?]$/.test(trimmed)) return [];
   const parts = trimmed.includes(', ') ? trimmed.split(/\s*,\s*/) : [trimmed];
   const day = startDate ? addUtcDays(startDate, dayNumber - 1) : '';
   const items = [];
@@ -78,34 +87,47 @@ function itemFromLine(line, dayNumber, startDate) {
   return items;
 }
 
+function weekdayDayNumber(weekdayName, startIso) {
+  const target = WEEKDAY_INDEX[String(weekdayName || '').toLowerCase()];
+  if (target == null || !startIso) return 0;
+  const start = new Date(`${startIso}T00:00:00.000Z`);
+  if (Number.isNaN(start.getTime())) return 0;
+  return ((target - start.getUTCDay() + 7) % 7) + 1;
+}
+
 export function plannedItineraryItems(corpus, { startDate = '' } = {}) {
   const items = [];
   const seen = new Set();
   let dayNumber = 0;
   const start = isoDay(startDate);
+  const pushItems = (text, dayNum) => {
+    for (const item of itemFromLine(text, dayNum, start)) {
+      const key = item.title.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      items.push(item);
+    }
+  };
   for (const rawLine of String(corpus || '').split(/\r?\n/)) {
     const line = rawLine.trim();
     if (!line) continue;
     const day = line.match(DAY_LINE_RE);
     if (day) {
       dayNumber = Number(day[1]);
-      if (day[2]) {
-        for (const item of itemFromLine(day[2], dayNumber, start)) {
-          const key = item.title.toLowerCase();
-          if (seen.has(key)) continue;
-          seen.add(key);
-          items.push(item);
-        }
-      }
+      if (day[2]) pushItems(day[2], dayNumber);
       continue;
     }
-    if (!dayNumber) continue;
-    for (const item of itemFromLine(line, dayNumber, start)) {
-      const key = item.title.toLowerCase();
-      if (seen.has(key)) continue;
-      seen.add(key);
-      items.push(item);
+    const weekday = start ? line.match(WEEKDAY_LINE_RE) : null;
+    if (weekday) {
+      const mapped = weekdayDayNumber(weekday[1], start);
+      if (mapped > 0) {
+        dayNumber = mapped;
+        pushItems(weekday[2], dayNumber);
+        continue;
+      }
     }
+    if (!dayNumber) continue;
+    pushItems(line, dayNumber);
   }
   return items;
 }
@@ -168,16 +190,27 @@ function mergeByTitle(base, extra) {
 
 export async function plannedCustomerThings(db, tripId, text, appReply, activities = []) {
   const base = Array.isArray(activities) ? activities.filter(Boolean) : [];
+  const startDate = await tripStartDate(db, tripId);
   let corpus = `${text || ''}\n${appReply || ''}`;
-  let items = plannedItineraryItems(corpus);
+  let items = plannedItineraryItems(corpus, { startDate });
   if (!items.length && isPlanConfirmation(text)) {
     corpus = (await priorAppBodies(db, tripId)).join('\n');
-    items = plannedItineraryItems(corpus);
+    items = plannedItineraryItems(corpus, { startDate });
   }
   if (!items.length) return base;
-  const startDate = await tripStartDate(db, tripId);
-  if (startDate) items = plannedItineraryItems(corpus, { startDate });
   return mergeByTitle(base, items);
+}
+
+export async function persistFollowupLodgingSafely(persistFn, db, tripId, lodgingWanted, options) {
+  try {
+    return await persistFn(db, tripId, null, lodgingWanted, options);
+  } catch (error) {
+    if (error?.name === 'IntakeLodgingResolveError' || /Brave Place Search|HTTP 402|Place search/i.test(String(error?.message || error))) {
+      console.error('followup_lodging_lookup_nonfatal', String(error?.message || error).slice(0, 240));
+      return null;
+    }
+    throw error;
+  }
 }
 
 export function keepPlannedDays(merged, wanted) {

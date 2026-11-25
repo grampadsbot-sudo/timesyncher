@@ -15,8 +15,23 @@ const OPENROUTER_TIER_REQUEST_MAX_TOKENS = {
   3: 4608,
   4: 6144,
 };
+const OPENROUTER_TIER4_TIMEOUT_MS = 35000;
+const COMPACT_RETRY_REASON_RE = /abort|timeout|timed out|tiered model returned an empty reply/i;
 const OPENROUTER_NO_TEMPERATURE_MODELS = new Set(['anthropic/claude-haiku-5.5']);
 const OPENROUTER_CANONICAL_SLUGS = { 'anthropic/claude-haiku-5.5': 'anthropic/claude-haiku-5.5-20261007' };
+
+export function openRouterTierReplyTimeoutMs(modelTier, requestedTimeoutMs = 0, defaultTimeoutMs = 20000) {
+  const explicit = Number(requestedTimeoutMs);
+  if (Number.isFinite(explicit) && explicit > 0) return explicit;
+  const base = Number.isFinite(Number(defaultTimeoutMs)) && Number(defaultTimeoutMs) > 0 ? Number(defaultTimeoutMs) : 20000;
+  return Number(modelTier) >= 4 ? Math.max(base, OPENROUTER_TIER4_TIMEOUT_MS) : base;
+}
+
+export function openRouterShouldCompactRetry({ modelTier, tier1CompactReasoning = false, result = null } = {}) {
+  if (tier1CompactReasoning === true || Number(modelTier) < 3) return false;
+  if (!result || result.called === true) return false;
+  return COMPACT_RETRY_REASON_RE.test(String(result.reason || ''));
+}
 
 let cachedTierOneModelId = '';
 
@@ -59,7 +74,13 @@ export function openRouterChatVisibleText(content) {
       const kind = String(part?.type || 'text').toLowerCase();
       return kind === 'text' || kind === 'output_text';
     })
-    .map((part) => (typeof part === 'string' ? part : String(part?.text || '')))
+    .map((part) => {
+      if (typeof part === 'string') return part;
+      if (typeof part?.text === 'string') return part.text;
+      if (typeof part?.text?.value === 'string') return part.text.value;
+      if (typeof part?.value === 'string') return part.value;
+      return '';
+    })
     .join('');
 }
 

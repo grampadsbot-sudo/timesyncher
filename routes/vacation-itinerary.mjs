@@ -59,7 +59,7 @@ import {
   resolveIntakePlace,
   tripIntakeJobFields,
 } from '../src/vacation/trip-intake-classify.mjs';
-import { keepPlannedDays, plannedCustomerThings } from '../src/vacation/chat-plan-persist.mjs';
+import { keepPlannedDays, persistFollowupLodgingSafely, plannedCustomerThings } from '../src/vacation/chat-plan-persist.mjs';
 import {
   intakeExtractedThings,
   runVacationAppInTurnSearch,
@@ -735,7 +735,7 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
   if (!intakeText) {
     const lodgingWanted = intakeLodgingWanted(extracted, wantedThings);
     if (lodgingWanted.length) {
-      const lodgingOutcome = await persistIntakeLodgingThings(db, tripId, null, lodgingWanted, {
+      const lodgingOutcome = await persistFollowupLodgingSafely(persistIntakeLodgingThings, db, tripId, lodgingWanted, {
         destinationHint: extractedDestination,
         areaHint: extractedDestination,
         env,

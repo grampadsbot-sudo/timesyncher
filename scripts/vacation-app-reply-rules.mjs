@@ -1,4 +1,4 @@
-import { openRouterListedPrices, openRouterReplyCost } from '../src/vacation/turn-cost.mjs';
+import { openRouterListedPrices, openRouterReplyCost, sumTurnCost } from '../src/vacation/turn-cost.mjs';
 import { planFactsForReply } from '../src/vacation/reply-plan-entitlement.mjs';
 import { modelVisibleTripContext, namedSearchAreaAwayFromLodgingReplyLine } from '../src/vacation/provider-result-context.mjs';
 import { gapAskReplyPromptTripRaw, perFactGapAskRuleLines } from '../src/vacation/gap-ask-reply-context.mjs';
@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { xaiPlaceSearchModelId } from '../src/vacation/provider-env.mjs';
-import { openRouterChatVisibleText, openRouterProviderSpread, openRouterReturnedModelMatches, openRouterTemperatureSpread, openRouterTierReasoningSpread, openRouterTierRequestMaxTokens } from './openrouter-tier-provider.mjs';
+import { openRouterChatVisibleText, openRouterProviderSpread, openRouterReturnedModelMatches, openRouterShouldCompactRetry, openRouterTemperatureSpread, openRouterTierReasoningSpread, openRouterTierReplyTimeoutMs, openRouterTierRequestMaxTokens } from './openrouter-tier-provider.mjs';
 export { openRouterChatVisibleText, openRouterTemperatureSpread } from './openrouter-tier-provider.mjs';
 export const REPLY_RULES_SLUG = 'bot-admin/skills/time-syncher/vacation-app-reply-rules';
 export const DIALOG_TEST_FINGERPRINT = 'TS-DIALOG-FINGERPRINT-20260924-bar2';
@@ -412,7 +412,11 @@ function decisionsPayload(context) {
   };
 }
 
-function normalizeDecisions(body) {
+function decisionsVia(url) {
+  return OPENROUTER_HOST.test(String(url || '')) ? 'openrouter-decisions' : 'http-decisions';
+}
+
+function normalizeDecisions(body, via = 'openrouter-decisions') {
   const answers = body?.answers && typeof body.answers === 'object' ? body.answers : {};
   const tierAnswer = answers.model_tier || answers.modelTier || {};
   const score = Number(tierAnswer.score);
@@ -431,28 +435,11 @@ function normalizeDecisions(body) {
     modelTierConfidence: Number.isFinite(Number(tierAnswer.confidence)) ? Number(tierAnswer.confidence) : null,
   };
   if (!Number.isInteger(modelTier) || modelTier < 1 || modelTier > 4 || !openRouterChatModelForTier(modelTier)) {
-    return {
-      jevRan: false,
-      via: 'openrouter-decisions',
-      modelTier: null,
-      responseModel: null,
-      extraContext,
-      error: 'tier_outside_bakeoff_map',
-    };
-  }
-  if (!modelTier) {
-    return {
-      jevRan: false,
-      via: 'openrouter-decisions',
-      modelTier: null,
-      responseModel: null,
-      extraContext,
-      error: 'jev decisions response missing model_tier score',
-    };
+    return { jevRan: false, via, modelTier: null, responseModel: null, extraContext, error: 'tier_outside_bakeoff_map' };
   }
   return {
     jevRan: true,
-    via: 'openrouter-decisions',
+    via,
     modelTier,
     responseModel: openRouterChatModelForTier(modelTier),
     routeType,
@@ -496,10 +483,11 @@ export async function jevPrecall({ customerTurn, stage, gate, screen, session, e
     };
   }
   const key = appOpenRouterKey(env);
+  const via = decisions ? decisionsVia(url) : 'http-jev';
   if (decisions && !key) {
     return {
       jevRan: false,
-      via: 'openrouter-decisions',
+      via,
       modelTier: null,
       responseModel: null,
       extraContext: null,
@@ -521,7 +509,6 @@ export async function jevPrecall({ customerTurn, stage, gate, screen, session, e
       signal: AbortSignal.timeout(20000),
     });
     const body = await response.json().catch(() => ({}));
-    const via = decisions ? 'openrouter-decisions' : 'http-jev';
     if (!response.ok || body.ok === false) {
       return {
         jevRan: false,
@@ -533,11 +520,11 @@ export async function jevPrecall({ customerTurn, stage, gate, screen, session, e
         request: payload,
       };
     }
-    return { ...(decisions ? normalizeDecisions(body) : normalizeJev(body, via)), request: payload };
+    return { ...(decisions ? normalizeDecisions(body, via) : normalizeJev(body, via)), request: payload };
   } catch (error) {
     return {
       jevRan: false,
-      via: decisions ? 'openrouter-decisions' : 'http-jev',
+      via,
       modelTier: null,
       responseModel: null,
       extraContext: null,
@@ -858,31 +845,15 @@ export async function callTieredModel({ rules, jev, customerTurn, stage, screen,
   if ((!forceModel && !jev?.jevRan) || !isBakeoffModelId(responseModel)) {
     return { called: false, via: null, modelTier: Number.isInteger(modelTier) ? modelTier : null, responseModel: responseModel || null, reason: 'model_not_in_bakeoff_map' };
   }
-  return callOpenRouterTieredChat({
-    rules,
-    jev,
-    customerTurn,
-    stage,
-    screen,
-    modelTier: forceModel ? (Number.isInteger(modelTier) ? modelTier : 1) : modelTier,
-    responseModel,
-    destination,
-    memory,
-    upsell,
-    postIntake,
-    env,
-    timeoutMs,
-    systemExtra,
-    tripContext,
-    planTable,
-    planLine,
-    seatDollars,
-    seat,
-    planOwned,
-    intakeReplyTurn,
-    replyFacts,
-    tier1CompactReasoning,
-  });
+  const effectiveTier = forceModel ? (Number.isInteger(modelTier) ? modelTier : 1) : modelTier;
+  const args = { rules, jev, customerTurn, stage, screen, modelTier: effectiveTier, responseModel, destination, memory, upsell, postIntake, env, timeoutMs, systemExtra, tripContext, planTable, planLine, seatDollars, seat, planOwned, intakeReplyTurn, replyFacts, tier1CompactReasoning };
+  const first = await callOpenRouterTieredChat(args);
+  if (!openRouterShouldCompactRetry({ modelTier: effectiveTier, tier1CompactReasoning, result: first })) return first;
+  const retry = await callOpenRouterTieredChat({ ...args, tier1CompactReasoning: true, timeoutMs: timeoutMs > 0 ? timeoutMs : TIERED_REPLY_TIMEOUT_MS });
+  const combinedCost = sumTurnCost(first.cost, retry.cost) || retry.cost || first.cost || null;
+  const combinedMs = (Number(first.genLatencyMs) || 0) + (Number(retry.genLatencyMs) || 0);
+  if (!retry.called) return { ...retry, modelTier: effectiveTier, cost: combinedCost, genLatencyMs: combinedMs };
+  return { ...retry, modelTier: effectiveTier, compactRetry: true, cost: combinedCost, genLatencyMs: combinedMs };
 }
 
 async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env, timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = null, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null, tier1CompactReasoning = false }) {
@@ -925,30 +896,24 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
           { role: 'user', content: userContent },
         ],
       }),
-      signal: AbortSignal.timeout(timeoutMs > 0 ? timeoutMs : TIERED_REPLY_TIMEOUT_MS),
+      signal: AbortSignal.timeout(openRouterTierReplyTimeoutMs(tier1CompactReasoning ? 1 : modelTier, timeoutMs, TIERED_REPLY_TIMEOUT_MS)),
     });
     const body = await response.json().catch(() => ({}));
     const cost = await openRouterReplyCost(body, responseModel, (id) => openRouterListedPrices(id, `${new URL(OPENROUTER_CHAT_COMPLETIONS_URL).origin}/api/v1/models`, appOpenRouterKey(env)));
+    const elapsed = Math.max(0, Date.now() - genStarted);
     if (!response.ok || body.ok === false) {
-      return {
-        called: false,
-        via: 'openrouter-chat',
-        modelTier,
-        responseModel,
-        reason: text(body.error?.message || body.error || `tiered model HTTP ${response.status}`, 300),
-        cost,
-      };
+      return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: text(body.error?.message || body.error || `tiered model HTTP ${response.status}`, 300), genLatencyMs: elapsed, cost };
     }
     const answer = chatReplyText(body.choices?.[0]?.message?.content) || text(body.answer || body.reply || body.text, 3500);
-    if (!answer) return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: 'tiered model returned an empty reply', cost };
+    if (!answer) return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: 'tiered model returned an empty reply', genLatencyMs: elapsed, cost };
     const returned = text(body.model || responseModel, 120);
     if (!openRouterReturnedModelMatches(responseModel, returned) || !isBakeoffModelId(responseModel)) {
-      return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: 'model_not_in_bakeoff_map', cost };
+      return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: 'model_not_in_bakeoff_map', genLatencyMs: elapsed, cost };
     }
     const visible = splitBeat(answer);
-    if (!visible.text) return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: 'tiered model returned an empty reply', cost };
-    return { called: true, via: 'openrouter-chat', modelTier, responseModel, text: visible.text, beats: visible.beats, maxTokens: 900, genLatencyMs: Math.max(0, Date.now() - genStarted), cost, backend: 'openrouter' };
+    if (!visible.text) return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: 'tiered model returned an empty reply', genLatencyMs: elapsed, cost };
+    return { called: true, via: 'openrouter-chat', modelTier, responseModel, text: visible.text, beats: visible.beats, maxTokens: 900, genLatencyMs: elapsed, cost, backend: 'openrouter' };
   } catch (error) {
-    return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: text(error?.message || error, 300), cost: null };
+    return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: text(error?.message || error?.name || error, 300), genLatencyMs: Math.max(0, Date.now() - genStarted), cost: null };
   }
 }

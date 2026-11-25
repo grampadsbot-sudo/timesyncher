@@ -58,6 +58,8 @@ export function confirmStoredTurns(transcript, pdfText, replyBackend) {
       estimate_amount: cost.estimate_amount ?? null,
       estimate_unit: cost.estimate_unit || '',
       estimate_label: cost.estimate_label || '',
+      usd_state: cost.usd_state || '',
+      usd_amount: cost.usd_amount ?? null,
       gap: gap.join(','),
     });
     gaps.push(...gap);

@@ -72,11 +72,26 @@ function turnTimes(card) {
   return `${walls.length} turns, p50 ${sorted[Math.floor(sorted.length / 2)]} ms, max ${sorted[sorted.length - 1]} ms`;
 }
 
-function replyCost(card) {
-  const cost = card.cost || {};
-  if (cost.state === 'measured' && Number.isFinite(Number(cost.amount))) return `$${Number(cost.amount).toFixed(4)} replies`;
-  if (Number.isFinite(Number(cost.estimate_amount)) && cost.estimate_state === 'estimate') return `~$${Number(cost.estimate_amount).toFixed(4)} replies (estimate)`;
+export function replyCostLabel(cost = {}) {
+  const unit = String(cost.unit || '').trim().toLowerCase();
+  if (cost.state === 'measured' && Number.isFinite(Number(cost.amount)) && (!unit || unit === 'usd')) {
+    return `$${Number(cost.amount).toFixed(4)} replies`;
+  }
+  if (cost.usd_state === 'priced' && Number.isFinite(Number(cost.usd_amount))) {
+    return `$${Number(cost.usd_amount).toFixed(4)} replies`;
+  }
+  if (Number.isFinite(Number(cost.estimate_amount)) && cost.estimate_state === 'estimate') {
+    return `~$${Number(cost.estimate_amount).toFixed(4)} replies (estimate)`;
+  }
+  if (cost.state === 'measured' && (unit === 'tokens' || unit === 'percent' || cost.usd_state === 'unpriced')) {
+    return 'unpriced replies';
+  }
+  if (cost.usd_state === 'unpriced') return 'unpriced replies';
   return `${cost.state || 'not-run'} replies`;
+}
+
+function replyCost(card) {
+  return replyCostLabel(card.cost || {});
 }
 
 function mediaCost(card) {
@@ -95,6 +110,7 @@ export function severityOf(card) {
 export function implicationOf(card) {
   const reason = String(card.reason || '');
   const edge = card.roster?.edge_case || '';
+  if (reason === 'planning-fallback-x3') return 'Fix the planning reply pipeline so itinerary turns produce a real plan instead of repeated fallbacks.';
   if (/coupon/.test(reason)) return 'Checkout must make the coupon step obvious and explain a rejected code in plain words.';
   if (reason === 'no-thing-after-chat') return 'Chat must turn the first answer into a visible plan item, or show why it did not.';
   if (/dialog|keepsake/.test(reason)) return 'The keepsake and Dialog pack must build from whatever the customer finished.';
@@ -106,11 +122,23 @@ export function implicationOf(card) {
   return card.verdict !== 'FAIL' ? 'No redesign change from this customer.' : 'Review this customer\'s failing step before the next wave.';
 }
 
+function fallbackFinding(card) {
+  const fb = card.planning_fallbacks || card.planningFallbacks || null;
+  const count = Number(fb?.count) || 0;
+  if (!count) return '';
+  const turns = Array.isArray(fb?.turns) && fb.turns.length ? ` (turns ${fb.turns.join(', ')})` : '';
+  return `planning fallback x${count}${turns}`;
+}
+
 export function customerSection(card, { wave, at = new Date() } = {}) {
   const coupon = card.coupon_redemption || {};
-  const broke = card.verdict === 'FAIL'
+  const fbNote = fallbackFinding(card);
+  const brokeBase = card.verdict === 'FAIL'
     ? clean(`${card.reason}; ${(card.checks || []).filter((check) => !check.pass).map((check) => `${check.id}: ${check.detail}`).slice(0, 3).join('; ')}`)
     : card.mode === 'dry' ? 'dry run: live steps not run' : 'nothing';
+  const broke = fbNote
+    ? (brokeBase === 'nothing' ? fbNote : clean(`${brokeBase}; ${fbNote}`))
+    : brokeBase;
   return [
     `### ${wave} / customer ${card.roster?.id ?? card.story_id} / ${hst(at)}`,
     `- Arm (A/B): ${card.ab_arm || card.reply_backend} | Coupon: ${clean(coupon.code_hint)} ${clean(coupon.status)} | Edge case: ${clean(card.roster?.edge_case)} | Result: ${card.verdict}${card.mode === 'dry' ? ' (dry)' : ''}`,
