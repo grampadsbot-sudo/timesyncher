@@ -32,7 +32,7 @@ await withMockedTurnPipeline(async ({ send, activityUpdates }) => {
   assert.ok(ordinary.turnTag.tags.includes('activities_experiences'), 'the turn tag reads the shared classification');
 });
 
-await withMockedTurnPipeline(async ({ send }) => {
+await withMockedTurnPipeline(async ({ send, captured }) => {
   assert.equal(cost10.turns.length, 10);
   for (const recorded of cost10.turns) {
     const label = `cost10 customer turn ${recorded.turnIndex}`;
@@ -53,6 +53,13 @@ await withMockedTurnPipeline(async ({ send }) => {
     const jevRows = turn.openrouterCalls.filter((row) => row.endpoint === 'decisions' && row.purpose !== 'place_relevance_jev');
     assert.deepEqual(jevRows.map((row) => row.purpose), ['jev_turn', 'jev_quality_rewrite'], `${label} rewrite adds one Jev re-score`);
     assert.ok(turn.openrouterCalls.filter((row) => row.endpoint === 'chat').length <= 6, `${label} chat budget`);
+  }
+  const judgedDrafts = captured.filter((row) => row.purpose === 'jev_turn');
+  assert.equal(judgedDrafts.length, cost10.turns.length);
+  for (const { body } of judgedDrafts) {
+    assert.ok(body.questions.overall_quality);
+    assert.ok(body.questions.route_type);
+    assert.equal(Object.hasOwn(body.questions, 'model_tier'), false, 'the draft tier is selected before the Jev request');
   }
 }, { destination: 'Orlando', owner: 'Sofia', start: '2027-04-05', end: '2027-04-09' });
 

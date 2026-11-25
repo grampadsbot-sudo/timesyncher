@@ -15,16 +15,16 @@ export function draftTierForTurn({ intent = null } = {}) {
 }
 
 export async function jevTurn({ customerTurn, draft, tripContext = null, planLine = '', session = null, env = process.env } = {}) {
-  const tierContext = { stage: 'vacation_conversation', screen: 'vacation-app', session: { seed_id: session?.token || null } };
-  const { tier = null, ...quality } = await jevQualityRewrite({ customerTurn, draft, tripContext, planLine, env, purpose: 'jev_turn', tierContext });
-  if (!tier) return { jevRan: false, error: quality.reason || 'jev_turn_failed', quality };
-  return { jevRan: true, via: tier.via, modelTier: tier.modelTier ?? null, routeType: tier.routeType ?? null, extraContext: tier.extraContext ?? null, quality };
+  const routeContext = { stage: 'vacation_conversation', screen: 'vacation-app', session: { seed_id: session?.token || null } };
+  const { routing, ...quality } = await jevQualityRewrite({ customerTurn, draft, tripContext, planLine, env, purpose: 'jev_turn', routeContext });
+  if (!routing) return { jevRan: false, error: quality.reason || 'jev_turn_failed', quality };
+  return { jevRan: true, ...routing, quality };
 }
 
 export function applyJevTurn(jev, result, judgeMs) {
   if (result?.jevRan) {
     jev.routeType = result.routeType ?? jev.routeType;
-    jev.extraContext = { ...(result.extraContext || {}), judgedModelTier: result.modelTier };
+    jev.extraContext = result.extraContext ?? jev.extraContext;
     jev.via = result.via ?? jev.via;
     jev.jevLatencyMs = Math.max(0, Number(judgeMs) || 0);
   } else {
