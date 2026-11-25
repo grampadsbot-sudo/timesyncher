@@ -15,6 +15,11 @@
           embed = true;
         }
         if (embed) document.documentElement.setAttribute('data-ts-embed', '1');
+        try {
+          if (new URLSearchParams(location.search).get('adminViewOnly') === '1') {
+            document.documentElement.setAttribute('data-ts-admin-viewonly', '1');
+          }
+        } catch (e) { /* ignore */ }
         else if (/^\/shared\/[^/]+\/?$/.test(location.pathname)) document.documentElement.setAttribute('data-ts-trip', '1');
       })();
     </script>

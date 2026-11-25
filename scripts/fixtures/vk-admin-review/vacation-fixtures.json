@@ -1,0 +1,113 @@
+{
+  "vacations": [
+    {
+      "tripId": "vk-fixture-trip-001",
+      "label": "Orlando theme parks — Lopez / Kowalski",
+      "destination": "Orlando, FL",
+      "sortAt": "2026-07-18T16:40:00.000Z",
+      "shareSlug": "vk-admin-share-orlando-001",
+      "chat": {
+        "turns": [
+          { "t": "owner-1", "speaker": "OWNER", "text": "We are the Lopez family planning five days at Orlando theme parks with kids 6 and 9." },
+          { "t": "app-welcome", "speaker": "APP", "text": "Welcome! I can sketch a kid-friendly Orlando week with park days and rest built in." },
+          { "t": "owner-2", "speaker": "OWNER", "text": "Magic Kingdom on day one and a slower pool morning before SeaWorld." },
+          { "t": "app-plan", "speaker": "APP", "text": "Added Magic Kingdom for day 1 and SeaWorld on day 2 with an easy afternoon block." }
+        ]
+      },
+      "sharedTrip": {
+        "tripId": 881001,
+        "title": "Orlando theme parks",
+        "destination": "Orlando, FL",
+        "startDate": "2026-08-10",
+        "endDate": "2026-08-14",
+        "places": [
+          {
+            "id": 88100101,
+            "name": "Magic Kingdom day",
+            "category": { "id": 1, "name": "Activity", "icon": "🎢" },
+            "category_name": "Activity",
+            "scheduled_days": [1],
+            "start_time": "09:00",
+            "duration": 480,
+            "description": "Family park day with an early rope-drop plan."
+          },
+          {
+            "id": 88100102,
+            "name": "SeaWorld Orlando",
+            "category": { "id": 1, "name": "Activity", "icon": "🐬" },
+            "category_name": "Activity",
+            "scheduled_days": [2],
+            "start_time": "10:30",
+            "duration": 360,
+            "description": "Marine park visit with a midday break."
+          }
+        ]
+      }
+    },
+    {
+      "tripId": "vk-fixture-trip-002",
+      "label": "Anaheim theme parks",
+      "destination": "Anaheim, CA",
+      "sortAt": "2026-07-10T09:15:00.000Z",
+      "shareSlug": "vk-admin-share-anaheim-002",
+      "chat": {
+        "turns": [
+          { "t": "owner-1", "speaker": "OWNER", "text": "Chavez family here — four days near Disneyland with teens." },
+          { "t": "app-1", "speaker": "APP", "text": "I will keep Disneyland Resort as the anchor with Downtown Disney on arrival evening." }
+        ]
+      },
+      "sharedTrip": {
+        "tripId": 881002,
+        "title": "Anaheim theme parks",
+        "destination": "Anaheim, CA",
+        "startDate": "2026-09-05",
+        "endDate": "2026-09-08",
+        "places": [
+          {
+            "id": 88100201,
+            "name": "Disneyland Park",
+            "category": { "id": 1, "name": "Activity", "icon": "🏰" },
+            "category_name": "Activity",
+            "scheduled_days": [1],
+            "start_time": "08:30",
+            "duration": 540,
+            "description": "Full park day with Genie+ style pacing."
+          }
+        ]
+      }
+    },
+    {
+      "tripId": "vk-fixture-decoy",
+      "label": "Portland weekend (decoy)",
+      "destination": "Portland, OR",
+      "sortAt": "2026-08-22T11:05:00.000Z",
+      "shareSlug": "vk-admin-share-decoy-999",
+      "isDecoy": true,
+      "chat": {
+        "turns": [
+          { "t": "owner-1", "speaker": "OWNER", "text": "Just a quick friend trip — food and bookstores only." },
+          { "t": "app-1", "speaker": "APP", "text": "Added Powell's and a curated coffee crawl for Saturday." }
+        ]
+      },
+      "sharedTrip": {
+        "tripId": 881999,
+        "title": "Portland weekend",
+        "destination": "Portland, OR",
+        "startDate": "2026-10-03",
+        "endDate": "2026-10-05",
+        "places": [
+          {
+            "id": 88199901,
+            "name": "Powell's City of Books",
+            "category": { "id": 3, "name": "Shop", "icon": "📚" },
+            "category_name": "Shop",
+            "scheduled_days": [1],
+            "start_time": "11:00",
+            "duration": 120,
+            "description": "Browse and souvenir stop."
+          }
+        ]
+      }
+    }
+  ]
+}

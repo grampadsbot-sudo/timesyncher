@@ -15,6 +15,7 @@ import { scheduleMissingEvidenceCapturesForTrip } from './thing-evidence-capture
 import { finalizeServedSharedTripPayload, projectServedBoundaryLogosForHttp } from './shared-trip-served-page.mjs';
 import { mergeBindingsIntoShared } from './thing-media-bind.mjs';
 import { sharedTripEditAccessFromRequest } from './web-access.mjs';
+import { buildVkAdminSharedTrip, vkAdminFixtureShareSlug } from './vk-admin-fixtures.mjs';
 
 let sharedTripDatabase = null;
 
@@ -306,6 +307,11 @@ async function respondSharedTripGet(req, res, shareToken) {
 }
 
 export async function loadSharedTripPayload(shareToken, req = null) {
+  if (vkAdminFixtureShareSlug(shareToken)) {
+    const fixture = buildVkAdminSharedTrip(shareToken);
+    if (fixture) return sharedTripPayloadForHttp(fixture);
+    return null;
+  }
   const local = await intakeSharedResponse(shareToken);
   if (local) return sharedTripPayloadForHttp(local);
   if (String(shareToken || '').startsWith('intake-')) return null;
@@ -332,6 +338,9 @@ function trekUpstreamBase() {
 }
 
 async function respondShareEditAccess(req, res, shareToken) {
+  if (vkAdminFixtureShareSlug(shareToken)) {
+    return sendJson(res, 200, { canEdit: false, role: 'viewer' });
+  }
   try {
     const access = await sharedTripEditAccessFromRequest(openSharedDb(), req, {
       shareToken,

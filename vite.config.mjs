@@ -93,6 +93,7 @@ export default defineConfig({
         openclawAdmin: resolve(__dirname, 'openclaw-admin.html'),
         itinerary: resolve(__dirname, 'itinerary.html'),
         vacationApp: resolve(__dirname, 'vacation-app.html'),
+        vacationAppAdmin: resolve(__dirname, 'vacation-app-admin.html'),
         sharedApp: resolve(__dirname, 'shared-app.html'),
         onboardingEula: resolve(__dirname, 'onboarding-eula.html'),
       },

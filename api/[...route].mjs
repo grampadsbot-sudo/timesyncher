@@ -17,8 +17,10 @@ import version from '../routes/version.mjs';
 import workerJobs from '../routes/worker-jobs.mjs';
 import thingEvidenceDossiers from '../routes/thing-evidence-dossiers.mjs';
 import vacationMcp from '../routes/vacation-mcp.mjs';
+import vkAdmin from '../routes/vk-admin.mjs';
 
 const handlers = {
+  admin: vkAdmin,
   'admin-onboardings': adminOnboardings,
   'checkout-config': checkoutConfig,
   'checkout-products': checkoutProducts,
