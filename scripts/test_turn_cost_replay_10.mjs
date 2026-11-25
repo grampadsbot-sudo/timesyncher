@@ -28,15 +28,25 @@ function replayUsage({ body, purpose, content, index }, baseline) {
 
 const costs = [];
 let unpricedCalls = 0;
+let chatCalls = 0;
 await withMockedTurnPipeline(async ({ send }) => {
   for (const [index, recorded] of fixture.turns.entries()) {
-    const result = await send({ ...recorded, usage: (sample) => replayUsage(sample, recorded.baseline) });
+    const retry = recorded.baseline.triedRewrite;
+    const result = await send({
+      ...recorded,
+      reply: retry ? 'We can keep the days flexible while you work out the details.' : recorded.reply,
+      rewrite: retry ? `${recorded.reply}\nWHAT_I_CHANGED: Answered the specific vacation question.` : undefined,
+      usage: (sample) => replayUsage(sample, recorded.baseline),
+    });
     const { openrouterCalls: rows, openrouterTotals: totals } = result;
     assert.equal(totals.measuredUsd, 0, 'using listed prices for the mocked usage');
     assert.ok(totals.estimatedUsd > 0 && totals.estimatedUsd < 0.0025, `turn ${index + 1} costs ${totals.estimatedUsd}`);
     assert.equal(totals.unpricedCalls, rows.filter((row) => row.endpoint === 'decisions').length);
+    assert.equal(totals.byPurpose.reply_rewrite?.calls || 0, Number(retry));
     const chat = rows.filter((row) => row.endpoint === 'chat');
     assert.ok(chat.every((row) => row.reasoningTokens === 0));
+    assert.ok(chat.length <= recorded.baseline.replay.chatCalls);
+    assert.equal(totals.unpricedCalls, recorded.baseline.replay.unpricedCalls - 1);
     if (index > 0) assert.ok(chat.some((row) => row.cachedTokens > 0));
     const expected = chat.reduce((usd, row) => usd
       + (row.promptTokens - row.cachedTokens) * Number(HAIKU_PRICING.prompt)
@@ -45,9 +55,22 @@ await withMockedTurnPipeline(async ({ send }) => {
     assert.ok(Math.abs(totals.estimatedUsd - expected) < 1e-8);
     costs.push(totals.estimatedUsd);
     unpricedCalls += totals.unpricedCalls;
+    chatCalls += chat.length;
   }
 }, { destination: 'Orlando', owner: 'Sofia', start: '2027-04-05', end: '2027-04-09' });
 const average = costs.reduce((sum, cost) => sum + cost, 0) / costs.length;
 const baselineAverage = fixture.preChangeReplySubtotalUsd / costs.length;
 assert.ok(average < baselineAverage, `replay ${average} should beat the recorded reply subtotal ${baselineAverage}`);
-console.log(JSON.stringify({ turns: costs.length, measuredUsd: 0, estimatedUsdPerTurn: average, baselineReplyUsdPerTurn: baselineAverage, unpricedCalls }));
+const baseReplay = fixture.turns.reduce((totals, { baseline: { replay } }) => ({
+  estimatedUsd: totals.estimatedUsd + replay.estimatedUsd,
+  unpricedCalls: totals.unpricedCalls + replay.unpricedCalls,
+  chatCalls: totals.chatCalls + replay.chatCalls,
+}), { estimatedUsd: 0, unpricedCalls: 0, chatCalls: 0 });
+const baseReplayAverage = baseReplay.estimatedUsd / costs.length;
+assert.ok(average < baseReplayAverage);
+assert.ok(chatCalls < baseReplay.chatCalls);
+console.log(JSON.stringify({
+  turns: costs.length, measuredUsd: 0, estimatedUsdPerTurn: average, unpricedCalls, chatCalls,
+  baselineRecordedReplyUsdPerTurn: baselineAverage, baselineReplayEstimatedUsdPerTurn: baseReplayAverage,
+  baselineReplayUnpricedCalls: baseReplay.unpricedCalls, baselineReplayChatCalls: baseReplay.chatCalls,
+}));

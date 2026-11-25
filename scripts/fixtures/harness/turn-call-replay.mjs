@@ -10,9 +10,10 @@ export const HAIKU_PRICING = {
 };
 
 export async function withMockedTurnPipeline(run, { destination = 'Bend', owner = 'Avery', start = '2027-03-04', end = '2027-03-08' } = {}) {
-  const trip = { id: 'fixture-1149', title: `${destination} vacation`, destination, start_date: start, end_date: end, metadata: {} };
+  const trip = { id: '10000000-0000-4000-8000-000000001149', title: `${destination} vacation`, destination, start_date: start, end_date: end, metadata: { publicSlug: 'fixture-1149' } };
   const session = { customer_id: 'fixture-owner', first_name: owner, display_name: owner, metadata: { replyBackend: 'openrouter' } };
   const stored = [];
+  const activityUpdates = [];
   const captured = [];
   const unexpected = [];
   let current;
@@ -30,7 +31,14 @@ export async function withMockedTurnPipeline(run, { destination = 'Bend', owner 
     if (/insert into trip_things/i.test(query)) return [{ id: 'fixture-thing' }];
     if (/insert into worker_jobs/i.test(query)) return [{ id: `job-${stored.length}` }];
     if (/select e.plan, e.status, e.metadata, e.trip_id/i.test(query)) return [{ plan: 'single', status: 'active', trip_id: trip.id, metadata: {} }];
-    if (query.startsWith('select count(*)::int as n from trip_things')) return [{ n: 0 }];
+    if (query.startsWith('select count(*)::int as n from trip_things')) return [{ n: current?.thing ? 1 : 0 }];
+    if (/select id, category, title, description, metadata, location from trip_things/i.test(query)) {
+      return current?.thing ? [current.thing] : [];
+    }
+    if (/^update trip_things set description = ''/i.test(query)) {
+      activityUpdates.push(values[1]);
+      return [{ id: current.thing.id }];
+    }
     if (query.startsWith('select') && /from trips where id/i.test(query)) {
       return current?.noSavedDestination ? [{ ...trip, destination: '' }] : [trip];
     }
@@ -42,6 +50,7 @@ export async function withMockedTurnPipeline(run, { destination = 'Bend', owner 
     TIMESYNCHER_GBRAIN_GET_PAGE_URL: 'https://rules.example.test/page',
     TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '1900',
     TIMESYNCHER_SINGLE_NAME: 'TimeSyncher Vacation Single',
+    TIMESYNCHER_TRAVEL_BASE_URL: 'https://travel.example.test',
     CHAT_ITINERARY_EDIT_OFFLINE_PARSE: '1',
   };
   const originalFetch = globalThis.fetch;
@@ -110,7 +119,7 @@ export async function withMockedTurnPipeline(run, { destination = 'Bend', owner 
   };
   try {
     await run({
-      captured, stored,
+      captured, stored, activityUpdates,
       send: async (sample) => {
         current = sample;
         index += 1;

@@ -12,7 +12,12 @@
         "completionTokens": 162,
         "triedRewrite": false,
         "interimPromptTokens": 0,
-        "interimCompletionTokens": 0
+        "interimCompletionTokens": 0,
+        "replay": {
+          "estimatedUsd": 0.0003986,
+          "unpricedCalls": 3,
+          "chatCalls": 2
+        }
       }
     },
     {
@@ -25,7 +30,12 @@
         "completionTokens": 2782,
         "triedRewrite": true,
         "interimPromptTokens": 1697,
-        "interimCompletionTokens": 213
+        "interimCompletionTokens": 213,
+        "replay": {
+          "estimatedUsd": 0.0021024,
+          "unpricedCalls": 4,
+          "chatCalls": 6
+        }
       }
     },
     {
@@ -38,7 +48,12 @@
         "completionTokens": 3680,
         "triedRewrite": true,
         "interimPromptTokens": 1723,
-        "interimCompletionTokens": 170
+        "interimCompletionTokens": 170,
+        "replay": {
+          "estimatedUsd": 0.0025972,
+          "unpricedCalls": 4,
+          "chatCalls": 6
+        }
       }
     },
     {
@@ -51,7 +66,12 @@
         "completionTokens": 4623,
         "triedRewrite": true,
         "interimPromptTokens": 1743,
-        "interimCompletionTokens": 219
+        "interimCompletionTokens": 219,
+        "replay": {
+          "estimatedUsd": 0.0031005,
+          "unpricedCalls": 4,
+          "chatCalls": 7
+        }
       }
     },
     {
@@ -64,7 +84,12 @@
         "completionTokens": 2127,
         "triedRewrite": true,
         "interimPromptTokens": 1737,
-        "interimCompletionTokens": 184
+        "interimCompletionTokens": 184,
+        "replay": {
+          "estimatedUsd": 0.0018427,
+          "unpricedCalls": 4,
+          "chatCalls": 7
+        }
       }
     },
     {
@@ -77,7 +102,12 @@
         "completionTokens": 3479,
         "triedRewrite": true,
         "interimPromptTokens": 1698,
-        "interimCompletionTokens": 205
+        "interimCompletionTokens": 205,
+        "replay": {
+          "estimatedUsd": 0.0025007,
+          "unpricedCalls": 4,
+          "chatCalls": 7
+        }
       }
     },
     {
@@ -90,7 +120,12 @@
         "completionTokens": 2071,
         "triedRewrite": true,
         "interimPromptTokens": 1699,
-        "interimCompletionTokens": 169
+        "interimCompletionTokens": 169,
+        "replay": {
+          "estimatedUsd": 0.0018019,
+          "unpricedCalls": 4,
+          "chatCalls": 7
+        }
       }
     },
     {
@@ -103,7 +138,12 @@
         "completionTokens": 1777,
         "triedRewrite": true,
         "interimPromptTokens": 1698,
-        "interimCompletionTokens": 176
+        "interimCompletionTokens": 176,
+        "replay": {
+          "estimatedUsd": 0.0016643,
+          "unpricedCalls": 4,
+          "chatCalls": 7
+        }
       }
     },
     {
@@ -116,7 +156,12 @@
         "completionTokens": 1102,
         "triedRewrite": false,
         "interimPromptTokens": 0,
-        "interimCompletionTokens": 0
+        "interimCompletionTokens": 0,
+        "replay": {
+          "estimatedUsd": 0.001287,
+          "unpricedCalls": 3,
+          "chatCalls": 4
+        }
       }
     },
     {
@@ -129,8 +174,14 @@
         "completionTokens": 187,
         "triedRewrite": false,
         "interimPromptTokens": 0,
-        "interimCompletionTokens": 0
+        "interimCompletionTokens": 0,
+        "replay": {
+          "estimatedUsd": 0.0007908,
+          "unpricedCalls": 3,
+          "chatCalls": 4
+        }
       }
     }
-  ]
+  ],
+  "preChangeReplay": "Same ten exchanges replayed with mock fetch on base e520244e. Reply usage uses the recorded aggregate counts, split across generations. Side usage is estimated at four characters per token. The pre-change ledger has no cache hits and separates unpriced Jev calls."
 }
