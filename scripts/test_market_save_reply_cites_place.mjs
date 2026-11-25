@@ -94,7 +94,7 @@ globalThis.fetch = async (url, init = {}) => {
   const href = String(url);
   const body = init.body ? JSON.parse(init.body) : {};
   if (href.includes('/api/alpha/decisions')) {
-    if (body.questions?.model_tier) {
+    if (body.questions?.model_tier && !body.questions?.overall_quality) {
       return json({ answers: { model_tier: { score: 2 }, route_type: { choice: 'general' } } });
     }
     return json({

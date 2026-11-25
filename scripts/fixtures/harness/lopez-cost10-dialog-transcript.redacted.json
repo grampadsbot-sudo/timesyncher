@@ -1,8 +1,8 @@
 {
-  "source": "First ten customer turns from vk-test-001-cost10-20261125-205446 with URLs, tokens, emails, and codes redacted.",
+  "source": "First ten customer turns from harness run vk-test-001-cost10-20261125-205446 (staging build fc988958) with URLs, tokens, emails, session ids, share links and codes removed; per-call openrouterCalls usage kept as recorded.",
   "turns": [
     {
-      "turnIndex": 1,
+      "turnIndex": 2,
       "text": "Hi, I'm Sofia Lopez. My husband and I are taking our kids, ages 6 and 9, to the Orlando theme parks from April 5 to April 9, 2027, and we want to keep the trip mid-range. I'd love a day-by-day plan that paces the parks so the kids still have energy, with notes on where we might stay and what to prioritize each day.",
       "intake": true,
       "reply": "Hi Sofia, I'm building your Orlando theme parks vacation now. You're going from Monday, April 5 to Friday, April 9, 2027, which is four nights, with you, your husband, and your two kids, ages 6 and 9. We're keeping it mid-range and pacing the parks so the kids have energy each day.\n\nWhere are you planning to stay in Orlando? Knowing your lodging will help me place the park days and travel times around it. I am building the itinerary from what you told me. View access lets family and friends see the days. Edit access lets them add notes after you approve an email invite. Welcome them onto this vacation as collaborators. The household plan is unlimited vacations for the whole year.",
@@ -14,10 +14,100 @@
       ],
       "baseline": {
         "triedRewrite": false
+      },
+      "openrouterCalls": [
+        {
+          "purpose": "jev_precall",
+          "endpoint": "decisions",
+          "model": "typesafe/jev-1.13-20260917",
+          "promptTokens": 1015,
+          "completionTokens": 129,
+          "cachedTokens": null,
+          "reasoningTokens": null,
+          "costUsd": 4.263e-05,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 253
+        },
+        {
+          "purpose": "turn_understanding",
+          "endpoint": "chat",
+          "model": "anthropic/claude-haiku-5.5",
+          "promptTokens": 3146,
+          "completionTokens": 324,
+          "cachedTokens": 0,
+          "reasoningTokens": 0,
+          "costUsd": 0.0005518,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 3288
+        },
+        {
+          "purpose": "reply_draft",
+          "endpoint": "chat",
+          "model": "anthropic/claude-haiku-5.5",
+          "promptTokens": 2040,
+          "completionTokens": 146,
+          "cachedTokens": 0,
+          "reasoningTokens": 0,
+          "costUsd": 0.00029633,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 1311
+        },
+        {
+          "purpose": "jev_quality",
+          "endpoint": "decisions",
+          "model": "typesafe/jev-1.13-20260917",
+          "promptTokens": 924,
+          "completionTokens": 110,
+          "cachedTokens": null,
+          "reasoningTokens": null,
+          "costUsd": 3.881e-05,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 167
+        }
+      ],
+      "openrouterTotals": {
+        "calls": 4,
+        "byPurpose": {
+          "jev_precall": {
+            "calls": 1,
+            "measuredUsd": 4.263e-05,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "jev_quality": {
+            "calls": 1,
+            "measuredUsd": 3.881e-05,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "reply_draft": {
+            "calls": 1,
+            "measuredUsd": 0.00029633,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "turn_understanding": {
+            "calls": 1,
+            "measuredUsd": 0.0005518,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          }
+        },
+        "measuredUsd": 0.00092957,
+        "estimatedUsd": 0,
+        "unpricedCalls": 0
       }
     },
     {
-      "turnIndex": 2,
+      "turnIndex": 4,
       "text": "We haven't picked a hotel yet, so please plan around a mid-range place with a pool near the parks. We want park time in the morning and a pool break in the afternoon so the kids can recharge. Please give my family edit access so they can add notes and suggestions once they accept the invite, and save the day-by-day plan onto our itinerary as you build it.",
       "intake": true,
       "reply": "Sofia, this sounds like a lovely family vacation, and a morning-parks, afternoon-pool rhythm is a smart way to keep your six- and nine-year-olds fresh for all four park days. Since no hotel is chosen yet, I'll plan around a mid-range property near the parks with a pool, and we can lock in the exact place once you pick one. Your itinerary is empty right now, so nothing is saved to the day-by-day plan yet, and I'll build it out on your vacation site as we go.\n\nFor edit access, I can't grant it from this chat, so I'm noting that your family member (editor) is listed on the vacation but not coming on the vacation. Edit access can be added by sending an email invite from your vacation settings once you approve it.\n\nWhich day do you want the first park morning, and do you have a favorite park you'd like to start with?",
@@ -29,11 +119,101 @@
       ],
       "baseline": {
         "triedRewrite": false
+      },
+      "openrouterCalls": [
+        {
+          "purpose": "jev_precall",
+          "endpoint": "decisions",
+          "model": "typesafe/jev-1.13-20260917",
+          "promptTokens": 1005,
+          "completionTokens": 129,
+          "cachedTokens": null,
+          "reasoningTokens": null,
+          "costUsd": 4.221e-05,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 160
+        },
+        {
+          "purpose": "turn_understanding",
+          "endpoint": "chat",
+          "model": "anthropic/claude-haiku-5.5",
+          "promptTokens": 3135,
+          "completionTokens": 231,
+          "cachedTokens": 0,
+          "reasoningTokens": 0,
+          "costUsd": 0.0005042,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 4056
+        },
+        {
+          "purpose": "reply_draft",
+          "endpoint": "chat",
+          "model": "anthropic/claude-haiku-5.5",
+          "promptTokens": 2933,
+          "completionTokens": 286,
+          "cachedTokens": 773,
+          "reasoningTokens": 0,
+          "costUsd": 0.00036673,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 2367
+        },
+        {
+          "purpose": "jev_quality",
+          "endpoint": "decisions",
+          "model": "typesafe/jev-1.13-20260917",
+          "promptTokens": 1130,
+          "completionTokens": 107,
+          "cachedTokens": null,
+          "reasoningTokens": null,
+          "costUsd": 4.746e-05,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 195
+        }
+      ],
+      "openrouterTotals": {
+        "calls": 4,
+        "byPurpose": {
+          "jev_precall": {
+            "calls": 1,
+            "measuredUsd": 4.221e-05,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "jev_quality": {
+            "calls": 1,
+            "measuredUsd": 4.746e-05,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "reply_draft": {
+            "calls": 1,
+            "measuredUsd": 0.00036673,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "turn_understanding": {
+            "calls": 1,
+            "measuredUsd": 0.0005042,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          }
+        },
+        "measuredUsd": 0.0009606,
+        "estimatedUsd": 0,
+        "unpricedCalls": 0
       }
     },
     {
-      "turnIndex": 3,
-      "text": "Tuesday, April 6 is perfect for our first park morning, and I'd love to start with Magic Kingdom. Please add the hotel arrival on Monday and our departure on Friday, and save each day onto the itinerary as you build it. You mentioned an editor on the vacation \u2014 what can collaborators actually do once they accept the invite, compared with people who only view the days?",
+      "turnIndex": 6,
+      "text": "Tuesday, April 6 is perfect for our first park morning, and I'd love to start with Magic Kingdom. Please add the hotel arrival on Monday and our departure on Friday, and save each day onto the itinerary as you build it. You mentioned an editor on the vacation — what can collaborators actually do once they accept the invite, compared with people who only view the days?",
       "intake": true,
       "reply": "Tuesday, April 6 is a good fit for a first morning at Magic Kingdom, and Magic Kingdom is already saved on that day. Your saved vacation runs Monday, April 5 through Friday, April 9, 2027, so Monday is the start and Friday is the end. I don't have hotel arrival or checkout times on the record yet, so I won't mark either one as set. Once you have your lodging details, send me the times and I'll add them to the right days.\n\nYour saved roster is Sofia Lopez as account holder, Mateo Lopez, Leo Lopez, Lily Lopez, and a child traveling with the group. Collaborators can be given either view access or edit access. View access lets someone see the days and what's planned on them. Edit access lets someone change the days, add activities, and work on the itinerary with you. The choice is yours to make for each person when you send the invite.",
       "recordedPurposes": [
@@ -49,10 +229,194 @@
       ],
       "baseline": {
         "triedRewrite": true
+      },
+      "openrouterCalls": [
+        {
+          "purpose": "jev_precall",
+          "endpoint": "decisions",
+          "model": "typesafe/jev-1.13-20260917",
+          "promptTokens": 1004,
+          "completionTokens": 127,
+          "cachedTokens": null,
+          "reasoningTokens": null,
+          "costUsd": 4.217e-05,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 231
+        },
+        {
+          "purpose": "turn_understanding",
+          "endpoint": "chat",
+          "model": "anthropic/claude-haiku-5.5",
+          "promptTokens": 3144,
+          "completionTokens": 246,
+          "cachedTokens": 3008,
+          "reasoningTokens": 0,
+          "costUsd": 0.00016668,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 1499
+        },
+        {
+          "purpose": "reply_draft",
+          "endpoint": "chat",
+          "model": "anthropic/claude-haiku-5.5",
+          "promptTokens": 3356,
+          "completionTokens": 301,
+          "cachedTokens": 773,
+          "reasoningTokens": 0,
+          "costUsd": 0.00041653,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 2287
+        },
+        {
+          "purpose": "reply_rewrite",
+          "endpoint": "chat",
+          "model": "anthropic/claude-haiku-5.5",
+          "promptTokens": 3384,
+          "completionTokens": 330,
+          "cachedTokens": 773,
+          "reasoningTokens": 0,
+          "costUsd": 0.00043383,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 2302
+        },
+        {
+          "purpose": "jev_quality",
+          "endpoint": "decisions",
+          "model": "typesafe/jev-1.13-20260917",
+          "promptTokens": 1103,
+          "completionTokens": 107,
+          "cachedTokens": null,
+          "reasoningTokens": null,
+          "costUsd": 4.633e-05,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 137
+        },
+        {
+          "purpose": "reply_interim",
+          "endpoint": "chat",
+          "model": "anthropic/claude-haiku-5.5",
+          "promptTokens": 1756,
+          "completionTokens": 144,
+          "cachedTokens": 773,
+          "reasoningTokens": 0,
+          "costUsd": 0.00017803,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 1494
+        },
+        {
+          "purpose": "interim_judge",
+          "endpoint": "chat",
+          "model": "anthropic/claude-haiku-5.5",
+          "promptTokens": 323,
+          "completionTokens": 15,
+          "cachedTokens": 0,
+          "reasoningTokens": 0,
+          "costUsd": 3.98e-05,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 633
+        },
+        {
+          "purpose": "reply_rewrite",
+          "endpoint": "chat",
+          "model": "anthropic/claude-haiku-5.5",
+          "promptTokens": 3194,
+          "completionTokens": 353,
+          "cachedTokens": 773,
+          "reasoningTokens": 0,
+          "costUsd": 0.00042633,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 2960
+        },
+        {
+          "purpose": "jev_quality_rewrite",
+          "endpoint": "decisions",
+          "model": "typesafe/jev-1.13-20260917",
+          "promptTokens": 1111,
+          "completionTokens": 107,
+          "cachedTokens": null,
+          "reasoningTokens": null,
+          "costUsd": 4.666e-05,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 147
+        }
+      ],
+      "openrouterTotals": {
+        "calls": 9,
+        "byPurpose": {
+          "jev_precall": {
+            "calls": 1,
+            "measuredUsd": 4.217e-05,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "jev_quality": {
+            "calls": 1,
+            "measuredUsd": 4.633e-05,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "reply_draft": {
+            "calls": 1,
+            "measuredUsd": 0.00041653,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "interim_judge": {
+            "calls": 1,
+            "measuredUsd": 3.98e-05,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "reply_interim": {
+            "calls": 1,
+            "measuredUsd": 0.00017803,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "reply_rewrite": {
+            "calls": 2,
+            "measuredUsd": 0.00086016,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "turn_understanding": {
+            "calls": 1,
+            "measuredUsd": 0.00016668,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "jev_quality_rewrite": {
+            "calls": 1,
+            "measuredUsd": 4.666e-05,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          }
+        },
+        "measuredUsd": 0.00179636,
+        "estimatedUsd": 0,
+        "unpricedCalls": 0
       }
     },
     {
-      "turnIndex": 4,
+      "turnIndex": 8,
       "text": "Edit access is what I want for my family, so once they accept the invite they can add notes and suggestions on the days. We still don't have a hotel or exact arrival and checkout times, but please save Monday as our arrival day and Friday as our departure on the itinerary anyway, and tell me how that first day should actually go before Tuesday morning at Magic Kingdom.",
       "intake": true,
       "reply": "Sofia, Monday is a great day to ease into the vacation, and having it saved as your arrival day means the whole Orlando plan has a clear shape before Tuesday's Magic Kingdom morning. Since there's no hotel or check-in time yet, I'll note Monday as the arrival day and Friday as the departure day on the itinerary without giving either a time. For Monday, the hotel arrival is what's on the record, so the simplest plan is to check in, let the kids swim at the pool, and keep the evening light so everyone sleeps well before an early Tuesday start. Your family can add edit access once they accept their invites, and then they can leave suggestions on each day.",
@@ -64,11 +428,101 @@
       ],
       "baseline": {
         "triedRewrite": false
+      },
+      "openrouterCalls": [
+        {
+          "purpose": "jev_precall",
+          "endpoint": "decisions",
+          "model": "typesafe/jev-1.13-20260917",
+          "promptTokens": 1003,
+          "completionTokens": 129,
+          "cachedTokens": null,
+          "reasoningTokens": null,
+          "costUsd": 4.213e-05,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 251
+        },
+        {
+          "purpose": "turn_understanding",
+          "endpoint": "chat",
+          "model": "anthropic/claude-haiku-5.5",
+          "promptTokens": 3139,
+          "completionTokens": 227,
+          "cachedTokens": 0,
+          "reasoningTokens": 0,
+          "costUsd": 0.0005026,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 3054
+        },
+        {
+          "purpose": "reply_draft",
+          "endpoint": "chat",
+          "model": "anthropic/claude-haiku-5.5",
+          "promptTokens": 3721,
+          "completionTokens": 235,
+          "cachedTokens": 773,
+          "reasoningTokens": 0,
+          "costUsd": 0.00042003,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 1973
+        },
+        {
+          "purpose": "jev_quality",
+          "endpoint": "decisions",
+          "model": "typesafe/jev-1.13-20260917",
+          "promptTokens": 1068,
+          "completionTokens": 107,
+          "cachedTokens": null,
+          "reasoningTokens": null,
+          "costUsd": 4.486e-05,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 169
+        }
+      ],
+      "openrouterTotals": {
+        "calls": 4,
+        "byPurpose": {
+          "jev_precall": {
+            "calls": 1,
+            "measuredUsd": 4.213e-05,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "jev_quality": {
+            "calls": 1,
+            "measuredUsd": 4.486e-05,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "reply_draft": {
+            "calls": 1,
+            "measuredUsd": 0.00042003,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "turn_understanding": {
+            "calls": 1,
+            "measuredUsd": 0.0005026,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          }
+        },
+        "measuredUsd": 0.00100962,
+        "estimatedUsd": 0,
+        "unpricedCalls": 0
       }
     },
     {
-      "turnIndex": 5,
-      "text": "Thank you \u2014 easing in on Monday with check-in, a pool swim, and a light evening is the right start before our Magic Kingdom morning. Yes, please save that plan onto the itinerary now: Monday as our arrival day and Friday as our departure, without hotel times, and keep the pool afternoon on the arrival day. Then keep planning the remaining park days with morning park time and an afternoon pool break, and save each day onto the itinerary as you build it.",
+      "turnIndex": 10,
+      "text": "Thank you — easing in on Monday with check-in, a pool swim, and a light evening is the right start before our Magic Kingdom morning. Yes, please save that plan onto the itinerary now: Monday as our arrival day and Friday as our departure, without hotel times, and keep the pool afternoon on the arrival day. Then keep planning the remaining park days with morning park time and an afternoon pool break, and save each day onto the itinerary as you build it.",
       "intake": true,
       "reply": "Thanks, Sofia. I'll save Monday, April 5 as your arrival day and Friday, April 9 as your departure day, with no hotel times yet, and keep the Monday pool afternoon in mind. Your saved vacation record has Magic Kingdom on Tuesday, April 6, so that morning stays as planned. I can't yet confirm how the remaining park days are set on the record, so I'll only name the days that are already saved, and I'll fill in morning park time and afternoon pool breaks as you give me the parks you want on each day.\n\nThe family roster on the record is you as account holder, your husband Mateo, Leo, Lily, and your child traveler. Edit access for collaborators is something you can send through your vacation settings once you approve the invite, and it stays in place from there.\n\nWhich park would you like for Wednesday, April 7, and should it be Epcot, Hollywood Studios, or Animal Kingdom?",
       "recordedPurposes": [
@@ -79,11 +533,101 @@
       ],
       "baseline": {
         "triedRewrite": false
+      },
+      "openrouterCalls": [
+        {
+          "purpose": "jev_precall",
+          "endpoint": "decisions",
+          "model": "typesafe/jev-1.13-20260917",
+          "promptTokens": 1022,
+          "completionTokens": 129,
+          "cachedTokens": null,
+          "reasoningTokens": null,
+          "costUsd": 4.292e-05,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 176
+        },
+        {
+          "purpose": "turn_understanding",
+          "endpoint": "chat",
+          "model": "anthropic/claude-haiku-5.5",
+          "promptTokens": 3172,
+          "completionTokens": 212,
+          "cachedTokens": 0,
+          "reasoningTokens": 0,
+          "costUsd": 0.0004984,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 3004
+        },
+        {
+          "purpose": "reply_draft",
+          "endpoint": "chat",
+          "model": "anthropic/claude-haiku-5.5",
+          "promptTokens": 4106,
+          "completionTokens": 318,
+          "cachedTokens": 773,
+          "reasoningTokens": 0,
+          "costUsd": 0.00050003,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 2210
+        },
+        {
+          "purpose": "jev_quality",
+          "endpoint": "decisions",
+          "model": "typesafe/jev-1.13-20260917",
+          "promptTokens": 1144,
+          "completionTokens": 110,
+          "cachedTokens": null,
+          "reasoningTokens": null,
+          "costUsd": 4.805e-05,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 211
+        }
+      ],
+      "openrouterTotals": {
+        "calls": 4,
+        "byPurpose": {
+          "jev_precall": {
+            "calls": 1,
+            "measuredUsd": 4.292e-05,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "jev_quality": {
+            "calls": 1,
+            "measuredUsd": 4.805e-05,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "reply_draft": {
+            "calls": 1,
+            "measuredUsd": 0.00050003,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "turn_understanding": {
+            "calls": 1,
+            "measuredUsd": 0.0004984,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          }
+        },
+        "measuredUsd": 0.0010894,
+        "estimatedUsd": 0,
+        "unpricedCalls": 0
       }
     },
     {
-      "turnIndex": 6,
-      "text": "Animal Kingdom on Wednesday, please, with the morning in the park and a pool break in the afternoon so the kids can recharge, and yes, save that day onto the itinerary along with Monday as our arrival day and Friday as our departure, still with no hotel times. You mentioned collaborators again \u2014 what can they actually do once they accept the invite, compared with people who only view the days?",
+      "turnIndex": 12,
+      "text": "Animal Kingdom on Wednesday, please, with the morning in the park and a pool break in the afternoon so the kids can recharge, and yes, save that day onto the itinerary along with Monday as our arrival day and Friday as our departure, still with no hotel times. You mentioned collaborators again — what can they actually do once they accept the invite, compared with people who only view the days?",
       "intake": true,
       "reply": "Sofia, Wednesday, April 7 at Animal Kingdom is a good fit for your crew, with the morning in the park and a pool break in the afternoon to let the kids recharge. Animal Kingdom is already saved on that day, so nothing new needs adding there. Monday, April 5 as your arrival and Friday, April 9 as your departure are on the saved record too, and I've left the hotel times blank since you haven't picked a hotel yet.\n\nOn your question about collaborators: once someone accepts an invite, they can help build the vacation, meaning they can add and change activities on the days. People who only view the days can see the plan but can't change it. That's the main difference to keep in mind when you decide who needs edit access.",
       "recordedPurposes": [
@@ -99,10 +643,194 @@
       ],
       "baseline": {
         "triedRewrite": true
+      },
+      "openrouterCalls": [
+        {
+          "purpose": "jev_precall",
+          "endpoint": "decisions",
+          "model": "typesafe/jev-1.13-20260917",
+          "promptTokens": 1007,
+          "completionTokens": 127,
+          "cachedTokens": null,
+          "reasoningTokens": null,
+          "costUsd": 4.229e-05,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 301
+        },
+        {
+          "purpose": "turn_understanding",
+          "endpoint": "chat",
+          "model": "anthropic/claude-haiku-5.5",
+          "promptTokens": 3146,
+          "completionTokens": 277,
+          "cachedTokens": 3008,
+          "reasoningTokens": 0,
+          "costUsd": 0.00018238,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 1695
+        },
+        {
+          "purpose": "reply_draft",
+          "endpoint": "chat",
+          "model": "anthropic/claude-haiku-5.5",
+          "promptTokens": 4671,
+          "completionTokens": 212,
+          "cachedTokens": 773,
+          "reasoningTokens": 0,
+          "costUsd": 0.00050353,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 1659
+        },
+        {
+          "purpose": "reply_rewrite",
+          "endpoint": "chat",
+          "model": "anthropic/claude-haiku-5.5",
+          "promptTokens": 4699,
+          "completionTokens": 234,
+          "cachedTokens": 773,
+          "reasoningTokens": 0,
+          "costUsd": 0.00051733,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 1855
+        },
+        {
+          "purpose": "jev_quality",
+          "endpoint": "decisions",
+          "model": "typesafe/jev-1.13-20260917",
+          "promptTokens": 1068,
+          "completionTokens": 110,
+          "cachedTokens": null,
+          "reasoningTokens": null,
+          "costUsd": 4.486e-05,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 181
+        },
+        {
+          "purpose": "reply_interim",
+          "endpoint": "chat",
+          "model": "anthropic/claude-haiku-5.5",
+          "promptTokens": 1759,
+          "completionTokens": 147,
+          "cachedTokens": 773,
+          "reasoningTokens": 0,
+          "costUsd": 0.00017983,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 1434
+        },
+        {
+          "purpose": "reply_rewrite",
+          "endpoint": "chat",
+          "model": "anthropic/claude-haiku-5.5",
+          "promptTokens": 3130,
+          "completionTokens": 292,
+          "cachedTokens": 773,
+          "reasoningTokens": 0,
+          "costUsd": 0.00038943,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 1967
+        },
+        {
+          "purpose": "interim_judge",
+          "endpoint": "chat",
+          "model": "anthropic/claude-haiku-5.5",
+          "promptTokens": 333,
+          "completionTokens": 15,
+          "cachedTokens": 0,
+          "reasoningTokens": 0,
+          "costUsd": 4.08e-05,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 681
+        },
+        {
+          "purpose": "jev_quality_rewrite",
+          "endpoint": "decisions",
+          "model": "typesafe/jev-1.13-20260917",
+          "promptTokens": 1092,
+          "completionTokens": 107,
+          "cachedTokens": null,
+          "reasoningTokens": null,
+          "costUsd": 4.586e-05,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 201
+        }
+      ],
+      "openrouterTotals": {
+        "calls": 9,
+        "byPurpose": {
+          "jev_precall": {
+            "calls": 1,
+            "measuredUsd": 4.229e-05,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "jev_quality": {
+            "calls": 1,
+            "measuredUsd": 4.486e-05,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "reply_draft": {
+            "calls": 1,
+            "measuredUsd": 0.00050353,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "interim_judge": {
+            "calls": 1,
+            "measuredUsd": 4.08e-05,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "reply_interim": {
+            "calls": 1,
+            "measuredUsd": 0.00017983,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "reply_rewrite": {
+            "calls": 2,
+            "measuredUsd": 0.00090676,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "turn_understanding": {
+            "calls": 1,
+            "measuredUsd": 0.00018238,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "jev_quality_rewrite": {
+            "calls": 1,
+            "measuredUsd": 4.586e-05,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          }
+        },
+        "measuredUsd": 0.00194631,
+        "estimatedUsd": 0,
+        "unpricedCalls": 0
       }
     },
     {
-      "turnIndex": 7,
+      "turnIndex": 14,
       "text": "I'm glad Wednesday at Animal Kingdom is saved with the morning in the park and a pool break after, and that Monday and Friday are on the itinerary as arrival and departure with the hotel times left blank. That access explanation is what I want for my family: viewers can see the days, and once they accept the invite, collaborators with edit access can add notes and suggestions. Let's do Hollywood Studios on Thursday morning with another afternoon pool break so the kids can recharge, and please save that day onto the itinerary as you add it.",
       "intake": false,
       "reply": "Hollywood Studios on Thursday is a good match for a crew that wants a strong morning and a slower afternoon. The kids get a morning in the park while they are fresh, then a pool break so they can recharge before the evening. Your vacation runs Monday, April 5 through Friday, April 9, 2027, with arrival Monday and departure Friday, and the hotel times stay blank until you pick a place to stay. Wednesday at Animal Kingdom stays as it is on the record, and I have not yet added Hollywood Studios to Thursday. Once I do, I will tell you it is saved. Who gets edit access and who gets view access is a choice you make in your vacation settings, so I will not decide that for you here.",
@@ -116,11 +844,141 @@
       ],
       "baseline": {
         "triedRewrite": true
+      },
+      "openrouterCalls": [
+        {
+          "purpose": "jev_precall",
+          "endpoint": "decisions",
+          "model": "typesafe/jev-1.13-20260917",
+          "promptTokens": 1035,
+          "completionTokens": 129,
+          "cachedTokens": null,
+          "reasoningTokens": null,
+          "costUsd": 4.347e-05,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 276
+        },
+        {
+          "purpose": "turn_understanding",
+          "endpoint": "chat",
+          "model": "anthropic/claude-haiku-5.5",
+          "promptTokens": 3196,
+          "completionTokens": 290,
+          "cachedTokens": 3008,
+          "reasoningTokens": 0,
+          "costUsd": 0.00019388,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 1815
+        },
+        {
+          "purpose": "reply_draft",
+          "endpoint": "chat",
+          "model": "anthropic/claude-haiku-5.5",
+          "promptTokens": 4890,
+          "completionTokens": 263,
+          "cachedTokens": 773,
+          "reasoningTokens": 0,
+          "costUsd": 0.00055093,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 1807
+        },
+        {
+          "purpose": "jev_quality",
+          "endpoint": "decisions",
+          "model": "typesafe/jev-1.13-20260917",
+          "promptTokens": 1128,
+          "completionTokens": 110,
+          "cachedTokens": null,
+          "reasoningTokens": null,
+          "costUsd": 4.738e-05,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 152
+        },
+        {
+          "purpose": "reply_rewrite",
+          "endpoint": "chat",
+          "model": "anthropic/claude-haiku-5.5",
+          "promptTokens": 2053,
+          "completionTokens": 286,
+          "cachedTokens": 773,
+          "reasoningTokens": 0,
+          "costUsd": 0.00027873,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 2081
+        },
+        {
+          "purpose": "jev_quality_rewrite",
+          "endpoint": "decisions",
+          "model": "typesafe/jev-1.13-20260917",
+          "promptTokens": 996,
+          "completionTokens": 110,
+          "cachedTokens": null,
+          "reasoningTokens": null,
+          "costUsd": 4.183e-05,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 159
+        }
+      ],
+      "openrouterTotals": {
+        "calls": 6,
+        "byPurpose": {
+          "jev_precall": {
+            "calls": 1,
+            "measuredUsd": 4.347e-05,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "jev_quality": {
+            "calls": 1,
+            "measuredUsd": 4.738e-05,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "reply_draft": {
+            "calls": 1,
+            "measuredUsd": 0.00055093,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "reply_rewrite": {
+            "calls": 1,
+            "measuredUsd": 0.00027873,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "turn_understanding": {
+            "calls": 1,
+            "measuredUsd": 0.00019388,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "jev_quality_rewrite": {
+            "calls": 1,
+            "measuredUsd": 4.183e-05,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          }
+        },
+        "measuredUsd": 0.00115622,
+        "estimatedUsd": 0,
+        "unpricedCalls": 0
       }
     },
     {
-      "turnIndex": 8,
-      "text": "Please save Hollywood Studios on Thursday now, morning in the park and a pool break in the afternoon, and tell me once that day is actually on the itinerary. You mentioned view access and edit access again \u2014 what can collaborators do once they accept the invite, compared with people who only view the days? I still want edit access for my family. For the flights, we'd leave from Chicago O'Hare Monday morning so we land in time for that easy arrival day, and fly home Friday late afternoon, and please save those outbound and return options on the trip as you plan them.",
+      "turnIndex": 16,
+      "text": "Please save Hollywood Studios on Thursday now, morning in the park and a pool break in the afternoon, and tell me once that day is actually on the itinerary. You mentioned view access and edit access again — what can collaborators do once they accept the invite, compared with people who only view the days? I still want edit access for my family. For the flights, we'd leave from Chicago O'Hare Monday morning so we land in time for that easy arrival day, and fly home Friday late afternoon, and please save those outbound and return options on the trip as you plan them.",
       "intake": true,
       "reply": "Sofia, I can see Hollywood Studios is already on your saved record for Thursday, April 8, with the morning in the park. Your saved vacation runs Monday, April 5 through Friday, April 9, 2027, and the record shows the Chicago O'Hare outbound flight on Monday, April 5 and the return flight from Chicago O'Hare on Friday, April 9. I can't add a pool break to that day from here without a saved activity for it, so I'll leave the afternoon open for your family to fill in. Hollywood Studios is already saved on that day.\n\nFor collaborators: view access lets someone see the days and what is planned on them. Edit access lets someone add notes, suggestions, and change activities on the days once they accept the invite. You can give view access or edit access to each person when you send the invite, and that choice is yours. Since you want edit access for your family, you'll set that in the invite step.\n\nMonday's flight is saved as the Chicago O'Hare outbound flight, and Friday's return is saved as the return flight. I'm not able to add more flight options from this chat, so the outbound and return times on the record are what I can confirm.",
       "recordedPurposes": [
@@ -131,11 +989,101 @@
       ],
       "baseline": {
         "triedRewrite": false
+      },
+      "openrouterCalls": [
+        {
+          "purpose": "jev_precall",
+          "endpoint": "decisions",
+          "model": "typesafe/jev-1.13-20260917",
+          "promptTokens": 1045,
+          "completionTokens": 127,
+          "cachedTokens": null,
+          "reasoningTokens": null,
+          "costUsd": 4.389e-05,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 290
+        },
+        {
+          "purpose": "turn_understanding",
+          "endpoint": "chat",
+          "model": "anthropic/claude-haiku-5.5",
+          "promptTokens": 3198,
+          "completionTokens": 354,
+          "cachedTokens": 3008,
+          "reasoningTokens": 0,
+          "costUsd": 0.00022608,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 2048
+        },
+        {
+          "purpose": "reply_draft",
+          "endpoint": "chat",
+          "model": "anthropic/claude-haiku-5.5",
+          "promptTokens": 5078,
+          "completionTokens": 393,
+          "cachedTokens": 773,
+          "reasoningTokens": 0,
+          "costUsd": 0.00063473,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 2703
+        },
+        {
+          "purpose": "jev_quality",
+          "endpoint": "decisions",
+          "model": "typesafe/jev-1.13-20260917",
+          "promptTokens": 1242,
+          "completionTokens": 110,
+          "cachedTokens": null,
+          "reasoningTokens": null,
+          "costUsd": 5.216e-05,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 184
+        }
+      ],
+      "openrouterTotals": {
+        "calls": 4,
+        "byPurpose": {
+          "jev_precall": {
+            "calls": 1,
+            "measuredUsd": 4.389e-05,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "jev_quality": {
+            "calls": 1,
+            "measuredUsd": 5.216e-05,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "reply_draft": {
+            "calls": 1,
+            "measuredUsd": 0.00063473,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "turn_understanding": {
+            "calls": 1,
+            "measuredUsd": 0.00022608,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          }
+        },
+        "measuredUsd": 0.00095686,
+        "estimatedUsd": 0,
+        "unpricedCalls": 0
       }
     },
     {
-      "turnIndex": 9,
-      "text": "I'm glad Hollywood Studios is already saved for Thursday morning, and that explanation is what I want: viewers can see the days, and once they accept the invite, collaborators with edit access can add notes and suggestions. Please still save the Thursday afternoon pool break on that day so it is actually on the itinerary. For the flights, home is Chicago O'Hare \u2014 we'd leave Monday morning so we land in time for that easy arrival day, and fly home Friday late afternoon from Orlando back to Chicago O'Hare, not a return that leaves Chicago. Please save those outbound and return options on the trip with those times and tell me once both flights are actually on the itinerary.",
+      "turnIndex": 18,
+      "text": "I'm glad Hollywood Studios is already saved for Thursday morning, and that explanation is what I want: viewers can see the days, and once they accept the invite, collaborators with edit access can add notes and suggestions. Please still save the Thursday afternoon pool break on that day so it is actually on the itinerary. For the flights, home is Chicago O'Hare — we'd leave Monday morning so we land in time for that easy arrival day, and fly home Friday late afternoon from Orlando back to Chicago O'Hare, not a return that leaves Chicago. Please save those outbound and return options on the trip with those times and tell me once both flights are actually on the itinerary.",
       "intake": false,
       "reply": "Sofia, I can see the Thursday morning Hollywood Studios visit already on your saved record, and I can't save a Thursday afternoon pool break from here, because there's no pool break on that day in the saved vacation record. The record does show a pool break on Friday, April 8 with a different label, so I won't count that as Thursday. Your saved record also has the Chicago O'Hare outbound flight on Monday, April 5 and the return flight from Orlando to Chicago O'Hare on Friday, April 9. Those are the two flights already on the itinerary, and I can't add new flight times from this chat, so the times on the record are what I can confirm. Edit access for your family is set when you send the invites, and once they accept, they can add notes and suggestions on the days.",
       "recordedPurposes": [
@@ -146,10 +1094,100 @@
       ],
       "baseline": {
         "triedRewrite": false
+      },
+      "openrouterCalls": [
+        {
+          "purpose": "jev_precall",
+          "endpoint": "decisions",
+          "model": "typesafe/jev-1.13-20260917",
+          "promptTokens": 1064,
+          "completionTokens": 125,
+          "cachedTokens": null,
+          "reasoningTokens": null,
+          "costUsd": 4.469e-05,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 182
+        },
+        {
+          "purpose": "turn_understanding",
+          "endpoint": "chat",
+          "model": "anthropic/claude-haiku-5.5",
+          "promptTokens": 3244,
+          "completionTokens": 339,
+          "cachedTokens": 0,
+          "reasoningTokens": 0,
+          "costUsd": 0.0005691,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 3417
+        },
+        {
+          "purpose": "reply_draft",
+          "endpoint": "chat",
+          "model": "anthropic/claude-haiku-5.5",
+          "promptTokens": 5359,
+          "completionTokens": 266,
+          "cachedTokens": 773,
+          "reasoningTokens": 0,
+          "costUsd": 0.00059933,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 1847
+        },
+        {
+          "purpose": "jev_quality",
+          "endpoint": "decisions",
+          "model": "typesafe/jev-1.13-20260917",
+          "promptTokens": 1195,
+          "completionTokens": 110,
+          "cachedTokens": null,
+          "reasoningTokens": null,
+          "costUsd": 5.019e-05,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 162
+        }
+      ],
+      "openrouterTotals": {
+        "calls": 4,
+        "byPurpose": {
+          "jev_precall": {
+            "calls": 1,
+            "measuredUsd": 4.469e-05,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "jev_quality": {
+            "calls": 1,
+            "measuredUsd": 5.019e-05,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "reply_draft": {
+            "calls": 1,
+            "measuredUsd": 0.00059933,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "turn_understanding": {
+            "calls": 1,
+            "measuredUsd": 0.0005691,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          }
+        },
+        "measuredUsd": 0.00126331,
+        "estimatedUsd": 0,
+        "unpricedCalls": 0
       }
     },
     {
-      "turnIndex": 10,
+      "turnIndex": 20,
       "text": "Unrelated: what is the weather on Mars next Tuesday?",
       "intake": false,
       "reply": "Sofia, that Mars weather question is outside what I can help with here, since I only plan your Orlando vacation. Your party on the saved record is you as the account holder, Mateo, Leo, Lily, and your child traveler, and the group is set for Monday, April 5 through Friday, April 9, 2027. Animal Kingdom on Wednesday morning, Hollywood Studios on Thursday morning, and the Magic Kingdom visit on April 6 are already on the record, along with the Monday outbound and Friday return flights from Chicago O'Hare. Tell me what you want to add to the park days next and I'll keep building the vacation around it.",
@@ -162,6 +1200,116 @@
       ],
       "baseline": {
         "triedRewrite": false
+      },
+      "openrouterCalls": [
+        {
+          "purpose": "jev_precall",
+          "endpoint": "decisions",
+          "model": "typesafe/jev-1.13-20260917",
+          "promptTokens": 941,
+          "completionTokens": 125,
+          "cachedTokens": null,
+          "reasoningTokens": null,
+          "costUsd": 3.952e-05,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 363
+        },
+        {
+          "purpose": "turn_understanding",
+          "endpoint": "chat",
+          "model": "anthropic/claude-haiku-5.5",
+          "promptTokens": 3046,
+          "completionTokens": 203,
+          "cachedTokens": 3008,
+          "reasoningTokens": 0,
+          "costUsd": 0.00013538,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 1365
+        },
+        {
+          "purpose": "itinerary_edit_intent",
+          "endpoint": "chat",
+          "model": "anthropic/claude-haiku-5.5",
+          "promptTokens": 1529,
+          "completionTokens": 129,
+          "cachedTokens": 773,
+          "reasoningTokens": 0,
+          "costUsd": 0.00014783,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 1665
+        },
+        {
+          "purpose": "reply_draft",
+          "endpoint": "chat",
+          "model": "anthropic/claude-haiku-5.5",
+          "promptTokens": 5266,
+          "completionTokens": 229,
+          "cachedTokens": 773,
+          "reasoningTokens": 0,
+          "costUsd": 0.00057153,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 1784
+        },
+        {
+          "purpose": "jev_quality",
+          "endpoint": "decisions",
+          "model": "typesafe/jev-1.13-20260917",
+          "promptTokens": 1072,
+          "completionTokens": 107,
+          "cachedTokens": null,
+          "reasoningTokens": null,
+          "costUsd": 4.502e-05,
+          "costSource": "openrouter_usage_cost",
+          "ok": true,
+          "httpStatus": 200,
+          "latencyMs": 284
+        }
+      ],
+      "openrouterTotals": {
+        "calls": 5,
+        "byPurpose": {
+          "jev_precall": {
+            "calls": 1,
+            "measuredUsd": 3.952e-05,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "jev_quality": {
+            "calls": 1,
+            "measuredUsd": 4.502e-05,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "reply_draft": {
+            "calls": 1,
+            "measuredUsd": 0.00057153,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "turn_understanding": {
+            "calls": 1,
+            "measuredUsd": 0.00013538,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          },
+          "itinerary_edit_intent": {
+            "calls": 1,
+            "measuredUsd": 0.00014783,
+            "estimatedUsd": 0,
+            "unpricedCalls": 0
+          }
+        },
+        "measuredUsd": 0.00093928,
+        "estimatedUsd": 0,
+        "unpricedCalls": 0
       }
     }
   ]

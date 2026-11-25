@@ -120,7 +120,7 @@ export function openRouterAppKey(env = process.env) {
   return appOpenRouterKey(env);
 }
 
-function openRouterChatModelForTier(tier) {
+export function openRouterChatModelForTier(tier) {
   return OPENROUTER_TIER_CHAT_MODELS[tier] || '';
 }
 
@@ -383,102 +383,37 @@ function vacationAppContext({ customerTurn, stage, gate, screen, session }) {
   };
 }
 
-function precallDecisionQuestions() {
-  return {
-    model_tier: {
-      type: 'score',
-      instructions: 'Pick the model tier this vacation-app turn needs. Criterion 1 is cheapest and criterion 4 is strongest. Use 1 or 2 for a simple acknowledgment. Use 3 or 4 when the reply needs richer banter, a multi-day plan, or a judgment call. Do not pin every turn to tier 1. A family mention is not by itself a collaborator welcome. There is no tier 5.',
-      criteria: JEV_MODEL_TIER_CRITERIA,
-    },
-    route_type: {
-      type: 'choice',
-      instructions: 'Which vacation-app reply route should the generator follow?',
-      criteria: {
-        itinerary_advice: 'Day-by-day plan, weather backup, activities, or where to go.',
-        notes_where: 'Customer wants to save a note. Day is required and place is optional. Never say Thing.',
-        access_pricing: 'The customer asked about price, access, or joining as collaborators. Not a day plan that only names family.',
-        collab_upsell: 'The one collab assessment, only when the customer asked to join and it has not been given. Do not use this for day advice.',
-        product_boundary: 'Reservations, payments, split-payer, or other language the reply rules ban.',
-        general: 'Other vacation-app help that still follows the shared reply rules.',
-      },
-    },
-    needs_day_for_note: {
-      type: 'noul',
-      instructions: 'Does a good reply need to name which day a note belongs to?',
-      criteria: {
-        true: 'The customer is saving a note, asking where it goes, or the answer depends on a day.',
-        false: 'The turn does not need a day to place a note.',
-      },
-    },
-  };
-}
-
-function draftQualityQuestions() {
-  return {
-    overall_quality: {
-      type: 'score',
-      instructions: 'Rate this draft as the customer-facing vacation reply. Return a score only. Criterion 1 is weak. Criterion 5 is excellent. Use criterion 1 or 2 when it misses the ask, names a place that has no search-result id, skips a price they asked for, says no extra fees instead of the price, says the plan is already owned, or uses a banned payment word. A place cited as (id:...) from a search or database result is already sourced. A price question that does not include required_payer_line, when that line is in the state, is criterion 3 or lower. Days and places listed in the itinerary state are already named.',
-      criteria: ['1 weak or off-brief', '2 thin', '3 adequate', '4 strong', '5 excellent'],
-    },
-    disposition: {
-      type: 'choice',
-      instructions: 'Choose keep or rewrite. Return the choice only.',
-      criteria: {
-        keep: 'The draft should stand. It answers this turn, and every place it names is in the itinerary state or cited as (id:...).',
-        rewrite: 'Replace the draft. It misses this turn, names a place with no search-result id, skips the price, or uses a banned payment word.',
-      },
-    },
-    fix_focus: {
-      type: 'choice',
-      instructions: 'Jev scores only. Pick one focus label. Do not write a note or a replacement reply.',
-      criteria: {
-        missing_price: 'Name each seat, the plan dollar amount, and who pays.',
-        unnamed_place: 'Take out the place that has no search-result id. A place cited as (id:...) stays.',
-        payment_wording: 'Name each seat and who pays without a banned payment word.',
-        misses_ask: 'Answer the ask and keep the days already named.',
-        keep: 'Keep the draft. It answers without adding a place.',
-      },
-    },
-  };
-}
-
-function jevTurnJudgeState(context, { draft, tripContext = null, planLine = '' } = {}) {
-  const requiredLine = text(planLine, 400);
-  const itinerary = Array.isArray(tripContext?.itinerary) ? text(tripContext.itinerary.filter(Boolean).join('; '), 1500) : '';
-  return {
-    ...context,
-    draft: text(draft, 3500),
-    ...(itinerary ? { itinerary } : {}),
-    ...(tripContext?.roster ? { roster: text(tripContext.roster, 400) } : {}),
-    ...(tripContext?.dates ? { dates: text(tripContext.dates, 400) } : {}),
-    ...(requiredLine ? { required_payer_line: requiredLine } : {}),
-  };
-}
-
 function decisionsPayload(context) {
   return {
     model: JEV_DECISIONS_MODEL,
     state: context,
-    questions: precallDecisionQuestions(),
-  };
-}
-
-export function jevBootstrapForDraft({ turnJev = null, understanding = null, customerTurn = '' } = {}) {
-  if (turnJev?.jevRan) return { ...turnJev };
-  const asksPrice = understanding?.intent?.asksPrice === true;
-  const asksAccess = understanding?.intent?.asksAccess === true || understanding?.intent?.pullsAccess === true;
-  const long = String(customerTurn || '').trim().length > 400;
-  let modelTier = 2;
-  if (asksPrice || asksAccess) modelTier = 4;
-  else if (long) modelTier = 3;
-  return {
-    jevRan: true,
-    via: 'bootstrap-tier',
-    modelTier,
-    responseModel: openRouterChatModelForTier(modelTier),
-    routeType: null,
-    extraContext: { routeType: null, bootstrap: true },
-    jevBeforeModel: false,
+    questions: {
+      model_tier: {
+        type: 'score',
+        instructions: 'Pick the model tier this vacation-app turn needs. Criterion 1 is cheapest and criterion 4 is strongest. Use 1 or 2 for a simple acknowledgment. Use 3 or 4 when the reply needs richer banter, a multi-day plan, or a judgment call. Do not pin every turn to tier 1. A family mention is not by itself a collaborator welcome. There is no tier 5.',
+        criteria: JEV_MODEL_TIER_CRITERIA,
+      },
+      route_type: {
+        type: 'choice',
+        instructions: 'Which vacation-app reply route should the generator follow?',
+        criteria: {
+          itinerary_advice: 'Day-by-day plan, weather backup, activities, or where to go.',
+          notes_where: 'Customer wants to save a note. Day is required and place is optional. Never say Thing.',
+          access_pricing: 'The customer asked about price, access, or joining as collaborators. Not a day plan that only names family.',
+          collab_upsell: 'The one collab assessment, only when the customer asked to join and it has not been given. Do not use this for day advice.',
+          product_boundary: 'Reservations, payments, split-payer, or other language the reply rules ban.',
+          general: 'Other vacation-app help that still follows the shared reply rules.',
+        },
+      },
+      needs_day_for_note: {
+        type: 'noul',
+        instructions: 'Does a good reply need to name which day a note belongs to?',
+        criteria: {
+          true: 'The customer is saving a note, asking where it goes, or the answer depends on a day.',
+          false: 'The turn does not need a day to place a note.',
+        },
+      },
+    },
   };
 }
 
@@ -542,78 +477,6 @@ export async function postXaiPlaceRatingsResponses({ payload, apiKey, fetchImpl 
   const key = text(apiKey, 500);
   if (!key) throw Object.assign(new Error('XAI_API_KEY is not set.'), { code: 'XAI_API_KEY_MISSING' });
   return fetchImpl('https://api.x.ai/v1/responses', { method: 'POST', headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json', accept: 'application/json' }, body: JSON.stringify(payload), signal: AbortSignal.timeout(Math.max(1, Number(timeoutMs) || 120000)) });
-}
-
-export async function jevTurn({
-  customerTurn,
-  draft,
-  tripContext = null,
-  planLine = '',
-  stage,
-  gate,
-  screen,
-  session,
-  env = process.env,
-  fetchImpl = fetch,
-  purpose = 'jev_turn',
-} = {}) {
-  const context = vacationAppContext({ customerTurn, stage, gate, screen, session });
-  const url = text(env.TIMESYNCHER_JEV_CLASSIFY_URL, 500) || DEFAULT_JEV_DECISIONS_URL;
-  if (!JEV_DECISIONS_PATH.test(url)) {
-    return { jevRan: false, quality: { judged: false, reason: 'quality_decisions_url_required', model: JEV_DECISIONS_MODEL } };
-  }
-  const key = appOpenRouterKey(env);
-  if (!key) {
-    return { jevRan: false, quality: { judged: false, reason: 'quality_credentials_missing', model: JEV_DECISIONS_MODEL } };
-  }
-  const payload = {
-    model: JEV_DECISIONS_MODEL,
-    state: jevTurnJudgeState(context, { draft, tripContext, planLine }),
-    questions: { ...precallDecisionQuestions(), ...draftQualityQuestions() },
-  };
-  const via = decisionsVia(url);
-  try {
-    const { response, body } = await fetchOpenRouterJson(url, {
-      purpose, endpoint: 'decisions', observe: isOpenRouterDecisionsUrl(url), key, payload, fetchImpl,
-      method: 'POST',
-      headers: {
-        authorization: `Bearer ${key}`,
-        'content-type': 'application/json',
-        accept: 'application/json',
-        'HTTP-Referer': 'https://timesyncher.com',
-        'X-Title': 'TimeSyncher Vacation App Jev Turn',
-      },
-      signal: AbortSignal.timeout(20000),
-    });
-    if (!response.ok || body.ok === false) {
-      const error = text(body.error?.message || body.error || `Jev HTTP ${response.status}`, 300);
-      return {
-        jevRan: false,
-        via,
-        modelTier: null,
-        responseModel: null,
-        extraContext: null,
-        error,
-        quality: { judged: false, reason: error, model: JEV_DECISIONS_MODEL },
-        request: payload,
-      };
-    }
-    const tier = normalizeDecisions(body, via);
-    const quality = qualityFromDecisions(body);
-    return { ...tier, quality, request: payload };
-  } catch (error) {
-    const message = text(error?.message || error, 300);
-    return {
-      jevRan: false,
-      via,
-      modelTier: null,
-      responseModel: null,
-      extraContext: null,
-      error: message,
-      quality: { judged: false, reason: message, model: JEV_DECISIONS_MODEL },
-      request: payload,
-    };
-  }
 }
 
 export async function jevPrecall({ customerTurn, stage, gate, screen, session, includeTripIntake = false, fetchImpl = fetch, env = process.env } = {}) {
@@ -887,19 +750,52 @@ export function qualityFromDecisions(body) {
   };
 }
 
-export async function jevQualityRewrite({ customerTurn, draft, tripContext = null, planLine = '', env = process.env, purpose = 'jev_quality' } = {}) {
+export async function jevQualityRewrite({ customerTurn, draft, tripContext = null, planLine = '', env = process.env, purpose = 'jev_quality', tierContext = null } = {}) {
   const key = appOpenRouterKey(env);
   const url = text(env.TIMESYNCHER_JEV_CLASSIFY_URL, 500) || DEFAULT_JEV_DECISIONS_URL;
   if (!JEV_DECISIONS_PATH.test(url)) return { judged: false, reason: 'quality_decisions_url_required', model: JEV_DECISIONS_MODEL };
   if (!key) return { judged: false, reason: 'quality_credentials_missing', model: JEV_DECISIONS_MODEL };
+  const requiredLine = text(planLine, 400);
+  const itinerary = Array.isArray(tripContext?.itinerary) ? text(tripContext.itinerary.filter(Boolean).join('; '), 1500) : '';
   const payload = {
     model: JEV_DECISIONS_MODEL,
-    state: jevTurnJudgeState(
-      { customer_turn: text(customerTurn, 6000) },
-      { draft, tripContext, planLine },
-    ),
-    questions: draftQualityQuestions(),
+    state: {
+      customer_turn: text(customerTurn, 6000),
+      draft: text(draft, 3500),
+      ...(itinerary ? { itinerary } : {}),
+      ...(tripContext?.roster ? { roster: text(tripContext.roster, 400) } : {}),
+      ...(tripContext?.dates ? { dates: text(tripContext.dates, 400) } : {}),
+      ...(requiredLine ? { required_payer_line: requiredLine } : {}),
+    },
+    questions: {
+      overall_quality: {
+        type: 'score',
+        instructions: 'Rate this draft as the customer-facing vacation reply. Return a score only. Criterion 1 is weak. Criterion 5 is excellent. Use criterion 1 or 2 when it misses the ask, names a place that has no search-result id, skips a price they asked for, says no extra fees instead of the price, says the plan is already owned, or uses a banned payment word. A place cited as (id:...) from a search or database result is already sourced. A price question that does not include required_payer_line, when that line is in the state, is criterion 3 or lower. Days and places listed in the itinerary state are already named.',
+        criteria: ['1 weak or off-brief', '2 thin', '3 adequate', '4 strong', '5 excellent'],
+      },
+      disposition: {
+        type: 'choice',
+        instructions: 'Choose keep or rewrite. Return the choice only.',
+        criteria: {
+          keep: 'The draft should stand. It answers this turn, and every place it names is in the itinerary state or cited as (id:...).',
+          rewrite: 'Replace the draft. It misses this turn, names a place with no search-result id, skips the price, or uses a banned payment word.',
+        },
+      },
+      fix_focus: {
+        type: 'choice',
+        instructions: 'Jev scores only. Pick one focus label. Do not write a note or a replacement reply.',
+        criteria: {
+          missing_price: 'Name each seat, the plan dollar amount, and who pays.',
+          unnamed_place: 'Take out the place that has no search-result id. A place cited as (id:...) stays.',
+          payment_wording: 'Name each seat and who pays without a banned payment word.',
+          misses_ask: 'Answer the ask and keep the days already named.',
+          keep: 'Keep the draft. It answers without adding a place.',
+        },
+      },
+    },
   };
+  if (tierContext) payload.state = { ...vacationAppContext(tierContext), ...payload.state, current_turn: undefined };
+  if (tierContext) payload.questions = { ...decisionsPayload({}).questions, ...payload.questions };
   try {
     const { response, body } = await fetchOpenRouterJson(url, {
       purpose, endpoint: 'decisions', observe: isOpenRouterDecisionsUrl(url), key, payload,
@@ -916,7 +812,7 @@ export async function jevQualityRewrite({ customerTurn, draft, tripContext = nul
     if (!response.ok || body.ok === false) {
       return { judged: false, reason: text(body.error?.message || body.error || `quality HTTP ${response.status}`, 300), model: JEV_DECISIONS_MODEL };
     }
-    return qualityFromDecisions(body);
+    return tierContext ? { ...qualityFromDecisions(body), tier: normalizeDecisions(body, decisionsVia(url)) } : qualityFromDecisions(body);
   } catch (error) {
     return { judged: false, reason: text(error?.message || error, 300), model: JEV_DECISIONS_MODEL };
   }

@@ -1,4 +1,5 @@
-import { callTieredModel, INTERIM_MODEL, jevBootstrapForDraft, jevTurn } from '../../scripts/vacation-app-reply-rules.mjs';
+import { callTieredModel, INTERIM_MODEL } from '../../scripts/vacation-app-reply-rules.mjs';
+import { applyJevTurn, draftTierForTurn, jevTurn } from './jev-turn.mjs';
 import { sumModelCost } from './turn-cost.mjs';
 
 const FIRST_INTAKE_REPLY_TIMEOUT_MS = 8000;
@@ -39,7 +40,7 @@ export async function produceFirstIntakeReply({
   savedEnd = '',
   loadOwnerPlan = loadTripOwnerReplyPlan,
   turnActionResults = null,
-  turnJev = null,
+  understanding = null,
 } = {}) {
   if (!rules?.ok) {
     return { reply: null, rules, jev: null, model: null, reason: rules?.error || 'reply_rules_unloaded' };
@@ -50,9 +51,7 @@ export async function produceFirstIntakeReply({
   const tripId = String(session?.trip_id || session?.tripId || saved?.tripId || '').trim();
   const customerInput = firstIntakeLodgingCustomerInput(saved?.things || [], wantedThings);
   await persistTripLodgingCustomerInputGap(env, tripId, customerInput);
-  const jevStarted = Date.now();
-  const jev = jevBootstrapForDraft({ turnJev, customerTurn });
-  if (jev && typeof jev === 'object') jev.jevLatencyMs = Math.max(0, Date.now() - jevStarted);
+  const jev = draftTierForTurn({ intent: understanding?.intent });
   if (!jev?.jevRan) {
     return { reply: null, rules, jev, model: null, customerInput, reason: jev?.error || 'jev_skipped' };
   }
@@ -164,32 +163,9 @@ export async function produceFirstIntakeReply({
     };
   }
   const judgeStarted = Date.now();
-  const jevTurnResult = await jevTurn({
-    customerTurn,
-    draft: reply,
-    stage: 'vacation_conversation',
-    screen: 'vacation-app',
-    session: { seed_id: session?.token || null },
-    env,
-  });
+  const jevTurnResult = await jevTurn({ customerTurn, draft: reply, session, env });
   const judgeMs = Math.max(0, Date.now() - judgeStarted);
-  if (jevTurnResult?.jevRan) {
-    jev.modelTier = jevTurnResult.modelTier ?? jev.modelTier;
-    jev.responseModel = jevTurnResult.responseModel ?? jev.responseModel;
-    if (model && typeof model === 'object') {
-      model.modelTier = jev.modelTier;
-      model.responseModel = jev.responseModel;
-    }
-    jev.routeType = jevTurnResult.routeType ?? jev.routeType;
-    jev.extraContext = jevTurnResult.extraContext ?? jev.extraContext;
-    jev.via = jevTurnResult.via ?? jev.via;
-    jev.jevRan = true;
-    jev.jevLatencyMs = Math.max(0, Number(jev.jevLatencyMs) || 0) + judgeMs;
-  } else if (jevTurnResult?.error) {
-    jev.error = jevTurnResult.error;
-    jev.jevRan = false;
-  }
-  const quality = jevTurnResult?.quality;
+  const quality = applyJevTurn(jev, jevTurnResult, judgeMs);
   if (quality?.judged !== true) {
     const reason = quality?.reason || 'quality_not_judged';
     return {

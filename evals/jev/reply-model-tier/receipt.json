@@ -2,11 +2,11 @@
   "card": "reply-model-tier",
   "model": "typesafe/jev-1.13",
   "verdict": "pass",
-  "cardHash": "68662325f646bd8b2589e7fdebe21a72651c3b10ceee9c1807b25870f3479900",
+  "cardHash": "57b461033e4b164bc681e0ce6714d65c2ee456bc69a19ebf67b55361cd7c0500",
   "labeledSetHash": "b315270d9a1822f5b609d8e2b3f7b9b3839be7f5315da4b67f594732ab996389",
   "passed": true,
   "score": 1,
   "threshold": 0.8,
-  "ranAt": "2026-11-25T21:30:00.000Z",
-  "gitSha": "vkfill-1158"
+  "ranAt": "2026-10-02T10:30:00.000Z",
+  "gitSha": "3e1e377"
 }

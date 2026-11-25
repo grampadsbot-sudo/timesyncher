@@ -22,7 +22,7 @@ async function produce(templateInterim) {
     const body = init.body ? JSON.parse(init.body) : {};
     const json = (payload, status = 200) => ({ ok: status < 400, status, json: async () => payload });
     if (href.includes('/api/alpha/decisions')) {
-      if (body.questions?.model_tier) {
+      if (body.questions?.model_tier && !body.questions?.overall_quality) {
         return json({ answers: { model_tier: { score: 1 }, route_type: { choice: 'general' } } });
       }
       const low = String(body.state?.draft || '').includes('neighborhood');

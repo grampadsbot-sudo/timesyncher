@@ -3,8 +3,6 @@ import {
   callTieredModel,
   INTERIM_MODEL,
   isBakeoffModelId,
-  jevBootstrapForDraft,
-  jevTurn,
   jevQualityRewrite,
   JEV_QUALITY_MODEL,
   loadVacationAppReplyRules,
@@ -28,6 +26,7 @@ import { pushPlanAndStyleDraftErrors } from './reply-draft-fact-extra.mjs';
 import { payerLineFromDollars, priceAnswered } from './seat-price.mjs';
 import { produceFirstIntakeReply } from './first-intake-reply.mjs';
 import { claimBlockedReply, heldJudgedDraft, requireReplyQuality, unjudgedReply } from './reply-quality-gate.mjs';
+import { applyJevTurn, draftTierForTurn, jevTurn } from './jev-turn.mjs';
 import { buildLiveAppRewritePending } from './chat-place-search.mjs';
 import { inTurnPlaceLiveReplyHooks, placeSearchTieredReplyTimeoutMs } from './in-turn-place-reply-fallback.mjs';
 import {
@@ -1403,7 +1402,7 @@ export async function produceLiveAppReply({
   customerTurn, session, priorTurns, tripTitle, placeResults = [], placeSearchTurn = false, webResearchTurn = false, env = process.env,
   seatDollars: suppliedSeatDollars = null, intake = false, wantedThings = [], roster = null, rosterError = null, extractedDestination = '', extractedTitle = '',
   destinationError = null, titleError = null, savedStart = '', savedEnd = '', loadOwnerPlan = null, loadSavedTripRecordFn = loadSavedTripRecord,
-  turnActionResults = null, placeSearchReplyFacts = null, understanding = null, turnJev = null } = {}) {
+  turnActionResults = null, placeSearchReplyFacts = null, understanding = null } = {}) {
   const vkBotReply = await routeVkBotMcpReply({ customerTurn, session, priorTurns, tripTitle, env });
   if (vkBotReply) return requireReplyQuality(vkBotReply, { customerTurn, env });
   const rules = await loadVacationAppReplyRules(env);
@@ -1411,7 +1410,7 @@ export async function produceLiveAppReply({
   const memory = memoryTurns(history);
   const intakeTurn = { text: customerTurn, intake: intake === true };
   const postIntake = firstMarkedIntake(intakeTurn, history);
-  if (postIntake) return produceFirstIntakeReply({ customerTurn, session, tripTitle, env, rules, wantedThings, roster, extractedDestination, savedStart, savedEnd, turnActionResults, turnJev, ...(loadOwnerPlan ? { loadOwnerPlan } : {}) });
+  if (postIntake) return produceFirstIntakeReply({ customerTurn, session, tripTitle, env, rules, wantedThings, roster, extractedDestination, savedStart, savedEnd, turnActionResults, understanding, ...(loadOwnerPlan ? { loadOwnerPlan } : {}) });
   let intent = emptyIntent();
   try {
     intent = await customerIntent(customerTurn, { env, understanding });
@@ -1469,9 +1468,7 @@ export async function produceLiveAppReply({
   const planTable = commerce.planTable;
   const seatDollars = commerce.seatDollars;
   const pricedSeat = commerce.pricedSeat;
-  const jevStarted = Date.now();
-  const jev = jevBootstrapForDraft({ turnJev, understanding, customerTurn });
-  if (jev && typeof jev === 'object') jev.jevLatencyMs = Math.max(0, Date.now() - jevStarted);
+  const jev = draftTierForTurn({ intent });
   if (!rules?.ok) {
     return {
       reply: null,
@@ -1559,34 +1556,9 @@ export async function produceLiveAppReply({
   const draftLatencyMs = Number(model?.genLatencyMs) || Math.max(0, Date.now() - genStarted);
   const draftFlags = hardQualityFlags(originalDraft, intakeTurn, corpus, modelPlaceSources, intent);
   const qualityStarted = Date.now();
-  const jevTurnResult = await jevTurn({
-    customerTurn,
-    draft: originalDraft,
-    tripContext,
-    planLine,
-    stage: 'vacation_conversation',
-    screen: 'vacation-app',
-    session: { seed_id: session?.token || null },
-    env,
-  });
+  const jevTurnResult = await jevTurn({ customerTurn, draft: originalDraft, tripContext, planLine, session, env });
   const draftQualityMs = Math.max(0, Date.now() - qualityStarted);
-  if (jevTurnResult?.jevRan) {
-    jev.modelTier = jevTurnResult.modelTier ?? jev.modelTier;
-    jev.responseModel = jevTurnResult.responseModel ?? jev.responseModel;
-    jev.routeType = jevTurnResult.routeType ?? jev.routeType;
-    jev.extraContext = jevTurnResult.extraContext ?? jev.extraContext;
-    jev.via = jevTurnResult.via ?? jev.via;
-    jev.jevRan = true;
-    jev.jevLatencyMs = Math.max(0, Number(jev.jevLatencyMs) || 0) + draftQualityMs;
-    if (model && typeof model === 'object') {
-      model.modelTier = jev.modelTier;
-      model.responseModel = jev.responseModel;
-    }
-  } else if (jevTurnResult?.error) {
-    jev.error = jevTurnResult.error;
-    jev.jevRan = false;
-  }
-  let quality = jevTurnResult?.quality;
+  let quality = applyJevTurn(jev, jevTurnResult, draftQualityMs);
   const factErrors = draftFactErrors(originalDraft, tripFacts);
   if (quality?.judged) {
     quality = correctFalsePriceMiss(dockQuality(quality, draftFlags), originalDraft, customerTurn, intent);

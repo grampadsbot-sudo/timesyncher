@@ -225,43 +225,12 @@ const gapReply = 'I can start a short draft from that. Where are you hoping to g
 const originalFetch = globalThis.fetch;
 const env = intakeLive.env;
 
-function jevOk(score = 0) {
-  return {
-    ok: true,
-    json: async () => ({
-      ok: true,
-      answers: { model_tier: { score }, route_type: { choice: 'general' } },
-    }),
-  };
-}
-
 function decisionsResponse(init, score = 0) {
   const body = init?.body ? JSON.parse(init.body) : {};
-  if (body.questions?.model_tier && body.questions?.overall_quality) {
-    return {
-      ok: true,
-      json: async () => ({
-        ok: true,
-        answers: {
-          model_tier: { score },
-          route_type: { choice: 'general' },
-          overall_quality: { score: 4 },
-          disposition: { choice: 'keep' },
-          fix_focus: { choice: 'keep' },
-        },
-      }),
-    };
-  }
-  if (body.questions?.overall_quality) {
-    return {
-      ok: true,
-      json: async () => ({
-        ok: true,
-        answers: { overall_quality: { score: 4 }, disposition: { choice: 'keep' }, fix_focus: { choice: 'keep' } },
-      }),
-    };
-  }
-  return jevOk(score);
+  assert.ok(body.questions?.overall_quality, 'the only Jev call on a first-intake turn judges the draft');
+  const answers = { overall_quality: { score: 4 }, disposition: { choice: 'keep' }, fix_focus: { choice: 'keep' } };
+  if (body.questions.model_tier) Object.assign(answers, { model_tier: { score }, route_type: { choice: 'general' } });
+  return { ok: true, json: async () => ({ ok: true, answers }) };
 }
 
 const chatCalls = [];
@@ -312,7 +281,7 @@ try {
   assert.equal(chatCalls.length, 1);
   assert.equal(produced.reply, voiceReply);
   assert.equal(produced.reason, null);
-  assert.equal(produced.jev.modelTier, 1);
+  assert.equal(produced.jev.modelTier, 3);
   assert.equal(produced.model.responseModel, INTERIM_MODEL);
   assert.equal(Number.isFinite(produced.jev.jevLatencyMs), true);
   assert.equal(Number.isFinite(produced.model.genLatencyMs), true);
@@ -328,7 +297,7 @@ try {
     model: produced.model,
     rules: produced.rules,
   });
-  assert.equal(stored.tier, 1);
+  assert.equal(stored.tier, 3);
   assert.equal(stored.modelId, tiers[1]);
   assert.equal(stored.jevLatencyMs, produced.jev.jevLatencyMs);
   assert.equal(stored.generationMs, produced.model.genLatencyMs);
@@ -462,11 +431,11 @@ try {
     }
     throw new Error(`unexpected ${target}`);
   };
-  const tierThree = await produceLiveAppReply({ ...voiceInput, ...intakeLive });
+  const tierFour = await produceLiveAppReply({ ...voiceInput, ...intakeLive, understanding: { intent: { asksPrice: true } } });
   assert.equal(chatCalls.length, 1);
-  assert.equal(tierThree.reply, voiceReply);
-  assert.equal(tierThree.jev.modelTier, 3);
-  assert.equal(tierThree.model.responseModel, INTERIM_MODEL);
+  assert.equal(tierFour.reply, voiceReply);
+  assert.equal(tierFour.jev.modelTier, 4);
+  assert.equal(tierFour.model.responseModel, INTERIM_MODEL);
 
   chatCalls.length = 0;
   globalThis.fetch = async (url, init) => {
@@ -479,13 +448,7 @@ try {
     }
     if (target.includes('/chat/completions')) {
       chatCalls.push(init?.body ? JSON.parse(init.body) : {});
-      return {
-        ok: true,
-        json: async () => ({
-          model: tiers[1],
-          choices: [{ message: { content: `${voiceReply}\nBEAT: reflected the intake` } }],
-        }),
-      };
+      return { ok: true, json: async () => ({ model: tiers[1], choices: [{ message: { content: `${voiceReply}\nBEAT: reflected the intake` } }] }) };
     }
     throw new Error(`unexpected ${target}`);
   };

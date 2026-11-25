@@ -68,10 +68,6 @@ async function mockFetch(url, init = {}) {
         fix_focus: { choice: low ? 'misses_ask' : 'keep' },
       });
     }
-    if (questions.model_tier) return decision({
-      model_tier: { score: 1 }, route_type: { choice: 'general' },
-      trip_intake: { noul: body.state.current_turn === intake ? 0.95 : 0.04 },
-    });
     if (questions.relevance) return decision({ relevance: { type: 'score', score: 3.2 } });
     assert.ok(questions.overall_quality);
     const low = String(body.state.draft).includes('neighborhood');
@@ -137,10 +133,10 @@ const db = async (strings, ...values) => {
   return [];
 };
 
-function checkRows(turn, expectedPurposes) {
+function checkRows(turn, expectedPurposes, start) {
   assert.deepEqual([...new Set(turn.openrouterCalls.map((row) => row.purpose))].sort(), [...expectedPurposes].sort());
   const { openrouterCalls: rows, openrouterTotals: totals } = turn;
-  assert.equal(rows.length, expectedPurposes.length);
+  assert.equal(rows.length, fetches.length - start);
   assert.equal(totals.calls, rows.length);
   const chats = rows.filter((row) => row.endpoint === 'chat');
   const decisions = rows.filter((row) => row.endpoint === 'decisions');
@@ -180,11 +176,12 @@ try {
 
   const first = await queueVacationAppTurnForTests(db, session, trip, { text: intake });
   assert.equal(first.ok, true, first.error);
-  checkRows(first, ['reply_draft', 'jev_turn']);
+  checkRows(first, ['turn_understanding', 'reply_draft', 'jev_turn'], 0);
+  const afterFirst = fetches.length;
   const second = await queueVacationAppTurnForTests(db, session, trip, { text: followup });
   assert.equal(second.ok, true, second.error);
   assert.equal(second.reply, rewrite);
-  checkRows(second, ['reply_draft', 'jev_turn', 'reply_interim', 'interim_judge', 'reply_rewrite', 'jev_quality_rewrite']);
+  checkRows(second, ['turn_understanding', 'reply_draft', 'jev_turn', 'reply_interim', 'interim_judge', 'reply_rewrite', 'jev_quality_rewrite'], afterFirst);
 
   const doc = liveTranscriptFromRows({ session: { ...session, trip_id: trip.id }, rows: stored });
   await renderDialog({
@@ -206,7 +203,7 @@ try {
   assert.equal(app[1].cost.dollars, 0.00026);
   const { rows: scoreRows } = confirmStoredTurns(written, '', 'openrouter');
   assert.deepEqual(scoreRows.filter((row) => row.role === 'app').map((row) => row.openrouterTotals), [first.openrouterTotals, second.openrouterTotals]);
-  assert.match(customerSection({ turns: scoreRows, verdict: 'PASS' }, { wave: 'fixture' }), /OpenRouter per app turn: T2 \$0\.000130 measured, \$0\.000000 estimated, 1 unpriced calls \| T4 \$0\.000520 measured, \$0\.000000 estimated, 2 unpriced calls/);
+  assert.match(customerSection({ turns: scoreRows, verdict: 'PASS' }, { wave: 'fixture' }), /OpenRouter per app turn: T2 \$0\.000260 measured, \$0\.000000 estimated, 1 unpriced calls/);
 
   const [extras, failures] = await Promise.all([
     withOpenRouterLedger(async () => {

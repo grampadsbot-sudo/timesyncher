@@ -34,11 +34,11 @@ export function assertComposerSource({ vacationApp, api, liveTurn, replyRules, s
   if (/Your website is not built yet|I can update this vacation from here/.test(vacationApp)) {
     errors.push('vacation app still renders a fixed welcome');
   }
-  const jevAt = liveTurn.indexOf('jevBootstrapForDraft');
+  const tierAt = liveTurn.indexOf('draftTierForTurn({');
   const modelAt = liveTurn.indexOf('await callTieredModel');
-  const jevTurnAt = liveTurn.indexOf('await jevTurn');
-  if (jevAt < 0 || modelAt < 0 || jevAt > modelAt || jevTurnAt < 0) {
-    errors.push('live reply path does not bootstrap Jev tier before the model or judge the draft after');
+  const jevAt = liveTurn.indexOf('await jevTurn(');
+  if (tierAt < 0 || modelAt < 0 || tierAt > modelAt || jevAt < modelAt) {
+    errors.push('live reply path does not pick the tier before the tiered model and call Jev once on the draft');
   }
   if (!/if \(!jev\?\.jevRan\)/.test(liveTurn)) {
     errors.push('live reply path can call the tiered model when Jev did not run');
@@ -115,8 +115,8 @@ export function assertComposerSource({ vacationApp, api, liveTurn, replyRules, s
   if (!/quality\.draft/.test(liveTurn) || !/nearIdenticalRewrite/.test(liveTurn) || !/shipChoice/.test(liveTurn)) {
     errors.push('a tier rewrite is not stored apart from the customer-facing reply');
   }
-  if (!replyRules.includes(SHARED_REPLY_PIPELINE) || !/export async function jevTurn/.test(replyRules) || !/export async function callTieredModel/.test(replyRules)) {
-    errors.push('shared producer contract is missing merged Jev-turn exports');
+  if (!replyRules.includes(SHARED_REPLY_PIPELINE) || !/export async function jevPrecall/.test(replyRules) || !/export async function callTieredModel/.test(replyRules)) {
+    errors.push('shared producer contract is missing Jev-then-tier exports');
   }
   if (/dialog_vacation_test_turn\s*\(/.test(`${liveTurn}\n${api}`)) {
     errors.push('live path calls dialog_vacation_test_turn');
