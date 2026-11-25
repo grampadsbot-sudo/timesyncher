@@ -100,12 +100,14 @@ const jobInput = {
   wantedThings: jobFields.wantedThings,
   intakeError: jobFields.intakeError,
 };
+const VK_SEARCH_WAKE_URL = 'https://vk-search.example/wake';
+const BRAVE_HOST = ['api', 'search', 'brave', 'com'].join('.');
 const searchCalls = [];
 const research = await runPublicResearch({
   job: { job_type: 'trip_intake', input: jobInput },
   artifacts: { destination: 'Orindell', requestText },
   env: {
-    BRAVE_SEARCH_API_KEY: 'brave-test-key',
+    VK_SEARCH_WAKE_URL,
     TAVILI_API_KEY: 'tavily-test-key',
     OPENROUTER_API_KEY: 'test-openrouter-key',
   },
@@ -116,7 +118,7 @@ const research = await runPublicResearch({
     searchCalls.push({ url: value, hostname });
     const allowedHosts = new Set([
       'overpass-api.de',
-      'api.search.brave.com',
+      'vk-search.example',
       'openrouter.ai',
       'nominatim.openstreetmap.org',
       'api.tavily.com',
@@ -133,19 +135,19 @@ const research = await runPublicResearch({
         ],
       });
     }
-    if (value.includes('api.search.brave.com/res/v1/local/place_search')) {
-      const url = new URL(value);
-      const q = url.searchParams.get('q') || 'Example Place';
-      if (q === 'River Lantern') return jsonResponse({ results: [] });
+    if (value === VK_SEARCH_WAKE_URL) {
+      const parsed = options.body ? JSON.parse(String(options.body)) : {};
+      const q = String(parsed?.place?.query || 'Example Place');
+      if (q.startsWith('River Lantern')) return jsonResponse({ results: [] });
       return jsonResponse({
         results: [{
           title: q,
           url: 'https://example.test/place',
+          address: '10 Main St, Orindell',
           coordinates: [41.12, -8.61],
         }],
       });
     }
-    if (value.includes('api.search.brave.com')) return jsonResponse({ results: [] });
     if (value.includes('openrouter.ai')) {
       return jsonResponse({ answers: { relevance: { choice: 5 } } });
     }
@@ -171,19 +173,20 @@ assert.equal(research.provider, 'place-search');
 assert.equal(research.intakeEvent.kind, 'trip_intake');
 assert.deepEqual(research.wantedThings.map((thing) => thing.name), ['River Lantern', 'North Market Hall', 'Harbor Jet']);
 assert.deepEqual([...new Set(searchCalls.map((call) => call.hostname))].sort(), [
-  'api.search.brave.com',
   'api.tavily.com',
   'nominatim.openstreetmap.org',
   'openrouter.ai',
   'overpass-api.de',
+  'vk-search.example',
 ]);
 assert.equal(searchCalls.some((call) => call.url.includes('nominatim')), true);
-assert.equal(searchCalls.some((call) => call.url.includes('api.search.brave.com')), true);
+assert.equal(searchCalls.some((call) => call.url === VK_SEARCH_WAKE_URL), true);
+assert.equal(searchCalls.some((call) => call.url.includes(BRAVE_HOST)), false);
 assert.equal(searchCalls.some((call) => call.url.includes('api.tavily.com')), true);
 assert.equal(searchCalls.some((call) => /googleapis|places\.google/.test(call.url)), false);
 const sources = research.things.map((thing) => thing.source);
 assert.equal(sources.includes('osm'), true);
-assert.equal(sources.includes('brave'), true);
+assert.equal(sources.includes('vk-search'), true);
 assert.equal(sources.includes('tavily'), true);
 assert.equal(sources.includes(null), false);
 assert.equal(research.things.every((thing) => thing.source), true);

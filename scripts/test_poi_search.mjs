@@ -110,16 +110,14 @@ const thin = await searchPois({
   fetchImpl: async (url) => {
     fetches.push(String(url));
     if (String(url).includes('overpass')) return { ok: true, json: async () => ({ elements: [] }) };
-    if (String(url).includes('brave')) {
-      return { ok: true, json: async () => ({ web: { results: [{ title: 'Puuhonua o Honaunau', url: 'https://www.nps.gov/puho/', lat: 19.42, lng: -155.91 }] } }) };
-    }
     throw new Error(`unexpected ${url}`);
   },
 });
-assert.equal(thin.brave, true);
-assert.equal(thin.pois.filter((poi) => poi.source === 'brave').length, 1);
+assert.equal(thin.brave, false);
+assert.equal(thin.pois.length, 0);
 assert.equal(fetches.filter((url) => url.includes('overpass')).length, 1);
-const braveCached = await searchPois({
+assert.equal(fetches.filter((url) => url.includes('brave')).length, 0);
+const thinCached = await searchPois({
   origin: house,
   category: 'activity',
   dateBucket: '2026-04-03',
@@ -127,25 +125,11 @@ const braveCached = await searchPois({
   braveKey: 'brave-test',
   now: 1_000 + 60_000,
   fetchImpl: async () => {
-    throw new Error('short brave cache should not refetch');
+    throw new Error('database cache should not refetch');
   },
 });
-assert.equal(braveCached.cache, 'hit');
-assert.equal(braveCached.pois.some((poi) => poi.source === 'brave'), true);
-await searchPois({
-  origin: house,
-  category: 'activity',
-  dateBucket: '2026-04-03',
-  fsqRecords: [],
-  braveKey: 'brave-test',
-  now: 1_000 + (8 * 60 * 60 * 1000) + 1,
-  fetchImpl: async (url) => {
-    fetches.push(String(url));
-    if (String(url).includes('overpass')) throw new Error('database cache should still hold');
-    return { ok: true, json: async () => ({ web: { results: [{ title: 'Puuhonua o Honaunau', url: 'https://www.nps.gov/puho/', lat: 19.42, lng: -155.91 }] } }) };
-  },
-});
-assert.equal(fetches.filter((url) => url.includes('brave')).length, 2);
+assert.equal(thinCached.cache, 'hit');
+assert.equal(thinCached.brave, false);
 assert.equal(fetches.filter((url) => url.includes('overpass')).length, 1);
 
 let active = 0;

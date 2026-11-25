@@ -18,7 +18,7 @@ export function resolvePlaceSearchQueryCenter({ namedPlaceLookup, anchorGeocode,
   return anchorRadiusCenter(null, context?.center);
 }
 
-export function resolveBraveCompactLocality({
+export function resolvePlaceCompactLocality({
   namedPlaceLookup,
   searchAnchor,
   context,

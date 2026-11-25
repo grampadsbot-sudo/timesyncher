@@ -1,54 +1,45 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { braveWebSearch, runBraveQueries } from '../src/vacation/dossier-brave.mjs';
+import { runDossierWebQueries } from '../src/vacation/dossier-web-search.mjs';
+import { dossierTavilySearch } from '../src/vacation/dossier-tavily-search.mjs';
 import { gatherThingEvidence } from '../src/vacation/thing-evidence-dossier.mjs';
 import { runThingEvidenceDossierStagingTargets } from '../src/vacation/thing-evidence-dossier-execution.mjs';
 import { resolvePassBOperatorTargets } from '../src/vacation/passb-dossier-metrics.mjs';
 import { buildPassBOperatorDossierTargets } from '../src/vacation/nyc-passb-dossier-inventory.mjs';
 import { createDossierFillTrace, recordDossierTraceAttempts } from '../src/vacation/dossier-fill-trace.mjs';
 import { memoryStore } from './lib/passb-text-builder-test-support.mjs';
-import { target, summary, description, page, field, findings, judge, webResponse, noSleep } from './lib/dossier-round4-test-support.mjs';
+import { target, summary, description, page, field, findings, judge } from './lib/dossier-round4-test-support.mjs';
 
-for (const status of [401, 402, 422, 429, 500, 503]) test(`Brave HTTP ${status} is named with bounded retry`, async () => {
-  let calls = 0;
-  const out = await braveWebSearch('Harbor Bistro Boston', {
-    env: { BRAVE_SEARCH_API_KEY: 'offline-fixture' }, sleepImpl: noSleep,
-    fetchImpl: async () => { calls += 1; return webResponse([], status); },
-  });
-  assert.equal(calls, status === 429 || status >= 500 ? 3 : 1);
-  const braveAttempts = out.attempts.filter((row) => row.kind === 'brave');
-  assert.equal(braveAttempts.length, calls);
-  assert.equal(braveAttempts.at(-1).httpStatus, status);
-  assert.equal(braveAttempts.at(-1).error, `brave_http_${status}`);
-  assert.equal(out.attempts.at(-1).error, 'tavily_missing_key');
-});
+function tavilyResponse(rows = [], status = 200) {
+  return { ok: status >= 200 && status < 300, status, json: async () => ({ results: rows }) };
+}
 
-test('429 then OK honors bounded Retry-After and paces sequential queries', async () => {
+for (const status of [401, 402, 422, 429, 500, 503]) test(`Tavily HTTP ${status} is named in attempts`, async () => {
   let calls = 0;
-  const waits = [];
-  const out = await runBraveQueries([{ query: 'Harbor Bistro route', stage: 'general' }, 'Harbor Bistro menu'], {
-    env: { BRAVE_SEARCH_API_KEY: 'offline-fixture' }, sleepImpl: async (ms) => waits.push(ms),
-    fetchImpl: async () => { calls += 1; return webResponse(calls === 1 ? [] : [{
-      url: target.website, title: target.title, description: summary,
-    }], calls === 1 ? 429 : 200, calls === 1 ? '1.5' : null); },
-  });
-  assert.equal(calls, 3);
-  assert.deepEqual(out.attempts.map((row) => row.httpStatus), [429, 200, 200]);
-  assert.ok(waits[0] >= 1450 && waits[0] <= 1500);
-  assert.ok(waits[1] >= 1000 && waits[1] <= 1050);
-  assert.equal(out.attempts[0].stage, 'general');
-  assert.equal(out.pages.length, 1);
-});
-
-for (const mode of ['long-header', 'deadline']) test(`Brave ${mode} refuses a retry outside its cap`, async () => {
-  let calls = 0;
-  const out = await braveWebSearch(target.title, {
-    env: { BRAVE_SEARCH_API_KEY: 'offline-fixture' }, sleepImpl: () => assert.fail('cannot sleep past cap'),
-    ...(mode === 'deadline' ? { deadline: Date.now() + 100 } : {}),
-    fetchImpl: async () => { calls += 1; return webResponse([], 429, mode === 'long-header' ? '60' : null); },
+  const out = await dossierTavilySearch('Harbor Bistro Boston', {
+    env: { TAVILI_API_KEY: 'offline-fixture' },
+    fetchImpl: async () => { calls += 1; return tavilyResponse([], status); },
   });
   assert.equal(calls, 1);
-  assert.equal(out.attempts[0].httpStatus, 429);
+  assert.equal(out.attempts.at(-1).httpStatus, status);
+  assert.equal(out.attempts.at(-1).error, `tavily_http_${status}`);
+});
+
+test('Tavily multi-query run preserves stage labels and collects pages', async () => {
+  let calls = 0;
+  const out = await runDossierWebQueries([{ query: 'Harbor Bistro route', stage: 'general' }, 'Harbor Bistro menu'], {
+    env: { TAVILI_API_KEY: 'offline-fixture' },
+    fetchImpl: async () => {
+      calls += 1;
+      return tavilyResponse(calls === 1 ? [] : [{
+        url: target.website, title: target.title, content: summary,
+      }], calls === 1 ? 429 : 200);
+    },
+  });
+  assert.equal(calls, 2);
+  assert.deepEqual(out.attempts.map((row) => row.httpStatus), [429, 200]);
+  assert.equal(out.attempts[0].searchStage, 'general');
+  assert.equal(out.pages.length, 1);
 });
 
 test('operator R0 retries current-version exhaustion on the next offset/limit/skipExisting call and traces only that call', async () => {
@@ -59,8 +50,8 @@ test('operator R0 retries current-version exhaustion on the next offset/limit/sk
   const row = targets[0];
   const storeImpl = memoryStore();
   storeImpl.rows.set(`trip:${row.tripId}:place:${row.placeId}`, {
-    thing: row.title, pages: [], fields: {}, emptySource: 'brave_extract_fallback_no_pages', attempts: [
-      { kind: 'page', stage: 'extract_fallback', status: 'failed', error: 'brave_extract_fallback_no_pages', query: 'old-query' },
+    thing: row.title, pages: [], fields: {}, emptySource: 'web_extract_fallback_no_pages', attempts: [
+      { kind: 'page', stage: 'extract_fallback', status: 'failed', error: 'web_extract_fallback_no_pages', query: 'old-query' },
       { kind: 'gather', step: 'operator_empty_gather_retry', gatherVersion: 4, status: 'failed' },
     ],
   });
@@ -71,16 +62,18 @@ test('operator R0 retries current-version exhaustion on the next offset/limit/sk
     fetchImpl: async () => assert.fail('no live provider'),
     gatherImpl: async (place, opts) => {
       gathers += 1;
-      return gatherThingEvidence(place, { ...opts, sleepImpl: noSleep, braveImpl: null,
-        env: { BRAVE_SEARCH_API_KEY: 'offline-fixture', VK_SEARCH_BOT_PRIMARY: '0' },
+      return gatherThingEvidence(place, {
+        ...opts,
+        env: { TAVILI_API_KEY: 'offline-fixture', VK_SEARCH_BOT_PRIMARY: '0' },
         resolveImpl: async () => [{ address: '93.184.216.34' }],
         extractImpl: async () => { throw new Error('Tavily extract failed with HTTP 432.'); },
-        fetchImpl: async (url) => {
+        fetchImpl: async (url, init = {}) => {
           const parsed = new URL(url);
-          if (!parsed.pathname.endsWith('/web/search')) return webResponse([], 403);
-          const q = parsed.searchParams.get('q'); queries.push(q);
-          return webResponse(gathers > 1 && q === row.title ? [{ url: 'https://guide.example/restaurant',
-            title: row.title, description: `${summary} ${description}`.replaceAll(target.title, row.title) }] : [], gathers === 1 ? 401 : 200);
+          if (parsed.pathname !== '/search') return tavilyResponse([], 403);
+          const q = JSON.parse(String(init.body || '{}')).query;
+          queries.push(q);
+          return tavilyResponse(gathers > 1 && q === row.title ? [{ url: 'https://guide.example/restaurant',
+            title: row.title, content: `${summary} ${description}`.replaceAll(target.title, row.title) }] : [], gathers === 1 ? 401 : 200);
         },
       });
     },
@@ -91,7 +84,7 @@ test('operator R0 retries current-version exhaustion on the next offset/limit/sk
   };
   const first = (await runThingEvidenceDossierStagingTargets(targets, options)).results[0];
   assert.equal(gathers, 1);
-  assert.equal(first.emptySource, 'brave_http_401+tavily_missing_key');
+  assert.equal(first.emptySource, 'tavily_http_401');
   assert.equal(first.trace.gather.path, 'retry');
   assert.ok(first.trace.attempts.some((attempt) => attempt.httpStatus === 401));
   assert.ok(first.trace.attempts.some((attempt) => attempt.provider === 'direct' && attempt.httpStatus === 403));
@@ -118,13 +111,13 @@ test('zero-hit operator fills retry across calls, then back off in the ledger wi
   storeImpl.rows.set(key, { thing: target.title, pages: [], fields: {}, attempts: [] });
   let gathers = 0;
   const options = {
-    env: { BRAVE_SEARCH_API_KEY: 'offline-fixture' }, storeImpl, skipExisting: true, operatorFill: true,
-    gatherImpl: async () => { gathers += 1; return { pages: [], attempts: [{ kind: 'brave', step: 'web_search', status: 'ok', results: 0, query: target.title }] }; },
-    fetchImpl: async () => webResponse(), buildImpl: async () => assert.fail('no evidence'),
+    env: { TAVILI_API_KEY: 'offline-fixture' }, storeImpl, skipExisting: true, operatorFill: true,
+    gatherImpl: async () => { gathers += 1; return { pages: [], attempts: [{ kind: 'page', provider: 'Tavily', stage: 'search', step: 'web_search', status: 'ok', results: 0, query: target.title }] }; },
+    fetchImpl: async () => tavilyResponse(), buildImpl: async () => assert.fail('no evidence'),
   };
   for (let count = 1; count <= 3; count += 1) {
     const row = (await runThingEvidenceDossierStagingTargets([{ ...target, website: undefined }], options)).results[0];
-    assert.equal(row.emptySource, 'brave_zero_hits');
+    assert.equal(row.emptySource, 'tavily_zero_hits');
     assert.equal(gathers, count);
   }
   const backedOff = (await runThingEvidenceDossierStagingTargets([target], options)).results[0];
@@ -143,7 +136,7 @@ test('zero-hit operator fills retry across calls, then back off in the ledger wi
 
 test('trace is absent outside operator fills and contains only bounded sanitized attempt metadata', async () => {
   const trace = createDossierFillTrace();
-  recordDossierTraceAttempts(trace, [{ kind: 'brave', step: 'web_search', query: 'https://user:fixture-password@site.example/path?token=fixture-value Bearer fixture-bearer '+ 'word '.repeat(60), status: 'ok', results: 1 }]);
+  recordDossierTraceAttempts(trace, [{ kind: 'page', provider: 'Tavily', step: 'web_search', query: 'https://user:fixture-password@site.example/path?token=fixture-value Bearer fixture-bearer ' + 'word '.repeat(60), status: 'ok', results: 1 }]);
   const encoded = JSON.stringify(trace);
   assert.ok(!/fixture-password|fixture-value|fixture-bearer/.test(encoded));
   assert.ok(trace.attempts[0].query.length <= 120);
@@ -155,13 +148,11 @@ test('trace is absent outside operator fills and contains only bounded sanitized
   assert.equal('trace' in result.results[0], false);
 });
 
-test('a recovered HTTP retry followed by zero hits reports the terminal zero-hit reason', async () => {
+test('zero hits reports the terminal tavily_zero_hits reason', async () => {
   const { dossierEmptyGatherReason } = await import('../src/vacation/xai-dossier-fill-state.mjs');
-  let calls = 0;
-  const gathered = await runBraveQueries([target.title], {
-    env: { BRAVE_SEARCH_API_KEY: 'offline-fixture' }, sleepImpl: noSleep,
-    fetchImpl: async () => { calls += 1; return webResponse([], calls === 1 ? 429 : 200); },
+  const gathered = await runDossierWebQueries([target.title], {
+    env: { TAVILI_API_KEY: 'offline-fixture' },
+    fetchImpl: async () => tavilyResponse([], 200),
   });
-  assert.equal(calls, 2);
-  assert.equal(dossierEmptyGatherReason(gathered), 'brave_zero_hits');
+  assert.equal(dossierEmptyGatherReason(gathered), 'tavily_zero_hits');
 });

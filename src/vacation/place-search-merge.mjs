@@ -1,6 +1,6 @@
-const SOURCE_IDS = new Set(['prior_db', 'osm', 'brave']);
-const LIVE_SOURCE_ORDER = ['brave', 'osm'];
-const MERGE_SOURCE_ORDER = ['brave', 'osm', 'prior_db'];
+const SOURCE_IDS = new Set(['prior_db', 'osm', 'vk-search']);
+const LIVE_SOURCE_ORDER = ['vk-search', 'osm'];
+const MERGE_SOURCE_ORDER = ['vk-search', 'osm', 'prior_db'];
 const PRIOR_CATEGORIES = new Map([
   ['grocery', 'grocery'],
   ['groceries', 'grocery'],
@@ -70,6 +70,15 @@ function mergePlaceFields(existing, incoming) {
       : {}),
     ...(incoming?.rating != null ? { rating: incoming.rating } : (existing?.rating != null ? { rating: existing.rating } : {})),
     ...(incoming?.ratingCount != null ? { ratingCount: incoming.ratingCount } : (existing?.ratingCount != null ? { ratingCount: existing.ratingCount } : {})),
+    ...(incoming?.summary || existing?.summary ? { summary: String(incoming?.summary || existing?.summary || '').trim() } : {}),
+    ...(incoming?.price != null ? { price: incoming.price } : (existing?.price != null ? { price: existing.price } : {})),
+    ...(incoming?.logoUrl || existing?.logoUrl ? { logoUrl: String(incoming?.logoUrl || existing?.logoUrl || '').trim() } : {}),
+    ...(Array.isArray(incoming?.providerCategories) && incoming.providerCategories.length
+      ? { providerCategories: incoming.providerCategories }
+      : (Array.isArray(existing?.providerCategories) && existing.providerCategories.length ? { providerCategories: existing.providerCategories } : {})),
+    ...(incoming?.sourceRecord && typeof incoming.sourceRecord === 'object'
+      ? { sourceRecord: { ...(existing?.sourceRecord && typeof existing.sourceRecord === 'object' ? existing.sourceRecord : {}), ...incoming.sourceRecord } }
+      : (existing?.sourceRecord && typeof existing.sourceRecord === 'object' ? { sourceRecord: existing.sourceRecord } : {})),
   };
 }
 
@@ -125,6 +134,11 @@ export function mergePlaces(groups = [], options = {}, samePlaceImpl) {
         ...(String(place.description || '').trim() ? { description: String(place.description).trim() } : {}),
         ...(place.rating != null ? { rating: place.rating } : {}),
         ...(place.ratingCount != null ? { ratingCount: place.ratingCount } : {}),
+        ...(String(place.summary || '').trim() ? { summary: String(place.summary).trim() } : {}),
+        ...(place.price != null ? { price: place.price } : {}),
+        ...(String(place.logoUrl || '').trim() ? { logoUrl: String(place.logoUrl).trim() } : {}),
+        ...(Array.isArray(place.providerCategories) && place.providerCategories.length ? { providerCategories: place.providerCategories } : {}),
+        ...(place.sourceRecord && typeof place.sourceRecord === 'object' ? { sourceRecord: place.sourceRecord } : {}),
       };
       const matchIndex = kept.findIndex((item) => samePlaceImpl(item, next));
       if (matchIndex >= 0) {

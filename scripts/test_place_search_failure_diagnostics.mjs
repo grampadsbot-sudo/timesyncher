@@ -7,11 +7,11 @@ import { installNoopNominatimStore } from './fixtures/nominatim-store-test-doubl
 installNoopNominatimStore();
 
 const NOMINATIM_HOST = ['nominatim', 'openstreetmap', 'org'].join('.');
-const BRAVE_HOST = ['api', 'search', 'brave', 'com'].join('.');
+const VK_SEARCH_WAKE_URL = 'https://vk-search.example/wake';
 const OPENROUTER_HOST = ['openrouter', 'ai'].join('.');
 const OVERPASS_HOST = ['overpass-api', 'de'].join('.');
 
-const env = { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key', DATABASE_URL: '' };
+const env = { OPENROUTER_API_KEY: 'test', VK_SEARCH_WAKE_URL, DATABASE_URL: '' };
 
 let caught = null;
 try {
@@ -30,7 +30,7 @@ try {
       if (href.includes(OVERPASS_HOST)) {
         return { ok: true, json: async () => ({ elements: [] }) };
       }
-      if (href.includes(BRAVE_HOST)) {
+      if (href === VK_SEARCH_WAKE_URL) {
         return { ok: true, json: async () => ({ results: KAANAPALI_ON_TARGET_BRAVE }) };
       }
       if (href.includes(OPENROUTER_HOST)) {

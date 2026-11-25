@@ -10,9 +10,9 @@ installNoopNominatimStore();
 const NOMINATIM_HOST = ['nominatim', 'openstreetmap', 'org'].join('.');
 const OVERPASS_HOST = ['overpass-api', 'de'].join('.');
 const OPENROUTER_HOST = ['openrouter', 'ai'].join('.');
-const BRAVE_HOST = ['api', 'search', 'brave', 'com'].join('.');
+const VK_SEARCH_WAKE_URL = 'https://vk-search.example/wake';
 
-const env = { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key', DATABASE_URL: '' };
+const env = { OPENROUTER_API_KEY: 'test', VK_SEARCH_WAKE_URL, DATABASE_URL: '' };
 
 function jsonResponse(body, ok = true, status = 200) {
   return { ok, status, json: async () => body };
@@ -50,8 +50,8 @@ const tacoFetch = async (url, options = {}) => {
     overpassBody = String(options.body || '');
     return { ok: true, json: async () => ({ elements: [] }) };
   }
-  if (href.includes(BRAVE_HOST)) {
-    return { ok: true, json: async () => ({ results: [{ id: 'b1', title: 'Taco Spot', latitude: 20.921, longitude: -156.691 }] }) };
+  if (href === VK_SEARCH_WAKE_URL) {
+    return { ok: true, json: async () => ({ results: [{ id: 'vk1', title: 'Taco Spot', url: 'https://example.test/taco', address: '10 Kaanapali Pkwy, Lahaina, HI', latitude: 20.921, longitude: -156.691 }] }) };
   }
   if (href.includes(OPENROUTER_HOST)) {
     return { ok: true, json: async () => ({ answers: { relevance: { type: 'score', score: 3.5 } } }) };
@@ -87,8 +87,8 @@ const activityFetch = async (url, options = {}) => {
     overpassBody = String(options.body || '');
     return { ok: true, json: async () => ({ elements: [] }) };
   }
-  if (href.includes(BRAVE_HOST)) {
-    return { ok: true, json: async () => ({ results: [{ id: 'b2', title: 'Lookout Point', latitude: 20.631, longitude: -156.491 }] }) };
+  if (href === VK_SEARCH_WAKE_URL) {
+    return { ok: true, json: async () => ({ results: [{ id: 'vk2', title: 'Lookout Point', url: 'https://example.test/lookout', address: 'Molokini Crater, Maui, HI', latitude: 20.631, longitude: -156.491 }] }) };
   }
   if (href.includes(OPENROUTER_HOST)) {
     return { ok: true, json: async () => ({ answers: { relevance: { type: 'score', score: 3.5 } } }) };
@@ -196,10 +196,10 @@ const hotelTacoFetch = async (url, options = {}) => {
     overpassBody = String(options.body || '');
     return { ok: true, json: async () => ({ elements: [] }) };
   }
-  if (href.includes(BRAVE_HOST)) {
-    const params = new URL(href).searchParams;
-    braveQuery = String(params.get('q') || '');
-    return { ok: true, json: async () => ({ results: [{ id: 'b3', title: 'Taco Shack', latitude: 20.921, longitude: -156.691 }] }) };
+  if (href === VK_SEARCH_WAKE_URL) {
+    const parsed = options.body ? JSON.parse(String(options.body)) : {};
+    braveQuery = String(parsed?.place?.query || '');
+    return { ok: true, json: async () => ({ results: [{ id: 'vk3', title: 'Taco Shack', url: 'https://example.test/shack', address: '20 Kaanapali Pkwy, Lahaina, HI', latitude: 20.921, longitude: -156.691 }] }) };
   }
   if (href.includes(OPENROUTER_HOST)) {
     return { ok: true, json: async () => ({ answers: { relevance: { type: 'score', score: 3.5 } } }) };

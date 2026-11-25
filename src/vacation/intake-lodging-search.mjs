@@ -1,9 +1,9 @@
 import { intakeLodgingLookupQuery } from './intake-lodging-lookup.mjs';
-import { buildProviderEnv, missingSearchKeys } from './provider-env.mjs';
+import { buildProviderEnv } from './provider-env.mjs';
 import { PlaceSearchError } from './place-search-error.mjs';
 import { resolveSearchContext } from './place-search-geocode.mjs';
-import { trimBraveResultEvidence } from './brave-place-query.mjs';
-import { queryBravePlaceSearch, placeSearchReadJson } from './place-search.mjs';
+import { placeSearchReadJson } from './place-search.mjs';
+import { queryVkSearchPlaces } from './vk-search-place-identity.mjs';
 
 function intakeSearchFail(message, code) {
   throw new PlaceSearchError(message, code);
@@ -16,16 +16,13 @@ export async function searchIntakeLodgingPlaces({
   tripId = '',
   env = process.env,
   fetchImpl = globalThis.fetch,
+  vkSearchImpl = null,
 } = {}) {
   const providerEnv = buildProviderEnv(env);
   const name = String(propertyName || '').trim();
   const area = String(areaHint || '').trim();
   const destinationHint = String(destination || '').trim();
   const lookupQuery = intakeLodgingLookupQuery(name, area || destinationHint);
-  const missing = missingSearchKeys(providerEnv);
-  if (missing.length) {
-    intakeSearchFail(`Place search refused to run. Missing ${missing.join(', ')}.`, 'missing_key');
-  }
   const providerLog = [];
   const geocodeLabel = area || destinationHint || name;
   const context = await resolveSearchContext(
@@ -37,14 +34,15 @@ export async function searchIntakeLodgingPlaces({
   );
   const center = context.center;
   const locationText = context.locationText || geocodeLabel;
-  let bravePlaces = [];
-  let braveQuery = lookupQuery;
-  let braveEndpoint = '';
+  let vkPlaces = [];
+  let vkQuery = lookupQuery;
   try {
-    const found = await queryBravePlaceSearch(fetchImpl, providerEnv, {
+    const found = await queryVkSearchPlaces(fetchImpl, providerEnv, {
       center,
       locationText,
       compactLocality: context.compactLocality || area || destinationHint,
+      namedPlaceLookup: true,
+      vkSearchImpl,
     }, [{
       category: 'hotel',
       q: lookupQuery,
@@ -55,35 +53,41 @@ export async function searchIntakeLodgingPlaces({
       limit: 5,
       place: true,
     }]);
-    bravePlaces = Array.isArray(found?.places) ? found.places : [];
-    braveQuery = String(found?.query || lookupQuery).trim();
-    braveEndpoint = String(found?.endpoint || '').trim();
-    const rawBraveResults = (Array.isArray(found?.rawResults) ? found.rawResults : [])
-      .slice(0, 5)
-      .map((row) => trimBraveResultEvidence(row));
-    providerLog.push({
-      provider: 'brave',
-      status: bravePlaces.length ? 'ok' : 'empty',
-      ...(bravePlaces.length ? {} : { reason: 'no_results' }),
-      resultCount: bravePlaces.length,
-      ...(braveQuery ? { query: braveQuery } : {}),
-      ...(braveEndpoint ? { endpoint: braveEndpoint } : {}),
-      rawResults: rawBraveResults,
-    });
+    vkPlaces = Array.isArray(found?.places) ? found.places : [];
+    vkQuery = String(found?.query || lookupQuery).trim();
+    const rawResults = (Array.isArray(found?.rawResults) ? found.rawResults : []).slice(0, 5);
+    if (found?.skipped) {
+      providerLog.push({
+        provider: 'vk-search',
+        status: 'skipped',
+        reason: found.skipped,
+        resultCount: 0,
+        ...(vkQuery ? { query: vkQuery } : {}),
+        rawResults,
+      });
+    } else {
+      providerLog.push({
+        provider: 'vk-search',
+        status: vkPlaces.length ? 'ok' : 'empty',
+        ...(vkPlaces.length ? {} : { reason: found?.unresolvedReasons?.[0] || 'no_results' }),
+        resultCount: vkPlaces.length,
+        ...(vkQuery ? { query: vkQuery } : {}),
+        rawResults,
+      });
+    }
   } catch (error) {
     providerLog.push({
-      provider: 'brave',
+      provider: 'vk-search',
       status: 'error',
-      reason: String(error?.message || error || 'brave failed').trim(),
+      reason: String(error?.message || error || 'vk-search failed').trim(),
       resultCount: 0,
-      ...(error?.braveQuery ? { query: String(error.braveQuery).trim() } : {}),
-      ...(error?.braveEndpoint ? { endpoint: String(error.braveEndpoint).trim() } : {}),
+      ...(vkQuery ? { query: vkQuery } : {}),
     });
     error.providers = providerLog;
     throw error;
   }
   return {
-    places: bravePlaces,
+    places: vkPlaces,
     providers: providerLog,
     center,
     locationText,

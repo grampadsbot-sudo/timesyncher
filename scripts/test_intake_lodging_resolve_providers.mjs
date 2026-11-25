@@ -2,8 +2,8 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { braveAddress, bravePlaceSearchRows, bravePoint, braveTitle, trimBraveResultEvidence } from '../src/vacation/brave-place-query.mjs';
 import { persistIntakeLodgingThings } from '../src/vacation/intake-lodging-thing.mjs';
+import { resolveVkSearchPlaceIdentity } from '../src/vacation/vk-search-place-identity.mjs';
 import { urlIsNominatim } from './intake-lodging-test-hosts.mjs';
 import { installNoopNominatimStore } from './fixtures/nominatim-store-test-double.mjs';
 
@@ -51,7 +51,7 @@ function mockDb(tripId) {
         if (locationRaw) row.location = JSON.parse(locationRaw);
         const metaRaw = values.find((value) => value && typeof value === 'object' && !Array.isArray(value) && (value.addressSource || value.sourceRef));
         if (metaRaw) row.metadata = metaRaw;
-        const source = values.find((value) => value === 'brave' || value === 'osm');
+        const source = values.find((value) => value === 'vk-search' || value === 'osm');
         if (source) row.source = source;
       }
       return [];
@@ -92,33 +92,26 @@ function mockDb(tripId) {
 }
 
 const displayFixture = loadFixture('hyatt-display-address-only.json');
-const displayRow = bravePlaceSearchRows(displayFixture, 'local')[0];
-assert.ok(braveAddress(displayRow).includes('200 Nohea Kai'));
+const displayRow = displayFixture.results[0];
+const displayResolved = await resolveVkSearchPlaceIdentity(
+  { ...displayRow, url: 'https://www.hyatt.com/maui' },
+  { category: 'hotel', env: {} },
+);
+assert.ok(displayResolved.ok && displayResolved.place.address.includes('200 Nohea Kai'));
 
 const { db: shapeDb, tripThings: shapeThings } = mockDb('trip-shape');
 const shapeOutcome = await persistIntakeLodgingThings(shapeDb, 'trip-shape', 'req-shape', [{ title: 'Hyatt Regency Maui', category: 'hotel' }], {
   areaHint: 'Kaanapali',
-  env: { OPENROUTER_API_KEY: 't', BRAVE_SEARCH_API_KEY: 'b' },
+  env: { OPENROUTER_API_KEY: 't' },
   fetchImpl: nominatimFetch(() => ({ ok: true, json: async () => [] })),
   searchImpl: async () => ({
-    places: [{
-      source: 'brave',
-      title: braveTitle(displayRow.title),
-      category: 'hotel',
-      lat: bravePoint(displayRow).lat,
-      lng: bravePoint(displayRow).lng,
-      address: braveAddress(displayRow),
-      externalId: 'brave-display-only',
-      sourceRecord: displayRow,
-      providerCategories: ['Hotel'],
-    }],
+    places: [displayResolved.place],
     providers: [{
-      provider: 'brave',
+      provider: 'vk-search',
       status: 'ok',
       resultCount: 1,
       query: 'Hyatt Regency Maui, Kaanapali',
-      endpoint: 'local',
-      rawResults: [trimBraveResultEvidence(displayRow)],
+      rawResults: [{ title: displayResolved.place.title, address: displayResolved.place.address }],
     }],
     center: { lat: 20.9250419, lng: -156.6899009 },
   }),
@@ -130,7 +123,7 @@ assert.equal(shapeOutcome.lookups[0].status, 'ok');
 const { db: reverseDb, tripThings: reverseThings } = mockDb('trip-reverse');
 const reverseOutcome = await persistIntakeLodgingThings(reverseDb, 'trip-reverse', 'req-reverse', [{ title: 'Hyatt Regency Maui', category: 'hotel' }], {
   areaHint: 'Kaanapali',
-  env: { OPENROUTER_API_KEY: 't', BRAVE_SEARCH_API_KEY: 'b' },
+  env: { OPENROUTER_API_KEY: 't' },
   fetchImpl: nominatimFetch((href) => ({
     ok: true,
     json: async () => (href.includes('reverse')
@@ -139,13 +132,13 @@ const reverseOutcome = await persistIntakeLodgingThings(reverseDb, 'trip-reverse
   })),
   searchImpl: async () => ({
     places: [{
-      source: 'brave',
+      source: 'vk-search',
       title: 'Hyatt Regency Maui Resort & Spa',
       category: 'hotel',
       lat: HYATT_LAT,
       lng: HYATT_LNG,
       address: '',
-      externalId: 'brave-coords-only',
+      externalId: 'vk-coords-only',
       sourceRecord: {
         title: 'Hyatt Regency Maui Resort & Spa',
         coordinates: [HYATT_LAT, HYATT_LNG],
@@ -154,7 +147,7 @@ const reverseOutcome = await persistIntakeLodgingThings(reverseDb, 'trip-reverse
       },
       providerCategories: ['lodging', 'Hotel'],
     }],
-    providers: [{ provider: 'brave', status: 'ok', resultCount: 1, rawResults: [] }],
+    providers: [{ provider: 'vk-search', status: 'ok', resultCount: 1, rawResults: [] }],
     center: { lat: 20.9250419, lng: -156.6899009 },
   }),
 });
@@ -165,7 +158,7 @@ assert.match(reverseThings[0].location.address, /200 Nohea Kai/i);
 const { db: nomSearchDb, tripThings: nomSearchThings } = mockDb('trip-nom-search');
 const nomSearchOutcome = await persistIntakeLodgingThings(nomSearchDb, 'trip-nom-search', 'req-nom-search', [{ title: 'Kihei Kai Nani', category: 'hotel' }], {
   areaHint: 'Kihei',
-  env: { OPENROUTER_API_KEY: 't', BRAVE_SEARCH_API_KEY: 'b' },
+  env: { OPENROUTER_API_KEY: 't' },
   fetchImpl: nominatimFetch((href) => ({
     ok: true,
     json: async () => (href.includes('/search')
@@ -184,7 +177,7 @@ const nomSearchOutcome = await persistIntakeLodgingThings(nomSearchDb, 'trip-nom
   })),
   searchImpl: async () => ({
     places: [],
-    providers: [{ provider: 'brave', status: 'empty', resultCount: 0, rawResults: [] }],
+    providers: [{ provider: 'vk-search', status: 'empty', resultCount: 0, rawResults: [] }],
     center: { lat: 20.763395, lng: -156.4463997 },
   }),
 });
@@ -195,7 +188,7 @@ assert.equal(nomSearchOutcome.lookups[0].status, 'ok');
 const { db: commercialDb, tripThings: commercialThings } = mockDb('trip-commercial');
 const commercialOutcome = await persistIntakeLodgingThings(commercialDb, 'trip-commercial', 'req-commercial', [{ title: 'Kihei Kai Nani', category: 'hotel' }], {
   areaHint: 'Kihei',
-  env: { OPENROUTER_API_KEY: 't', BRAVE_SEARCH_API_KEY: 'b' },
+  env: { OPENROUTER_API_KEY: 't' },
   fetchImpl: nominatimFetch(() => ({
     ok: true,
     json: async () => [{
@@ -211,7 +204,7 @@ const commercialOutcome = await persistIntakeLodgingThings(commercialDb, 'trip-c
   })),
   searchImpl: async () => ({
     places: [],
-    providers: [{ provider: 'brave', status: 'empty', resultCount: 0, rawResults: [{ title: 'Unrelated shop', id: 'x1', coordinates: [21, -157] }] }],
+    providers: [{ provider: 'vk-search', status: 'empty', resultCount: 0, rawResults: [{ title: 'Unrelated shop', id: 'x1', coordinates: [21, -157] }] }],
     center: { lat: 20.763395, lng: -156.4463997 },
   }),
 });
@@ -230,7 +223,7 @@ upgradeThings.push({
 });
 const upgradeOutcome = await persistIntakeLodgingThings(upgradeDb, 'trip-upgrade', 'req-upgrade', [{ title: 'Hyatt Regency Maui', category: 'hotel' }], {
   areaHint: 'Kaanapali',
-  env: { OPENROUTER_API_KEY: 't', BRAVE_SEARCH_API_KEY: 'b' },
+  env: { OPENROUTER_API_KEY: 't' },
   fetchImpl: nominatimFetch(() => ({ ok: true, json: async () => [] })),
   existingThings: [{
     id: 'stale-1',
@@ -241,16 +234,16 @@ const upgradeOutcome = await persistIntakeLodgingThings(upgradeDb, 'trip-upgrade
   }],
   searchImpl: async () => ({
     places: [{
-      source: 'brave',
+      source: 'vk-search',
       title: 'Hyatt Regency Maui Resort & Spa',
       category: 'hotel',
       lat: HYATT_LAT,
       lng: HYATT_LNG,
       address: '200 Nohea Kai Drive, Lahaina, HI 96761',
-      externalId: 'brave-upgrade',
+      externalId: 'vk-upgrade',
       providerCategories: ['lodging', 'Hotel'],
       sourceRecord: {
-        id: 'brave-upgrade',
+        id: 'vk-upgrade',
         title: 'Hyatt Regency Maui Resort & Spa',
         icon_category: 'lodging',
         categories: ['lodging'],
@@ -258,14 +251,14 @@ const upgradeOutcome = await persistIntakeLodgingThings(upgradeDb, 'trip-upgrade
         postal_address: { displayAddress: '200 Nohea Kai Drive, Lahaina, HI 96761' },
       },
     }],
-    providers: [{ provider: 'brave', status: 'ok', resultCount: 1, rawResults: [] }],
+    providers: [{ provider: 'vk-search', status: 'ok', resultCount: 1, rawResults: [] }],
     center: { lat: 20.9250419, lng: -156.6899009 },
   }),
 });
 assert.equal(upgradeOutcome.saved.length, 1);
 assert.equal(upgradeThings.length, 1);
 assert.match(upgradeThings[0].title, /Hyatt Regency Maui/i);
-assert.equal(upgradeThings[0].source, 'brave');
+assert.equal(upgradeThings[0].source, 'vk-search');
 assert.ok(String(upgradeThings[0].location.address || '').includes('200 Nohea Kai'));
 assert.equal(upgradeOutcome.lookups[0].status, 'ok');
 

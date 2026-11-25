@@ -23,15 +23,25 @@ import { installNoopNominatimStore } from './fixtures/nominatim-store-test-doubl
 installNoopNominatimStore();
 
 const NOMINATIM_HOST = ['nominatim', 'openstreetmap', 'org'].join('.');
-const BRAVE_HOST = ['api', 'search', 'brave', 'com'].join('.');
+const VK_SEARCH_WAKE_URL = 'https://vk-search.example/wake';
 const OPENROUTER_HOST = ['openrouter', 'ai'].join('.');
 const OVERPASS_HOST = ['overpass-api', 'de'].join('.');
 
 const env = {
   OPENROUTER_API_KEY: 'test-openrouter',
-  BRAVE_SEARCH_API_KEY: 'test-brave',
+  VK_SEARCH_WAKE_URL,
   DATABASE_URL: '',
 };
+
+function withVkIdentity(rows) {
+  return rows.map((row, idx) => ({
+    ...row,
+    url: row.url || `https://vk-candidate.example/gate-${idx + 1}`,
+    postal_address: row.postal_address && Object.keys(row.postal_address).length
+      ? row.postal_address
+      : { displayAddress: `${100 + idx} Kaanapali Pkwy, Lahaina, HI 96761` },
+  }));
+}
 
 function relevanceScoreForName(name) {
   const lower = String(name || '').toLowerCase();
@@ -56,8 +66,8 @@ function mockCheck6Fetch({ judgedTitles = [] }) {
       }));
       return { ok: true, json: async () => ({ elements }) };
     }
-    if (href.includes(BRAVE_HOST)) {
-      return { ok: true, json: async () => ({ results: KAANAPALI_TACO_BRAVE_RESULTS }) };
+    if (href === VK_SEARCH_WAKE_URL) {
+      return { ok: true, json: async () => ({ results: withVkIdentity(KAANAPALI_TACO_BRAVE_RESULTS) }) };
     }
     if (href.includes(OPENROUTER_HOST)) {
       const raw = options.body ? JSON.parse(String(options.body)) : {};
@@ -87,13 +97,13 @@ const check6 = await searchPlaces({
   fetchImpl: mockCheck6Fetch({ judgedTitles }),
 });
 
-const braveLive = check6.places.filter((row) => row.source === 'brave');
-assert.ok(braveLive.length > 0, JSON.stringify(check6.places.map((row) => row.title)));
+const vkLive = check6.places.filter((row) => row.source === 'vk-search');
+assert.ok(vkLive.length > 0, JSON.stringify(check6.places.map((row) => row.title)));
 assert.ok(
   judgedTitles.some((title) => /whalers village/i.test(String(title))),
-  `Brave row must reach Jev before OSM cap: ${judgedTitles.join(' | ')}`,
+  `VK Search row must reach Jev before OSM cap: ${judgedTitles.join(' | ')}`,
 );
-assert.ok(placeToTripThing(braveLive[0])?.metadata?.sourceRef?.id, 'brave taco row must be persistable');
+assert.ok(placeToTripThing(vkLive[0])?.metadata?.sourceRef?.id, 'vk-search taco row must be persistable');
 
 const lodgingClassification = {
   ok: true,
@@ -188,8 +198,8 @@ const dSave = await searchPlaces({
     if (href.includes(OVERPASS_HOST)) {
       return { ok: false, status: 504, text: async () => 'Gateway Timeout', json: async () => ({}) };
     }
-    if (href.includes(BRAVE_HOST)) {
-      return { ok: true, json: async () => ({ results: FISH_MARKET_MAUI_BRAVE }) };
+    if (href === VK_SEARCH_WAKE_URL) {
+      return { ok: true, json: async () => ({ results: withVkIdentity(FISH_MARKET_MAUI_BRAVE) }) };
     }
     if (href.includes(OPENROUTER_HOST)) {
       const raw = options.body ? JSON.parse(String(options.body)) : {};
@@ -214,8 +224,8 @@ assert.ok(
 
 const ordered = orderRowsForRelevanceJudge([
   { source: 'osm', title: 'a' },
-  { source: 'brave', title: 'b', providerRank: 1 },
-  { source: 'brave', title: 'c', providerRank: 0 },
+  { source: 'vk-search', title: 'b', providerRank: 1 },
+  { source: 'vk-search', title: 'c', providerRank: 0 },
 ]);
 assert.equal(ordered[0].title, 'c');
 assert.equal(ordered[1].title, 'b');

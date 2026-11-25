@@ -9,7 +9,7 @@ import { tripPlaceDossierKey } from '../src/vacation/thing-evidence-dossier-stor
 import { dossierFillRebuildFields } from '../src/vacation/xai-dossier-fill-state.mjs';
 import { fetchXaiPlaceRatings } from '../src/vacation/xai-grok-place-ratings.mjs';
 
-const env = { XAI_API_KEY: 'unit-test', BRAVE_SEARCH_API_KEY: 'unit-test' };
+const env = { XAI_API_KEY: 'unit-test', TAVILI_API_KEY: 'unit-test' };
 const place = { id: 'port-noop', title: 'Harbor Bookshop', category: 'store' };
 const key = tripPlaceDossierKey('port-trip', place.id);
 const summary = 'Harbor Bookshop offers a quiet place to browse local history books and staff selections by the harbor.';
@@ -76,7 +76,7 @@ test('port: attempts-only light dossiers fail before skip and do not restart exh
     gatherImpl: unexpected, buildImpl: unexpected,
     fetchImpl: async () => {
       searches += 1;
-      return { ok: true, json: async () => ({ web: { results: [] } }) };
+      return { ok: true, status: 200, json: async () => ({ results: [] }) };
     },
   };
   let firstSearches = 0;
@@ -109,9 +109,9 @@ test('port: attempts-only gather resumes gap search, clears emptySource only aft
   const result = await fetchXaiPlaceRatings(place, {
     env, storeImpl, dossierKey: key, gatherImpl: unexpected,
     fetchImpl: async (url) => {
-      assert.ok(new URL(url).pathname.endsWith('/web/search'));
+      assert.equal(new URL(url).pathname, '/search');
       searches += 1;
-      return { ok: true, json: async () => ({ web: { results: [{ url: page.url, title: place.title, description: text }] } }) };
+      return { ok: true, status: 200, json: async () => ({ results: [{ url: page.url, title: place.title, content: text }] }) };
     },
     buildImpl: async (dossier, options) => {
       builds += 1;

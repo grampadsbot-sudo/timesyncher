@@ -1,4 +1,4 @@
-export const PLACE_RESULT_PROVIDERS = new Set(['prior_db', 'osm', 'brave']);
+export const PLACE_RESULT_PROVIDERS = new Set(['prior_db', 'osm', 'vk-search']);
 
 export function providerRowIsError(row = {}) {
   return String(row?.status || '').trim().toLowerCase() === 'error';

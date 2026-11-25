@@ -1,25 +1,12 @@
-import {
-  braveAddress,
-  braveCategoryName,
-  braveEndpoint,
-  bravePoint,
-  braveProviderCategories,
-  braveQueryString,
-  braveLocalPlaceResult,
-  bravePlaceSearchRows,
-  bravePlaceDisplayTitle,
-  preferBraveUrlDuplicates,
-} from './brave-place-query.mjs';
 import { finalizeSearchPlaces } from './search-place-output.mjs';
 import { enrichSearchPlacesWithGrokRatings } from './xai-grok-place-ratings.mjs';
 import { enrichSearchPlacesWithEventLogos } from './search-event-logo.mjs';
-import { placePersistCategory } from './intake-car-category.mjs';
 import { categoryRadiusMeters, firstPassSearchLimit } from './keepsake-list-minimums.mjs';
 import { searchTavily } from './poi-search.mjs';
 import { attachPlaceRelevance } from './place-search-relevance.mjs';
-import { buildProviderEnv, missingSearchKeys } from './provider-env.mjs';
+import { buildProviderEnv } from './provider-env.mjs';
 import { runPlaceProviderPass } from './place-search-provider-pass.mjs';
-import { sourceRecordFor, sourceRefFor } from './place-search-record.mjs';
+import { sourceRefFor } from './place-search-record.mjs';
 import { noteToTripThing, placeToTripThing } from './place-search-trip-thing.mjs';
 import { enrichSearchPlacesWithWebDetails } from './search-place-detail-enrichment.mjs';
 import { PlaceSearchError } from './place-search-error.mjs';
@@ -28,14 +15,14 @@ import { normalizePlaceSearchCategory } from './place-search-category-keys.mjs';
 import { normalizePlaceSearchTargetKind } from './place-search-target-kind.mjs';
 import { overpassQuery, placesFromOsmPayload } from './place-search-osm.mjs';
 import { boundedAwait } from './bounded-await.mjs';
+import { queryVkSearchPlaces } from './vk-search-place-identity.mjs';
 
 export const PLACE_SEARCH_OVERPASS_TIMEOUT_MS = 8000;
 import { mergePlaces as mergePlaceRows } from './place-search-merge.mjs';
 import { distanceMeters, samePlace } from './place-search-same-place.mjs';
-import { ANCHOR_RADIUS_SCOPE_DESTINATION, ANCHOR_RADIUS_SCOPE_LODGING, radiusMetersForAnchorScope } from './place-search-radius-filter.mjs';
 
 export { PlaceSearchError };
-const SOURCE_IDS = new Set(['prior_db', 'osm', 'brave']);
+const SOURCE_IDS = new Set(['prior_db', 'osm', 'vk-search']);
 const PLACE_KINDS = new Set(['grocery', 'market', 'restaurant', 'store', 'garden', 'activity', 'hotel']);
 const PLACE_STOP = 'jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?|from|for|with|between|around|starting|leaving|ending|ended|ends|through|until|next|this|morning|afternoon|evening|please|and|or';
 const NOT_A_PLACE = /^(?:the|a|an|this|that|our|my|your|new|next|last|current|week|weeks|night|nights|day|days|morning|afternoon|evening|weekend|month|year|time|trip|trips|vacation|vacations|staycation|holiday|bot|staging|one|it|monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)$/i;
@@ -182,8 +169,8 @@ export function mergePlaces(groups = [], options = {}) {
 export { missingSearchKeys } from './provider-env.mjs';
 
 function countSources(places) {
-  const counts = { prior_db: 0, osm: 0, brave: 0 };
-  for (const place of places) counts[place.source] += 1;
+  const counts = { prior_db: 0, osm: 0, 'vk-search': 0 };
+  for (const place of places) counts[place.source] = (counts[place.source] || 0) + 1;
   return counts;
 }
 
@@ -260,11 +247,6 @@ async function attachRelevance(rows, fetchImpl, env, relevanceContext = {}) {
   return attachPlaceRelevance(rows, fetchImpl, env, relevanceContext, { requireOpenRouterKey });
 }
 
-function categoryNameField(name) {
-  const categoryName = String(name || '').trim();
-  return categoryName ? { categoryName } : {};
-}
-
 async function queryOsm(fetchImpl, center, categoryFilter = null) {
   const body = `data=${encodeURIComponent(overpassQuery(center, categoryFilter))}`;
   const timedOut = { overpassTimedOut: true };
@@ -282,120 +264,6 @@ async function queryOsm(fetchImpl, center, categoryFilter = null) {
     fail('OpenStreetMap Overpass timed out', 'source_failed');
   }
   return placesFromOsmPayload(payload, center, { finite, metersInsideCategory, ratingFromRecord });
-}
-
-function braveCallSummary(calls) {
-  const query = calls.map((row) => row.query).filter(Boolean).join(' | ');
-  const endpoint = [...new Set(calls.map((row) => row.endpoint).filter(Boolean))].join(' | ');
-  return { query, endpoint };
-}
-
-export async function queryBravePlaceSearch(fetchImpl, env, {
-  center,
-  locationText,
-  compactLocality = '',
-  namedPlaceLookup = false,
-}, queries) {
-  if (braveEndpoint(center) !== 'local') {
-    const error = new Error('Brave place search requires coordinates');
-    error.code = 'no_coordinates';
-    throw error;
-  }
-  const places = [];
-  const calls = [];
-  let anchorRadiusRejected = 0;
-  const anchorRadiusRejections = [];
-  const braveRadiusScope = namedPlaceLookup
-    ? ANCHOR_RADIUS_SCOPE_DESTINATION
-    : ANCHOR_RADIUS_SCOPE_LODGING;
-  const area = String(locationText || center?.label || '').trim();
-  const locality = String(compactLocality || center?.compactLocality || '').trim();
-  try {
-    for (const item of queries) {
-      const query = braveQueryString(item, area, center, locality);
-      const endpoint = 'local';
-      calls.push({ query, endpoint });
-      const params = new URLSearchParams({
-        q: query,
-        count: String(item.limit || searchLimit(item.category)),
-        latitude: String(center.lat),
-        longitude: String(center.lng),
-        radius: String(categoryRadiusMeters(item.category)),
-      });
-      const payload = await placeSearchReadJson(
-        fetchImpl,
-        `https://api.search.brave.com/res/v1/local/place_search?${params}`,
-        {
-          label: 'Brave Place Search',
-          headers: { 'X-Subscription-Token': String(env.brave).trim() },
-        },
-      );
-      const braveRows = bravePlaceSearchRows(payload, endpoint);
-      const rawBraveResults = braveRows.slice(0, 5);
-      for (let providerRank = 0; providerRank < braveRows.length; providerRank += 1) {
-        const result = braveRows[providerRank];
-        if (!braveLocalPlaceResult(result)) continue;
-        const point = bravePoint(result);
-        const title = bravePlaceDisplayTitle(result);
-        const address = braveAddress(result);
-        const description = String(result?.description || '').replace(/\s+/g, ' ').trim();
-        if (!title) continue;
-        const limitMeters = radiusMetersForAnchorScope(item.category, braveRadiusScope);
-        const meters = center ? distanceMeters(center, point) : null;
-        if (center && (meters === null || meters > limitMeters)) {
-          anchorRadiusRejected += 1;
-          anchorRadiusRejections.push({
-            title,
-            source: 'brave',
-            lat: point.lat,
-            lng: point.lng,
-            meters,
-            limitMeters,
-            scope: braveRadiusScope,
-            reason: 'outside_radius',
-          });
-          continue;
-        }
-        const providerCategories = braveProviderCategories(result);
-        places.push({
-          source: 'brave',
-          title,
-          category: placePersistCategory({ source: 'brave', category: item.category, sourceRecord: result, providerCategories }),
-          lat: point.lat,
-          lng: point.lng,
-          address,
-          url: String(result?.url || ''),
-          externalId: String(result?.id || result?.url || ''),
-          providerRank,
-          sourceRecord: result,
-          ...(description ? { description } : {}),
-          ...ratingFromRecord(result),
-          ...categoryNameField(braveCategoryName(result)),
-          ...(providerCategories.length ? { providerCategories } : {}),
-        });
-      }
-      calls[calls.length - 1].rawResults = rawBraveResults;
-    }
-  } catch (error) {
-    const summary = braveCallSummary(calls);
-    error.braveQuery = summary.query;
-    error.braveEndpoint = summary.endpoint;
-    throw error;
-  }
-  const rawResults = calls.flatMap((row) => (Array.isArray(row.rawResults) ? row.rawResults : [])).slice(0, 5);
-  const braveLookups = calls.map((row) => ({
-    query: String(row.query || '').trim(),
-    endpoint: String(row.endpoint || '').trim(),
-  })).filter((row) => row.query && row.endpoint);
-  const dedupedPlaces = preferBraveUrlDuplicates(places);
-  return {
-    places: dedupedPlaces,
-    rawResults,
-    ...(braveLookups.length ? { braveLookups } : {}),
-    ...(anchorRadiusRejected > 0 ? { anchorRadiusRejected } : {}),
-    ...(anchorRadiusRejections.length ? { anchorRadiusRejections } : {}),
-    ...braveCallSummary(calls),
-  };
 }
 
 export function selectPriorPlaces(rows = [], center) {
@@ -438,7 +306,7 @@ async function queryPriorRows(env, tripId) {
     select id, title, category, location, source
     from trip_things
     where trip_id = ${id}::uuid
-      and source in ('prior_db', 'osm', 'brave')
+      and source in ('prior_db', 'osm', 'vk-search')
     order by updated_at desc
     limit 400
   `;
@@ -506,6 +374,7 @@ export async function searchPlaces({
   db = null,
   env = process.env,
   fetchImpl = globalThis.fetch,
+  vkSearchImpl = null,
   priorPlaces,
   loadPriorPlaces,
   onSearchSnapshot = null,
@@ -531,10 +400,6 @@ export async function searchPlaces({
     };
   }
   requireOpenRouterKey(env);
-  if (placeQueries.length) {
-    const missing = missingSearchKeys(env);
-    if (missing.length) fail(`Place search refused to run. Missing ${missing.join(', ')}.`, 'missing_key');
-  }
   if (infoQueries.length && !String(env.tavily || '').trim()) {
     fail(`Search refused to run. Missing ${String(env.tavilyName || 'TAVILI_API_KEY')}.`, 'missing_key');
   }
@@ -585,7 +450,8 @@ export async function searchPlaces({
       selectPriorPlaces,
       priorRowsFromInput,
       queryOsm,
-      queryBrave: queryBravePlaceSearch,
+      queryVkSearch: queryVkSearchPlaces,
+      vkSearchImpl,
       mergePlaces,
       attachRelevance,
       readJson: placeSearchReadJson,

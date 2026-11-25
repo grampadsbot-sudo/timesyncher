@@ -13,16 +13,17 @@ import { installNoopNominatimStore } from './fixtures/nominatim-store-test-doubl
 installNoopNominatimStore();
 
 const NOMINATIM_HOST = ['nominatim', 'openstreetmap', 'org'].join('.');
-const BRAVE_HOST = ['api', 'search', 'brave', 'com'].join('.');
+const VK_SEARCH_WAKE_URL = 'https://vk-search.example/wake';
 const OPENROUTER_HOST = ['openrouter', 'ai'].join('.');
 const OVERPASS_HOST = ['overpass-api', 'de'].join('.');
 
-const env = { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key', DATABASE_URL: '' };
+const env = { OPENROUTER_API_KEY: 'test', VK_SEARCH_WAKE_URL, DATABASE_URL: '' };
 
-const PAIA_COMPETING_BRAVE = [
+const PAIA_COMPETING_VK = [
   {
     id: 'loc-paia-restaurant',
     title: 'Paia Fish Market Restaurant',
+    url: 'https://paiafishmarket.com/paia',
     latitude: 20.915,
     longitude: -156.381,
     categories: ['restaurant'],
@@ -31,6 +32,7 @@ const PAIA_COMPETING_BRAVE = [
   {
     id: 'loc-paia-south',
     title: 'Paia Fish Market South Side',
+    url: 'https://paiafishmarket.com/kihei',
     latitude: 20.74,
     longitude: -156.455,
     categories: ['restaurant'],
@@ -39,6 +41,7 @@ const PAIA_COMPETING_BRAVE = [
   {
     id: 'loc-mamas',
     title: "Mama's Fish House",
+    url: 'https://mamasfishhouse.com/',
     latitude: 20.936,
     longitude: -156.367,
     categories: ['restaurant'],
@@ -81,8 +84,8 @@ async function relevanceFetch(url, options = {}) {
   if (href.includes(OVERPASS_HOST)) {
     return { ok: true, json: async () => ({ elements: [] }) };
   }
-  if (href.includes(BRAVE_HOST)) {
-    return { ok: true, json: async () => ({ results: PAIA_COMPETING_BRAVE }) };
+  if (href === VK_SEARCH_WAKE_URL) {
+    return { ok: true, json: async () => ({ results: PAIA_COMPETING_VK }) };
   }
   throw new Error(`unexpected ${href}`);
 }

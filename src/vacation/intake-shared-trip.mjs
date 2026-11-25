@@ -100,7 +100,7 @@ export function customerStatedLodgingThing(thing = {}) {
   const source = String(meta.source || thing.source || '').toLowerCase();
   if (source === 'customer_stated' || source === 'customer') return true;
   if (meta.intakeSource === 'chat_extraction') return true;
-  if (['brave', 'osm', 'tavily'].includes(source) && locationOf(thing)) return true;
+  if (['vk-search', 'brave', 'osm', 'tavily'].includes(source) && locationOf(thing)) return true;
   return false;
 }
 

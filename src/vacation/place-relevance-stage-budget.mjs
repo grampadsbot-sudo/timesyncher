@@ -58,7 +58,7 @@ function rowCategoryKey(row) {
   return String(row?.category || '').trim().toLowerCase();
 }
 
-const RELEVANCE_JUDGE_SOURCE_ORDER = ['brave', 'prior_db', 'osm'];
+const RELEVANCE_JUDGE_SOURCE_ORDER = ['vk-search', 'prior_db', 'osm'];
 
 function relevanceJudgeSourceRank(row) {
   const source = String(row?.source || '').trim();

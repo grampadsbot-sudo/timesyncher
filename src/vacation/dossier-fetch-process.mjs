@@ -1,6 +1,6 @@
 import { fork } from 'node:child_process';
-import { braveSubscriptionKey, tavilyApiKey } from './poi-search.mjs';
-import { BRAVE_PROVIDER_KEY_NAME, TAVILI_PROVIDER_KEY_NAME } from './provider-env.mjs';
+import { tavilyApiKey } from './poi-search.mjs';
+import { TAVILI_PROVIDER_KEY_NAME } from './provider-env.mjs';
 
 export function runDossierFetchTask(operation, place, options = {}, {
   workerUrl = new URL('./dossier-fetch-worker.mjs', import.meta.url),
@@ -37,25 +37,23 @@ export function runDossierFetchTask(operation, place, options = {}, {
         try {
           if (message?.type === 'progress' && validDossier(message.dossier)) {
             latest = message.dossier;
-            Object.assign(options.bravePace || {}, message.bravePace);
             if (options.onProgress) await options.onProgress(latest);
             if (!settled) child.send({ type: 'ack' }, (error) => {
               if (error) failed('fetch_worker_ipc_failed');
             });
           } else if (message?.type === 'result' && validDossier(message.dossier)) {
-            Object.assign(options.bravePace || {}, message.bravePace);
             finish(null, message.dossier);
           } else {
             failed(message?.type === 'error' ? 'fetch_worker_task_failed' : 'fetch_worker_protocol');
           }
         } catch (error) { finish(error); }
       });
-      const { destination, center, deadline, onlyFields, dossier, bravePace, botPrimary } = options;
+      const { destination, center, deadline, onlyFields, dossier, botPrimary } = options;
       const env = options.env || process.env;
       child.send({ operation, place, options: {
-        destination, center, deadline, onlyFields, dossier, bravePace, botPrimary,
+        destination, center, deadline, onlyFields, dossier, botPrimary,
         env: {
-          [BRAVE_PROVIDER_KEY_NAME]: braveSubscriptionKey(options.env), [TAVILI_PROVIDER_KEY_NAME]: tavilyApiKey(options.env),
+          [TAVILI_PROVIDER_KEY_NAME]: tavilyApiKey(options.env),
           VK_SEARCH_BOT_PRIMARY: env.VK_SEARCH_BOT_PRIMARY,
           VK_SEARCH_WAKE_URL: env.VK_SEARCH_WAKE_URL,
           VK_SEARCH_CENSUS_DIR: env.VK_SEARCH_CENSUS_DIR,

@@ -244,7 +244,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
   const fetchIsolation = fetchImpl === globalThis.fetch && !resolveImpl && !sleepImpl;
   fetchImpl = dossierDeadlineFetch(fetchImpl, deadline);
   const gatherOpts = {
-    env, fetchImpl, destination, resolveImpl, center, deadline, sleepImpl, fetchIsolation, fetchTaskImpl, bravePace: { nextAt: 0 },
+    env, fetchImpl, destination, resolveImpl, center, deadline, sleepImpl, fetchIsolation, fetchTaskImpl,
     onProgress: key ? async (progress) => {
       recordDossierTraceAttempts(trace, progress.attempts);
       merged = mergeDossierPages(persisted || {}, progress);
@@ -312,7 +312,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
         extractReviewsImpl,
         extractDossierReviews,
         callDossierBuilder,
-        judgeDossierFindings, trace, bravePace: gatherOpts.bravePace, sleepImpl,
+        judgeDossierFindings, trace, sleepImpl,
       });
       recordDossierTraceAttempts(trace, (merged.attempts || []).slice(attemptsBeforeTopUp));
       stampReviewsEvidencePageHash(merged, place);
@@ -342,7 +342,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
     if (!placeSupportsDossierReviews(place)) merged = stripDossierReviews(merged, place);
     merged.captureCheckpoint = 'after_gather';
     if (key) await saveThingEvidenceDossier(key, merged, { env, storeImpl });
-    if ((outOfTime() || gathered.attempts?.some((row) => row.error === 'brave_deadline')) && merged.pages?.length) {
+    if ((outOfTime() || gathered.attempts?.some((row) => row.error === 'tavily_deadline')) && merged.pages?.length) {
       recordDossierTracePages(trace, merged, normalizeDossierEvidence(merged, place, trace));
       commitDossierXaiUsageRun(merged, persisted || {}, { kind: 'partial-gather', placeId: place.id ?? place.placeId });
       return { payload: {}, structuredText: '', partial: true, checkpoint: merged.captureCheckpoint, parsed: { evidenceDossier: merged } };

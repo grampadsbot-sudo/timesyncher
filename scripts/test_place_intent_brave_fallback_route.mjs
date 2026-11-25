@@ -12,23 +12,23 @@ import { useVacationDatabase } from '../src/vacation/db.mjs';
 import { installNoopNominatimStore, resetNominatimStore } from './fixtures/nominatim-store-test-double.mjs';
 import { handleEulaStoreDbSql } from './fixtures/eula-store-db-sql.mjs';
 import {
-  BRAVE_DUMMY,
   BRAVE_HOST,
   classifierPayloadForTurn,
   NOMINATIM_HOST,
   OPENROUTER_DUMMY,
   OPENROUTER_HOST,
   OVERPASS_HOST,
-  ROUTER_MODEL,
   TAVILY_HOST,
   TAVILY_DUMMY,
 } from './fixtures/place-intent-brave-fallback-fixtures.mjs';
+
+const VK_SEARCH_WAKE_URL = 'https://vk-search.example/wake';
 
 async function runPlaceIntentRouteTests() {
   const storeDir = await mkdtemp(path.join(tmpdir(), 'place-intent-brave-fallback-'));
   const saved = {};
   for (const key of [
-    'BRAVE_SEARCH_API_KEY',
+    'VK_SEARCH_WAKE_URL',
     'TAVILI_API_KEY',
     'OPENROUTER_API_KEY',
     'TIMESYNCHER_EULA_VERSION',
@@ -44,7 +44,7 @@ async function runPlaceIntentRouteTests() {
   }
 
   Object.assign(process.env, {
-    BRAVE_SEARCH_API_KEY: BRAVE_DUMMY,
+    VK_SEARCH_WAKE_URL,
     TAVILI_API_KEY: TAVILY_DUMMY,
     OPENROUTER_API_KEY: OPENROUTER_DUMMY,
     TIMESYNCHER_EULA_VERSION: 'test-eula-place-intent',
@@ -110,6 +110,7 @@ async function runPlaceIntentRouteTests() {
     tripThings: [],
     turnPayloads: [],
     fetchCalls: [],
+    vkQueries: [],
     lastResponse: null,
   };
 
@@ -162,7 +163,7 @@ async function runPlaceIntentRouteTests() {
     }
     if (/insert into worker_jobs/i.test(text)) return [{ id: 'job-place-intent' }];
     if (/insert into trip_things/i.test(text)) {
-      state.tripThings.push({ source: values.find((value) => value === 'brave') || 'brave' });
+      state.tripThings.push({ source: values.find((value) => value === 'vk-search') || 'vk-search' });
       return [{ id: `trip-thing-${state.tripThings.length}` }];
     }
     if (/update transcript_turns/i.test(text) && /set payload/i.test(text)) {
@@ -219,27 +220,32 @@ async function runPlaceIntentRouteTests() {
     if (href.includes(OVERPASS_HOST)) {
       return { ok: true, json: async () => ({ elements: [] }) };
     }
-    if (href.includes(BRAVE_HOST) && href.includes('local/place_search')) {
-      assert.equal(options.headers['X-Subscription-Token'], BRAVE_DUMMY);
+    if (href.includes(BRAVE_HOST)) {
+      throw new Error(`Brave must never be called at runtime: ${href}`);
+    }
+    if (href === VK_SEARCH_WAKE_URL) {
+      const parsed = options.body ? JSON.parse(String(options.body)) : {};
+      const q = String(parsed?.place?.query || '');
+      state.vkQueries.push(q);
       if (state.braveMode === 'fail') {
         return { ok: false, status: 503, json: async () => ({}), text: async () => 'fail' };
       }
       if (state.braveMode === 'empty') {
         return { ok: true, json: async () => ({ results: [] }) };
       }
-      const params = new URL(href).searchParams;
       return {
         ok: true,
         json: async () => ({
           results: [{
-            id: 'brave-kaanapali-taco-1',
+            id: 'vk-kaanapali-taco-1',
             title: 'Kaanapali Taco Cart',
             latitude: 20.921,
             longitude: -156.691,
+            address: '2435 Kaanapali Pkwy, Lahaina, HI 96761',
             url: 'https://example.com/kaanapali-taco',
           }],
         }),
-        _q: params.get('q'),
+        _q: q,
       };
     }
     if (href.includes(TAVILY_HOST)) {
@@ -302,6 +308,7 @@ async function runPlaceIntentRouteTests() {
     state.tripThings = [];
     state.turnPayloads = [];
     state.fetchCalls = [];
+    state.vkQueries = [];
     const req = {
       method: 'POST',
       url: `/api/vacation-itinerary?app=1&session=${encodeURIComponent(onboarding.token)}`,
@@ -334,18 +341,20 @@ async function runPlaceIntentRouteTests() {
     state.braveMode = 'ok';
     const bestTacos = await postTurn('best tacos near our hotel');
     assert.notEqual(bestTacos.status, 502, JSON.stringify(bestTacos.body));
-    const braveCall = state.fetchCalls.find((url) => url.includes(BRAVE_HOST) && url.includes('local'));
-    assert.ok(braveCall, 'Brave local search should run for best tacos near our hotel');
-    const braveQ = new URL(braveCall).searchParams.get('q') || '';
-    assert.match(braveQ, /tacos near Kaanapali, Maui/);
-    assert.doesNotMatch(braveQ, /our hotel/i);
+    const vkCall = state.fetchCalls.find((url) => url === VK_SEARCH_WAKE_URL);
+    assert.ok(vkCall, 'VK Search should run for best tacos near our hotel');
+    assert.equal(state.fetchCalls.some((url) => url.includes(BRAVE_HOST)), false);
+    const vkQ = state.vkQueries[0] || '';
+    assert.match(vkQ, /tacos/i);
+    assert.match(vkQ, /Kaanapali, Maui/);
+    assert.doesNotMatch(vkQ, /our hotel/i);
     const bestPayload = state.turnPayloads.at(-1);
-    const bestBrave = bestPayload.placeSearch.providers.find((row) => row.provider === 'brave');
-    assert.equal(bestBrave.endpoint, 'local');
-    assert.equal(bestBrave.query, braveQ);
+    const bestVk = bestPayload.placeSearch.providers.find((row) => row.provider === 'vk-search');
+    assert.equal(bestVk.endpoint, 'vk-search');
+    assert.equal(bestVk.query, vkQ);
     assert.equal(bestPayload.placeSearch?.status, 'ok');
     assert.equal(Array.isArray(bestPayload.placeSearch?.providers), true);
-    assert.ok(bestPayload.placeSearch.providers.some((row) => row.provider === 'brave' && row.status === 'ok'));
+    assert.ok(bestPayload.placeSearch.providers.some((row) => row.provider === 'vk-search' && row.status === 'ok'));
 
     state.lodgingCoords = false;
     state.nominatimMode = 'fail';
@@ -354,12 +363,12 @@ async function runPlaceIntentRouteTests() {
     assert.equal(findNearHotel.status, 502);
     assert.equal(findNearHotel.body.ok, false);
     assert.match(String(findNearHotel.body.error || ''), /geocode|place_search_failed/i);
-    assert.equal(state.fetchCalls.some((url) => url.includes(BRAVE_HOST)), false);
+    assert.equal(state.fetchCalls.some((url) => url === VK_SEARCH_WAKE_URL || url.includes(BRAVE_HOST)), false);
     const findPayload = state.turnPayloads.at(-1);
     assert.equal(findPayload.placeSearch?.status, 'failed');
     assert.equal(findPayload.placeSearch?.reason, 'geocode_failed');
-    const findBrave = findPayload.placeSearch.providers.find((row) => row.provider === 'brave');
-    assert.equal(findBrave, undefined);
+    const findVk = findPayload.placeSearch.providers.find((row) => row.provider === 'vk-search');
+    assert.equal(findVk, undefined);
     const nominatimRow = findPayload.placeSearch.providers.find((row) => row.provider === 'nominatim');
     assert.equal(nominatimRow?.status, 'error');
 
@@ -369,7 +378,7 @@ async function runPlaceIntentRouteTests() {
     const recommend = await postTurn('recommend taco spots near Kaanapali Maui');
     assert.equal(recommend.status, 502);
     assert.equal(recommend.body.ok, false);
-    assert.equal(state.fetchCalls.some((url) => url.includes(BRAVE_HOST)), false);
+    assert.equal(state.fetchCalls.some((url) => url === VK_SEARCH_WAKE_URL || url.includes(BRAVE_HOST)), false);
     const recommendPayload = state.turnPayloads.at(-1);
     assert.equal(recommendPayload.placeSearch?.status, 'failed');
     assert.equal(recommendPayload.placeSearch?.reason, 'geocode_failed');
@@ -392,7 +401,7 @@ async function runPlaceIntentRouteTests() {
     const weather = await postTurn('What events are happening in Kaanapali this weekend?');
     assert.notEqual(weather.status, 502, JSON.stringify(weather.body));
     assert.equal(state.fetchCalls.some((url) => url.includes(TAVILY_HOST)), true);
-    assert.equal(state.fetchCalls.some((url) => url.includes(BRAVE_HOST) && url.includes('local')), false);
+    assert.equal(state.fetchCalls.some((url) => url === VK_SEARCH_WAKE_URL || url.includes(BRAVE_HOST)), false);
     const weatherPayload = state.turnPayloads.at(-1);
     assert.equal(weatherPayload.webSearch?.status, 'ok');
     assert.equal(weatherPayload.turnClassifier?.turnKind, 'web_research');
@@ -400,22 +409,22 @@ async function runPlaceIntentRouteTests() {
     state.classifierMode = 'ok';
     const landing = await postTurn('we land in Maui at 3pm');
     assert.notEqual(landing.status, 502, JSON.stringify(landing.body));
-    assert.equal(state.fetchCalls.some((url) => url.includes(BRAVE_HOST) && url.includes('local')), false);
+    assert.equal(state.fetchCalls.some((url) => url === VK_SEARCH_WAKE_URL || url.includes(BRAVE_HOST)), false);
     assert.equal(state.fetchCalls.some((url) => url.includes(TAVILY_HOST)), false);
     const landingPayload = state.turnPayloads.at(-1);
     assert.equal(landingPayload.placeSearch, undefined);
     assert.equal(landingPayload.turnClassifier?.turnKind, 'other');
 
     state.classifierMode = 'fail';
-    const braveCallsBeforeClassifierFail = state.fetchCalls.filter((url) => url.includes(BRAVE_HOST) && url.includes('local')).length;
+    const vkCallsBeforeClassifierFail = state.fetchCalls.filter((url) => url === VK_SEARCH_WAKE_URL).length;
     const classifierFail = await postTurn('best tacos near our hotel');
     assert.equal(classifierFail.status, 502);
     assert.equal(classifierFail.body.ok, false);
     assert.equal(classifierFail.body.status, 'turn_classifier_failed');
     assert.match(String(classifierFail.body.error || ''), /classifier down/i);
     assert.equal(
-      state.fetchCalls.filter((url) => url.includes(BRAVE_HOST) && url.includes('local')).length,
-      braveCallsBeforeClassifierFail,
+      state.fetchCalls.filter((url) => url === VK_SEARCH_WAKE_URL).length,
+      vkCallsBeforeClassifierFail,
     );
     const classifierFailPayload = state.turnPayloads.at(-1);
     assert.equal(classifierFailPayload.turnClassifier?.turnKind, null);

@@ -3,15 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { attachIntakeItineraryFromReply } from '../routes/vacation-itinerary.mjs';
-import {
-  braveAddress,
-  braveCategoryName,
-  braveLocalPlaceResult,
-  bravePlaceSearchRows,
-  bravePoint,
-  braveProviderCategories,
-  braveTitle,
-} from '../src/vacation/brave-place-query.mjs';
+import { resolveVkSearchPlaceIdentity } from '../src/vacation/vk-search-place-identity.mjs';
 import { queriesFromPlaceClassification } from '../src/vacation/place-search-query-plan.mjs';
 import { placeSearchProvidersAllEmpty } from '../src/vacation/place-search-provider-pass.mjs';
 import { overpassQuery, osmPlaceQualifiesForSave, placesFromOsmPayload } from '../src/vacation/place-search-osm.mjs';
@@ -30,37 +22,23 @@ const FIXTURE_DIR = fileURLToPath(new URL('./fixtures/intake-lodging-brave/', im
 const KIHEI_CENTER = { lat: 20.763395, lng: -156.4463997 };
 const NOMINATIM_HOST = ['nominatim', 'openstreetmap', 'org'].join('.');
 const OVERPASS_HOST = ['overpass-api', 'de'].join('.');
-const BRAVE_HOST = ['api', 'search', 'brave', 'com'].join('.');
+const VK_SEARCH_WAKE_URL = 'https://vk-search.example/wake';
 const OPENROUTER_HOST = ['openrouter', 'ai'].join('.');
 
 function loadFixture(name) {
   return JSON.parse(readFileSync(`${FIXTURE_DIR}${name}`, 'utf8'));
 }
 
-function bravePlacesFromFixture(fixture) {
+async function vkPlacesFromFixture(fixture) {
   const rows = [];
-  const braveRows = bravePlaceSearchRows(fixture, 'local');
-  for (let providerRank = 0; providerRank < braveRows.length; providerRank += 1) {
-    const result = braveRows[providerRank];
-    if (!braveLocalPlaceResult(result)) continue;
-    const point = bravePoint(result);
-    const title = braveTitle(result?.title || result?.name);
-    const address = braveAddress(result);
-    if (!title) continue;
-    rows.push({
-      source: 'brave',
-      title,
-      category: 'hotel',
-      lat: point.lat,
-      lng: point.lng,
-      address,
-      url: String(result?.url || ''),
-      externalId: String(result?.id || result?.url || ''),
-      categoryName: braveCategoryName(result),
-      providerCategories: braveProviderCategories(result),
-      providerRank,
-      sourceRecord: result,
-    });
+  const raw = Array.isArray(fixture?.results) ? fixture.results : [];
+  for (let providerRank = 0; providerRank < raw.length; providerRank += 1) {
+    const result = raw[providerRank];
+    const outcome = await resolveVkSearchPlaceIdentity(
+      { ...result, url: result?.url || `https://lodging.example/hotel-${providerRank}` },
+      { category: 'hotel', providerRank, env: {} },
+    );
+    if (outcome.ok && outcome.place) rows.push(outcome.place);
   }
   return rows;
 }
@@ -116,7 +94,7 @@ function mockCreationDb(tripId) {
   return { db, tripThings, turns };
 }
 
-const kiheiPlaces = bravePlacesFromFixture(loadFixture('kihei-live-h2.json'));
+const kiheiPlaces = await vkPlacesFromFixture(loadFixture('kihei-live-h2.json'));
 const creationSentence = 'We booked Kihei Kai Nani in Kihei Nov 19–26 2026.';
 const creationThings = [{ name: 'Kihei Kai Nani', kind: 'hotel', who: '', when: '' }];
 let creationQuery = '';
@@ -140,13 +118,13 @@ await attachIntakeItineraryFromReply(
     extractedDestination: 'Kihei',
     extractedTitle: 'Kihei Nov 19–26 2026',
     wantedThings: creationThings,
-    env: { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key' },
+    env: { OPENROUTER_API_KEY: 'test', VK_SEARCH_WAKE_URL },
     searchPlacesImpl: async ({ propertyName, areaHint }) => {
       creationQuery = intakeLodgingLookupQuery(propertyName, areaHint);
       return {
         places: kiheiPlaces,
         center: KIHEI_CENTER,
-        providers: [{ provider: 'brave', status: 'ok', resultCount: kiheiPlaces.length, query: creationQuery }],
+        providers: [{ provider: 'vk-search', status: 'ok', resultCount: kiheiPlaces.length, query: creationQuery }],
       };
     },
   },
@@ -184,7 +162,7 @@ assert.match(overpassMarket, /amenity"="marketplace"/);
 assert.match(overpassMarket, /shop"="farm"/);
 assert.doesNotMatch(overpassMarket, /supermarket\|grocery/);
 
-let braveFarmersQuery = '';
+let vkFarmersQuery = '';
 const farmersFetch = async (url, options = {}) => {
   const href = String(url);
   if (href.includes(NOMINATIM_HOST)) {
@@ -193,8 +171,9 @@ const farmersFetch = async (url, options = {}) => {
   if (href.includes(OVERPASS_HOST)) {
     return { ok: true, json: async () => ({ elements: [] }) };
   }
-  if (href.includes(BRAVE_HOST)) {
-    braveFarmersQuery = new URL(href).searchParams.get('q') || '';
+  if (href === VK_SEARCH_WAKE_URL) {
+    const parsed = options.body ? JSON.parse(String(options.body)) : {};
+    vkFarmersQuery = String(parsed?.place?.query || '');
     return { ok: true, json: async () => ({ results: [] }) };
   }
   if (href.includes(OPENROUTER_HOST)) {
@@ -208,12 +187,12 @@ const farmersSearch = await searchPlaces({
   queries: farmersPlan.queries,
   relevanceTarget: 'Farmers market',
   relevanceArea: farmersPlan.destination,
-  env: { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key', DATABASE_URL: '' },
+  env: { OPENROUTER_API_KEY: 'test', VK_SEARCH_WAKE_URL, DATABASE_URL: '' },
   fetchImpl: farmersFetch,
   tripId: 'trip-farmers',
 });
 assert.equal(farmersSearch.outcomeStatus, 'no_results');
-assert.match(braveFarmersQuery, /Farmers market/i);
+assert.match(vkFarmersQuery, /Farmers market/i);
 
 const chatNoResults = await runCustomerChatPlaceSearch({
   placeSearchTurn: true,
@@ -227,32 +206,32 @@ const chatNoResults = await runCustomerChatPlaceSearch({
     targetKind: 'category',
   },
   tripDestination: 'Kihei',
-  env: { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key', DATABASE_URL: '' },
+  env: { OPENROUTER_API_KEY: 'test', VK_SEARCH_WAKE_URL, DATABASE_URL: '' },
   fetchImpl: farmersFetch,
 });
 assert.equal(chatNoResults.status, 'no_results');
 assert.equal(chatNoResults.error, null);
 
-const osmErrBraveEmpty = await searchPlaces({
+const osmErrVkEmpty = await searchPlaces({
   destination: farmersPlan.destination,
   queries: farmersPlan.queries,
   relevanceTarget: 'Farmers market',
   relevanceArea: farmersPlan.destination,
-  env: { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key', DATABASE_URL: '' },
+  env: { OPENROUTER_API_KEY: 'test', VK_SEARCH_WAKE_URL, DATABASE_URL: '' },
   fetchImpl: async (url) => {
     const href = String(url);
     if (href.includes(NOMINATIM_HOST)) {
       return { ok: true, json: async () => [{ lat: String(KIHEI_CENTER.lat), lon: String(KIHEI_CENTER.lng), display_name: 'Kihei' }] };
     }
     if (href.includes(OVERPASS_HOST)) throw new Error('overpass down');
-    if (href.includes(BRAVE_HOST)) return { ok: true, json: async () => ({ results: [] }) };
+    if (href === VK_SEARCH_WAKE_URL) return { ok: true, json: async () => ({ results: [] }) };
     if (href.includes(OPENROUTER_HOST)) return { ok: true, json: async () => ({ answers: { relevance: { type: 'score', score: 3.5 } } }) };
     throw new Error(href);
   },
   tripId: 'trip-osm-err',
 });
-assert.equal(osmErrBraveEmpty.outcomeStatus, 'no_results');
-assert.ok(Array.isArray(osmErrBraveEmpty.providerErrors) && osmErrBraveEmpty.providerErrors.some((row) => row.provider === 'osm'));
+assert.equal(osmErrVkEmpty.outcomeStatus, 'no_results');
+assert.ok(Array.isArray(osmErrVkEmpty.providerErrors) && osmErrVkEmpty.providerErrors.some((row) => row.provider === 'osm'));
 
 assert.equal(osmPlaceQualifiesForSave({ name: 'Hawaii 31 & 360 Junction (Kālepa Bridge)', highway: 'junction', junction: 'yes' }), false);
 assert.equal(osmPlaceQualifiesForSave({ name: 'Snorkeling Entry Point', highway: 'service', access: 'yes' }), false);
@@ -322,7 +301,7 @@ const blackRockFetch = async (url) => {
     }
     return { ok: true, json: async () => [{ lat: String(KIHEI_CENTER.lat), lon: String(KIHEI_CENTER.lng), display_name: 'Kihei, Maui' }] };
   }
-  if (href.includes(BRAVE_HOST)) {
+  if (href === VK_SEARCH_WAKE_URL) {
     return {
       ok: true,
       json: async () => ({
@@ -331,7 +310,8 @@ const blackRockFetch = async (url) => {
           title: 'Black Rock',
           lat: KAANAPALI.lat,
           lng: KAANAPALI.lng,
-          address: { street: 'Kaanapali Pkwy' },
+          url: 'https://example.com/black-rock',
+          address: '2605 Kaanapali Pkwy, Lahaina, HI 96761',
           icon_category: 'attraction',
         }],
       }),
@@ -357,7 +337,7 @@ const anchorSearch = await searchPlaces({
   relevanceTarget: 'cafe',
   relevanceArea: 'Kihei',
   searchAnchor: { text: 'Kihei', source: 'named_anchor' },
-  env: { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key', DATABASE_URL: '' },
+  env: { OPENROUTER_API_KEY: 'test', VK_SEARCH_WAKE_URL, DATABASE_URL: '' },
   fetchImpl: blackRockFetch,
   tripId: 'trip-anchor',
 });
@@ -365,14 +345,14 @@ assert.equal(anchorSearch.places.length, 0);
 assert.equal(anchorSearch.outcomeStatus, 'no_results');
 assert.ok(Number(anchorSearch.anchorRadiusRejected) >= 1, 'Black Rock outside Kihei anchor radius is dropped');
 
-const braveLodgingThing = placeToTripThing({
-  source: 'brave',
+const vkLodgingThing = placeToTripThing({
+  source: 'vk-search',
   title: 'Kihei Kai Nani Condo',
   category: 'hotel',
   lat: 20.7175,
   lng: -156.4447,
   address: '2495 S Kihei Rd',
-  externalId: 'brave-kihei',
+  externalId: 'vk-kihei',
   sourceRecord: {
     id: 'loc-test',
     title: 'Kihei Kai Nani Condo',
@@ -381,14 +361,14 @@ const braveLodgingThing = placeToTripThing({
   },
   providerCategories: ['lodging', 'real_estate'],
 });
-assert.equal(braveLodgingThing.metadata.sourceRecord.icon_category, 'lodging');
-assert.ok(braveLodgingThing.metadata.sourceRecord.categories.includes('lodging'));
+assert.equal(vkLodgingThing.metadata.sourceRecord.icon_category, 'lodging');
+assert.ok(vkLodgingThing.metadata.sourceRecord.categories.includes('lodging'));
 
 assert.equal(placeSearchProvidersAllEmpty([
   { provider: 'nominatim', status: 'ok', resultCount: 1 },
   { provider: 'prior_db', status: 'empty', reason: 'no_results', resultCount: 0 },
   { provider: 'osm', status: 'empty', reason: 'no_results', resultCount: 0 },
-  { provider: 'brave', status: 'empty', reason: 'no_results', resultCount: 0 },
+  { provider: 'vk-search', status: 'empty', reason: 'no_results', resultCount: 0 },
 ]), true);
 
 console.log('test_sct_a78799b_search_fill: ok');

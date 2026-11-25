@@ -240,9 +240,6 @@ try {
   const noModel = spawnSync(process.execPath, [command], { encoding: 'utf8', env: preflightEnv });
   assert.equal(noModel.status, 1);
   assert.equal(JSON.parse(noModel.stderr).code, 'XAI_PLACE_SEARCH_MODEL_MISSING');
-  const noBrave = spawnSync(process.execPath, [command], { encoding: 'utf8', env: { ...preflightEnv, XAI_PLACE_SEARCH_MODEL: 'test-model' } });
-  assert.equal(noBrave.status, 1);
-  assert.equal(JSON.parse(noBrave.stderr).code, 'missing_search_keys');
   assert.equal(existsSync(preflightEnv.TIMESYNCHER_THING_EVIDENCE_DOSSIER_DIR), false, 'preflight must fail before dossier mutation');
 } finally {
   rmSync(scratch, { recursive: true, force: true });

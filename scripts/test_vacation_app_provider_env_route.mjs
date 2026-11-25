@@ -12,7 +12,7 @@ import { useVacationDatabase } from '../src/vacation/db.mjs';
 import { installNoopNominatimStore, resetNominatimStore } from './fixtures/nominatim-store-test-double.mjs';
 import { handleEulaStoreDbSql } from './fixtures/eula-store-db-sql.mjs';
 
-const BRAVE_DUMMY = 'route-test-brave-key-aa11';
+const VK_SEARCH_WAKE_URL = 'https://vk-search.example/wake';
 const TAVILY_DUMMY = 'route-test-tavily-key-bb22';
 const OPENROUTER_DUMMY = 'route-test-openrouter-cc33';
 
@@ -27,6 +27,7 @@ async function runProviderEnvRouteTest(blobMode) {
   const saved = {};
   for (const key of [
     'BRAVE_SEARCH_API_KEY',
+    'VK_SEARCH_WAKE_URL',
     'TAVILI_API_KEY',
     'OPENROUTER_API_KEY',
     'TIMESYNCHER_EULA_VERSION',
@@ -44,7 +45,7 @@ async function runProviderEnvRouteTest(blobMode) {
   }
 
   Object.assign(process.env, {
-    BRAVE_SEARCH_API_KEY: BRAVE_DUMMY,
+    VK_SEARCH_WAKE_URL,
     TAVILI_API_KEY: TAVILY_DUMMY,
     OPENROUTER_API_KEY: OPENROUTER_DUMMY,
     TIMESYNCHER_EULA_VERSION: 'test-eula-provider-env',
@@ -178,7 +179,7 @@ async function runProviderEnvRouteTest(blobMode) {
     if (/insert into trip_things/i.test(text)) {
       const metaValue = values.find((value) => value && typeof value === 'object' && value.sourceRef);
       const metaJson = metaValue ? JSON.stringify(metaValue) : values.find((value) => typeof value === 'string' && value.includes('sourceRef'));
-      const source = values.find((value) => value === 'brave' || value === 'tavily')
+      const source = values.find((value) => value === 'vk-search' || value === 'tavily')
         || metaValue?.source
         || (metaJson && JSON.parse(metaJson).source);
       state.tripThings.push({ metaJson: metaJson || JSON.stringify(metaValue || {}), source });
@@ -229,16 +230,19 @@ async function runProviderEnvRouteTest(blobMode) {
     if (href.includes(OVERPASS_HOST)) {
       return { ok: true, json: async () => ({ elements: [] }) };
     }
-    if (href.includes(BRAVE_HOST) && href.includes('local')) {
-      assert.equal(options.headers['X-Subscription-Token'], BRAVE_DUMMY);
+    if (href.includes(BRAVE_HOST)) {
+      throw new Error(`Brave must never be called at runtime: ${href}`);
+    }
+    if (href === VK_SEARCH_WAKE_URL) {
       return {
         ok: true,
         json: async () => ({
           results: [{
-            id: 'brave-taco-route-1',
+            id: 'vk-taco-route-1',
             title: 'Route Taco Spot',
             latitude: 47.61,
             longitude: -122.34,
+            address: '100 Market Square, Neutral Bay',
             url: 'https://example.com/taco',
           }],
         }),
@@ -346,25 +350,26 @@ async function runProviderEnvRouteTest(blobMode) {
   try {
     const place = await postTurn('Find family-friendly taco spots within walking distance of the market square');
     assert.notEqual(place.status, 502, JSON.stringify(place.body));
-    assert.equal(state.fetchCalls.some((url) => url.includes(BRAVE_HOST)), true);
+    assert.equal(state.fetchCalls.some((url) => url === VK_SEARCH_WAKE_URL), true);
+    assert.equal(state.fetchCalls.some((url) => url.includes(BRAVE_HOST)), false);
     assert.equal(state.tripThings.length, 1);
-    assert.equal(state.tripThings[0].source, 'brave');
+    assert.equal(state.tripThings[0].source, 'vk-search');
     const placeMeta = typeof state.tripThings[0].metaJson === 'string'
       ? JSON.parse(state.tripThings[0].metaJson)
       : state.tripThings[0].metaJson;
-    assert.equal(placeMeta.sourceRef.id, 'brave-taco-route-1');
-    assert.equal(placeMeta.source, 'brave');
+    assert.equal(placeMeta.sourceRef.id, 'vk-taco-route-1');
+    assert.equal(placeMeta.source, 'vk-search');
     const placePayload = state.turnPayloads.at(-1);
     assert.equal(placePayload.placeSearch.status, 'ok');
-    const braveProvider = placePayload.placeSearch.providers.find((row) => row.provider === 'brave');
-    assert.equal(braveProvider?.status, 'ok');
-    assert.equal(placePayload.placeSearch.results[0].provider, 'brave');
-    assert.equal(placePayload.placeSearch.results[0].providerId, 'brave-taco-route-1');
+    const vkProvider = placePayload.placeSearch.providers.find((row) => row.provider === 'vk-search');
+    assert.equal(vkProvider?.status, 'ok');
+    assert.equal(placePayload.placeSearch.results[0].provider, 'vk-search');
+    assert.equal(placePayload.placeSearch.results[0].providerId, 'vk-taco-route-1');
 
     const web = await postTurn('What is the weather usually like in Neutral Bay in October?');
     assert.notEqual(web.status, 502, JSON.stringify(web.body));
     assert.equal(state.fetchCalls.some((url) => url.includes(TAVILY_HOST)), true);
-    assert.equal(state.fetchCalls.some((url) => url.includes(BRAVE_HOST) && url.includes('local')), false);
+    assert.equal(state.fetchCalls.some((url) => url.includes(BRAVE_HOST)), false);
     assert.equal(state.tripThings.length, 1);
     assert.equal(state.tripThings[0].source, 'tavily');
     const webPayload = state.turnPayloads.at(-1);
@@ -372,12 +377,11 @@ async function runProviderEnvRouteTest(blobMode) {
     assert.equal(webPayload.webSearch.results[0].provider, 'tavily');
 
     delete process.env.BRAVE_SEARCH_API_KEY;
-    const missing = await postTurn('Find family-friendly taco spots within walking distance of the market square');
+    const withoutBrave = await postTurn('Find family-friendly taco spots within walking distance of the market square');
     assert.equal(state.fetchCalls.some((url) => url.includes(BRAVE_HOST)), false);
-    assert.equal(state.fetchCalls.some((url) => url.includes(NOMINATIM_HOST)), false);
-    assert.equal(missing.body.ok, false);
-    assert.match(String(missing.body.error || ''), /BRAVE_SEARCH_API_KEY/);
-    process.env.BRAVE_SEARCH_API_KEY = BRAVE_DUMMY;
+    assert.equal(state.fetchCalls.some((url) => url === VK_SEARCH_WAKE_URL), true);
+    assert.notEqual(withoutBrave.status, 502, JSON.stringify(withoutBrave.body));
+    assert.equal(withoutBrave.body.ok, true);
 
     return { blobMode, ok: true };
   } finally {

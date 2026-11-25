@@ -175,17 +175,3 @@ export function topUpQueriesForField(field = '', place = {}, destination = '', a
   const idx = Math.max(0, Math.min(attemptIndex, all.length - 1));
   return [{ query: all[idx], field, attempt: attemptIndex + 1 }];
 }
-
-export function stageQueriesForFields(fields = [], place = {}, destination = '') {
-  const want = new Set(fields);
-  const out = [];
-  for (const stage of braveDossierQueryStages(place, destination)) {
-    const hit = stage.stage === 'happyHour' && (want.has('happyHour') || want.has('happyHourDetails'))
-      || stage.stage === 'reviews' && (want.has('reviews') || want.has('googleRating') || want.has('yelpRating') || want.has('ratings'))
-      || want.has(stage.stage)
-      || (stage.stage === 'general' && (want.has('summary') || want.has('description') || want.has('itineraryNote') || want.has('knownFor')));
-    if (!hit) continue;
-    for (const query of stage.queries) out.push({ query, stage: stage.stage, review: stage.review === true });
-  }
-  return out;
-}

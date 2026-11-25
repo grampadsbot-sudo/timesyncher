@@ -20,6 +20,7 @@ import {
   TRIP_ID,
   TRIP_ID_B,
   TRIP_TITLE,
+  VK_SEARCH_WAKE_URL,
   buildState,
   dbFor,
   intakeFetchMock,
@@ -37,7 +38,7 @@ async function runPlanFlow(plan) {
     TIMESYNCHER_EULA_VERSION: 'test-eula-e2e',
     TIMESYNCHER_COUPON_HASH_SALT: 'chat-entitlement-e2e',
     RESEND_API_KEY: 'test-key',
-    BRAVE_SEARCH_API_KEY: 'brave-e2e-key',
+    VK_SEARCH_WAKE_URL,
     TAVILI_API_KEY: 'tavily-e2e-key',
     OPENROUTER_API_KEY: 'openrouter-e2e-key',
     DATABASE_URL: 'postgresql://chat-entitlement-e2e@127.0.0.1/chat_entitlement_e2e',
@@ -151,8 +152,9 @@ async function runPlanFlow(plan) {
     const taco = await postTurn('Find kid-friendly taco spots within walking distance of Pike Place');
     assert.notEqual(taco.status, 502, JSON.stringify(taco.body));
     assert.equal(taco.body.ok, true, JSON.stringify(taco.body));
-    assert.equal(state.tripThings.some((row) => row.source === 'brave'), true);
-    assert.equal(state.fetchCalls.some((href) => href.includes(BRAVE_HOST) && href.includes('local')), true);
+    assert.equal(state.tripThings.some((row) => row.source === 'vk-search'), true);
+    assert.equal(state.fetchCalls.some((href) => href === VK_SEARCH_WAKE_URL), true);
+    assert.equal(state.fetchCalls.some((href) => href.includes(BRAVE_HOST)), false);
 
     const weather = await postTurn('What is the weather usually like in October?');
     assert.notEqual(weather.status, 502, JSON.stringify(weather.body));

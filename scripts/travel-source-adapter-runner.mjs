@@ -140,18 +140,6 @@ function webHit({ category, title, summary, url, source, retrievedAt }) {
   };
 }
 
-function braveHits(payload, category, retrievedAt) {
-  const results = Array.isArray(payload?.web?.results) ? payload.web.results : [];
-  return results.map((result) => webHit({
-    category,
-    title: result?.title,
-    summary: result?.description,
-    url: result?.url,
-    source: 'brave',
-    retrievedAt,
-  })).filter(Boolean);
-}
-
 function tavilyHits(payload, category, retrievedAt) {
   const results = Array.isArray(payload?.results) ? payload.results : [];
   return results.map((result) => webHit({
@@ -164,16 +152,12 @@ function tavilyHits(payload, category, retrievedAt) {
   })).filter(Boolean);
 }
 
-export async function searchBraveAndTavily(query, options = {}) {
+export async function searchTavilyWeb(query, options = {}) {
   const q = text(query, 500);
   if (!q) return [];
-  const braveKey = text(options.braveKey, 500);
   const tavilyKey = text(options.tavilyKey, 500);
-  const missing = [];
-  if (!braveKey) missing.push(text(options.braveName, 80) || 'brave');
-  if (!tavilyKey) missing.push(text(options.tavilyName, 80) || 'tavily');
-  if (missing.length) {
-    const error = new Error(`Search refused to run. Missing ${missing.join(', ')}.`);
+  if (!tavilyKey) {
+    const error = new Error(`Search refused to run. Missing ${text(options.tavilyName, 80) || 'tavily'}.`);
     error.code = 'missing_key';
     console.error(error.message);
     throw error;
@@ -181,10 +165,6 @@ export async function searchBraveAndTavily(query, options = {}) {
   const fetchImpl = options.fetchImpl || globalThis.fetch;
   const category = text(options.category || 'decision', 40) || 'decision';
   const retrievedAt = text(options.retrievedAt || new Date().toISOString(), 40);
-  const braveResponse = await fetchImpl(`https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(q)}`, {
-    headers: { Accept: 'application/json', 'X-Subscription-Token': braveKey },
-  });
-  if (!braveResponse?.ok) throw new Error(`Brave search failed: HTTP ${braveResponse?.status || 0}`);
   const tavilyResponse = await fetchImpl('https://api.tavily.com/search', {
     method: 'POST',
     headers: { Authorization: `Bearer ${tavilyKey}`, 'Content-Type': 'application/json' },
@@ -198,10 +178,7 @@ export async function searchBraveAndTavily(query, options = {}) {
     }),
   });
   if (!tavilyResponse?.ok) throw new Error(`Tavily search failed: HTTP ${tavilyResponse?.status || 0}`);
-  return [
-    ...braveHits(await braveResponse.json(), category, retrievedAt),
-    ...tavilyHits(await tavilyResponse.json(), category, retrievedAt),
-  ];
+  return tavilyHits(await tavilyResponse.json(), category, retrievedAt);
 }
 
 async function runHotelGoat(adapter, context = {}) {
@@ -313,13 +290,11 @@ export async function runApprovedSourceAdapters(input = {}) {
     }
   }
   for (const adapter of adapters) {
-    if (adapter.id === 'brave-tavily-web') {
+    if (adapter.id === 'tavily-web') {
       const query = [text(input.destination, 160), text(input.artifacts?.requestText || input.requestText, 400)].filter(Boolean).join(' ');
-      const found = await searchBraveAndTavily(query, {
+      const found = await searchTavilyWeb(query, {
         fetchImpl: input.fetchImpl,
-        braveKey: input.braveKey,
         tavilyKey: input.tavilyKey,
-        braveName: input.braveName,
         tavilyName: input.tavilyName,
         category: 'decision',
         retrievedAt: input.retrievedAt,

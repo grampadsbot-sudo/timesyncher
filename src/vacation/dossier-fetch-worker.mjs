@@ -9,19 +9,18 @@ export function serveDossierFetchWorker({ gatherImpl = gatherThingEvidence, topU
   process.once('disconnect', () => process.exit(1));
   process.once('message', async ({ operation, place, options }) => {
     process.channel.ref();
-    const bravePace = options.bravePace || { nextAt: 0 };
     const onProgress = async (dossier) => {
       const acknowledged = new Promise((resolve) => process.once('message', resolve));
-      await send({ type: 'progress', dossier, bravePace });
+      await send({ type: 'progress', dossier });
       await acknowledged;
     };
     try {
-      const opts = { ...options, bravePace, onProgress };
+      const opts = { ...options, onProgress };
       let dossier;
       if (operation === 'gather') dossier = await gatherDossierWithEscalation(place, gatherImpl, opts);
       else if (operation === 'topUp') dossier = await topUpImpl(options.dossier, place, opts);
       else throw new Error('unknown_fetch_operation');
-      await send({ type: 'result', dossier, bravePace });
+      await send({ type: 'result', dossier });
     } catch {
       await send({ type: 'error' });
     }

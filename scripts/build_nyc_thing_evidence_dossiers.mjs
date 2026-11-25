@@ -2,15 +2,13 @@
 import { pathToFileURL } from 'node:url';
 import { runThingEvidenceDossierStagingTargets } from '../src/vacation/thing-evidence-dossier-execution.mjs';
 import { buildNycThingEvidenceDossierTargets } from '../src/vacation/nyc-passb-dossier-inventory.mjs';
-import { missingSearchKeys, xaiPlaceSearchModelId } from '../src/vacation/provider-env.mjs';
+import { xaiPlaceSearchModelId } from '../src/vacation/provider-env.mjs';
 
 export { buildNycThingEvidenceDossierTargets } from '../src/vacation/nyc-passb-dossier-inventory.mjs';
 
 async function main() {
   if (!process.env.XAI_API_KEY) throw Object.assign(new Error('XAI_API_KEY is not set.'), { code: 'missing_xai_api_key' });
   xaiPlaceSearchModelId();
-  const missingKeys = missingSearchKeys();
-  if (missingKeys.length) throw Object.assign(new Error(`Missing search configuration: ${missingKeys.join(', ')}`), { code: 'missing_search_keys' });
   const result = await runThingEvidenceDossierStagingTargets(buildNycThingEvidenceDossierTargets());
   if (!result.ok) {
     console.error(JSON.stringify(result));

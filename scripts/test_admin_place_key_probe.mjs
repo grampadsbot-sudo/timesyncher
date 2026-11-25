@@ -4,7 +4,6 @@ import fs from 'node:fs';
 import { probePlaceSearchKeys } from '../src/vacation/poi-search.mjs';
 import { requireAdminAuth } from '../src/vacation/auth.mjs';
 
-const MOCK_BRAVE = 'probe-test-brave-key-7f3a';
 const MOCK_TAVILY = 'probe-test-tavily-key-9c2b';
 const adminSource = fs.readFileSync(new URL('../routes/admin-onboardings.mjs', import.meta.url), 'utf8');
 
@@ -17,78 +16,50 @@ assert.throws(
 );
 
 let fetchCalls = 0;
-const missingBrave = await probePlaceSearchKeys({ tavily: MOCK_TAVILY }, async () => {
+const missingTavily = await probePlaceSearchKeys({}, async () => {
   fetchCalls += 1;
   return { ok: true, status: 200, json: async () => ({ results: [] }) };
 });
-assert.equal(fetchCalls, 0, 'missing brave key must not fetch');
-assert.equal(missingBrave.statusCode, 503);
-assert.deepEqual(missingBrave.body, { provider: 'brave', error: 'missing_key' });
-
-fetchCalls = 0;
-const missingTavily = await probePlaceSearchKeys({ brave: MOCK_BRAVE }, async (url) => {
-  fetchCalls += 1;
-  return {
-    ok: true,
-    status: 200,
-    json: async () => ({ results: [{ title: 'Cafe Test' }] }),
-  };
-});
-assert.equal(fetchCalls, 1, 'brave probe runs before tavily missing is detected');
+assert.equal(fetchCalls, 0, 'missing tavily key must not fetch');
 assert.equal(missingTavily.statusCode, 503);
 assert.deepEqual(missingTavily.body, { provider: 'tavily', error: 'missing_key' });
 
 fetchCalls = 0;
 const ok = await probePlaceSearchKeys({
-  brave: MOCK_BRAVE,
   tavily: MOCK_TAVILY,
-}, async () => {
+}, async (url) => {
   fetchCalls += 1;
-  if (fetchCalls === 1) {
-    return {
-      ok: true,
-      status: 200,
-      json: async () => ({ results: [{ title: 'Brave Coffee House' }] }),
-    };
-  }
+  assert.equal(String(url).includes('brave'), false, 'admin probe must not call brave');
   return {
     ok: true,
     status: 200,
     json: async () => ({ results: [{ title: 'Tavily Coffee Guide' }] }),
   };
 });
-assert.equal(fetchCalls, 2);
+assert.equal(fetchCalls, 1);
 assert.equal(ok.statusCode, 200);
 assert.equal(ok.body.ok, true);
-assert.equal(ok.body.providers.length, 2);
-assert.equal(ok.body.providers[0].provider, 'brave');
+assert.equal(ok.body.providers.length, 1);
+assert.equal(ok.body.providers[0].provider, 'tavily');
 assert.equal(ok.body.providers[0].resultCount, 1);
-assert.equal(ok.body.providers[0].firstTitle, 'Brave Coffee House');
+assert.equal(ok.body.providers[0].firstTitle, 'Tavily Coffee Guide');
 const serialized = JSON.stringify(ok.body);
-assert.doesNotMatch(serialized, new RegExp(MOCK_BRAVE));
 assert.doesNotMatch(serialized, new RegExp(MOCK_TAVILY));
 assert.doesNotMatch(serialized, /authorization|X-Subscription-Token/i);
 
-const braveError = await probePlaceSearchKeys({
-  brave: MOCK_BRAVE,
+const tavilyError = await probePlaceSearchKeys({
   tavily: MOCK_TAVILY,
-}, async (url) => {
-  if (String(url).includes('brave.com')) {
-    return { ok: false, status: 402, json: async () => ({}) };
-  }
-  return { ok: true, status: 200, json: async () => ({ results: [{ title: 'Tavily OK' }] }) };
-});
-assert.equal(braveError.statusCode, 200);
-assert.equal(braveError.body.providers[0].httpStatus, 402);
-assert.equal(braveError.body.providers[0].resultCount, 0);
+}, async () => ({ ok: false, status: 402, json: async () => ({}) }));
+assert.equal(tavilyError.statusCode, 200);
+assert.equal(tavilyError.body.providers[0].httpStatus, 402);
+assert.equal(tavilyError.body.providers[0].resultCount, 0);
 
 console.log(JSON.stringify({
   ok: true,
   checked: 'admin-place-key-probe',
   tests: [
     'admin_auth_required',
-    'missing_brave_key_no_fetch',
-    'missing_tavily_key_no_second_fetch',
+    'missing_tavily_key_no_fetch',
     'success_shape_excludes_key_material',
     'provider_http_status_passthrough',
   ],

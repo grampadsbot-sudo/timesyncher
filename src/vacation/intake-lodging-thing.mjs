@@ -1,7 +1,6 @@
 import { assignTripSiteUrlWhenThingsPresent } from './trip-site-url-after-insert.mjs';
 import { insertTripThing, tripThingRow } from './trip-things.mjs';
-import { placeToTripThing, PlaceSearchError } from './place-search.mjs';
-import { braveAddress } from './brave-place-query.mjs';
+import { placeToTripThing } from './place-search.mjs';
 import {
   rankIntakeLodgingCandidates,
   intakeLodgingPickMissReason,
@@ -66,14 +65,25 @@ function lodgingLookupMiss({
   return { ok: false, miss: diagnostic, lookup: diagnostic, search };
 }
 
-function usableBraveAddress(picked = {}) {
+function usablePlaceAddress(picked = {}) {
   const direct = String(picked?.address || '').trim();
   if (direct) return direct;
   const record = picked?.sourceRecord && typeof picked.sourceRecord === 'object' ? picked.sourceRecord : null;
-  return braveAddress(record);
+  if (typeof record?.address === 'string' && record.address.trim()) return record.address.trim();
+  const postal = record?.postal_address || record?.postalAddress || {};
+  if (postal && typeof postal === 'object') {
+    const display = String(postal.displayAddress || '').trim();
+    if (display) return display;
+    const joined = [postal.streetAddress, postal.addressLocality, postal.addressRegion, postal.postalCode, postal.addressCountry || postal.country]
+      .map((part) => String(part || '').trim())
+      .filter(Boolean)
+      .join(', ');
+    if (joined) return joined;
+  }
+  return '';
 }
 
-function braveLodgingCategoryEstablished(places = []) {
+function providerLodgingCategoryEstablished(places = []) {
   return (Array.isArray(places) ? places : []).some((place) => hasCoordinates(place) && isLodgingProviderPlace(place));
 }
 
@@ -130,15 +140,15 @@ async function resolveIntakeLodgingThing({
     throw new IntakeLodgingResolveError(telemetry.error, telemetry);
   }
   pickOptions.areaCenter = search?.center && hasCoordinates(search.center) ? search.center : null;
-  const bravePlaces = (Array.isArray(search?.places) ? search.places : []).filter((place) => hasCoordinates(place));
-  const braveLodgingEstablished = braveLodgingCategoryEstablished(bravePlaces);
-  const requireTourismLodging = !braveLodgingEstablished;
+  const providerPlaces = (Array.isArray(search?.places) ? search.places : []).filter((place) => hasCoordinates(place));
+  const lodgingEstablished = providerLodgingCategoryEstablished(providerPlaces);
+  const requireTourismLodging = !lodgingEstablished;
 
-  const braveRanked = rankIntakeLodgingCandidates(bravePlaces, pickOptions);
-  let picked = braveRanked.picked;
-  let pickRanking = braveRanked.pickRanking;
-  let addressSource = 'brave';
-  let coordsSource = 'brave';
+  const ranked = rankIntakeLodgingCandidates(providerPlaces, pickOptions);
+  let picked = ranked.picked;
+  let pickRanking = ranked.pickRanking;
+  let addressSource = String(picked?.addressSource || picked?.source || 'vk-search').trim();
+  let coordsSource = String(picked?.coordsSource || picked?.source || 'vk-search').trim();
   let lat = null;
   let lng = null;
   let address = '';
@@ -147,7 +157,7 @@ async function resolveIntakeLodgingThing({
   if (picked) {
     lat = Number(picked.lat);
     lng = Number(picked.lng);
-    address = usableBraveAddress(picked);
+    address = usablePlaceAddress(picked);
     if (hasCoordinates(picked) && !address) {
       const reversed = await nominatimReverseWithEvidence(fetchImpl, lat, lng, search, lookupQuery);
       if (reversed?.address) {
@@ -196,7 +206,7 @@ async function resolveIntakeLodgingThing({
     const hits = await nominatimForwardWithEvidence(fetchImpl, lookupQuery, search);
     const nomPicked = pickNominatimLodgingCandidate(hits, pickOptions, { requireTourismLodging });
     if (!nomPicked) {
-      const reason = intakeLodgingPickMissReason(bravePlaces, pickOptions)
+      const reason = intakeLodgingPickMissReason(providerPlaces, pickOptions)
         || nominatimLodgingPickMissReason(hits, pickOptions, { requireTourismLodging });
       return lodgingLookupMiss({
         name,
@@ -254,7 +264,7 @@ function lodgingTitleAlreadySatisfied(thing = {}) {
   const meta = thingMetadata(thing);
   const source = String(meta.source || thing?.source || '').toLowerCase();
   if (source === 'customer_stated') return false;
-  if (source === 'prior_db' || source === 'osm' || source === 'brave' || source === 'tavily') return true;
+  if (source === 'prior_db' || source === 'osm' || source === 'vk-search' || source === 'tavily') return true;
   const loc = thing?.location && typeof thing.location === 'object' ? thing.location : {};
   const lat = Number(loc.lat);
   const lng = Number(loc.lng);

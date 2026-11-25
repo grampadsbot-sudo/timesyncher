@@ -1,83 +1,67 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { xaiGrokPlaceSearchModelId } from './vacation-app-reply-rules.mjs';
-import { bravePoiPage, pickBraveLocation, braveLocalEvidence } from '../src/vacation/dossier-brave.mjs';
 import { condenseText, dossierForModel, xaiCallUsd, logXaiUsage } from '../src/vacation/dossier-cost.mjs';
 import { extractReviewsByCode, finalizeReviewSet } from '../src/vacation/dossier-review-extract.mjs';
 import { gatherThingEvidence } from '../src/vacation/thing-evidence-dossier.mjs';
-import { BRAVE_SEARCH_RES_V1 } from '../src/vacation/poi-search.mjs';
 import { prepareDossierFindings } from '../src/vacation/thing-dossier-fields.mjs';
 
-const poi = {
-  title: 'Arthouse Hotel',
-  rating: { ratingValue: 4.5, bestRating: 5, reviewCount: 1234, profile: { name: 'Tripadvisor', url: 'https://www.tripadvisor.com/Hotel_Review-arthouse' } },
-  reviews: { results: [
-    { comment: 'Lovely rooftop bar and very friendly staff, we would stay again.', date: 'Sep 2026', rating: { ratingValue: 5 } },
-    { comment: 'Rooms were small but spotless and the location was perfect.', date: 'Aug 2026', rating: { ratingValue: 4 } },
-    { comment: 'short' },
-  ] },
-};
-const page = bravePoiPage(poi, { fetchedAt: '2026-10-22T00:00:00Z', id: 'abc' });
-assert.equal(page.via, 'brave');
-assert.equal(page.url, 'https://www.tripadvisor.com/Hotel_Review-arthouse');
-assert.equal(page.braveReviews.length, 2);
-assert.match(page.text, /Rated 4\.5 out of 5 from 1234 reviews on Tripadvisor\./);
-assert.equal(bravePoiPage({ title: 'x' }), null);
+const TAVILY_URL = `https://${['api', 'tavily', 'com'].join('.')}/search`;
 
-assert.equal(pickBraveLocation([{ id: '1', title: 'Other Place' }, { id: '2', title: 'The Arthouse Hotel' }], 'Arthouse Hotel').id, '2');
-assert.equal(pickBraveLocation([{ id: '1', title: 'Other Place' }], 'Arthouse Hotel'), undefined);
-
-assert.equal((await braveLocalEvidence({ title: 'Arthouse Hotel' }, { env: {}, fetchImpl: () => { throw new Error('no'); } })).pages.length, 0);
-const calls = [];
-const fake = async (url) => {
-  calls.push(url);
-  if (url.includes('/web/search')) return { ok: true, json: async () => ({ locations: { results: [{ id: 'abc', title: 'Arthouse Hotel' }] } }) };
-  if (url.includes('/local/pois')) return { ok: true, json: async () => ({ results: [poi] }) };
-  return { ok: false, status: 404 };
+const reviewPageText = [
+  'Arthouse Hotel on Tripadvisor.',
+  'Rated 4.5 out of 5 from 1234 reviews on Tripadvisor.',
+  'Review 1 (5/5) Sep 2026: Lovely rooftop bar and very friendly staff, we would stay again.',
+  'Review 2 (4/5) Aug 2026: Rooms were small but spotless and the location was perfect.',
+].join('\n');
+const reviewPage = {
+  url: 'https://www.tripadvisor.com/Hotel_Review-arthouse',
+  fetchedAt: '2026-10-22T00:00:00Z',
+  text: reviewPageText,
+  sha256: createHash('sha256').update(reviewPageText).digest('hex'),
+  via: 'brave',
+  braveRating: { average: 4.5, count: 1234, scaleMax: 5, quote: 'Rated 4.5 out of 5 from 1234 reviews on Tripadvisor.', url: 'https://www.tripadvisor.com/Hotel_Review-arthouse', source: 'Tripadvisor' },
+  braveReviews: [
+    { text: 'Lovely rooftop bar and very friendly staff, we would stay again.', date: 'Sep 2026', rating: 5 },
+    { text: 'Rooms were small but spotless and the location was perfect.', date: 'Aug 2026', rating: 4 },
+  ],
 };
-const brave = await braveLocalEvidence({ title: 'Arthouse Hotel' }, { destination: 'NYC', env: { BRAVE_SEARCH_API_KEY: 'k' }, fetchImpl: fake });
-assert.equal(brave.pages.length, 1);
-assert.ok(calls[0].includes('result_filter=locations') && calls[1].includes('ids=abc'));
 
 const dossier = await gatherThingEvidence({ title: 'Arthouse Hotel', category: 'hotel' }, {
   destination: 'NYC',
-  env: { BRAVE_SEARCH_API_KEY: 'k' },
+  env: { TAVILI_API_KEY: 'k' },
   fetchImpl: async (url) => {
-    if (url.includes(BRAVE_SEARCH_RES_V1)) {
+    assert.equal(String(url).includes('brave'), false);
+    if (String(url) === TAVILY_URL) {
       return {
         ok: true,
+        status: 200,
         json: async () => ({
-          web: { results: [{ url: 'https://a.example/arthouse', title: 'Arthouse Hotel', description: 'Arthouse Hotel is a hotel on the Upper West Side with a rooftop bar.' }] },
+          results: [{ url: 'https://a.example/arthouse', title: 'Arthouse Hotel', content: 'Arthouse Hotel is a hotel on the Upper West Side with a rooftop bar.' }],
         }),
-      };
-    }
-    if (url.includes('a.example')) {
-      return {
-        ok: true,
-        headers: { get: () => 'text/html' },
-        body: { getReader: () => ({ read: async () => ({ done: true }), cancel: async () => {} }) },
       };
     }
     return { ok: false, status: 404 };
   },
   extractImpl: async () => [],
-  braveImpl: async () => brave,
 });
-assert.ok(dossier.pages.some((p) => p.via === 'brave'));
-assert.ok(dossier.attempts.some((a) => a.kind === 'brave' && a.step === 'pois'));
+assert.ok(dossier.pages.some((p) => p.via === 'tavily-search'));
+assert.equal(dossier.attempts.some((a) => /brave/i.test(String(a.kind || a.provider || ''))), false);
 
-const code = extractReviewsByCode(dossier).filter((r) => r.method === 'code:brave');
+const withReviews = { ...dossier, pages: [...dossier.pages, reviewPage] };
+const code = extractReviewsByCode(withReviews).filter((r) => r.method === 'code:brave');
 assert.equal(code.length, 2);
-const set = finalizeReviewSet(dossier, code, [], []);
+const set = finalizeReviewSet(withReviews, code, [], []);
 assert.equal(set.length, 2);
 
-const built = prepareDossierFindings({ ...dossier, reviewSet: set }, {});
+const built = prepareDossierFindings({ ...withReviews, reviewSet: set }, {});
 assert.equal(built.rating, 4.5);
 assert.equal(built.reviewsAvailable, 1234);
 
 const long = `${'Filler text about nothing in particular here. '.repeat(400)} Arthouse Hotel has a great rooftop bar, open daily 5 pm to 1 am.`;
 const short = condenseText(long, 'Arthouse Hotel', { maxChars: 300 });
 assert.ok(short.length <= 300 && /rooftop bar/.test(short));
-const slim = dossierForModel({ thing: 'Arthouse Hotel', pages: [{ url: 'u', text: long }, page], reviewSet: [] }, { perPage: 500, total: 2000 });
+const slim = dossierForModel({ thing: 'Arthouse Hotel', pages: [{ url: 'u', text: long }, reviewPage], reviewSet: [] }, { perPage: 500, total: 2000 });
 assert.equal(slim.pages.length, 2);
 assert.ok(slim.pages[0].text.length <= 500);
 assert.equal(slim.pages[1].braveReviews, undefined);

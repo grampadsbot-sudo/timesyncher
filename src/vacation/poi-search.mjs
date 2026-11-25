@@ -5,14 +5,10 @@ export { POI_RADIUS_METERS, THIN_POI_COUNT };
 
 const BASE32 = '0123456789bcdefghjkmnpqrstuvwxyz';
 const POI_CACHE_MS = 7 * 24 * 60 * 60 * 1000;
-const BRAVE_CACHE_MS = 8 * 60 * 60 * 1000;
 const cache = new Map();
-const braveCache = new Map();
-export const BRAVE_SEARCH_RES_V1 = 'https://api.search.brave.com/res/v1';
 
 export function clearPoiCache() {
   cache.clear();
-  braveCache.clear();
 }
 
 export function geohash(lat, lng, precision = 6) {
@@ -121,30 +117,6 @@ export function parseOverpass(payload, category) {
   }).filter((poi) => poi.name && Number.isFinite(poi.lat) && Number.isFinite(poi.lng));
 }
 
-function bravePois(payload, category) {
-  const results = payload?.web?.results || payload?.results || [];
-  return results.map((result) => ({
-    id: `brave:${result.url || result.title}`,
-    name: String(result.title || '').trim(),
-    lat: Number(result.lat),
-    lng: Number(result.lng),
-    category,
-    source: 'brave',
-    url: String(result.url || ''),
-  })).filter((poi) => poi.url && poi.name);
-}
-
-async function fetchBrave(fetchImpl, braveKey, origin, category) {
-  const response = await fetchImpl(`https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(`${category} near ${origin.lat},${origin.lng}`)}`, {
-    headers: { 'X-Subscription-Token': braveKey, Accept: 'application/json' },
-  });
-  if (!response?.ok) {
-    const status = Number(response?.status) || 0;
-    throw new Error(`Brave web search failed: HTTP ${status}`);
-  }
-  return bravePois(await response.json(), category);
-}
-
 const TAVILY_SEARCH_URL = 'https://api.tavily.com/search';
 const TAVILY_TIMEOUT_MS = 15000;
 
@@ -155,10 +127,6 @@ export class TavilySearchError extends Error {
     this.code = code;
     if (status !== undefined) this.status = status;
   }
-}
-
-export function braveSubscriptionKey(env = process.env) {
-  return String(buildProviderEnv(env).brave || '').trim();
 }
 
 export function tavilyApiKey(env = process.env) {
@@ -272,22 +240,12 @@ export async function searchTavily(query, {
   };
 }
 
-async function braveForThinDatabase(key, database, { fetchImpl, braveKey, origin, category, thinAt, now }) {
-  if (database.length >= thinAt || !braveKey || !fetchImpl) return [];
-  const hit = braveCache.get(key);
-  if (hit && hit.expiresAt > now) return hit.pois;
-  const pois = await fetchBrave(fetchImpl, braveKey, origin, category);
-  braveCache.set(key, { expiresAt: now + BRAVE_CACHE_MS, pois });
-  return pois;
-}
-
 export async function searchPois({
   origin,
   category,
   dateBucket = '',
   fsqRecords = [],
   fetchImpl = fetch,
-  braveKey = '',
   thinAt = THIN_POI_COUNT,
   now = Date.now(),
 } = {}) {
@@ -298,8 +256,7 @@ export async function searchPois({
   const key = cacheKey(origin, category, radiusMeters, dateBucket);
   const hit = cache.get(key);
   if (hit && hit.expiresAt > now) {
-    const brave = await braveForThinDatabase(key, hit.value.pois, { fetchImpl, braveKey, origin, category, thinAt, now });
-    return { pois: [...hit.value.pois, ...brave], cache: 'hit', brave: brave.length > 0 };
+    return { pois: [...hit.value.pois], cache: 'hit', brave: false };
   }
   const fsq = searchFsqRecords(fsqRecords, { origin, radiusMeters, category });
   let osm = [];
@@ -314,8 +271,7 @@ export async function searchPois({
   }
   const database = [...fsq, ...osm];
   cache.set(key, { expiresAt: now + POI_CACHE_MS, value: { pois: database } });
-  const brave = await braveForThinDatabase(key, database, { fetchImpl, braveKey, origin, category, thinAt, now });
-  return { pois: [...database, ...brave], cache: 'miss', brave: brave.length > 0 };
+  return { pois: database, cache: 'miss', brave: false };
 }
 
 export { jevRelevanceScore, parseJevRelevanceScoreAnswer } from './place-relevance-judge.mjs';
@@ -351,8 +307,6 @@ export function lowestRentalPrices(offers = [], { limit = 10, eliminatedBrands =
 }
 
 const PROBE_QUERY = 'coffee';
-const PROBE_LAT = 47.6097;
-const PROBE_LNG = -122.3331;
 
 function probeMissingKey(provider) {
   return { provider, error: 'missing_key' };
@@ -362,33 +316,6 @@ function probeSuccessShape(provider, httpStatus, results) {
   const rows = Array.isArray(results) ? results : [];
   const firstTitle = String(rows[0]?.title || rows[0]?.name || '').trim() || null;
   return { provider, httpStatus: Number(httpStatus) || 0, resultCount: rows.length, firstTitle };
-}
-
-async function probeBraveProvider(env, fetchImpl) {
-  const key = braveSubscriptionKey(env);
-  if (!key) return probeMissingKey('brave');
-  const params = new URLSearchParams({
-    q: PROBE_QUERY,
-    latitude: String(PROBE_LAT),
-    longitude: String(PROBE_LNG),
-    radius: '2500',
-    count: '3',
-  });
-  const response = await fetchImpl(`https://api.search.brave.com/res/v1/local/place_search?${params}`, {
-    method: 'GET',
-    headers: { accept: 'application/json', 'X-Subscription-Token': key },
-  });
-  const httpStatus = Number(response?.status) || 0;
-  if (!response?.ok) return probeSuccessShape('brave', httpStatus, []);
-  let payload = {};
-  try {
-    payload = await response.json();
-  } catch {
-    payload = {};
-  }
-  const results = Array.isArray(payload?.results) ? payload.results : [];
-  const titles = results.map((row) => ({ title: String(row?.title || row?.name || '').trim() })).filter((row) => row.title);
-  return probeSuccessShape('brave', httpStatus, titles);
 }
 
 async function probeTavilyProvider(env, fetchImpl) {
@@ -421,11 +348,9 @@ async function probeTavilyProvider(env, fetchImpl) {
 }
 
 export async function probePlaceSearchKeys(env = process.env, fetchImpl = globalThis.fetch) {
-  const brave = await probeBraveProvider(env, fetchImpl);
-  if (brave.error === 'missing_key') return { ok: false, statusCode: 503, body: brave };
   const tavily = await probeTavilyProvider(env, fetchImpl);
   if (tavily.error === 'missing_key') return { ok: false, statusCode: 503, body: tavily };
-  return { ok: true, statusCode: 200, body: { ok: true, providers: [brave, tavily] } };
+  return { ok: true, statusCode: 200, body: { ok: true, providers: [tavily] } };
 }
 
 const TAVILY_EXTRACT_URL = 'https://api.tavily.com/extract';

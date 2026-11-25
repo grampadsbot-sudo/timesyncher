@@ -18,9 +18,9 @@
   },
   "adapters": [
     {
-      "id": "brave-tavily-web",
+      "id": "tavily-web",
       "kind": "web_search",
-      "label": "Brave and Tavily public web search",
+      "label": "Tavily public web search",
       "safetyClass": "approved_public_search",
       "enabled": true,
       "allowsBookingOrPayment": false,
