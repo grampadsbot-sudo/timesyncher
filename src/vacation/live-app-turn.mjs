@@ -25,7 +25,7 @@ import { enrichDraftingTripContext } from './reply-trip-context-facts.mjs';
 import { pushPlanAndStyleDraftErrors } from './reply-draft-fact-extra.mjs';
 import { payerLineFromDollars, priceAnswered } from './seat-price.mjs';
 import { produceFirstIntakeReply } from './first-intake-reply.mjs';
-import { claimBlockedReply, failOpenShippedReply, heldJudgedDraft, jevJudgeErrored, requireReplyQuality, unjudgedReply } from './reply-quality-gate.mjs';
+import { claimBlockedReply, failOpenLiveReply, heldJudgedDraft, jevJudgeErrored, requireReplyQuality, unjudgedReply } from './reply-quality-gate.mjs';
 import { applyJevTurn, draftTierForTurn, jevTurn } from './jev-turn.mjs';
 import { buildLiveAppRewritePending } from './chat-place-search.mjs';
 import { inTurnPlaceLiveReplyHooks, placeSearchTieredReplyTimeoutMs } from './in-turn-place-reply-fallback.mjs';
@@ -1606,37 +1606,11 @@ export async function produceLiveAppReply({
   };
   if (!quality?.judged) {
     if (jevJudgeErrored(quality)) {
-      const failOpen = failOpenShippedReply({
-        rules,
-        jev,
-        model,
-        quality,
-        log: baseLog,
-        draft: originalDraft,
-        judgeMs: draftQualityMs,
+      return failOpenLiveReply({
+        rules, jev, model, quality, log: baseLog, draft: originalDraft, judgeMs: draftQualityMs, draftModel, ship: shipInTurnDraft, stamp: stampShippedReply,
       });
-      const shippedReplyText = shipInTurnDraft(originalDraft, { rules, jev });
-      if (shippedReplyText?.status) return shippedReplyText;
-      const stamped = stampShippedReply({
-        reply: shippedReplyText ?? failOpen.reply,
-        quality: failOpen.quality,
-        draftModel,
-        log: failOpen.log,
-        draft: originalDraft,
-      });
-      stamped.model.modelTier = model?.modelTier ?? jev?.modelTier ?? null;
-      stamped.model.beats = model?.beats || null;
-      stamped.model.via = model?.via || stamped.model.via;
-      return { reply: stamped.reply, rules, jev, model: stamped.model, quality: stamped.quality, log: stamped.log, reason: null };
     }
-    return unjudgedReply({
-      rules,
-      jev,
-      model,
-      quality,
-      log: baseLog,
-      draft: originalDraft,
-    });
+    return unjudgedReply({ rules, jev, model, quality, log: baseLog, draft: originalDraft });
   }
   const claimReason = replyActionClaimReason(originalDraft, turnActionResults, replyClaimContextFromIntent(intent));
   if (claimReason) {

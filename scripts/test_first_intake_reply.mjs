@@ -454,8 +454,9 @@ try {
   };
   const jevFailed = await produceLiveAppReply({ ...voiceInput, ...intakeLive });
   assert.equal(chatCalls.length, 1, 'intake draft runs before the merged Jev judge fails');
-  assert.equal(jevFailed.reply, null);
-  assert.equal(jevFailed.reason, 'jev down');
+  assert.equal(jevFailed.reply, voiceReply);
+  assert.equal(jevFailed.reason, null);
+  assert.equal(jevFailed.quality.judgeFailed, true);
   assert.ok(jevFailed.model);
 
   chatCalls.length = 0;

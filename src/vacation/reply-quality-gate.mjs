@@ -40,7 +40,7 @@ export function failOpenJudgedQuality(quality, judgeMs = 0) {
   };
 }
 
-export function failOpenShippedReply({ rules, jev, model, quality, log, draft, judgeMs = 0 }) {
+function failOpenShippedReply({ rules, jev, model, quality, log, draft, judgeMs = 0 }) {
   const openQuality = failOpenJudgedQuality(quality, judgeMs);
   if (jev && typeof jev === 'object') {
     jev.judgeFailed = true;
@@ -56,6 +56,17 @@ export function failOpenShippedReply({ rules, jev, model, quality, log, draft, j
     log: nextLog,
     reason: null,
   };
+}
+
+export function failOpenLiveReply({ rules, jev, model, quality, log, draft, judgeMs, draftModel, ship, stamp }) {
+  const failOpen = failOpenShippedReply({ rules, jev, model, quality, log, draft, judgeMs });
+  const shippedReplyText = ship(draft, { rules, jev });
+  if (shippedReplyText?.status) return shippedReplyText;
+  const stamped = stamp({ reply: shippedReplyText ?? failOpen.reply, quality: failOpen.quality, draftModel, log: failOpen.log, draft });
+  stamped.model.modelTier = model?.modelTier ?? jev?.modelTier ?? null;
+  stamped.model.beats = model?.beats || null;
+  stamped.model.via = model?.via || stamped.model.via;
+  return { reply: stamped.reply, rules, jev, model: stamped.model, quality: stamped.quality, log: stamped.log, reason: null };
 }
 
 export function unjudgedReply({ rules, jev, model, quality, log, draft }) {
