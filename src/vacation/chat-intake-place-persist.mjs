@@ -8,6 +8,15 @@ import { normalizePlaceSearchTargetKind } from './place-search-target-kind.mjs';
 import { intakeLodgingLookupQuery } from './intake-lodging-lookup.mjs';
 import { samePlace } from './place-search-same-place.mjs';
 import { applyEnrichedDetailToTripThing, enrichPlaceDetail } from './place-detail-enrichment.mjs';
+import {
+  evaluateIntakeAdmission,
+  evaluateIntakePreSearch,
+  findStructuralDuplicate,
+  intakeProvenanceOrigin,
+  intakeWriteRejected,
+  isCustomerIntakeProvenance,
+  recordChatIntakeSearchMiss,
+} from './intake-thing-admission.mjs';
 
 const GEOCODABLE_KINDS = new Set(['grocery', 'market', 'restaurant', 'store', 'garden', 'activity', 'hotel', 'car']);
 
@@ -120,17 +129,23 @@ export async function upgradeTripThingInPlace(db, tripId, rowId, requestId, thin
   return { ...item, id: String(rowId) };
 }
 
-async function findExistingChatIntakeRow(db, tripId, title) {
-  const key = normalizedTitleKey(title);
-  if (!db || !tripId || !key) return null;
-  const rows = await db`
+async function loadChatIntakeRows(db, tripId) {
+  if (!db || !tripId) return [];
+  return db`
     select id, title, location, source, metadata, category, description, starts_at
     from trip_things
     where trip_id = ${tripId}::uuid
   `;
+}
+
+async function findExistingChatIntakeRow(db, tripId, title, metadata = {}) {
+  const key = normalizedTitleKey(title);
+  if (!db || !tripId || !key) return null;
+  const rows = await loadChatIntakeRows(db, tripId);
+  const dup = findStructuralDuplicate(rows, { metadata, title });
+  if (dup) return dup;
   for (const row of rows) {
-    if (normalizedTitleKey(row?.title) !== key) continue;
-    return row;
+    if (normalizedTitleKey(row?.title) === key) return row;
   }
   return null;
 }
@@ -196,21 +211,49 @@ export async function persistChatIntakePlaceThing(db, {
   env = process.env,
   fetchImpl = globalThis.fetch,
   searchImpl = searchPlaces,
+  provenanceContext = {},
 } = {}) {
   const name = clean(title, 240);
   if (!db || !tripId || !name) return null;
-  const existing = await findExistingChatIntakeRow(db, tripId, name);
+  const existingRows = await loadChatIntakeRows(db, tripId);
+  let existing = await findExistingChatIntakeRow(db, tripId, name, metadata);
+  const preRows = existing
+    ? existingRows.filter((row) => String(row.id) !== String(existing.id))
+    : existingRows;
+  const pre = evaluateIntakePreSearch({
+    title: name,
+    category,
+    description,
+    metadata,
+    existingRows: preRows,
+    provenanceContext,
+  });
+  if (!pre.admit) {
+    if (pre.reason === 'merge_duplicate' && pre.mergeIntoId) {
+      const mergeRow = existingRows.find((row) => String(row.id) === pre.mergeIntoId);
+      if (mergeRow) return { ...tripThingRow({ ...mergeRow }), id: String(mergeRow.id), deduped: true };
+    }
+    return null;
+  }
+  const adjustedCategory = pre.adjustedCategory || category;
+  if (!existing) existing = await findExistingChatIntakeRow(db, tripId, name, metadata);
   const existingMeta = existing?.metadata && typeof existing.metadata === 'object' ? existing.metadata : {};
   if (existing && !rowNeedsPlaceSearch(existing) && thingHasCoordinates(existing)) {
     return { ...tripThingRow({ ...existing, metadata: existingMeta }), id: String(existing.id), deduped: true };
   }
+  const baseMeta = {
+    ...existingMeta,
+    ...metadata,
+    source: metadata?.source || existingMeta.source || 'chat_extraction',
+    intakeSource: metadata?.intakeSource || existingMeta.intakeSource || 'chat_extraction',
+  };
   const destination = clean(destinationHint, 180);
   let resolved = null;
   if (destination) {
     try {
       const outcome = await searchChatIntakePlace({
         title: name,
-        category: category || existing?.category || 'activity',
+        category: adjustedCategory || category || existing?.category || 'activity',
         destinationHint: destination,
         detailText,
         tripId,
@@ -220,12 +263,35 @@ export async function persistChatIntakePlaceThing(db, {
         searchImpl,
       });
       if (outcome.ok && outcome.place) {
+        const post = evaluateIntakeAdmission({
+          title: name,
+          category: adjustedCategory || category,
+          description,
+          metadata: {
+            ...baseMeta,
+            origin: intakeProvenanceOrigin(baseMeta) || 'provider_search',
+            providerResultId: outcome.place?.id || outcome.place?.providerResultId || baseMeta.providerResultId,
+          },
+          resolvedPlace: outcome.place,
+          existingRows,
+          provenanceContext,
+        });
+        const mergeId = post.reason === 'merge_duplicate' ? String(post.mergeIntoId || '') : '';
+        const upgradingSameRow = mergeId && mergeId === String(existing?.id || '');
+        if (!post.admit && !upgradingSameRow) {
+          if (mergeId) {
+            const mergeRow = post.mergeRow || existingRows.find((row) => String(row.id) === mergeId);
+            if (mergeRow) return { ...tripThingRow({ ...mergeRow }), id: String(mergeRow.id), deduped: true };
+          }
+          await recordChatIntakeSearchMiss(db, tripId, { title: name, category: adjustedCategory || category, reason: post.reason });
+          return null;
+        }
         const baseThing = placeToTripThing(outcome.place);
         try {
           const enrichment = await enrichPlaceDetail({
             place: outcome.place,
             destination,
-            category: category || existing?.category || 'activity',
+            category: adjustedCategory || category || existing?.category || 'activity',
             env,
             fetchImpl,
           });
@@ -239,12 +305,6 @@ export async function persistChatIntakePlaceThing(db, {
       console.error(`chat intake place search failed for "${name}": ${String(error?.message || error)}`);
     }
   }
-  const baseMeta = {
-    ...existingMeta,
-    ...metadata,
-    source: metadata?.source || existingMeta.source || 'chat_extraction',
-    intakeSource: metadata?.intakeSource || existingMeta.intakeSource || 'chat_extraction',
-  };
   if (resolved) {
     const merged = {
       ...resolved,
@@ -261,24 +321,45 @@ export async function persistChatIntakePlaceThing(db, {
     }
     return insertTripThing(db, { tripId, requestId, thing: merged, env });
   }
-  const unresolved = unresolvedChatIntakePlaceThing({
-    title: name,
-    category: category || existing?.category || 'activity',
-    description,
-    metadata: baseMeta,
-    startsAt: startsAt || existing?.starts_at || null,
-  });
-  if (existing?.id) {
-    return upgradeTripThingInPlace(db, tripId, existing.id, requestId, unresolved, env);
+  const missReason = destination ? 'search_miss' : 'missing_destination';
+  if (isCustomerIntakeProvenance(baseMeta) && !intakeWriteRejected(name, baseMeta, provenanceContext)) {
+    const origin = intakeProvenanceOrigin(baseMeta) || 'customer_turn';
+    const provenanceSrc = clean(baseMeta.source || baseMeta.intakeSource, 80).toLowerCase();
+    const fromChatExtraction = provenanceSrc === 'chat_extraction';
+    const placeholder = unresolvedChatIntakePlaceThing({
+      title: name,
+      category: adjustedCategory || category || existing?.category || 'activity',
+      description,
+      metadata: {
+        ...baseMeta,
+        origin,
+        source: fromChatExtraction ? 'chat_extraction' : 'customer_stated',
+        intakeSource: fromChatExtraction
+          ? (baseMeta.intakeSource || 'chat_extraction')
+          : (baseMeta.intakeSource || 'customer-turn'),
+      },
+      startsAt,
+    });
+    if (!placeholder) return null;
+    if (existing?.id) {
+      return upgradeTripThingInPlace(db, tripId, existing.id, requestId, placeholder, env);
+    }
+    return insertTripThing(db, { tripId, requestId, thing: placeholder, env });
   }
-  return insertTripThing(db, { tripId, requestId, thing: unresolved, env });
+  await recordChatIntakeSearchMiss(db, tripId, {
+    title: name,
+    category: adjustedCategory || category || existing?.category || 'activity',
+    reason: missReason,
+  });
+  return null;
 }
 
 export function unresolvedThingsFromPlaceClassification(classification = {}) {
   const rows = [];
   const seen = new Set();
-  const push = (title, category) => {
-    const thing = unresolvedChatIntakePlaceThing({ title, category, metadata: { source: 'chat_extraction' } });
+  const push = (title, category, meta = {}) => {
+    if (intakeWriteRejected(title, meta)) return;
+    const thing = unresolvedChatIntakePlaceThing({ title, category, metadata: meta });
     if (!thing) return;
     const key = normalizedTitleKey(thing.title);
     if (seen.has(key)) return;
@@ -289,7 +370,13 @@ export function unresolvedThingsFromPlaceClassification(classification = {}) {
   for (const item of things) {
     const kind = clean(item?.kind || item?.category, 80).toLowerCase();
     if (!isChatIntakeGeocodableThing({ kind })) continue;
-    push(item?.name || item?.title, kind);
+    const meta = {
+      source: item?.source || 'chat_extraction',
+      origin: item?.origin || '',
+      customerTurnId: item?.customerTurnId || '',
+      customerSpan: item?.customerSpan || item?.name || '',
+    };
+    push(item?.name || item?.title, kind, meta);
   }
   const target = clean(classification?.target, 240);
   const targetKind = normalizePlaceSearchTargetKind(classification?.targetKind);
@@ -400,23 +487,6 @@ export function rowNeedsDetailBackfill(row = {}) {
   return Number.isFinite(lat) && Number.isFinite(lng);
 }
 
-export async function persistChatPlaceSearchMisses(db, {
-  tripId,
-  requestId,
-  classification,
-  chatSearch = {},
-  insertStampedChatPlaceThings,
-}) {
-  const misses = unresolvedThingsFromPlaceClassification(classification);
-  const fromSearch = Array.isArray(chatSearch?.things) ? chatSearch.things : [];
-  const things = fromSearch.length ? fromSearch : misses;
-  if (!things.length) return { placeResults: [], placeSearchReplyFacts: null };
-  return insertStampedChatPlaceThings(db, {
-    tripId,
-    requestId,
-    things,
-    classification,
-  });
-}
+export { persistChatPlaceSearchMisses } from './chat-place-search-when.mjs';
 
 export { queriesFromWantedThings, normalizePlaceSearchTargetKind };

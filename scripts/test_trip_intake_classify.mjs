@@ -13,6 +13,10 @@ import {
   STAGING_HYATT_INTAKE_EXTRACTION,
   STAGING_HYATT_INTAKE_SENTENCE,
 } from './fixtures/trip-intake-hyatt-staging.mjs';
+import {
+  INTAKE_PROVENANCE_TEST_OPTIONS,
+  thingWithFixtureProvenance,
+} from './fixtures/intake-provenance-test-context.mjs';
 
 const turnSource = fs.readFileSync(new URL('../src/vacation/live-app-turn.mjs', import.meta.url), 'utf8');
 const routeSource = fs.readFileSync(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
@@ -32,19 +36,19 @@ assert.deepEqual(thingsFromIntake('gardens swim groceries dinner town walk house
 assert.deepEqual(mergeWantedThings([{ title: 'Existing', category: 'activity' }], 'swim').map((thing) => thing.title), ['Existing']);
 
 const extracted = thingsFromIntake([
-  { name: 'North Market Hall', kind: 'restaurant', who: 'Ana', when: 'Tuesday' },
-  { name: 'North Market Hall', kind: 'restaurant', who: 'Ana', when: 'Tuesday' },
-  { name: 'mid-range options', kind: 'hotel', who: '', when: '' },
+  thingWithFixtureProvenance({ name: 'North Market Hall', kind: 'restaurant', who: 'Ana', when: 'Tuesday' }),
+  thingWithFixtureProvenance({ name: 'North Market Hall', kind: 'restaurant', who: 'Ana', when: 'Tuesday' }),
+  thingWithFixtureProvenance({ name: 'mid-range options', kind: 'hotel', who: '', when: '' }),
   { name: '', kind: 'activity' },
-]);
+], INTAKE_PROVENANCE_TEST_OPTIONS);
 assert.deepEqual(extracted.map((thing) => thing.title), ['North Market Hall']);
 assert.equal(extracted[0].who, 'Ana');
 assert.equal(extracted[0].whenLabel, 'Tuesday');
 assert.equal(extracted[0].source, 'chat_extraction');
 const merged = mergeWantedThings([{ title: 'North Market Hall', category: 'activity' }], [
-  { name: 'North Market Hall', kind: 'restaurant', who: 'Ana', when: 'Tuesday' },
-  { name: 'Zephyr Pavilion', kind: 'hotel', who: '', when: '' },
-]);
+  thingWithFixtureProvenance({ name: 'North Market Hall', kind: 'restaurant', who: 'Ana', when: 'Tuesday' }),
+  thingWithFixtureProvenance({ name: 'Zephyr Pavilion', kind: 'hotel', who: '', when: '' }),
+], INTAKE_PROVENANCE_TEST_OPTIONS);
 assert.deepEqual(merged.map((thing) => thing.title), ['North Market Hall', 'Zephyr Pavilion']);
 
 function jsonResponse(body, ok = true, status = 200) {
@@ -128,7 +132,7 @@ const followUp = await classifyTripIntake({
 });
 assert.equal(followUp.ok, true);
 assert.equal(followUp.intake, false);
-assert.equal(followUp.things.length, 1);
+assert.equal(followUp.things.length, 0, 'things without customer span in turn are not admitted');
 
 const fields = tripIntakeJobFields({
   requestText: lisbon,
@@ -158,7 +162,7 @@ const notFirst = tripIntakeJobFields({
   jobKind: 'trip_intake',
 });
 assert.equal(notFirst.intakeEvent, null);
-assert.equal(notFirst.wantedThings.length, 1);
+assert.equal(notFirst.wantedThings.length, 0);
 assert.equal(notFirst.title, '');
 assert.equal(notFirst.destinationError, 'trip place was not in the extraction');
 assert.equal(notFirst.titleError, 'trip title was not in the extraction');
@@ -296,7 +300,7 @@ assert.match(unnamed.destinationError, /classifier down/);
 assert.match(unnamed.titleError, /classifier down/);
 
 assert.match(classifySource, /anchorIsLodging true when that reference is their hotel/);
-assert.match(classifySource, /exactly one things entry with kind hotel/);
+assert.match(classifySource, /one things row with kind hotel/);
 assert.match(classifySource, /category is required and must be exactly one of/);
 
 const hyattStaging = await classifyTripIntake({

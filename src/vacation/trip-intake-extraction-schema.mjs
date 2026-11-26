@@ -31,12 +31,16 @@ export function tripIntakeExtractionJsonSchema() {
             items: {
               type: 'object',
               additionalProperties: false,
-              required: ['name', 'kind', 'who', 'when'],
+              required: ['name', 'kind', 'who', 'when', 'origin', 'customerTurnId', 'customerSpan', 'existingThingId'],
               properties: {
                 name: { type: 'string' },
                 kind: { type: 'string' },
                 who: { type: 'string' },
                 when: { type: 'string' },
+                origin: { type: 'string' },
+                customerTurnId: { type: 'string' },
+                customerSpan: { type: 'string' },
+                existingThingId: { type: 'string' },
               },
             },
           },
