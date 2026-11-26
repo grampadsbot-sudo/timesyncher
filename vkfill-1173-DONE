@@ -1,1 +1,1 @@
-result blocked git push denied by cursor sandbox (local head a37ca15aec1ba1156ad61a49f23be6370e2cb026; tests ok: test_vk_admin_review_a.mjs 11/11, test_check_code_ratchet.mjs pass; open_work publish --issue 1173 ready)
+result success head a01e6766ef868071bdf975d535f06c62461362d1 pr 1174; isVkAdminAllowedHost replaces VERCEL_ENV gate; local tests 11/11 test_vk_admin_review_a.mjs + test_check_code_ratchet.mjs; CI accept=success gateb=success unit-tests=success
