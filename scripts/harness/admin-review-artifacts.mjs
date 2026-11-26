@@ -46,7 +46,9 @@ export function createAdminArtifactWriter({ origin, login, fetchImpl, harnessVac
     const endpoint = new URL(`/api/admin/customers/${encodeURIComponent(tripId)}/artifacts/${artifact}`, origin);
     const response = await fetchImpl(endpoint, {
       method: 'PUT', headers: { 'content-type': 'application/json', cookie },
-      body: JSON.stringify(artifact === 'review' ? bytes : { data: bytes.toString('base64') }),
+      body: JSON.stringify(
+        artifact === 'review' || artifact === 'feedback' ? bytes : { data: bytes.toString('base64') },
+      ),
       redirect: 'manual', signal: AbortSignal.timeout(30000),
     });
     if (response.status === 401) session = undefined;

@@ -5,12 +5,13 @@ window.startVkAdminReview = (() => {
   const check = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m20 6-11 11-5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   const brandLockup = '<div class="brand vk-app-brand" data-vk-wordmark="1"><img class="mark" src="/brand/vk-book-logo.svg" alt="Vacay Keepsake" width="28" height="30" /><span class="vk-print-wordmark">vacay <i>keepsake</i></span></div>';
   const views = [
-    ['chat', 'Dialog'], ['trip', 'Vacation site'], ['keepsake', 'Keepsake'],
+    ['chat', 'Dialog'], ['feedback', 'Feedback'], ['trip', 'Vacation site'], ['keepsake', 'Keepsake'],
     ['onboarding', 'Onboarding'], ['captures', 'Chat screenshots'], ['vacations', 'All vacations'],
   ];
   const json = (method, body) => ({ method, headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
   const state = { customers: new Map(), opened: [], recent: new Set(), details: new Map(), artifacts: new Map(),
-    selection: null, view: 'all', attachments: [], voiceMode: false, voiceArmed: false, sending: false, opening: false };
+    selection: null, view: 'all', feedbackRollup: null, feedbackRollupFailed: false, attachments: [],
+    voiceMode: false, voiceArmed: false, sending: false, opening: false };
   let notesRequest = 0;
   let root;
 
@@ -65,7 +66,8 @@ window.startVkAdminReview = (() => {
   }
 
   function customerList() {
-    return `<div class="admin-customers" data-admin-customers="1">${[...state.customers].map(([key, account]) => {
+    const rollup = '<div class="admin-feedback-rollup-link"><button class="admin-open" type="button" data-view="feedback-all">All customers feedback</button></div>';
+    return `${rollup}<div class="admin-customers" data-admin-customers="1">${[...state.customers].map(([key, account]) => {
       const latest = account.vacations[0];
       const coupon = account.coupon ? `<small class="admin-coupon">${safe(account.coupon)}</small>` : '';
       return `<section class="admin-group" data-trip-group="${safe(latest.tripId)}" data-sort-at="${safe(latest.sortAt)}"><header><b>${safe(account.name)}</b><small>${safe(latest.destination)} · <time datetime="${safe(latest.sortAt)}">${safe(latest.sortAt.slice(0, 10))}</time></small>${coupon}</header><button class="admin-open" type="button" data-customer-id="${safe(account.id)}" data-open-account="${safe(key)}" aria-label="Open ${safe(account.name)}">${state.recent.has(key) ? 'Opened' : 'Open'}</button></section>`;
@@ -85,8 +87,63 @@ window.startVkAdminReview = (() => {
   }
 
   function dialogResults(vac) {
-    return [['QA', vac.qa], ['Survey', vac.survey]].filter(([, data]) => data != null).map(([label, data]) =>
-      `<section class="admin-result" data-review-result="${label.toLowerCase()}"><h3>${label}</h3><pre>${safe(typeof data === 'string' ? data : JSON.stringify(data, null, 2))}</pre></section>`).join('');
+    const surveyLabel = vac.survey?.label ? String(vac.survey.label) : 'end of chat (legacy)';
+    return [['QA', vac.qa], [`Survey (${surveyLabel})`, vac.survey]].filter(([, data]) => data != null).map(([label, data]) => {
+      const attr = label.startsWith('Survey') ? 'survey' : label.toLowerCase().replace(/\s+/g, '-');
+      return `<section class="admin-result" data-review-result="${attr}"><h3>${label}</h3><pre>${safe(typeof data === 'string' ? data : JSON.stringify(data, null, 2))}</pre></section>`;
+    }).join('');
+  }
+
+  const ratingFmt = (value) => (value == null || Number.isNaN(Number(value)) ? '—' : Number(value).toFixed(2));
+
+  function feedbackTableRows(rows) {
+    if (!rows?.length) return '<p class="admin-empty">No role-play checkpoint feedback is stored yet.</p>';
+    const head = '<tr><th>Customer</th><th>Vacation</th><th>Checkpoint</th><th>Question</th><th>Rating</th><th>Comment</th></tr>';
+    const body = rows.map((row) => `<tr>
+      <td>${safe(row.customer)}</td>
+      <td>${safe(row.destination || row.vacation)}</td>
+      <td>${safe(row.checkpoint)}</td>
+      <td>${safe(row.question)}</td>
+      <td>${safe(ratingFmt(row.rating))}</td>
+      <td>${safe(row.comment)}</td>
+    </tr>`).join('');
+    return `<div class="admin-feedback-table-wrap"><table class="admin-feedback-table">${head}${body}</table></div>`;
+  }
+
+  function feedbackView(vac, artifacts) {
+    if (!artifacts) return '<p class="admin-empty">Loading feedback…</p>';
+    if (artifacts.failed) return '<p class="admin-empty" role="status">Feedback could not be loaded.</p>';
+    const payload = artifacts.feedback;
+    if (!payload?.checkpoints?.length && !payload?.legacy_trip_survey) {
+      return '<p class="admin-empty">No checkpoint feedback is stored for this vacation yet.</p>';
+    }
+    const checkpointRows = (payload.checkpoints || []).flatMap((checkpoint) => {
+      const scores = checkpoint.scores?.length ? checkpoint.scores : [{ expected_score: null, construct: '' }];
+      return scores.map((score) => ({
+        customer: payload.customer?.name || vac.label,
+        vacation: vac.destination || vac.title,
+        checkpoint: checkpoint.label || checkpoint.id,
+        question: checkpoint.prompt,
+        rating: score.expected_score,
+        comment: checkpoint.reply,
+      }));
+    });
+    const legacy = payload.legacy_trip_survey;
+    const legacyRows = legacy?.questions?.map((question, index) => ({
+      customer: payload.customer?.name || vac.label,
+      vacation: vac.destination || vac.title,
+      checkpoint: legacy.label || 'end of chat (legacy)',
+      question,
+      rating: null,
+      comment: legacy.answers?.[index] || '',
+    })) || [];
+    return `<div class="admin-feedback" data-feedback-view="customer">${feedbackTableRows([...checkpointRows, ...legacyRows])}</div>`;
+  }
+
+  function feedbackRollupView() {
+    if (state.feedbackRollupFailed) return '<p class="admin-empty" role="status">All-customers feedback could not be loaded.</p>';
+    if (state.feedbackRollup == null) return '<p class="admin-empty">Loading all-customers feedback…</p>';
+    return `<div class="admin-feedback" data-feedback-view="rollup">${feedbackTableRows(state.feedbackRollup)}</div>`;
   }
 
   function dialog(vac, artifacts) {
@@ -161,13 +218,18 @@ window.startVkAdminReview = (() => {
   }
 
   function sitePane() {
+    if (state.view === 'feedback-all') {
+      return `<div class="site-pane" id="sitePane" data-kind="feedback-all">${feedbackRollupView()}</div>`;
+    }
     if (state.view === 'all') return `<div class="site-pane" id="sitePane" data-kind="customers">${customerList()}</div>`;
     const vac = state.details.get(viewTrip());
     return `<div class="site-pane admin-vacation" id="sitePane" data-kind="${state.view}" data-run="${safe(vac.tripId)}"><div class="admin-view-panel">${viewContent(vac)}</div></div>`;
   }
 
   function viewContent(vac) {
-    const renderView = { chat: dialog, trip: vacationSite, keepsake, onboarding, captures, vacations: vacationList }[state.view];
+    const renderView = {
+      chat: dialog, feedback: feedbackView, trip: vacationSite, keepsake, onboarding, captures, vacations: vacationList,
+    }[state.view];
     return renderView(vac, state.artifacts.get(vac.tripId));
   }
 
@@ -198,6 +260,7 @@ window.startVkAdminReview = (() => {
       button.setAttribute('aria-expanded', String(open));
     } else if (button.dataset.view) {
       state.view = button.dataset.view;
+      if (state.view === 'feedback-all') void loadFeedbackRollup();
       renderViewPane();
       document.getElementById('tripButton').focus();
     } else if (button.dataset.tripId === 'all') showCustomer(null);
@@ -208,6 +271,13 @@ window.startVkAdminReview = (() => {
 
   function renderViewPane() {
     const pane = document.getElementById('sitePane');
+    if (state.view === 'feedback-all' || state.view === 'all') {
+      pane.dataset.kind = state.view;
+      pane.dataset.run = '';
+      pane.innerHTML = state.view === 'feedback-all' ? feedbackRollupView() : customerList();
+      document.getElementById('vacationDropdown').outerHTML = switcher();
+      return;
+    }
     const vac = state.details.get(viewTrip());
     pane.dataset.kind = state.view;
     pane.dataset.run = vac.tripId;
@@ -360,10 +430,22 @@ window.startVkAdminReview = (() => {
     const result = await api(artifactsPath(id)).catch(() => null);
     const artifacts = result?.res.ok ? result.data : { failed: true };
     state.artifacts.set(id, artifacts);
-    if (viewTrip() === id && ['chat', 'captures', 'keepsake', 'onboarding'].includes(state.view)) {
+    if (viewTrip() === id && ['chat', 'captures', 'keepsake', 'onboarding', 'feedback'].includes(state.view)) {
       const vac = state.details.get(id);
       document.querySelector('.admin-view-panel').innerHTML = viewContent(vac);
       lockReplay(document.getElementById('customerChatReplay'));
+    }
+  }
+
+  async function loadFeedbackRollup() {
+    state.feedbackRollup = null;
+    state.feedbackRollupFailed = false;
+    const { res, data } = await api('feedback').catch(() => ({ res: { ok: false }, data: {} }));
+    state.feedbackRollupFailed = !res.ok;
+    state.feedbackRollup = res.ok ? (data.rows || []) : [];
+    if (state.view === 'feedback-all') {
+      const pane = document.getElementById('sitePane');
+      if (pane?.dataset.kind === 'feedback-all') pane.innerHTML = feedbackRollupView();
     }
   }
 

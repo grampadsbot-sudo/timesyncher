@@ -5,8 +5,10 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { cannedWelcomeLiveTurn } from '../src/vacation/onboarding-welcome.mjs';
-import { LocalVkAdminStore } from '../src/vacation/vk-admin-review-storage.mjs';
-import { createAdminArtifactWriter } from './harness/admin-review-artifacts.mjs';
+import { buildFeedbackArtifact } from '../src/vacation/vk-admin-feedback.mjs';
+import { LocalVkAdminStore, saveFeedbackArtifact } from '../src/vacation/vk-admin-review-storage.mjs';
+import { SSR_CHECKPOINTS } from './customer_suite/ssr/checkpoints.mjs';
+import { createAdminArtifactWriter, firstFiveTurnCapture, storeDialogPdf } from './harness/admin-review-artifacts.mjs';
 import { inviteOnboardingTags } from './harness/onboarding-screens.mjs';
 import { playWithAdminArtifacts, storeHarnessKeepsake, writeOutcomes } from './harness/runtime.mjs';
 import { extractPdfText } from './live-transcript-dialog-pdf.mjs';
@@ -110,6 +112,29 @@ try {
   assert.equal(picker.testCustomerCount, 100, 'roster runs do not add customers to the roster count');
   assert.ok(!JSON.stringify(picker).includes('@harness.invalid'));
   const store = new LocalVkAdminStore(workspace);
+  const feedbackReactions = SSR_CHECKPOINTS.map((checkpoint, index) => ({
+    checkpoint: checkpoint.id,
+    label: checkpoint.label,
+    constructs: [...checkpoint.constructs],
+    prompt: checkpoint.prompt,
+    reply: `Fixture role-play reply ${index + 1} for ${checkpoint.id}.`,
+  }));
+  await saveFeedbackArtifact(store, tripId, buildFeedbackArtifact({
+    story: { story_id: 'fixture-review', customer: { name: 'Sofia Lopez' }, destination: 'Fixture destination' },
+    played: { tripId, survey: { label: 'end of chat (legacy)', questions: ['Legacy?'], answers: ['Legacy only.'] } },
+    reactions: feedbackReactions,
+    ssr: {
+      method: 'ssr-maier-2025',
+      anchor_set_version: 'fixture',
+      summary_by_construct: {},
+      checkpoints: feedbackReactions.map((reaction) => ({
+        checkpoint: reaction.checkpoint,
+        construct: reaction.constructs[0],
+        expected_score: 3.8,
+        pmf_by_rating: { 4: 0.6 },
+      })),
+    },
+  }));
   const earlierNoteId = 'dddddddd-0000-0000-0000-000000000116';
   await store.putJson(`notes/customer-${earlierCustomerId}/${earlierNoteId}.json`, {
     id: earlierNoteId, vacationId: olderTrip, at: before, text: 'Existing admin note',
@@ -251,7 +276,7 @@ try {
         await menuButton.click();
         await page.getByRole('option', { name, exact: true }).click();
       };
-      const basicViews = ['Dialog', 'Vacation site', 'Keepsake', 'Onboarding', 'Chat screenshots'];
+      const basicViews = ['Dialog', 'Feedback', 'Vacation site', 'Keepsake', 'Onboarding', 'Chat screenshots'];
       const requests = [];
       page.on('request', (request) => requests.push([request.method(), new URL(request.url()).pathname]));
       await page.goto(`${base}/vacation-app/admin`);
@@ -307,6 +332,15 @@ try {
       assert.equal(new URL(dialog.url()).pathname, `${artifactPath}/dialog-pdf`);
       assert.deepEqual(await fs.readFile(await dialog.path()), pdf);
       await shot('dialog');
+
+      await chooseView('Feedback');
+      const feedback = page.locator('[data-feedback-view="customer"]');
+      await feedback.waitFor();
+      assert.match(await feedback.textContent(), /After setup/);
+      assert.match(await feedback.textContent(), /Fixture role-play reply/);
+      assert.match(await feedback.textContent(), /end of chat \(legacy\)/);
+      assert.doesNotMatch(await feedback.textContent(), /It answered some of it/);
+      await shot('feedback');
 
       await chooseView('Vacation site');
       const shared = page.frameLocator('[data-trip-frame]');
@@ -404,6 +438,12 @@ try {
       assert.ok(requests.every(([method, pathname]) => method === 'GET' || pathname.startsWith('/api/admin/')));
       assert.deepEqual(server.writes, []);
 
+      await chooseView('All Customers');
+      await page.getByRole('button', { name: 'All customers feedback', exact: true }).click();
+      const rollup = page.locator('[data-feedback-view="rollup"]');
+      await rollup.waitFor();
+      assert.match(await rollup.textContent(), /Fixture role-play reply/);
+      await shot('feedback-rollup');
       await chooseView('All Customers');
       await page.getByRole('button', { name: 'Open Second fixture', exact: true }).click();
       await page.getByText('No Dialog PDF yet').waitFor();

@@ -46,3 +46,9 @@
 .admin-captures img { display: block; max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; }
 .admin-note { overflow-wrap: anywhere; }
 .admin-note-files a { color: inherit; text-decoration: underline; }
+.admin-feedback-rollup-link { padding: 12px 16px 0; }
+.admin-feedback-table-wrap { padding: 12px 16px; overflow: auto; }
+.admin-feedback-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.admin-feedback-table th, .admin-feedback-table td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+.admin-feedback-table th { background: var(--soft); font-weight: 700; }
+.admin-feedback-table td:nth-child(6) { min-width: 12rem; white-space: pre-wrap; }
