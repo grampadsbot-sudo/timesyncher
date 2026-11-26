@@ -36,30 +36,13 @@ function bootstrapPlaywrightForCi() {
   if (!existsSync(bundled)) {
     throw new Error(`playwright missing after install at ${bundled}`);
   }
-  process.env.PLAYWRIGHT_BROWSERS_PATH = PW_BROWSERS_PATH;
-  const installEnv = { ...process.env, PLAYWRIGHT_BROWSERS_PATH: PW_BROWSERS_PATH };
   const browserInstall = spawnSync(
-    'npx',
-    ['--prefix', PW_PREFIX, 'playwright', 'install', '--with-deps', 'chromium'],
-    { stdio: 'inherit', env: installEnv },
+    process.execPath,
+    [path.join(bundled, 'cli.js'), 'install', 'chromium'],
+    { stdio: 'inherit' },
   );
   if (browserInstall.status !== 0) {
-    const depsOnly = spawnSync(
-      'sudo',
-      ['-n', 'npx', '--prefix', PW_PREFIX, 'playwright', 'install-deps', 'chromium'],
-      { stdio: 'inherit', env: installEnv },
-    );
-    const browserOnly = spawnSync(
-      'npx',
-      ['--prefix', PW_PREFIX, 'playwright', 'install', 'chromium'],
-      { stdio: 'inherit', env: installEnv },
-    );
-    if (browserOnly.status !== 0) {
-      throw new Error(
-        `playwright chromium install failed (with-deps=${browserInstall.status ?? 'null'}, `
-        + `install-deps=${depsOnly.status ?? 'null'}, chromium=${browserOnly.status ?? 'null'})`,
-      );
-    }
+    throw new Error(`playwright chromium install failed (status ${browserInstall.status ?? 'null'})`);
   }
   return require(bundled);
 }
@@ -79,9 +62,7 @@ function chromiumBinaryReady(mod) {
 }
 
 function loadPlaywright() {
-  if (existsSync(PW_BROWSERS_PATH)) {
-    process.env.PLAYWRIGHT_BROWSERS_PATH = PW_BROWSERS_PATH;
-  }
+  process.env.PLAYWRIGHT_BROWSERS_PATH ||= PW_BROWSERS_PATH;
   for (const candidate of [
     path.join(PW_PREFIX, 'node_modules/playwright'),
     'playwright',
@@ -92,15 +73,11 @@ function loadPlaywright() {
   ]) {
     const mod = tryRequirePlaywright(candidate);
     if (!mod?.chromium) continue;
-    if (candidate.startsWith(PW_PREFIX)) process.env.PLAYWRIGHT_BROWSERS_PATH = PW_BROWSERS_PATH;
     if (chromiumBinaryReady(mod)) return mod;
   }
-  const mod = bootstrapPlaywrightForCi();
-  process.env.PLAYWRIGHT_BROWSERS_PATH = PW_BROWSERS_PATH;
-  return mod;
+  return bootstrapPlaywrightForCi();
 }
 const { chromium } = loadPlaywright();
-if (existsSync(PW_BROWSERS_PATH)) process.env.PLAYWRIGHT_BROWSERS_PATH = PW_BROWSERS_PATH;
 
 const fixtures = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/fixtures/vk-admin-review/vacation-fixtures.json'), 'utf8'));
 const roster = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/fixtures/vk-admin-review/roster-catalog.json'), 'utf8'));
