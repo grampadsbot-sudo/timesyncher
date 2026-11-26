@@ -56,15 +56,22 @@ const replies = [
     ledger('req-2', names[0], 'openrouter_usage_cost', 0.003, { purpose: 'reply_draft' })],
   [ledger('req-3', names[2], 'unpriced', null, { purpose: 'reply_draft' })],
 ];
+const graded = [
+  { score: 4.25, disposition: 'keep' },
+  { score: 3.8, disposition: 'rewrite' },
+  { score: 3.5, disposition: 'keep' },
+];
 const turns = replies.flatMap((rows, index) => {
   const common = { request_id: `req-${index + 1}`, at: current };
+  const quality = { judged: true, score: graded[index].score, disposition: graded[index].disposition };
   return [
     { ...common, speaker: 'customer', direction: 'inbound', body: `Customer line ${index + 1}`,
       payload: index === 0 ? { liveTranscript: { openrouterCalls: rows.slice(0, 1) } } : {} },
     { ...common, speaker: 'app', direction: 'outbound', body: `App reply ${index + 1}`,
       payload: { liveTranscript: index === 1
-        ? { modelId: names[0], quality: { shippedModel: names[index] }, shippedRewrite: true, openrouterCalls: rows }
-        : { shippedModel: names[index], openrouterCalls: rows } } },
+        ? { modelId: names[0], quality: { ...quality, shippedModel: names[index] }, shippedRewrite: true,
+          jevDisposition: graded[index].disposition, openrouterCalls: rows }
+        : { shippedModel: names[index], quality, jevDisposition: graded[index].disposition, openrouterCalls: rows } } },
   ];
 });
 const openingGreeting = "Welcome, Sofia! You're all set to start planning your vacation.";
@@ -72,7 +79,8 @@ turns.unshift({ at: current, speaker: 'app', direction: 'outbound', body: openin
   payload: { welcomeAudience: 'owner', liveTranscript: cannedWelcomeLiveTurn({ text: openingGreeting, at: current }) } });
 turns.push({ request_id: 'req-4', at: current, speaker: 'app', direction: 'outbound', body: 'App reply 4',
   payload: { liveTranscript: { model: { responseModel: 'vendor/legacy',
-    cost: { status: 'measured', currency: 'USD', dollars: 0.004, source: 'openrouter_usage_cost' } } } } });
+    cost: { status: 'measured', currency: 'USD', dollars: 0.004, source: 'openrouter_usage_cost' } },
+  quality: { judged: true, score: 4, disposition: 'keep' }, jevDisposition: 'keep' } } });
 const storedOnboarding = [{ id: 'fixture-session', status: 'completed', current_step: 'vacation_app', created_at: before, completed_at: current }];
 let queries = [];
 const db = async (parts, id) => {
@@ -251,7 +259,7 @@ try {
         await menuButton.click();
         await page.getByRole('option', { name, exact: true }).click();
       };
-      const basicViews = ['Dialog', 'Vacation site', 'Keepsake', 'Onboarding', 'Chat screenshots'];
+      const basicViews = ['Dialog', 'Vacation site', 'Keepsake', 'Onboarding', 'Chat screenshots', 'Dialog PDF'];
       const requests = [];
       page.on('request', (request) => requests.push([request.method(), new URL(request.url()).pathname]));
       await page.goto(`${base}/vacation-app/admin`);
@@ -266,9 +274,14 @@ try {
       assert.equal(await page.getByRole('button', { name: 'Open Lopez family', exact: true }).count(), 0, 'roster vacation is in Sofia’s account');
       await shot('customers');
 
+      const artifactsReady = page.waitForResponse((res) => res.url().includes(`${artifactPath}`) && res.ok());
       await sofia.click();
       await page.locator(`#sitePane[data-kind="chat"][data-run="${tripId}"]`).waitFor();
-      await page.locator('[data-dialog-pdf]').waitFor();
+      await artifactsReady;
+      assert.equal(await page.locator('.admin-dialog-head [data-dialog-pdf]').count(), 0);
+      await menuButton.click();
+      await page.getByRole('option', { name: 'Dialog PDF', exact: true }).waitFor();
+      await page.keyboard.press('Escape');
       const welcome = page.locator('[data-admin-welcome]');
       await welcome.waitFor();
       assert.equal(await welcome.count(), 1);
@@ -282,7 +295,11 @@ try {
       assert.equal(await page.locator('#adminView, .admin-view-controls, select').count(), 0);
       assert.equal(await page.locator('#appHeader .vacation-dropdown').count(), 1);
       await menuButton.click();
-      assert.deepEqual(await viewOptions.allTextContents(), [...basicViews, 'All vacations']);
+      assert.deepEqual(
+        await page.locator('.admin-header-views .trip-option b').allTextContents(),
+        [...basicViews, 'All vacations'],
+      );
+      assert.deepEqual(await viewOptions.allTextContents(), [...basicViews.slice(0, 5), 'All vacations']);
       await shotMenu('header-multiple-vacations');
       await page.keyboard.press('Escape');
       assert.equal(await menuButton.getAttribute('aria-expanded'), 'false');
@@ -293,16 +310,21 @@ try {
       assert.deepEqual(text.slice(1).map((line) => line.match(/(?:Customer line|App reply) \d/)[0]), turns.slice(1).map((turn) => turn.body));
       assert.deepEqual(await page.locator('.admin-reply-detail').allTextContents(), [
         'Opening greeting (no model, no cost)',
-        'vendor/first · Actual $0.01234567 Estimated $0.00',
+        'vendor/first · Actual $0.01',
         'vendor/second · Actual $0.00 Estimated $0.05',
         'vendor/third · unpriced',
-        'vendor/legacy · Actual $0.004 Estimated $0.00',
+        'vendor/legacy · Actual $0.00',
       ]);
-      assert.match(await page.locator('[data-vacation-total]').textContent(), /Actual \$0.02134567 Estimated \$0.05 1 unpriced/);
+      assert.match(await page.locator('[data-vacation-total]').textContent(), /Actual \$0.02 Estimated \$0.05 1 unpriced/);
+      assert.deepEqual(await page.locator('[data-admin-turn-grade="not-graded"]').count(), 1);
+      assert.deepEqual(await page.locator('[data-admin-turn-grade="graded"]').count(), 4);
+      assert.deepEqual(await page.locator('[data-jev-score]').evaluateAll((els) => els.map((el) => el.textContent)), ['4.25', '3.8', '3.5', '4']);
+      assert.deepEqual(await page.locator('[data-qa-verdict]').evaluateAll((els) => els.map((el) => el.textContent)), ['keep', 'rewrite', 'keep', 'keep']);
       assert.match(await page.locator('[data-review-result="qa"]').textContent(), /"score": 4/);
       assert.match(await page.locator('[data-review-result="survey"]').textContent(), /happy/);
       const dialogDownload = page.waitForEvent('download');
-      await page.locator('[data-dialog-pdf]').click();
+      await menuButton.click();
+      await page.getByRole('option', { name: 'Dialog PDF', exact: true }).click();
       const dialog = await dialogDownload;
       assert.equal(new URL(dialog.url()).pathname, `${artifactPath}/dialog-pdf`);
       assert.deepEqual(await fs.readFile(await dialog.path()), pdf);
@@ -366,7 +388,10 @@ try {
       assert.equal(await fs.readFile(await (await uploadDownload).path(), 'utf8'), 'admin attachment');
       await page.evaluate(() => { window.initialThread = document.getElementById('messages'); });
       await chooseView('Dialog');
-      await page.locator('[data-dialog-pdf]').waitFor();
+      assert.equal(await page.locator('.admin-dialog-head [data-dialog-pdf]').count(), 0);
+      await menuButton.click();
+      await page.getByRole('option', { name: 'Dialog PDF', exact: true }).waitFor();
+      await page.keyboard.press('Escape');
       await chooseView('All vacations');
       const vacationList = page.locator('#sitePane [data-admin-vacations]');
       assert.deepEqual(await vacationList.locator('[data-open-vacation]').evaluateAll((buttons) =>
@@ -406,14 +431,17 @@ try {
 
       await chooseView('All Customers');
       await page.getByRole('button', { name: 'Open Second fixture', exact: true }).click();
-      await page.getByText('No Dialog PDF yet').waitFor();
+      await menuButton.click();
+      assert.equal(await page.getByRole('option', { name: 'Dialog PDF', exact: true }).count(), 0);
+      await page.keyboard.press('Escape');
       await welcome.waitFor();
       assert.match(await welcome.textContent(), /Welcome to Second fixture's vacation/);
       assert.equal(await page.locator('[data-review-result]').count(), 0);
       assert.equal(await note.count(), 0);
       assert.equal(await existingNote.count(), 0);
       await menuButton.click();
-      assert.deepEqual(await viewOptions.allTextContents(), basicViews);
+      assert.deepEqual(await viewOptions.allTextContents(), basicViews.slice(0, 5));
+      assert.equal(await page.getByRole('option', { name: 'Dialog PDF', exact: true }).count(), 0);
       await shotMenu('header-single-vacation');
       await page.keyboard.press('Escape');
       await chooseView('Onboarding');
