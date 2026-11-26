@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { readFile, mkdir } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
@@ -73,14 +73,14 @@ async function respondToFixture(request) {
   return request.respond({ contentType: types[relativePath.split('.').at(-1)], body });
 }
 
+const screenshotDir = process.env.DAY_CHIP_SCREENSHOTS;
+if (screenshotDir) await mkdir(screenshotDir, { recursive: true });
+
 const browser = await puppeteer.launch({
   executablePath: process.env.CHROME_PATH || process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser',
   headless: true,
   args: ['--no-sandbox', '--disable-dev-shm-usage'],
 });
-const screenshotDir = process.env.DAY_CHIP_SCREENSHOTS;
-if (screenshotDir) await mkdir(screenshotDir, { recursive: true });
-
 try {
   const measurements = [];
   for (const [width, height] of viewports) {
@@ -102,17 +102,25 @@ try {
         label.selectNodeContents(button);
         const text = label.getBoundingClientRect();
         const tolerance = 0.5;
+        const contentLeft = box.left + button.clientLeft + parseFloat(style.paddingLeft);
+        const contentRight = box.right - parseFloat(style.borderRightWidth) - parseFloat(style.paddingRight);
         return {
           label: button.textContent.trim(),
           top: box.top,
-          visible: text.width > 0 && text.height > 0
+          bounds: {
+            text: [text.left, text.right, text.top, text.bottom],
+            chip: [contentLeft, contentRight, box.top + button.clientTop, box.top + button.clientTop + button.clientHeight],
+          },
+          font: [style.fontSize, style.fontFamily, style.letterSpacing],
+          visible: text.width > 0 && text.height > 0 && style.visibility === 'visible'
             && box.left >= Math.max(0, groupBox.left) - tolerance
             && box.right <= Math.min(window.innerWidth, groupBox.right) + tolerance
-            && text.left >= box.left + button.clientLeft - tolerance
-            && text.right <= box.left + button.clientLeft + button.clientWidth + tolerance
+            && text.left >= contentLeft - tolerance
+            && text.right <= contentRight + tolerance
             && text.top >= box.top + button.clientTop - tolerance
             && text.bottom <= box.top + button.clientTop + button.clientHeight + tolerance,
-          overflow: [style.overflowX, style.overflowY, style.textOverflow],
+          clipsText: [style.overflowX, style.overflowY].some((value) => value === 'hidden' || value === 'clip')
+            || style.textOverflow === 'ellipsis',
         };
       }));
       const rows = [];
@@ -122,8 +130,13 @@ try {
       }
       console.log(`${width}x${height}: ${rows.map((row) => row.map((chip) => chip.label).join(', ')).join(' | ')}`);
       if (screenshotDir) {
-        await group.screenshot({ path: `${screenshotDir}/day-chips-${width}.png`, scrollIntoView: true });
+        await group.screenshot({ path: `${screenshotDir}/day-chips-${width}.png` });
       }
+      const day15 = await group.$('::-p-xpath(./button[normalize-space(.)="Day 15"])');
+      assert.ok(day15, 'fixture should expose a Day 15 chip');
+      await day15.click();
+      await page.waitForFunction(() =>
+        document.querySelector('[data-ts-day-timeline]')?.textContent.includes('Fixture itinerary for day 15'));
       measurements.push({ width, height, rows, chips });
     } finally {
       await page.close();
@@ -131,16 +144,15 @@ try {
   }
 
   const expectedRows = [];
-  for (let index = 0; index < dayCount; index += 7) {
+  for (let index = 0; index < days.length; index += 7) {
     expectedRows.push(days.slice(index, index + 7).map(({ day_number }) => `Day ${day_number}`));
   }
   for (const { width, height, rows, chips } of measurements) {
     const size = `${width}x${height}`;
     assert.deepEqual(rows.map((row) => row.map(({ label }) => label)), expectedRows, `${size} day chip rows`);
     for (const chip of chips) {
-      assert.ok(chip.visible, `${size} ${chip.label} must fit inside the chip and viewport`);
-      assert.ok(chip.overflow.every((value) => !['hidden', 'clip', 'ellipsis'].includes(value) || value === 'clip' && chip.overflow[2] === value),
-        `${size} ${chip.label} must not use hidden overflow or an ellipsis`);
+      assert.ok(chip.visible, `${size} ${chip.label} must fit inside the chip and viewport. Bounds ${JSON.stringify(chip.bounds)}. Font ${chip.font.join(' ')}`);
+      assert.ok(!chip.clipsText, `${size} ${chip.label} must not use hidden overflow or an ellipsis`);
     }
   }
 } finally {
