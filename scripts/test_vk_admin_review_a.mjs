@@ -64,23 +64,43 @@ function bootstrapPlaywrightForCi() {
   return require(bundled);
 }
 
+function chromiumBinaryReady(mod) {
+  try {
+    const chromePath = mod.chromium.executablePath();
+    if (!existsSync(chromePath)) return false;
+    const chromeFolder = path.basename(path.dirname(path.dirname(chromePath)));
+    const browsersRoot = path.dirname(path.dirname(path.dirname(chromePath)));
+    const shellDir = chromeFolder.replace(/^chromium-/, 'chromium_headless_shell-');
+    const shellExe = path.join(browsersRoot, shellDir, 'chrome-headless-shell-linux64/chrome-headless-shell');
+    return existsSync(shellExe);
+  } catch {
+    return false;
+  }
+}
+
 function loadPlaywright() {
+  if (existsSync(PW_BROWSERS_PATH)) {
+    process.env.PLAYWRIGHT_BROWSERS_PATH = PW_BROWSERS_PATH;
+  }
   for (const candidate of [
+    path.join(PW_PREFIX, 'node_modules/playwright'),
     'playwright',
     'playwright-core',
     path.join(ROOT, 'node_modules/playwright'),
     path.join(os.homedir(), 'tsv-dispatch/capture/node_modules/playwright'),
-    path.join(PW_PREFIX, 'node_modules/playwright'),
     path.join(os.homedir(), '.npm/_npx/e41f203b7505f1fb/node_modules/playwright'),
   ]) {
     const mod = tryRequirePlaywright(candidate);
     if (!mod?.chromium) continue;
     if (candidate.startsWith(PW_PREFIX)) process.env.PLAYWRIGHT_BROWSERS_PATH = PW_BROWSERS_PATH;
-    return mod;
+    if (chromiumBinaryReady(mod)) return mod;
   }
-  return bootstrapPlaywrightForCi();
+  const mod = bootstrapPlaywrightForCi();
+  process.env.PLAYWRIGHT_BROWSERS_PATH = PW_BROWSERS_PATH;
+  return mod;
 }
 const { chromium } = loadPlaywright();
+if (existsSync(PW_BROWSERS_PATH)) process.env.PLAYWRIGHT_BROWSERS_PATH = PW_BROWSERS_PATH;
 
 const fixtures = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/fixtures/vk-admin-review/vacation-fixtures.json'), 'utf8'));
 const roster = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/fixtures/vk-admin-review/roster-catalog.json'), 'utf8'));
