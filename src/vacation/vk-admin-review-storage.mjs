@@ -82,20 +82,23 @@ export async function saveWelcome(store, member, vacation) {
   });
 }
 
-export async function listNotes(store, customerId, vacationId, legacyTripIds) {
-  const notes = await store.listJson(notesPath(customerId, vacationId));
-  const legacy = await Promise.all(legacyTripIds.map(async (tripId) => {
-    const records = await store.listJson(notesPath(null, tripId));
-    return records.map((note) => ({ ...note, vacationId: tripId }));
-  }));
-  return [...notes.map((note) => ({ vacationId, ...note })), ...legacy.flat()]
-    .sort((a, b) => Number(b.kind === 'welcome') - Number(a.kind === 'welcome') || a.at.localeCompare(b.at) || a.id.localeCompare(b.id))
-    .map(presentNote);
+export async function listNotes(store, customerId, vacationId, legacySources) {
+  const paths = new Map([[notesPath(customerId, vacationId), vacationId]]);
+  for (const source of legacySources) {
+    const path = notesPath(source.customerId, source.vacationId);
+    if (!paths.has(path)) paths.set(path, source.vacationId);
+  }
+  const lists = await Promise.all([...paths].map(async ([path, vacationId]) =>
+    (await store.listJson(path)).map((note) => ({ vacationId, ...note }))));
+  const notes = lists.flat().sort((a, b) =>
+    Number(b.kind === 'welcome') - Number(a.kind === 'welcome') || a.at.localeCompare(b.at) || a.id.localeCompare(b.id));
+  return notes.filter((note, index) => note.kind !== 'welcome' || index === 0).map(presentNote);
 }
 
-export async function loadNoteFile(store, customerId, vacationId, legacy, id, index) {
+export async function loadNoteFile(store, customerId, vacationId, legacy, id, index, recordId) {
   if (!uuid.test(id) || !/^\d$/.test(index)) return null;
   const note = await store.getJson(`${notesPath(customerId, vacationId)}/${id}.json`)
+    || (recordId && await store.getJson(`${notesPath(recordId, vacationId)}/${id}.json`))
     || (legacy ? await store.getJson(`${notesPath(null, vacationId)}/${id}.json`) : null);
   const file = note?.attachments?.[Number(index)];
   return file ? Buffer.from(file.data, 'base64') : null;

@@ -9,7 +9,7 @@ window.startVkAdminReview = (() => {
     ['onboarding', 'Onboarding'], ['captures', 'Chat screenshots'], ['vacations', 'All vacations'],
   ];
   const json = (method, body) => ({ method, headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
-  const state = { groups: [], customers: new Map(), opened: [], recent: new Set(), details: new Map(), artifacts: new Map(),
+  const state = { customers: new Map(), opened: [], recent: new Set(), details: new Map(), artifacts: new Map(),
     selection: null, view: 'all', attachments: [], voiceMode: false, voiceArmed: false, sending: false, opening: false };
   let notesRequest = 0;
   let root;
@@ -65,13 +65,10 @@ window.startVkAdminReview = (() => {
   }
 
   function customerList() {
-    return `<div class="admin-customers" data-admin-customers="1">${state.groups.map((group) => {
-      const members = groupMembers(group).filter((member) =>
-        state.customers.get(accountKey(member, group.tripId)).vacations[0].tripId === group.tripId);
-      if (!members.length) return '';
-      const names = members.filter((member) => member.id != null).map((member) => `<li><button class="admin-customer-name" type="button" data-open-account="${safe(accountKey(member, group.tripId))}">${safe(member.customer_label)}</button>${member.test_coupon ? `<small class="admin-coupon">${safe(member.test_coupon)}</small>` : ''}</li>`).join('');
-      const key = accountKey(members[0], group.tripId);
-      return `<section class="admin-group" data-trip-group="${safe(group.tripId)}" data-sort-at="${safe(group.sortAt)}"><header><b>${safe(group.label)}</b><small>${safe(group.destination)} · <time datetime="${safe(group.sortAt)}">${safe(group.sortAt.slice(0, 10))}</time></small></header>${names ? `<ul>${names}</ul>` : ''}<button class="admin-open" type="button" data-vk-open="1" data-customer-id="${safe(group.tripId)}" data-open-account="${safe(key)}" aria-label="Open ${safe(members[0].customer_label)}">${state.recent.has(key) ? 'Opened' : 'Open'}</button></section>`;
+    return `<div class="admin-customers" data-admin-customers="1">${[...state.customers].map(([key, account]) => {
+      const latest = account.vacations[0];
+      const coupon = account.coupon ? `<small class="admin-coupon">${safe(account.coupon)}</small>` : '';
+      return `<section class="admin-group" data-trip-group="${safe(latest.tripId)}" data-sort-at="${safe(latest.sortAt)}"><header><b>${safe(account.name)}</b><small>${safe(latest.destination)} · <time datetime="${safe(latest.sortAt)}">${safe(latest.sortAt.slice(0, 10))}</time></small>${coupon}</header><button class="admin-open" type="button" data-customer-id="${safe(account.id)}" data-open-account="${safe(key)}" aria-label="Open ${safe(account.name)}">${state.recent.has(key) ? 'Opened' : 'Open'}</button></section>`;
     }).join('')}</div>`;
   }
 
@@ -96,6 +93,9 @@ window.startVkAdminReview = (() => {
     const turns = (vac.turns || []).map((turn, index) => {
       if (turn.speaker === 'system' || turn.direction === 'system') return '';
       const detail = vac.replyDetails?.[index];
+      if (detail && turn.fixedOpener === true && !detail.model && !detail.priced) {
+        return `${turnMarkup(turn)}<p class="admin-reply-detail"><strong>Opening greeting (no model, no cost)</strong></p>`;
+      }
       const meta = detail ? `<p class="admin-reply-detail"><strong>${safe(detail.model || 'Model unavailable')}</strong> · ${detail.priced ? costLines(detail.costs) : '<span data-cost="unpriced">unpriced</span>'}</p>` : '';
       return `${turnMarkup(turn)}${meta}`;
     }).join('');
@@ -265,12 +265,14 @@ window.startVkAdminReview = (() => {
     return refresh();
   }
 
-  function indexCustomers() {
+  function indexCustomers(groups) {
     state.customers.clear();
-    for (const group of state.groups) {
+    for (const group of groups) {
       for (const member of groupMembers(group)) {
         const key = accountKey(member, group.tripId);
-        if (!state.customers.has(key)) state.customers.set(key, { id: member.id, name: member.customer_label, vacations: [] });
+        if (!state.customers.has(key)) {
+          state.customers.set(key, { id: member.id, name: member.customer_label, coupon: member.test_coupon, vacations: [] });
+        }
         state.customers.get(key).vacations.push(group);
       }
       if (state.opened.includes(group.tripId)) state.recent.add(accountKey(groupMembers(group)[0], group.tripId));
@@ -282,9 +284,8 @@ window.startVkAdminReview = (() => {
     if (res.status === 401) return renderGate();
     if (res.status === 503) return renderGate('Admin sign-in is not configured here.');
     if (!res.ok) return renderGate('Admin review is not available.');
-    state.groups = data.groups || [];
     state.opened = data.opened || [];
-    indexCustomers();
+    indexCustomers(data.groups || []);
     const selection = history.state?.vkAdminSelection;
     const finish = state.opened.includes(selection?.tripId)
       && state.customers.get(selection.key)?.vacations.some((vac) => vac.tripId === selection.tripId);
