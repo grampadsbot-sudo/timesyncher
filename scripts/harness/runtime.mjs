@@ -279,7 +279,7 @@ export function liveOptions(env = process.env) {
       const { played, adminArtifacts, dialog, transcript } = await playWithAdminArtifacts({
         origin, token: created.token, tripId: created.tripId, outDir: options.outDir, secrets, fetchImpl,
         replyBackend: story.reply_backend, put: putArtifact,
-        loadTranscript: () => storedLiveTranscript(db, created.token),
+        loadTranscript: async () => await storedLiveTranscript(db, created.token),
         play: (afterCustomerTurn) => playCustomerTurns(story, {
           origin,
           token: created.token,
@@ -296,9 +296,7 @@ export function liveOptions(env = process.env) {
       });
       const tripId = played.tripId || created.tripId;
       const shareToken = played.shareToken || created.shareToken;
-      const saveKeepsake = () => storeHarnessKeepsake({
-        origin, tripId, shareToken, fetchImpl, outDir: options.outDir, put: putArtifact, adminArtifacts,
-      });
+      const keepsakeOptions = { origin, tripId, shareToken, fetchImpl, outDir: options.outDir, put: putArtifact, adminArtifacts };
       const base = {
         ...played,
         adminArtifacts,
@@ -321,7 +319,7 @@ export function liveOptions(env = process.env) {
         ...onboardingFields(),
       };
       if (played.reason) {
-        const keepsake = !chatLeftNoThing(played) ? await saveKeepsake() : null;
+        const keepsake = !chatLeftNoThing(played) ? await storeHarnessKeepsake(keepsakeOptions) : null;
         return writeOutcomes(options.outDir, {
           ...base,
           tripId,
@@ -374,7 +372,7 @@ export function liveOptions(env = process.env) {
       }
       const attachment = await attachMedia({ origin, shareToken, story, fetchImpl, env: ready });
       const video = await writeVideoCheck({ origin, attachment, fetchImpl, outDir: options.outDir });
-      const keepsake = await saveKeepsake();
+      const keepsake = await storeHarnessKeepsake(keepsakeOptions);
       const screens = await captureScreens({ origin, shareToken, sessionToken: created.token, outDir: options.outDir });
       try {
         onboard = await rebuildCustomerPdf(onboard, screens.files || []);

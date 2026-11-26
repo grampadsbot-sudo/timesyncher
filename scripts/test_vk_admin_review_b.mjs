@@ -381,8 +381,9 @@ try {
   assert.equal(failed.adminArtifacts.dialogPdf, true);
   assert.deepEqual(failed.adminArtifacts.captures, [1, 2]);
   assert.deepEqual(failed.adminArtifacts.errors, []);
-  writeOutcomes(failed.outDir, failed);
+  writeOutcomes(failed.outDir, { ...failed.played, tripId: other, adminArtifacts: failed.adminArtifacts });
   const failedOutcomes = JSON.parse(await fs.readFile(path.join(failed.outDir, 'outcomes.json'), 'utf8'));
+  assert.equal(failedOutcomes.reason, 'harness-error');
   assert.deepEqual(failedOutcomes.adminArtifacts.httpFailures, [{ failure: 'turn-1-capture-or-upload-failed', operation: 'put', status: 503 }]);
   assert.deepEqual(await readArtifact(other), { ok: true, turns: [1, 2], dialogPdf: true, keepsakePdf: false, review: null });
   assert.match(extractPdfText(await readArtifact(other, 'dialog-pdf')), /Stored customer message with no reply/);
