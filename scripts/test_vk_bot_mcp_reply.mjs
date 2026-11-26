@@ -9,6 +9,7 @@ import {
   sumTurnCost,
 } from '../src/vacation/turn-cost.mjs';
 import { callVkBotMcp, routeVkBotMcpReply, sessionReplyBackend } from '../src/vacation/vk-bot-mcp-reply.mjs';
+import { OPENROUTER_CHAT_COMPLETIONS_URL } from './vacation-app-reply-rules.mjs';
 
 const MCP = 'http://127.0.0.1:9/v1/mcp';
 const env = {
@@ -163,7 +164,7 @@ async function verifyTurn110(mcpEnabled) {
         assert.ok(request.params.arguments.message.includes(turn110));
         return rpc({ status: 'done', reply: inviteClaim, model: 'vk-intake' });
       }
-      if (String(url) === 'https://openrouter.ai/api/v1/chat/completions' && !mcpEnabled && draftCalls === 0) {
+      if (String(url) === OPENROUTER_CHAT_COMPLETIONS_URL && !mcpEnabled && draftCalls === 0) {
         draftCalls += 1;
         assert.ok(JSON.stringify(request.messages).includes(turn110));
         return Response.json({
