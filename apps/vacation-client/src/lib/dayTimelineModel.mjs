@@ -64,7 +64,7 @@ export function parseClockToMinutes(clock) {
   if (meridiem === 'am' && hours === 12) hours = 0;
   return hours * 60 + minutes;
 }
-export function formatClockMinutes(totalMinutes) {
+function formatClockMinutes(totalMinutes) {
   if (totalMinutes == null || !Number.isFinite(totalMinutes)) return '';
   const normalized = ((Math.round(totalMinutes) % (24 * 60)) + 24 * 60) % (24 * 60);
   const hours24 = Math.floor(normalized / 60);
@@ -497,7 +497,7 @@ export function shiftDayIndex(trip, currentIndex, delta) {
   return next;
 }
 
-export function timeRangeLabel(entry) {
+function timeRangeLabel(entry) {
   if (entry.kind === 'travel') {
     return entry.travelMinutes != null ? `${entry.travelMinutes} min travel` : 'Travel';
   }

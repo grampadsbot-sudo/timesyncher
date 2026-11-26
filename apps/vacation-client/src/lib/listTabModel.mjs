@@ -9,7 +9,7 @@ import { productThingCategory } from '../../../../src/vacation/keepsake-product-
 
 export const LIST_TAB_IDS = ['flights', 'hotels', 'cars', 'restaurants', 'stores', 'events'];
 
-export const DEFAULT_SORT = { key: 'name', dir: 'asc' };
+const DEFAULT_SORT = { key: 'name', dir: 'asc' };
 
 function text(value) {
   return String(value ?? '').trim();
@@ -291,7 +291,7 @@ export function emptyStateMessage(tab, { categoryCount, filterActive }) {
   return 'No items match this filter.';
 }
 
-export function fareDirectionLabel(override = {}) {
+function fareDirectionLabel(override = {}) {
   const raw = text(override.fareDirection || override.tripType || override.pricingType).toLowerCase();
   if (raw.includes('round')) return 'round trip';
   if (raw.includes('one')) return 'one-way';

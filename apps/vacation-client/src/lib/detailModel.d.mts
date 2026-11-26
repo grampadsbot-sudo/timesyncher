@@ -1,23 +1,12 @@
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 
-export function detailCategoryKey(place: SharedPlace, trip: SharedTripPayload): string;
-export function detailCategoryLabel(category: string): string;
 export function detailCoordinates(
   place: SharedPlace,
   trip: SharedTripPayload,
 ): { lat: number; lng: number } | null;
-export function detailReviewTotals(override: Record<string, unknown>): {
-  count: number;
-  average: number;
-  histogram: number[];
-  sources: string[];
-} | null;
 export function detailReviewTotalsLine(override: Record<string, unknown>): string;
-export function detailHeaderLabel(categoryLabel: string, source: string): string;
 export function detailSummary(place: SharedPlace, trip: SharedTripPayload): string;
-export function detailItineraryNote(place: SharedPlace, trip: SharedTripPayload): string;
 export function detailHappyHour(override: Record<string, unknown>): string;
-export function detailPriceLabel(place: SharedPlace, trip: SharedTripPayload, category: string): string;
 export function detailRatingLines(
   override: Record<string, unknown>,
 ): Array<{ id: string; value: number; caption?: string }>;
@@ -31,7 +20,6 @@ export function detailReviews(
   source?: string;
   compositeLabel?: string;
 }>;
-export function detailSummarySourceUrls(override: Record<string, unknown>): string[];
 export function detailFieldRows(
   place: SharedPlace,
   trip: SharedTripPayload,

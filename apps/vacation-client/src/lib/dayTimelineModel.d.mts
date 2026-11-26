@@ -4,7 +4,6 @@ export function sortedDays(trip: SharedTripPayload): SharedDay[];
 export function dayChipLabel(day: SharedDay): string;
 export function parseDurationMinutes(raw: unknown): number | null;
 export function parseClockToMinutes(clock: string): number | null;
-export function formatClockMinutes(totalMinutes: number): string;
 export function estimateTravelMinutes(fromPlace: SharedPlace, toPlace: SharedPlace): number;
 export function itineraryNoteFor(
   place: SharedPlace,
@@ -33,7 +32,6 @@ export function mapPlacesForTimeline(
   entries: TimelineEntry[],
 ): SharedPlace[];
 export function shiftDayIndex(trip: SharedTripPayload, currentIndex: number, delta: number): number;
-export function timeRangeLabel(entry: TimelineEntry): string;
 
 export function mediaForPlace(trip: SharedTripPayload, place: SharedPlace): Array<{
   kind?: string;

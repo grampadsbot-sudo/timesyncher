@@ -21,7 +21,7 @@ function mediaBlob(row = {}) {
     .join(' ');
 }
 
-export function isKeepsakeJunkMedia(row = {}) {
+function isKeepsakeJunkMedia(row = {}) {
   return JUNK_RE.test(mediaBlob(row));
 }
 
@@ -56,7 +56,7 @@ export function mediaPrintSrc(row = {}) {
   );
 }
 
-export function normalizeMediaRows(rows) {
+function normalizeMediaRows(rows) {
   if (!Array.isArray(rows)) return [];
   return rows.filter((row) => row && typeof row === 'object' && !isKeepsakeJunkMedia(row));
 }

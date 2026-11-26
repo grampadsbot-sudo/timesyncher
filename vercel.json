@@ -38,6 +38,10 @@
       "dest": "/api/[...route]?...route=pdf&keepsakePdf=1&shareToken=$1&report=$2"
     },
     {
+      "src": "/vacation-app/admin/?",
+      "dest": "/api/[...route]?...route=admin&adminPage=1"
+    },
+    {
       "src": "/shared/?",
       "dest": "/vacation-app.html"
     },
@@ -69,7 +73,7 @@
   "functions": {
     "api/[...route].mjs": {
       "maxDuration": 60,
-      "includeFiles": "{scripts/vacation-app-reply-rules-snapshot.json,content/onboarding-welcome.json,dialog-runners/tier_models.json,scripts/fixtures/vk-search-census/results/*.json,config/chat-itinerary-edit-trips.json}"
+      "includeFiles": "{scripts/vacation-app-reply-rules-snapshot.json,content/onboarding-welcome.json,dialog-runners/tier_models.json,scripts/fixtures/vk-search-census/results/*.json,scripts/fixtures/vk-admin-review/*.json,config/chat-itinerary-edit-trips.json}"
     }
   },
   "headers": [

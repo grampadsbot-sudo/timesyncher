@@ -11,12 +11,10 @@ export function budgetLineAmount(
 export function bucketTargetAmount(trip: SharedTripPayload, bucket: string): number | null;
 export function tripBudgetTargetTotal(trip: SharedTripPayload): number | null;
 export function placesForBudget(trip: SharedTripPayload): SharedPlace[];
-export function canonicalBudgetPlace(trip: SharedTripPayload, placeOrId: SharedPlace | string | number): SharedPlace | null;
 export function bucketDisplayLabel(bucket: string): string;
 export function bucketIcon(bucket: string): string;
 export function formatUsd(amount: number, currency?: string): string;
 export function formatBudgetTarget(target: number | null, currency?: string): string;
-export function varianceLabel(planned: number, target: number | null, currency?: string): string | null;
 
 export type BudgetRow = {
   place: SharedPlace;

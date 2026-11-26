@@ -1,0 +1,705 @@
+{
+  "count": 100,
+  "customers": [
+    {
+      "id": 1,
+      "customer_label": "Lopez family",
+      "destination": "Orlando theme parks",
+      "test_coupon": "VK-TEST-001",
+      "tripId": "vk-fixture-trip-001"
+    },
+    {
+      "id": 2,
+      "customer_label": "Kowalski family",
+      "destination": "Orlando theme parks",
+      "test_coupon": "VK-TEST-002",
+      "tripId": "vk-fixture-trip-001"
+    },
+    {
+      "id": 3,
+      "customer_label": "Patel family",
+      "destination": "Orlando theme parks",
+      "test_coupon": "VK-TEST-003",
+      "tripId": "vk-fixture-trip-001"
+    },
+    {
+      "id": 4,
+      "customer_label": "Benson family",
+      "destination": "Orlando theme parks",
+      "test_coupon": "VK-TEST-004",
+      "tripId": "vk-fixture-trip-001"
+    },
+    {
+      "id": 5,
+      "customer_label": "Chavez family",
+      "destination": "Anaheim theme parks",
+      "test_coupon": "VK-TEST-005",
+      "tripId": "vk-fixture-trip-002"
+    },
+    {
+      "id": 6,
+      "customer_label": "Nguyen family",
+      "destination": "Anaheim theme parks",
+      "test_coupon": "VK-TEST-006",
+      "tripId": "vk-fixture-trip-002"
+    },
+    {
+      "id": 7,
+      "customer_label": "Harrison family",
+      "destination": "New York City",
+      "test_coupon": "VK-TEST-007",
+      "tripId": "vk-fixture-trip-003"
+    },
+    {
+      "id": 8,
+      "customer_label": "Brooks family",
+      "destination": "New York City",
+      "test_coupon": "VK-TEST-008",
+      "tripId": "vk-fixture-trip-003"
+    },
+    {
+      "id": 9,
+      "customer_label": "Alvarez couple",
+      "destination": "New York City",
+      "test_coupon": "VK-TEST-009",
+      "tripId": "vk-fixture-trip-003"
+    },
+    {
+      "id": 10,
+      "customer_label": "Tanner friends group",
+      "destination": "Las Vegas",
+      "test_coupon": "VK-TEST-010",
+      "tripId": "vk-fixture-trip-004"
+    },
+    {
+      "id": 11,
+      "customer_label": "Gomez couple",
+      "destination": "Las Vegas",
+      "test_coupon": "VK-TEST-011",
+      "tripId": "vk-fixture-trip-004"
+    },
+    {
+      "id": 12,
+      "customer_label": "Whitaker family",
+      "destination": "Las Vegas",
+      "test_coupon": "VK-TEST-012",
+      "tripId": "vk-fixture-trip-004"
+    },
+    {
+      "id": 13,
+      "customer_label": "Okafor family",
+      "destination": "Washington, DC",
+      "test_coupon": "VK-TEST-013",
+      "tripId": "vk-fixture-trip-005"
+    },
+    {
+      "id": 14,
+      "customer_label": "Snyder family",
+      "destination": "Washington, DC",
+      "test_coupon": "VK-TEST-014",
+      "tripId": "vk-fixture-trip-005"
+    },
+    {
+      "id": 15,
+      "customer_label": "Kim family",
+      "destination": "Washington, DC",
+      "test_coupon": "VK-TEST-015",
+      "tripId": "vk-fixture-trip-005"
+    },
+    {
+      "id": 16,
+      "customer_label": "Ramirez family",
+      "destination": "San Diego",
+      "test_coupon": "VK-TEST-016",
+      "tripId": "vk-fixture-trip-006"
+    },
+    {
+      "id": 17,
+      "customer_label": "Delgado family",
+      "destination": "San Diego",
+      "test_coupon": "VK-TEST-017",
+      "tripId": "vk-fixture-trip-006"
+    },
+    {
+      "id": 18,
+      "customer_label": "Clark couple",
+      "destination": "San Diego",
+      "test_coupon": "VK-TEST-018",
+      "tripId": "vk-fixture-trip-006"
+    },
+    {
+      "id": 19,
+      "customer_label": "Murphy family",
+      "destination": "Chicago",
+      "test_coupon": "VK-TEST-019",
+      "tripId": "vk-fixture-trip-007"
+    },
+    {
+      "id": 20,
+      "customer_label": "Keller friends group",
+      "destination": "Chicago",
+      "test_coupon": "VK-TEST-020",
+      "tripId": "vk-fixture-trip-007"
+    },
+    {
+      "id": 21,
+      "customer_label": "Singh family",
+      "destination": "Chicago",
+      "test_coupon": "VK-TEST-021",
+      "tripId": "vk-fixture-trip-007"
+    },
+    {
+      "id": 22,
+      "customer_label": "Fletcher family",
+      "destination": "Honolulu, Oahu",
+      "test_coupon": "VK-TEST-022",
+      "tripId": "vk-fixture-trip-008"
+    },
+    {
+      "id": 23,
+      "customer_label": "Nakamura family",
+      "destination": "Honolulu, Oahu",
+      "test_coupon": "VK-TEST-023",
+      "tripId": "vk-fixture-trip-008"
+    },
+    {
+      "id": 24,
+      "customer_label": "Doyle couple",
+      "destination": "Maui",
+      "test_coupon": "VK-TEST-024",
+      "tripId": "vk-fixture-trip-009"
+    },
+    {
+      "id": 25,
+      "customer_label": "Vargas family",
+      "destination": "Maui",
+      "test_coupon": "VK-TEST-025",
+      "tripId": "vk-fixture-trip-009"
+    },
+    {
+      "id": 26,
+      "customer_label": "Sorensen couple",
+      "destination": "Kauai",
+      "test_coupon": "VK-TEST-026",
+      "tripId": "vk-fixture-trip-010"
+    },
+    {
+      "id": 27,
+      "customer_label": "Castillo family",
+      "destination": "Los Angeles",
+      "test_coupon": "VK-TEST-027",
+      "tripId": "vk-fixture-trip-011"
+    },
+    {
+      "id": 28,
+      "customer_label": "Greenberg family",
+      "destination": "Los Angeles",
+      "test_coupon": "VK-TEST-028",
+      "tripId": "vk-fixture-trip-011"
+    },
+    {
+      "id": 29,
+      "customer_label": "Wallace family",
+      "destination": "San Francisco",
+      "test_coupon": "VK-TEST-029",
+      "tripId": "vk-fixture-trip-012"
+    },
+    {
+      "id": 30,
+      "customer_label": "Raman family",
+      "destination": "San Francisco",
+      "test_coupon": "VK-TEST-030",
+      "tripId": "vk-fixture-trip-012"
+    },
+    {
+      "id": 31,
+      "customer_label": "Morales family",
+      "destination": "Miami",
+      "test_coupon": "VK-TEST-031",
+      "tripId": "vk-fixture-trip-013"
+    },
+    {
+      "id": 32,
+      "customer_label": "Bates friends group",
+      "destination": "Miami",
+      "test_coupon": "VK-TEST-032",
+      "tripId": "vk-fixture-trip-013"
+    },
+    {
+      "id": 33,
+      "customer_label": "Sullivan family",
+      "destination": "Boston",
+      "test_coupon": "VK-TEST-033",
+      "tripId": "vk-fixture-trip-014"
+    },
+    {
+      "id": 34,
+      "customer_label": "Horton family",
+      "destination": "Boston",
+      "test_coupon": "VK-TEST-034",
+      "tripId": "vk-fixture-trip-014"
+    },
+    {
+      "id": 35,
+      "customer_label": "Lindholm family",
+      "destination": "Seattle",
+      "test_coupon": "VK-TEST-035",
+      "tripId": "vk-fixture-trip-015"
+    },
+    {
+      "id": 36,
+      "customer_label": "Reed couple",
+      "destination": "Seattle",
+      "test_coupon": "VK-TEST-036",
+      "tripId": "vk-fixture-trip-015"
+    },
+    {
+      "id": 37,
+      "customer_label": "Boudreaux couple",
+      "destination": "New Orleans",
+      "test_coupon": "VK-TEST-037",
+      "tripId": "vk-fixture-trip-016"
+    },
+    {
+      "id": 38,
+      "customer_label": "Hensley friends group",
+      "destination": "New Orleans",
+      "test_coupon": "VK-TEST-038",
+      "tripId": "vk-fixture-trip-016"
+    },
+    {
+      "id": 39,
+      "customer_label": "Caldwell friends group",
+      "destination": "Nashville",
+      "test_coupon": "VK-TEST-039",
+      "tripId": "vk-fixture-trip-017"
+    },
+    {
+      "id": 40,
+      "customer_label": "Boone family",
+      "destination": "Nashville",
+      "test_coupon": "VK-TEST-040",
+      "tripId": "vk-fixture-trip-017"
+    },
+    {
+      "id": 41,
+      "customer_label": "Estrada friends group",
+      "destination": "Austin",
+      "test_coupon": "VK-TEST-041",
+      "tripId": "vk-fixture-trip-018"
+    },
+    {
+      "id": 42,
+      "customer_label": "Garrett family",
+      "destination": "Austin",
+      "test_coupon": "VK-TEST-042",
+      "tripId": "vk-fixture-trip-018"
+    },
+    {
+      "id": 43,
+      "customer_label": "Salazar family",
+      "destination": "San Antonio",
+      "test_coupon": "VK-TEST-043",
+      "tripId": "vk-fixture-trip-019"
+    },
+    {
+      "id": 44,
+      "customer_label": "Pruitt family",
+      "destination": "San Antonio",
+      "test_coupon": "VK-TEST-044",
+      "tripId": "vk-fixture-trip-019"
+    },
+    {
+      "id": 45,
+      "customer_label": "Kramer family",
+      "destination": "Denver",
+      "test_coupon": "VK-TEST-045",
+      "tripId": "vk-fixture-trip-020"
+    },
+    {
+      "id": 46,
+      "customer_label": "Nolan couple",
+      "destination": "Denver",
+      "test_coupon": "VK-TEST-046",
+      "tripId": "vk-fixture-trip-020"
+    },
+    {
+      "id": 47,
+      "customer_label": "Dixon family",
+      "destination": "Atlanta",
+      "test_coupon": "VK-TEST-047",
+      "tripId": "vk-fixture-trip-021"
+    },
+    {
+      "id": 48,
+      "customer_label": "Mancini family",
+      "destination": "Philadelphia",
+      "test_coupon": "VK-TEST-048",
+      "tripId": "vk-fixture-trip-022"
+    },
+    {
+      "id": 49,
+      "customer_label": "Whitmore couple",
+      "destination": "Charleston",
+      "test_coupon": "VK-TEST-049",
+      "tripId": "vk-fixture-trip-023"
+    },
+    {
+      "id": 50,
+      "customer_label": "Granger family",
+      "destination": "Charleston",
+      "test_coupon": "VK-TEST-050",
+      "tripId": "vk-fixture-trip-023"
+    },
+    {
+      "id": 51,
+      "customer_label": "Tate couple",
+      "destination": "Savannah",
+      "test_coupon": "VK-TEST-051",
+      "tripId": "vk-fixture-trip-024"
+    },
+    {
+      "id": 52,
+      "customer_label": "Cunningham family",
+      "destination": "Phoenix and Scottsdale",
+      "test_coupon": "VK-TEST-052",
+      "tripId": "vk-fixture-trip-025"
+    },
+    {
+      "id": 53,
+      "customer_label": "Morales-Vega family",
+      "destination": "Santa Fe",
+      "test_coupon": "VK-TEST-053",
+      "tripId": "vk-fixture-trip-026"
+    },
+    {
+      "id": 54,
+      "customer_label": "Beckett friends group",
+      "destination": "Portland",
+      "test_coupon": "VK-TEST-054",
+      "tripId": "vk-fixture-trip-027"
+    },
+    {
+      "id": 55,
+      "customer_label": "Olson family",
+      "destination": "Minneapolis",
+      "test_coupon": "VK-TEST-055",
+      "tripId": "vk-fixture-trip-028"
+    },
+    {
+      "id": 56,
+      "customer_label": "Navarro family",
+      "destination": "Dallas",
+      "test_coupon": "VK-TEST-056",
+      "tripId": "vk-fixture-trip-029"
+    },
+    {
+      "id": 57,
+      "customer_label": "Franklin family",
+      "destination": "Houston",
+      "test_coupon": "VK-TEST-057",
+      "tripId": "vk-fixture-trip-030"
+    },
+    {
+      "id": 58,
+      "customer_label": "Jensen family",
+      "destination": "Salt Lake City",
+      "test_coupon": "VK-TEST-058",
+      "tripId": "vk-fixture-trip-031"
+    },
+    {
+      "id": 59,
+      "customer_label": "McAllister family",
+      "destination": "Anchorage",
+      "test_coupon": "VK-TEST-059",
+      "tripId": "vk-fixture-trip-032"
+    },
+    {
+      "id": 60,
+      "customer_label": "Petersen family",
+      "destination": "Yellowstone National Park",
+      "test_coupon": "VK-TEST-060",
+      "tripId": "vk-fixture-trip-033"
+    },
+    {
+      "id": 61,
+      "customer_label": "Reyes family",
+      "destination": "Grand Canyon National Park",
+      "test_coupon": "VK-TEST-061",
+      "tripId": "vk-fixture-trip-034"
+    },
+    {
+      "id": 62,
+      "customer_label": "Chang family",
+      "destination": "Yosemite National Park",
+      "test_coupon": "VK-TEST-062",
+      "tripId": "vk-fixture-trip-035"
+    },
+    {
+      "id": 63,
+      "customer_label": "Holloway family",
+      "destination": "Great Smoky Mountains National Park",
+      "test_coupon": "VK-TEST-063",
+      "tripId": "vk-fixture-trip-036"
+    },
+    {
+      "id": 64,
+      "customer_label": "Dalton friends group",
+      "destination": "Zion National Park",
+      "test_coupon": "VK-TEST-064",
+      "tripId": "vk-fixture-trip-037"
+    },
+    {
+      "id": 65,
+      "customer_label": "Kerrigan family",
+      "destination": "Glacier National Park",
+      "test_coupon": "VK-TEST-065",
+      "tripId": "vk-fixture-trip-038"
+    },
+    {
+      "id": 66,
+      "customer_label": "Boucher family",
+      "destination": "Acadia National Park",
+      "test_coupon": "VK-TEST-066",
+      "tripId": "vk-fixture-trip-039"
+    },
+    {
+      "id": 67,
+      "customer_label": "Sutton family",
+      "destination": "Rocky Mountain National Park",
+      "test_coupon": "VK-TEST-067",
+      "tripId": "vk-fixture-trip-040"
+    },
+    {
+      "id": 68,
+      "customer_label": "Halvorsen couple",
+      "destination": "Grand Teton National Park",
+      "test_coupon": "VK-TEST-068",
+      "tripId": "vk-fixture-trip-041"
+    },
+    {
+      "id": 69,
+      "customer_label": "Mendoza family",
+      "destination": "Arches and Bryce Canyon National Parks",
+      "test_coupon": "VK-TEST-069",
+      "tripId": "vk-fixture-trip-042"
+    },
+    {
+      "id": 70,
+      "customer_label": "Cho family",
+      "destination": "Olympic National Park",
+      "test_coupon": "VK-TEST-070",
+      "tripId": "vk-fixture-trip-043"
+    },
+    {
+      "id": 71,
+      "customer_label": "Vaughn couple",
+      "destination": "Joshua Tree National Park",
+      "test_coupon": "VK-TEST-071",
+      "tripId": "vk-fixture-trip-044"
+    },
+    {
+      "id": 72,
+      "customer_label": "Delaney family",
+      "destination": "Everglades National Park",
+      "test_coupon": "VK-TEST-072",
+      "tripId": "vk-fixture-trip-045"
+    },
+    {
+      "id": 73,
+      "customer_label": "Kemp family",
+      "destination": "Shenandoah National Park",
+      "test_coupon": "VK-TEST-073",
+      "tripId": "vk-fixture-trip-046"
+    },
+    {
+      "id": 74,
+      "customer_label": "Barker family",
+      "destination": "Myrtle Beach",
+      "test_coupon": "VK-TEST-074",
+      "tripId": "vk-fixture-trip-047"
+    },
+    {
+      "id": 75,
+      "customer_label": "Callahan family",
+      "destination": "Outer Banks",
+      "test_coupon": "VK-TEST-075",
+      "tripId": "vk-fixture-trip-048"
+    },
+    {
+      "id": 76,
+      "customer_label": "Parrish family",
+      "destination": "Destin",
+      "test_coupon": "VK-TEST-076",
+      "tripId": "vk-fixture-trip-049"
+    },
+    {
+      "id": 77,
+      "customer_label": "Mercer couple",
+      "destination": "Key West",
+      "test_coupon": "VK-TEST-077",
+      "tripId": "vk-fixture-trip-050"
+    },
+    {
+      "id": 78,
+      "customer_label": "Galloway family",
+      "destination": "Clearwater Beach",
+      "test_coupon": "VK-TEST-078",
+      "tripId": "vk-fixture-trip-051"
+    },
+    {
+      "id": 79,
+      "customer_label": "McCarthy family",
+      "destination": "Cape Cod",
+      "test_coupon": "VK-TEST-079",
+      "tripId": "vk-fixture-trip-052"
+    },
+    {
+      "id": 80,
+      "customer_label": "Ainsworth family",
+      "destination": "Hilton Head Island",
+      "test_coupon": "VK-TEST-080",
+      "tripId": "vk-fixture-trip-053"
+    },
+    {
+      "id": 81,
+      "customer_label": "Davenport family",
+      "destination": "Virginia Beach",
+      "test_coupon": "VK-TEST-081",
+      "tripId": "vk-fixture-trip-054"
+    },
+    {
+      "id": 82,
+      "customer_label": "Foley family",
+      "destination": "Gulf Shores",
+      "test_coupon": "VK-TEST-082",
+      "tripId": "vk-fixture-trip-055"
+    },
+    {
+      "id": 83,
+      "customer_label": "Bradford family",
+      "destination": "Lake Tahoe",
+      "test_coupon": "VK-TEST-083",
+      "tripId": "vk-fixture-trip-056"
+    },
+    {
+      "id": 84,
+      "customer_label": "Sampson couple",
+      "destination": "Sedona",
+      "test_coupon": "VK-TEST-084",
+      "tripId": "vk-fixture-trip-057"
+    },
+    {
+      "id": 85,
+      "customer_label": "Whitfield family",
+      "destination": "London",
+      "test_coupon": "VK-TEST-085",
+      "tripId": "vk-fixture-trip-058"
+    },
+    {
+      "id": 86,
+      "customer_label": "Donovan couple",
+      "destination": "Edinburgh",
+      "test_coupon": "VK-TEST-086",
+      "tripId": "vk-fixture-trip-059"
+    },
+    {
+      "id": 87,
+      "customer_label": "Ashford family",
+      "destination": "Bath and the Cotswolds",
+      "test_coupon": "VK-TEST-087",
+      "tripId": "vk-fixture-trip-060"
+    },
+    {
+      "id": 88,
+      "customer_label": "Bennett family",
+      "destination": "York",
+      "test_coupon": "VK-TEST-088",
+      "tripId": "vk-fixture-trip-061"
+    },
+    {
+      "id": 89,
+      "customer_label": "Hargreaves family",
+      "destination": "Lake District",
+      "test_coupon": "VK-TEST-089",
+      "tripId": "vk-fixture-trip-062"
+    },
+    {
+      "id": 90,
+      "customer_label": "Tremblay-Ortiz family",
+      "destination": "Vancouver",
+      "test_coupon": "VK-TEST-090",
+      "tripId": "vk-fixture-trip-063"
+    },
+    {
+      "id": 91,
+      "customer_label": "Schaefer family",
+      "destination": "Toronto",
+      "test_coupon": "VK-TEST-091",
+      "tripId": "vk-fixture-trip-064"
+    },
+    {
+      "id": 92,
+      "customer_label": "Haddad friends group",
+      "destination": "Banff",
+      "test_coupon": "VK-TEST-092",
+      "tripId": "vk-fixture-trip-065"
+    },
+    {
+      "id": 93,
+      "customer_label": "Bianchi family",
+      "destination": "Montreal",
+      "test_coupon": "VK-TEST-093",
+      "tripId": "vk-fixture-trip-066"
+    },
+    {
+      "id": 94,
+      "customer_label": "Gallagher family",
+      "destination": "Dublin",
+      "test_coupon": "VK-TEST-094",
+      "tripId": "vk-fixture-trip-067"
+    },
+    {
+      "id": 95,
+      "customer_label": "Kavanagh friends group",
+      "destination": "Galway",
+      "test_coupon": "VK-TEST-095",
+      "tripId": "vk-fixture-trip-068"
+    },
+    {
+      "id": 96,
+      "customer_label": "Fitzpatrick friends group",
+      "destination": "Killarney",
+      "test_coupon": "VK-TEST-096",
+      "tripId": "vk-fixture-trip-069"
+    },
+    {
+      "id": 97,
+      "customer_label": "Lawson family",
+      "destination": "Sydney",
+      "test_coupon": "VK-TEST-097",
+      "tripId": "vk-fixture-trip-070"
+    },
+    {
+      "id": 98,
+      "customer_label": "Chambers couple",
+      "destination": "Melbourne",
+      "test_coupon": "VK-TEST-098",
+      "tripId": "vk-fixture-trip-071"
+    },
+    {
+      "id": 99,
+      "customer_label": "Thornton friends group",
+      "destination": "Queenstown",
+      "test_coupon": "VK-TEST-099",
+      "tripId": "vk-fixture-trip-072"
+    },
+    {
+      "id": 100,
+      "customer_label": "Rutherford family",
+      "destination": "Auckland",
+      "test_coupon": "VK-TEST-100",
+      "tripId": "vk-fixture-trip-073"
+    }
+  ]
+}

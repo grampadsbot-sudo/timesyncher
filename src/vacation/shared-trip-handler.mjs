@@ -15,6 +15,7 @@ import { scheduleMissingEvidenceCapturesForTrip } from './thing-evidence-capture
 import { finalizeServedSharedTripPayload, projectServedBoundaryLogosForHttp } from './shared-trip-served-page.mjs';
 import { mergeBindingsIntoShared } from './thing-media-bind.mjs';
 import { sharedTripEditAccessFromRequest } from './web-access.mjs';
+import { buildVkAdminSharedTrip, vkAdminFixtureShareSlug } from './vk-admin-fixtures.mjs';
 
 let sharedTripDatabase = null;
 
@@ -306,6 +307,7 @@ async function respondSharedTripGet(req, res, shareToken) {
 }
 
 export async function loadSharedTripPayload(shareToken, req = null) {
+  if (vkAdminFixtureShareSlug(shareToken)) return sharedTripPayloadForHttp(buildVkAdminSharedTrip(shareToken));
   const local = await intakeSharedResponse(shareToken);
   if (local) return sharedTripPayloadForHttp(local);
   if (String(shareToken || '').startsWith('intake-')) return null;
@@ -329,6 +331,14 @@ function trekUpstreamBase() {
     throw error;
   }
   return base;
+}
+
+function respondVkAdminFixture(req, res, trekPath, shareToken) {
+  if (isShareEditAccess(req.method, trekPath)) return sendJson(res, 200, { canEdit: false, role: 'viewer' });
+  if (req.method !== 'GET' && req.method !== 'HEAD') return sendJson(res, 403, { ok: false, code: 'admin_view_only' });
+  if (!isSharedTripGet(req.method, trekPath)) return sendJson(res, 404, { ok: false, code: 'not_found' });
+  const payload = buildVkAdminSharedTrip(shareToken);
+  return payload ? sendSharedTripPayload(res, 200, payload) : sendSlugMiss(res, shareToken);
 }
 
 async function respondShareEditAccess(req, res, shareToken) {
@@ -378,6 +388,7 @@ async function proxyConfiguredUpstream(req, res, trekPath) {
 export default async function handler(req, res) {
   const trekPath = trekPathFromReq(req);
   const shareToken = shareTokenFromTrekPath(trekPath);
+  if (vkAdminFixtureShareSlug(shareToken)) return respondVkAdminFixture(req, res, trekPath, shareToken);
   if (isShareEditAccess(req.method, trekPath)) {
     return respondShareEditAccess(req, res, shareToken);
   }

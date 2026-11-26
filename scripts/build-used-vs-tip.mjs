@@ -81,7 +81,7 @@ export function explainBuildUsedVsTip({ driveSha, tipSha, commits }) {
   return lines.join('\n');
 }
 
-export function listCommitsBetween(driveSha, tipSha, cwd = root) {
+function listCommitsBetween(driveSha, tipSha, cwd = root) {
   const drive = normalizeSha(driveSha);
   const tip = normalizeSha(tipSha);
   if (!drive || !tip || drive === tip) return [];

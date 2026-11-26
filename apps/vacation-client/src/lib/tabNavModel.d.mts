@@ -8,9 +8,6 @@ export function isTabId(value: unknown): value is TabId;
 export function readTabFromLocation(hash: string, search: string): TabId;
 export function tabLocationHash(tab: TabId): string;
 export function writeTabToLocation(tab: TabId, location: Location): void;
-export function sectionVisibilityMap(
-  trip: import('../types/sharedTrip.ts').SharedTripPayload | undefined,
-): Record<string, unknown>;
 export function isConfigSectionVisible(
   trip: import('../types/sharedTrip.ts').SharedTripPayload | undefined,
   key: 'flights' | 'hotels' | 'cars',

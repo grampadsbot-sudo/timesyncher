@@ -533,7 +533,7 @@ function deriveContentNeedles(inventory, patterns) {
 }
 
 const inventoryDoc = JSON.parse(fs.readFileSync(new URL('./fixtures/hardcoded-content/inventory.json', import.meta.url), 'utf8'));
-export const CONTENT_NEEDLES = deriveContentNeedles(inventoryDoc, INVENTORY_PATTERNS);
+const CONTENT_NEEDLES = deriveContentNeedles(inventoryDoc, INVENTORY_PATTERNS);
 
 export function bundleScanFindings(file, text) {
   const findings = [];
@@ -2100,7 +2100,7 @@ export function crossOriginBundleFindings(file, text, { downloads = false, scrip
   return findings;
 }
 
-export function crossOriginBundleScan(cwd = process.cwd()) {
+function crossOriginBundleScan(cwd = process.cwd()) {
   const findings = [];
   const downloading = new Set();
   const texts = new Map();
@@ -2439,7 +2439,7 @@ export function baselineRemoteRef(ref) {
   return name.startsWith('origin/') ? name : `origin/${name}`;
 }
 
-export function baseBaselineCount(cwd = process.cwd()) {
+function baseBaselineCount(cwd = process.cwd()) {
   const ref = process.env.BASE || process.env.GITHUB_BASE_REF || '';
   if (!ref) return { status: 'skip' };
   const shown = spawnSync('git', ['show', `${baselineRemoteRef(ref)}:scripts/hardcoded-content-baseline.json`], {

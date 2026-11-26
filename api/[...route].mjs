@@ -17,8 +17,10 @@ import version from '../routes/version.mjs';
 import workerJobs from '../routes/worker-jobs.mjs';
 import thingEvidenceDossiers from '../routes/thing-evidence-dossiers.mjs';
 import vacationMcp from '../routes/vacation-mcp.mjs';
+import vkAdmin from '../routes/vk-admin.mjs';
 
 const handlers = {
+  admin: vkAdmin,
   'admin-onboardings': adminOnboardings,
   'checkout-config': checkoutConfig,
   'checkout-products': checkoutProducts,
@@ -75,6 +77,10 @@ function publicApiRequest(req) {
     if (!params.get('sessionId')) params.set('sessionId', sessionId);
     if (!params.get('action')) params.set('action', 'accept-page');
     parts = ['eula'];
+  }
+  if (parts[0] === 'vacation-app' && parts[1] === 'admin' && parts.length === 2) {
+    parts = ['admin'];
+    params.set('adminPage', '1');
   }
   for (const key of ROUTING_QUERY_KEYS) params.delete(key);
   const path = `/api/${parts.map((part) => encodeURIComponent(part)).join('/')}`;

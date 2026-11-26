@@ -1,0 +1,183 @@
+{
+  "vacations": [
+    {
+      "tripId": "vk-fixture-trip-001",
+      "label": "Orlando theme parks — Lopez / Kowalski",
+      "destination": "Orlando, FL",
+      "sortAt": "2026-07-18T16:40:00.000Z",
+      "shareSlug": "vk-admin-share-orlando-001",
+      "turns": [
+        {
+          "id": "vk-fixture-trip-001-turn-1",
+          "speaker": "customer",
+          "direction": "inbound",
+          "channel": "web",
+          "authorLabel": "Lopez family",
+          "body": "We are the Lopez family planning five days at Orlando theme parks with kids 6 and 9."
+        },
+        {
+          "id": "vk-fixture-trip-001-turn-2",
+          "speaker": "app",
+          "direction": "outbound",
+          "channel": "web",
+          "authorLabel": "Vacay Keepsake",
+          "body": "Welcome! I can sketch a kid-friendly Orlando week with park days and rest built in."
+        },
+        {
+          "id": "vk-fixture-trip-001-turn-3",
+          "speaker": "customer",
+          "direction": "inbound",
+          "channel": "web",
+          "authorLabel": "Lopez family",
+          "body": "Magic Kingdom on day one and a slower pool morning before SeaWorld."
+        },
+        {
+          "id": "vk-fixture-trip-001-turn-4",
+          "speaker": "app",
+          "direction": "outbound",
+          "channel": "web",
+          "authorLabel": "Vacay Keepsake",
+          "body": "Added Magic Kingdom for day 1 and SeaWorld on day 2 with an easy afternoon block."
+        }
+      ],
+      "trip": {
+        "id": "vk-fixture-trip-001",
+        "title": "Orlando theme parks",
+        "destination": "Orlando, FL",
+        "start_date": "2026-08-10",
+        "end_date": "2026-08-14",
+        "status": "planning",
+        "metadata": {
+          "timezone": "UTC"
+        }
+      },
+      "things": [
+        {
+          "id": "vk-fixture-trip-001-thing-88100101",
+          "title": "Magic Kingdom day",
+          "category": "attraction",
+          "description": "Family park day with an early rope-drop plan.",
+          "source": "customer",
+          "starts_at": "2026-08-10T09:00:00",
+          "metadata": {
+            "startTime": "09:00",
+            "summary": "Family park day with an early rope-drop plan."
+          }
+        },
+        {
+          "id": "vk-fixture-trip-001-thing-88100102",
+          "title": "SeaWorld Orlando",
+          "category": "attraction",
+          "description": "Marine park visit with a midday break.",
+          "source": "customer",
+          "starts_at": "2026-08-11T10:30:00",
+          "metadata": {
+            "startTime": "10:30",
+            "summary": "Marine park visit with a midday break."
+          }
+        }
+      ]
+    },
+    {
+      "tripId": "vk-fixture-trip-002",
+      "label": "Anaheim theme parks",
+      "destination": "Anaheim, CA",
+      "sortAt": "2026-07-10T09:15:00.000Z",
+      "shareSlug": "vk-admin-share-anaheim-002",
+      "turns": [
+        {
+          "id": "vk-fixture-trip-002-turn-1",
+          "speaker": "customer",
+          "direction": "inbound",
+          "channel": "web",
+          "authorLabel": "Chavez family",
+          "body": "Chavez family here — four days near Disneyland with teens."
+        },
+        {
+          "id": "vk-fixture-trip-002-turn-2",
+          "speaker": "app",
+          "direction": "outbound",
+          "channel": "web",
+          "authorLabel": "Vacay Keepsake",
+          "body": "I will keep Disneyland Resort as the anchor with Downtown Disney on arrival evening."
+        }
+      ],
+      "trip": {
+        "id": "vk-fixture-trip-002",
+        "title": "Anaheim theme parks",
+        "destination": "Anaheim, CA",
+        "start_date": "2026-09-05",
+        "end_date": "2026-09-08",
+        "status": "planning",
+        "metadata": {
+          "timezone": "UTC"
+        }
+      },
+      "things": [
+        {
+          "id": "vk-fixture-trip-002-thing-88100201",
+          "title": "Disneyland Park",
+          "category": "attraction",
+          "description": "Full park day with Genie+ style pacing.",
+          "source": "customer",
+          "starts_at": "2026-09-05T08:30:00",
+          "metadata": {
+            "startTime": "08:30",
+            "summary": "Full park day with Genie+ style pacing."
+          }
+        }
+      ]
+    },
+    {
+      "tripId": "vk-fixture-decoy",
+      "label": "Portland weekend (decoy)",
+      "destination": "Portland, OR",
+      "sortAt": "2026-08-22T11:05:00.000Z",
+      "shareSlug": "vk-admin-share-decoy-999",
+      "isDecoy": true,
+      "turns": [
+        {
+          "id": "vk-fixture-decoy-turn-1",
+          "speaker": "customer",
+          "direction": "inbound",
+          "channel": "web",
+          "authorLabel": "Decoy friend group",
+          "body": "Just a quick friend trip — food and bookstores only."
+        },
+        {
+          "id": "vk-fixture-decoy-turn-2",
+          "speaker": "app",
+          "direction": "outbound",
+          "channel": "web",
+          "authorLabel": "Vacay Keepsake",
+          "body": "Added Powell's and a curated coffee crawl for Saturday."
+        }
+      ],
+      "trip": {
+        "id": "vk-fixture-decoy",
+        "title": "Portland weekend",
+        "destination": "Portland, OR",
+        "start_date": "2026-10-03",
+        "end_date": "2026-10-05",
+        "status": "planning",
+        "metadata": {
+          "timezone": "UTC"
+        }
+      },
+      "things": [
+        {
+          "id": "vk-fixture-decoy-thing-88199901",
+          "title": "Powell's City of Books",
+          "category": "store",
+          "description": "Browse and souvenir stop.",
+          "source": "customer",
+          "starts_at": "2026-10-03T11:00:00",
+          "metadata": {
+            "startTime": "11:00",
+            "summary": "Browse and souvenir stop."
+          }
+        }
+      ]
+    }
+  ]
+}
