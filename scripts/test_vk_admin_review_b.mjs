@@ -247,8 +247,12 @@ try {
         await page.waitForFunction(() => getComputedStyle(document.querySelector('#vacationDropdown .trip-list')).opacity === '1');
         await shot(name);
       };
-      const chooseView = async (name) => {
+      const openMenu = async () => {
         await menuButton.click();
+        await page.waitForFunction(() => document.getElementById('vacationDropdown')?.classList.contains('open'));
+      };
+      const chooseView = async (name) => {
+        await openMenu();
         await page.getByRole('option', { name, exact: true }).click();
       };
       const basicViews = ['Dialog', 'Vacation site', 'Keepsake', 'Onboarding', 'Chat screenshots'];
@@ -268,7 +272,10 @@ try {
 
       await sofia.click();
       await page.locator(`#sitePane[data-kind="chat"][data-run="${tripId}"]`).waitFor();
-      await page.locator('[data-dialog-pdf]').waitFor();
+      await openMenu();
+      await page.locator('#vacationDropdown [data-dialog-pdf]').waitFor();
+      await page.keyboard.press('Escape');
+      assert.equal(await page.locator('.admin-view-panel [data-dialog-pdf]').count(), 0);
       const welcome = page.locator('[data-admin-welcome]');
       await welcome.waitFor();
       assert.equal(await welcome.count(), 1);
@@ -301,8 +308,9 @@ try {
       assert.match(await page.locator('[data-vacation-total]').textContent(), /Actual \$0.02134567 Estimated \$0.05 1 unpriced/);
       assert.match(await page.locator('[data-review-result="qa"]').textContent(), /"score": 4/);
       assert.match(await page.locator('[data-review-result="survey"]').textContent(), /happy/);
+      await openMenu();
       const dialogDownload = page.waitForEvent('download');
-      await page.locator('[data-dialog-pdf]').click();
+      await page.locator('#vacationDropdown [data-dialog-pdf]').click();
       const dialog = await dialogDownload;
       assert.equal(new URL(dialog.url()).pathname, `${artifactPath}/dialog-pdf`);
       assert.deepEqual(await fs.readFile(await dialog.path()), pdf);
@@ -317,10 +325,15 @@ try {
       await chooseView('Keepsake');
       const preview = page.frameLocator('[data-keepsake-frame]');
       await preview.locator('[data-ae-print="1"]').first().waitFor({ timeout: 40000, state: 'attached' });
+      assert.equal(await page.locator('.admin-view-panel [data-keepsake-pdf], .admin-view-panel [data-keepsake-generate]').count(), 0);
+      const keepsakeBody = await preview.locator('body').innerText().catch(() => '');
+      assert.ok(!/This is an initial take that can be revised through the Vacay Keepsake conversation/.test(keepsakeBody));
+      await openMenu();
       const keepsakeDownload = page.waitForEvent('download');
-      await page.locator('[data-keepsake-pdf]').click();
+      await page.locator('#vacationDropdown [data-keepsake-pdf]').click();
       assert.deepEqual(await fs.readFile(await (await keepsakeDownload).path()), keepsakePdf);
-      const generate = page.locator('[data-keepsake-generate]');
+      await openMenu();
+      const generate = page.locator('#vacationDropdown [data-keepsake-generate]');
       const existingRoute = `/api/pdf/shared/${orlando.shareSlug}/report/keepsake-style-2.pdf`;
       assert.equal(await generate.getAttribute('href'), existingRoute);
       const routeRequest = context.waitForEvent('request', (request) => new URL(request.url()).pathname === existingRoute);
@@ -366,7 +379,9 @@ try {
       assert.equal(await fs.readFile(await (await uploadDownload).path(), 'utf8'), 'admin attachment');
       await page.evaluate(() => { window.initialThread = document.getElementById('messages'); });
       await chooseView('Dialog');
-      await page.locator('[data-dialog-pdf]').waitFor();
+      await openMenu();
+      await page.locator('#vacationDropdown [data-dialog-pdf]').waitFor();
+      await page.keyboard.press('Escape');
       await chooseView('All vacations');
       const vacationList = page.locator('#sitePane [data-admin-vacations]');
       assert.deepEqual(await vacationList.locator('[data-open-vacation]').evaluateAll((buttons) =>
@@ -406,7 +421,9 @@ try {
 
       await chooseView('All Customers');
       await page.getByRole('button', { name: 'Open Second fixture', exact: true }).click();
-      await page.getByText('No Dialog PDF yet').waitFor();
+      await openMenu();
+      await page.getByRole('option', { name: 'No Dialog PDF yet', exact: true }).waitFor();
+      await page.keyboard.press('Escape');
       await welcome.waitFor();
       assert.match(await welcome.textContent(), /Welcome to Second fixture's vacation/);
       assert.equal(await page.locator('[data-review-result]').count(), 0);
