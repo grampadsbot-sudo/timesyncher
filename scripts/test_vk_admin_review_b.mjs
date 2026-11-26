@@ -279,7 +279,7 @@ try {
       assert.deepEqual(await onboarding.evaluateAll((figures) => figures.map(({ dataset }) =>
         [dataset.onboardingRole, dataset.vacationId, dataset.onboardingStage, Number(dataset.captureWidth)])),
       onboardingTags.map(({ role, vacationId, screen, width }) => [role, vacationId, screen, width]));
-      assert.deepEqual(await page.locator('section:has([data-onboarding-stage]) h3').allTextContents(),
+      assert.deepEqual(await page.locator('section:has(> .admin-captures > [data-onboarding-stage]) > h3').allTextContents(),
         ['Collaborator 1', 'Collaborator 2', 'Trip editor', 'Viewer']);
       await onboarding.first().locator('img').evaluate((img) => img.decode());
       await shot('onboarding');

@@ -6,6 +6,7 @@ import { captureVacationInviteOnboarding } from './harness/onboarding-invites.mj
 import { STAGING_HARNESS_ORIGIN } from './harness/env.mjs';
 import { shotBlank } from './harness/onboarding-screens.mjs';
 import { loadVkAdminPlaywright } from './qa/vk-admin-playwright.mjs';
+import { listReviewArtifacts, loadReviewArtifact, LocalVkAdminStore } from '../src/vacation/vk-admin-review-storage.mjs';
 
 const origin = STAGING_HARNESS_ORIGIN;
 const tripId = 'aaaaaaaa-0000-0000-0000-000000001184';
@@ -75,19 +76,13 @@ const { chromium } = loadVkAdminPlaywright();
 const browser = await chromium.launch();
 const outDir = await fs.mkdtemp(path.join(os.tmpdir(), 'vk-invite-onboarding-'));
 try {
-  const puts = [];
+  const store = new LocalVkAdminStore(path.join(outDir, 'store'));
   const result = await captureVacationInviteOnboarding({
     db, ownerCustomerId: ownerId, tripId, tag, origin, env: {}, outDir,
     story: { coupon: {}, steps: ['collaborator'], party: {
       collaborators: [people.collaborator], editors: [people.editor], viewers: [{}],
     } },
-    put: async (id, artifact, bytes) => {
-      assert.equal(id, tripId);
-      assert.equal(shotBlank(bytes), false);
-      const width = bytes.readUInt32BE(16);
-      assert.equal(width, Number(artifact.split('-').at(-1)));
-      puts.push(artifact);
-    },
+    openStore: () => store,
     openPage: async () => {
       const context = await browser.newContext({ isMobile: true, hasTouch: true });
       await context.route('**/*', async (route) => {
@@ -123,7 +118,14 @@ try {
   assert.deepEqual(sharedAccess, [true, false]);
   assert.deepEqual(sent.map(({ email }) => email), [people.collaborator.email, people.editor.email]);
   assert.equal(tagged, 1);
-  assert.deepEqual(puts, result.uploaded.map(({ artifact }) => artifact));
+  const { onboardingCaptures } = await listReviewArtifacts(store, tripId);
+  assert.deepEqual(onboardingCaptures.map(({ artifact }) => artifact).sort(),
+    result.uploaded.map(({ artifact }) => artifact).sort());
+  for (const { artifact, width } of onboardingCaptures) {
+    const bytes = await loadReviewArtifact(store, tripId, artifact);
+    assert.equal(shotBlank(bytes), false);
+    assert.equal(bytes.readUInt32BE(16), width);
+  }
   assert.ok(result.uploaded.every(({ vacationId }) => vacationId === tripId));
   for (const [role, stages] of [
     ['telegram_collaborator', ['invite-email', 'accept-link', 'sign-in-or-join', 'first-view']],

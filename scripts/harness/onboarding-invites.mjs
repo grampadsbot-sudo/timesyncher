@@ -1,15 +1,18 @@
 import { openCollaboratorAppSeats } from '../../src/vacation/collaborator-app-seat.mjs';
 import { collaboratorEulaSessionId } from '../../src/vacation/collaborators.mjs';
 import { queueOrSendWebEditorInviteEmail } from '../../src/vacation/email.mjs';
+import { harnessOutboundEmailAllowed } from '../../src/vacation/email-harness-outbound.mjs';
 import { createWebEditorInvite, publicTripUrl } from '../../src/vacation/web-access.mjs';
+import { saveReviewArtifact, vkAdminStorage } from '../../src/vacation/vk-admin-review-storage.mjs';
 import { STAGING_HARNESS_ORIGIN } from './env.mjs';
 import { captureInviteOnboarding } from './onboarding-capture.mjs';
 import { assertOnboardingCustomer, refusedOnboardingTarget } from './onboarding-screens.mjs';
 import { assertThrowaway, isHarnessTag } from './protected.mjs';
 import { shortHash } from './redact.mjs';
 
-function assertInvitee({ name, email }) {
+function assertInvitee({ name, email }, { stored = false } = {}) {
   assertOnboardingCustomer({ name, email });
+  if (stored && harnessOutboundEmailAllowed(email, { TIMESYNCHER_HARNESS_STUB_OUTBOUND: '1' })) return;
   if (!/^[a-z0-9._+-]+@(?:harness\.invalid|example\.test)$/i.test(email)) {
     throw new Error('refused: invitation requires a throwaway inbox');
   }
@@ -79,7 +82,8 @@ async function tagJoinedCollaborator(db, tripId, tag, invite) {
 }
 
 export async function captureVacationInviteOnboarding({
-  db, story, ownerCustomerId, tripId, tag, origin, env, outDir, put, openPage, issuePlanned = true,
+  db, story, ownerCustomerId, tripId, tag, origin, env, outDir, openPage, put, issuePlanned = true,
+  openStore = () => vkAdminStorage(env),
 }) {
   const uploaded = [];
   const errors = [];
@@ -90,6 +94,11 @@ export async function captureVacationInviteOnboarding({
     where id = ${tripId} and customer_id = ${ownerCustomerId} and metadata->>'harnessTag' = ${tag}
   `;
   if (!trip) throw new Error('refused: invite onboarding vacation does not match the harness run');
+  const write = put || (async (_vacationId, artifact, bytes) => {
+    if (!await saveReviewArtifact(openStore(), tripId, artifact, bytes.toString('base64'))) {
+      throw new Error('invalid onboarding capture');
+    }
+  });
   const staging = {
     ...env, TIMESYNCHER_SITE_BASE_URL: origin, TIMESYNCHER_TRAVEL_BASE_URL: origin,
     TIMESYNCHER_HARNESS_STUB_OUTBOUND: '1',
@@ -97,7 +106,8 @@ export async function captureVacationInviteOnboarding({
   const sharedUrl = publicTripUrl(trip, staging);
   const shared = new URL(sharedUrl);
   assertThrowaway({ tripId, shareToken: shared.pathname, displayName: trip.title });
-  if (shared.origin !== origin || !/^\/shared\/[^/]+\/?$/.test(shared.pathname) || refusedOnboardingTarget(sharedUrl)) {
+  if (shared.origin !== origin || !/^\/shared\/[^/]+\/?$/.test(shared.pathname)
+    || refusedOnboardingTarget(sharedUrl) || /santa barbara/i.test(trip.title)) {
     throw new Error('refused: invite onboarding shared vacation');
   }
   const party = story.party || {};
@@ -120,11 +130,11 @@ export async function captureVacationInviteOnboarding({
   if (party.viewers?.some((viewer) => !viewer.email)) invites.push({ role: 'viewer', invite_id: 'shared' });
   for (const invite of invites) {
     const args = {
-      invite, origin, sharedUrl, title: trip.title, vacationId: tripId, guest: shortHash(invite.invite_id), outDir, put, openPage,
+      invite, origin, sharedUrl, title: trip.title, vacationId: tripId, guest: shortHash(invite.invite_id), outDir, put: write, openPage,
     };
     try {
       if (invite.role !== 'viewer') {
-        assertInvitee(invite);
+        assertInvitee(invite, { stored: true });
         if (!invite.html || !['sent', 'stubbed'].includes(invite.status)) {
           errors.push(`${invite.role}-stored-invite-missing`);
           continue;

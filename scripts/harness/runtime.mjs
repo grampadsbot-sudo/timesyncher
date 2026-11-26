@@ -222,7 +222,7 @@ export function liveOptions(env = process.env) {
       try {
         const invited = await captureVacationInviteOnboarding({
           db, story, ownerCustomerId: created.customerId, tripId: played.tripId || created.tripId,
-          tag: options.tag, origin, env: ready, outDir: options.outDir, put: putArtifact,
+          tag: options.tag, origin, env: ready, outDir: options.outDir, put: ready.VK_ADMIN_LOGIN ? putArtifact : undefined,
           issuePlanned: !played.reason,
         });
         adminArtifacts.onboardingCaptures.push(...invited.uploaded);
