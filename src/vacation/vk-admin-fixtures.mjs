@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { applyThingPresentation, sharedTripFromIntake } from './intake-shared-trip.mjs';
 import { finalizeServedSharedTripPayload } from './shared-trip-served-page.mjs';
-import { isVkAdminProduction } from './vk-admin-session.mjs';
+import { isVkAdminAllowedHost } from './vk-admin-session.mjs';
 
 const FIXTURE_ROOT = fileURLToPath(new URL('../../scripts/fixtures/vk-admin-review/', import.meta.url));
 const SHARE_PREFIX = 'vk-admin-share-';
@@ -79,8 +79,8 @@ export function vkAdminFixtureShareSlug(slug) {
   return String(slug || '').startsWith(SHARE_PREFIX);
 }
 
-export function buildVkAdminSharedTrip(shareSlug, env = process.env) {
-  if (isVkAdminProduction(env)) return null;
+export function buildVkAdminSharedTrip(shareSlug, req = null, env = process.env) {
+  if (!isVkAdminAllowedHost(req, env)) return null;
   const row = loadVacationFixtures().vacations.find((vac) => vac.shareSlug === shareSlug);
   if (!row?.trip) return null;
   const shared = sharedTripFromIntake({ trip: structuredClone(row.trip), things: structuredClone(row.things || []) });

@@ -2,9 +2,40 @@ import crypto from 'node:crypto';
 
 const VK_ADMIN_COOKIE = 'vk_admin';
 const MAX_AGE_SEC = 12 * 60 * 60;
+const VK_ADMIN_DEFAULT_ALLOWED_HOSTS = ['vacation-staging.timesyncher.com'];
 
-export function isVkAdminProduction(env = process.env) {
-  return String(env.VERCEL_ENV || '').trim() === 'production';
+function hostFromRequest(req) {
+  return String(req?.headers?.['x-forwarded-host'] || req?.headers?.host || '')
+    .split(',')[0]
+    .trim();
+}
+
+function hostnameOnly(host) {
+  const raw = String(host || '').trim();
+  if (!raw) return '';
+  if (raw.startsWith('[')) {
+    const end = raw.indexOf(']');
+    return (end === -1 ? raw : raw.slice(1, end)).toLowerCase();
+  }
+  const i = raw.lastIndexOf(':');
+  if (i > -1 && /^\d+$/.test(raw.slice(i + 1))) return raw.slice(0, i).toLowerCase();
+  return raw.toLowerCase();
+}
+
+function vkAdminExtraAllowedHosts(env = process.env) {
+  const list = String(env.VK_ADMIN_ALLOWED_HOSTS || '')
+    .split(',')
+    .map((part) => hostnameOnly(part.trim()))
+    .filter(Boolean);
+  return list;
+}
+
+export function isVkAdminAllowedHost(req, env = process.env) {
+  const host = hostnameOnly(hostFromRequest(req));
+  if (!host) return false;
+  if (host === 'localhost' || host === '127.0.0.1' || host === '::1') return true;
+  if (VK_ADMIN_DEFAULT_ALLOWED_HOSTS.includes(host)) return true;
+  return vkAdminExtraAllowedHosts(env).includes(host);
 }
 
 function adminKeys(env) {
@@ -72,7 +103,7 @@ function refuse(res, status, body) {
 }
 
 export function requireVkAdmin(req, res, env = process.env) {
-  if (isVkAdminProduction(env)) return refuse(res, 404, { error: 'not found' });
+  if (!isVkAdminAllowedHost(req, env)) return refuse(res, 404, { error: 'not found' });
   if (!vkAdminConfigured(env)) return refuse(res, 503, { error: 'Admin sign-in is not configured.', code: 'admin_not_configured' });
   return readVkAdminSession(req, env) || refuse(res, 401, { error: 'Admin sign-in required.', code: 'admin_required' });
 }

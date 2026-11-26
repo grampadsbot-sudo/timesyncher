@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import {
   freshVkAdminSession,
-  isVkAdminProduction,
+  isVkAdminAllowedHost,
   loginMatches,
   requireVkAdmin,
   vkAdminConfigured,
@@ -117,7 +117,7 @@ function adminRequest(req) {
 
 export default async function handler(req, res) {
   const env = process.env;
-  if (isVkAdminProduction(env)) return notFound(res);
+  if (!isVkAdminAllowedHost(req, env)) return notFound(res);
   const { page, parts } = adminRequest(req);
   if (page && (!parts || !parts.length)) return serveAdminPage(res);
   if (!parts || !parts.length) return notFound(res);
