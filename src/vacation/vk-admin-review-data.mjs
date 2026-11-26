@@ -1,16 +1,10 @@
-import { DatabaseJsonStore, LocalJsonStore } from '../onboarding/eula-persistent-store.mjs';
 import { hasDatabase, sql } from './db.mjs';
 import { intakeShareSlug } from './intake-shared-trip.mjs';
 import { vacationAppTurnPayloadForClient } from './reply-ship.mjs';
 import { listVkAdminGroups, presentVkAdminVacation } from './vk-admin-fixtures.mjs';
 
-export function vkAdminStorage(env) {
-  if (hasDatabase(env)) return new DatabaseJsonStore({ prefix: 'vk-admin-review', env });
-  if (env.VERCEL || env.VERCEL_ENV) throw new Error('VK admin storage requires a vacation database');
-  return new LocalJsonStore('runtime/vk-admin-review');
-}
-
 const iso = (value) => value ? new Date(value).toISOString() : null;
+const date = (value) => iso(value)?.slice(0, 10) || '';
 
 function groupByKey(items, keyFn) {
   const map = new Map();
@@ -26,7 +20,7 @@ function groupByKey(items, keyFn) {
 function storedGroup(row) {
   const label = row.display_name || [row.first_name, row.last_name].filter(Boolean).join(' ') || row.title;
   return {
-    tripId: row.trip_id, sortAt: iso(row.created_at),
+    tripId: row.trip_id, sortAt: iso(row.created_at), title: row.title,
     label, destination: row.destination || '', customerCount: row.customer_id ? 1 : 0,
     customers: row.customer_id ? [{ id: row.customer_id, customer_label: label }] : [],
     isTest: Boolean(row.harness_tag),
@@ -45,6 +39,22 @@ export async function vkAdminGroups(db) {
   return [...rows.map(storedGroup), ...fixtures].sort((a, b) => Date.parse(b.sortAt) - Date.parse(a.sortAt));
 }
 
+export function vkAdminMember(vacation, customerId = null) {
+  const members = vacation.customers;
+  if (customerId != null) return members.find((member) => String(member.id) === customerId) || null;
+  return members[0] || { id: null, customer_label: vacation.label };
+}
+
+export async function vkAdminLegacyNoteTrips(db, vacation, member) {
+  if (member.id == null) return [];
+  if (typeof member.id === 'number') {
+    return listVkAdminGroups().filter((group) => group.customers[0]?.id === member.id).map((group) => group.tripId);
+  }
+  if (!db) return [vacation.tripId];
+  const rows = await db`select id::text as trip_id from trips where customer_id = ${member.id}`;
+  return rows.map((row) => row.trip_id);
+}
+
 function costs(rows) {
   const total = { actual: 0, estimated: 0, unpriced: 0 };
   for (const row of rows) {
@@ -56,24 +66,38 @@ function costs(rows) {
   return { actual: total.actual / 1e8, estimated: total.estimated / 1e8, unpriced: total.unpriced };
 }
 
-function dialog(vacation, ledger) {
+function isReply(turn) {
+  return turn.direction === 'outbound' || ['app', 'assistant'].includes(turn.speaker);
+}
+
+function dialog(vacation, ledger, replyCosts = []) {
   const rows = ledger.filter((row) => String(row?.tripId ?? '') === vacation.tripId);
-  const byRequest = groupByKey(rows.filter((row) => row.requestId != null), (row) => String(row.requestId));
+  const byRequest = groupByKey(rows.filter((row) => row.requestId != null), (row) => row.requestId);
+  const legacy = new Map();
+  const replyDetails = vacation.turns.map((turn, index) => {
+    if (!isReply(turn)) return null;
+    const callRows = byRequest.get(turn.requestId) || [];
+    const generation = callRows.filter((row) => row.ok !== false
+      && (!row.purpose || (turn.generationPurpose ? row.purpose === turn.generationPurpose : row.purpose.startsWith('reply_')))
+      && (!turn.model || !row.model || row.model === turn.model));
+    const call = turn.fixedOpener ? null : generation.at(-1);
+    const fallback = !turn.fixedOpener && !callRows.length ? replyCosts[index] : null;
+    if (fallback) legacy.set(turn.requestId ?? index, fallback);
+    const charge = call || fallback;
+    const cost = costs(charge ? [charge] : []);
+    return { model: call?.model || turn.model || '', costs: cost, priced: Boolean(charge && !cost.unpriced) };
+  });
   return {
     ...vacation,
-    costs: costs(rows),
-    replyDetails: vacation.turns.map((turn) => {
-      if (turn.speaker !== 'app' && turn.direction !== 'outbound' && turn.speaker !== 'assistant') return null;
-      const callRows = byRequest.get(String(turn.requestId)) || turn.payload?.liveTranscript?.openrouterCalls || [];
-      const generation = callRows.filter((row) =>
-        row.tripId === vacation.tripId && row.ok !== false
-        && (!row.purpose || row.purpose === turn.generationPurpose)
-        && (!turn.model || row.model === turn.model));
-      const call = generation.at(-1);
-      const cost = costs(call ? [call] : []);
-      return { model: call?.model || turn.model || '', costs: cost, priced: Boolean(call && !cost.unpriced) };
-    }),
+    costs: costs([...rows, ...legacy.values()]),
+    replyDetails,
   };
+}
+
+function storedReplyCost(row) {
+  const live = row.payload?.liveTranscript;
+  const cost = live?.cost || live?.model?.cost;
+  return cost?.status === 'measured' && cost.currency === 'USD' ? { costUsd: cost.dollars, costSource: cost.source } : null;
 }
 
 function storedTurn(row, label) {
@@ -83,9 +107,23 @@ function storedTurn(row, label) {
     speaker: row.speaker, direction: row.direction, body: row.body,
     at: iso(row.at), requestId: row.request_id, payload,
     authorLabel: payload.authorName || live.speakerName || (row.direction === 'inbound' ? label : 'Vacay Keepsake'),
-    model: live.shippedModel || live.model?.responseModel || live.modelId || '',
-    generationPurpose: live.held ? 'reply_interim' : live.quality?.rewritten ? 'reply_rewrite' : 'reply_draft',
+    model: live.shippedModel || live.quality?.shippedModel || live.model?.responseModel || live.modelId || '',
+    fixedOpener: live.fixedOpener === true,
+    generationPurpose: live.held ? 'reply_interim' : live.shippedRewrite || live.quality?.rewritten ? 'reply_rewrite' : 'reply_draft',
   };
+}
+
+function storedLedger(transcript, tripId) {
+  const snapshots = new Map();
+  for (const turn of transcript) {
+    const rows = turn.payload?.liveTranscript?.openrouterCalls;
+    if (!Array.isArray(rows)) continue;
+    const calls = rows.filter((call) => call && (call.tripId == null || call.tripId === tripId))
+      .map((call) => ({ ...call, tripId, requestId: call.requestId ?? turn.request_id }));
+    const key = turn.request_id ?? calls[0]?.requestId ?? turn;
+    if (calls.length > (snapshots.get(key)?.length ?? 0)) snapshots.set(key, calls);
+  }
+  return [...snapshots.values()].flat();
 }
 
 export async function findVkAdminVacation(db, id, { detail = false } = {}) {
@@ -93,7 +131,7 @@ export async function findVkAdminVacation(db, id, { detail = false } = {}) {
   if (fixture) return detail ? dialog(fixture, fixture.ledger || []) : fixture;
   if (!db || !/^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/i.test(id)) return null;
   const [row] = await db`
-    select t.id::text as trip_id, t.title, t.destination, t.created_at,
+    select t.id::text as trip_id, t.title, t.destination, t.created_at, t.start_date, t.end_date,
       c.id as customer_id, c.display_name, c.first_name, c.last_name,
       t.metadata->>'harnessTag' as harness_tag,
       coalesce(t.metadata->>'sharedToken', t.metadata->>'shareToken', t.metadata->>'publicSlug',
@@ -103,7 +141,7 @@ export async function findVkAdminVacation(db, id, { detail = false } = {}) {
     where t.id = ${id}
   `;
   if (!row) return null;
-  const group = storedGroup(row);
+  const group = { ...storedGroup(row), startDate: date(row.start_date), endDate: date(row.end_date) };
   if (!detail) return group;
   const [transcript, sessions, events] = await Promise.all([
     db`
@@ -122,15 +160,6 @@ export async function findVkAdminVacation(db, id, { detail = false } = {}) {
       where os.trip_id = ${id} order by oc.clicked_at, oc.id
     `,
   ]);
-  const seenLedgers = new Map();
-  for (const turn of transcript) {
-    const rows = turn.payload?.liveTranscript?.openrouterCalls;
-    if (!Array.isArray(rows) || !rows.length) continue;
-    const request = turn.request_id;
-    const calls = rows.map((call) => ({ ...call, requestId: call.requestId ?? request }));
-    const prior = request && seenLedgers.get(request);
-    if (!prior || prior.length < calls.length) seenLedgers.set(request || turn, calls);
-  }
   const onboarding = sessions.map((session) => ({
     status: session.status, currentStep: session.current_step,
     events: [
@@ -147,7 +176,7 @@ export async function findVkAdminVacation(db, id, { detail = false } = {}) {
     ...group, shareSlug: row.share_slug || (row.intake_share ? intakeShareSlug(id) : ''),
     turns: transcript.map((turn) => storedTurn(turn, group.label)),
     onboarding, qa: row.qa, survey: row.survey,
-  }, [...seenLedgers.values()].flat());
+  }, storedLedger(transcript, id), transcript.map(storedReplyCost));
 }
 
 export function vkAdminDatabase(env) {

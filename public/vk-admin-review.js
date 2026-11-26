@@ -6,19 +6,27 @@ window.startVkAdminReview = (() => {
   const brandLockup = '<div class="brand vk-app-brand" data-vk-wordmark="1"><img class="mark" src="/brand/vk-book-logo.svg" alt="Vacay Keepsake" width="28" height="30" /><span class="vk-print-wordmark">vacay <i>keepsake</i></span></div>';
   const views = [
     ['chat', 'Dialog'], ['trip', 'Vacation site'], ['keepsake', 'Keepsake'],
-    ['onboarding', 'Onboarding'], ['captures', 'First 5 turns'],
+    ['onboarding', 'Onboarding'], ['captures', 'Chat screenshots'], ['vacations', 'All vacations'],
   ];
   const json = (method, body) => ({ method, headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
-  const state = { groups: [], opened: [], details: new Map(), artifacts: new Map(), view: 'all', attachments: [], voiceMode: false, voiceArmed: false, sending: false };
+  const state = { groups: [], customers: new Map(), opened: [], recent: new Set(), details: new Map(), artifacts: new Map(),
+    selection: null, view: 'all', attachments: [], voiceMode: false, voiceArmed: false, sending: false, opening: false };
   let notesRequest = 0;
   let root;
 
   const getState = () => state;
-  const viewTrip = () => (state.view === 'all' ? '' : state.view.slice(0, state.view.lastIndexOf(':')));
-  const customer = () => viewTrip() || null;
-  const customerQuery = (id) => id == null ? '' : `?customer=${encodeURIComponent(id)}`;
+  const viewTrip = () => state.selection?.tripId;
+  const customer = () => state.customers.get(state.selection?.key);
+  const customerParam = (id) => id == null ? '' : `?customerId=${encodeURIComponent(id)}`;
+  const notesQuery = (tripId, id) => {
+    if (!tripId) return '';
+    const params = new URLSearchParams({ vacationId: tripId });
+    if (id != null) params.set('customerId', id);
+    return `?${params}`;
+  };
   const artifactsPath = (id) => `customers/${encodeURIComponent(id)}/artifacts`;
-  const viewKind = () => (state.view === 'all' ? 'all' : state.view.slice(state.view.lastIndexOf(':') + 1));
+  const accountKey = (member, tripId) => member.id == null ? `vacation:${tripId}` : `customer:${member.id}`;
+  const groupMembers = (group) => group.customers.length ? group.customers : [{ id: null, customer_label: group.label }];
 
   async function api(path, init) {
     const res = await fetch(`/api/admin/${path}`, { credentials: 'same-origin', ...init });
@@ -39,31 +47,37 @@ window.startVkAdminReview = (() => {
   }
 
   function switcher() {
-    const current = state.view === 'all' ? 'All Customers' : `${state.details.get(viewTrip())?.label || 'Vacation'}`;
-    const option = (id, title, sub = '') => {
-      const on = id === state.view || (id !== 'all' && id === `${viewTrip()}:chat`);
-      return `<button class="trip-option ${on ? 'active' : ''}" type="button" data-trip-id="${safe(id)}" role="option" aria-selected="${on ? 'true' : 'false'}"><span>${on ? check : ''}</span><span class="trip-option-text"><b>${safe(title)}</b>${sub ? `<small>${safe(sub)}</small>` : ''}</span></button>`;
+    const account = customer();
+    const current = account ? `${views.find(([id]) => id === state.view)[1]} · ${account.name}` : 'All Customers';
+    const option = (id, title, on, sub = '', attrs = '') => {
+      return `<button class="trip-option ${on ? 'active' : ''}" type="button" data-trip-id="${safe(id)}" ${attrs} role="option" aria-selected="${on}"><span>${on ? check : ''}</span><span class="trip-option-text"><b>${safe(title)}</b>${sub ? `<small>${safe(sub)}</small>` : ''}</span></button>`;
     };
-    const runs = state.opened.map((tripId) => {
-      const vac = state.details.get(tripId);
-      if (!vac) return '';
-      return `<div class="admin-run" data-run-group="${safe(tripId)}">${option(`${tripId}:chat`, vac.label, vac.destination)}</div>`;
+    const viewOptions = account ? views
+      .filter(([id]) => id !== 'vacations' || account.vacations.length > 1)
+      .map(([id, label]) => option(id, label, id === state.view, '', `data-view="${id}"`)).join('') : '';
+    const runs = [...state.recent].map((key) => {
+      const entry = state.customers.get(key);
+      const latest = entry.vacations[0];
+      return `<div data-run-group="${safe(latest.tripId)}">${option(key, entry.name, false, latest.destination, `data-open-account="${safe(key)}"`)}</div>`;
     }).join('');
     const clear = state.opened.length ? '<button class="trip-option admin-clear-all" type="button" data-clear-all="1"><span></span><span class="trip-option-text"><b>Clear all</b></span></button>' : '';
-    return `<div class="vacation-dropdown" id="vacationDropdown" data-trip-switcher-root="1"><button class="trip-button" id="tripButton" data-trip-switcher="1" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Switch customer"><span class="trip-trigger-text"><span class="trip-trigger-title">${safe(current)}</span></span>${chevron}</button><div class="trip-list" role="listbox">${option('all', 'All Customers', `${state.groups.length} vacations`)}${runs}${clear}</div></div>`;
+    return `<div class="vacation-dropdown" id="vacationDropdown" data-trip-switcher-root="1"><button class="trip-button" id="tripButton" data-trip-switcher="1" type="button" aria-haspopup="listbox" aria-expanded="false"><span class="trip-trigger-text"><span class="trip-trigger-title">${safe(current)}</span></span>${chevron}</button><div class="trip-list" role="listbox">${viewOptions ? `<div class="admin-header-views" role="group" aria-label="Vacation views">${viewOptions}</div>` : ''}${option('all', 'All Customers', !account)}${runs}${clear}</div></div>`;
   }
 
   function customerList() {
     return `<div class="admin-customers" data-admin-customers="1">${state.groups.map((group) => {
-      const names = group.customers.map((c) => `<li><span>${safe(c.customer_label)}</span>${c.test_coupon ? `<small class="admin-coupon">${safe(c.test_coupon)}</small>` : ''}</li>`).join('');
-      const open = state.opened.includes(group.tripId);
-      return `<section class="admin-group" data-trip-group="${safe(group.tripId)}" data-sort-at="${safe(group.sortAt)}"><header><b>${safe(group.label)}</b><small>${safe(group.destination)} · <time datetime="${safe(group.sortAt)}">${safe(group.sortAt.slice(0, 10))}</time></small></header>${names ? `<ul>${names}</ul>` : ''}<button class="admin-open" type="button" data-vk-open="1" data-customer-id="${safe(group.tripId)}">${open ? 'Opened' : 'Open'}</button></section>`;
+      const members = groupMembers(group).filter((member) =>
+        state.customers.get(accountKey(member, group.tripId)).vacations[0].tripId === group.tripId);
+      if (!members.length) return '';
+      const names = members.filter((member) => member.id != null).map((member) => `<li><button class="admin-customer-name" type="button" data-open-account="${safe(accountKey(member, group.tripId))}">${safe(member.customer_label)}</button>${member.test_coupon ? `<small class="admin-coupon">${safe(member.test_coupon)}</small>` : ''}</li>`).join('');
+      const key = accountKey(members[0], group.tripId);
+      return `<section class="admin-group" data-trip-group="${safe(group.tripId)}" data-sort-at="${safe(group.sortAt)}"><header><b>${safe(group.label)}</b><small>${safe(group.destination)} · <time datetime="${safe(group.sortAt)}">${safe(group.sortAt.slice(0, 10))}</time></small></header>${names ? `<ul>${names}</ul>` : ''}<button class="admin-open" type="button" data-vk-open="1" data-customer-id="${safe(group.tripId)}" data-open-account="${safe(key)}" aria-label="Open ${safe(members[0].customer_label)}">${state.recent.has(key) ? 'Opened' : 'Open'}</button></section>`;
     }).join('')}</div>`;
   }
 
-  function viewControls() {
-    return `<div class="admin-view-controls"><label for="adminView">View</label><select id="adminView">${views.map(([kind, label]) =>
-      `<option value="${kind}"${kind === viewKind() ? ' selected' : ''}>${label}</option>`).join('')}</select></div>`;
+  function vacationList() {
+    return `<div class="admin-customers" data-admin-vacations>${customer().vacations.map((vac) =>
+      `<section class="admin-group"><header><b>${safe(vac.title || vac.destination || vac.label)}</b><small>${safe(vac.destination)} · <time datetime="${safe(vac.sortAt)}">${safe(vac.sortAt.slice(0, 10))}</time></small></header><button class="admin-open" type="button" data-open-vacation="${safe(vac.tripId)}">${vac.tripId === viewTrip() ? 'Current vacation' : 'Open'}</button></section>`).join('')}</div>`;
   }
 
   const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 8 });
@@ -124,15 +138,13 @@ window.startVkAdminReview = (() => {
   }
 
   function sitePane() {
-    const kind = viewKind();
-    if (kind === 'all') return `<div class="site-pane" id="sitePane" data-kind="customers">${customerList()}</div>`;
+    if (state.view === 'all') return `<div class="site-pane" id="sitePane" data-kind="customers">${customerList()}</div>`;
     const vac = state.details.get(viewTrip());
-    if (!vac) return '<div class="site-pane" id="sitePane" data-kind="loading"></div>';
-    return `<div class="site-pane admin-vacation" id="sitePane" data-kind="${kind}" data-run="${safe(vac.tripId)}">${viewControls()}<div class="admin-view-panel">${viewContent(vac)}</div></div>`;
+    return `<div class="site-pane admin-vacation" id="sitePane" data-kind="${state.view}" data-run="${safe(vac.tripId)}"><div class="admin-view-panel">${viewContent(vac)}</div></div>`;
   }
 
   function viewContent(vac) {
-    const renderView = { chat: dialog, trip: vacationSite, keepsake, onboarding, captures }[viewKind()];
+    const renderView = { chat: dialog, trip: vacationSite, keepsake, onboarding, captures, vacations: vacationList }[state.view];
     return renderView(vac, state.artifacts.get(vac.tripId));
   }
 
@@ -142,62 +154,58 @@ window.startVkAdminReview = (() => {
   }
 
   function render() {
-    root.innerHTML = `<main class="app" data-admin="1"><header class="topbar" id="appHeader">${brandLockup}${switcher()}</header><section class="workspace" id="workspace">${sitePane()}<div class="splitter-row" id="splitterRow"><span class="splitter-track" id="splitterTrack" aria-hidden="true"></span><button class="splitter" id="splitter" type="button" aria-label="Resize review and chat panels"></button></div><section class="chat-pane" aria-label="Admin notes"><div class="messages" id="messages" data-screen="admin" aria-label="${customer() ? 'Vacation notes' : 'General notes'}"></div>${window.tsChatComposer.markup({ messageLabel: 'Admin message' })}</section></section></main>`;
+    const composer = customer() ? window.tsChatComposer.markup({ messageLabel: 'Admin message' }) : '';
+    root.innerHTML = `<main class="app" data-admin="1"><header class="topbar" id="appHeader">${brandLockup}${switcher()}</header><section class="workspace" id="workspace">${sitePane()}<div class="splitter-row" id="splitterRow"><span class="splitter-track" id="splitterTrack" aria-hidden="true"></span><button class="splitter" id="splitter" type="button" aria-label="Resize review and chat panels"></button></div><section class="chat-pane" aria-label="Admin thread"><div class="messages" id="messages" data-screen="admin"></div>${composer}</section></section></main>`;
     document.title = 'Vacay Keepsake admin';
     lockReplay(document.getElementById('customerChatReplay'));
-    bind();
+    window.tsVacationAppChrome.bindSplitter();
+    if (composer) {
+      window.tsChatComposer.bind({ getState, onSubmit: adminSubmit });
+      window.tsChatComposer.renderAttachments(state.attachments);
+    }
     void refreshNotes();
   }
 
-  function bind() {
-    const menu = document.getElementById('vacationDropdown');
-    const button = document.getElementById('tripButton');
-    button.addEventListener('click', (event) => {
+  function handleClick(event) {
+    const button = event.target.closest('button');
+    if (!button) return;
+    if (button.id === 'tripButton') {
       event.stopPropagation();
-      const open = !menu.classList.contains('open');
-      menu.classList.toggle('open', open);
+      const open = document.getElementById('vacationDropdown').classList.toggle('open');
       button.setAttribute('aria-expanded', String(open));
-    });
-    menu.querySelectorAll('[data-trip-id]').forEach((option) => option.addEventListener('click', () => {
-      if (option.dataset.tripId === 'all') showCustomer(null);
-      else showCustomer(option.dataset.tripId.slice(0, -5));
-    }));
-    bindView();
-    menu.querySelector('[data-clear-all]')?.addEventListener('click', clearAll);
-    root.querySelectorAll('[data-vk-open]').forEach((el) => el.addEventListener('click', () => openVacation(el.dataset.customerId)));
-    window.tsVacationAppChrome.bindSplitter();
-    window.tsChatComposer.bind({ getState, onSubmit: adminSubmit });
-    window.tsChatComposer.renderAttachments(state.attachments);
-  }
-
-  function bindView() {
-    document.getElementById('adminView')?.addEventListener('change', (event) => {
-      state.view = `${viewTrip()}:${event.target.value}`;
+    } else if (button.dataset.view) {
+      state.view = button.dataset.view;
       renderViewPane();
-      document.getElementById('adminView').focus();
-    });
+      document.getElementById('tripButton').focus();
+    } else if (button.dataset.tripId === 'all') showCustomer(null);
+    else if (button.hasAttribute('data-clear-all')) void clearAll();
+    else if (button.dataset.openAccount) void openVacation(button.dataset.openAccount);
+    else if (button.dataset.openVacation) void openVacation(state.selection.key, button.dataset.openVacation);
   }
 
   function renderViewPane() {
     const pane = document.getElementById('sitePane');
     const vac = state.details.get(viewTrip());
-    pane.dataset.kind = viewKind();
+    pane.dataset.kind = state.view;
+    pane.dataset.run = vac.tripId;
     pane.querySelector('.admin-view-panel').innerHTML = viewContent(vac);
     lockReplay(document.getElementById('customerChatReplay'));
+    document.getElementById('vacationDropdown').outerHTML = switcher();
   }
 
-  function renderNote(note, id) {
-    const query = customerQuery(id);
+  function renderNote(note, customerId) {
+    const query = notesQuery(note.vacationId, customerId);
+    const welcome = note.kind === 'welcome';
     const links = note.attachments.map((file, index) =>
       `<a href="/api/admin/notes/${safe(note.id)}/${index}${safe(query)}" download="${safe(file.name)}">${safe(file.name)}</a>`).join(' ');
-    return `<article class="bubble user admin-note" data-admin-note><small>Admin · <time datetime="${safe(note.at)}">${safe(new Date(note.at).toLocaleString())}</time></small>${safe(note.text)}${links ? `<div class="admin-note-files">${links}</div>` : ''}</article>`;
+    return `<article class="bubble admin-note${welcome ? '' : ' user'}" data-admin-note data-vacation-id="${safe(note.vacationId)}"${welcome ? ' data-admin-welcome' : ''}><small>${welcome ? 'Vacay Keepsake' : 'Admin'} · <time datetime="${safe(note.at)}">${safe(new Date(note.at).toLocaleString())}</time></small>${safe(note.text)}${links ? `<div class="admin-note-files">${links}</div>` : ''}</article>`;
   }
 
   async function refreshNotes() {
-    const id = customer();
+    const id = customer()?.id;
     const request = ++notesRequest;
-    const result = await api(`notes${customerQuery(id)}`).catch(() => null);
-    if (request !== notesRequest || id !== customer()) return;
+    const result = await api(`notes${notesQuery(viewTrip(), id)}`).catch(() => null);
+    if (request !== notesRequest) return;
     const pane = document.getElementById('messages');
     if (!pane) return;
     if (result?.res.ok) pane.innerHTML = result.data.notes.map((note) => renderNote(note, id)).join('');
@@ -218,8 +226,10 @@ window.startVkAdminReview = (() => {
     event.preventDefault();
     const textarea = document.getElementById('messageText');
     const text = textarea.value.trim();
-    if (state.sending || (!text && !state.attachments.length)) return;
-    const id = customer();
+    if (!customer() || state.sending || (!text && !state.attachments.length)) return;
+    const key = state.selection.key;
+    const customerId = customer().id == null ? null : String(customer().id);
+    const vacationId = viewTrip();
     const files = state.attachments;
     const send = document.getElementById('sendButton');
     state.sending = true;
@@ -227,16 +237,16 @@ window.startVkAdminReview = (() => {
     try {
       if (files.reduce((sum, file) => sum + file.size, 0) > 3 * 1024 * 1024) throw new Error('The combined upload limit is 3 MB.');
       const attachments = await Promise.all(files.map(encodeFile));
-      const { res, data } = await api('notes', json('POST', { customer: id, text, attachments }));
+      const { res, data } = await api('notes', json('POST', { customerId, vacationId, text, attachments }));
       if (!res.ok) throw new Error(data.error || 'Note could not be saved.');
-      if (customer() === id && textarea.isConnected) {
+      if (textarea.isConnected) {
         if (textarea.value.trim() === text) textarea.value = '';
         if (state.attachments === files) state.attachments = [];
         window.tsChatComposer.renderAttachments(state.attachments);
         window.tsChatComposer.resizeComposer(textarea);
         textarea.focus();
       }
-      if (customer() === id) await refreshNotes();
+      if (state.selection?.key === key) await refreshNotes();
     } catch (error) {
       if (textarea.isConnected) window.tsChatComposer.renderAttachments(files, error?.message || 'Note could not be saved.');
     } finally {
@@ -255,10 +265,16 @@ window.startVkAdminReview = (() => {
     return refresh();
   }
 
-  async function loadDetail(tripId) {
-    if (state.details.has(tripId)) return;
-    const { res, data } = await api(`customers/${encodeURIComponent(tripId)}`);
-    if (res.ok && data.vacation) state.details.set(tripId, data.vacation);
+  function indexCustomers() {
+    state.customers.clear();
+    for (const group of state.groups) {
+      for (const member of groupMembers(group)) {
+        const key = accountKey(member, group.tripId);
+        if (!state.customers.has(key)) state.customers.set(key, { id: member.id, name: member.customer_label, vacations: [] });
+        state.customers.get(key).vacations.push(group);
+      }
+      if (state.opened.includes(group.tripId)) state.recent.add(accountKey(groupMembers(group)[0], group.tripId));
+    }
   }
 
   async function refresh() {
@@ -268,59 +284,92 @@ window.startVkAdminReview = (() => {
     if (!res.ok) return renderGate('Admin review is not available.');
     state.groups = data.groups || [];
     state.opened = data.opened || [];
-    await Promise.all(state.opened.map(loadDetail));
-    state.opened = state.opened.filter((id) => state.details.has(id));
-    if (state.view !== 'all' && !state.opened.includes(viewTrip())) state.view = 'all';
-    render();
+    indexCustomers();
+    const selection = history.state?.vkAdminSelection;
+    const finish = state.opened.includes(selection?.tripId)
+      && state.customers.get(selection.key)?.vacations.some((vac) => vac.tripId === selection.tripId);
+    if (finish) {
+      const { res, data } = await api(`customers/${encodeURIComponent(selection.tripId)}`);
+      if (res.ok && data.vacation) {
+        state.details.set(selection.tripId, data.vacation);
+        state.recent.add(selection.key);
+        return showCustomer(selection);
+      }
+    }
+    showCustomer(null);
   }
 
-  async function openVacation(tripId) {
-    const { res, data } = await api(`customers/${encodeURIComponent(tripId)}/open`, { method: 'POST' });
-    if (res.status === 401) return renderGate();
-    if (!res.ok || !data.vacation) return;
-    state.details.set(tripId, data.vacation);
-    state.opened = data.opened || state.opened;
-    showCustomer(tripId);
+  async function openVacation(key, tripId = state.customers.get(key).vacations[0].tripId) {
+    if (state.opening) return;
+    state.opening = true;
+    try {
+      const { id } = state.customers.get(key);
+      const { res, data } = await api(`customers/${encodeURIComponent(tripId)}/open${customerParam(id)}`, { method: 'POST' });
+      if (res.status === 401) return renderGate();
+      if (!res.ok || !data.vacation) throw new Error('Vacation could not be opened.');
+      state.details.set(tripId, data.vacation);
+      state.opened = data.opened || state.opened;
+      state.recent.add(key);
+      showCustomer({ key, tripId });
+    } catch {
+      document.getElementById('sitePane')?.insertAdjacentHTML('afterbegin', '<p class="admin-empty" role="status">Vacation could not be opened.</p>');
+    } finally {
+      state.opening = false;
+    }
   }
 
-  function showCustomer(id) {
-    if (id !== customer()) {
+  function showCustomer(selection) {
+    const sameCustomer = selection && selection.key === state.selection?.key;
+    if (!sameCustomer) {
       state.attachments = [];
       state.voiceArmed = false;
     }
-    state.view = id ? `${id}:chat` : 'all';
-    render();
-    if (id) void loadArtifacts(id);
+    state.selection = selection;
+    state.view = selection ? 'chat' : 'all';
+    history.replaceState({ ...history.state, vkAdminSelection: selection }, '');
+    if (sameCustomer) renderViewPane();
+    else render();
+    if (selection) void loadArtifacts(selection.tripId);
   }
 
   async function loadArtifacts(id) {
     const result = await api(artifactsPath(id)).catch(() => null);
     const artifacts = result?.res.ok ? result.data : { failed: true };
     state.artifacts.set(id, artifacts);
-    if (customer() === id && ['chat', 'captures'].includes(viewKind())) {
+    if (viewTrip() === id && ['chat', 'captures'].includes(state.view)) {
       const vac = state.details.get(id);
-      document.querySelector('.admin-view-panel').innerHTML = (viewKind() === 'chat' ? dialog : captures)(vac, artifacts);
+      document.querySelector('.admin-view-panel').innerHTML = viewContent(vac);
       lockReplay(document.getElementById('customerChatReplay'));
     }
   }
 
   async function clearAll() {
+    if (state.opening) return;
     const { res, data } = await api('clear-all', { method: 'POST' });
     if (res.status === 401) return renderGate();
     if (!res.ok) return;
     state.opened = data.opened || [];
+    state.recent.clear();
     state.details.clear();
     state.artifacts.clear();
     showCustomer(null);
   }
 
-  document.addEventListener('click', () => {
+  function closeMenu() {
     document.getElementById('vacationDropdown')?.classList.remove('open');
     document.getElementById('tripButton')?.setAttribute('aria-expanded', 'false');
+  }
+
+  document.addEventListener('click', closeMenu);
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape' || !document.querySelector('#vacationDropdown.open')) return;
+    closeMenu();
+    document.getElementById('tripButton').focus();
   });
 
   return (mount) => {
     root = mount;
+    root.addEventListener('click', handleClick);
     return refresh().catch((error) => {
       console.error(error);
       renderGate('Admin review could not load.');

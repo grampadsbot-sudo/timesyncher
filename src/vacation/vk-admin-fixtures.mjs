@@ -70,6 +70,10 @@ export function presentVkAdminVacation(tripId) {
   const detail = vacationByTripId(id);
   return {
     ...group,
+    title: detail?.trip?.title || group.destination || group.label,
+    startDate: detail?.trip?.start_date || '',
+    endDate: detail?.trip?.end_date || '',
+    ...(detail?.ledger ? { ledger: detail.ledger } : {}),
     shareSlug: detail?.shareSlug || '',
     turns: Array.isArray(detail?.turns) ? detail.turns : [],
     onboarding: detail?.onboarding || [],
