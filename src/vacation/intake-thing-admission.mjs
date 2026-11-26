@@ -126,6 +126,13 @@ export function carTitleNamesRentalBrand(title = '') {
   return RENTAL_BRANDS.some((brand) => key.includes(brand));
 }
 
+function flightTitleIsBareAirlineName(title = '') {
+  const text = clean(title, 240);
+  if (!text || text.split(/\s+/).length !== 1) return false;
+  const key = normalizeKey(text);
+  return AIRLINE_NAMES.includes(key);
+}
+
 export function flightTitleHasRealFlight(title = '', metadata = {}, description = '') {
   const blob = `${title} ${description} ${JSON.stringify(metadata?.sourceRecord || {})}`.trim();
   if (/\b[A-Z]{2}\s*\d{1,4}\b/.test(blob)) return true;
@@ -213,6 +220,10 @@ export function evaluateIntakeAdmission({
   }
 
   if (adjustedCategory === 'flight' && !flightTitleHasRealFlight(name, metadata, description)) {
+    const src = clean(metadata?.source || metadata?.intakeSource, 80).toLowerCase();
+    if (flightTitleIsBareAirlineName(name) && src === 'chat_extraction') {
+      return { admit: false, reason: 'defect_j_bare_airline' };
+    }
     if (!customerSaid && !resolvedPlace) return { admit: false, reason: 'flight_not_booked' };
   }
 
@@ -260,6 +271,10 @@ export function evaluateIntakePreSearch({
     if (!customerSaid) return { admit: false, reason: 'car_not_rental_brand' };
   }
   if (adjustedCategory === 'flight' && !flightTitleHasRealFlight(name, metadata, description)) {
+    const src = clean(metadata?.source || metadata?.intakeSource, 80).toLowerCase();
+    if (flightTitleIsBareAirlineName(name) && src === 'chat_extraction') {
+      return { admit: false, reason: 'defect_j_bare_airline' };
+    }
     if (!customerSaid) return { admit: false, reason: 'flight_not_booked' };
   }
   for (const row of Array.isArray(existingRows) ? existingRows : []) {
@@ -331,7 +346,10 @@ export function tripThingGateViolations(things = [], { itineraryTitles = [] } = 
       }
     }
     if (kind === 'flight' && !flightTitleHasRealFlight(title, meta, row?.description || '')) {
-      if (!isCustomerIntakeProvenance(meta)) {
+      const src = clean(meta?.source || meta?.intakeSource || row?.source, 80).toLowerCase();
+      if (flightTitleIsBareAirlineName(title) && src === 'chat_extraction') {
+        violations.push({ code: 'defect_j_flight_phrase', title, id: row?.id, reason: 'bare_airline_extraction' });
+      } else if (!isCustomerIntakeProvenance(meta)) {
         violations.push({ code: 'defect_j_flight_phrase', title, id: row?.id });
       }
     }

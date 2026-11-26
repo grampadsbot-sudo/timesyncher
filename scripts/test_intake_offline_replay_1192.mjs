@@ -1,0 +1,123 @@
+#!/usr/bin/env node
+/**
+ * Offline replay: Lopez Orlando intake phrases through shared admission + trip gate
+ * (no staging deploy). Mirrors duplicate hotel / phrase defects A–J from #1192.
+ */
+import assert from 'node:assert/strict';
+import {
+  evaluateIntakeAdmission,
+  evaluateIntakePreSearch,
+  intakePhraseDenied,
+  lodgingStem,
+  tripItineraryTitleRejected,
+  tripThingsRealGatePasses,
+} from '../src/vacation/intake-thing-admission.mjs';
+import { lopezBadPhraseRows } from './fixtures/lopez-intake-phrase-rows.mjs';
+
+const TRIP_NIGHTS = 5;
+const STAY_LABEL = 'The Lake Buena Vista hotel';
+
+/** Intake turns in Lopez-like order: customer rows, composed junk, assistant lines. */
+const REPLAY_ATTEMPTS = [
+  { title: 'The Lake Buena Vista hotel', category: 'hotel', metadata: { source: 'customer-turn', origin: 'customer_turn' } },
+  { title: 'Lake Buena Vista hotel', category: 'hotel', metadata: { source: 'chat_extraction' } },
+  { title: 'family hotel or resort in Lake Buena Vista', category: 'hotel', metadata: { source: 'chat_extraction' } },
+  { title: 'Lake Buena Vista settle-in with the pool', category: 'activity', metadata: { source: 'chat_extraction' } },
+  { title: 'Nothing has been booked', category: 'activity', metadata: { source: 'chat_extraction' } },
+  { title: 'and nothing has been emailed.', category: 'activity', metadata: { source: 'assistant' } },
+  { title: 'simple snack after morning snack at Magic Kingdom', category: 'restaurant', metadata: { source: 'chat_extraction' } },
+  { title: 'Magic Kingdom parade', category: 'activity', metadata: { source: 'customer-turn', origin: 'customer_turn' } },
+  { title: 'Magic Kingdom afternoon parade', category: 'activity', metadata: { source: 'chat_extraction' } },
+  { title: 'rides between the Lake Buena Vista stay and the parks', category: 'car', metadata: { source: 'chat_extraction' } },
+  { title: 'rides between Lake Buena Vista stay and the parks', category: 'car', metadata: { source: 'chat_extraction' } },
+  { title: 'Delta options', category: 'flight', metadata: { source: 'chat_extraction' } },
+  { title: 'Delta or Southwest early afternoon return flight option', category: 'flight', metadata: { source: 'chat_extraction' } },
+  { title: 'Delta or Southwest early departure flight option', category: 'flight', metadata: { source: 'chat_extraction' } },
+  { title: 'flight options outbound Monday April 5 morning landing Orlando International', category: 'flight', metadata: { source: 'chat_extraction' } },
+  { title: 'flight options return Friday April 9 afternoon', category: 'flight', metadata: { source: 'chat_extraction' } },
+  { title: 'Southwest', category: 'flight', metadata: { source: 'chat_extraction' } },
+  { title: 'Magic Kingdom Villains Spectacular', category: 'family_event', metadata: { source: 'long-intake', origin: 'customer_blurb', needsDetails: true } },
+  { title: 'we fly Delta out Monday April 5', category: 'flight', metadata: { source: 'customer-turn', origin: 'customer_turn' } },
+];
+
+function replayOrlandoIntakeThings(attempts = REPLAY_ATTEMPTS) {
+  const existing = [];
+  const admitted = [];
+  let nextId = 1;
+  for (const attempt of attempts) {
+    const pre = evaluateIntakePreSearch({ ...attempt, existingRows: existing });
+    if (!pre.admit) continue;
+    const post = evaluateIntakeAdmission({
+      ...attempt,
+      category: pre.adjustedCategory || attempt.category,
+      resolvedPlace: null,
+      existingRows: existing,
+    });
+    if (!post.admit) continue;
+    const row = {
+      id: `replay-${nextId}`,
+      title: attempt.title,
+      category: post.adjustedCategory || pre.adjustedCategory || attempt.category,
+      metadata: { ...attempt.metadata, origin: attempt.metadata?.origin || 'customer_turn' },
+    };
+    nextId += 1;
+    existing.push(row);
+    admitted.push(row);
+  }
+  return { admitted, existing };
+}
+
+/** Derive canonical lodging timeline labels from deduped stay rows (one stem). */
+function lodgingTimelineTitlesFromStays(stayRows, { nights = TRIP_NIGHTS } = {}) {
+  const hotels = stayRows.filter((row) => String(row.category || '').toLowerCase() === 'hotel');
+  assert.equal(hotels.length, 1, 'exactly one Lake Buena Vista stay after replay');
+  const stayTitle = hotels[0].title;
+  const titles = [`Check-in: ${stayTitle}`];
+  for (let night = 0; night < nights; night += 1) {
+    titles.push(`Sleep: ${stayTitle}`);
+    titles.push(`Wake: ${stayTitle}`);
+  }
+  return titles;
+}
+
+const { admitted } = replayOrlandoIntakeThings();
+
+const hotelRows = admitted.filter((row) => row.category === 'hotel');
+assert.equal(hotelRows.length, 1, 'one Lake Buena Vista stay');
+assert.equal(lodgingStem(hotelRows[0].title), lodgingStem(STAY_LABEL), 'stay stem matches customer hotel');
+
+const familyEvents = admitted.filter((row) => row.category === 'family_event');
+assert.ok(familyEvents.some((row) => /Villains Spectacular/i.test(row.title)), 'family event under The Rest category');
+assert.equal(admitted.filter((row) => row.category === 'restaurant').length, 0, 'no composed phrase restaurants');
+assert.equal(admitted.filter((row) => row.category === 'car').length, 0, 'no composed car phrases');
+const flights = admitted.filter((row) => row.category === 'flight');
+assert.ok(
+  flights.every((row) => !intakePhraseDenied(row.title, { skipProperName: true })),
+  'no composed flight option Things',
+);
+
+const itineraryTitles = lodgingTimelineTitlesFromStays(admitted);
+assert.equal(itineraryTitles.filter((t) => /^Check-in:/i.test(t)).length, 1, 'one Check-in');
+assert.equal(itineraryTitles.filter((t) => /^Sleep:/i.test(t)).length, TRIP_NIGHTS, 'one Sleep per night');
+assert.equal(itineraryTitles.filter((t) => /^Wake:/i.test(t)).length, TRIP_NIGHTS, 'one Wake per night');
+assert.ok(intakePhraseDenied('Lake Buena Vista settle-in with the pool'), 'composed wake phrase not a Thing');
+assert.ok(
+  !itineraryTitles.some((t) => /settle-in with the pool/i.test(t)),
+  'deduped stay does not multiply composed wake rows',
+);
+
+const badItinerary = ['Nothing has been booked', 'and nothing has been emailed.'];
+for (const title of badItinerary) {
+  assert.equal(tripItineraryTitleRejected(title), true, `assistant sentence blocked: ${title}`);
+}
+
+const gatePass = tripThingsRealGatePasses(admitted, { itineraryTitles: [] });
+assert.equal(gatePass, true, 'replay trip passes real-things gate');
+assert.ok(
+  admitted.some((row) => /Villains Spectacular/i.test(row.title)),
+  'customer blurb placeholder event kept in replay',
+);
+
+assert.equal(tripThingsRealGatePasses(lopezBadPhraseRows, { itineraryTitles: badItinerary }), false, 'old Lopez rows fail gate');
+
+console.log('test_intake_offline_replay_1192: ok');
