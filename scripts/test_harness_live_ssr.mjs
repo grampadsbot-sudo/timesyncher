@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { aggregateSsrWave } from './customer_suite/ssr/aggregate.mjs';
-import { createLocalBgeEmbedder } from './customer_suite/ssr/embedder.mjs';
+import { embedderForHarnessLiveTest } from './customer_suite/ssr/embedder.mjs';
 import { scoreCustomerCheckpoints } from './customer_suite/ssr/scorer.mjs';
 import { collectLiveSsrCheckpoint, createLiveSsrRespond } from './harness/live-ssr.mjs';
 
@@ -46,7 +46,7 @@ assert.equal(askCalls, 4);
 assert.ok(ssrReactions.every((row) => row.reply.includes('Harness stub model reply')));
 assert.ok(!ssrReactions.some((row) => /It answered some of it|Keep the days lighter/.test(row.reply)));
 
-const embedder = createLocalBgeEmbedder();
+const embedder = embedderForHarnessLiveTest();
 const ssr = scoreCustomerCheckpoints({
   storyId: story.story_id,
   customerName: story.customer.name,
