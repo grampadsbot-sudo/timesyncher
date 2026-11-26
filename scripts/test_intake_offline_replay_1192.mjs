@@ -1,8 +1,4 @@
 #!/usr/bin/env node
-/**
- * Offline replay: Lopez Orlando intake phrases through shared admission + trip gate
- * (no staging deploy). Mirrors duplicate hotel / phrase defects A–J from #1192.
- */
 import assert from 'node:assert/strict';
 import {
   evaluateIntakeAdmission,
@@ -17,7 +13,6 @@ import { lopezBadPhraseRows } from './fixtures/lopez-intake-phrase-rows.mjs';
 const TRIP_NIGHTS = 5;
 const STAY_LABEL = 'The Lake Buena Vista hotel';
 
-/** Intake turns in Lopez-like order: customer rows, composed junk, assistant lines. */
 const REPLAY_ATTEMPTS = [
   { title: 'The Lake Buena Vista hotel', category: 'hotel', metadata: { source: 'customer-turn', origin: 'customer_turn' } },
   { title: 'Lake Buena Vista hotel', category: 'hotel', metadata: { source: 'chat_extraction' } },
@@ -67,7 +62,6 @@ function replayOrlandoIntakeThings(attempts = REPLAY_ATTEMPTS) {
   return { admitted, existing };
 }
 
-/** Derive canonical lodging timeline labels from deduped stay rows (one stem). */
 function lodgingTimelineTitlesFromStays(stayRows, { nights = TRIP_NIGHTS } = {}) {
   const hotels = stayRows.filter((row) => String(row.category || '').toLowerCase() === 'hotel');
   assert.equal(hotels.length, 1, 'exactly one Lake Buena Vista stay after replay');

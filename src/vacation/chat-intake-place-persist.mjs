@@ -220,7 +220,6 @@ export async function persistChatIntakePlaceThing(db, {
 } = {}) {
   const name = clean(title, 240);
   if (!db || !tripId || !name) return null;
-  if (intakePhraseDenied(name)) return null;
   const existingRows = await loadChatIntakeRows(db, tripId);
   const adjustedCategorySeed = intakeCategoryForTitle(name, category);
   let existing = await findExistingChatIntakeRow(db, tripId, name, adjustedCategorySeed);

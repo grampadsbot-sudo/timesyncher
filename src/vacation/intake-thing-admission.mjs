@@ -204,7 +204,9 @@ export function evaluateIntakeAdmission({
   if (!name) return { admit: false, reason: 'empty_title' };
 
   const customerSaid = isCustomerIntakeProvenance(metadata);
-  const phraseReason = intakePhraseDenied(name, { skipProperName: customerSaid });
+  const phraseReason = intakePhraseDenied(name, {
+    skipProperName: customerSaid || Boolean(resolvedPlace),
+  });
   if (phraseReason) return { admit: false, reason: phraseReason };
 
   let adjustedCategory = intakeCategoryForTitle(name, category);
@@ -263,10 +265,10 @@ export function evaluateIntakePreSearch({
 } = {}) {
   const name = clean(title, 240);
   if (!name) return { admit: false, reason: 'empty_title' };
-  const customerSaid = isCustomerIntakeProvenance(metadata);
-  const phraseReason = intakePhraseDenied(name, { skipProperName: customerSaid });
+  const phraseReason = intakePhraseDenied(name, { skipProperName: true });
   if (phraseReason) return { admit: false, reason: phraseReason };
   const adjustedCategory = intakeCategoryForTitle(name, category);
+  const customerSaid = isCustomerIntakeProvenance(metadata);
   if (adjustedCategory === 'car' && !carTitleNamesRentalBrand(name)) {
     if (!customerSaid) return { admit: false, reason: 'car_not_rental_brand' };
   }

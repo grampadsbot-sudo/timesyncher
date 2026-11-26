@@ -1,4 +1,3 @@
-/** Fixture rows mirroring Sofia Lopez Orlando TEST trip phrase Things (pre-gate). */
 export const LOPEZ_TRIP_TITLE = 'Orlando Theme Parks Family Trip';
 export const LOPEZ_CUSTOMER_DISPLAY = 'Sofia Lopez';
 
