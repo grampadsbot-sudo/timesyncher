@@ -1,84 +1,15 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import http from 'node:http';
-import { spawnSync } from 'node:child_process';
-import fs, { existsSync } from 'node:fs';
-import { createRequire } from 'node:module';
+import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { loadVkAdminPlaywright } from './qa/vk-admin-playwright.mjs';
 import { startVkAdminLocalServer } from './qa/vk-admin-local-server.mjs';
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
-const require = createRequire(import.meta.url);
-const PW_PREFIX = '/tmp/pw';
-const PW_BROWSERS_PATH = '/tmp/pw-browsers-chromium';
-const PW_PLAYWRIGHT_VERSION = '1.65.0';
-
-function tryRequirePlaywright(candidate) {
-  if (candidate.includes('node_modules') && !existsSync(path.join(candidate, 'package.json'))) {
-    return null;
-  }
-  try {
-    return require(candidate);
-  } catch {
-    return null;
-  }
-}
-
-function bootstrapPlaywrightForCi() {
-  const bundled = path.join(PW_PREFIX, 'node_modules/playwright');
-  const pkgInstall = spawnSync('npm', ['install', '--prefix', PW_PREFIX, `playwright@${PW_PLAYWRIGHT_VERSION}`], {
-    stdio: 'inherit',
-  });
-  if (pkgInstall.status !== 0) {
-    throw new Error(`playwright npm install failed (status ${pkgInstall.status ?? 'null'})`);
-  }
-  if (!existsSync(bundled)) {
-    throw new Error(`playwright missing after install at ${bundled}`);
-  }
-  const browserInstall = spawnSync(
-    process.execPath,
-    [path.join(bundled, 'cli.js'), 'install', 'chromium'],
-    { stdio: 'inherit' },
-  );
-  if (browserInstall.status !== 0) {
-    throw new Error(`playwright chromium install failed (status ${browserInstall.status ?? 'null'})`);
-  }
-  return require(bundled);
-}
-
-function chromiumBinaryReady(mod) {
-  try {
-    const chromePath = mod.chromium.executablePath();
-    if (!existsSync(chromePath)) return false;
-    const chromeFolder = path.basename(path.dirname(path.dirname(chromePath)));
-    const browsersRoot = path.dirname(path.dirname(path.dirname(chromePath)));
-    const shellDir = chromeFolder.replace(/^chromium-/, 'chromium_headless_shell-');
-    const shellExe = path.join(browsersRoot, shellDir, 'chrome-headless-shell-linux64/chrome-headless-shell');
-    return existsSync(shellExe);
-  } catch {
-    return false;
-  }
-}
-
-function loadPlaywright() {
-  process.env.PLAYWRIGHT_BROWSERS_PATH ||= PW_BROWSERS_PATH;
-  for (const candidate of [
-    path.join(PW_PREFIX, 'node_modules/playwright'),
-    'playwright',
-    'playwright-core',
-    path.join(ROOT, 'node_modules/playwright'),
-    path.join(os.homedir(), 'tsv-dispatch/capture/node_modules/playwright'),
-    path.join(os.homedir(), '.npm/_npx/e41f203b7505f1fb/node_modules/playwright'),
-  ]) {
-    const mod = tryRequirePlaywright(candidate);
-    if (!mod?.chromium) continue;
-    if (chromiumBinaryReady(mod)) return mod;
-  }
-  return bootstrapPlaywrightForCi();
-}
-const { chromium } = loadPlaywright();
+const { chromium } = loadVkAdminPlaywright();
 
 const fixtures = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/fixtures/vk-admin-review/vacation-fixtures.json'), 'utf8'));
 const roster = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/fixtures/vk-admin-review/roster-catalog.json'), 'utf8'));
@@ -381,7 +312,7 @@ try {
       await page.waitForSelector('#attachmentRow .chip');
       await page.fill('#messageText', 'Admin check, not for the customer');
       await page.click('#sendButton');
-      await page.waitForSelector('#messages [data-admin-local="1"]');
+      await page.waitForSelector('#messages [data-admin-note]');
       await page.waitForTimeout(300);
       assert.deepEqual(posts.filter((p) => !p.startsWith('POST /api/admin/')), [], 'composer sends nothing outside admin');
       assert.deepEqual(server.writes, []);
@@ -389,8 +320,7 @@ try {
       const detail = await page.evaluate(() => fetch('/api/admin/customers/vk-fixture-trip-001').then((r) => r.json()));
       assert.equal(detail.vacation.turns.length, ORLANDO.turns.length);
 
-      await page.click('#tripButton');
-      await page.click('[data-trip-id="vk-fixture-trip-001:trip"]');
+      await page.selectOption('#adminView', { label: 'Vacation site' });
       await page.waitForSelector('#sitePane[data-kind="trip"] iframe[data-trip-frame="1"]');
       const frame = page.frameLocator('iframe[data-trip-frame="1"]');
       const firstThing = ORLANDO.things[0].title;

@@ -115,6 +115,6 @@ export function defaultRunRoot() {
 }
 
 export function secretValues(env = process.env, extra = []) {
-  const keys = ['DATABASE_URL', 'NEON_DATABASE_URL', 'TIMESYNCHER_MEDIA_BIND_TOKEN', 'TIMESYNCHER_ADMIN_TOKEN', 'TIMESYNCHER_WORKER_TOKEN'];
+  const keys = ['DATABASE_URL', 'NEON_DATABASE_URL', 'TIMESYNCHER_MEDIA_BIND_TOKEN', 'TIMESYNCHER_ADMIN_TOKEN', 'TIMESYNCHER_WORKER_TOKEN', 'VK_ADMIN_LOGIN', 'VK_ADMIN_SESSION_SECRET'];
   return [...keys.map((key) => String(env[key] || '')), ...extra].filter((value) => value.length > 8);
 }

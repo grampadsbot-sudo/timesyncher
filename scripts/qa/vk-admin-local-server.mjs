@@ -2,7 +2,8 @@ import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import vkAdmin from '../../routes/vk-admin.mjs';
+import { createVkAdminHandler } from '../../routes/vk-admin.mjs';
+import vacationItinerary from '../../routes/vacation-itinerary.mjs';
 import sharedTripHandler from '../../src/vacation/shared-trip-handler.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -19,7 +20,7 @@ const TYPES = {
 };
 
 function staticFile(pathname) {
-  const rel = /^\/shared\/[^/]+\/?$/.test(pathname) ? '/shared-app.html' : pathname;
+  const rel = /^\/shared\/[^/]+(?:\/journey)?\/?$/.test(pathname) ? '/shared-app.html' : pathname;
   const bases = rel.startsWith('/src/') || rel === '/shared-app.html' || rel === '/vacation-app.html' ? [ROOT] : [path.join(ROOT, 'public')];
   for (const base of bases) {
     const full = path.resolve(base, `.${rel}`);
@@ -42,13 +43,19 @@ async function withBody(req) {
   return req;
 }
 
-export async function startVkAdminLocalServer({ port = 0, ownerAppPayload = null } = {}) {
+export async function startVkAdminLocalServer({ port = 0, ownerAppPayload = null, adminDatabase, adminStore } = {}) {
+  const vkAdmin = createVkAdminHandler({ database: adminDatabase || (() => null), storage: adminStore });
   const writes = [];
   const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, 'http://local.test');
     try {
       if (url.pathname === '/vacation-app/admin' || url.pathname === '/vacation-app/admin/' || url.pathname.startsWith('/api/admin')) {
         await vkAdmin(await withBody(req), res);
+        return;
+      }
+      if (url.pathname.startsWith('/api/pdf/')) {
+        req.headers['x-forwarded-proto'] = 'http';
+        await vacationItinerary(req, res);
         return;
       }
       if (url.pathname.startsWith('/api/shared/')) {
