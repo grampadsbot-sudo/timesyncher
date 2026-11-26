@@ -47,8 +47,6 @@ export function vkAdminMember(vacation, customerId = null) {
 
 export async function vkAdminLegacyNoteTrips(db, vacation, member) {
   if (member.id == null) return [];
-  // The old workspace was shared by a vacation. Associate its notes with the
-  // owning customer (the first roster member for the shared synthetic fixtures).
   if (typeof member.id === 'number') {
     return listVkAdminGroups().filter((group) => group.customers[0]?.id === member.id).map((group) => group.tripId);
   }
