@@ -12,6 +12,17 @@ export function vkAdminStorage(env) {
 
 const iso = (value) => value ? new Date(value).toISOString() : null;
 
+function groupByKey(items, keyFn) {
+  const map = new Map();
+  for (const item of items) {
+    const key = keyFn(item);
+    const bucket = map.get(key);
+    if (bucket) bucket.push(item);
+    else map.set(key, [item]);
+  }
+  return map;
+}
+
 function storedGroup(row) {
   const label = row.display_name || [row.first_name, row.last_name].filter(Boolean).join(' ') || row.title;
   return {
@@ -47,7 +58,7 @@ function costs(rows) {
 
 function dialog(vacation, ledger) {
   const rows = ledger.filter((row) => String(row?.tripId ?? '') === vacation.tripId);
-  const byRequest = Map.groupBy(rows.filter((row) => row.requestId != null), (row) => String(row.requestId));
+  const byRequest = groupByKey(rows.filter((row) => row.requestId != null), (row) => String(row.requestId));
   return {
     ...vacation,
     costs: costs(rows),
