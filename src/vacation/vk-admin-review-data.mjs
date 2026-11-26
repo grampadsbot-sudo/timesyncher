@@ -123,7 +123,7 @@ function storedTurn(row, label) {
   const payload = vacationAppTurnPayloadForClient(row.payload || {});
   const live = row.payload?.liveTranscript || {};
   return {
-    speaker: row.speaker, direction: row.direction, body: row.body,
+    turnId: row.id, speaker: row.speaker, direction: row.direction, body: row.body,
     at: iso(row.at), requestId: row.request_id, payload,
     authorLabel: payload.authorName || live.speakerName || (row.direction === 'inbound' ? label : 'Vacay Keepsake'),
     model: live.shippedModel || live.quality?.shippedModel || live.model?.responseModel || live.modelId || '',
@@ -164,7 +164,7 @@ export async function findVkAdminVacation(db, id, { detail = false } = {}) {
   if (!detail) return group;
   const [transcript, sessions, events] = await Promise.all([
     db`
-      select request_id, speaker, direction, body, payload, coalesce(received_at, sent_at, created_at) as at
+      select id, request_id, speaker, direction, body, payload, coalesce(received_at, sent_at, created_at) as at
       from transcript_turns where trip_id = ${id}
       and channel in ('vacation-app', 'vacation_app', 'telegram_vacation_bot', 'telegram_vacation_media')
       order by coalesce(received_at, sent_at, created_at), created_at, id

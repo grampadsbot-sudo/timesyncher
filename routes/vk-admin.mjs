@@ -10,7 +10,7 @@ import {
 } from '../src/vacation/vk-admin-session.mjs';
 import { findVkAdminVacation, vkAdminDatabase, vkAdminGroups, vkAdminLegacyNoteSources, vkAdminMember } from '../src/vacation/vk-admin-review-data.mjs';
 import {
-  artifactType, listNotes, listReviewArtifacts, loadNoteFile, loadReviewArtifact,
+  artifactType, listNotes, listReviewArtifacts, listTravelSummarySnapshots, loadNoteFile, loadReviewArtifact,
   noteFromBody, notesPath, presentNote, saveReviewArtifact, saveReviewResults, saveWelcome, vkAdminStorage,
 } from '../src/vacation/vk-admin-review-storage.mjs';
 
@@ -175,6 +175,13 @@ async function handleNotes(req, res, db, getStore, [id, index]) {
 }
 
 async function handleArtifacts(req, res, db, getStore, tripId, artifact) {
+  if (artifact === 'travel-summary') {
+    if (req.method !== 'GET') return methodNotAllowed(res);
+    const vacation = await findVkAdminVacation(db, tripId, { detail: true });
+    if (!vacation) return notFound(res);
+    const snapshots = await listTravelSummarySnapshots(getStore(), vacation);
+    return send(res, 200, { ok: true, snapshots });
+  }
   const type = artifact ? artifactType(artifact) : '';
   const review = artifact === 'review' && req.method === 'PUT';
   if (artifact && !type && !review) return notFound(res);

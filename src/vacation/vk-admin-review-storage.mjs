@@ -4,6 +4,7 @@ import { dirname } from 'node:path';
 import { DatabaseJsonStore, LocalJsonStore } from '../onboarding/eula-persistent-store.mjs';
 import { hasDatabase, sql } from './db.mjs';
 import { listOnboardingCaptureTags, onboardingCaptureTag } from './vk-admin-onboarding-captures.mjs';
+import { travelSummaryPrefix, travelSummaryValues } from './vk-travel-summary.mjs';
 
 export class LocalVkAdminStore extends LocalJsonStore {
   async listOnboardingArtifacts(vacationId) {
@@ -167,6 +168,33 @@ export async function listReviewArtifacts(store, vacationId) {
     keepsakePdf: Boolean(keepsake?.data),
     review,
   };
+}
+
+export async function listTravelSummarySnapshots(store, vacation) {
+  const stored = await store.listJson(travelSummaryPrefix(vacation.tripId));
+  const byTurn = new Map(stored.filter((snapshot) => typeof snapshot?.turnId === 'string')
+    .map((snapshot) => [snapshot.turnId, snapshot]));
+  const turns = vacation.turns.filter((turn) => turn.turnId && turn.direction === 'inbound' && turn.speaker === 'customer');
+  const people = new Set();
+  let where = '';
+  return turns.map((turn, index) => {
+    const payload = turn.payload;
+    const snapshot = byTurn.get(turn.turnId);
+    where = snapshot?.where || payload?.destination || where;
+    for (const person of Array.isArray(payload?.roster) ? payload.roster : []) {
+      if (person?.name && ['owner', 'collaborator', 'child'].includes(person.role)) people.add(person.name);
+    }
+    const latest = index === turns.length - 1;
+    return {
+      turnId: turn.turnId,
+      turnNumber: index + 1,
+      ...travelSummaryValues(snapshot || {
+        where: latest ? vacation.destination || where : where,
+        tripName: latest && vacation.shareSlug ? vacation.title : '',
+        who: [...people].join(', '),
+      }),
+    };
+  });
 }
 
 export async function saveReviewResults(store, vacationId, { qa, survey }) {

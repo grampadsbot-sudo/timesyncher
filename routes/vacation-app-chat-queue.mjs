@@ -17,6 +17,7 @@ import { loadOwnerReplyPlanForTurn } from '../src/vacation/reply-plan-entitlemen
 import { placeSearchClientError, recoverSoftSearchReply } from '../src/vacation/place-search-reply-facts.mjs';
 import { failedInTurnSearchTurn, replyStageMillis, turnStageTimings } from '../src/vacation/turn-stage-timings.mjs';
 import { persistVacationAppCustomerTurn } from '../src/vacation/vacation-app-queue-persist.mjs';
+import { travelSummaryForTurn } from '../src/vacation/vk-travel-summary.mjs';
 import { prepareChatItineraryEditForQueueTurn } from '../src/vacation/chat-itinerary-edit.mjs';
 import { producedDemoLockedChatEditReply } from '../src/vacation/chat-itinerary-edit-day.mjs';
 import { createBoundedReplyShipGate, createBoundedRewriteClaim, rewriteVacationAppActionClaim } from '../src/vacation/vacation-app-chat-postgen.mjs';
@@ -196,6 +197,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     jobFields,
     customerTurnIndex,
     intakeLatency,
+    travelSummary: tripId ? travelSummaryForTurn(trip, classification.understanding?.travelSummary ?? intake.previousTravelSummary) : null,
   });
   const turnRows = [{ id: persistedCustomerTurnId }];
   const jobRows = [{ id: persistedJobId }];

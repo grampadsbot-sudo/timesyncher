@@ -47,3 +47,17 @@
 .admin-captures img { display: block; max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; }
 .admin-note { overflow-wrap: anywhere; }
 .admin-note-files a { color: inherit; text-decoration: underline; }
+.admin-travel { max-width: 660px; margin-inline: auto; padding: 12px 16px 16px; }
+.admin-travel-scrubber { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; font-size: 0.875rem; }
+.admin-travel-scrubber label { font-weight: 700; }
+.admin-travel-scrubber input { width: 100%; min-width: 0; height: 44px; margin: 0; accent-color: var(--blue); }
+.admin-travel-scrubber output { color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.admin-travel-cover { margin-top: 6px; padding: 16px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); overflow-wrap: anywhere; }
+.admin-travel-cover header { display: flex; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.admin-travel-cover header img { flex: none; }
+.admin-travel-cover h1 { min-width: 0; margin: 0; font: 700 clamp(1.3rem, 5vw, 2rem)/1.15 Georgia, serif; }
+.admin-travel-cover dl { display: grid; gap: 8px; margin: 12px 0; }
+.admin-travel-cover dl > div { display: grid; grid-template-columns: 7rem minmax(0, 1fr); align-items: baseline; gap: 8px; }
+.admin-travel-cover dt { color: var(--muted); font-size: 0.875rem; font-weight: 700; white-space: nowrap; }
+.admin-travel-cover dd { margin: 0; }
+.admin-travel-cover p { margin: 12px 0 0; line-height: 1.5; white-space: pre-wrap; }

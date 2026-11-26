@@ -547,7 +547,7 @@ async function queueVacationAppTurn(db, session, trip, body, intakePrefill = nul
   if (aiMcpReply) return aiMcpReply;
   const pendingPreviewReply = await tryHandlePendingPreviewChatTurn(db, { session, trip, requestText });
   if (pendingPreviewReply) return pendingPreviewReply;
-  const intake = await resolveVacationAppQueueIntake(requestText, intakePrefill, process.env, session);
+  const intake = await resolveVacationAppQueueIntake(requestText, intakePrefill, process.env, session, { db, trip });
   return runQueueVacationAppTurn(db, session, trip, body, queueVacationAppHooks(), { requestText, ...intake, welcomeMs, httpReq, postStartedMs: httpReq ? postStartedByRequest.get(httpReq) : null });
 }
 
