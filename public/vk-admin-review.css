@@ -37,6 +37,8 @@
 .admin-costs, .admin-reply-detail { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; font-size: 0.8125rem; }
 .admin-reply-detail { margin: -4px 0 7px; color: var(--muted); }
 .admin-result, .admin-replay { padding: 0 16px 8px; }
+.admin-result h4 { margin: 0 0 6px; font-size: 0.9375rem; }
+.admin-result[data-feedback-qa-summary] { border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 4px; }
 .admin-result pre { white-space: pre-wrap; overflow-wrap: anywhere; }
 .admin-replay ol { padding-inline-start: 24px; }
 .admin-replay time { color: var(--muted); }

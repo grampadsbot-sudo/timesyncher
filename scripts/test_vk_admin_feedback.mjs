@@ -7,6 +7,9 @@ import { buildFeedbackArtifact, feedbackRollupRows } from '../src/vacation/vk-ad
 import { LocalVkAdminStore, loadFeedbackArtifact, saveFeedbackArtifact } from '../src/vacation/vk-admin-review-storage.mjs';
 import { SSR_CHECKPOINTS } from './customer_suite/ssr/checkpoints.mjs';
 import { startVkAdminLocalServer } from './qa/vk-admin-local-server.mjs';
+import { loadVkAdminPlaywright } from './qa/vk-admin-playwright.mjs';
+
+const { chromium } = loadVkAdminPlaywright();
 
 const workspace = await fs.mkdtemp(path.join(os.tmpdir(), 'vk-admin-feedback-'));
 const store = new LocalVkAdminStore(workspace);
@@ -20,8 +23,17 @@ const vacations = [{
   harness_tag: 'harness:fixture:feedback',
   created_at: '2026-11-26T12:00:00.000Z',
 }];
+const turns = [{
+  request_id: 'req-1', speaker: 'customer', direction: 'inbound', body: 'Fixture customer line',
+  at: '2026-11-26T12:00:01.000Z',
+}, {
+  request_id: 'req-1', speaker: 'app', direction: 'outbound', body: 'Fixture app reply',
+  at: '2026-11-26T12:00:02.000Z', payload: {},
+}];
 const db = async (parts, id) => {
   const query = parts.join('?');
+  if (query.includes('from transcript_turns')) return id === tripId ? turns : [];
+  if (query.includes('from onboarding_sessions')) return [];
   if (query.includes('from trips')) return id ? vacations.filter((row) => row.trip_id === id) : vacations;
   return [];
 };
@@ -102,6 +114,43 @@ assert.equal(loadedViaRoute.feedback.legacy_trip_survey.label, 'end of chat (leg
 const rollupRoute = await (await fetch(`${base}/api/admin/feedback`, { headers: { cookie: authCookie } })).json();
 assert.ok(rollupRoute.rows.some((row) => row.checkpoint.includes('After setup')));
 assert.ok(rollupRoute.rows.some((row) => row.checkpoint === 'end of chat (legacy)'));
-await server.close();
+
+const browser = await chromium.launch({ headless: true });
+try {
+  for (const width of [390, 1280]) {
+    const context = await browser.newContext({ viewport: { width, height: width === 390 ? 844 : 800 } });
+    try {
+      const page = await context.newPage();
+      await page.goto(`${base}/vacation-app/admin`);
+      await page.fill('#adminLoginInput', LOGIN);
+      await page.locator('#adminLogin button').click();
+      await page.getByRole('button', { name: 'Open Taylor Moss', exact: true }).click();
+      await page.locator(`#sitePane[data-kind="chat"][data-run="${tripId}"]`).waitFor();
+      const menuButton = page.locator('#tripButton');
+      const viewOptions = page.locator('#vacationDropdown [data-view]');
+      await menuButton.click();
+      assert.deepEqual(await viewOptions.allTextContents(), [
+        'Dialog', 'Feedback & QA', 'Vacation site', 'Keepsake', 'Onboarding', 'Chat screenshots',
+      ]);
+      await page.keyboard.press('Escape');
+      assert.equal(await page.locator('[data-feedback-qa-summary]').count(), 0);
+      await menuButton.click();
+      await page.getByRole('option', { name: 'Feedback & QA', exact: true }).click();
+      const feedback = page.locator('[data-feedback-view="customer"]');
+      await feedback.waitFor();
+      assert.equal(await feedback.locator('[data-feedback-qa-summary]').count(), 1);
+      assert.match(await feedback.locator('[data-qa-not-graded]').textContent(), /^not graded$/);
+      assert.equal(await feedback.locator('[data-review-result="qa-czar"]').count(), 0);
+      assert.match(await feedback.textContent(), /After setup/);
+      assert.match(await feedback.textContent(), /end of chat \(legacy\)/);
+      console.log(`ok test_vk_admin_feedback.mjs UI at ${width}`);
+    } finally {
+      await context.close();
+    }
+  }
+} finally {
+  await browser.close();
+  await server.close();
+}
 
 console.log('ok test_vk_admin_feedback.mjs');

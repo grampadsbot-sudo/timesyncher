@@ -5,7 +5,7 @@ window.startVkAdminReview = (() => {
   const check = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m20 6-11 11-5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   const brandLockup = '<div class="brand vk-app-brand" data-vk-wordmark="1"><img class="mark" src="/brand/vk-book-logo.svg" alt="Vacay Keepsake" width="28" height="30" /><span class="vk-print-wordmark">vacay <i>keepsake</i></span></div>';
   const views = [
-    ['chat', 'Dialog'], ['feedback', 'Feedback'], ['trip', 'Vacation site'], ['keepsake', 'Keepsake'],
+    ['chat', 'Dialog'], ['feedback', 'Feedback & QA'], ['trip', 'Vacation site'], ['keepsake', 'Keepsake'],
     ['onboarding', 'Onboarding'], ['captures', 'Chat screenshots'], ['vacations', 'All vacations'],
   ];
   const json = (method, body) => ({ method, headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
@@ -66,7 +66,7 @@ window.startVkAdminReview = (() => {
   }
 
   function customerList() {
-    const rollup = '<div class="admin-feedback-rollup-link"><button class="admin-open" type="button" data-view="feedback-all">All customers feedback</button></div>';
+    const rollup = '<div class="admin-feedback-rollup-link"><button class="admin-open" type="button" data-view="feedback-all">All customers Feedback & QA</button></div>';
     return `${rollup}<div class="admin-customers" data-admin-customers="1">${[...state.customers].map(([key, account]) => {
       const latest = account.vacations[0];
       const coupon = account.coupon ? `<small class="admin-coupon">${safe(account.coupon)}</small>` : '';
@@ -86,12 +86,29 @@ window.startVkAdminReview = (() => {
     return `<span data-cost="actual">Actual ${money(costs.actual)}</span> <span data-cost="estimated">Estimated ${money(costs.estimated)}</span>${costs.unpriced ? ` <span data-cost="unpriced">${costs.unpriced} unpriced</span>` : ''}`;
   }
 
-  function dialogResults(vac) {
-    const surveyLabel = vac.survey?.label ? String(vac.survey.label) : 'end of chat (legacy)';
-    return [['QA', vac.qa], [`Survey (${surveyLabel})`, vac.survey]].filter(([, data]) => data != null).map(([label, data]) => {
-      const attr = label.startsWith('Survey') ? 'survey' : label.toLowerCase().replace(/\s+/g, '-');
-      return `<section class="admin-result" data-review-result="${attr}"><h3>${label}</h3><pre>${safe(typeof data === 'string' ? data : JSON.stringify(data, null, 2))}</pre></section>`;
-    }).join('');
+  function storedJevRollup(vac, feedback) {
+    const rollup = feedback?.jev_rollup ?? feedback?.jev ?? vac?.jev ?? vac?.jevRollup;
+    if (rollup != null && (typeof rollup !== 'object' || Object.keys(rollup).length)) return rollup;
+    const summary = feedback?.ssr?.summary_by_construct;
+    if (summary && typeof summary === 'object' && Object.keys(summary).length) return feedback.ssr;
+    return null;
+  }
+
+  function tripLevelQaSummary(vac, artifacts) {
+    const feedback = artifacts?.failed ? null : artifacts?.feedback;
+    const qa = artifacts?.review?.qa ?? vac?.qa ?? null;
+    const jev = storedJevRollup(vac, feedback);
+    const survey = artifacts?.review?.survey ?? vac?.survey ?? null;
+    const body = (label, data, attr) => `<section class="admin-result" data-review-result="${attr}"><h4>${label}</h4><pre>${safe(typeof data === 'string' ? data : JSON.stringify(data, null, 2))}</pre></section>`;
+    const surveyLabel = survey?.label ? String(survey.label) : 'end of chat (legacy)';
+    const parts = [];
+    if (qa != null) parts.push(body('QA Czar', qa, 'qa-czar'));
+    if (jev != null) parts.push(body('Jev rollup', jev, 'jev-rollup'));
+    if (survey != null) parts.push(body(`Survey (${surveyLabel})`, survey, 'survey'));
+    const inner = parts.length
+      ? parts.join('')
+      : '<p class="admin-empty" data-qa-not-graded="1">not graded</p>';
+    return `<section class="admin-result" data-feedback-qa-summary="1"><h3>Trip-level QA</h3>${inner}</section>`;
   }
 
   const ratingFmt = (value) => (value == null || Number.isNaN(Number(value)) ? '—' : Number(value).toFixed(2));
@@ -111,13 +128,15 @@ window.startVkAdminReview = (() => {
   }
 
   function feedbackView(vac, artifacts) {
-    if (!artifacts) return '<p class="admin-empty">Loading feedback…</p>';
-    if (artifacts.failed) return '<p class="admin-empty" role="status">Feedback could not be loaded.</p>';
-    const payload = artifacts.feedback;
-    if (!payload?.checkpoints?.length && !payload?.legacy_trip_survey) {
-      return '<p class="admin-empty">No checkpoint feedback is stored for this vacation yet.</p>';
+    const qaSummary = tripLevelQaSummary(vac, artifacts);
+    if (!artifacts) {
+      return `<div class="admin-feedback" data-feedback-view="customer">${qaSummary}<p class="admin-empty">Loading feedback…</p></div>`;
     }
-    const checkpointRows = (payload.checkpoints || []).flatMap((checkpoint) => {
+    if (artifacts.failed) {
+      return `<div class="admin-feedback" data-feedback-view="customer">${qaSummary}<p class="admin-empty" role="status">Feedback could not be loaded.</p></div>`;
+    }
+    const payload = artifacts.feedback;
+    const checkpointRows = (payload?.checkpoints || []).flatMap((checkpoint) => {
       const scores = checkpoint.scores?.length ? checkpoint.scores : [{ expected_score: null, construct: '' }];
       return scores.map((score) => ({
         customer: payload.customer?.name || vac.label,
@@ -128,7 +147,7 @@ window.startVkAdminReview = (() => {
         comment: checkpoint.reply,
       }));
     });
-    const legacy = payload.legacy_trip_survey;
+    const legacy = payload?.legacy_trip_survey;
     const legacyRows = legacy?.questions?.map((question, index) => ({
       customer: payload.customer?.name || vac.label,
       vacation: vac.destination || vac.title,
@@ -137,7 +156,11 @@ window.startVkAdminReview = (() => {
       rating: null,
       comment: legacy.answers?.[index] || '',
     })) || [];
-    return `<div class="admin-feedback" data-feedback-view="customer">${feedbackTableRows([...checkpointRows, ...legacyRows])}</div>`;
+    const rows = [...checkpointRows, ...legacyRows];
+    const table = rows.length
+      ? feedbackTableRows(rows)
+      : '<p class="admin-empty">No checkpoint feedback is stored for this vacation yet.</p>';
+    return `<div class="admin-feedback" data-feedback-view="customer">${qaSummary}${table}</div>`;
   }
 
   function feedbackRollupView() {
@@ -160,7 +183,7 @@ window.startVkAdminReview = (() => {
       ? `<a class="admin-action" data-dialog-pdf href="/api/admin/${artifactsPath(vac.tripId)}/dialog-pdf" download>Dialog PDF</a>`
       : (artifacts?.failed ? '<span class="admin-status">Dialog PDF could not be loaded.</span>' :
         artifacts ? '<span class="admin-status">No Dialog PDF yet</span>' : '');
-    return `<div class="admin-dialog-head"><div class="admin-costs" data-vacation-total aria-label="Vacation total"><strong>Vacation total</strong> ${costLines(vac.costs)}</div>${pdf}</div><div class="messages" id="customerChatReplay" data-readonly="true" aria-readonly="true" aria-label="${safe(vac.label)} chat (read only)">${turns || '<p class="admin-empty">No chat turns are stored for this vacation yet.</p>'}</div>${dialogResults({ qa: artifacts?.review?.qa ?? vac.qa, survey: artifacts?.review?.survey ?? vac.survey })}`;
+    return `<div class="admin-dialog-head"><div class="admin-costs" data-vacation-total aria-label="Vacation total"><strong>Vacation total</strong> ${costLines(vac.costs)}</div>${pdf}</div><div class="messages" id="customerChatReplay" data-readonly="true" aria-readonly="true" aria-label="${safe(vac.label)} chat (read only)">${turns || '<p class="admin-empty">No chat turns are stored for this vacation yet.</p>'}</div>`;
   }
 
   function vacationSite(vac) {

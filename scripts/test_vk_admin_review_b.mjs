@@ -276,7 +276,7 @@ try {
         await menuButton.click();
         await page.getByRole('option', { name, exact: true }).click();
       };
-      const basicViews = ['Dialog', 'Feedback', 'Vacation site', 'Keepsake', 'Onboarding', 'Chat screenshots'];
+      const basicViews = ['Dialog', 'Feedback & QA', 'Vacation site', 'Keepsake', 'Onboarding', 'Chat screenshots'];
       const requests = [];
       page.on('request', (request) => requests.push([request.method(), new URL(request.url()).pathname]));
       await page.goto(`${base}/vacation-app/admin`);
@@ -324,8 +324,7 @@ try {
         'vendor/legacy · Actual $0.004 Estimated $0.00',
       ]);
       assert.match(await page.locator('[data-vacation-total]').textContent(), /Actual \$0.02134567 Estimated \$0.05 1 unpriced/);
-      assert.match(await page.locator('[data-review-result="qa"]').textContent(), /"score": 4/);
-      assert.match(await page.locator('[data-review-result="survey"]').textContent(), /happy/);
+      assert.equal(await page.locator('[data-feedback-qa-summary]').count(), 0);
       const dialogDownload = page.waitForEvent('download');
       await page.locator('[data-dialog-pdf]').click();
       const dialog = await dialogDownload;
@@ -333,9 +332,11 @@ try {
       assert.deepEqual(await fs.readFile(await dialog.path()), pdf);
       await shot('dialog');
 
-      await chooseView('Feedback');
+      await chooseView('Feedback & QA');
       const feedback = page.locator('[data-feedback-view="customer"]');
       await feedback.waitFor();
+      assert.match(await feedback.locator('[data-review-result="qa-czar"]').textContent(), /"score": 4/);
+      assert.match(await feedback.locator('[data-review-result="survey"]').textContent(), /happy/);
       assert.match(await feedback.textContent(), /After setup/);
       assert.match(await feedback.textContent(), /Fixture role-play reply/);
       assert.match(await feedback.textContent(), /end of chat \(legacy\)/);
@@ -439,7 +440,7 @@ try {
       assert.deepEqual(server.writes, []);
 
       await chooseView('All Customers');
-      await page.getByRole('button', { name: 'All customers feedback', exact: true }).click();
+      await page.getByRole('button', { name: 'All customers Feedback & QA', exact: true }).click();
       const rollup = page.locator('[data-feedback-view="rollup"]');
       await rollup.waitFor();
       assert.match(await rollup.textContent(), /Fixture role-play reply/);
