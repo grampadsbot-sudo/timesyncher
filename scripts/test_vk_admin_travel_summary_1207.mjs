@@ -6,7 +6,7 @@ import path from 'node:path';
 import { startVkAdminLocalServer } from './qa/vk-admin-local-server.mjs';
 import { loadVkAdminPlaywright } from './qa/vk-admin-playwright.mjs';
 import { LocalVkAdminStore } from '../src/vacation/vk-admin-review-storage.mjs';
-import { travelSummaryForTurn } from '../src/vacation/vk-travel-summary.mjs';
+import { travelSummaryDocument, travelSummaryForTurn } from '../src/vacation/vk-travel-summary.mjs';
 import { persistVacationAppCustomerTurn } from '../src/vacation/vacation-app-queue-persist.mjs';
 import { turnUnderstandingRequest } from '../src/vacation/turn-understanding.mjs';
 import { tripIntakeExtractionChatRequest } from '../src/vacation/trip-intake-classify.mjs';
@@ -43,7 +43,7 @@ const query = async (strings) => {
 const stateDir = await mkdtemp(path.join(os.tmpdir(), 'vk-travel-summary-'));
 const store = new LocalVkAdminStore(stateDir);
 const save = (snapshot) => store.putJson(`artifacts/${tripId}/travel-summary/${snapshot.turnId}.json`, snapshot);
-await save(first);
+await save({ ...travelSummaryDocument(first), turnId: firstId });
 const { turnId: storedId, ...forPersist } = last;
 await persistVacationAppCustomerTurn(async (strings, ...values) => {
   const sql = strings.join('?');

@@ -4,7 +4,7 @@ import { dirname } from 'node:path';
 import { DatabaseJsonStore, LocalJsonStore } from '../onboarding/eula-persistent-store.mjs';
 import { hasDatabase, sql } from './db.mjs';
 import { listOnboardingCaptureTags, onboardingCaptureTag } from './vk-admin-onboarding-captures.mjs';
-import { travelSummaryPrefix, travelSummaryValues } from './vk-travel-summary.mjs';
+import { travelSummaryFromDocument, travelSummaryPrefix, travelSummaryValues } from './vk-travel-summary.mjs';
 
 export class LocalVkAdminStore extends LocalJsonStore {
   async listOnboardingArtifacts(vacationId) {
@@ -179,7 +179,7 @@ export async function listTravelSummarySnapshots(store, vacation) {
   let where = '';
   return turns.map((turn, index) => {
     const payload = turn.payload;
-    const snapshot = byTurn.get(turn.turnId);
+    const snapshot = travelSummaryFromDocument(byTurn.get(turn.turnId));
     where = snapshot?.where || payload?.destination || where;
     for (const person of Array.isArray(payload?.roster) ? payload.roster : []) {
       if (person?.name && ['owner', 'collaborator', 'child'].includes(person.role)) people.add(person.name);

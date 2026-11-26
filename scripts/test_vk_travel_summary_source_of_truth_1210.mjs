@@ -37,7 +37,7 @@ const evidence = await travelSummaryContext(async (strings, ...values) => {
   if (query.includes('eula_store_objects')) {
     assert.ok(query.includes("a.document->>'version'"));
     assert.ok(values.includes('2'));
-    return [];
+    return [{ summary: { who: hidden.join(', ') } }];
   }
   if (query.includes('from transcript_turns')) return [{ body: previousText }];
   if (query.includes('from trip_things')) return things;
@@ -45,6 +45,7 @@ const evidence = await travelSummaryContext(async (strings, ...values) => {
 }, { ...trip, party, metadata: { dialogParty: party } });
 assert.deepEqual(evidence.customerTurns, [previousText]);
 assert.deepEqual(evidence.things, things);
+assert.equal(evidence.previousSummary, null);
 assertNoPrivateData(evidence);
 
 let extractedRequest;

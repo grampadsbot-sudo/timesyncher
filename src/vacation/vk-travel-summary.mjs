@@ -24,7 +24,7 @@ export async function loadCurrentTravelSummary(db, tripId) {
       and a.document->>'version' = ${String(summaryVersion)}
     order by coalesce(t.received_at, t.created_at) desc, t.id desc limit 1
   `;
-  return row?.summary ? travelSummaryValues(row.summary) : null;
+  return travelSummaryFromDocument(row?.summary);
 }
 
 export async function travelSummaryContext(db, trip) {
@@ -52,6 +52,10 @@ export async function travelSummaryContext(db, trip) {
 
 export function travelSummaryDocument(summary) {
   return { ...travelSummaryValues(summary), version: summaryVersion };
+}
+
+export function travelSummaryFromDocument(document) {
+  return document?.version === summaryVersion ? travelSummaryValues(document) : null;
 }
 
 export function travelSummaryForTurn(trip, modelSummary) {
