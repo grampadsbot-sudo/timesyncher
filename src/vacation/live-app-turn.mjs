@@ -25,7 +25,7 @@ import { enrichDraftingTripContext } from './reply-trip-context-facts.mjs';
 import { pushPlanAndStyleDraftErrors } from './reply-draft-fact-extra.mjs';
 import { payerLineFromDollars, priceAnswered } from './seat-price.mjs';
 import { produceFirstIntakeReply } from './first-intake-reply.mjs';
-import { claimBlockedReply, heldJudgedDraft, requireReplyQuality, unjudgedReply } from './reply-quality-gate.mjs';
+import { claimBlockedReply, failOpenShippedReply, heldJudgedDraft, jevJudgeErrored, requireReplyQuality, unjudgedReply } from './reply-quality-gate.mjs';
 import { applyJevTurn, draftTierForTurn, jevTurn } from './jev-turn.mjs';
 import { buildLiveAppRewritePending } from './chat-place-search.mjs';
 import { inTurnPlaceLiveReplyHooks, placeSearchTieredReplyTimeoutMs } from './in-turn-place-reply-fallback.mjs';
@@ -88,6 +88,7 @@ export function jevStamp(jev) {
       responseModel: jev.responseModel || null,
       jevLatencyMs: Number.isFinite(Number(jev.jevLatencyMs)) ? Number(jev.jevLatencyMs) : null,
       jevBeforeModel: jev.jevBeforeModel === true,
+      ...(jev.judgeFailed === true ? { judgeFailed: true, judgeError: jev.judgeError || null } : {}),
     };
   }
   return {
@@ -177,6 +178,7 @@ export function liveTurnRecord({
         rewritten: model.quality.rewritten === true,
         model: model.quality.model || null,
         judgeMs: Number.isFinite(Number(model.quality.judgeMs)) ? Number(model.quality.judgeMs) : null,
+        ...(model.quality.judgeFailed === true ? { judgeFailed: true, judgeError: model.quality.judgeError || null } : {}),
       };
       if (record.quality.rewritten && model.quality.draft) {
         record.quality.draft = String(model.quality.draft);
@@ -1603,6 +1605,30 @@ export async function produceLiveAppReply({
     flagged: false, cost: model?.cost || null,
   };
   if (!quality?.judged) {
+    if (jevJudgeErrored(quality)) {
+      const failOpen = failOpenShippedReply({
+        rules,
+        jev,
+        model,
+        quality,
+        log: baseLog,
+        draft: originalDraft,
+        judgeMs: draftQualityMs,
+      });
+      const shippedReplyText = shipInTurnDraft(originalDraft, { rules, jev });
+      if (shippedReplyText?.status) return shippedReplyText;
+      const stamped = stampShippedReply({
+        reply: shippedReplyText ?? failOpen.reply,
+        quality: failOpen.quality,
+        draftModel,
+        log: failOpen.log,
+        draft: originalDraft,
+      });
+      stamped.model.modelTier = model?.modelTier ?? jev?.modelTier ?? null;
+      stamped.model.beats = model?.beats || null;
+      stamped.model.via = model?.via || stamped.model.via;
+      return { reply: stamped.reply, rules, jev, model: stamped.model, quality: stamped.quality, log: stamped.log, reason: null };
+    }
     return unjudgedReply({
       rules,
       jev,

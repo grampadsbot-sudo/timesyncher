@@ -1,4 +1,5 @@
 import { jevQualityRewrite, openRouterChatModelForTier } from '../../scripts/vacation-app-reply-rules.mjs';
+import { jevJudgeErrored, shortJevJudgeError } from './reply-quality-gate.mjs';
 
 export function draftTierForTurn({ intent = null } = {}) {
   const modelTier = intent?.asksPrice === true || intent?.asksAccess === true || intent?.pullsAccess === true ? 4 : 3;
@@ -26,6 +27,10 @@ export function applyJevTurn(jev, result, judgeMs) {
     jev.routeType = result.routeType ?? jev.routeType;
     jev.extraContext = result.extraContext ?? jev.extraContext;
     jev.via = result.via ?? jev.via;
+    jev.jevLatencyMs = Math.max(0, Number(judgeMs) || 0);
+  } else if (jevJudgeErrored(result?.quality)) {
+    jev.judgeFailed = true;
+    jev.judgeError = shortJevJudgeError(result?.quality?.reason || result?.error);
     jev.jevLatencyMs = Math.max(0, Number(judgeMs) || 0);
   } else {
     jev.error = result?.error || 'jev_turn_failed';

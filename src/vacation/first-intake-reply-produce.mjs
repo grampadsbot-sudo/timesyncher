@@ -1,5 +1,6 @@
 import { callTieredModel, INTERIM_MODEL } from '../../scripts/vacation-app-reply-rules.mjs';
 import { applyJevTurn, draftTierForTurn, jevTurn } from './jev-turn.mjs';
+import { failOpenJudgedQuality, jevJudgeErrored } from './reply-quality-gate.mjs';
 import { sumModelCost } from './turn-cost.mjs';
 
 const FIRST_INTAKE_REPLY_TIMEOUT_MS = 8000;
@@ -165,19 +166,25 @@ export async function produceFirstIntakeReply({
   const judgeStarted = Date.now();
   const jevTurnResult = await jevTurn({ customerTurn, draft: reply, session, env });
   const judgeMs = Math.max(0, Date.now() - judgeStarted);
-  const quality = applyJevTurn(jev, jevTurnResult, judgeMs);
+  let quality = applyJevTurn(jev, jevTurnResult, judgeMs);
   if (quality?.judged !== true) {
-    const reason = quality?.reason || 'quality_not_judged';
-    return {
-      reply: null,
-      rules,
-      jev,
-      model,
-      customerInput,
-      quality: quality || { judged: false, reason },
-      reason,
-      blockedReasons: [reason],
-    };
+    if (jevJudgeErrored(quality)) {
+      quality = failOpenJudgedQuality(quality, judgeMs);
+      jev.judgeFailed = true;
+      jev.judgeError = quality.judgeError;
+    } else {
+      const reason = quality?.reason || 'quality_not_judged';
+      return {
+        reply: null,
+        rules,
+        jev,
+        model,
+        customerInput,
+        quality: quality || { judged: false, reason },
+        reason,
+        blockedReasons: [reason],
+      };
+    }
   }
   quality.judgeMs = judgeMs;
   if (model && typeof model === 'object') {

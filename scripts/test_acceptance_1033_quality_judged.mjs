@@ -91,7 +91,7 @@ assert.equal(second.quality?.judged === true || second.model?.quality?.judged ==
 stored(second.reply, second.model?.quality?.judged === true ? second.model : { ...second.model, quality: second.quality });
 
 install([FIRST_REPLY], { failQuality: true });
-const refused = await produceFirstIntakeReply({
+const judgeDown = await produceFirstIntakeReply({
   customerTurn: HILO,
   session: { first_name: 'Avery' },
   env,
@@ -100,9 +100,10 @@ const refused = await produceFirstIntakeReply({
   savedStart: '2027-03-04',
   savedEnd: '2027-03-08',
 });
-assert.equal(refused.reply, null);
-assert.match(refused.reason, /quality judge down|quality_not_judged/);
-assert.notEqual(refused.quality?.judged, true);
+assert.equal(judgeDown.reason, null);
+assert.equal(judgeDown.quality?.judged, true);
+assert.equal(judgeDown.quality?.judgeFailed, true);
+assert.ok(judgeDown.reply);
 
 install(['Where are you headed, and what dates work for you?']);
 const greeting = await produceNoTripStarterReply({
@@ -126,9 +127,10 @@ const timedOut = await produceFirstIntakeReply({
   savedStart: '2027-03-04',
   savedEnd: '2027-03-08',
 });
-assert.equal(timedOut.reply, null);
-assert.match(timedOut.reason, /timeout|aborted/i);
-assert.notEqual(timedOut.quality?.judged, true);
+assert.equal(timedOut.reason, null);
+assert.equal(timedOut.quality?.judged, true);
+assert.equal(timedOut.quality?.judgeFailed, true);
+assert.ok(timedOut.reply);
 
 const renderer = await import('node:fs').then((fs) => fs.readFileSync(new URL('./live-transcript-dialog-pdf.mjs', import.meta.url), 'utf8'));
 assert.match(renderer, /quality\?\.judged !== true/);
