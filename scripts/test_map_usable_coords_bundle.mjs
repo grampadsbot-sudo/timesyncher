@@ -10,8 +10,9 @@ assert.match(rendered, /La\.length\?n\.jsx\("div",\{"data-ts-day-map"/);
 assert.match(rendered, /Wo=\(\[G,Re\]\)=>tsUsableMapLatLng\(G,Re\)/);
 assert.match(rendered, /tsDayKeepsakeMap=xa\(Is,1100,1500\)/);
 assert.match(rendered, /return nr\+\(wn&&tsDayKeepsakeMap\?Oo:""\)/);
-assert.match(rendered, /function tsStyle2DayMapSection/);
-assert.match(rendered, /\$\{tsStyle2DayMapSection\(nr,so\(nr\)\)\}/);
+assert.doesNotMatch(rendered, /function tsStyle2DayMapSection/);
+assert.match(rendered, /\(tsDm\)=>/);
+assert.match(rendered, /data-day-map-fill/);
 assert.match(rendered, /function isUsableMapLatLng/);
 
 const blockStart = rendered.indexOf('const MAP_CENTER_UNRESOLVED=');
