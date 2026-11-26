@@ -18,6 +18,7 @@ const [orlando] = JSON.parse(await fs.readFile(fixturePath, 'utf8')).vacations;
 const tripId = 'aaaaaaaa-0000-0000-0000-000000000116';
 const other = 'bbbbbbbb-0000-0000-0000-000000000116';
 const olderTrip = 'cccccccc-0000-0000-0000-000000000116';
+const failedTrip = 'eeeeeeee-0000-0000-0000-000000000116';
 const customerId = 'fixture-lopez-current';
 const earlierCustomerId = 'fixture-lopez-earlier';
 const fixtureTrip = 'vk-fixture-trip-001';
@@ -37,15 +38,12 @@ const vacations = [
     customer_email: 'harness+fixture-current+vk-001-lopez@harness.invalid',
     share_slug: orlando.shareSlug, harness_tag: 'harness:fixture:review', created_at: current,
     start_date: '2027-03-01', end_date: '2027-03-05', qa: { score: 4 }, survey: { rating: 'happy' } },
-<<<<<<< HEAD
-  { trip_id: other, title: 'Second fixture', destination: 'Fixture destination', customer_id: 'fixture-2', display_name: 'Second fixture', harness_tag: 'harness:fixture:failed', created_at: before },
-  { trip_id: olderTrip, title: 'Earlier fixture vacation', destination: 'Earlier destination', customer_id: 'fixture-1',
-    display_name: 'Test harness review', created_at: before },
-=======
   { trip_id: other, title: 'Second fixture', destination: 'Fixture destination', customer_id: 'fixture-2', display_name: 'Second fixture', created_at: before },
   { trip_id: olderTrip, title: 'Earlier fixture vacation', destination: 'Earlier destination', customer_id: earlierCustomerId,
     customer_email: 'harness+fixture-earlier+vk-001-lopez@harness.invalid', display_name: 'Sofia Lopez', created_at: before },
->>>>>>> origin/vk
+  { trip_id: failedTrip, title: 'Failed fixture', destination: 'Fixture destination', customer_id: 'fixture-kowalski-failed',
+    customer_email: 'harness+fixture-failed+vk-002-kowalski@harness.invalid', display_name: 'Kowalski family',
+    harness_tag: 'harness:fixture:failed', created_at: before },
 ];
 const names = ['vendor/first', 'vendor/second', 'vendor/third'];
 const ledger = (requestId, model, costSource, costUsd, extra = {}) => ({ tripId, requestId, model, costUsd, costSource, ...extra });
@@ -139,7 +137,7 @@ try {
   const put = createAdminArtifactWriter({
     origin: staging, login: LOGIN,
     fetchImpl: async (url, init) => {
-      if (!failedOnce && url.pathname.endsWith(`/${other}/artifacts/turn-1`)) {
+      if (!failedOnce && url.pathname.endsWith(`/${failedTrip}/artifacts/turn-1`)) {
         failedOnce = true;
         return new Response(null, { status: 503 });
       }
@@ -414,31 +412,31 @@ try {
       await context.close();
     }
   }
-  const failed = await replay(other, true);
+  const failed = await replay(failedTrip, true);
   assert.equal(failed.played.reason, 'harness-error');
   assert.equal(failed.dialog.ok, false);
   assert.match(failed.dialog.detail, /no app reply/);
   assert.equal(failed.adminArtifacts.dialogPdf, true);
   assert.deepEqual(failed.adminArtifacts.captures, [1, 2]);
   assert.deepEqual(failed.adminArtifacts.errors, []);
-  writeOutcomes(failed.outDir, { ...failed.played, tripId: other, adminArtifacts: failed.adminArtifacts });
+  writeOutcomes(failed.outDir, { ...failed.played, tripId: failedTrip, adminArtifacts: failed.adminArtifacts });
   const failedOutcomes = JSON.parse(await fs.readFile(path.join(failed.outDir, 'outcomes.json'), 'utf8'));
   assert.equal(failedOutcomes.reason, 'harness-error');
   assert.deepEqual(failedOutcomes.adminArtifacts.httpFailures, [{ failure: 'turn-1-capture-or-upload-failed', operation: 'put', status: 503 }]);
-  assert.deepEqual(await readArtifact(other), { ok: true, turns: [1, 2], dialogPdf: true, keepsakePdf: false, review: null });
-  assert.match(extractPdfText(await readArtifact(other, 'dialog-pdf')), /Stored customer message with no reply/);
+  assert.deepEqual(await readArtifact(failedTrip), { ok: true, turns: [1, 2], dialogPdf: true, keepsakePdf: false, review: null });
+  assert.match(extractPdfText(await readArtifact(failedTrip, 'dialog-pdf')), /Stored customer message with no reply/);
 
   const directPut = createAdminArtifactWriter({
     origin: staging, fetchImpl: () => assert.fail('database writer must stay on the staging database'),
     harnessVacation: {
-      tripId: other, tag: vacations[1].harness_tag,
+      tripId: failedTrip, tag: vacations[3].harness_tag,
       db: async (_sql, id, tag) => vacations.filter((vacation) => vacation.trip_id === id && vacation.harness_tag === tag),
       openStore: () => new LocalVkAdminStore(workspace),
     },
   });
   await assert.rejects(directPut(olderTrip, 'turn-3', png), /left the harness vacation/);
-  await directPut(other, 'turn-3', png);
-  assert.deepEqual(await readArtifact(other, 'turn-3'), png);
+  await directPut(failedTrip, 'turn-3', png);
+  assert.deepEqual(await readArtifact(failedTrip, 'turn-3'), png);
   assert.ok(queries.length > 0 && queries.every((query) => /^\s*select\b/i.test(query)), 'admin review never writes to customer tables');
 } finally {
   await browser.close();
