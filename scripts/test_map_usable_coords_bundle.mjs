@@ -8,6 +8,10 @@ const rendered = await readFile(new URL('../public/assets/index-BKun7ofk.js', im
 assert.equal(rendered.includes('Map appears when the day has mapped itinerary stops.'), false);
 assert.match(rendered, /La\.length\?n\.jsx\("div",\{"data-ts-day-map"/);
 assert.match(rendered, /Wo=\(\[G,Re\]\)=>tsUsableMapLatLng\(G,Re\)/);
+assert.match(rendered, /tsDayKeepsakeMap=xa\(Is,1100,1500\)/);
+assert.match(rendered, /return nr\+\(wn&&tsDayKeepsakeMap\?Oo:""\)/);
+assert.match(rendered, /function tsStyle2DayMapSection/);
+assert.match(rendered, /\$\{tsStyle2DayMapSection\(nr,so\(nr\)\)\}/);
 assert.match(rendered, /function isUsableMapLatLng/);
 
 const blockStart = rendered.indexOf('const MAP_CENTER_UNRESOLVED=');

@@ -1323,6 +1323,6 @@
     "rule": "DEAD-CODE",
     "file": "src/vacation/trip-map-initial-view.mjs",
     "symbol": "export:finiteCoord",
-    "note": "bundled into served trek trip-map helper; unit-tested"
+    "note": "existing; ratchet only shrinks"
   }
 ]

@@ -26,6 +26,12 @@ const LEAF_PLACE_LATLNG_NEEDLE = 'g!=null&&g.lat&&(g!=null&&g.lng)&&h.panTo([g.l
 
 const LEAF_PLACE_LATLNG_PATCH = 'g!=null&&tsUsableMapLatLng(g.lat,g.lng)&&h.panTo([g.lat,g.lng]';
 
+const STYLE2_DAY_MAP_NEEDLE = '${so(nr)?`<section class="page daily-page daily-map-page" data-style2-map="1" data-day-map-page="1" data-config-map="1"><h2>${an(nr.title||("Day "+nr.day_number))} map</h2><div class="map-box" data-day-map-fill="1">${xa((Ci(nr)||[]).map(row=>row.item).filter(Boolean),1100,1500)}</div></section>`:""}';
+
+const STYLE2_DAY_MAP_PATCH = '${tsStyle2DayMapSection(nr,so(nr))}';
+
+const STYLE2_DAY_MAP_FN = 'function tsStyle2DayMapSection(nr,mapOn){if(!mapOn)return"";const tsStyle2DayMap=xa((Ci(nr)||[]).map(row=>row.item).filter(Boolean),1100,1500);if(!tsStyle2DayMap)return"";const dayTitle=an(nr.title||"Day "+nr.day_number);return"<section class=\\"page daily-page daily-map-page\\" data-style2-map=\\"1\\" data-day-map-page=\\"1\\" data-config-map=\\"1\\"><h2>"+dayTitle+" map</h2><div class=\\"map-box\\" data-day-map-fill=\\"1\\">"+tsStyle2DayMap+"</div></section>";}';
+
 export function patchMapUsableCoords(source = '', options = {}) {
   const served = options.served === true;
   let js = String(source || '');
@@ -50,6 +56,14 @@ export function patchMapUsableCoords(source = '', options = {}) {
   }
   if (js.includes(LEAF_PLACE_LATLNG_NEEDLE)) {
     js = js.replace(LEAF_PLACE_LATLNG_NEEDLE, LEAF_PLACE_LATLNG_PATCH);
+  }
+  if (js.includes(STYLE2_DAY_MAP_NEEDLE)) {
+    js = js.replace(STYLE2_DAY_MAP_NEEDLE, STYLE2_DAY_MAP_PATCH);
+  } else if (served && js.includes('data-style2-map="1"') && !js.includes('tsStyle2DayMapSection')) {
+    throw new Error('map usable coords patch missed style2 day map conditional');
+  }
+  if (js.includes('tsTripMapInitialView=') && !js.includes('function tsStyle2DayMapSection')) {
+    js = js.replace('const tsUsableMapLatLng=isUsableMapLatLng;', `${STYLE2_DAY_MAP_FN}const tsUsableMapLatLng=isUsableMapLatLng;`);
   }
   if (served) {
     if (!js.includes('tsUsableMapLatLng')) {
