@@ -8,7 +8,11 @@ import {
   vkAdminConfigured,
   writeVkAdminSession,
 } from '../src/vacation/vk-admin-session.mjs';
-import { listVkAdminGroups, presentVkAdminVacation } from '../src/vacation/vk-admin-fixtures.mjs';
+import { findVkAdminVacation, vkAdminDatabase, vkAdminGroups, vkAdminStorage } from '../src/vacation/vk-admin-review-data.mjs';
+import {
+  artifactType, listNotes, listReviewArtifacts, loadNoteFile, loadReviewArtifact,
+  noteFromBody, notesPath, presentNote, saveReviewArtifact, saveReviewResults,
+} from '../src/vacation/vk-admin-review-storage.mjs';
 
 const OWNER_SHELL = fileURLToPath(new URL('../vacation-app.html', import.meta.url));
 const ADMIN_SCRIPTS = [
@@ -82,19 +86,19 @@ async function handleSession(req, res, env) {
   return send(res, 200, { ok: true, role: 'admin', opened: session.opened });
 }
 
-function handleCustomers(req, res, session) {
+async function handleCustomers(req, res, session, db) {
   if (req.method !== 'GET') return send(res, 405, { ok: false, error: 'method not allowed' });
-  const groups = listVkAdminGroups();
+  const groups = await vkAdminGroups(db);
   const testCustomerCount = groups.filter((g) => g.isTest).reduce((n, g) => n + g.customerCount, 0);
   return send(res, 200, { ok: true, role: 'admin', opened: session.opened, groups, testCustomerCount });
 }
 
-function handleCustomer(req, res, env, session, tripId, action) {
-  const vacation = presentVkAdminVacation(tripId);
+async function handleCustomer(req, res, env, session, tripId, action, db) {
+  if ((!action && req.method !== 'GET') || (action && (action !== 'open' || req.method !== 'POST'))) return methodNotAllowed(res);
+  const vacation = await findVkAdminVacation(db, tripId, { detail: true });
   if (!vacation) return notFound(res);
   if (!action && req.method === 'GET') return send(res, 200, { ok: true, role: 'admin', vacation });
-  if (action !== 'open' || req.method !== 'POST') return send(res, 405, { ok: false, error: 'method not allowed' });
-  const opened = session.opened.includes(tripId) ? session.opened : [...session.opened, tripId];
+  const opened = [...new Set([...session.opened, tripId])].slice(-40);
   writeVkAdminSession(res, req, { ...session, opened }, env);
   return send(res, 200, { ok: true, role: 'admin', opened, vacation });
 }
@@ -115,18 +119,89 @@ function adminRequest(req) {
   return { page, parts: parts.slice(1).map((part) => decodeURIComponent(part)) };
 }
 
-export default async function handler(req, res) {
-  const env = process.env;
-  if (!isVkAdminAllowedHost(req, env)) return notFound(res);
-  const { page, parts } = adminRequest(req);
-  if (page && (!parts || !parts.length)) return serveAdminPage(res);
-  if (!parts || !parts.length) return notFound(res);
-  const [head, id, action, extra] = parts;
-  if (head === 'session' && !id) return handleSession(req, res, env);
-  const session = requireVkAdmin(req, res, env);
-  if (!session) return;
-  if (head === 'customers' && !id) return handleCustomers(req, res, session);
-  if (head === 'customers' && id && !extra) return handleCustomer(req, res, env, session, id, action);
-  if (head === 'clear-all' && !id) return handleClearAll(req, res, env, session);
-  return notFound(res);
+function methodNotAllowed(res) {
+  return send(res, 405, { ok: false, error: 'method not allowed' });
 }
+
+function sendFile(res, body, type, filename) {
+  res.statusCode = 200;
+  res.setHeader('content-type', type);
+  res.setHeader('cache-control', 'no-store');
+  res.setHeader('x-content-type-options', 'nosniff');
+  if (filename) res.setHeader('content-disposition', `attachment; filename="${filename}"`);
+  res.end(body);
+}
+
+function jsonRequest(req) {
+  return String(req.headers?.['content-type'] || '').split(';')[0].trim().toLowerCase() === 'application/json';
+}
+
+async function handleNotes(req, res, db, getStore, [id, index]) {
+  if (req.method !== 'GET' && (req.method !== 'POST' || id)) return methodNotAllowed(res);
+  if (req.method === 'POST' && !jsonRequest(req)) return send(res, 415, { ok: false, error: 'JSON required' });
+  const url = new URL(req.url, 'http://localhost');
+  const body = req.method === 'POST' ? await readBody(req) : null;
+  const customer = body ? body.customer : url.searchParams.get('customer');
+  if (customer !== null && (typeof customer !== 'string' || !await findVkAdminVacation(db, customer))) return notFound(res);
+  const store = getStore();
+  if (id) {
+    const file = await loadNoteFile(store, customer, id, index);
+    return file ? sendFile(res, file, 'application/octet-stream') : notFound(res);
+  }
+  if (!body) return send(res, 200, { ok: true, notes: await listNotes(store, customer) });
+  const note = noteFromBody(body);
+  if (!note) return send(res, 400, { ok: false, error: 'Add a message or files. The combined upload limit is 3 MB.' });
+  await store.putJson(`${notesPath(customer)}/${note.id}.json`, note);
+  return send(res, 201, { ok: true, note: presentNote(note) });
+}
+
+async function handleArtifacts(req, res, db, getStore, tripId, artifact) {
+  const type = artifact ? artifactType(artifact) : '';
+  const review = artifact === 'review' && req.method === 'PUT';
+  if (artifact && !type && !review) return notFound(res);
+  const vacation = await findVkAdminVacation(db, tripId);
+  if (!vacation) return notFound(res);
+  if (req.method === 'GET') {
+    const store = getStore();
+    if (!artifact) return send(res, 200, { ok: true, ...await listReviewArtifacts(store, tripId) });
+    const file = await loadReviewArtifact(store, tripId, artifact);
+    return file ? sendFile(res, file, type, artifact === 'dialog-pdf' ? 'dialog.pdf' : '') : notFound(res);
+  }
+  if (req.method !== 'PUT' || !artifact) return methodNotAllowed(res);
+  if (!vacation.isTest && artifact !== 'dialog-pdf') return send(res, 403, { ok: false, error: 'captures require a test vacation' });
+  if (!jsonRequest(req)) return send(res, 415, { ok: false, error: 'JSON required' });
+  const body = await readBody(req);
+  const saved = review ? await saveReviewResults(getStore(), tripId, body)
+    : await saveReviewArtifact(getStore(), tripId, artifact, body.data);
+  if (!saved) return send(res, 400, { ok: false, error: 'invalid artifact' });
+  return send(res, 200, { ok: true });
+}
+
+export function createVkAdminHandler({ database = vkAdminDatabase, storage = vkAdminStorage } = {}) {
+  return async function handler(req, res) {
+    const env = process.env;
+    if (!isVkAdminAllowedHost(req, env)) return notFound(res);
+    const { page, parts } = adminRequest(req);
+    if (page && (!parts || !parts.length)) return serveAdminPage(res);
+    if (!parts || !parts.length) return notFound(res);
+    const [head, id, action, extra, tail] = parts;
+    if (head === 'session' && !id) return handleSession(req, res, env);
+    const session = requireVkAdmin(req, res, env);
+    if (!session) return;
+    const getStore = () => storage(env);
+    try {
+      if (head === 'customers' && !id) return await handleCustomers(req, res, session, database(env));
+      if (head === 'customers' && id && action === 'artifacts' && !tail) {
+        return await handleArtifacts(req, res, database(env), getStore, id, extra);
+      }
+      if (head === 'customers' && id && !extra) return await handleCustomer(req, res, env, session, id, action, database(env));
+      if (head === 'notes' && !extra && (!id || action)) return await handleNotes(req, res, database(env), getStore, [id, action]);
+      if (head === 'clear-all' && !id) return handleClearAll(req, res, env, session);
+      return notFound(res);
+    } catch {
+      return send(res, 503, { ok: false, error: 'Admin review storage is unavailable.' });
+    }
+  };
+}
+
+export default createVkAdminHandler();

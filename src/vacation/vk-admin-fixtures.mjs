@@ -72,6 +72,7 @@ export function presentVkAdminVacation(tripId) {
     ...group,
     shareSlug: detail?.shareSlug || '',
     turns: Array.isArray(detail?.turns) ? detail.turns : [],
+    onboarding: detail?.onboarding || [],
   };
 }
 

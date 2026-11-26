@@ -157,7 +157,7 @@ function initialOpenerTurns(body) {
     .filter((turn) => Boolean(turn.text));
 }
 
-export async function playCustomerTurns(story, { origin, token, tripId, fetchImpl, hosts, waitMs = 0, secrets = [], liveCustomer = false, customerAsk = null, customerLanes = null, maxTurns = 0, probeDelaysMs = null, sleepImpl = null }) {
+export async function playCustomerTurns(story, { origin, token, tripId, fetchImpl, hosts, waitMs = 0, secrets = [], liveCustomer = false, customerAsk = null, customerLanes = null, maxTurns = 0, probeDelaysMs = null, sleepImpl = null, afterCustomerTurn = null }) {
   const probeDelays = storedTurnProbeDelays(probeDelaysMs);
   const sleep = typeof sleepImpl === 'function' ? sleepImpl : (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
   const allowed = new URL(origin).origin;
@@ -405,6 +405,9 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
     }
     seenRuledApp = latestStoredAppTurn(history.body, { ruledOnly: true }) || seenRuledApp;
     seenApp = latestStoredAppTurn(history.body) || seenApp;
+    if (afterCustomerTurn && index < 5) {
+      await afterCustomerTurn({ tripId: currentTrip, turn: index + 1, text: turn.text, webAccessToken });
+    }
     if (isFallback) {
       const fallbackTurnIndex = Number(replyBody?.appTurnIndex || latestStoredAppTurn(history.body)?.turnIndex) || (index + 1);
       planningFallbackTurns.push(fallbackTurnIndex);
@@ -416,7 +419,7 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
       consecutiveFallbacks = 0;
     }
     const reached = chatGoalsReached({ itineraryCount: items, customerTurns, index, maxTurns: limit });
-    if (liveCustomer && reached.done) break;
+    if (liveCustomer && reached.done && (!afterCustomerTurn || index + 1 >= 5)) break;
   }
   if (liveCustomer && items === 0) {
     const confirm = {

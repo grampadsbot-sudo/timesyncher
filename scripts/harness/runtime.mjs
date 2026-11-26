@@ -1,3 +1,4 @@
+import { createAdminArtifactWriter, firstFiveTurnCapture, storeDialogPdf } from './admin-review-artifacts.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { preflightHarnessEnv, secretValues, stagingOrigin } from './env.mjs';
@@ -81,6 +82,7 @@ export function writeOutcomes(outDir, payload) {
       rescuedTimeouts: rescuedTimeoutsSummary(payload?.rescuedTimeouts),
       costs,
       costUsd,
+      ...(payload.adminArtifacts ? { adminArtifacts: payload.adminArtifacts } : {}),
       liveShaStart: payload?.liveShaStart || '',
       liveShaEnd: payload?.liveShaEnd || '',
     };
@@ -182,20 +184,43 @@ export function liveOptions(env = process.env) {
         };
       }
       const liveCustomer = story.reply_backend === 'vk_bot_mcp';
-      const played = await playCustomerTurns(story, {
-        origin,
-        token: created.token,
-        tripId: created.tripId,
-        fetchImpl,
-        hosts: bannedHosts,
-        waitMs: 20000,
-        secrets,
-        liveCustomer,
-        customerAsk: customerAskFromEnv(ready, bannedHosts),
-        maxTurns: maxTurnsFromEnv(ready.VK_TEST_MAX_TURNS != null ? ready : process.env),
-      });
+      const putArtifact = createAdminArtifactWriter({ origin, login: ready.VK_ADMIN_LOGIN, fetchImpl });
+      const capture = firstFiveTurnCapture({ origin, token: created.token, outDir: options.outDir, put: putArtifact });
+      const adminArtifacts = { captures: [], dialogPdf: false, errors: [] };
+      const publishDialog = async (tripId, dialog) => {
+        try {
+          adminArtifacts.dialogPdf = await storeDialogPdf(putArtifact, tripId, dialog);
+        } catch {
+          adminArtifacts.errors.push('dialog-pdf-upload-failed');
+        }
+      };
+      let played;
+      try {
+        played = await playCustomerTurns(story, {
+          origin,
+          token: created.token,
+          tripId: created.tripId,
+          fetchImpl,
+          hosts: bannedHosts,
+          waitMs: 20000,
+          secrets,
+          afterCustomerTurn: async (turn) => {
+            try {
+              if (await capture.capture(turn)) adminArtifacts.captures.push(turn.turn);
+            } catch {
+              adminArtifacts.errors.push(`turn-${turn.turn}-capture-or-upload-failed`);
+            }
+          },
+          liveCustomer,
+          customerAsk: customerAskFromEnv(ready, bannedHosts),
+          maxTurns: maxTurnsFromEnv(ready.VK_TEST_MAX_TURNS != null ? ready : process.env),
+        });
+      } finally {
+        await capture.close();
+      }
       const base = {
         ...played,
+        adminArtifacts,
         sessionRef: shortHash(created.token),
         transcript: null,
         pdfText: '',
@@ -220,7 +245,7 @@ export function liveOptions(env = process.env) {
         const { stampUnstoredExchange } = await import('./unstored-turn.mjs');
         const stamped = stampUnstoredExchange(storedTranscript, played.exchange) || storedTranscript;
         if (stamped) {
-          await renderDialog({
+          const dialog = await renderDialog({
             token: created.token,
             outDir: options.outDir,
             secrets,
@@ -230,6 +255,7 @@ export function liveOptions(env = process.env) {
             replyBackend: story.reply_backend,
             loadTranscript: async () => stamped,
           });
+          await publishDialog(played.tripId || created.tripId, dialog);
         }
         return writeOutcomes(options.outDir, {
           ...base,
@@ -242,6 +268,14 @@ export function liveOptions(env = process.env) {
       }
       const tripId = played.tripId || created.tripId;
       const shareToken = played.shareToken || created.shareToken;
+      const qa = played.qaRating && played.qaRating !== 'slot' ? played.qaRating : null;
+      if (qa || played.survey) {
+        try {
+          await putArtifact(tripId, 'review', { qa, survey: played.survey });
+        } catch {
+          adminArtifacts.errors.push('review-upload-failed');
+        }
+      }
       const steps = await runSteps(story, async () => {
         const response = await fetchImpl(appEndpoint(origin, created.token, tripId), {
           method: 'POST',
@@ -260,6 +294,7 @@ export function liveOptions(env = process.env) {
         replyBackend: story.reply_backend,
         loadTranscript: async () => stampLivePdf(await storedLiveTranscript(db, created.token), played),
       });
+      await publishDialog(tripId, dialog);
       const transcript = transcriptForScorecard(dialog.transcript, storedTranscript);
       if (chatLeftNoThing(played)) {
         const video = await writeVideoCheck({ origin, attachment: { ok: false, detail: 'no-thing-after-chat', bindings: [] }, fetchImpl, outDir: options.outDir });
@@ -295,7 +330,8 @@ export function liveOptions(env = process.env) {
       const pricingOk = played.pricingReactionCaptured === true;
       const itineraryOk = Number(played.itineraryCount) > 0;
       const keepsakeOk = keepsake.ok === true;
-      let reason = '';
+      let reason = adminArtifacts.errors.length ? 'admin-artifact-upload-or-capture-failed'
+        : adminArtifacts.captures.length !== 5 ? 'admin-first-five-captures-missing' : '';
       if (liveCustomer && (!itineraryOk || !keepsakeOk || !pricingOk)) {
         const missing = [
           itineraryOk ? null : 'itinerary',

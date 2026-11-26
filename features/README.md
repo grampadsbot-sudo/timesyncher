@@ -113,3 +113,7 @@ Live TREK button labels for the same panel (not extra options): **TimeSyncher Va
 Not found on shared vacation-3 header in this dump: media toggle, QR toggle. Voice note **is** live on travel shared HTML (`voice-note.md`).
 
 Thing detail website links show the full URL and wrap only after URL delimiters (/ . ? &), never mid-word. The detail header logo chip always renders: record logo, then site favicon, then the type icon. Copy-trip verification at 390/430: scripts/test_acceptance_detail_links_logo.mjs.
+
+## VK admin review
+
+On the allowed admin host, the customer list groups vacations by ID and sorts newest first. An opened vacation has a View dropdown with Dialog, Vacation site, Keepsake, Onboarding, and First 5 turns. Dialog shows stored replies, models, vacation-scoped ledger costs, QA and survey results when available, and the latest stored Dialog PDF. Vacation site reuses the view-only shared trip. Keepsake previews the product book and opens the existing Generate route. Onboarding replays stored session events and First 5 turns shows the available harness captures in order. Admin notes, including uploads and microphone text, are stored for the selected vacation or in the general thread under All Customers.
