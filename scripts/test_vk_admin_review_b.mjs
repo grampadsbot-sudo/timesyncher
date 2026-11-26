@@ -177,10 +177,20 @@ try {
         opened += 1;
         return { close: async () => { closed += 1; }, page: {
           async goto(url) { assert.equal(new URL(url).searchParams.get('tripId'), id); },
-          async waitForFunction(_callback, line) { assert.match(line, /^Customer line [1-5]$/); },
+          async waitForFunction(_callback, arg) {
+            if (arg == null || typeof arg === 'number') return;
+            assert.match(String(arg), /^Customer line [1-5]$/);
+          },
           locator(selector) {
-            assert.equal(selector, '#messages');
-            return { evaluate: async () => {} };
+            if (selector === '#messages') return { evaluate: async () => {} };
+            if (selector === '#workspace.chat-only' || selector === '.chat-pane') {
+              return {
+                count: async () => 1,
+                screenshot: async ({ path: file }) => { await fs.writeFile(file, png); return png; },
+              };
+            }
+            if (selector === '.site-pane iframe') return { count: async () => 0, first: () => ({ waitFor: async () => {}, contentFrame: () => null }) };
+            throw new Error(`unexpected selector ${selector}`);
           },
           async screenshot({ path: file }) { await fs.writeFile(file, png); return png; },
         } };
@@ -436,6 +446,7 @@ try {
       await chooseView('Onboarding');
       await page.getByText('vacation app', { exact: true }).waitFor();
       assert.equal(await page.locator('[data-onboarding-stage]').count(), 0);
+      assert.equal(await page.locator('[data-onboarding-missing]').count(), 0);
       await chooseView('Chat screenshots');
       await page.getByText('No captures', { exact: true }).waitFor();
       await chooseView('All Customers');
@@ -462,6 +473,25 @@ try {
   assert.deepEqual(failedOutcomes.adminArtifacts.httpFailures, [{ failure: 'turn-1-capture-or-upload-failed', operation: 'put', status: 503 }]);
   assert.deepEqual(await readArtifact(failedTrip), { ok: true, turns: [1, 2], onboardingCaptures: [], dialogPdf: true, keepsakePdf: false, review: null });
   assert.match(extractPdfText(await readArtifact(failedTrip, 'dialog-pdf')), /Stored customer message with no reply/);
+
+  {
+    const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const page = await context.newPage();
+  await page.goto(`${base}/vacation-app/admin`);
+  await page.fill('#adminLoginInput', LOGIN);
+  await page.locator('#adminLogin button').click();
+  await page.getByRole('button', { name: 'Open Kowalski family', exact: true }).click();
+  await page.locator(`#sitePane[data-run="${failedTrip}"]`).waitFor();
+  await page.locator('#tripButton').click();
+  await page.getByRole('option', { name: 'Onboarding', exact: true }).click();
+  const missing = page.locator('[data-onboarding-missing="1"]');
+  await missing.waitFor();
+  assert.match(await missing.textContent(), /harness:fixture:failed/);
+  const missingShot = path.join(log, 'onboarding-missing-390.png');
+  await page.screenshot({ path: missingShot, mask: [page.locator('.admin-coupon')] });
+  assert.ok((await fs.stat(missingShot)).size > 1000, 'onboarding-missing-390.png');
+  await context.close();
+  }
 
   const directPut = createAdminArtifactWriter({
     origin: staging, fetchImpl: () => assert.fail('database writer must stay on the staging database'),

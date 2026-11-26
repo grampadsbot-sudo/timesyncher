@@ -5,6 +5,7 @@
 .admin-group header .admin-coupon { font-size: 12px; font-weight: 700; color: var(--gold-strong); }
 .admin-open { grid-column: 2; grid-row: 1 / span 2; border: 1px solid var(--line); border-radius: 8px; background: var(--soft); color: var(--ink); font-weight: 750; padding: 8px 12px; }
 .admin-empty { margin: 16px; color: var(--muted); }
+.admin-error { margin: 16px; padding: 12px 14px; border: 1px solid #c62828; border-radius: 8px; background: #ffebee; color: #b71c1c; }
 .site-pane[data-kind="customers"], .site-pane[data-kind="chat"], .site-pane[data-kind="trip"] { background: var(--panel); }
 .admin-clear-all b { color: var(--blue); }
 .app[data-admin].site-fullscreen {
