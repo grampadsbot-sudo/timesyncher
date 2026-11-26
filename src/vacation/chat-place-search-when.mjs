@@ -5,6 +5,7 @@ import { rowNeedsDetailBackfill } from './chat-intake-place-persist.mjs';
 import { applyEnrichedDetailToTripThing, enrichPlaceDetail } from './place-detail-enrichment.mjs';
 import { activeCollaboratorsFromParty, partyNamesFromDialogParty } from './reply-action-claim.mjs';
 import { insertTripThing } from './trip-things.mjs';
+import { evaluateIntakeAdmission, intakePhraseDenied, thingRowFilled } from './intake-thing-admission.mjs';
 
 function clean(value, max = 180) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
@@ -232,8 +233,27 @@ export async function insertStampedChatPlaceThings(db, {
   const destinationHint = clean(tripDateRows[0]?.destination, 180);
   const placeResults = [];
   const savedForFacts = [];
+  const existingRows = await db`
+    select id, title, location, source, metadata, category, description, starts_at
+    from trip_things
+    where trip_id = ${tripId}::uuid
+  `;
   for (const thing of Array.isArray(things) ? things : []) {
-    const stamped = stampChatSavedPlaceThing(thing, classification);
+    const title = clean(thing?.title, 240);
+    if (!title || intakePhraseDenied(title)) continue;
+    const post = evaluateIntakeAdmission({
+      title,
+      category: thing?.category,
+      description: thing?.description,
+      metadata: thing?.metadata,
+      resolvedPlace: Number.isFinite(Number(thing?.location?.lat)) ? thing : thing,
+      existingRows,
+    });
+    if (!post.admit) continue;
+    const admitted = post.adjustedCategory
+      ? { ...thing, category: post.adjustedCategory }
+      : thing;
+    const stamped = stampChatSavedPlaceThing(admitted, classification);
     const enriched = await enrichChatSavedPlaceThing(stamped, { destination: destinationHint, env, fetchImpl });
     const meta = enriched?.metadata && typeof enriched.metadata === 'object' ? enriched.metadata : {};
     const scheduled = scheduleChatThing(enriched, { start_date: tripStart, end_date: tripEnd });
@@ -249,6 +269,8 @@ export async function insertStampedChatPlaceThings(db, {
       },
     };
     const inserted = await insertTripThing(db, { tripId, requestId, thing: scheduledThing });
+    if (!inserted?.id || !thingRowFilled(inserted)) continue;
+    existingRows.push(inserted);
     savedForFacts.push({
       title: inserted?.title || enriched.title,
       whenLabel: meta.whenLabel || '',

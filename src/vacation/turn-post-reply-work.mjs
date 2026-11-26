@@ -3,11 +3,11 @@ import {
   isChatIntakeGeocodableThing,
   refreshUnresolvedChatIntakePlaces,
   rowNeedsPlaceSearch,
-  unresolvedChatIntakePlaceThing,
 } from './chat-intake-place-persist.mjs';
 import { searchIntakeLodgingPlaces } from './intake-lodging-search.mjs';
 import { searchPlaces } from './place-search.mjs';
-import { insertIntakeTripThingRow, insertTripThing } from './trip-things.mjs';
+import { insertIntakeTripThingRow } from './trip-things.mjs';
+import { intakePhraseDenied } from './intake-thing-admission.mjs';
 import {
   DEFAULT_ACTIVITY_COMMIT_TIMEOUT_MS,
   clearDeferredPlaceRefresh,
@@ -74,16 +74,20 @@ export function createPostReplyWork({
 
   const deferThing = (entry, reason) => deferredThings.push({ thingId: entry.thingId || null, title: entry.title, category: entry.category || 'activity', reason });
 
-  async function insertDeferred({ title, category, description = '', metadata = {}, startsAt = null }) {
-    const unresolved = unresolvedChatIntakePlaceThing({
-      title,
+  async function insertDeferred({ title, category, description = '', metadata = {}, startsAt = null, destinationHint = '' }) {
+    if (intakePhraseDenied(title)) return null;
+    const id = await insertIntakeTripThingRow(db, {
+      tripId,
       category,
+      title,
       description,
       metadata: { ...metadata, source: metadata?.source, placeRefreshDeferred: true },
       startsAt,
+      destinationHint,
+      env,
+      fetchImpl: boundedFetch,
     });
-    const written = unresolved ? await insertTripThing(db, { tripId, requestId, thing: unresolved, env }) : null;
-    return written?.id || null;
+    return id;
   }
 
   async function insertThing(conn, args = {}) {
@@ -121,7 +125,12 @@ export function createPostReplyWork({
         const title = cleanTitle(stay?.name || stay?.title);
         if (!title || have.has(title.toLowerCase())) continue;
         have.add(title.toLowerCase());
-        const thingId = await insertDeferred({ title, category: 'hotel', metadata: { source: 'chat_extraction' } });
+        const thingId = await insertDeferred({
+          title,
+          category: 'hotel',
+          metadata: { source: 'chat_extraction' },
+          destinationHint: options.destinationHint || options.areaHint || '',
+        });
         deferThing({ thingId, title, category: 'hotel' }, 'budget_exhausted');
       }
       return { saved: [], misses: [], lookups: [], lodgingOutcome: null };

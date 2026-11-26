@@ -9,6 +9,7 @@ import {
 } from '../../scripts/vacation-app-reply-rules.mjs';
 import { openRouterProviderForTier, openRouterTemperatureSpread, openRouterTier1CompactReasoningSpread } from '../../scripts/openrouter-tier-provider.mjs';
 import { intakeThingHasProperName } from './intake-thing-name.mjs';
+import { intakeCategoryForTitle, intakePhraseDenied } from './intake-thing-admission.mjs';
 import {
   PLACE_SEARCH_CATEGORY_KEYS,
   intakePlaceSearchCategoryError,
@@ -199,13 +200,14 @@ function cleanThings(list) {
   const seen = new Set();
   for (const item of list) {
     const name = clean(item?.name || item?.title, 180);
-    if (!name || !intakeThingHasProperName(name)) continue;
+    if (!name || !intakeThingHasProperName(name) || intakePhraseDenied(name)) continue;
     const key = name.toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);
+    const kind = intakeCategoryForTitle(name, clean(item?.kind || item?.category, 40).toLowerCase());
     things.push({
       name,
-      kind: clean(item?.kind || item?.category, 40).toLowerCase(),
+      kind,
       who: clean(item?.who, 120),
       when: clean(item?.when || item?.whenLabel, 180),
       source: CHAT_EXTRACTION,
