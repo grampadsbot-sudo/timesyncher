@@ -25,7 +25,7 @@ import { enrichDraftingTripContext } from './reply-trip-context-facts.mjs';
 import { pushPlanAndStyleDraftErrors } from './reply-draft-fact-extra.mjs';
 import { payerLineFromDollars, priceAnswered } from './seat-price.mjs';
 import { produceFirstIntakeReply } from './first-intake-reply.mjs';
-import { claimBlockedReply, heldJudgedDraft, requireReplyQuality, unjudgedReply } from './reply-quality-gate.mjs';
+import { claimBlockedReply, failOpenLiveReply, heldJudgedDraft, jevJudgeErrored, requireReplyQuality, unjudgedReply } from './reply-quality-gate.mjs';
 import { applyJevTurn, draftTierForTurn, jevTurn } from './jev-turn.mjs';
 import { buildLiveAppRewritePending } from './chat-place-search.mjs';
 import { inTurnPlaceLiveReplyHooks, placeSearchTieredReplyTimeoutMs } from './in-turn-place-reply-fallback.mjs';
@@ -88,6 +88,7 @@ export function jevStamp(jev) {
       responseModel: jev.responseModel || null,
       jevLatencyMs: Number.isFinite(Number(jev.jevLatencyMs)) ? Number(jev.jevLatencyMs) : null,
       jevBeforeModel: jev.jevBeforeModel === true,
+      ...(jev.judgeFailed === true ? { judgeFailed: true, judgeError: jev.judgeError || null } : {}),
     };
   }
   return {
@@ -177,6 +178,7 @@ export function liveTurnRecord({
         rewritten: model.quality.rewritten === true,
         model: model.quality.model || null,
         judgeMs: Number.isFinite(Number(model.quality.judgeMs)) ? Number(model.quality.judgeMs) : null,
+        ...(model.quality.judgeFailed === true ? { judgeFailed: true, judgeError: model.quality.judgeError || null } : {}),
       };
       if (record.quality.rewritten && model.quality.draft) {
         record.quality.draft = String(model.quality.draft);
@@ -1603,14 +1605,12 @@ export async function produceLiveAppReply({
     flagged: false, cost: model?.cost || null,
   };
   if (!quality?.judged) {
-    return unjudgedReply({
-      rules,
-      jev,
-      model,
-      quality,
-      log: baseLog,
-      draft: originalDraft,
-    });
+    if (jevJudgeErrored(quality)) {
+      return failOpenLiveReply({
+        rules, jev, model, quality, log: baseLog, draft: originalDraft, judgeMs: draftQualityMs, draftModel, ship: shipInTurnDraft, stamp: stampShippedReply,
+      });
+    }
+    return unjudgedReply({ rules, jev, model, quality, log: baseLog, draft: originalDraft });
   }
   const claimReason = replyActionClaimReason(originalDraft, turnActionResults, replyClaimContextFromIntent(intent));
   if (claimReason) {

@@ -177,10 +177,18 @@ assert.equal(savedTitleFields.title, 'Maui Mar 10–17 2027');
 assert.equal(savedTitleFields.titleError, null);
 assert.equal(savedTitleFields.destination, 'Maui');
 
-const failed = await classifyTripIntake({
+const jevDown = await classifyTripIntake({
   text: lisbon,
   env,
   fetchImpl: mockFetch({ score: 0.9, things: [], failOn: '/decisions' }),
+});
+assert.equal(jevDown.ok, true);
+assert.equal(jevDown.intake, true);
+
+const failed = await classifyTripIntake({
+  text: lisbon,
+  env,
+  fetchImpl: mockFetch({ score: 0.9, things: [], failOn: '/chat/completions' }),
 });
 assert.equal(failed.ok, false);
 assert.equal(failed.intake, false);

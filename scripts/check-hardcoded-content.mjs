@@ -198,6 +198,7 @@ const ALLOWED_MODELS = new Set([
   'deepseek/deepseek-v3.2',
   'qwen/qwen3-max',
   'typesafe/jev-1.13',
+  'typesafe/jev-1.13-20260917',
 ]);
 const MODEL_VENDOR = /^(?:google|qwen|deepseek|typesafe|openai|anthropic|meta-llama|mistralai|x-ai|cohere|perplexity|groq)\//i;
 const GPT_MINI = /gpt-[a-z0-9.]+-mini/ig;

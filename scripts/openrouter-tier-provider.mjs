@@ -18,7 +18,11 @@ const OPENROUTER_TIER_REQUEST_MAX_TOKENS = {
 const OPENROUTER_TIER4_TIMEOUT_MS = 35000;
 const COMPACT_RETRY_REASON_RE = /abort|timeout|timed out|tiered model returned an empty reply/i;
 const OPENROUTER_NO_TEMPERATURE_MODELS = new Set(['anthropic/claude-haiku-5.5']);
-const OPENROUTER_CANONICAL_SLUGS = { 'anthropic/claude-haiku-5.5': 'anthropic/claude-haiku-5.5-20261007' };
+const OPENROUTER_CANONICAL_SLUGS = {
+  'anthropic/claude-haiku-5.5': 'anthropic/claude-haiku-5.5-20261007',
+  'typesafe/jev-1.13': 'typesafe/jev-1.13-20260917',
+  'typesafe/jev-1.13-20260917': 'typesafe/jev-1.13',
+};
 
 export function openRouterTierReplyTimeoutMs(modelTier, requestedTimeoutMs = 0, defaultTimeoutMs = 20000) {
   const explicit = Number(requestedTimeoutMs);

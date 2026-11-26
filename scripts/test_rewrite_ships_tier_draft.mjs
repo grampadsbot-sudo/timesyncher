@@ -136,8 +136,10 @@ await withFetch(async (url, init = {}) => {
   });
   assert.equal(decisions.length, 1);
   assert.equal(tierChats.length, 1, 'the draft runs once before the single Jev judge fails');
-  assert.equal(produced.reply, null);
-  assert.equal(produced.reason, 'quality HTTP 503');
+  assert.equal(produced.reply, DRAFT);
+  assert.equal(produced.reason, null);
+  assert.equal(produced.jev.judgeFailed, true);
+  assert.equal(produced.quality.judgeFailed, true);
 });
 
 const vercel = JSON.parse(await readFile(new URL('../vercel.json', import.meta.url), 'utf8'));

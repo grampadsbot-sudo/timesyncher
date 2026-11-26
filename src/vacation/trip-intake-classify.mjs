@@ -425,12 +425,16 @@ export async function classifyTripIntake({
   try {
     let score = 1;
     if (!turnSession) {
-      const decision = await postJson(fetchImpl, DEFAULT_JEV_DECISIONS_URL, key, {
-        model,
-        state: { channel: 'vacation-app', current_turn: message },
-        questions: { trip_intake: TRIP_INTAKE_JEV_QUESTION },
-      }, 'intake_classify_jev', 'decisions');
-      score = decisionScore(decision?.answers?.trip_intake);
+      try {
+        const decision = await postJson(fetchImpl, DEFAULT_JEV_DECISIONS_URL, key, {
+          model,
+          state: { channel: 'vacation-app', current_turn: message },
+          questions: { trip_intake: TRIP_INTAKE_JEV_QUESTION },
+        }, 'intake_classify_jev', 'decisions');
+        score = decisionScore(decision?.answers?.trip_intake);
+      } catch {
+        score = 1;
+      }
     }
     if (score == null) return failed('trip intake classifier returned no decision');
     const extractionModel = bakeoffTierModels()[1];

@@ -18,7 +18,7 @@ const JEV_DECISIONS_PATH = /\/api\/alpha\/decisions\/?$/i;
 const OPENROUTER_CHAT_PATH = /\/api\/v1\/chat\/completions\/?$/i;
 export const DEFAULT_JEV_DECISIONS_URL = 'https://openrouter.ai/api/alpha/decisions';
 export const OPENROUTER_CHAT_COMPLETIONS_URL = 'https://openrouter.ai/api/v1/chat/completions'; export const OPENROUTER_KEY_URL = 'https://openrouter.ai/api/v1/key';
-export const JEV_QUALITY_MODEL = 'typesafe/jev-1.13';
+export const JEV_QUALITY_MODEL = 'typesafe/jev-1.13-20260917';
 const JEV_DECISIONS_MODEL = JEV_QUALITY_MODEL;
 export const TRIP_INTAKE_JEV_QUESTION = {
   type: 'noul',
