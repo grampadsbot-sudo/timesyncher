@@ -1,4 +1,5 @@
 import { cleanText } from './http.mjs';
+import { tripItineraryTitleRejected } from './intake-thing-admission.mjs';
 import { isAiImportChatRequest } from './mcp-chat-import.mjs';
 import { isReservationAsk } from './mcp-reservations-handshake.mjs';
 import { vkBotUsageCost } from './turn-cost.mjs';
@@ -71,6 +72,7 @@ function itemFromLine(line, dayNumber, startDate) {
   for (const part of parts) {
     const title = cleanText(part, 80);
     if (!title || title.length < 2 || title.split(/\s+/).length > 12 || title.includes('?')) continue;
+    if (tripItineraryTitleRejected(title)) continue;
     items.push({
       title,
       category: categoryForPlanTitle(title),
