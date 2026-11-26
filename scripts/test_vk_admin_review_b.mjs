@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { cannedWelcomeLiveTurn } from '../src/vacation/onboarding-welcome.mjs';
 import { LocalVkAdminStore } from '../src/vacation/vk-admin-review-storage.mjs';
 import { firstFiveTurnCapture, createAdminArtifactWriter, storeDialogPdf } from './harness/admin-review-artifacts.mjs';
 import { startVkAdminLocalServer } from './qa/vk-admin-local-server.mjs';
@@ -58,6 +59,9 @@ const turns = replies.flatMap((rows, index) => {
         : { shippedModel: names[index], openrouterCalls: rows } } },
   ];
 });
+const openingGreeting = "Welcome, Sofia! You're all set to start planning your vacation.";
+turns.unshift({ at: current, speaker: 'app', direction: 'outbound', body: openingGreeting,
+  payload: { welcomeAudience: 'owner', liveTranscript: cannedWelcomeLiveTurn({ text: openingGreeting, at: current }) } });
 turns.push({ request_id: 'req-4', at: current, speaker: 'app', direction: 'outbound', body: 'App reply 4',
   payload: { liveTranscript: { model: { responseModel: 'vendor/legacy',
     cost: { status: 'measured', currency: 'USD', dollars: 0.004, source: 'openrouter_usage_cost' } } } } });
@@ -215,9 +219,13 @@ try {
       await shotMenu('header-multiple-vacations');
       await page.keyboard.press('Escape');
       assert.equal(await menuButton.getAttribute('aria-expanded'), 'false');
-      const text = await page.locator('#customerChatReplay article').allTextContents();
-      assert.deepEqual(text.map((line) => line.match(/(?:Customer line|App reply) \d/)[0]), turns.map((turn) => turn.body));
+      const dialogTurns = page.locator('#customerChatReplay article');
+      const greetingDetail = dialogTurns.filter({ hasText: openingGreeting }).locator('xpath=following-sibling::*[1]');
+      assert.equal(await greetingDetail.textContent(), 'Opening greeting (no model, no cost)');
+      const text = await dialogTurns.allTextContents();
+      assert.deepEqual(text.slice(1).map((line) => line.match(/(?:Customer line|App reply) \d/)[0]), turns.slice(1).map((turn) => turn.body));
       assert.deepEqual(await page.locator('.admin-reply-detail').allTextContents(), [
+        'Opening greeting (no model, no cost)',
         'vendor/first · Actual $0.01234567 Estimated $0.00',
         'vendor/second · Actual $0.00 Estimated $0.05',
         'vendor/third · unpriced',

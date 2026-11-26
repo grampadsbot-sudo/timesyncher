@@ -93,6 +93,9 @@ window.startVkAdminReview = (() => {
     const turns = (vac.turns || []).map((turn, index) => {
       if (turn.speaker === 'system' || turn.direction === 'system') return '';
       const detail = vac.replyDetails?.[index];
+      if (detail && turn.fixedOpener === true && !detail.model && !detail.priced) {
+        return `${turnMarkup(turn)}<p class="admin-reply-detail"><strong>Opening greeting (no model, no cost)</strong></p>`;
+      }
       const meta = detail ? `<p class="admin-reply-detail"><strong>${safe(detail.model || 'Model unavailable')}</strong> · ${detail.priced ? costLines(detail.costs) : '<span data-cost="unpriced">unpriced</span>'}</p>` : '';
       return `${turnMarkup(turn)}${meta}`;
     }).join('');
