@@ -75,6 +75,7 @@ export function intakeProvenanceOrigin(metadata = {}) {
   const origin = clean(bag.origin, 80).toLowerCase();
   if (CUSTOMER_ORIGINS.has(origin) || PROVIDER_ORIGINS.has(origin)) return origin;
   const src = clean(bag.source || bag.intakeSource, 80).toLowerCase();
+  if (src === 'customer') return 'customer_turn';
   if (src === 'customer_stated') return 'customer_turn';
   if (src === 'customer-turn') return 'customer_turn';
   if (src === 'chat_extraction') return 'customer_turn';
