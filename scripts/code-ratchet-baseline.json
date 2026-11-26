@@ -1318,11 +1318,5 @@
     "file": "vacation-app.html",
     "symbol": "lines:872",
     "note": "existing; ratchet only shrinks"
-  },
-  {
-    "rule": "DEAD-CODE",
-    "file": "src/vacation/trip-map-initial-view.mjs",
-    "symbol": "export:finiteCoord",
-    "note": "existing; ratchet only shrinks"
   }
 ]

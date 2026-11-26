@@ -5,7 +5,7 @@ export const TRIP_MAP_DESTINATION_ZOOM = 11;
 export const TRIP_MAP_FIT_MAX_ZOOM = 15;
 const MAP_COORD_NEAR_ORIGIN_EPSILON = 0.5;
 
-export function finiteCoord(value) {
+function finiteCoord(value) {
   if (value === null || value === undefined) return null;
   if (typeof value === 'string' && value.trim() === '') return null;
   const number = Number(value);
