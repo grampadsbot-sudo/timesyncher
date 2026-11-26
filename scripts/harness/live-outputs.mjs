@@ -109,6 +109,14 @@ export async function renderDialog({
   fs.mkdirSync(outDir, { recursive: true });
   const stamped = stampRunReplyBackend(stampMissingDriveSha(doc, sha), replyBackend);
   const payload = ssrSummary ? { ...stamped, ssrSummary } : stamped;
+  if (redactForAdmin) {
+    const { assertLiveTranscript } = await import('../live-transcript-dialog-pdf.mjs');
+    try {
+      assertLiveTranscript(payload);
+    } catch (error) {
+      return { ok: false, detail: redactUrls(redactText(error.message, secrets)), transcript: null, pdfText: '', out };
+    }
+  }
   const scrub = redactForAdmin
     ? (_key, value) => typeof value === 'string' ? redactUrls(redactText(value, secrets)) : value
     : undefined;

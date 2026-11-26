@@ -201,7 +201,7 @@ export function liveOptions(env = process.env) {
       const { sql } = await import('../../src/vacation/db.mjs');
       const db = sql(ready);
       const created = await provisionThrowaway(db, story, { tag: options.tag, runId: options.runId, env: ready });
-      const secrets = secretValues(ready, [created.token]);
+      const secrets = secretValues(ready, [created.token, created.shareToken]);
       let couponRedemption = null;
       if (story.coupon) {
         try {

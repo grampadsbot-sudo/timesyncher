@@ -143,6 +143,8 @@ try {
           stored.push({ ...customer, turnIndex: 5, text, storedText: text, buildSha: sha });
           throw new Error('simulated mid-run failure');
         }
+        await capture({ tripId: id, turn: 5, text: 'Customer line 5' });
+        await capture({ tripId: id, turn: 6, text: 'Customer line 6' });
         return { reason: '', liveShaStart: sha };
       },
       openPage: async () => {
@@ -167,6 +169,7 @@ try {
   assert.deepEqual(adminArtifacts.captures, [1, 2, 3, 4, 5]);
   assert.deepEqual(adminArtifacts.errors, []);
   assert.deepEqual(uploaded, ['turn-1', 'turn-2', 'turn-3', 'turn-4', 'turn-5', 'dialog-pdf'].map((name) => [`${artifactPath}/${name}`, 200]));
+  assert.deepEqual((await fs.readdir(path.join(outDir, 'first-5-turns'))).sort(), [1, 2, 3, 4, 5].map((n) => `turn-${n}.png`));
   const pdf = await readArtifact(tripId, 'dialog-pdf');
   assert.match(extractPdfText(pdf), /Customer line 5/);
   const keepsake = await storeHarnessKeepsake({
@@ -374,6 +377,7 @@ try {
   const failed = await replay(other, true);
   assert.equal(failed.played.reason, 'harness-error');
   assert.equal(failed.dialog.ok, false);
+  assert.match(failed.dialog.detail, /no app reply/);
   assert.equal(failed.adminArtifacts.dialogPdf, true);
   assert.deepEqual(failed.adminArtifacts.captures, [1, 2]);
   assert.deepEqual(failed.adminArtifacts.errors, []);

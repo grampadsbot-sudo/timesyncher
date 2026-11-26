@@ -51,6 +51,8 @@ export function createAdminArtifactWriter({ origin, login, fetchImpl, harnessVac
     });
     if (response.status === 401) session = undefined;
     if (!response.ok) throw httpError('put', response.status);
+    const saved = await response.json().catch(() => null);
+    if (saved?.ok !== true) throw httpError('put', response.status);
   };
 }
 
