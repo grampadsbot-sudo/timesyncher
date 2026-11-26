@@ -131,6 +131,10 @@ window.startVkAdminReview = (() => {
     if (!artifacts) return replay + '<p class="admin-empty">Loading onboarding captures…</p>';
     if (artifacts.failed) return replay + '<p class="admin-empty" role="status">Onboarding captures could not be loaded.</p>';
     const shots = artifacts.onboardingCaptures || [];
+    const harnessRun = String(vac.harnessTag || '').trim();
+    if (!shots.length && harnessRun) {
+      return `${replay}<p class="admin-error" role="alert" data-onboarding-missing="1" data-harness-run="${safe(harnessRun)}">Onboarding captures missing for this run <strong>${safe(harnessRun)}</strong>.</p>`;
+    }
     if (!shots.length) return replay || '<p class="admin-empty">No onboarding is stored for this vacation yet.</p>';
     const guests = new Map();
     for (const shot of shots) {
