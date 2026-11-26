@@ -5,7 +5,7 @@ import { replyHasCannedHelpDeskOpener } from './reply-canned-opener.mjs';
 export { customerAskedAccessCollabOrPlan } from './customer-collab-plan-asked.mjs';
 export { replyHasCannedHelpDeskOpener, stripCannedHelpDeskOpener } from './reply-canned-opener.mjs';
 
-export function replyHasUnaskedPostIntakeCollabCopy(reply = '', customerTurn = '') {
+function replyHasUnaskedPostIntakeCollabCopy(reply = '', customerTurn = '') {
   if (customerAskedAccessCollabOrPlan(customerTurn)) return false;
   return !postIntakeCollabCopyMissing(reply);
 }
