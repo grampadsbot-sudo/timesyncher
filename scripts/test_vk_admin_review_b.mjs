@@ -470,6 +470,9 @@ try {
   const missing = page.locator('[data-onboarding-missing="1"]');
   await missing.waitFor();
   assert.match(await missing.textContent(), /harness:fixture:failed/);
+  const missingShot = path.join(log, 'onboarding-missing-390.png');
+  await page.screenshot({ path: missingShot, mask: [page.locator('.admin-coupon')] });
+  assert.ok((await fs.stat(missingShot)).size > 1000, 'onboarding-missing-390.png');
   await context.close();
   }
 
