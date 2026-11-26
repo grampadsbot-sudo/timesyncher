@@ -24,42 +24,28 @@ function disclosedAge(corpus, name, value) {
 }
 
 export function customerNamedInRoster(text, name) {
-  return !customerChallengesPriorReply(text) && customerMentionedName(text, name, true);
+  return !customerChallengesPriorReply(text) && customerMentionedName(text, name);
 }
 
 function rememberRoster(sources, field, value, source) {
   sources.push({ field, value, source });
 }
 
-function rosterCustomerCorpus(doc) {
-  const parts = [];
-  for (const turn of Array.isArray(doc?.turns) ? doc.turns : []) {
-    if (turn?.role === 'customer') parts.push(String(turn.text || ''));
-  }
-  return parts.join('\n');
-}
-
 function escapeRosterName(name) {
   return String(name || '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+');
 }
 
-function customerMentionedName(corpus, name, exact = false) {
-  const full = String(name || '').trim();
-  if (!full || !String(corpus || '').trim()) return false;
-  const escaped = escapeRosterName(full);
-  if (new RegExp(`\\b${escaped}\\b`, 'i').test(corpus)) return true;
-  if (exact) return false;
-  const first = full.split(/\s+/)[0];
-  if (first.length >= 3 && new RegExp(`\\b${first.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(corpus)) return true;
-  return false;
+function customerMentionedName(corpus, name) {
+  const escaped = escapeRosterName(name);
+  return Boolean(escaped && new RegExp(`\\b${escaped}\\b`, 'i').test(String(corpus || '')));
 }
 
 export function completeRosterParty(doc) {
   const stored = doc?.party && typeof doc.party === 'object' ? doc.party : {};
   const transcriptOnly = doc?.transcriptOnly === true;
-  const customerCorpus = transcriptOnly ? rosterDisclosureCorpus(doc.turns) : rosterCustomerCorpus(doc);
-  const named = (name) => customerMentionedName(customerCorpus, name, transcriptOnly);
-  const ageFor = (name, age) => transcriptOnly ? disclosedAge(customerCorpus, name, age) : (age == null ? NaN : Number(age));
+  const customerCorpus = transcriptOnly ? rosterDisclosureCorpus(doc.turns) : '';
+  const named = (name) => customerMentionedName(customerCorpus, name);
+  const ageFor = (name, age) => transcriptOnly ? disclosedAge(customerCorpus, name, age) : Number(age);
   const sources = [];
   const party = {
     primary: null,
@@ -77,27 +63,24 @@ export function completeRosterParty(doc) {
     rememberRoster(sources, 'primary', party.primary.name, 'session');
   }
   for (const person of Array.isArray(stored.collaborators) ? stored.collaborators : []) {
-    if (!person?.name) continue;
-    if (!named(person.name)) continue;
+    if (!person?.name || (transcriptOnly && !named(person.name))) continue;
     const collaborator = transcriptOnly ? { name: person.name } : { ...person };
     party.collaborators.push(collaborator);
     rememberRoster(sources, `collaborators.${person.name}`, collaborator.payer || '', 'trip.dialogParty');
   }
   for (const kid of Array.isArray(stored.preference_subjects) ? stored.preference_subjects : []) {
-    if (!kid?.name || !named(kid.name)) continue;
+    if (!kid?.name || (transcriptOnly ? !named(kid.name) : !Number.isFinite(Number(kid.age)))) continue;
     const age = ageFor(kid.name, kid.age);
     party.preference_subjects.push(Number.isFinite(age) ? { name: kid.name, age } : { name: kid.name });
     rememberRoster(sources, `preference_subjects.${kid.name}`, Number.isFinite(age) ? age : '', 'trip.dialogParty');
   }
   for (const person of Array.isArray(stored.viewers) ? stored.viewers : []) {
-    if (!person?.name) continue;
-    if (!named(person.name)) continue;
+    if (!person?.name || (transcriptOnly && !named(person.name))) continue;
     party.viewers.push({ name: person.name });
     rememberRoster(sources, `viewers.${person.name}`, 'viewer', 'trip.dialogParty');
   }
   for (const person of Array.isArray(stored.editors) ? stored.editors : []) {
-    if (!person?.name) continue;
-    if (!named(person.name)) continue;
+    if (!person?.name || (transcriptOnly && !named(person.name))) continue;
     party.editors.push({ name: person.name });
     rememberRoster(sources, `editors.${person.name}`, 'editor', 'trip.dialogParty');
   }
