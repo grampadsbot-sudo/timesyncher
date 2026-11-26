@@ -11,6 +11,7 @@ import {
   ONBOARDING_WIDTHS,
   assessOnboardingScreens,
   assertOnboardingCustomer,
+  inviteOnboardingTags,
   refusedOnboardingTarget,
   shotBlank,
 } from './onboarding-screens.mjs';
@@ -285,4 +286,141 @@ export async function rebuildCustomerPdf(captured, laterFiles = []) {
   const outPath = captured.outPath;
   const click = captured.termsClick === 'ui' ? 'ui' : '';
   return { ...resultFrom(captured.shots, click, laterFiles, outPath), laterFiles };
+}
+
+const inviteWait = { timeout: 30000 };
+
+async function openInvitePage() {
+  const playwright = resolvePlaywright();
+  if (playwright.missing) throw new Error('Playwright is required for invite onboarding captures');
+  const browser = await playwright.module.webkit.launch();
+  try {
+    const context = await browser.newContext({
+      viewport: { width: ONBOARDING_WIDTHS[0], height: 844 },
+      isMobile: true, hasTouch: true, userAgent: IPHONE, serviceWorkers: 'block',
+    });
+    return { page: await context.newPage(), close: () => browser.close() };
+  } catch (error) {
+    await browser.close();
+    throw error;
+  }
+}
+
+function inviteTarget(value, origin) {
+  const url = new URL(value, origin);
+  if (url.origin !== origin || url.username || url.password || refusedOnboardingTarget(url.href)) {
+    throw new Error('refused: invite onboarding navigation');
+  }
+  return url;
+}
+
+async function showReceivedInvite(page, { role, html, subject }, origin) {
+  const meta = '<meta name="viewport" content="width=device-width, initial-scale=1">'
+    + '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; style-src \'unsafe-inline\'; img-src data:">';
+  await page.setContent(html.replace(/<html\b[^>]*>/i, (tag) => `${tag}<head>${meta}</head>`));
+  const links = await page.locator('a[href]').evaluateAll((anchors, emailSubject) => {
+    const subject = document.createElement('p');
+    subject.style.cssText = 'border-bottom:1px solid currentColor;font:600 14px Arial;margin:0;padding:16px 28px';
+    subject.textContent = emailSubject;
+    document.body.prepend(subject);
+    return anchors.map((anchor) => {
+      if (/^https?:\/\//i.test(anchor.textContent.trim())) anchor.textContent = '[link hidden]';
+      return anchor.getAttribute('href');
+    });
+  }, subject);
+  const link = links.find((href) => {
+    const url = new URL(href, origin);
+    return role === 'telegram_collaborator' ? url.pathname.startsWith('/accept/vacation-collaborator-')
+      : url.pathname === '/api/vacation-itinerary' && url.searchParams.get('webAccess') === '1'
+        && url.searchParams.get('action') === 'accept' && url.searchParams.has('token');
+  });
+  if (!link) throw new Error('stored invite email has no accept link');
+  return inviteTarget(link, origin).href;
+}
+
+export async function captureInviteOnboarding({
+  invite, origin, sharedUrl, title, vacationId, guest, outDir, put, openPage = openInvitePage,
+}) {
+  const { role } = invite;
+  const tags = inviteOnboardingTags({ role, guest, vacationId });
+  const dir = path.join(outDir, 'invite-onboarding');
+  fs.mkdirSync(dir, { recursive: true });
+  const { page, close } = await openPage();
+  const uploaded = [];
+  let screen = role === 'viewer' ? 'shared-landing' : 'invite-email';
+  const capture = async (stage, also = '') => {
+    screen = stage;
+    for (const tag of tags.filter((tag) => tag.screen === stage)) {
+      await page.setViewportSize({ width: tag.width, height: 844 });
+      const file = path.join(dir, `${tag.artifact}.png`);
+      const bytes = await page.screenshot({ path: file });
+      if (shotBlank(bytes) || chromeHits(await page.locator('body').innerText()).length) {
+        throw new Error('invite onboarding surface is blank or contains engineering chrome');
+      }
+      await put(vacationId, tag.artifact, bytes);
+      uploaded.push(tag);
+      if (also) {
+        const sameScreen = tags.find((other) => other.screen === also && other.width === tag.width);
+        await put(vacationId, sameScreen.artifact, bytes);
+        uploaded.push(sameScreen);
+      }
+    }
+  };
+  const goto = async (value) => {
+    const url = inviteTarget(value, origin);
+    const response = await page.goto(url.href, { waitUntil: 'domcontentloaded', ...inviteWait });
+    inviteTarget(page.url(), origin);
+    if (!response?.ok()) throw new Error('invite onboarding page failed to load');
+  };
+  try {
+    await page.route('**/*', (route) => {
+      const request = route.request();
+      return request.isNavigationRequest() && new URL(request.url()).origin !== origin ? route.abort() : route.fallback();
+    });
+    if (role !== 'viewer') {
+      const acceptUrl = await showReceivedInvite(page, invite, origin);
+      await capture('invite-email');
+      screen = 'accept-link';
+      await goto(acceptUrl);
+    }
+    if (role === 'telegram_collaborator') {
+      await page.waitForSelector('#form', inviteWait);
+      await capture('accept-link');
+      screen = 'sign-in-or-join';
+      await page.fill('#name', invite.name);
+      await page.check('#agree');
+      await capture('sign-in-or-join');
+      await page.click('#form button.btn');
+      screen = 'first-view';
+      await page.waitForURL((url) => url.origin === origin && url.pathname === '/vacation-app.html'
+        && url.searchParams.has('session'), inviteWait);
+      await page.waitForSelector('#messageText', inviteWait);
+      await capture('first-view');
+    } else {
+      const shared = inviteTarget(sharedUrl, origin);
+      if (role === 'web_editor') {
+        await page.getByRole('heading', { name: 'Website editing enabled', exact: true }).waitFor(inviteWait);
+        const landingLink = await page.locator('main a').getAttribute('href', inviteWait);
+        if (inviteTarget(landingLink, origin).pathname !== shared.pathname) throw new Error('editor landed on a different vacation');
+        await capture('accept-link', 'sign-in-or-join');
+        screen = 'first-view';
+      }
+      await goto(shared.href);
+      await page.getByText(title, { exact: false }).first().waitFor(inviteWait);
+      const slug = shared.pathname.split('/')[2];
+      const access = await page.evaluate(async (url) => {
+        const response = await fetch(url, { redirect: 'error', signal: AbortSignal.timeout(20000) });
+        return response.ok ? response.json() : null;
+      }, `/api/shared/${slug}/edit-access`);
+      if (access?.canEdit !== (role === 'web_editor') || (role === 'web_editor' && access.role !== role)) {
+        throw new Error('shared vacation access did not match the invited role');
+      }
+      await capture(role === 'viewer' ? 'shared-landing' : 'first-view');
+    }
+    return { uploaded, error: '' };
+  } catch {
+    return { uploaded, error: `${role}-${screen}-capture-or-upload-failed` };
+  } finally {
+    await close();
+  }
 }

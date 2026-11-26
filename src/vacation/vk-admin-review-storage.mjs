@@ -1,10 +1,16 @@
 import { randomUUID } from 'node:crypto';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { DatabaseJsonStore, LocalJsonStore } from '../onboarding/eula-persistent-store.mjs';
 import { hasDatabase, sql } from './db.mjs';
+import { listOnboardingCaptureTags, onboardingCaptureTag } from './vk-admin-onboarding-captures.mjs';
 
 export class LocalVkAdminStore extends LocalJsonStore {
+  async listOnboardingArtifacts(vacationId) {
+    const dir = this.path(onboardingPath(vacationId));
+    return existsSync(dir) ? readdirSync(dir).map(artifactName) : [];
+  }
+
   async putWelcome(key, value) {
     const path = this.path(key);
     mkdirSync(dirname(path), { recursive: true });
@@ -17,6 +23,15 @@ export class LocalVkAdminStore extends LocalJsonStore {
 }
 
 class DatabaseVkAdminStore extends DatabaseJsonStore {
+  async listOnboardingArtifacts(vacationId) {
+    const prefix = this.key(onboardingPath(vacationId)) + '/';
+    const rows = await sql(this.env)`
+      select substr(key, ${prefix.length + 1}) as name
+      from eula_store_objects where left(key, ${prefix.length}) = ${prefix}
+    `;
+    return rows.map((row) => artifactName(row.name));
+  }
+
   async putWelcome(key, value) {
     const db = sql(this.env);
     await db`
@@ -104,12 +119,22 @@ export async function loadNoteFile(store, customerId, vacationId, legacy, id, in
   return file ? Buffer.from(file.data, 'base64') : null;
 }
 
+function onboardingPath(vacationId) {
+  return `artifacts/${encodeURIComponent(vacationId)}/onboarding`;
+}
+
+function artifactName(file) {
+  return file.endsWith('.json') ? file.slice(0, -5) : '';
+}
+
 function artifactPath(vacationId, artifact) {
-  return `artifacts/${encodeURIComponent(vacationId)}/${artifact}.json`;
+  const dir = onboardingCaptureTag(artifact, vacationId)
+    ? onboardingPath(vacationId) : `artifacts/${encodeURIComponent(vacationId)}`;
+  return `${dir}/${artifact}.json`;
 }
 
 export function artifactType(artifact) {
-  if (/^turn-[1-5]$/.test(artifact)) return 'image/png';
+  if (/^turn-[1-5]$/.test(artifact) || onboardingCaptureTag(artifact)) return 'image/png';
   return artifact === 'dialog-pdf' ? 'application/pdf' : '';
 }
 
@@ -133,6 +158,7 @@ export async function listReviewArtifacts(store, vacationId) {
   }));
   return {
     turns: captures.filter(Boolean),
+    onboardingCaptures: listOnboardingCaptureTags(await store.listOnboardingArtifacts(vacationId), vacationId),
     dialogPdf: Boolean(await loadReviewArtifact(store, vacationId, 'dialog-pdf')),
     review: await store.getJson(artifactPath(vacationId, 'review')),
   };
