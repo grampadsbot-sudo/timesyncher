@@ -14,6 +14,9 @@ const raw = execFileSync('git', ['show', `${UPSTREAM_COMMIT}:${UPSTREAM_PATH}`],
 
 const rendered = renderServedTrekBundle(raw.toString('utf8'));
 assert.match(rendered, /tsTripMapInitialView=/);
+assert.match(rendered, /tsUsableMapLatLng=/);
+assert.match(rendered, /function isUsableMapLatLng/);
+assert.equal(rendered.includes('Map appears when the day has mapped itinerary stops.'), false);
 assert.match(rendered, /tsMapIv=I\.useMemo\(\(\)=>tsTripMapInitialView\(\{places:z,trip:r\}\)/);
 assert.match(rendered, /data-map-center-unresolved/);
 assert.match(rendered, /tsBindTripMapHookLeaflet/);

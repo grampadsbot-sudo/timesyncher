@@ -3,17 +3,30 @@ export const MAP_CENTER_UNRESOLVED = 'map_center_unresolved';
 export const TRIP_MAP_SINGLE_POINT_ZOOM = 12;
 export const TRIP_MAP_DESTINATION_ZOOM = 11;
 export const TRIP_MAP_FIT_MAX_ZOOM = 15;
+const MAP_COORD_NEAR_ORIGIN_EPSILON = 0.5;
 
 export function finiteCoord(value) {
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'string' && value.trim() === '') return null;
   const number = Number(value);
   return Number.isFinite(number) ? number : null;
 }
 
-function pointFromLatLng(lat, lng) {
+export function isUsableMapLatLng(lat, lng) {
   const la = finiteCoord(lat);
   const ln = finiteCoord(lng);
-  if (la === null || ln === null) return null;
-  return { lat: la, lng: ln };
+  if (la === null || ln === null) return false;
+  if (Math.abs(la) > 90 || Math.abs(ln) > 180) return false;
+  if (la === 0 && ln === 0) return false;
+  if (Math.abs(la) < MAP_COORD_NEAR_ORIGIN_EPSILON && Math.abs(ln) < MAP_COORD_NEAR_ORIGIN_EPSILON) {
+    return false;
+  }
+  return true;
+}
+
+function pointFromLatLng(lat, lng) {
+  if (!isUsableMapLatLng(lat, lng)) return null;
+  return { lat: finiteCoord(lat), lng: finiteCoord(lng) };
 }
 
 function pointFromRecord(record = {}) {
@@ -97,5 +110,19 @@ export function computeTripMapInitialView({ places = [], trip = {} } = {}) {
 }
 
 export function tripMapInitialViewBundleSnippet() {
-  return `const tsTripMapInitialView=(${computeTripMapInitialView.toString()});`;
+  return [
+    `const MAP_CENTER_UNRESOLVED=${JSON.stringify(MAP_CENTER_UNRESOLVED)};`,
+    `const TRIP_MAP_SINGLE_POINT_ZOOM=${TRIP_MAP_SINGLE_POINT_ZOOM};`,
+    `const TRIP_MAP_DESTINATION_ZOOM=${TRIP_MAP_DESTINATION_ZOOM};`,
+    `const TRIP_MAP_FIT_MAX_ZOOM=${TRIP_MAP_FIT_MAX_ZOOM};`,
+    `const MAP_COORD_NEAR_ORIGIN_EPSILON=${MAP_COORD_NEAR_ORIGIN_EPSILON};`,
+    finiteCoord.toString(),
+    isUsableMapLatLng.toString(),
+    pointFromLatLng.toString(),
+    pointFromRecord.toString(),
+    coordsFromPlace.toString(),
+    destinationCoordsFromTrip.toString(),
+    `const tsTripMapInitialView=${computeTripMapInitialView.toString()};`,
+    'const tsUsableMapLatLng=isUsableMapLatLng;',
+  ].join('');
 }

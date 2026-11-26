@@ -1,12 +1,12 @@
-import { finiteCoord } from './trip-map-initial-view.mjs';
+import { isUsableMapLatLng } from './trip-map-initial-view.mjs';
 import { tryGeocodeLabel } from './place-search-geocode.mjs';
 import { scheduleBackgroundWork } from './deferred-work.mjs';
 
 function cleanCenter(center = {}) {
-  const lat = finiteCoord(center?.lat ?? center?.latitude);
-  const lng = finiteCoord(center?.lng ?? center?.longitude);
-  if (lat === null || lng === null) return null;
-  return { lat, lng };
+  const lat = center?.lat ?? center?.latitude;
+  const lng = center?.lng ?? center?.longitude;
+  if (!isUsableMapLatLng(lat, lng)) return null;
+  return { lat: Number(lat), lng: Number(lng) };
 }
 
 export function destinationCenterFromTripMetadata(metadata = {}) {
