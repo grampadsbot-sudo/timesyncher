@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { DatabaseJsonStore, LocalJsonStore } from '../onboarding/eula-persistent-store.mjs';
 import { hasDatabase, sql } from './db.mjs';
+import { welcomeNoteText } from './welcome-note-text.mjs';
 import { listOnboardingCaptureTags, onboardingCaptureTag } from './vk-admin-onboarding-captures.mjs';
 
 export class LocalVkAdminStore extends LocalJsonStore {
@@ -87,11 +88,7 @@ export function notesPath(customerId, vacationId) {
 
 export async function saveWelcome(store, member, vacation) {
   const path = notesPath(member.id, vacation.tripId);
-  const title = vacation.title || vacation.destination || vacation.label;
-  const place = vacation.destination && !title.toLowerCase().includes(vacation.destination.toLowerCase())
-    ? ` in ${vacation.destination}` : '';
-  const dates = [vacation.startDate, vacation.endDate].filter(Boolean).join(' to ');
-  const text = `Welcome to ${member.customer_label}'s vacation. ${title}${place}${dates ? ` · ${dates}` : ''}.`;
+  const text = welcomeNoteText(member, vacation);
   await store.putWelcome(`${path}/welcome.json`, {
     id: 'welcome', kind: 'welcome', at: new Date().toISOString(), text, vacationId: vacation.tripId, attachments: [],
   });

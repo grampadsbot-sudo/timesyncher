@@ -30,11 +30,12 @@ assert.deepEqual(hitsFor(POST_INTAKE_COLLAB_COPY), []);
 
 const draft = "Hi Sofia, I'm building your Orlando theme parks vacation now. You're going from Monday, April 5 to Friday, April 9, 2027, which is four nights. Where are you planning to stay in Orlando?";
 assert.equal(postIntakeCollabCopyMissing(draft), true);
-const firstIntake = ensurePostIntakeCollabCopy(draft);
-assert.equal(firstIntake.endsWith(POST_INTAKE_COLLAB_COPY), true);
-assert.equal(postIntakeCollabCopyMissing(firstIntake), false);
-assert.deepEqual(hitsFor(firstIntake), []);
-assert.equal(ensurePostIntakeCollabCopy(firstIntake), firstIntake, 'copy is not appended twice');
+assert.equal(ensurePostIntakeCollabCopy(draft), draft, 'unasked intake must not append collab/plan copy');
+assert.deepEqual(hitsFor(draft), []);
+const askedIntake = ensurePostIntakeCollabCopy(draft, 'What is edit access vs view access for collaborators?');
+assert.equal(askedIntake.endsWith(POST_INTAKE_COLLAB_COPY), true);
+assert.equal(postIntakeCollabCopyMissing(askedIntake), false);
+assert.deepEqual(hitsFor(askedIntake), []);
 
 const echoed = ensurePostIntakeCollabCopy(`${draft} I am building the itinerary from what you told me. View access lets family and friends see the days. Edit access lets them add notes after you approve an email invite. Welcome them onto this vacation as collaborators. ${OLD_SENTENCE}`);
 assert.equal(echoed.includes(OLD_SENTENCE), false);

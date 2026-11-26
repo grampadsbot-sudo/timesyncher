@@ -1014,8 +1014,27 @@ function rememberRoster(sources, field, value, source) {
   sources.push({ field, value, source });
 }
 
+function rosterCustomerCorpus(doc) {
+  const parts = [];
+  for (const turn of Array.isArray(doc?.turns) ? doc.turns : []) {
+    if (turn?.role === 'customer') parts.push(String(turn.text || ''));
+  }
+  return parts.join('\n');
+}
+
+function customerMentionedName(corpus, name) {
+  const full = String(name || '').trim();
+  if (!full || !String(corpus || '').trim()) return false;
+  const escaped = full.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+');
+  if (new RegExp(`\\b${escaped}\\b`, 'i').test(corpus)) return true;
+  const first = full.split(/\s+/)[0];
+  if (first.length >= 3 && new RegExp(`\\b${first.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(corpus)) return true;
+  return false;
+}
+
 export function completeRosterParty(doc) {
   const stored = doc?.party && typeof doc.party === 'object' ? doc.party : {};
+  const customerCorpus = rosterCustomerCorpus(doc);
   const sources = [];
   const party = {
     primary: null,
@@ -1034,21 +1053,25 @@ export function completeRosterParty(doc) {
   }
   for (const person of Array.isArray(stored.collaborators) ? stored.collaborators : []) {
     if (!person?.name) continue;
+    if (!customerMentionedName(customerCorpus, person.name)) continue;
     party.collaborators.push({ ...person });
     rememberRoster(sources, `collaborators.${person.name}`, person.payer || '', 'trip.dialogParty');
   }
   for (const kid of Array.isArray(stored.preference_subjects) ? stored.preference_subjects : []) {
     if (!kid?.name || !Number.isFinite(Number(kid.age))) continue;
+    if (!customerMentionedName(customerCorpus, kid.name)) continue;
     party.preference_subjects.push({ name: kid.name, age: Number(kid.age) });
     rememberRoster(sources, `preference_subjects.${kid.name}`, Number(kid.age), 'trip.dialogParty');
   }
   for (const person of Array.isArray(stored.viewers) ? stored.viewers : []) {
     if (!person?.name) continue;
+    if (!customerMentionedName(customerCorpus, person.name)) continue;
     party.viewers.push({ name: person.name });
     rememberRoster(sources, `viewers.${person.name}`, 'viewer', 'trip.dialogParty');
   }
   for (const person of Array.isArray(stored.editors) ? stored.editors : []) {
     if (!person?.name) continue;
+    if (!customerMentionedName(customerCorpus, person.name)) continue;
     party.editors.push({ name: person.name });
     rememberRoster(sources, `editors.${person.name}`, 'editor', 'trip.dialogParty');
   }

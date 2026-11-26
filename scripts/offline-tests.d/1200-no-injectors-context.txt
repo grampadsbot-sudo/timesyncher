@@ -1,0 +1,1 @@
+scripts/test_issue_1200_no_injectors_context.mjs
