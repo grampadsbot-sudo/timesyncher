@@ -43,7 +43,7 @@ assert.equal(party.primary?.name, 'Sofia Lopez');
 assert.deepEqual(party.collaborators, []);
 assert.deepEqual(party.preference_subjects, []);
 const roster = draftingFacts([], lopezCorpus, { party, things: [] }).roster || '';
-assert.doesNotMatch(roster, /Mateo|Lily|Leo/i);
+assert.doesNotMatch(roster, /Mateo|Lily|Leo|payer/i);
 
 const planFacts = planFactsForReply({ postIntake: true, purchasedPlan: 'unlimited', planOwned: true });
 assert.equal(planFacts.collaborator_access?.view_access?.includes('View access'), true);

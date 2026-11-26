@@ -412,7 +412,7 @@ export function draftingFacts(priorTurns, customerTurn = '', saved = null) {
     return when ? `${thing.title}: ${when}` : thing.title;
   }).filter(Boolean);
   const party = record?.party && typeof record.party === 'object' ? record.party : {};
-  const owner = party.primary?.name ? [{ name: party.primary.name, payer: 'account holder' }] : [];
+  const owner = party.primary?.name ? [{ name: party.primary.name }] : [];
   const travelers = [
     ...owner,
     ...(Array.isArray(party.collaborators) ? party.collaborators : []),
