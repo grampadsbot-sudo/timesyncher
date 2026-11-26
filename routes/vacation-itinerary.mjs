@@ -363,14 +363,8 @@ function welcomeFirstName(value) {
   return text ? text.split(/\s+/)[0] : '';
 }
 
-function tripHasRealVacationContent(trip) {
-  if (!trip) return false;
-  if (String(trip.destination || '').trim()) return true;
-  return Boolean(trip.startDate || trip.endDate || trip.start_date || trip.end_date);
-}
-
 function tripHasVacationSite(trip) {
-  if (!tripHasRealVacationContent(trip)) return false;
+  if (!trip || (!String(trip.destination || '').trim() && !(trip.startDate || trip.endDate || trip.start_date || trip.end_date))) return false;
   if (String(trip?.publicUrl || '').trim()) return true;
   return Boolean(String(trip?.shareToken || '').trim());
 }
