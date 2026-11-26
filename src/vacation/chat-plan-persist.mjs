@@ -193,10 +193,11 @@ function mergeByTitle(base, extra) {
 export async function plannedCustomerThings(db, tripId, text, appReply, activities = []) {
   const base = Array.isArray(activities) ? activities.filter(Boolean) : [];
   const startDate = await tripStartDate(db, tripId);
-  let items = plannedItineraryItems(String(text || ''), { startDate });
+  const corpus = `${text || ''}\n${appReply || ''}`;
+  let items = plannedItineraryItems(corpus, { startDate });
   if (!items.length && isPlanConfirmation(text)) {
-    const corpus = (await priorAppBodies(db, tripId)).join('\n');
-    items = plannedItineraryItems(corpus, { startDate });
+    const prior = (await priorAppBodies(db, tripId)).join('\n');
+    items = plannedItineraryItems(prior, { startDate });
   }
   if (!items.length) return base;
   return mergeByTitle(base, items);

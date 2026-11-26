@@ -5,7 +5,17 @@ import { rowNeedsDetailBackfill } from './chat-intake-place-persist.mjs';
 import { applyEnrichedDetailToTripThing, enrichPlaceDetail } from './place-detail-enrichment.mjs';
 import { activeCollaboratorsFromParty, partyNamesFromDialogParty } from './reply-action-claim.mjs';
 import { insertTripThing } from './trip-things.mjs';
-import { evaluateIntakeAdmission, intakePhraseDenied, thingRowFilled } from './intake-thing-admission.mjs';
+import {
+  evaluateIntakeAdmission,
+  evaluateIntakePreSearch,
+  intakePhraseDenied,
+  recordChatIntakeSearchMiss,
+  thingRowFilled,
+} from './intake-thing-admission.mjs';
+import {
+  unresolvedChatIntakePlaceThing,
+  unresolvedThingsFromPlaceClassification,
+} from './chat-intake-place-persist.mjs';
 
 function clean(value, max = 180) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
@@ -241,18 +251,34 @@ export async function insertStampedChatPlaceThings(db, {
   for (const thing of Array.isArray(things) ? things : []) {
     const title = clean(thing?.title, 240);
     if (!title || intakePhraseDenied(title)) continue;
-    const post = evaluateIntakeAdmission({
+    const baseMeta = {
+      ...(thing?.metadata && typeof thing.metadata === 'object' ? thing.metadata : {}),
+      source: thing?.metadata?.source || 'chat_extraction',
+      origin: thing?.metadata?.origin || 'customer_turn',
+    };
+    const hasCoords = Number.isFinite(Number(thing?.location?.lat)) && Number.isFinite(Number(thing?.location?.lng));
+    const pre = evaluateIntakePreSearch({
       title,
       category: thing?.category,
       description: thing?.description,
-      metadata: thing?.metadata,
-      resolvedPlace: Number.isFinite(Number(thing?.location?.lat)) ? thing : thing,
+      metadata: baseMeta,
       existingRows,
     });
+    if (!pre.admit) continue;
+    const post = hasCoords
+      ? evaluateIntakeAdmission({
+        title,
+        category: pre.adjustedCategory || thing?.category,
+        description: thing?.description,
+        metadata: baseMeta,
+        resolvedPlace: thing,
+        existingRows,
+      })
+      : { admit: true, adjustedCategory: pre.adjustedCategory || thing?.category };
     if (!post.admit) continue;
     const admitted = post.adjustedCategory
-      ? { ...thing, category: post.adjustedCategory }
-      : thing;
+      ? { ...thing, category: post.adjustedCategory, metadata: baseMeta }
+      : { ...thing, metadata: baseMeta };
     const stamped = stampChatSavedPlaceThing(admitted, classification);
     const enriched = await enrichChatSavedPlaceThing(stamped, { destination: destinationHint, env, fetchImpl });
     const meta = enriched?.metadata && typeof enriched.metadata === 'object' ? enriched.metadata : {};
@@ -268,17 +294,66 @@ export async function insertStampedChatPlaceThings(db, {
         ...(scheduled.candidateDates.length ? { candidateDates: scheduled.candidateDates } : {}),
       },
     };
-    const inserted = await insertTripThing(db, { tripId, requestId, thing: scheduledThing });
-    if (!inserted?.id || !thingRowFilled(inserted)) continue;
+    const row = hasCoords
+      ? scheduledThing
+      : (unresolvedChatIntakePlaceThing({
+        title,
+        category: admitted.category || 'activity',
+        description: admitted.description || '',
+        metadata: {
+          ...scheduledThing.metadata,
+          needsDetails: true,
+          source: 'customer_stated',
+        },
+        startsAt: scheduledThing.starts_at,
+      }) || scheduledThing);
+    const inserted = await insertTripThing(db, { tripId, requestId, thing: row });
+    if (!inserted?.id) continue;
+    if (hasCoords && !thingRowFilled(inserted)) continue;
     existingRows.push(inserted);
     savedForFacts.push({
       title: inserted?.title || enriched.title,
       whenLabel: meta.whenLabel || '',
       customerWhen: meta.customerWhen || '',
     });
-    const row = inTurnPlaceResultFromTripThing(inserted);
-    if (row) placeResults.push(row);
+    const placeRow = inTurnPlaceResultFromTripThing(inserted);
+    if (placeRow) placeResults.push(placeRow);
   }
   const placeSearchReplyFacts = chatPlaceSearchSavedReplyFacts(savedForFacts, tripStart, tripEnd);
   return { placeResults, placeSearchReplyFacts };
+}
+
+export async function persistChatPlaceSearchMisses(db, {
+  tripId,
+  requestId,
+  classification,
+  chatSearch = {},
+  insertStampedChatPlaceThings,
+}) {
+  const misses = unresolvedThingsFromPlaceClassification(classification);
+  const fromSearch = Array.isArray(chatSearch?.things) ? chatSearch.things : [];
+  const things = fromSearch.length ? fromSearch : misses;
+  if (!things.length) return { placeResults: [], placeSearchReplyFacts: null };
+  const filtered = things.filter((thing) => {
+    const title = clean(thing?.title, 240);
+    return title && !intakePhraseDenied(title);
+  });
+  if (!filtered.length) {
+    for (const thing of things) {
+      const title = clean(thing?.title, 240);
+      if (!title) continue;
+      await recordChatIntakeSearchMiss(db, tripId, {
+        title,
+        category: thing?.category || 'activity',
+        reason: intakePhraseDenied(title) || 'place_search_miss',
+      });
+    }
+    return { placeResults: [], placeSearchReplyFacts: null };
+  }
+  return insertStampedChatPlaceThings(db, {
+    tripId,
+    requestId,
+    things: filtered,
+    classification,
+  });
 }

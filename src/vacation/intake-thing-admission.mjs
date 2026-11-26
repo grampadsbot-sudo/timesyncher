@@ -48,8 +48,6 @@ const PHRASE_DENY_RES = [
   /\bflight\s+options?\b/i,
   /\breturn\s+flight\s+option\b/i,
   /\bdeparture\s+flight\s+option\b/i,
-  /\bin\s+lake\s+buena\s+vista\s*$/i,
-  /\blake\s+buena\s+vista\s+hotel\s*$/i,
   /\bhotel\s+or\s+resort\b/i,
   /\bpreferences?\b/i,
   /\bcandidate\s+only\b/i,
@@ -69,7 +67,38 @@ const FAMILY_EVENT_RES = [
 const SENTENCE_TAIL_RE = /[.!?]\s*$/;
 const STATUS_ONLY_RE = /^(nothing|no|not)\b/i;
 
-export function intakePhraseDenied(title = '') {
+const CUSTOMER_ORIGINS = new Set(['customer_blurb', 'customer_turn']);
+const PROVIDER_ORIGINS = new Set(['provider_search', 'booking']);
+
+export function intakeProvenanceOrigin(metadata = {}) {
+  const bag = metadata && typeof metadata === 'object' ? metadata : {};
+  const origin = clean(bag.origin, 80).toLowerCase();
+  if (CUSTOMER_ORIGINS.has(origin) || PROVIDER_ORIGINS.has(origin)) return origin;
+  const src = clean(bag.source || bag.intakeSource, 80).toLowerCase();
+  if (src === 'customer_stated') return 'customer_turn';
+  if (src === 'customer-turn') return 'customer_turn';
+  if (src === 'chat_extraction') return 'customer_turn';
+  if (src === 'long-intake') return 'customer_blurb';
+  if (['prior_db', 'osm', 'vk-search', 'tavily', 'brave'].includes(src)) return 'provider_search';
+  if (src === 'booking') return 'booking';
+  const column = clean(bag.columnSource, 80).toLowerCase();
+  if (['prior_db', 'osm', 'vk-search', 'tavily'].includes(column)) return 'provider_search';
+  return '';
+}
+
+export function isCustomerIntakeProvenance(metadata = {}) {
+  return CUSTOMER_ORIGINS.has(intakeProvenanceOrigin(metadata));
+}
+
+export function tripThingHasAdmissibleProvenance(row = {}) {
+  const meta = row?.metadata && typeof row.metadata === 'object' ? row.metadata : {};
+  const origin = intakeProvenanceOrigin({ ...meta, columnSource: row?.source });
+  if (origin) return true;
+  const src = String(row?.source || '').toLowerCase();
+  return ['prior_db', 'osm', 'vk-search', 'tavily', 'customer_stated'].includes(src);
+}
+
+export function intakePhraseDenied(title = '', { skipProperName = false } = {}) {
   const text = clean(title, 240);
   if (!text) return 'empty_title';
   if (SENTENCE_TAIL_RE.test(text) && text.split(/\s+/).length >= 4) return 'assistant_sentence';
@@ -77,7 +106,7 @@ export function intakePhraseDenied(title = '') {
   for (const re of PHRASE_DENY_RES) {
     if (re.test(text)) return `phrase_deny:${re.source.slice(0, 40)}`;
   }
-  if (!intakeThingHasProperName(text)) return 'not_proper_name';
+  if (!skipProperName && !intakeThingHasProperName(text)) return 'not_proper_name';
   const words = text.split(/\s+/);
   if (words.length > 12) return 'composed_phrase';
   return '';
@@ -125,6 +154,13 @@ export function nearDuplicateTitle(left = '', right = '') {
   const short = a.length <= b.length ? a : b;
   const long = a.length <= b.length ? b : a;
   if (long.startsWith(short) && long.length - short.length <= 24) return true;
+  const tokensA = a.split(/\s+/).filter(Boolean);
+  const tokensB = b.split(/\s+/).filter(Boolean);
+  const smallTokens = tokensA.length <= tokensB.length ? tokensA : tokensB;
+  const bigTokens = tokensA.length <= tokensB.length ? tokensB : tokensA;
+  if (smallTokens.length >= 2 && smallTokens.every((token) => bigTokens.includes(token)) && bigTokens.length - smallTokens.length <= 4) {
+    return true;
+  }
   const stemA = lodgingStem(left);
   const stemB = lodgingStem(right);
   if (stemA && stemA === stemB && stemA.length >= 6) return true;
@@ -160,7 +196,8 @@ export function evaluateIntakeAdmission({
   const name = clean(title, 240);
   if (!name) return { admit: false, reason: 'empty_title' };
 
-  const phraseReason = intakePhraseDenied(name);
+  const customerSaid = isCustomerIntakeProvenance(metadata);
+  const phraseReason = intakePhraseDenied(name, { skipProperName: customerSaid });
   if (phraseReason) return { admit: false, reason: phraseReason };
 
   let adjustedCategory = intakeCategoryForTitle(name, category);
@@ -169,14 +206,14 @@ export function evaluateIntakeAdmission({
     adjustedCategory = 'family_event';
   }
 
-  if (adjustedCategory === 'car' && !carTitleNamesRentalBrand(name)) {
+  if (adjustedCategory === 'car' && !carTitleNamesRentalBrand(name) && !customerSaid) {
     if (!resolvedPlace || !isCarRentalProviderPlace(resolvedPlace)) {
       return { admit: false, reason: 'car_not_rental_brand' };
     }
   }
 
   if (adjustedCategory === 'flight' && !flightTitleHasRealFlight(name, metadata, description)) {
-    if (!resolvedPlace) return { admit: false, reason: 'flight_not_booked' };
+    if (!customerSaid && !resolvedPlace) return { admit: false, reason: 'flight_not_booked' };
   }
 
   const candidate = resolvedPlace
@@ -197,6 +234,9 @@ export function evaluateIntakeAdmission({
   }
 
   if (!resolvedPlace) {
+    if (isCustomerIntakeProvenance(metadata)) {
+      return { admit: true, reason: 'customer_placeholder', adjustedCategory };
+    }
     return { admit: false, reason: 'unresolved_requires_search' };
   }
 
@@ -212,14 +252,15 @@ export function evaluateIntakePreSearch({
 } = {}) {
   const name = clean(title, 240);
   if (!name) return { admit: false, reason: 'empty_title' };
-  const phraseReason = intakePhraseDenied(name);
+  const customerSaid = isCustomerIntakeProvenance(metadata);
+  const phraseReason = intakePhraseDenied(name, { skipProperName: customerSaid });
   if (phraseReason) return { admit: false, reason: phraseReason };
   const adjustedCategory = intakeCategoryForTitle(name, category);
   if (adjustedCategory === 'car' && !carTitleNamesRentalBrand(name)) {
-    return { admit: false, reason: 'car_not_rental_brand' };
+    if (!customerSaid) return { admit: false, reason: 'car_not_rental_brand' };
   }
   if (adjustedCategory === 'flight' && !flightTitleHasRealFlight(name, metadata, description)) {
-    return { admit: false, reason: 'flight_not_booked' };
+    if (!customerSaid) return { admit: false, reason: 'flight_not_booked' };
   }
   for (const row of Array.isArray(existingRows) ? existingRows : []) {
     if (nearDuplicateTitle(name, row?.title)) {
@@ -255,6 +296,69 @@ export async function recordChatIntakeSearchMiss(db, tripId, { title, category, 
 
 export function tripItineraryTitleRejected(title = '') {
   return Boolean(intakePhraseDenied(title));
+}
+
+function thingCategoryKind(row = {}) {
+  return intakeCategoryForTitle(row?.title, row?.category || 'activity');
+}
+
+export function tripThingGateViolations(things = [], { itineraryTitles = [] } = {}) {
+  const violations = [];
+  const rows = Array.isArray(things) ? things : [];
+  for (const raw of itineraryTitles) {
+    const title = clean(raw, 240);
+    if (title && intakePhraseDenied(title)) violations.push({ code: 'defect_f_itinerary_phrase', title });
+  }
+  for (const row of rows) {
+    const title = clean(row?.title, 240);
+    const meta = row?.metadata && typeof row.metadata === 'object' ? row.metadata : {};
+    const phraseReason = intakePhraseDenied(title);
+    if (phraseReason) {
+      violations.push({ code: 'composed_or_assistant_phrase', title, id: row?.id, reason: phraseReason });
+      continue;
+    }
+    if (!tripThingHasAdmissibleProvenance(row)) {
+      violations.push({ code: 'missing_provenance', title, id: row?.id });
+    }
+    const kind = thingCategoryKind(row);
+    if (kind === 'restaurant' && FAMILY_EVENT_RES.some((re) => re.test(title))) {
+      violations.push({ code: 'defect_g_wrong_category', title, id: row?.id, expected: 'family_event' });
+    }
+    if (kind === 'car' && !carTitleNamesRentalBrand(title)) {
+      const record = meta.sourceRecord && typeof meta.sourceRecord === 'object' ? meta.sourceRecord : {};
+      if (!isCarRentalProviderPlace({ title, sourceRecord: record, providerCategories: meta.providerCategories })) {
+        violations.push({ code: 'defect_i_car_phrase', title, id: row?.id });
+      }
+    }
+    if (kind === 'flight' && !flightTitleHasRealFlight(title, meta, row?.description || '')) {
+      if (!isCustomerIntakeProvenance(meta)) {
+        violations.push({ code: 'defect_j_flight_phrase', title, id: row?.id });
+      }
+    }
+  }
+  for (let i = 0; i < rows.length; i += 1) {
+    for (let j = i + 1; j < rows.length; j += 1) {
+      const left = rows[i];
+      const right = rows[j];
+      const leftKind = thingCategoryKind(left);
+      const rightKind = thingCategoryKind(right);
+      if (leftKind !== rightKind && !(leftKind === 'family_event' || rightKind === 'family_event')) continue;
+      if (nearDuplicateTitle(left?.title, right?.title)) {
+        violations.push({
+          code: 'defect_a_duplicate',
+          title: clean(left?.title, 240),
+          other: clean(right?.title, 240),
+          id: left?.id,
+          otherId: right?.id,
+        });
+      }
+    }
+  }
+  return violations;
+}
+
+export function tripThingsRealGatePasses(things = [], options = {}) {
+  return tripThingGateViolations(things, options).length === 0;
 }
 
 export { normalizeKey, lodgingStem };

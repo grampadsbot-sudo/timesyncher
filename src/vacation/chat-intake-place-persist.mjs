@@ -11,10 +11,13 @@ import { applyEnrichedDetailToTripThing, enrichPlaceDetail } from './place-detai
 import {
   evaluateIntakeAdmission,
   evaluateIntakePreSearch,
+  intakeCategoryForTitle,
   intakePhraseDenied,
   lodgingStem,
   nearDuplicateTitle,
   recordChatIntakeSearchMiss,
+  intakeProvenanceOrigin,
+  isCustomerIntakeProvenance,
 } from './intake-thing-admission.mjs';
 
 const GEOCODABLE_KINDS = new Set(['grocery', 'market', 'restaurant', 'store', 'garden', 'activity', 'hotel', 'car']);
@@ -219,22 +222,27 @@ export async function persistChatIntakePlaceThing(db, {
   if (!db || !tripId || !name) return null;
   if (intakePhraseDenied(name)) return null;
   const existingRows = await loadChatIntakeRows(db, tripId);
+  const adjustedCategorySeed = intakeCategoryForTitle(name, category);
+  let existing = await findExistingChatIntakeRow(db, tripId, name, adjustedCategorySeed);
+  const preRows = existing
+    ? existingRows.filter((row) => String(row.id) !== String(existing.id))
+    : existingRows;
   const pre = evaluateIntakePreSearch({
     title: name,
     category,
     description,
     metadata,
-    existingRows,
+    existingRows: preRows,
   });
   if (!pre.admit) {
     if (pre.reason === 'merge_duplicate' && pre.mergeIntoId) {
       const mergeRow = existingRows.find((row) => String(row.id) === pre.mergeIntoId);
       if (mergeRow) return { ...tripThingRow({ ...mergeRow }), id: String(mergeRow.id), deduped: true };
     }
-    if (pre.reason !== 'merge_duplicate') return null;
+    return null;
   }
   const adjustedCategory = pre.adjustedCategory || category;
-  const existing = await findExistingChatIntakeRow(db, tripId, name, adjustedCategory);
+  if (!existing) existing = await findExistingChatIntakeRow(db, tripId, name, adjustedCategory);
   const existingMeta = existing?.metadata && typeof existing.metadata === 'object' ? existing.metadata : {};
   if (existing && !rowNeedsPlaceSearch(existing) && thingHasCoordinates(existing)) {
     return { ...tripThingRow({ ...existing, metadata: existingMeta }), id: String(existing.id), deduped: true };
@@ -269,9 +277,11 @@ export async function persistChatIntakePlaceThing(db, {
           resolvedPlace: outcome.place,
           existingRows,
         });
-        if (!post.admit) {
-          if (post.reason === 'merge_duplicate' && post.mergeIntoId) {
-            const mergeRow = post.mergeRow || existingRows.find((row) => String(row.id) === post.mergeIntoId);
+        const mergeId = post.reason === 'merge_duplicate' ? String(post.mergeIntoId || '') : '';
+        const upgradingSameRow = mergeId && mergeId === String(existing?.id || '');
+        if (!post.admit && !upgradingSameRow) {
+          if (mergeId) {
+            const mergeRow = post.mergeRow || existingRows.find((row) => String(row.id) === mergeId);
             if (mergeRow) return { ...tripThingRow({ ...mergeRow }), id: String(mergeRow.id), deduped: true };
           }
           await recordChatIntakeSearchMiss(db, tripId, { title: name, category: adjustedCategory || category, reason: post.reason });
@@ -312,10 +322,31 @@ export async function persistChatIntakePlaceThing(db, {
     }
     return insertTripThing(db, { tripId, requestId, thing: merged, env });
   }
+  const missReason = destination ? 'search_miss' : 'missing_destination';
+  if (isCustomerIntakeProvenance(baseMeta)) {
+    const origin = intakeProvenanceOrigin(baseMeta) || 'customer_turn';
+    const placeholder = unresolvedChatIntakePlaceThing({
+      title: name,
+      category: adjustedCategory || category || existing?.category || 'activity',
+      description,
+      metadata: {
+        ...baseMeta,
+        origin,
+        source: 'customer_stated',
+        intakeSource: baseMeta.intakeSource || 'customer-turn',
+      },
+      startsAt,
+    });
+    if (!placeholder) return null;
+    if (existing?.id) {
+      return upgradeTripThingInPlace(db, tripId, existing.id, requestId, placeholder, env);
+    }
+    return insertTripThing(db, { tripId, requestId, thing: placeholder, env });
+  }
   await recordChatIntakeSearchMiss(db, tripId, {
     title: name,
     category: adjustedCategory || category || existing?.category || 'activity',
-    reason: destination ? 'search_miss' : 'missing_destination',
+    reason: missReason,
   });
   return null;
 }
@@ -447,25 +478,5 @@ export function rowNeedsDetailBackfill(row = {}) {
   return Number.isFinite(lat) && Number.isFinite(lng);
 }
 
-export async function persistChatPlaceSearchMisses(db, {
-  tripId,
-  requestId,
-  classification,
-  chatSearch = {},
-}) {
-  const misses = unresolvedThingsFromPlaceClassification(classification);
-  const fromSearch = Array.isArray(chatSearch?.things) ? chatSearch.things : [];
-  const things = fromSearch.length ? fromSearch : misses;
-  for (const thing of things) {
-    const title = clean(thing?.title, 240);
-    if (!title || intakePhraseDenied(title)) continue;
-    await recordChatIntakeSearchMiss(db, tripId, {
-      title,
-      category: thing?.category || 'activity',
-      reason: 'place_search_miss',
-    });
-  }
-  return { placeResults: [], placeSearchReplyFacts: null };
-}
-
+export { persistChatPlaceSearchMisses } from './chat-place-search-when.mjs';
 export { queriesFromWantedThings, normalizePlaceSearchTargetKind };
