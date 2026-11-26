@@ -24,6 +24,18 @@ import { createBoundedReplyShipGate, createBoundedRewriteClaim } from '../src/va
 import { sessionReplyBackend } from '../src/vacation/vk-bot-mcp-reply.mjs';
 import { isOrdinaryPlanningTurn, recoverOrdinaryPlanningReply } from '../src/vacation/chat-plan-persist.mjs';
 import { openRouterTurnTelemetry } from '../src/vacation/openrouter-call-ledger.mjs';
+
+function unconfirmedCollaboratorInviteReply(invite, seat) {
+  const nextStep = seat ? 'Only the vacation owner can send collaborator invitations.' : ({
+    missing_email: 'Please share their email address.',
+    invalid_email: 'Please double-check their email address.',
+    missing_invitee_name: 'Please share their name.',
+    already_collaborator: 'Check the collaborator list for their current access.',
+    send_failed: 'Check the collaborator list before trying again.',
+  }[invite?.code] || 'To invite someone, please share their name and email address.');
+  return `I couldn't confirm a collaborator invite on this turn. ${nextStep} With edit access, a collaborator can update the itinerary and add notes.`;
+}
+
 export async function queueVacationAppTurn(db, session, trip, body, hooks, intake = {}) {
   const env = process.env;
   const tripId = trip?.id ?? null;
@@ -440,17 +452,17 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
   }
   const vkBotTurn = produced?.model?.backend === 'vk_bot_mcp' || produced?.model?.via === 'vk_bot_mcp';
   const claimedFrom = produced.reply;
-  if (!produced.reply) {
-    const draft = String(produced.blockedDraft || '').trim();
-    if (!vkBotTurn && draft && (produced.reason === 'reply_action_claim_blocked' || replyActionClaimReason(draft, turnActionResults, replyClaimContext))) {
-      produced.reply = await rewriteClaim(draft);
-      if (produced.reply) produced.reason = null;
-    }
-  } else if (vkBotTurn && replyActionClaimReason(produced.reply, turnActionResults, replyClaimContext)) {
+  const draft = String(produced.reply || produced.blockedDraft || '').trim();
+  const claimReason = replyActionClaimReason(draft, turnActionResults, replyClaimContext);
+  if (vkBotTurn && claimReason === 'reply_action_claim_unbacked') {
+    produced.reply = unconfirmedCollaboratorInviteReply(turnActionResults.invite, seat);
+    produced.reason = null;
+  } else if (vkBotTurn && produced.reply && claimReason) {
     produced.reply = null;
     produced.reason = 'vk_bot_mcp_claim_blocked';
-  } else if (!vkBotTurn) {
-    produced.reply = await rewriteClaim(produced.reply);
+  } else if (!vkBotTurn && (produced.reply || (draft && (produced.reason === 'reply_action_claim_blocked' || claimReason)))) {
+    produced.reply = await rewriteClaim(draft);
+    if (produced.reply) produced.reason = null;
   }
   await applyReplyQuality(produced, { customerTurn: requestText, env, previousReply: claimedFrom });
   if (!String(produced?.reply || '').trim() && isOrdinaryPlanningTurn(requestText)) {
