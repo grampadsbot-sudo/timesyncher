@@ -9,6 +9,8 @@ import { finalizeCustomerReplyText } from '../src/vacation/reply-customer-wordin
 
 const terms = loadBarTerms();
 const OLD_SENTENCE = 'The household plan is unlimited vacations for the whole year.';
+const lopezIntake = 'Voice note dump for Orlando parks, April 5 through 9.';
+const accessAsk = 'How do view access and edit access work for my family?';
 
 function hitsFor(text) {
   return checkDialogPack([
@@ -30,13 +32,18 @@ assert.deepEqual(hitsFor(POST_INTAKE_COLLAB_COPY), []);
 
 const draft = "Hi Sofia, I'm building your Orlando theme parks vacation now. You're going from Monday, April 5 to Friday, April 9, 2027, which is four nights. Where are you planning to stay in Orlando?";
 assert.equal(postIntakeCollabCopyMissing(draft), true);
-const firstIntake = ensurePostIntakeCollabCopy(draft);
-assert.equal(firstIntake.endsWith(POST_INTAKE_COLLAB_COPY), true);
-assert.equal(postIntakeCollabCopyMissing(firstIntake), false);
+const firstIntake = finalizeCustomerReplyText(ensurePostIntakeCollabCopy(draft, lopezIntake));
+assert.equal(firstIntake.includes(POST_INTAKE_COLLAB_COPY), false);
+assert.equal(postIntakeCollabCopyMissing(firstIntake), true);
 assert.deepEqual(hitsFor(firstIntake), []);
-assert.equal(ensurePostIntakeCollabCopy(firstIntake), firstIntake, 'copy is not appended twice');
 
-const echoed = ensurePostIntakeCollabCopy(`${draft} I am building the itinerary from what you told me. View access lets family and friends see the days. Edit access lets them add notes after you approve an email invite. Welcome them onto this vacation as collaborators. ${OLD_SENTENCE}`);
+const asked = ensurePostIntakeCollabCopy(draft, accessAsk);
+assert.equal(asked.endsWith(POST_INTAKE_COLLAB_COPY), true);
+assert.equal(postIntakeCollabCopyMissing(asked), false);
+assert.deepEqual(hitsFor(asked), []);
+assert.equal(ensurePostIntakeCollabCopy(asked, accessAsk), asked, 'copy is not appended twice');
+
+const echoed = ensurePostIntakeCollabCopy(`${draft} I am building the itinerary from what you told me. View access lets family and friends see the days. Edit access lets them add notes after you approve an email invite. Welcome them onto this vacation as collaborators. ${OLD_SENTENCE}`, accessAsk);
 assert.equal(echoed.includes(OLD_SENTENCE), false);
 assert.equal(echoed.split(HOUSEHOLD_PLAN_YEAR_LINE).length, 2, 'old sentence is upgraded, not duplicated');
 assert.deepEqual(hitsFor(echoed), []);

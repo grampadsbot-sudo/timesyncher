@@ -24,7 +24,7 @@ import {
   transcriptToJsonl,
 } from '../src/vacation/live-app-turn.mjs';
 import { priceAnswered } from '../src/vacation/seat-price.mjs';
-import { postIntakeCollabCopyMissing } from '../src/vacation/post-intake-collab-copy.mjs';
+import { customerReplyShipViolations } from '../src/vacation/customer-reply-ship-checks.mjs';
 import { DIALOG_TEST_FINGERPRINT, INTERIM_MODEL, bakeoffTierModels, isBakeoffModelId } from './vacation-app-reply-rules.mjs';
 import { pdfTextHasSha, readTipSha } from './void-stale-build.mjs';
 import { buildUsedVsTipLine, driveBanner, driveShaFromTranscript, isUntrustedPack } from './build-used-vs-tip.mjs';
@@ -227,8 +227,8 @@ export function assertLiveTranscript(doc) {
   if (intakeCustomer) {
     const intakeReply = turns.find((turn) => turn.role === 'app' && turn.turnIndex === intakeCustomer.turnIndex + 1);
     const intakeText = String(intakeReply?.text || '');
-    const intakeOk = /build(?:ing)? (?:the|your) itinerary/i.test(intakeText) && !postIntakeCollabCopyMissing(intakeText);
-    if (!intakeOk) contentFails.push('FAIL. post_intake_itinerary_collab_upsell');
+    const intakeViolations = customerReplyShipViolations(intakeText, intakeCustomer.text || '');
+    for (const code of intakeViolations) contentFails.push(`FAIL. ${code}`);
   }
   const commentCounts = {};
   for (const turn of turns) {

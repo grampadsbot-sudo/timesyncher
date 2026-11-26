@@ -155,7 +155,7 @@ export async function persistVacationAppOutboundReply({
       error: String(produced?.quality?.reason || produced?.reason || 'quality_not_judged'),
     };
   }
-  if (firstIntake && produced?.reply) produced.reply = ensurePostIntakeCollabCopy(produced.reply);
+  if (firstIntake && produced?.reply) produced.reply = ensurePostIntakeCollabCopy(produced.reply, requestText);
   if (produced?.reply) produced.reply = sayVacationNotTrip(produced.reply);
   if (produced?.reply) produced.reply = finalizeCustomerReplyText(produced.reply);
   const priorApp = await outboundAppReplyForRequest(db, requestId);

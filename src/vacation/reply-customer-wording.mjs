@@ -1,3 +1,4 @@
+import { stripCannedHelpDeskOpener } from './reply-canned-opener.mjs';
 import { upgradeHouseholdPlanYearWording } from './household-plan-year-copy.mjs';
 import { normalizeLodgingCheckoutWording } from './reply-lodging-checkout-wording.mjs';
 
@@ -7,6 +8,8 @@ const MONTH = '(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|jul
 const DATE_THEN_VACATION = new RegExp(`\\b(${MONTH}\\.?\\s+\\d{1,2}(?:st|nd|rd|th)?(?:,\\s*\\d{4})?)\\s+vacation\\b`, 'gi');
 
 export function finalizeCustomerReplyText(text) {
-  const value = upgradeHouseholdPlanYearWording(String(text || '').trim()).replace(DATE_THEN_VACATION, '$1 stay');
-  return normalizeLodgingCheckoutWording(value);
+  const value = normalizeLodgingCheckoutWording(
+    upgradeHouseholdPlanYearWording(stripCannedHelpDeskOpener(String(text || '').trim())).replace(DATE_THEN_VACATION, '$1 stay'),
+  );
+  return value;
 }

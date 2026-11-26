@@ -272,7 +272,7 @@ try {
       const welcome = page.locator('[data-admin-welcome]');
       await welcome.waitFor();
       assert.equal(await welcome.count(), 1);
-      assert.match(await welcome.textContent(), /Welcome to Sofia Lopez's vacation\. Test harness review in Fixture destination · 2027-03-01 to 2027-03-05/);
+      assert.match(await welcome.textContent(), /Welcome to Sofia Lopez's vacation\. Test harness review · March 1, 2027 to March 5, 2027/);
       assert.equal(await welcome.getAttribute('data-vacation-id'), tripId);
       const existingNote = page.locator('#messages [data-admin-note]').filter({ hasText: 'Existing admin note' });
       assert.equal(await existingNote.getAttribute('data-vacation-id'), olderTrip);

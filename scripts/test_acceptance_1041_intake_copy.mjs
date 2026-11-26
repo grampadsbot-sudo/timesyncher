@@ -4,10 +4,10 @@ import { readFileSync } from 'node:fs';
 import { ensurePostIntakeCollabCopy, postIntakeCollabCopyMissing } from '../src/vacation/post-intake-collab-copy.mjs';
 
 const renderer = readFileSync(new URL('./live-transcript-dialog-pdf.mjs', import.meta.url), 'utf8');
-assert.match(renderer, /post_intake_itinerary_collab_upsell/);
-assert.match(renderer, /build\(\?:ing\)\? \(\?:the\|your\) itinerary/);
+assert.match(renderer, /customerReplyShipViolations/);
+assert.doesNotMatch(renderer, /post_intake_itinerary_collab_upsell/);
 const ship = readFileSync(new URL('../src/vacation/reply-ship.mjs', import.meta.url), 'utf8');
-assert.match(ship, /firstIntake && produced\?\.reply\) produced\.reply = ensurePostIntakeCollabCopy/);
+assert.match(ship, /ensurePostIntakeCollabCopy\(produced\.reply, requestText\)/);
 
 function intakeOk(text) {
   return /build(?:ing)? (?:the|your) itinerary/i.test(text)
@@ -19,12 +19,14 @@ function intakeOk(text) {
 }
 
 const hilo = 'Hilo from March 4 to March 8 can stay light. Where are you staying?';
-const stamped = ensurePostIntakeCollabCopy(hilo);
+const accessAsk = 'Can my sister get view access or edit access on this vacation?';
+const stamped = ensurePostIntakeCollabCopy(hilo, accessAsk);
 assert.equal(intakeOk(stamped), true);
 assert.equal(postIntakeCollabCopyMissing(stamped), false);
-assert.equal(ensurePostIntakeCollabCopy(stamped), stamped);
+assert.equal(ensurePostIntakeCollabCopy(stamped, accessAsk), stamped);
 assert.equal(stamped.startsWith(hilo), true);
-const banned = ensurePostIntakeCollabCopy(`${hilo} You also have unlimited time.`);
+assert.equal(ensurePostIntakeCollabCopy(hilo, ''), hilo);
+const banned = ensurePostIntakeCollabCopy(`${hilo} You also have unlimited time.`, accessAsk);
 assert.equal(/you also have unlimited/i.test(banned), false);
 assert.equal(intakeOk(banned), true);
 
