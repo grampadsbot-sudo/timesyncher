@@ -16,15 +16,15 @@ function unconfirmedCollaboratorInviteReply(invite, seat) {
   return `I couldn't confirm a collaborator invite on this turn. ${nextStep} With edit access, a collaborator can update the itinerary and add notes.`;
 }
 
-export async function rewriteVacationAppActionClaim(produced, { rewriteClaim, turnActionResults, replyClaimContext, seat }) {
+export async function rewriteVacationAppActionClaim(produced, { rewriteClaim, turnActionResults, replyClaimContext, seat, replyBackend }) {
   const vkBotTurn = produced.model?.backend === 'vk_bot_mcp' || produced.model?.via === 'vk_bot_mcp';
   const draft = String(produced.reply || produced.blockedDraft || '').trim();
   const claimReason = replyActionClaimReason(draft, turnActionResults, replyClaimContext);
-  if (vkBotTurn) {
-    if (claimReason === 'reply_action_claim_unbacked') {
-      produced.reply = unconfirmedCollaboratorInviteReply(turnActionResults.invite, seat);
-      produced.reason = null;
-    } else if (produced.reply && claimReason) {
+  if (claimReason === 'reply_action_claim_unbacked' && (vkBotTurn || replyBackend === 'vk_bot_mcp')) {
+    produced.reply = unconfirmedCollaboratorInviteReply(turnActionResults.invite, seat);
+    produced.reason = null;
+  } else if (vkBotTurn) {
+    if (produced.reply && claimReason) {
       produced.reply = null;
       produced.reason = 'vk_bot_mcp_claim_blocked';
     }

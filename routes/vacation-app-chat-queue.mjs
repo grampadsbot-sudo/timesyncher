@@ -439,12 +439,13 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     };
   }
   const claimedFrom = produced.reply;
-  await rewriteVacationAppActionClaim(produced, { rewriteClaim, turnActionResults, replyClaimContext, seat });
+  const replyBackend = sessionReplyBackend(session);
+  await rewriteVacationAppActionClaim(produced, { rewriteClaim, turnActionResults, replyClaimContext, seat, replyBackend });
   await applyReplyQuality(produced, { customerTurn: requestText, env, previousReply: claimedFrom });
   if (!String(produced?.reply || '').trim() && isOrdinaryPlanningTurn(requestText)) {
-    Object.assign(produced, recoverOrdinaryPlanningReply(produced, requestText, { backend: sessionReplyBackend(session), previousReply: claimedFrom }));
+    Object.assign(produced, recoverOrdinaryPlanningReply(produced, requestText, { backend: replyBackend, previousReply: claimedFrom }));
   }
-  const softSearchRecovered = recoverSoftSearchReply(produced, placeSearchReplyFacts, { backend: sessionReplyBackend(session), destination: cleanText(trip?.destination || '', 180) });
+  const softSearchRecovered = recoverSoftSearchReply(produced, placeSearchReplyFacts, { backend: replyBackend, destination: cleanText(trip?.destination || '', 180) });
   if (softSearchRecovered) Object.assign(produced, softSearchRecovered);
   if (!produced.reply) {
     const failure = applyLiveAppReplyFailureToPayload(payload, customerLive, produced);
@@ -478,7 +479,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     recordCustomerThingNotes: hooks.recordCustomerThingNotes,
     publishIntakeShare: hooks.publishIntakeShare,
     vacationAppTripSummary: hooks.vacationAppTripSummary,
-    replyBackend: sessionReplyBackend(session),
+    replyBackend,
     postStartedMs: Number(intake.postStartedMs) > 0 ? Number(intake.postStartedMs) : started, postBudgetMs: intake.postBudgetMs ?? null, activityCommitDecisionsImpl: intake.activityCommitDecisionsImpl ?? null,
   });
   if (itineraryEditResult?.client) {
