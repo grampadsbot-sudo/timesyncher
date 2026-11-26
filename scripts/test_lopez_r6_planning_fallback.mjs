@@ -113,18 +113,12 @@ async function runScenario(tier4FailureMode) {
     const href = String(url);
     const body = JSON.parse(String(init.body || '{}'));
     if (href.includes('/api/alpha/decisions')) {
-      if (body.questions?.model_tier) {
+      if (body.questions?.overall_quality) {
         return jsonResponse({
           answers: {
             model_tier: { score: 2.55, confidence: 0.54 },
             route_type: { choice: 'itinerary_advice' },
             needs_day_for_note: { noul: 0.26 },
-          },
-        });
-      }
-      if (body.questions?.overall_quality) {
-        return jsonResponse({
-          answers: {
             overall_quality: { score: 3.6 },
             disposition: { choice: 'keep' },
             fix_focus: { choice: 'keep' },
@@ -258,17 +252,11 @@ try {
     const href = String(url);
     const body = JSON.parse(String(init.body || '{}'));
     if (href.includes('/api/alpha/decisions')) {
-      if (body.questions?.model_tier) {
-        return jsonResponse({
-          answers: {
-            model_tier: { score: 2.55, confidence: 0.54 },
-            route_type: { choice: 'itinerary_advice' },
-            needs_day_for_note: { noul: 0.26 },
-          },
-        });
-      }
       return jsonResponse({
         answers: {
+          model_tier: { score: 2.55, confidence: 0.54 },
+          route_type: { choice: 'itinerary_advice' },
+          needs_day_for_note: { noul: 0.26 },
           overall_quality: { score: 3.8 },
           disposition: { choice: 'keep' },
           fix_focus: { choice: 'keep' },

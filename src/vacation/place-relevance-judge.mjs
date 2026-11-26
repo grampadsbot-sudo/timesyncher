@@ -1,4 +1,4 @@
-import { postJevDecisions } from '../../scripts/vacation-app-reply-rules.mjs';
+import { JEV_QUALITY_MODEL, postJevDecisions } from '../../scripts/vacation-app-reply-rules.mjs';
 import { jevRelevanceJudgeTimeoutMs } from './place-relevance-stage-budget.mjs';
 import { PlaceSearchError } from './place-search-error.mjs';
 import { parseJevRelevanceScoreAnswer } from './place-relevance-score-parse.mjs';
@@ -27,7 +27,7 @@ export async function jevRelevanceScore(poi, { fetchImpl = fetch, apiKey = '', t
   const searchArea = String(area || poi.area || '').trim();
   const description = String(poi.description || '').trim();
   const payload = {
-    model: 'typesafe/jev-1.13',
+    model: JEV_QUALITY_MODEL,
     state: {
       channel: 'vacation-search',
       poiId: poi.id,

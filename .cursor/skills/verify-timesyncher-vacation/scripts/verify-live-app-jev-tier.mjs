@@ -34,10 +34,11 @@ export function assertComposerSource({ vacationApp, api, liveTurn, replyRules, s
   if (/Your website is not built yet|I can update this vacation from here/.test(vacationApp)) {
     errors.push('vacation app still renders a fixed welcome');
   }
-  const jevAt = liveTurn.indexOf('await jevPrecall');
+  const tierAt = liveTurn.indexOf('draftTierForTurn({');
   const modelAt = liveTurn.indexOf('await callTieredModel');
-  if (jevAt < 0 || modelAt < 0 || jevAt > modelAt) {
-    errors.push('live reply path does not call Jev before the tiered model');
+  const jevAt = liveTurn.indexOf('await jevTurn(');
+  if (tierAt < 0 || modelAt < 0 || tierAt > modelAt || jevAt < modelAt) {
+    errors.push('live reply path does not pick the tier before the tiered model and call Jev once on the draft');
   }
   if (!/if \(!jev\?\.jevRan\)/.test(liveTurn)) {
     errors.push('live reply path can call the tiered model when Jev did not run');

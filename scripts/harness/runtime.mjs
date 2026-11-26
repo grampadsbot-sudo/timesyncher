@@ -70,6 +70,7 @@ export function writeOutcomes(outDir, payload) {
     const fallbackTurns = Array.isArray(rawFallbacks.turns) ? rawFallbacks.turns : [];
     const costUsd = sumUsageUsd(turns.filter((turn) => turn?.cost).map((turn) => ({ usage: turn.cost, model: turn.model || '' })));
     const rec = {
+      tripId: payload?.tripId ? String(payload.tripId) : '',
       itineraryCount: Number(payload?.itineraryCount) || 0,
       keepsakeOk: payload?.keepsakeOk === true,
       pricingReactionCaptured: payload?.pricingReactionCaptured === true,
@@ -232,6 +233,7 @@ export function liveOptions(env = process.env) {
         }
         return writeOutcomes(options.outDir, {
           ...base,
+          tripId: played.tripId || created.tripId || '',
           transcript: stamped,
           pricingReactionCaptured: played.pricingReactionCaptured === true,
           customerTurnCount: played.customerTurnCount || 0,
@@ -263,6 +265,7 @@ export function liveOptions(env = process.env) {
         const video = await writeVideoCheck({ origin, attachment: { ok: false, detail: 'no-thing-after-chat', bindings: [] }, fetchImpl, outDir: options.outDir });
         return writeOutcomes(options.outDir, {
           ...base,
+          tripId,
           steps,
           transcript,
           pdfText: dialog.pdfText,
@@ -305,6 +308,7 @@ export function liveOptions(env = process.env) {
       }
       return writeOutcomes(options.outDir, {
         ...base,
+        tripId,
         steps,
         transcript,
         pdfText: dialog.pdfText,

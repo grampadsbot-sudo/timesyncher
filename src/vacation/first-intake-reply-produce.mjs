@@ -1,4 +1,6 @@
-import { callTieredModel, INTERIM_MODEL, jevPrecall, jevQualityRewrite } from '../../scripts/vacation-app-reply-rules.mjs';
+import { callTieredModel, INTERIM_MODEL } from '../../scripts/vacation-app-reply-rules.mjs';
+import { applyJevTurn, draftTierForTurn, jevTurn } from './jev-turn.mjs';
+import { failOpenJudgedQuality, jevJudgeErrored } from './reply-quality-gate.mjs';
 import { sumModelCost } from './turn-cost.mjs';
 
 const FIRST_INTAKE_REPLY_TIMEOUT_MS = 8000;
@@ -39,7 +41,7 @@ export async function produceFirstIntakeReply({
   savedEnd = '',
   loadOwnerPlan = loadTripOwnerReplyPlan,
   turnActionResults = null,
-  turnJev = null,
+  understanding = null,
 } = {}) {
   if (!rules?.ok) {
     return { reply: null, rules, jev: null, model: null, reason: rules?.error || 'reply_rules_unloaded' };
@@ -50,15 +52,7 @@ export async function produceFirstIntakeReply({
   const tripId = String(session?.trip_id || session?.tripId || saved?.tripId || '').trim();
   const customerInput = firstIntakeLodgingCustomerInput(saved?.things || [], wantedThings);
   await persistTripLodgingCustomerInputGap(env, tripId, customerInput);
-  const jevStarted = Date.now();
-  const jev = turnJev || await jevPrecall({
-    customerTurn,
-    stage: 'vacation_conversation',
-    screen: 'vacation-app',
-    session: { seed_id: session?.token || null },
-    env,
-  });
-  if (!turnJev && jev && typeof jev === 'object') jev.jevLatencyMs = Math.max(0, Date.now() - jevStarted);
+  const jev = draftTierForTurn({ intent: understanding?.intent });
   if (!jev?.jevRan) {
     return { reply: null, rules, jev, model: null, customerInput, reason: jev?.error || 'jev_skipped' };
   }
@@ -170,20 +164,27 @@ export async function produceFirstIntakeReply({
     };
   }
   const judgeStarted = Date.now();
-  const quality = await jevQualityRewrite({ customerTurn, draft: reply, env });
+  const jevTurnResult = await jevTurn({ customerTurn, draft: reply, session, env });
   const judgeMs = Math.max(0, Date.now() - judgeStarted);
+  let quality = applyJevTurn(jev, jevTurnResult, judgeMs);
   if (quality?.judged !== true) {
-    const reason = quality?.reason || 'quality_not_judged';
-    return {
-      reply: null,
-      rules,
-      jev,
-      model,
-      customerInput,
-      quality: quality || { judged: false, reason },
-      reason,
-      blockedReasons: [reason],
-    };
+    if (jevJudgeErrored(quality)) {
+      quality = failOpenJudgedQuality(quality, judgeMs);
+      jev.judgeFailed = true;
+      jev.judgeError = quality.judgeError;
+    } else {
+      const reason = quality?.reason || 'quality_not_judged';
+      return {
+        reply: null,
+        rules,
+        jev,
+        model,
+        customerInput,
+        quality: quality || { judged: false, reason },
+        reason,
+        blockedReasons: [reason],
+      };
+    }
   }
   quality.judgeMs = judgeMs;
   if (model && typeof model === 'object') {

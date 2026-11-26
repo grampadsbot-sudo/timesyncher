@@ -58,7 +58,7 @@ assert.match(hilo, /build(?:ing)? (?:the|your) itinerary/i);
 assert.match(hilo, /\bview access\b/i);
 assert.match(hilo, /\bedit access\b/i);
 assert.match(hilo, /email invite/i);
-assert.match(hilo, /unlimited vacations for the whole year/i);
+assert.match(hilo, /covers the family's vacations for the whole year/i);
 assert.doesNotMatch(hilo, /you also have unlimited/i);
 
 const bindToken = 'mb_fixture_token';

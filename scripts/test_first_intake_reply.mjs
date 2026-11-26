@@ -225,28 +225,12 @@ const gapReply = 'I can start a short draft from that. Where are you hoping to g
 const originalFetch = globalThis.fetch;
 const env = intakeLive.env;
 
-function jevOk(score = 0) {
-  return {
-    ok: true,
-    json: async () => ({
-      ok: true,
-      answers: { model_tier: { score }, route_type: { choice: 'general' } },
-    }),
-  };
-}
-
 function decisionsResponse(init, score = 0) {
   const body = init?.body ? JSON.parse(init.body) : {};
-  if (body.questions?.overall_quality) {
-    return {
-      ok: true,
-      json: async () => ({
-        ok: true,
-        answers: { overall_quality: { score: 4 }, disposition: { choice: 'keep' }, fix_focus: { choice: 'keep' } },
-      }),
-    };
-  }
-  return jevOk(score);
+  assert.ok(body.questions?.overall_quality, 'the only Jev call on a first-intake turn judges the draft');
+  const answers = { overall_quality: { score: 4 }, disposition: { choice: 'keep' }, fix_focus: { choice: 'keep' } };
+  if (body.questions.model_tier) Object.assign(answers, { model_tier: { score }, route_type: { choice: 'general' } });
+  return { ok: true, json: async () => ({ ok: true, answers }) };
 }
 
 const chatCalls = [];
@@ -297,7 +281,7 @@ try {
   assert.equal(chatCalls.length, 1);
   assert.equal(produced.reply, voiceReply);
   assert.equal(produced.reason, null);
-  assert.equal(produced.jev.modelTier, 1);
+  assert.equal(produced.jev.modelTier, 3);
   assert.equal(produced.model.responseModel, INTERIM_MODEL);
   assert.equal(Number.isFinite(produced.jev.jevLatencyMs), true);
   assert.equal(Number.isFinite(produced.model.genLatencyMs), true);
@@ -313,7 +297,7 @@ try {
     model: produced.model,
     rules: produced.rules,
   });
-  assert.equal(stored.tier, 1);
+  assert.equal(stored.tier, 3);
   assert.equal(stored.modelId, tiers[1]);
   assert.equal(stored.jevLatencyMs, produced.jev.jevLatencyMs);
   assert.equal(stored.generationMs, produced.model.genLatencyMs);
@@ -447,29 +431,33 @@ try {
     }
     throw new Error(`unexpected ${target}`);
   };
-  const tierThree = await produceLiveAppReply({ ...voiceInput, ...intakeLive });
+  const tierFour = await produceLiveAppReply({ ...voiceInput, ...intakeLive, understanding: { intent: { asksPrice: true } } });
   assert.equal(chatCalls.length, 1);
-  assert.equal(tierThree.reply, voiceReply);
-  assert.equal(tierThree.jev.modelTier, 3);
-  assert.equal(tierThree.model.responseModel, INTERIM_MODEL);
+  assert.equal(tierFour.reply, voiceReply);
+  assert.equal(tierFour.jev.modelTier, 4);
+  assert.equal(tierFour.model.responseModel, INTERIM_MODEL);
 
   chatCalls.length = 0;
-  globalThis.fetch = async (url) => {
+  globalThis.fetch = async (url, init) => {
     const target = String(url);
+    if (target.includes('/get_page') || target.includes('/page?')) {
+      return { ok: true, json: async () => ({ frontmatter: { smoke_bar_phrase: 'Fixture rules loaded' } }) };
+    }
     if (target.includes('/api/alpha/decisions')) {
       return { ok: false, status: 503, json: async () => ({ error: { message: 'jev down' } }) };
     }
     if (target.includes('/chat/completions')) {
-      chatCalls.push({});
-      throw new Error('fallback model was called');
+      chatCalls.push(init?.body ? JSON.parse(init.body) : {});
+      return { ok: true, json: async () => ({ model: tiers[1], choices: [{ message: { content: `${voiceReply}\nBEAT: reflected the intake` } }] }) };
     }
     throw new Error(`unexpected ${target}`);
   };
   const jevFailed = await produceLiveAppReply({ ...voiceInput, ...intakeLive });
-  assert.equal(chatCalls.length, 0);
-  assert.equal(jevFailed.reply, null);
-  assert.equal(jevFailed.reason, 'jev down');
-  assert.equal(jevFailed.model, null);
+  assert.equal(chatCalls.length, 1, 'intake draft runs before the merged Jev judge fails');
+  assert.equal(jevFailed.reply, voiceReply);
+  assert.equal(jevFailed.reason, null);
+  assert.equal(jevFailed.quality.judgeFailed, true);
+  assert.ok(jevFailed.model);
 
   chatCalls.length = 0;
   globalThis.fetch = async (url, init) => {

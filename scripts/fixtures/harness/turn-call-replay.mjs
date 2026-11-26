@@ -67,9 +67,17 @@ export async function withMockedTurnPipeline(run, { destination = 'Bend', owner 
       return Response.json({ data: [{ id: 'anthropic/claude-haiku-5.5', pricing: HAIKU_PRICING }] });
     }
     if (route === '/api/alpha/decisions') {
-      if (body.questions.model_tier && body.questions.trip_intake) {
-        captured.push({ purpose: 'jev_precall', body });
-        return Response.json({ answers: { model_tier: { score: (current.tier || 1) - 1 }, route_type: { choice: 'general' }, trip_intake: { noul: current.intake ? 0.95 : 0.05 } } });
+      if (body.questions.route_type && body.questions.overall_quality) {
+        captured.push({ purpose: 'jev_turn', body });
+        const low = current.rewrite && body.state.draft === current.reply;
+        return Response.json({
+          answers: {
+            route_type: { choice: 'general' },
+            overall_quality: { score: low ? 0 : 3 },
+            disposition: { choice: low ? 'rewrite' : 'keep' },
+            fix_focus: { choice: low ? 'misses_ask' : 'keep' },
+          },
+        });
       }
       if (body.questions.overall_quality) {
         captured.push({ purpose: 'jev_quality', body });

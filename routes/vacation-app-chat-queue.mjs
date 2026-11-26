@@ -299,7 +299,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
         env: env,
         rules,
         loadOwnerPlan,
-        turnActionResults, turnJev: classification.turnJev,
+        turnActionResults, understanding: classification.understanding,
       });
     } else {
       produced = await produceLiveAppReply({
@@ -324,7 +324,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
         savedEnd: jobFields.endDate,
         loadOwnerPlan,
         turnActionResults: itineraryEditAuthoritative ? { ...(turnActionResults || {}), itineraryEditAuthoritative } : turnActionResults,
-        placeSearchReplyFacts, understanding: classification.understanding, turnJev: classification.turnJev,
+        placeSearchReplyFacts, understanding: classification.understanding,
       });
     }
   } catch (error) {

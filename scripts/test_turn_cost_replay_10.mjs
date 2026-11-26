@@ -44,7 +44,7 @@ await withMockedTurnPipeline(async ({ send }) => {
     const chat = rows.filter((row) => row.endpoint === 'chat');
     assert.ok(chat.every((row) => row.reasoningTokens === 0));
     assert.ok(chat.length <= recorded.baseline.replay.chatCalls);
-    assert.equal(totals.unpricedCalls, recorded.baseline.replay.unpricedCalls - 1);
+    assert.equal(totals.unpricedCalls, recorded.baseline.replay.unpricedCalls - 2, `turn ${index + 1} has one Jev decisions call fewer than the #1149 replay`);
     if (index > 0) assert.ok(chat.some((row) => row.cachedTokens > 0));
     const expected = chat.reduce((usd, row) => usd
       + (row.promptTokens - row.cachedTokens) * Number(HAIKU_PRICING.prompt)

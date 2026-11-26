@@ -77,7 +77,7 @@ globalThis.fetch = async (url, init = {}) => {
     json: async () => payload,
   });
   if (href.includes('/api/alpha/decisions')) {
-    if (body.questions?.model_tier) {
+    if (body.questions?.model_tier && !body.questions?.overall_quality) {
       return json({ answers: { model_tier: { score: 1 }, route_type: { choice: 'general' } } });
     }
     assert.match(body.questions.overall_quality.instructions, /Return a score only/);

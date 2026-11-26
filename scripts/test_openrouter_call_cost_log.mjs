@@ -58,10 +58,16 @@ async function mockFetch(url, init = {}) {
   if (String(url) === DEFAULT_JEV_DECISIONS_URL) {
     fetches.push('decisions');
     const questions = body.questions;
-    if (questions.model_tier) return decision({
-      model_tier: { score: 1 }, route_type: { choice: 'general' },
-      trip_intake: { noul: body.state.current_turn === intake ? 0.95 : 0.04 },
-    });
+    if (questions.model_tier && questions.overall_quality) {
+      const low = String(body.state.draft).includes('neighborhood');
+      return decision({
+        model_tier: { score: 1 },
+        route_type: { choice: 'general' },
+        overall_quality: { score: low ? 0 : 3.9 },
+        disposition: { choice: low ? 'rewrite' : 'keep' },
+        fix_focus: { choice: low ? 'misses_ask' : 'keep' },
+      });
+    }
     if (questions.relevance) return decision({ relevance: { type: 'score', score: 3.2 } });
     assert.ok(questions.overall_quality);
     const low = String(body.state.draft).includes('neighborhood');
@@ -156,6 +162,8 @@ function checkRows(turn, expectedPurposes, start) {
     assert.equal(row.httpStatus, 200);
     assert.ok(row.latencyMs >= 0);
     assert.equal(totals.byPurpose[row.purpose].calls, rows.filter((r) => r.purpose === row.purpose).length);
+    assert.equal(row.tripId, trip.id);
+    assert.ok(row.requestId != null && String(row.requestId).length > 0);
   }
 }
 
@@ -170,12 +178,12 @@ try {
 
   const first = await queueVacationAppTurnForTests(db, session, trip, { text: intake });
   assert.equal(first.ok, true, first.error);
-  checkRows(first, ['jev_precall', 'turn_understanding', 'reply_draft', 'jev_quality'], 0);
+  checkRows(first, ['turn_understanding', 'reply_draft', 'jev_turn'], 0);
   const afterFirst = fetches.length;
   const second = await queueVacationAppTurnForTests(db, session, trip, { text: followup });
   assert.equal(second.ok, true, second.error);
   assert.equal(second.reply, rewrite);
-  checkRows(second, ['jev_precall', 'turn_understanding', 'reply_draft', 'jev_quality', 'reply_interim', 'interim_judge', 'reply_rewrite', 'jev_quality_rewrite'], afterFirst);
+  checkRows(second, ['turn_understanding', 'reply_draft', 'jev_turn', 'reply_interim', 'interim_judge', 'reply_rewrite', 'jev_quality_rewrite'], afterFirst);
 
   const doc = liveTranscriptFromRows({ session: { ...session, trip_id: trip.id }, rows: stored });
   await renderDialog({
@@ -191,13 +199,17 @@ try {
     assert.deepEqual(logs.filter((row) => row.requestId === returned.requestId).map(({ event, tripId, requestId, ...row }) => {
       assert.equal(tripId, trip.id);
       return row;
-    }), returned.openrouterCalls);
+    }), returned.openrouterCalls.map(({ tripId, requestId, ...row }) => {
+      assert.equal(tripId, trip.id);
+      assert.equal(requestId, returned.requestId);
+      return row;
+    }));
   }
   assert.equal(app[0].cost.dollars, usage.cost);
   assert.equal(app[1].cost.dollars, 0.00026);
   const { rows: scoreRows } = confirmStoredTurns(written, '', 'openrouter');
   assert.deepEqual(scoreRows.filter((row) => row.role === 'app').map((row) => row.openrouterTotals), [first.openrouterTotals, second.openrouterTotals]);
-  assert.match(customerSection({ turns: scoreRows, verdict: 'PASS' }, { wave: 'fixture' }), /OpenRouter per app turn: T2 \$0\.000260 measured, \$0\.000000 estimated, 2 unpriced calls/);
+  assert.match(customerSection({ turns: scoreRows, verdict: 'PASS' }, { wave: 'fixture' }), /OpenRouter per app turn: T2 \$0\.000260 measured, \$0\.000000 estimated, 1 unpriced calls/);
 
   const [extras, failures] = await Promise.all([
     withOpenRouterLedger(async () => {

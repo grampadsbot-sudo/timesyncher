@@ -210,9 +210,11 @@ async function runHyattHandlerRouteTest() {
       return scoredFetch(url, options);
     };
     const missing = await postApp(state, handler, sessionToken, { tripId: state.tripId, text: 'Add a quiet morning at the Hyatt Regency Maui.' });
-    assert.equal(missing.status, 502);
-    assert.equal(missing.body.error, 'quality_score_missing');
-    assert.equal(missing.body.reply, null);
+    assert.ok(missing.status >= 200 && missing.status < 300, `score-missing turn failed: ${missing.status} ${JSON.stringify(missing.body)}`);
+    assert.equal(missing.body.ok, true, JSON.stringify(missing.body));
+    assert.ok(String(missing.body.reply || '').trim().length > 0, JSON.stringify(missing.body));
+    const missingApp = [...state.transcriptTurns].reverse().find((row) => row.payload?.liveTranscript?.replyProducer === 'vacation-app-reply-rules');
+    assert.equal(missingApp?.payload?.liveTranscript?.quality?.judgeFailed, true);
     return { ok: true };
   } finally {
     globalThis.fetch = originalFetch;

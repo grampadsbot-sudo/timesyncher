@@ -167,7 +167,7 @@ function installFetch(replyText) {
     const href = String(url);
     const body = parseJson(init.body);
     if (href.includes('/api/alpha/decisions')) {
-      if (body.questions?.model_tier) {
+      if (body.questions?.model_tier && !body.questions?.overall_quality) {
         return jsonResponse({ answers: { model_tier: { score: 2.2, confidence: 0.6 }, route_type: { choice: 'itinerary_advice' }, needs_day_for_note: { noul: 0.2 } } });
       }
       return jsonResponse({ answers: { overall_quality: { score: 3.9 }, disposition: { choice: 'keep' }, fix_focus: { choice: 'keep' } } });

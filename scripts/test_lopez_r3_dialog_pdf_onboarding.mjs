@@ -82,7 +82,7 @@ const customerRecord = liveTurnRecord({
 const firstIntakeText = [
   'Hi Sofia Lopez, we are building your Orlando theme parks vacation from Monday, April 5, 2027 through Friday, April 9, 2027.',
   'Where will you be staying during the vacation?',
-  'I am building the itinerary from what you told me. View access lets family and friends see the days. Edit access lets them add notes after you approve an email invite. Welcome them onto this vacation as collaborators. The household plan is unlimited vacations for the whole year.',
+  'I am building the itinerary from what you told me. View access lets family and friends see the days. Edit access lets them add notes after you approve an email invite. Welcome them onto this vacation as collaborators. The household plan covers the family\'s vacations for the whole year.',
 ].join(' ');
 
 const turn3NoLog = liveTurnRecord({

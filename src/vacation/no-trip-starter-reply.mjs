@@ -1,4 +1,5 @@
-import { callTieredModel, jevPrecall } from '../../scripts/vacation-app-reply-rules.mjs';
+import { callTieredModel } from '../../scripts/vacation-app-reply-rules.mjs';
+import { applyJevTurn, draftTierForTurn, jevTurn } from './jev-turn.mjs';
 import { requireReplyQuality } from './reply-quality-gate.mjs';
 import { sumModelCost } from './turn-cost.mjs';
 import { routeVkBotMcpReply } from './vk-bot-mcp-reply.mjs';
@@ -77,22 +78,14 @@ export async function produceNoTripStarterReply({
   rules = null,
   loadOwnerPlan = loadSessionOwnerReplyPlan,
   turnActionResults = null,
-  turnJev = null,
+  understanding = null,
 } = {}) {
   const vkBotReply = await routeVkBotMcpReply({ customerTurn, session, priorTurns: [], tripTitle: '', env });
   if (vkBotReply) return requireReplyQuality(vkBotReply, { customerTurn, env });
   if (!rules?.ok) {
     return { reply: null, rules, jev: null, model: null, reason: rules?.error || 'reply_rules_unloaded' };
   }
-  const jevStarted = Date.now();
-  const jev = turnJev || await jevPrecall({
-    customerTurn,
-    stage: 'vacation_conversation',
-    screen: 'vacation-app',
-    session: { seed_id: session?.token || null },
-    env,
-  });
-  if (!turnJev && jev && typeof jev === 'object') jev.jevLatencyMs = Math.max(0, Date.now() - jevStarted);
+  const jev = draftTierForTurn({ intent: understanding?.intent });
   if (!jev?.jevRan) {
     return { reply: null, rules, jev, model: null, reason: jev?.error || 'jev_skipped' };
   }
@@ -152,5 +145,10 @@ export async function produceNoTripStarterReply({
       blockedReasons: [String(error.reason || 'reply_action_claim_blocked')],
     };
   }
-  return requireReplyQuality({ reply, rules, jev, model, reason: null }, { customerTurn, env });
+  const judge = async () => {
+    const started = Date.now();
+    const result = await jevTurn({ customerTurn, draft: reply, session, env });
+    return applyJevTurn(jev, result, Date.now() - started);
+  };
+  return requireReplyQuality({ reply, rules, jev, model, reason: null }, { customerTurn, env, judge });
 }
