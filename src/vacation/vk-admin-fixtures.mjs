@@ -15,6 +15,12 @@ function loadRosterCatalog() {
   return rosterCatalog;
 }
 
+export function vkAdminRosterId(email) {
+  const match = /^harness\+[a-z0-9][a-z0-9._-]*\+vk-(\d{3})-[a-z0-9-]+@harness\.invalid$/i.exec(email || '');
+  const id = Number(match?.[1]);
+  return loadRosterCatalog().customers.find((customer) => customer.id === id)?.id;
+}
+
 function loadVacationFixtures() {
   if (!vacationFixtures) vacationFixtures = JSON.parse(readFileSync(`${FIXTURE_ROOT}vacation-fixtures.json`, 'utf8'));
   return vacationFixtures;

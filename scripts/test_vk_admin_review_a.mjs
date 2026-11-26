@@ -296,13 +296,17 @@ try {
       const order = await page.$$eval('[data-trip-group]', (els) => els.map((el) => el.dataset.tripGroup));
       assert.equal(order[0], 'vk-fixture-decoy');
       assert.ok(order.indexOf('vk-fixture-trip-001') < order.indexOf('vk-fixture-trip-002'));
-      assert.equal(await page.locator('[data-trip-group="vk-fixture-trip-001"] .admin-coupon').count(), 4);
+      const orlandoRows = page.locator('[data-trip-group="vk-fixture-trip-001"]');
+      assert.equal(await orlandoRows.count(), 4, 'four customers sharing one fixture vacation have separate picker rows');
+      assert.deepEqual(await orlandoRows.locator('[data-customer-id]').evaluateAll((buttons) =>
+        buttons.map((button) => Number(button.dataset.customerId))), roster.customers
+        .filter((member) => member.tripId === ORLANDO.tripId).map((member) => member.id));
       assert.equal(await page.locator('#splitter').count(), 1);
       assert.match(await page.locator('#vacationDropdown [data-trip-id="all"] b').textContent(), /^All Customers$/);
       await noOverflow('list');
-      await page.screenshot({ path: path.join(SHOTS, `list-${width}.png`) });
+      await page.screenshot({ path: path.join(SHOTS, `list-${width}.png`), mask: [page.locator('.admin-coupon')] });
 
-      await page.locator('[data-trip-group="vk-fixture-trip-001"]').getByRole('button', { name: 'Lopez family', exact: true }).click();
+      await orlandoRows.getByRole('button', { name: 'Open Lopez family', exact: true }).click();
       await page.waitForSelector('#sitePane[data-kind="chat"] #customerChatReplay article.bubble');
       const welcome = page.locator('#messages [data-admin-welcome]');
       await welcome.waitFor();
@@ -347,7 +351,7 @@ try {
 
       await page.click('#tripButton');
       await page.click('[data-trip-id="all"]');
-      await page.click('[data-vk-open][data-customer-id="vk-fixture-trip-002"]');
+      await page.locator('[data-trip-group="vk-fixture-trip-002"] button').first().click();
       await page.waitForSelector('#sitePane[data-kind="chat"][data-run="vk-fixture-trip-002"]');
       assert.equal(await page.locator('#vacationDropdown [data-run-group]').count(), 2, 'two customers open at once');
       const clears = await page.$$eval('button', (els) => els.filter((el) => /clear/i.test(el.textContent || '') || el.matches('[data-clear-run], [data-clear-all]')).map((el) => el.textContent.trim()));

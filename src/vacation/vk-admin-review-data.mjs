@@ -1,7 +1,7 @@
 import { hasDatabase, sql } from './db.mjs';
 import { intakeShareSlug } from './intake-shared-trip.mjs';
 import { vacationAppTurnPayloadForClient } from './reply-ship.mjs';
-import { listVkAdminGroups, presentVkAdminVacation } from './vk-admin-fixtures.mjs';
+import { listVkAdminGroups, presentVkAdminVacation, vkAdminRosterId } from './vk-admin-fixtures.mjs';
 
 const iso = (value) => value ? new Date(value).toISOString() : null;
 const date = (value) => iso(value)?.slice(0, 10) || '';
@@ -19,11 +19,15 @@ function groupByKey(items, keyFn) {
 
 function storedGroup(row) {
   const label = row.display_name || [row.first_name, row.last_name].filter(Boolean).join(' ') || row.title;
+  const rosterId = vkAdminRosterId(row.customer_email);
+  const member = rosterId != null
+    ? { id: rosterId, customer_label: label, recordId: row.customer_id }
+    : { id: row.customer_id, customer_label: label };
   return {
     tripId: row.trip_id, sortAt: iso(row.created_at), title: row.title,
     label, destination: row.destination || '', customerCount: row.customer_id ? 1 : 0,
-    customers: row.customer_id ? [{ id: row.customer_id, customer_label: label }] : [],
-    isTest: Boolean(row.harness_tag),
+    customers: row.customer_id ? [member] : [],
+    isTest: rosterId != null || Boolean(row.harness_tag),
   };
 }
 
@@ -32,7 +36,8 @@ export async function vkAdminGroups(db) {
   if (!db) return fixtures;
   const rows = await db`
     select t.id::text as trip_id, t.title, t.destination, t.created_at,
-      c.id as customer_id, c.display_name, c.first_name, c.last_name, t.metadata->>'harnessTag' as harness_tag
+      c.id as customer_id, c.email as customer_email, c.display_name, c.first_name, c.last_name,
+      t.metadata->>'harnessTag' as harness_tag
     from trips t left join customers c on c.id = t.customer_id
     order by t.created_at desc, t.id
   `;
@@ -41,18 +46,31 @@ export async function vkAdminGroups(db) {
 
 export function vkAdminMember(vacation, customerId = null) {
   const members = vacation.customers;
-  if (customerId != null) return members.find((member) => String(member.id) === customerId) || null;
+  if (customerId != null) return members.find((member) => String(member.id) === customerId || member.recordId === customerId) || null;
   return members[0] || { id: null, customer_label: vacation.label };
 }
 
-export async function vkAdminLegacyNoteTrips(db, vacation, member) {
+export async function vkAdminLegacyNoteSources(db, vacation, member) {
   if (member.id == null) return [];
   if (typeof member.id === 'number') {
-    return listVkAdminGroups().filter((group) => group.customers[0]?.id === member.id).map((group) => group.tripId);
+    const sources = listVkAdminGroups().filter((group) => group.customers[0]?.id === member.id)
+      .map((group) => ({ vacationId: group.tripId }));
+    if (!db) return sources;
+    const pattern = `harness+%+vk-${String(member.id).padStart(3, '0')}-%@harness.invalid`;
+    const rows = await db`
+      select t.id::text as trip_id, c.id as customer_id, c.email as customer_email
+      from trips t join customers c on c.id = t.customer_id
+      where lower(c.email) like ${pattern}
+      order by t.created_at desc, t.id
+    `;
+    for (const row of rows.filter((row) => vkAdminRosterId(row.customer_email) === member.id)) {
+      sources.push({ vacationId: row.trip_id }, { customerId: row.customer_id, vacationId: row.trip_id });
+    }
+    return sources;
   }
-  if (!db) return [vacation.tripId];
+  if (!db) return [{ vacationId: vacation.tripId }];
   const rows = await db`select id::text as trip_id from trips where customer_id = ${member.id}`;
-  return rows.map((row) => row.trip_id);
+  return rows.map((row) => ({ vacationId: row.trip_id }));
 }
 
 function costs(rows) {
@@ -132,7 +150,7 @@ export async function findVkAdminVacation(db, id, { detail = false } = {}) {
   if (!db || !/^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/i.test(id)) return null;
   const [row] = await db`
     select t.id::text as trip_id, t.title, t.destination, t.created_at, t.start_date, t.end_date,
-      c.id as customer_id, c.display_name, c.first_name, c.last_name,
+      c.id as customer_id, c.email as customer_email, c.display_name, c.first_name, c.last_name,
       t.metadata->>'harnessTag' as harness_tag,
       coalesce(t.metadata->>'sharedToken', t.metadata->>'shareToken', t.metadata->>'publicSlug',
         t.metadata->>'source_token', t.metadata->>'slug') as share_slug,

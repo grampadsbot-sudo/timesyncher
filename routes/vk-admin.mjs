@@ -8,7 +8,7 @@ import {
   vkAdminConfigured,
   writeVkAdminSession,
 } from '../src/vacation/vk-admin-session.mjs';
-import { findVkAdminVacation, vkAdminDatabase, vkAdminGroups, vkAdminLegacyNoteTrips, vkAdminMember } from '../src/vacation/vk-admin-review-data.mjs';
+import { findVkAdminVacation, vkAdminDatabase, vkAdminGroups, vkAdminLegacyNoteSources, vkAdminMember } from '../src/vacation/vk-admin-review-data.mjs';
 import {
   artifactType, listNotes, listReviewArtifacts, loadNoteFile, loadReviewArtifact,
   noteFromBody, notesPath, presentNote, saveReviewArtifact, saveReviewResults, saveWelcome, vkAdminStorage,
@@ -89,7 +89,7 @@ async function handleSession(req, res, env) {
 async function handleCustomers(req, res, session, db) {
   if (req.method !== 'GET') return send(res, 405, { ok: false, error: 'method not allowed' });
   const groups = await vkAdminGroups(db);
-  const testCustomerCount = groups.filter((g) => g.isTest).reduce((n, g) => n + g.customerCount, 0);
+  const testCustomerCount = new Set(groups.filter((g) => g.isTest).flatMap((g) => g.customers.map((member) => member.id))).size;
   return send(res, 200, { ok: true, role: 'admin', opened: session.opened, groups, testCustomerCount });
 }
 
@@ -160,12 +160,12 @@ async function handleNotes(req, res, db, getStore, [id, index]) {
   const store = getStore();
   if (id) {
     const legacy = vacation.customers[0]?.id === member.id;
-    const file = await loadNoteFile(store, member.id, vacationId, legacy, id, index);
+    const file = await loadNoteFile(store, member.id, vacationId, legacy, id, index, member.recordId);
     return file ? sendFile(res, file, 'application/octet-stream') : notFound(res);
   }
   if (!body) {
-    const legacyTripIds = await vkAdminLegacyNoteTrips(db, vacation, member);
-    return send(res, 200, { ok: true, notes: await listNotes(store, member.id, vacationId, legacyTripIds) });
+    const legacySources = await vkAdminLegacyNoteSources(db, vacation, member);
+    return send(res, 200, { ok: true, notes: await listNotes(store, member.id, vacationId, legacySources) });
   }
   const note = noteFromBody(body, vacationId);
   if (!note) return send(res, 400, { ok: false, error: 'Add a message or files. The combined upload limit is 3 MB.' });
