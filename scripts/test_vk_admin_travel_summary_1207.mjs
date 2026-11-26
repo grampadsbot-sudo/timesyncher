@@ -52,7 +52,7 @@ await persistVacationAppCustomerTurn(async (strings, ...values) => {
     assert.ok(sql.includes('insert into eula_store_objects'), 'the turn and snapshot are stored in the same statement');
     assert.ok(values.includes(`vk-admin-review/artifacts/${tripId}/travel-summary`));
     const document = values.find((value) => value?.description === modelFields.description);
-    assert.deepEqual(document, forPersist);
+    assert.deepEqual(document, { ...forPersist, version: 2 });
     await save({ turnId: storedId, ...document });
     return [{ id: storedId }];
   }

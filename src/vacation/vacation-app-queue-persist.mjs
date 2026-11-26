@@ -1,6 +1,6 @@
 import { initTripSearchProgress } from './search-progress.mjs';
 import { bindOpenRouterLedger } from './openrouter-call-ledger.mjs';
-import { travelSummaryPrefix } from './vk-travel-summary.mjs';
+import { travelSummaryDocument, travelSummaryPrefix } from './vk-travel-summary.mjs';
 
 export async function persistVacationAppCustomerTurn(db, {
   transcriptOwnerId,
@@ -44,7 +44,7 @@ export async function persistVacationAppCustomerTurn(db, {
     ), summary as (
       insert into eula_store_objects (key, document, updated_at)
       select ${summaryPrefix}::text || '/' || id::text || '.json',
-        ${travelSummary ?? null}::jsonb || jsonb_build_object('turnId', id), now()
+        ${travelSummary ? travelSummaryDocument(travelSummary) : null}::jsonb || jsonb_build_object('turnId', id), now()
       from turn where ${summaryPrefix}::text is not null
       on conflict (key) do nothing
     )

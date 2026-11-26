@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { hostIsBanned, loadBannedHosts } from './fetch-guard.mjs';
+import { travelSummaryValues } from '../../src/vacation/vk-travel-summary.mjs';
 
 const CUSTOMER_LANE_ORDER = ['gemini', 'claude', 'codex'];
 const TRANSCRIPT_MAX_TURNS = 12;
@@ -60,14 +61,14 @@ export function isOddCustomerIndex(index, every = oddEvery()) {
   return Number(index) % every === every - 1;
 }
 
-export async function speakCustomer({ persona, appReply = '', index = 0, transcript = [], ask, order, env = process.env } = {}) {
+export async function speakCustomer({ persona, appReply = '', index = 0, transcript = [], travelSummary = null, ask, order, env = process.env } = {}) {
   const lane = customerLane(order);
   if (isOddCustomerIndex(index, oddEvery(env))) return { ...oddCustomerTurn(index), lane: 'host', model: lane, cost: null };
   if (typeof ask !== 'function') throw new Error('harness preflight missing HARNESS_CUSTOMER_MODEL_URL');
   const goal = persona?.goals?.[index] || persona?.goals?.[0] || persona?.destination || '';
   const priorTranscript = formatCustomerTranscript(transcript);
   const isFirstTurn = Number(index) === 0 && !priorTranscript.some((turn) => turn.role === 'customer');
-  const spoken = await ask({ lane, persona, appReply: String(appReply || ''), goal, index, transcript: priorTranscript, isFirstTurn });
+  const spoken = await ask({ lane, persona, appReply: String(appReply || ''), goal, index, transcript: priorTranscript, isFirstTurn, travelSummary });
   const text = String(spoken?.text || '').trim();
   if (!text) throw new Error('refused: customer model returned no line');
   if (spoken?.url && hostIsBanned(spoken.url, loadBannedHosts())) throw new Error('refused: harness blocked a model host');
@@ -106,7 +107,7 @@ export function pickCustomerLane(env = process.env, spawnImpl = spawnSync) {
 
 export function customerAskFromEnv(env = process.env, hosts = loadBannedHosts(), fetchImpl = globalThis.fetch) {
   const url = String(env?.HARNESS_CUSTOMER_MODEL_URL || '').trim();
-  return async ({ lane, persona, appReply, goal, index, transcript = [], isFirstTurn } = {}) => {
+  return async ({ lane, persona, appReply, goal, index, transcript = [], isFirstTurn, travelSummary = null } = {}) => {
     if (!url) throw new Error('harness preflight missing HARNESS_CUSTOMER_MODEL_URL');
     const banned = Array.isArray(hosts) ? hosts : loadBannedHosts();
     if (hostIsBanned(url, banned)) throw new Error('refused: harness blocked a model host');
@@ -126,6 +127,7 @@ export function customerAskFromEnv(env = process.env, hosts = loadBannedHosts(),
         index,
         transcript: priorTranscript,
         isFirstTurn: firstTurn,
+        travelSummary: travelSummary ? travelSummaryValues(travelSummary) : null,
       }),
       signal: AbortSignal.timeout(180000),
     });

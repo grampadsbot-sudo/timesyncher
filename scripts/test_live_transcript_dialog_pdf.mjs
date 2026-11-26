@@ -183,11 +183,7 @@ assert.ok(draftFactErrors('The party of 9 is already set.', { travelers: ['Ada',
 assert.equal(draftFactErrors('The crew includes your unnamed friends.', { ownerName: 'Ada' }).some((error) => /invented people/.test(error)), false);
 assert.doesNotMatch(source, /WHAT_I_CHANGED/);
 const partyFacts = draftingFacts([], 'The party of eight needs a quiet day. Four friends are still unnamed.');
-assert.doesNotMatch(partyFacts.roster, /party of (six|seven|eight|nine|ten)/i);
-assert.match(partyFacts.roster, /List only people the customer named/);
-assert.doesNotMatch(partyFacts.roster, /Ask the customer for anything they haven't said/);
-assert.doesNotMatch(partyFacts.roster, /four friends/i);
-assert.doesNotMatch(partyFacts.roster, /count in the party/i);
+assert.equal(Object.hasOwn(partyFacts, 'roster'), false);
 const fullParty = { travelers: ['Craig Davidson', 'Kimberly Davidson', 'Tyler Davidson', 'Lauren Davidson', 'Torren', 'Peyton', 'Keegan', 'Fallon'] };
 assert.ok(draftFactErrors('Craig, Kimberly, Lauren, Torren, Peyton, Keegan, and Fallon are all set.', fullParty).some((error) => /Tyler is traveling/.test(error)));
 assert.equal(draftFactErrors('Torren, Peyton, Keegan, and Fallon are with you.', fullParty).some((error) => /Tyler is traveling/.test(error)), false);
@@ -319,7 +315,7 @@ const draftFacts = draftingFacts([
   span: { spanLabel: 'Sun Apr 5' },
   party: {},
 });
-assert.doesNotMatch(draftFacts.roster, /Aunt Jean/);
+assert.equal(Object.hasOwn(draftFacts, 'roster'), false);
 assert.doesNotMatch(draftFacts.dates, /night 8/);
 assert.equal(draftFacts.itinerary.some((line) => /garden/i.test(line) && /Thu Apr 9/.test(line)), true);
 assert.equal(draftFacts.itinerary.some((line) => /Fri Apr 10/.test(line) && /swim/i.test(line)), false);

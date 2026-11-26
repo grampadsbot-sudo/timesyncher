@@ -44,6 +44,7 @@ export function createBoundedRewriteClaim({
   env,
   jobFields,
   firstIntake,
+  travelSummary,
 }) {
   const postgenTimeoutMs = chatReplyPostgenTimeoutMs(env);
   return async (replyText) => {
@@ -64,6 +65,7 @@ export function createBoundedRewriteClaim({
         env,
         destination: String(jobFields.destination || ''),
         postIntake: firstIntake === true,
+        travelSummary,
       }),
       postgenTimeoutMs,
       () => ({ reply: null, reason: 'rewrite_timeout', model: null }),

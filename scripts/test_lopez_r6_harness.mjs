@@ -89,6 +89,7 @@ function makeLiveServerMock(replyPlan) {
           ok: true,
           status: 'replied',
           reply: step.reply,
+          travelSummary: step.travelSummary,
           appTurnIndex: step.appTurnIndex || postIndex,
           modelId: 'anthropic/claude-haiku-5.5',
           itinerary: step.itinerary || [{ id: 'thing-1', title: 'Magic Kingdom' }],
@@ -122,15 +123,15 @@ const recoveredPlay = await playCustomerTurns(
     secrets: [],
     liveCustomer: true,
     maxTurns: 6,
-    customerAsk: async ({ index, transcript, isFirstTurn }) => {
-      recordedTranscripts.push({ index, transcript, isFirstTurn });
+    customerAsk: async ({ index, transcript, isFirstTurn, travelSummary }) => {
+      recordedTranscripts.push({ index, transcript, isFirstTurn, travelSummary });
       if (index === 4) {
         return { text: '$129 a year for the household plan sounds reasonable and works for us.', model: GEMINI_CUSTOMER_MODEL, cost: { input_tokens: 10500, output_tokens: 900, thinking_tokens: 700, cache_read_tokens: 0, total_tokens: 11400 } };
       }
       return { text: `Customer planning turn ${index + 1} for Orlando family days.`, model: GEMINI_CUSTOMER_MODEL, cost: { input_tokens: 10500, output_tokens: 900, thinking_tokens: 700, cache_read_tokens: 0, total_tokens: 11400 } };
     },
     fetchImpl: makeLiveServerMock([
-      { reply: PLANNING_ERROR_REPLY, appTurnIndex: 3 },
+      { reply: PLANNING_ERROR_REPLY, appTurnIndex: 3, travelSummary: { where: 'Orlando', who: 'Two adults and two kids', transport: '', tripName: 'Family vacation', description: '' } },
       { reply: PLANNING_ERROR_REPLY, appTurnIndex: 5 },
       { reply: 'Day 1: Check in at Pop Century Resort. Day 2: Magic Kingdom.', appTurnIndex: 7 },
       { reply: 'The household plan is $129 per year for unlimited vacations.', appTurnIndex: 9 },
@@ -143,7 +144,9 @@ assert.equal(recoveredPlay.planningFallbacks.count, 2);
 assert.deepEqual(recoveredPlay.planningFallbacks.turns, [3, 5]);
 assert.equal(recoveredPlay.pricingReactionCaptured, true);
 assert.equal(recordedTranscripts[0].isFirstTurn, true);
+assert.equal(recordedTranscripts[0].travelSummary, null);
 assert.equal(recordedTranscripts[1].isFirstTurn, false);
+assert.deepEqual(recordedTranscripts[1].travelSummary, { where: 'Orlando', who: 'Two adults and two kids', transport: '', tripName: 'Family vacation', description: '' });
 assert.ok(recordedTranscripts[1].transcript.some((t) => t.role === 'customer'));
 assert.ok(recordedTranscripts[1].transcript.some((t) => t.role === 'app'));
 

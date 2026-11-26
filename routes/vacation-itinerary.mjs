@@ -1,5 +1,6 @@
 import { requireIntakeAuth } from '../src/vacation/auth.mjs';
 import { sql } from '../src/vacation/db.mjs';
+import { loadCurrentTravelSummary } from '../src/vacation/vk-travel-summary.mjs';
 import { queueOrSendWebEditorInviteEmail } from '../src/vacation/email.mjs';
 import { cleanText, readJson, sendJson, vacationAppErrorBody } from '../src/vacation/http.mjs';
 import {
@@ -930,6 +931,7 @@ async function handleVacationApp(req, res, db, url) {
       publicUrl: selected?.publicUrl || '',
       vacations,
       turns,
+      travelSummary: eula.accepted ? await loadCurrentTravelSummary(db, selected?.id) : null,
       itinerary,
       searchProgress,
     });

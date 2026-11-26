@@ -1,5 +1,6 @@
 import { filterPlacesWithinRadius } from './place-search-radius-filter.mjs';
 import { nominatimLabelsEquivalent } from './nominatim-label-equivalent.mjs';
+import { travelSummaryValues } from './vk-travel-summary.mjs';
 
 function webResultAliases(name) {
   const aliases = new Set();
@@ -183,10 +184,8 @@ function omitOutOfTurnSearchAreaLodging(facts) {
 export function modelVisibleTripContext(tripContext) {
   if (!tripContext || typeof tripContext !== 'object') return tripContext;
   const scoped = omitOutOfTurnSearchAreaLodging(tripContext);
-  if (!('tripReplyGate' in scoped) && !('placeSearchAreaScope' in scoped) && !('namedSearchAwayFromStatedLodging' in scoped)) {
-    return scoped;
-  }
-  const { tripReplyGate, placeSearchAreaScope, namedSearchAwayFromStatedLodging, ...rest } = scoped;
+  const { tripReplyGate, placeSearchAreaScope, namedSearchAwayFromStatedLodging, party, roster, dialogParty, metadata, travelSummary, ...rest } = scoped;
+  if (travelSummary) rest.travelSummary = travelSummaryValues(travelSummary);
   return rest;
 }
 
