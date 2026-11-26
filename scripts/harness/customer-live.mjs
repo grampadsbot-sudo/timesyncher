@@ -141,7 +141,6 @@ export function customerAskFromEnv(env = process.env, hosts = loadBannedHosts(),
     const firstTurn = typeof isFirstTurn === 'boolean'
       ? isFirstTurn
       : (Number(index) === 0 && !priorTranscript.some((turn) => turn.role === 'customer'));
-    // The existing server reads goal and the recent transcript during the disclosure payload rollout.
     const response = await fetchImpl(url, {
       method: 'POST',
       headers: { 'content-type': 'application/json', accept: 'application/json' },
