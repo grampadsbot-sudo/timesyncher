@@ -67,7 +67,9 @@ assert.equal(calls.length, 1);
 const messages = calls[0].messages;
 const system = openRouterChatVisibleText(messages.find((message) => message.role === 'system')?.content);
 const user = messages.find((message) => message.role === 'user')?.content || '';
-const stored = `${system}\n${user}`;
+const capabilities = system.split('\n').find((line) => line.includes('Vacation chat can save itinerary placements.'));
+assert.ok(capabilities?.includes('can invite collaborators in chat by name and email'));
+const stored = `${system.replace(capabilities, '')}\n${user}`;
 const facts = JSON.parse(user);
 
 const violations = [];
