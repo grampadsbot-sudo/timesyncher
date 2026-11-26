@@ -2,32 +2,57 @@ import { mkdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { STAGING_HARNESS_ORIGIN } from './env.mjs';
 import { resolvePlaywright } from './live-outputs.mjs';
+import { assertThrowaway, isHarnessTag } from './protected.mjs';
+import { saveReviewArtifact, saveReviewResults } from '../../src/vacation/vk-admin-review-storage.mjs';
 
-export function createAdminArtifactWriter({ origin, login, fetchImpl }) {
+export function createAdminArtifactWriter({ origin, login, fetchImpl, harnessVacation }) {
   if (origin !== STAGING_HARNESS_ORIGIN) throw new Error('admin artifact uploads require the staging admin host');
   let session;
+
+  function httpError(operation, status) {
+    return Object.assign(new Error(`admin artifact ${operation} returned HTTP ${status}`), { operation, status });
+  }
 
   async function signIn() {
     if (!login) throw new Error('VK_ADMIN_LOGIN is required to upload admin artifacts');
     const response = await fetchImpl(new URL('/api/admin/session', origin), {
       method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ login }), redirect: 'error', signal: AbortSignal.timeout(15000),
+      body: JSON.stringify({ login }), redirect: 'manual', signal: AbortSignal.timeout(15000),
     });
-    const cookies = response.headers.getSetCookie?.() || [];
+    if (!response.ok) throw httpError('sign-in', response.status);
+    const cookies = response.headers.getSetCookie?.() ?? [response.headers.get('set-cookie') || ''];
     const cookie = cookies.find((value) => value.startsWith('vk_admin='))?.split(';')[0];
-    if (!response.ok || !cookie) throw new Error(`admin artifact sign-in returned HTTP ${response.status}`);
+    if (!cookie) throw new Error('admin artifact sign-in returned no session cookie');
     return cookie;
   }
 
   return async (tripId, artifact, bytes) => {
-    const cookie = await (session ??= signIn());
+    assertThrowaway({ tripId });
+    if (harnessVacation && tripId !== harnessVacation.tripId) throw new Error('artifact upload left the harness vacation');
+    if (!login && harnessVacation) {
+      const { db, tag, openStore } = harnessVacation;
+      if (!isHarnessTag(tag)) throw new Error('artifact upload requires a harness tag');
+      const [owned] = await db`select id from trips where id = ${tripId} and metadata->>'harnessTag' = ${tag}`;
+      if (!owned) throw new Error('artifact upload requires the current harness vacation');
+      const saved = artifact === 'review' ? await saveReviewResults(openStore(), tripId, bytes)
+        : await saveReviewArtifact(openStore(), tripId, artifact, bytes.toString('base64'));
+      if (!saved) throw new Error('invalid admin artifact');
+      return;
+    }
+    const cookie = await (session ??= signIn().catch((error) => {
+      session = undefined;
+      throw error;
+    }));
     const endpoint = new URL(`/api/admin/customers/${encodeURIComponent(tripId)}/artifacts/${artifact}`, origin);
     const response = await fetchImpl(endpoint, {
       method: 'PUT', headers: { 'content-type': 'application/json', cookie },
       body: JSON.stringify(artifact === 'review' ? bytes : { data: bytes.toString('base64') }),
-      redirect: 'error', signal: AbortSignal.timeout(30000),
+      redirect: 'manual', signal: AbortSignal.timeout(30000),
     });
-    if (!response.ok) throw new Error(`admin artifact upload returned HTTP ${response.status}`);
+    if (response.status === 401) session = undefined;
+    if (!response.ok) throw httpError('put', response.status);
+    const saved = await response.json().catch(() => null);
+    if (saved?.ok !== true) throw httpError('put', response.status);
   };
 }
 
@@ -47,7 +72,13 @@ async function openCapturePage() {
 export function firstFiveTurnCapture({ origin, token, outDir, put, openPage = openCapturePage }) {
   let opened;
   const numbers = new Set();
+  const pending = new Map();
   const dir = path.join(outDir, 'first-5-turns');
+  async function upload(turn) {
+    const { tripId, bytes } = pending.get(turn);
+    await put(tripId, `turn-${turn}`, bytes);
+    pending.delete(turn);
+  }
   return {
     async capture({ tripId, turn, text, webAccessToken }) {
       if (!Number.isInteger(turn) || turn < 1 || turn > 5 || numbers.has(turn)) return false;
@@ -68,8 +99,19 @@ export function firstFiveTurnCapture({ origin, token, outDir, put, openPage = op
       await mkdir(dir, { recursive: true });
       const bytes = await page.screenshot({ path: path.join(dir, `turn-${turn}.png`) });
       numbers.add(turn);
-      await put(tripId, `turn-${turn}`, bytes);
+      pending.set(turn, { tripId, bytes });
+      await upload(turn);
       return true;
+    },
+    async flush(onResult) {
+      for (const turn of pending.keys()) {
+        try {
+          await upload(turn);
+          onResult(turn);
+        } catch (error) {
+          onResult(turn, error);
+        }
+      }
     },
     async close() {
       await opened?.close();
@@ -78,7 +120,11 @@ export function firstFiveTurnCapture({ origin, token, outDir, put, openPage = op
 }
 
 export async function storeDialogPdf(put, tripId, dialog) {
-  if (!dialog?.ok || !dialog.out) return false;
-  await put(tripId, 'dialog-pdf', await readFile(dialog.out));
+  return storePdf(put, tripId, 'dialog-pdf', dialog?.ok && dialog.out);
+}
+
+export async function storePdf(put, tripId, artifact, file) {
+  if (!file) return false;
+  await put(tripId, artifact, await readFile(file));
   return true;
 }

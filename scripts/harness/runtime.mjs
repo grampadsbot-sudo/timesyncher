@@ -1,4 +1,4 @@
-import { createAdminArtifactWriter, firstFiveTurnCapture, storeDialogPdf } from './admin-review-artifacts.mjs';
+import { createAdminArtifactWriter, firstFiveTurnCapture, storeDialogPdf, storePdf } from './admin-review-artifacts.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { preflightHarnessEnv, secretValues, stagingOrigin } from './env.mjs';
@@ -8,13 +8,16 @@ import { provisionThrowaway } from './live-provision.mjs';
 import { customerAskFromEnv } from './customer-live.mjs';
 import { sumUsageUsd } from './cost.mjs';
 import { playCustomerTurns } from './live-play.mjs';
-import { attachMedia, captureScreens, fetchKeepsake, renderDialog, runSteps, writeVideoCheck } from './live-outputs.mjs';
+import { attachMedia, captureScreens, fetchKeepsake, renderDialog, renderStoredDialog, runSteps, writeVideoCheck } from './live-outputs.mjs';
 import { captureOnboardingPdf, rebuildCustomerPdf } from './onboarding-capture.mjs';
-import { shortHash } from './redact.mjs';
+import { redactText, shortHash } from './redact.mjs';
+import { redactUrls } from './backends.mjs';
 import { transcriptForScorecard, writeRedactedLiveTranscript } from './redacted-transcript.mjs';
 import { deleteTaggedRows } from './cleanup.mjs';
 import { createCouponLedger, redeemRosterCoupon } from './coupon.mjs';
 import { couponPaymentSteps } from './onboarding-capture.mjs';
+import { stampUnstoredExchange } from './unstored-turn.mjs';
+import { vkAdminStorage } from '../../src/vacation/vk-admin-review-storage.mjs';
 import { captureVacationInviteOnboarding } from './onboarding-invites.mjs';
 
 function stampLivePdf(doc, played) {
@@ -44,7 +47,7 @@ export function chatLeftNoThing(played) {
 
 export function maxTurnsFromEnv(env = process.env) {
   const raw = Number(env?.VK_TEST_MAX_TURNS);
-  if (!Number.isFinite(raw) || raw === 0) return 4;
+  if (!Number.isFinite(raw) || raw === 0) return 5;
   return Math.max(1, Math.floor(raw));
 }
 
@@ -105,6 +108,91 @@ async function storedLiveTranscript(db, token) {
   }
 }
 
+function recordArtifactFailure(artifacts, failure, error) {
+  if (!artifacts.errors.includes(failure)) artifacts.errors.push(failure);
+  if (Number.isInteger(error?.status)) {
+    artifacts.httpFailures.push({ failure, operation: error.operation, status: error.status });
+  }
+}
+
+export async function playWithAdminArtifacts({ origin, token, tripId, outDir, secrets, fetchImpl, replyBackend, put, play, loadTranscript, openPage }) {
+  const capture = firstFiveTurnCapture({ origin, token, outDir, put, openPage });
+  const adminArtifacts = { captures: [], dialogPdf: false, keepsakePdf: false, errors: [], httpFailures: [] };
+  const captureFailure = (n) => `turn-${n}-capture-or-upload-failed`;
+  const afterCustomerTurn = async (turn) => {
+    try {
+      if (await capture.capture(turn)) adminArtifacts.captures.push(turn.turn);
+    } catch (error) {
+      recordArtifactFailure(adminArtifacts, captureFailure(turn.turn), error);
+    }
+  };
+  let played;
+  try {
+    played = await play(afterCustomerTurn);
+  } catch (error) {
+    played = { reason: 'harness-error', detail: redactUrls(redactText(error?.message || error, secrets)) };
+  } finally {
+    await capture.flush((n, error) => {
+      if (error) recordArtifactFailure(adminArtifacts, captureFailure(n), error);
+      else {
+        adminArtifacts.captures.push(n);
+        adminArtifacts.errors = adminArtifacts.errors.filter((failure) => failure !== captureFailure(n));
+      }
+    });
+    await capture.close().catch(() => recordArtifactFailure(adminArtifacts, 'capture-close-failed'));
+    adminArtifacts.captures.sort((left, right) => left - right);
+  }
+  const storedTranscript = await loadTranscript();
+  writeRedactedLiveTranscript(outDir, storedTranscript, secrets);
+  const transcript = played.reason ? stampUnstoredExchange(storedTranscript, played.exchange) : stampLivePdf(storedTranscript, played);
+  let dialog = { ok: false, detail: 'no stored turns', pdfText: '' };
+  if (transcript?.turns?.length) {
+    try {
+      dialog = await renderDialog({
+        token, outDir, secrets, buildSha: played.liveShaStart, origin, fetchImpl, replyBackend,
+        loadTranscript: async () => transcript,
+        redactForAdmin: true,
+      });
+    } catch (error) {
+      dialog.detail = redactUrls(redactText(error?.message || error, secrets));
+    }
+  }
+  let uploadDialog;
+  try {
+    uploadDialog = dialog.ok ? dialog : renderStoredDialog({ transcript, outDir, secrets, failed: Boolean(played.reason) });
+    if (!uploadDialog) recordArtifactFailure(adminArtifacts, 'dialog-pdf-generation-failed');
+  } catch {
+    recordArtifactFailure(adminArtifacts, 'dialog-pdf-generation-failed');
+  }
+  if (uploadDialog) {
+    try {
+      adminArtifacts.dialogPdf = await storeDialogPdf(put, played.tripId || tripId, uploadDialog);
+    } catch (error) {
+      recordArtifactFailure(adminArtifacts, 'dialog-pdf-upload-failed', error);
+    }
+  }
+  return { played, adminArtifacts, dialog, transcript: transcriptForScorecard(dialog.transcript, transcript) };
+}
+
+export async function storeHarnessKeepsake({ origin, tripId, shareToken, fetchImpl, outDir, put, adminArtifacts }) {
+  let keepsake;
+  try {
+    keepsake = await fetchKeepsake({ origin, shareToken, fetchImpl, outDir });
+  } catch {
+    keepsake = { ok: false, detail: 'keepsake request failed' };
+  }
+  if (!keepsake.ok) {
+    recordArtifactFailure(adminArtifacts, 'keepsake-pdf-generation-failed');
+    return keepsake;
+  }
+  try {
+    adminArtifacts.keepsakePdf = await storePdf(put, tripId, 'keepsake-pdf', keepsake.file);
+  } catch (error) {
+    recordArtifactFailure(adminArtifacts, 'keepsake-pdf-upload-failed', error);
+  }
+  return keepsake;
+}
+
 export function liveOptions(env = process.env) {
   const ready = preflightHarnessEnv(env);
   const bannedHosts = loadBannedHosts();
@@ -114,7 +202,7 @@ export function liveOptions(env = process.env) {
       const { sql } = await import('../../src/vacation/db.mjs');
       const db = sql(ready);
       const created = await provisionThrowaway(db, story, { tag: options.tag, runId: options.runId, env: ready });
-      const secrets = secretValues(ready, [created.token]);
+      const secrets = secretValues(ready, [created.token, created.shareToken]);
       let couponRedemption = null;
       if (story.coupon) {
         try {
@@ -185,19 +273,15 @@ export function liveOptions(env = process.env) {
         };
       }
       const liveCustomer = story.reply_backend === 'vk_bot_mcp';
-      const putArtifact = createAdminArtifactWriter({ origin, login: ready.VK_ADMIN_LOGIN, fetchImpl });
-      const capture = firstFiveTurnCapture({ origin, token: created.token, outDir: options.outDir, put: putArtifact });
-      const adminArtifacts = { captures: [], onboardingCaptures: [], dialogPdf: false, errors: [] };
-      const publishDialog = async (tripId, dialog) => {
-        try {
-          adminArtifacts.dialogPdf = await storeDialogPdf(putArtifact, tripId, dialog);
-        } catch {
-          adminArtifacts.errors.push('dialog-pdf-upload-failed');
-        }
-      };
-      let played;
-      try {
-        played = await playCustomerTurns(story, {
+      const putArtifact = createAdminArtifactWriter({
+        origin, login: ready.VK_ADMIN_LOGIN, fetchImpl,
+        harnessVacation: { db, tripId: created.tripId, tag: options.tag, openStore: () => vkAdminStorage(ready) },
+      });
+      const { played, adminArtifacts, dialog, transcript } = await playWithAdminArtifacts({
+        origin, token: created.token, tripId: created.tripId, outDir: options.outDir, secrets, fetchImpl,
+        replyBackend: story.reply_backend, put: putArtifact,
+        loadTranscript: async () => await storedLiveTranscript(db, created.token),
+        play: (afterCustomerTurn) => playCustomerTurns(story, {
           origin,
           token: created.token,
           tripId: created.tripId,
@@ -205,20 +289,13 @@ export function liveOptions(env = process.env) {
           hosts: bannedHosts,
           waitMs: 20000,
           secrets,
-          afterCustomerTurn: async (turn) => {
-            try {
-              if (await capture.capture(turn)) adminArtifacts.captures.push(turn.turn);
-            } catch {
-              adminArtifacts.errors.push(`turn-${turn.turn}-capture-or-upload-failed`);
-            }
-          },
+          afterCustomerTurn,
           liveCustomer,
           customerAsk: customerAskFromEnv(ready, bannedHosts),
           maxTurns: maxTurnsFromEnv(ready.VK_TEST_MAX_TURNS != null ? ready : process.env),
-        });
-      } finally {
-        await capture.close();
-      }
+        }),
+      });
+      adminArtifacts.onboardingCaptures = [];
       try {
         const invited = await captureVacationInviteOnboarding({
           db, story, ownerCustomerId: created.customerId, tripId: played.tripId || created.tripId,
@@ -230,6 +307,9 @@ export function liveOptions(env = process.env) {
       } catch {
         adminArtifacts.errors.push('invite-onboarding-capture-failed');
       }
+      const tripId = played.tripId || created.tripId;
+      const shareToken = played.shareToken || created.shareToken;
+      const keepsakeOptions = { origin, tripId, shareToken, fetchImpl, outDir: options.outDir, put: putArtifact, adminArtifacts };
       const base = {
         ...played,
         adminArtifacts,
@@ -251,41 +331,26 @@ export function liveOptions(env = process.env) {
         steps: [],
         ...onboardingFields(),
       };
-      const storedTranscript = await storedLiveTranscript(db, created.token);
-      writeRedactedLiveTranscript(options.outDir, storedTranscript, secrets);
       if (played.reason) {
-        const { stampUnstoredExchange } = await import('./unstored-turn.mjs');
-        const stamped = stampUnstoredExchange(storedTranscript, played.exchange) || storedTranscript;
-        if (stamped) {
-          const dialog = await renderDialog({
-            token: created.token,
-            outDir: options.outDir,
-            secrets,
-            buildSha: played.liveShaStart,
-            origin,
-            fetchImpl,
-            replyBackend: story.reply_backend,
-            loadTranscript: async () => stamped,
-          });
-          await publishDialog(played.tripId || created.tripId, dialog);
-        }
+        const keepsake = !chatLeftNoThing(played) ? await storeHarnessKeepsake(keepsakeOptions) : null;
         return writeOutcomes(options.outDir, {
           ...base,
-          tripId: played.tripId || created.tripId || '',
-          transcript: stamped,
+          tripId,
+          transcript,
+          pdfText: dialog.pdfText,
+          keepsakeOk: keepsake?.ok === true,
+          keepsakeDetail: keepsake?.detail || '',
           pricingReactionCaptured: played.pricingReactionCaptured === true,
           customerTurnCount: played.customerTurnCount || 0,
           hitTurnCap: played.hitTurnCap === true,
         });
       }
-      const tripId = played.tripId || created.tripId;
-      const shareToken = played.shareToken || created.shareToken;
       const qa = played.qaRating && played.qaRating !== 'slot' ? played.qaRating : null;
       if (qa || played.survey) {
         try {
           await putArtifact(tripId, 'review', { qa, survey: played.survey });
-        } catch {
-          adminArtifacts.errors.push('review-upload-failed');
+        } catch (error) {
+          recordArtifactFailure(adminArtifacts, 'review-upload-failed', error);
         }
       }
       const steps = await runSteps(story, async () => {
@@ -296,18 +361,6 @@ export function liveOptions(env = process.env) {
         });
         if (response.status >= 400) throw new Error('collaborator step failed');
       });
-      const dialog = await renderDialog({
-        token: created.token,
-        outDir: options.outDir,
-        secrets,
-        buildSha: played.liveShaStart,
-        origin,
-        fetchImpl,
-        replyBackend: story.reply_backend,
-        loadTranscript: async () => stampLivePdf(await storedLiveTranscript(db, created.token), played),
-      });
-      await publishDialog(tripId, dialog);
-      const transcript = transcriptForScorecard(dialog.transcript, storedTranscript);
       if (chatLeftNoThing(played)) {
         const video = await writeVideoCheck({ origin, attachment: { ok: false, detail: 'no-thing-after-chat', bindings: [] }, fetchImpl, outDir: options.outDir });
         return writeOutcomes(options.outDir, {
@@ -332,7 +385,7 @@ export function liveOptions(env = process.env) {
       }
       const attachment = await attachMedia({ origin, shareToken, story, fetchImpl, env: ready });
       const video = await writeVideoCheck({ origin, attachment, fetchImpl, outDir: options.outDir });
-      const keepsake = await fetchKeepsake({ origin, shareToken, fetchImpl, outDir: options.outDir });
+      const keepsake = await storeHarnessKeepsake(keepsakeOptions);
       const screens = await captureScreens({ origin, shareToken, sessionToken: created.token, outDir: options.outDir });
       try {
         onboard = await rebuildCustomerPdf(onboard, screens.files || []);

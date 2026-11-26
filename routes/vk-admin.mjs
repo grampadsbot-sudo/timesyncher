@@ -184,7 +184,7 @@ async function handleArtifacts(req, res, db, getStore, tripId, artifact) {
     const store = getStore();
     if (!artifact) return send(res, 200, { ok: true, ...await listReviewArtifacts(store, tripId) });
     const file = await loadReviewArtifact(store, tripId, artifact);
-    return file ? sendFile(res, file, type, artifact === 'dialog-pdf' ? 'dialog.pdf' : '') : notFound(res);
+    return file ? sendFile(res, file, type, type === 'application/pdf' ? `${artifact.slice(0, -4)}.pdf` : '') : notFound(res);
   }
   if (req.method !== 'PUT' || !artifact) return methodNotAllowed(res);
   if (!vacation.isTest && artifact !== 'dialog-pdf') return send(res, 403, { ok: false, error: 'captures require a test vacation' });

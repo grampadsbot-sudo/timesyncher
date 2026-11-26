@@ -1,12 +1,15 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { cannedWelcomeLiveTurn } from '../src/vacation/onboarding-welcome.mjs';
 import { LocalVkAdminStore } from '../src/vacation/vk-admin-review-storage.mjs';
-import { firstFiveTurnCapture, createAdminArtifactWriter, storeDialogPdf } from './harness/admin-review-artifacts.mjs';
+import { createAdminArtifactWriter } from './harness/admin-review-artifacts.mjs';
 import { inviteOnboardingTags } from './harness/onboarding-screens.mjs';
+import { playWithAdminArtifacts, storeHarnessKeepsake, writeOutcomes } from './harness/runtime.mjs';
+import { extractPdfText } from './live-transcript-dialog-pdf.mjs';
 import { startVkAdminLocalServer } from './qa/vk-admin-local-server.mjs';
 import { loadVkAdminPlaywright } from './qa/vk-admin-playwright.mjs';
 
@@ -16,13 +19,14 @@ const [orlando] = JSON.parse(await fs.readFile(fixturePath, 'utf8')).vacations;
 const tripId = 'aaaaaaaa-0000-0000-0000-000000000116';
 const other = 'bbbbbbbb-0000-0000-0000-000000000116';
 const olderTrip = 'cccccccc-0000-0000-0000-000000000116';
+const failedTrip = 'eeeeeeee-0000-0000-0000-000000000116';
 const customerId = 'fixture-lopez-current';
 const earlierCustomerId = 'fixture-lopez-earlier';
 const fixtureTrip = 'vk-fixture-trip-001';
 const current = '2026-11-26T12:00:00.000Z';
 const before = '2026-11-25T12:00:00.000Z';
 const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/FioAAAAASUVORK5CYII=', 'base64');
-const pdf = Buffer.from('%PDF-1.7\n% test for transport only\n%%EOF');
+
 const log = process.env.VK_ADMIN_REVIEW_SCREENSHOTS_DIR || path.join(os.tmpdir(), 'vk-admin-review-b');
 const workspace = await fs.mkdtemp(path.join(os.tmpdir(), 'vk-admin-review-b-storage-'));
 const LOGIN = 'fixture-admin-sign-in';
@@ -38,6 +42,9 @@ const vacations = [
   { trip_id: other, title: 'Second fixture', destination: 'Fixture destination', customer_id: 'fixture-2', display_name: 'Second fixture', created_at: before },
   { trip_id: olderTrip, title: 'Earlier fixture vacation', destination: 'Earlier destination', customer_id: earlierCustomerId,
     customer_email: 'harness+fixture-earlier+vk-001-lopez@harness.invalid', display_name: 'Sofia Lopez', created_at: before },
+  { trip_id: failedTrip, title: 'Failed fixture', destination: 'Fixture destination', customer_id: 'fixture-kowalski-failed',
+    customer_email: 'harness+fixture-failed+vk-002-kowalski@harness.invalid', display_name: 'Kowalski family',
+    harness_tag: 'harness:fixture:failed', created_at: before },
 ];
 const names = ['vendor/first', 'vendor/second', 'vendor/third'];
 const ledger = (requestId, model, costSource, costUsd, extra = {}) => ({ tripId, requestId, model, costUsd, costSource, ...extra });
@@ -109,53 +116,101 @@ try {
     attachments: [{ name: 'existing.txt', data: Buffer.from('existing admin attachment').toString('base64') }],
   });
   const artifactPath = `/api/admin/customers/${tripId}/artifacts`;
-  const uploaded = [];
   const staging = 'https://vacation-staging.timesyncher.com';
-  const writer = createAdminArtifactWriter({
+  const fetchStaging = async (url, init) => {
+    assert.equal(url.origin, staging);
+    if (url.pathname.endsWith('/session')) assert.equal(init.method, 'POST');
+    const target = new URL(url.pathname, base);
+    if (url.pathname.startsWith('/api/pdf/shared/')) {
+      target.searchParams.set('pdfPath', url.pathname.slice('/api/pdf/shared/'.length));
+    }
+    return fetch(target, init);
+  };
+  const readArtifact = async (id, name) => {
+    const response = await fetch(`${base}/api/admin/customers/${id}/artifacts${name ? `/${name}` : ''}`, { headers: { cookie } });
+    assert.equal(response.status, 200);
+    return name ? Buffer.from(await response.arrayBuffer()) : response.json();
+  };
+  const fixture = JSON.parse(await fs.readFile(new URL('./fixtures/harness/transcript-fixture.json', import.meta.url), 'utf8'));
+  const sha = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+  const uploaded = [];
+  let failedOnce = false;
+  const put = createAdminArtifactWriter({
     origin: staging, login: LOGIN,
-    fetchImpl: (url, init) => {
-      assert.equal(url.origin, staging);
-      if (url.pathname.endsWith('/session')) assert.equal(init.method, 'POST');
-      return fetch(`${base}${url.pathname}`, init);
+    fetchImpl: async (url, init) => {
+      if (!failedOnce && url.pathname.endsWith(`/${failedTrip}/artifacts/turn-1`)) {
+        failedOnce = true;
+        return new Response(null, { status: 503 });
+      }
+      const result = await fetchStaging(url, init);
+      if (init.method === 'PUT') uploaded.push([url.pathname, result.status]);
+      return result;
     },
   });
-  let opened = 0;
-  let closed = 0;
-  const capture = firstFiveTurnCapture({
-    origin: staging, token: 'fixture-browser-session', outDir: workspace,
-    put: async (id, name, bytes) => {
-      uploaded.push([id, name]);
-      await writer(id, name, bytes);
-    },
-    openPage: async () => {
-      opened += 1;
-      return { close: async () => { closed += 1; }, page: {
-        async goto(url) { assert.equal(new URL(url).searchParams.get('tripId'), tripId); },
-        async waitForFunction(callback, line) { assert.match(line, /^Customer line [1-5]$/); },
-        locator(selector) {
-          assert.equal(selector, '#messages');
-          return { evaluate: async () => {} };
-        },
-        async screenshot({ path: file }) { await fs.writeFile(file, png); return png; },
-      } };
-    },
-  });
-  for (let turn = 1; turn <= 6; turn += 1) {
-    assert.equal(await capture.capture({ tripId, turn, text: `Customer line ${turn}` }), turn <= 5);
+  async function replay(id, failed = false) {
+    const outDir = path.join(workspace, id);
+    const [customer, app] = fixture.turns;
+    const stored = [];
+    let opened = 0;
+    let closed = 0;
+    const result = await playWithAdminArtifacts({
+      origin: staging, token: 'fixture-browser-session', tripId: id, outDir, put,
+      secrets: ['fixture-browser-session'], fetchImpl: fetchStaging, replyBackend: 'vk_bot_mcp',
+      loadTranscript: async () => ({ ...fixture, turns: stored }),
+      play: async (capture) => {
+        for (let turn = 1; turn <= (failed ? 2 : 5); turn += 1) {
+          const text = `Customer line ${turn}`;
+          stored.push({ ...customer, turnIndex: turn * 2 - 1, text, storedText: text });
+          stored.push({ ...app, turnIndex: turn * 2, quality: { ...app.quality, comment: `Reply ${turn} addresses the trip.` } });
+          await capture({ tripId: id, turn, text });
+        }
+        if (failed) {
+          const text = 'Stored customer message with no reply';
+          stored.push({ ...customer, turnIndex: 5, text, storedText: text, buildSha: sha });
+          throw new Error('simulated mid-run failure');
+        }
+        await capture({ tripId: id, turn: 5, text: 'Customer line 5' });
+        await capture({ tripId: id, turn: 6, text: 'Customer line 6' });
+        return { reason: '', liveShaStart: sha };
+      },
+      openPage: async () => {
+        opened += 1;
+        return { close: async () => { closed += 1; }, page: {
+          async goto(url) { assert.equal(new URL(url).searchParams.get('tripId'), id); },
+          async waitForFunction(_callback, line) { assert.match(line, /^Customer line [1-5]$/); },
+          locator(selector) {
+            assert.equal(selector, '#messages');
+            return { evaluate: async () => {} };
+          },
+          async screenshot({ path: file }) { await fs.writeFile(file, png); return png; },
+        } };
+      },
+    });
+    assert.deepEqual([opened, closed], [1, 1]);
+    return { ...result, outDir };
   }
-  assert.equal(await capture.capture({ tripId, turn: 5, text: 'Customer line 5' }), false);
-  await capture.close();
-  assert.deepEqual([opened, closed], [1, 1]);
-  assert.deepEqual(uploaded, [1, 2, 3, 4, 5].map((n) => [tripId, `turn-${n}`]));
-  assert.deepEqual((await fs.readdir(path.join(workspace, 'first-5-turns'))).sort(), [1, 2, 3, 4, 5].map((n) => `turn-${n}.png`));
-  const pdfFile = path.join(workspace, 'dialog.pdf');
-  await fs.writeFile(pdfFile, pdf);
-  assert.equal(await storeDialogPdf(writer, tripId, { ok: true, out: pdfFile }), true);
+  const { adminArtifacts, outDir, played, dialog } = await replay(tripId);
+  assert.equal(played.reason, '');
+  assert.equal(dialog.ok, true, dialog.detail);
+  assert.deepEqual(adminArtifacts.captures, [1, 2, 3, 4, 5]);
+  assert.deepEqual(adminArtifacts.errors, []);
+  assert.deepEqual(uploaded, ['turn-1', 'turn-2', 'turn-3', 'turn-4', 'turn-5', 'dialog-pdf'].map((name) => [`${artifactPath}/${name}`, 200]));
+  assert.deepEqual((await fs.readdir(path.join(outDir, 'first-5-turns'))).sort(), [1, 2, 3, 4, 5].map((n) => `turn-${n}.png`));
+  const pdf = await readArtifact(tripId, 'dialog-pdf');
+  assert.match(extractPdfText(pdf), /Customer line 5/);
+  const keepsake = await storeHarnessKeepsake({
+    origin: staging, tripId, shareToken: orlando.shareSlug, fetchImpl: fetchStaging, outDir, put, adminArtifacts,
+  });
+  assert.equal(keepsake.ok, true, keepsake.detail);
+  assert.deepEqual(uploaded.at(-1), [`${artifactPath}/keepsake-pdf`, 200]);
+  const keepsakePdf = await readArtifact(tripId, 'keepsake-pdf');
+  assert.match(extractPdfText(keepsakePdf), /Complete List/);
+  assert.deepEqual(await readArtifact(tripId), { ok: true, turns: [1, 2, 3, 4, 5], onboardingCaptures: [], dialogPdf: true, keepsakePdf: true, review: null });
   const onboardingTags = [
     ['telegram_collaborator', '000000000001'], ['telegram_collaborator', '000000000002'],
     ['web_editor', '000000000003'], ['viewer', '000000000004'],
   ].flatMap(([role, guest]) => inviteOnboardingTags({ role, guest, vacationId: tripId }));
-  for (const { artifact } of onboardingTags) await writer(tripId, artifact, png);
+  for (const { artifact } of onboardingTags) await put(tripId, artifact, png);
   const onboardingImage = onboardingTags[0].artifact;
   assert.equal((await fetch(`${base}${artifactPath}/${onboardingImage}`)).status, 401);
   assert.equal((await fetch(`${base}/api/admin/customers/${other}/artifacts/${onboardingImage}`, { headers: { cookie } })).status, 404);
@@ -262,6 +317,9 @@ try {
       await chooseView('Keepsake');
       const preview = page.frameLocator('[data-keepsake-frame]');
       await preview.locator('[data-ae-print="1"]').first().waitFor({ timeout: 40000, state: 'attached' });
+      const keepsakeDownload = page.waitForEvent('download');
+      await page.locator('[data-keepsake-pdf]').click();
+      assert.deepEqual(await fs.readFile(await (await keepsakeDownload).path()), keepsakePdf);
       const generate = page.locator('[data-keepsake-generate]');
       const existingRoute = `/api/pdf/shared/${orlando.shareSlug}/report/keepsake-style-2.pdf`;
       assert.equal(await generate.getAttribute('href'), existingRoute);
@@ -374,6 +432,31 @@ try {
       await context.close();
     }
   }
+  const failed = await replay(failedTrip, true);
+  assert.equal(failed.played.reason, 'harness-error');
+  assert.equal(failed.dialog.ok, false);
+  assert.match(failed.dialog.detail, /no app reply/);
+  assert.equal(failed.adminArtifacts.dialogPdf, true);
+  assert.deepEqual(failed.adminArtifacts.captures, [1, 2]);
+  assert.deepEqual(failed.adminArtifacts.errors, []);
+  writeOutcomes(failed.outDir, { ...failed.played, tripId: failedTrip, adminArtifacts: failed.adminArtifacts });
+  const failedOutcomes = JSON.parse(await fs.readFile(path.join(failed.outDir, 'outcomes.json'), 'utf8'));
+  assert.equal(failedOutcomes.reason, 'harness-error');
+  assert.deepEqual(failedOutcomes.adminArtifacts.httpFailures, [{ failure: 'turn-1-capture-or-upload-failed', operation: 'put', status: 503 }]);
+  assert.deepEqual(await readArtifact(failedTrip), { ok: true, turns: [1, 2], onboardingCaptures: [], dialogPdf: true, keepsakePdf: false, review: null });
+  assert.match(extractPdfText(await readArtifact(failedTrip, 'dialog-pdf')), /Stored customer message with no reply/);
+
+  const directPut = createAdminArtifactWriter({
+    origin: staging, fetchImpl: () => assert.fail('database writer must stay on the staging database'),
+    harnessVacation: {
+      tripId: failedTrip, tag: vacations[3].harness_tag,
+      db: async (_sql, id, tag) => vacations.filter((vacation) => vacation.trip_id === id && vacation.harness_tag === tag),
+      openStore: () => new LocalVkAdminStore(workspace),
+    },
+  });
+  await assert.rejects(directPut(olderTrip, 'turn-3', png), /left the harness vacation/);
+  await directPut(failedTrip, 'turn-3', png);
+  assert.deepEqual(await readArtifact(failedTrip, 'turn-3'), png);
   assert.ok(queries.length > 0 && queries.every((query) => /^\s*select\b/i.test(query)), 'admin review never writes to customer tables');
 } finally {
   await browser.close();

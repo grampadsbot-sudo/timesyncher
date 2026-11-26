@@ -135,13 +135,14 @@ function artifactPath(vacationId, artifact) {
 
 export function artifactType(artifact) {
   if (/^turn-[1-5]$/.test(artifact) || onboardingCaptureTag(artifact)) return 'image/png';
-  return artifact === 'dialog-pdf' ? 'application/pdf' : '';
+  return artifact === 'dialog-pdf' || artifact === 'keepsake-pdf' ? 'application/pdf' : '';
 }
 
 export async function saveReviewArtifact(store, vacationId, artifact, data) {
   const bytes = readBase64(data);
-  const signature = artifact === 'dialog-pdf' ? pdf : png;
-  if (!artifactType(artifact) || !bytes?.subarray(0, signature.length).equals(signature)) return false;
+  const type = artifactType(artifact);
+  const signature = type === 'application/pdf' ? pdf : png;
+  if (!type || !bytes?.subarray(0, signature.length).equals(signature)) return false;
   await store.putJson(artifactPath(vacationId, artifact), { data });
   return true;
 }
@@ -156,11 +157,15 @@ export async function listReviewArtifacts(store, vacationId) {
     const capture = await store.getJson(artifactPath(vacationId, `turn-${turn}`));
     return capture ? turn : null;
   }));
+  const [dialog, keepsake, review] = await Promise.all(['dialog-pdf', 'keepsake-pdf', 'review'].map((artifact) => (
+    store.getJson(artifactPath(vacationId, artifact))
+  )));
   return {
     turns: captures.filter(Boolean),
     onboardingCaptures: listOnboardingCaptureTags(await store.listOnboardingArtifacts(vacationId), vacationId),
-    dialogPdf: Boolean(await loadReviewArtifact(store, vacationId, 'dialog-pdf')),
-    review: await store.getJson(artifactPath(vacationId, 'review')),
+    dialogPdf: Boolean(dialog?.data),
+    keepsakePdf: Boolean(keepsake?.data),
+    review,
   };
 }
 

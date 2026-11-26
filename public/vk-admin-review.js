@@ -112,12 +112,14 @@ window.startVkAdminReview = (() => {
     return `<iframe title="${safe(vac.label)} trip (view only)" src="${src}" credentialless sandbox="allow-scripts allow-same-origin" data-trip-frame="1"></iframe>`;
   }
 
-  function keepsake(vac) {
-    if (!vac.shareSlug) return '<p class="admin-empty">No keepsake is available for this vacation yet.</p>';
+  function keepsake(vac, artifacts) {
+    const pdf = artifacts?.keepsakePdf
+      ? `<a class="admin-action" data-keepsake-pdf href="/api/admin/${artifactsPath(vac.tripId)}/keepsake-pdf" download>Keepsake PDF</a>` : '';
+    if (!vac.shareSlug) return pdf || '<p class="admin-empty">No keepsake is available for this vacation yet.</p>';
     const share = encodeURIComponent(vac.shareSlug);
     const generate = `/api/pdf/shared/${share}/report/keepsake-style-2.pdf`;
     const preview = `/shared/${share}/journey?style=2&printMode=report&pdfReport=keepsake-style-2`;
-    return `<div class="admin-keepsake-actions"><a class="admin-action" href="${generate}" target="_blank" rel="noopener" data-keepsake-generate>Generate</a></div><iframe title="${safe(vac.label)} keepsake" src="${preview}" credentialless data-keepsake-frame></iframe>`;
+    return `<div class="admin-keepsake-actions">${pdf}<a class="admin-action" href="${generate}" target="_blank" rel="noopener" data-keepsake-generate>Generate</a></div><iframe title="${safe(vac.label)} keepsake" src="${preview}" credentialless data-keepsake-frame></iframe>`;
   }
 
   function onboarding(vac, artifacts) {
@@ -358,7 +360,7 @@ window.startVkAdminReview = (() => {
     const result = await api(artifactsPath(id)).catch(() => null);
     const artifacts = result?.res.ok ? result.data : { failed: true };
     state.artifacts.set(id, artifacts);
-    if (viewTrip() === id && ['chat', 'captures', 'onboarding'].includes(state.view)) {
+    if (viewTrip() === id && ['chat', 'captures', 'keepsake', 'onboarding'].includes(state.view)) {
       const vac = state.details.get(id);
       document.querySelector('.admin-view-panel').innerHTML = viewContent(vac);
       lockReplay(document.getElementById('customerChatReplay'));
