@@ -20,9 +20,7 @@ import { stampUnstoredExchange } from './unstored-turn.mjs';
 import { vkAdminStorage } from '../../src/vacation/vk-admin-review-storage.mjs';
 import { captureVacationInviteOnboarding } from './onboarding-invites.mjs';
 import { attachSsrToKeepsakeMetadata } from '../customer_suite/ssr/dialog-hook.mjs';
-import { buildFeedbackArtifact } from '../../src/vacation/vk-admin-feedback.mjs';
-import { scoreCustomerCheckpoints } from '../customer_suite/ssr/scorer.mjs';
-import { collectLiveSsrCheckpoint, createLiveSsrRespond } from './live-ssr.mjs';
+import { createLiveSsrHarness, primeLiveSsr } from './live-ssr-harness.mjs';
 
 function stampLivePdf(doc, played) {
   if (!doc || !Array.isArray(doc.turns)) return doc;
@@ -281,21 +279,9 @@ export function liveOptions(env = process.env) {
         origin, login: ready.VK_ADMIN_LOGIN, fetchImpl,
         harnessVacation: { db, tripId: created.tripId, tag: options.tag, openStore: () => vkAdminStorage(ready) },
       });
-      const ssrReactions = [];
-      const ssrSetupErrors = [];
-      let liveSsrRespond = null;
-      if (liveCustomer) {
-        liveSsrRespond = createLiveSsrRespond({
-          story,
-          customerAsk: customerAskFromEnv(ready, bannedHosts),
-          env: ready,
-        });
-        try {
-          ssrReactions.push(await collectLiveSsrCheckpoint('after_setup', liveSsrRespond));
-        } catch {
-          ssrSetupErrors.push('ssr-after-setup-failed');
-        }
-      }
+      const { ssrReactions, ssrSetupErrors, liveSsrRespond } = await primeLiveSsr({
+        liveCustomer, story, ready, bannedHosts, customerAskFromEnv,
+      });
       const { played, adminArtifacts, dialog, transcript } = await playWithAdminArtifacts({
         origin, token: created.token, tripId: created.tripId, outDir: options.outDir, secrets, fetchImpl,
         replyBackend: story.reply_backend, put: putArtifact,
@@ -383,65 +369,11 @@ export function liveOptions(env = process.env) {
         });
         if (response.status >= 400) throw new Error('collaborator step failed');
       });
-      async function finalizeLiveSsr(keepsakeDecision) {
-        if (!liveCustomer || !liveSsrRespond) return null;
-        const keepsakeStatus = keepsakeDecision?.ok === true ? 'shown' : 'skipped';
-        const keepsakeNote = keepsakeDecision?.detail || '';
-        for (const [checkpointId, extra] of [
-          ['after_keepsake', { keepsakeStatus, keepsakeNote }],
-          ['pricing_10', {}],
-          ['pricing_17', {}],
-        ]) {
-          try {
-            ssrReactions.push(await collectLiveSsrCheckpoint(checkpointId, liveSsrRespond, extra));
-          } catch {
-            adminArtifacts.errors.push(`ssr-${checkpointId}-failed`);
-          }
-        }
-        try {
-          const ssr = scoreCustomerCheckpoints({
-            storyId: story.story_id,
-            customerName: story.customer?.name || '',
-            reactions: ssrReactions,
-          });
-          fs.mkdirSync(options.outDir, { recursive: true });
-          fs.writeFileSync(path.join(options.outDir, 'ssr-receipt.json'), `${JSON.stringify({ reactions: ssrReactions, ssr }, null, 2)}\n`);
-          try {
-            await putArtifact(tripId, 'feedback', buildFeedbackArtifact({
-                story,
-                played: { ...played, tripId, survey: played.survey },
-                reactions: ssrReactions,
-                ssr,
-              }));
-          } catch (error) {
-            recordArtifactFailure(adminArtifacts, 'feedback-artifact-upload-failed', error);
-          }
-          return ssr;
-        } catch {
-          adminArtifacts.errors.push('ssr-score-failed');
-          return null;
-        }
-      }
-      async function renderLiveDialogWithSsr(ssrRecord) {
-        const ssrDialog = await renderDialog({
-          token: created.token,
-          outDir: options.outDir,
-          secrets,
-          buildSha: played.liveShaStart,
-          origin,
-          fetchImpl,
-          replyBackend: story.reply_backend,
-          ssrSummary: ssrRecord,
-          loadTranscript: async () => stampLivePdf(storedTranscript, played),
-          redactForAdmin: true,
-        });
-        try {
-          adminArtifacts.dialogPdf = await storeDialogPdf(putArtifact, tripId, ssrDialog);
-        } catch (error) {
-          recordArtifactFailure(adminArtifacts, 'dialog-pdf-upload-failed', error);
-        }
-        return ssrDialog;
-      }
+      const { finalizeLiveSsr, renderLiveDialogWithSsr } = createLiveSsrHarness({
+        liveCustomer, liveSsrRespond, ssrReactions, adminArtifacts, story, played, tripId,
+        putArtifact, outDir: options.outDir, recordArtifactFailure, stampLivePdf, storedTranscript,
+        created, secrets, origin, fetchImpl, replyBackend: story.reply_backend,
+      });
       if (chatLeftNoThing(played)) {
         const ssrRecord = await finalizeLiveSsr({ ok: false, detail: 'no-thing-after-chat' });
         const outDialog = ssrRecord ? await renderLiveDialogWithSsr(ssrRecord) : dialog;
