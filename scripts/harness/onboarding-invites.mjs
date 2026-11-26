@@ -148,5 +148,8 @@ export async function captureVacationInviteOnboarding({
       errors.push(`${invite.role}-onboarding-capture-failed`);
     }
   }
+  if (!uploaded.length && story.coupon && story.steps?.includes('collaborator')) {
+    errors.push('admin-onboarding-captures-missing');
+  }
   return { uploaded, errors };
 }
