@@ -4,6 +4,7 @@
 .admin-group header small, .admin-group li small { color: var(--muted); }
 .admin-group ul { grid-column: 1; list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 14px; }
 .admin-group li { display: inline-flex; gap: 6px; align-items: baseline; }
+.admin-customer-name { border: 0; background: transparent; color: var(--ink); font: inherit; padding: 3px 0; text-decoration: underline; }
 .admin-coupon { font-size: 12px; font-weight: 700; color: var(--gold-strong); }
 .admin-open { grid-column: 2; grid-row: 1 / span 2; border: 1px solid var(--line); border-radius: 8px; background: var(--soft); color: var(--ink); font-weight: 750; padding: 8px 12px; }
 .admin-empty { margin: 16px; color: var(--muted); }
@@ -27,11 +28,11 @@
 .app[data-admin] .topbar .trip-button { min-width: 0; max-width: 100%; }
 .app[data-admin] .trip-button .trip-trigger-text { overflow: hidden; }
 .app[data-admin] .trip-button .trip-trigger-title { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; overflow-wrap: normal; }
-.site-pane.admin-vacation { display: grid; grid-template-rows: auto minmax(0, 1fr); background: var(--panel); }
-.admin-view-controls, .admin-dialog-head, .admin-keepsake-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 8px 16px; }
-.admin-view-controls { border-bottom: 1px solid var(--line); }
-.admin-view-controls label { font-weight: 700; }
-.admin-view-controls select, .admin-action { font: inherit; color: var(--ink); background: var(--soft); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; }
+.app[data-admin] .trip-list { max-height: min(70dvh, 540px); overflow: auto; }
+.admin-header-views { border-bottom: 1px solid var(--line); margin-bottom: 6px; padding-bottom: 6px; }
+.site-pane.admin-vacation { display: grid; grid-template-rows: minmax(0, 1fr); background: var(--panel); }
+.admin-dialog-head, .admin-keepsake-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 8px 16px; }
+.admin-action { font: inherit; color: var(--ink); background: var(--soft); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; }
 .admin-action { display: inline-block; font-weight: 700; }
 .admin-view-panel { min-height: 0; overflow: auto; }
 .admin-view-panel iframe { width: 100%; height: 100%; display: block; border: 0; }

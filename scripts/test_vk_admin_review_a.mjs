@@ -7,6 +7,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadVkAdminPlaywright } from './qa/vk-admin-playwright.mjs';
 import { startVkAdminLocalServer } from './qa/vk-admin-local-server.mjs';
+import { LocalVkAdminStore } from '../src/vacation/vk-admin-review-storage.mjs';
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const { chromium } = loadVkAdminPlaywright();
@@ -15,6 +16,7 @@ const fixtures = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/fixtures/vk
 const roster = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/fixtures/vk-admin-review/roster-catalog.json'), 'utf8'));
 const ORLANDO = fixtures.vacations.find((v) => v.tripId === 'vk-fixture-trip-001');
 const SHOTS = path.join(os.tmpdir(), 'vk-admin-review-a');
+const storeDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vk-admin-review-a-storage-'));
 fs.mkdirSync(SHOTS, { recursive: true });
 
 const LOGIN = 'stand-in-admin-login';
@@ -23,6 +25,7 @@ process.env.VK_ADMIN_SESSION_SECRET = 'stand-in-admin-session-secret';
 delete process.env.VERCEL_ENV;
 
 const server = await startVkAdminLocalServer({
+  adminStore: () => new LocalVkAdminStore(storeDir),
   ownerAppPayload: () => ({
     ok: true,
     session: { token: 'owner-fixture', status: 'active', customerName: 'Lopez family', currentTripId: 'owner-trip', seat: null },
@@ -50,6 +53,8 @@ const ADMIN_CALLS = [
   ['GET', '/api/admin/customers'],
   ['GET', '/api/admin/customers/vk-fixture-trip-001'],
   ['POST', '/api/admin/customers/vk-fixture-trip-001/open'],
+  ['GET', '/api/admin/notes?vacationId=vk-fixture-trip-001'],
+  ['POST', '/api/admin/notes'],
   ['POST', '/api/admin/clear-all'],
   ['GET', '/api/admin/anything-else'],
 ];
@@ -267,7 +272,7 @@ try {
   const customerBubbles = await realCustomerBubbles(browser);
   assert.equal(customerBubbles.length, ORLANDO.turns.length);
   for (const width of [390, 1280]) {
-    await test(`[${width}] sign in, list, Chat (real renderer, read-only), Trip (view-only), composer, switcher`, async () => {
+    await test(`[${width}] sign in, customer picker, read-only Dialog and Vacation site, composer, header switcher`, async () => {
       const context = await browser.newContext({ viewport: { width, height: width === 390 ? 844 : 800 } });
       const page = await context.newPage();
       const posts = [];
@@ -297,8 +302,13 @@ try {
       await noOverflow('list');
       await page.screenshot({ path: path.join(SHOTS, `list-${width}.png`) });
 
-      await page.click('[data-vk-open][data-customer-id="vk-fixture-trip-001"]');
+      await page.locator('[data-trip-group="vk-fixture-trip-001"]').getByRole('button', { name: 'Lopez family', exact: true }).click();
       await page.waitForSelector('#sitePane[data-kind="chat"] #customerChatReplay article.bubble');
+      const welcome = page.locator('#messages [data-admin-welcome]');
+      await welcome.waitFor();
+      assert.match(await welcome.textContent(), /Welcome to Lopez family's vacation.*Orlando/s);
+      assert.equal(await welcome.getAttribute('data-vacation-id'), ORLANDO.tripId);
+      assert.equal(await page.locator('#adminView, .admin-view-controls').count(), 0);
       const adminBubbles = await page.$$eval('#customerChatReplay article.bubble', (els) => els.map((el) => el.outerHTML));
       assert.deepEqual(adminBubbles, customerBubbles, 'admin Chat markup equals the real customer chat renderer');
       assert.equal(await page.locator('#customerChatReplay :is(textarea, input, select, [contenteditable="true"], button:not([disabled]))').count(), 0, 'chat replay is read-only');
@@ -312,15 +322,15 @@ try {
       await page.waitForSelector('#attachmentRow .chip');
       await page.fill('#messageText', 'Admin check, not for the customer');
       await page.click('#sendButton');
-      await page.waitForSelector('#messages [data-admin-note]');
-      await page.waitForTimeout(300);
+      await page.locator('#messages [data-admin-note]').filter({ hasText: 'Admin check, not for the customer' }).first().waitFor();
       assert.deepEqual(posts.filter((p) => !p.startsWith('POST /api/admin/')), [], 'composer sends nothing outside admin');
       assert.deepEqual(server.writes, []);
       assert.equal(await page.locator('#customerChatReplay article.bubble').count(), ORLANDO.turns.length, 'customer transcript unchanged');
       const detail = await page.evaluate(() => fetch('/api/admin/customers/vk-fixture-trip-001').then((r) => r.json()));
       assert.equal(detail.vacation.turns.length, ORLANDO.turns.length);
 
-      await page.selectOption('#adminView', { label: 'Vacation site' });
+      await page.click('#tripButton');
+      await page.getByRole('option', { name: 'Vacation site', exact: true }).click();
       await page.waitForSelector('#sitePane[data-kind="trip"] iframe[data-trip-frame="1"]');
       const frame = page.frameLocator('iframe[data-trip-frame="1"]');
       const firstThing = ORLANDO.things[0].title;
@@ -353,6 +363,7 @@ try {
 } finally {
   await browser.close();
   await server.close();
+  fs.rmSync(storeDir, { recursive: true, force: true });
 }
 
 const failed = results.filter((row) => !row.ok);

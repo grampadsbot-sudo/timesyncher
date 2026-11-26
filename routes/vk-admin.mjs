@@ -8,10 +8,10 @@ import {
   vkAdminConfigured,
   writeVkAdminSession,
 } from '../src/vacation/vk-admin-session.mjs';
-import { findVkAdminVacation, vkAdminDatabase, vkAdminGroups, vkAdminStorage } from '../src/vacation/vk-admin-review-data.mjs';
+import { findVkAdminVacation, vkAdminDatabase, vkAdminGroups, vkAdminLegacyNoteTrips, vkAdminMember } from '../src/vacation/vk-admin-review-data.mjs';
 import {
   artifactType, listNotes, listReviewArtifacts, loadNoteFile, loadReviewArtifact,
-  noteFromBody, notesPath, presentNote, saveReviewArtifact, saveReviewResults,
+  noteFromBody, notesPath, presentNote, saveReviewArtifact, saveReviewResults, saveWelcome, vkAdminStorage,
 } from '../src/vacation/vk-admin-review-storage.mjs';
 
 const OWNER_SHELL = fileURLToPath(new URL('../vacation-app.html', import.meta.url));
@@ -93,11 +93,15 @@ async function handleCustomers(req, res, session, db) {
   return send(res, 200, { ok: true, role: 'admin', opened: session.opened, groups, testCustomerCount });
 }
 
-async function handleCustomer(req, res, env, session, tripId, action, db) {
+async function handleCustomer(req, res, env, session, tripId, action, db, getStore) {
   if ((!action && req.method !== 'GET') || (action && (action !== 'open' || req.method !== 'POST'))) return methodNotAllowed(res);
   const vacation = await findVkAdminVacation(db, tripId, { detail: true });
   if (!vacation) return notFound(res);
   if (!action && req.method === 'GET') return send(res, 200, { ok: true, role: 'admin', vacation });
+  const customerId = new URL(req.url, 'http://localhost').searchParams.get('customerId');
+  const member = vkAdminMember(vacation, customerId);
+  if (!member) return notFound(res);
+  await saveWelcome(getStore(), member, vacation);
   const opened = [...new Set([...session.opened, tripId])].slice(-40);
   writeVkAdminSession(res, req, { ...session, opened }, env);
   return send(res, 200, { ok: true, role: 'admin', opened, vacation });
@@ -139,19 +143,34 @@ function jsonRequest(req) {
 async function handleNotes(req, res, db, getStore, [id, index]) {
   if (req.method !== 'GET' && (req.method !== 'POST' || id)) return methodNotAllowed(res);
   if (req.method === 'POST' && !jsonRequest(req)) return send(res, 415, { ok: false, error: 'JSON required' });
-  const url = new URL(req.url, 'http://localhost');
+  const params = new URL(req.url, 'http://localhost').searchParams;
   const body = req.method === 'POST' ? await readBody(req) : null;
-  const customer = body ? body.customer : url.searchParams.get('customer');
-  if (customer !== null && (typeof customer !== 'string' || !await findVkAdminVacation(db, customer))) return notFound(res);
-  const store = getStore();
-  if (id) {
-    const file = await loadNoteFile(store, customer, id, index);
+  const vacationId = body ? body.vacationId ?? body.customer : params.get('vacationId') ?? params.get('customer');
+  const customerId = body ? body.customerId ?? null : params.get('customerId');
+  if (!body && vacationId === null && customerId === null) {
+    const store = getStore();
+    if (!id) return send(res, 200, { ok: true, notes: await listNotes(store, null, null, []) });
+    const file = await loadNoteFile(store, null, null, false, id, index);
     return file ? sendFile(res, file, 'application/octet-stream') : notFound(res);
   }
-  if (!body) return send(res, 200, { ok: true, notes: await listNotes(store, customer) });
-  const note = noteFromBody(body);
+  if (typeof vacationId !== 'string' || (customerId !== null && typeof customerId !== 'string')) return notFound(res);
+  const vacation = await findVkAdminVacation(db, vacationId);
+  const member = vacation && vkAdminMember(vacation, customerId);
+  if (!member) return notFound(res);
+  const store = getStore();
+  if (id) {
+    const legacy = vacation.customers[0]?.id === member.id;
+    const file = await loadNoteFile(store, member.id, vacationId, legacy, id, index);
+    return file ? sendFile(res, file, 'application/octet-stream') : notFound(res);
+  }
+  if (!body) {
+    const legacyTripIds = await vkAdminLegacyNoteTrips(db, vacation, member);
+    return send(res, 200, { ok: true, notes: await listNotes(store, member.id, vacationId, legacyTripIds) });
+  }
+  const note = noteFromBody(body, vacationId);
   if (!note) return send(res, 400, { ok: false, error: 'Add a message or files. The combined upload limit is 3 MB.' });
-  await store.putJson(`${notesPath(customer)}/${note.id}.json`, note);
+  await saveWelcome(store, member, vacation);
+  await store.putJson(`${notesPath(member.id, vacationId)}/${note.id}.json`, note);
   return send(res, 201, { ok: true, note: presentNote(note) });
 }
 
@@ -194,7 +213,7 @@ export function createVkAdminHandler({ database = vkAdminDatabase, storage = vkA
       if (head === 'customers' && id && action === 'artifacts' && !tail) {
         return await handleArtifacts(req, res, database(env), getStore, id, extra);
       }
-      if (head === 'customers' && id && !extra) return await handleCustomer(req, res, env, session, id, action, database(env));
+      if (head === 'customers' && id && !extra) return await handleCustomer(req, res, env, session, id, action, database(env), getStore);
       if (head === 'notes' && !extra && (!id || action)) return await handleNotes(req, res, database(env), getStore, [id, action]);
       if (head === 'clear-all' && !id) return handleClearAll(req, res, env, session);
       return notFound(res);

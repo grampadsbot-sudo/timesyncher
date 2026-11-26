@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { LocalJsonStore } from '../src/onboarding/eula-persistent-store.mjs';
+import { LocalVkAdminStore } from '../src/vacation/vk-admin-review-storage.mjs';
 import { firstFiveTurnCapture, createAdminArtifactWriter, storeDialogPdf } from './harness/admin-review-artifacts.mjs';
 import { startVkAdminLocalServer } from './qa/vk-admin-local-server.mjs';
 import { loadVkAdminPlaywright } from './qa/vk-admin-playwright.mjs';
@@ -13,6 +13,7 @@ const fixturePath = new URL('./fixtures/vk-admin-review/vacation-fixtures.json',
 const [orlando] = JSON.parse(await fs.readFile(fixturePath, 'utf8')).vacations;
 const tripId = 'aaaaaaaa-0000-0000-0000-000000000116';
 const other = 'bbbbbbbb-0000-0000-0000-000000000116';
+const olderTrip = 'cccccccc-0000-0000-0000-000000000116';
 const current = '2026-11-26T12:00:00.000Z';
 const before = '2026-11-25T12:00:00.000Z';
 const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/FioAAAAASUVORK5CYII=', 'base64');
@@ -26,8 +27,11 @@ delete process.env.VERCEL_ENV;
 
 const vacations = [
   { trip_id: tripId, title: 'Test harness review', destination: 'Fixture destination', customer_id: 'fixture-1', display_name: 'Test harness review',
-    share_slug: orlando.shareSlug, harness_tag: 'harness:fixture:review', created_at: current, qa: { score: 4 }, survey: { rating: 'happy' } },
+    share_slug: orlando.shareSlug, harness_tag: 'harness:fixture:review', created_at: current,
+    start_date: '2027-03-01', end_date: '2027-03-05', qa: { score: 4 }, survey: { rating: 'happy' } },
   { trip_id: other, title: 'Second fixture', destination: 'Fixture destination', customer_id: 'fixture-2', display_name: 'Second fixture', created_at: before },
+  { trip_id: olderTrip, title: 'Earlier fixture vacation', destination: 'Earlier destination', customer_id: 'fixture-1',
+    display_name: 'Test harness review', created_at: before },
 ];
 const names = ['vendor/first', 'vendor/second', 'vendor/third'];
 const ledger = (requestId, model, costSource, costUsd, extra = {}) => ({ tripId, requestId, model, costUsd, costSource, ...extra });
@@ -35,17 +39,24 @@ const replies = [
   [ledger('req-1', names[0], 'openrouter_usage_cost', 0.01234567, { purpose: 'reply_draft' }),
     ledger('req-1', 'vendor/judge', 'openrouter_usage_cost', 0.002, { purpose: 'jev_quality' }),
     ledger('req-1', names[0], 'openrouter_usage_cost', 99, { tripId: other, purpose: 'reply_draft' })],
-  [ledger('req-2', names[1], 'openrouter_listed_price', 0.05, { purpose: 'reply_draft' })],
+  [ledger(null, names[1], 'openrouter_listed_price', 0.05, { tripId: null, purpose: 'reply_rewrite' }),
+    ledger('req-2', names[0], 'openrouter_usage_cost', 0.003, { purpose: 'reply_draft' })],
   [ledger('req-3', names[2], 'unpriced', null, { purpose: 'reply_draft' })],
 ];
 const turns = replies.flatMap((rows, index) => {
   const common = { request_id: `req-${index + 1}`, at: current };
   return [
-    { ...common, speaker: 'customer', direction: 'inbound', body: `Customer line ${index + 1}`, payload: {} },
+    { ...common, speaker: 'customer', direction: 'inbound', body: `Customer line ${index + 1}`,
+      payload: index === 0 ? { liveTranscript: { openrouterCalls: rows.slice(0, 1) } } : {} },
     { ...common, speaker: 'app', direction: 'outbound', body: `App reply ${index + 1}`,
-      payload: { liveTranscript: { shippedModel: names[index], openrouterCalls: rows } } },
+      payload: { liveTranscript: index === 1
+        ? { modelId: names[0], quality: { shippedModel: names[index] }, shippedRewrite: true, openrouterCalls: rows }
+        : { shippedModel: names[index], openrouterCalls: rows } } },
   ];
 });
+turns.push({ request_id: 'req-4', at: current, speaker: 'app', direction: 'outbound', body: 'App reply 4',
+  payload: { liveTranscript: { model: { responseModel: 'vendor/legacy',
+    cost: { status: 'measured', currency: 'USD', dollars: 0.004, source: 'openrouter_usage_cost' } } } } });
 const storedOnboarding = [{ id: 'fixture-session', status: 'completed', current_step: 'vacation_app', created_at: before, completed_at: current }];
 let queries = [];
 const db = async (parts, id) => {
@@ -54,12 +65,13 @@ const db = async (parts, id) => {
   if (query.includes('from transcript_turns')) return id === tripId ? turns : [];
   if (query.includes('from onboarding_clicks')) return [{ session_id: 'fixture-session', event_type: 'accept', target: 'Terms', clicked_at: current }];
   if (query.includes('from onboarding_sessions')) return storedOnboarding;
+  if (query.includes('from trips where customer_id')) return vacations.filter((row) => row.customer_id === id);
   if (query.includes('from trips')) return id ? vacations.filter((row) => row.trip_id === id) : vacations;
   throw new Error('Unknown fixture query');
 };
 const server = await startVkAdminLocalServer({
   adminDatabase: () => db,
-  adminStore: () => new LocalJsonStore(workspace),
+  adminStore: () => new LocalVkAdminStore(workspace),
   ownerAppPayload: () => ({ ok: true, turns: turns.map(({ body }) => ({ body })) }),
 });
 const { base } = server;
@@ -121,6 +133,17 @@ try {
   assert.equal((await fetch(`${base}${artifactPath}/dialog-pdf`)).status, 401);
   assert.equal((await fetch(`${base}/api/admin/notes`)).status, 401);
   assert.equal((await fetch(`${base}${artifactPath}/turn-6`, { headers: { cookie } })).status, 404);
+  const notesUrl = (id) => `${base}/api/admin/notes?vacationId=${id}&customerId=fixture-1`;
+  const readNotes = async (id) => {
+    const response = await fetch(notesUrl(id), { headers: { cookie } });
+    assert.equal(response.status, 200);
+    return (await response.json()).notes;
+  };
+  assert.equal((await fetch(notesUrl(other), { headers: { cookie } })).status, 404);
+  const invalidNote = await fetch(`${base}/api/admin/notes`, {
+    method: 'POST', headers: { cookie, 'content-type': 'application/json' }, body: JSON.stringify({ text: 'Missing vacation ID' }),
+  });
+  assert.equal(invalidNote.status, 404);
 
   for (const width of [390, 1280]) {
     const context = await browser.newContext({ viewport: { width, height: width === 390 ? 844 : 800 }, acceptDownloads: true });
@@ -130,6 +153,17 @@ try {
         assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), name);
         await page.screenshot({ path: path.join(log, `${name}-${width}.png`) });
       };
+      const menuButton = page.locator('#tripButton');
+      const viewOptions = page.locator('#vacationDropdown [data-view]');
+      const shotMenu = async (name) => {
+        await page.waitForFunction(() => getComputedStyle(document.querySelector('#vacationDropdown .trip-list')).opacity === '1');
+        await shot(name);
+      };
+      const chooseView = async (name) => {
+        await menuButton.click();
+        await page.getByRole('option', { name, exact: true }).click();
+      };
+      const basicViews = ['Dialog', 'Vacation site', 'Keepsake', 'Onboarding', 'Chat screenshots'];
       const requests = [];
       page.on('request', (request) => requests.push([request.method(), new URL(request.url()).pathname]));
       await page.goto(`${base}/vacation-app/admin`);
@@ -139,19 +173,32 @@ try {
       const timestamps = await page.locator('[data-sort-at]').evaluateAll((rows) => rows.map((row) => row.dataset.sortAt));
       assert.deepEqual(timestamps, [...timestamps].sort().reverse());
       assert.equal(await page.locator('[data-trip-group]').first().getAttribute('data-trip-group'), tripId);
+      assert.equal(await page.locator(`[data-trip-group="${olderTrip}"]`).count(), 0, 'one picker entry per customer');
       await shot('customers');
 
       await page.locator(`[data-customer-id="${tripId}"]`).click();
       await page.locator('[data-dialog-pdf]').waitFor();
-      assert.deepEqual(await page.locator('#adminView option').allTextContents(), ['Dialog', 'Vacation site', 'Keepsake', 'Onboarding', 'First 5 turns']);
+      const welcome = page.locator('[data-admin-welcome]');
+      await welcome.waitFor();
+      assert.equal(await welcome.count(), 1);
+      assert.match(await welcome.textContent(), /Welcome to Test harness review's vacation\. Test harness review in Fixture destination · 2027-03-01 to 2027-03-05/);
+      assert.equal(await welcome.getAttribute('data-vacation-id'), tripId);
+      assert.equal(await page.locator('#adminView, .admin-view-controls, select').count(), 0);
+      assert.equal(await page.locator('#appHeader .vacation-dropdown').count(), 1);
+      await menuButton.click();
+      assert.deepEqual(await viewOptions.allTextContents(), [...basicViews, 'All vacations']);
+      await shotMenu('header-multiple-vacations');
+      await page.keyboard.press('Escape');
+      assert.equal(await menuButton.getAttribute('aria-expanded'), 'false');
       const text = await page.locator('#customerChatReplay article').allTextContents();
       assert.deepEqual(text.map((line) => line.match(/(?:Customer line|App reply) \d/)[0]), turns.map((turn) => turn.body));
       assert.deepEqual(await page.locator('.admin-reply-detail').allTextContents(), [
         'vendor/first · Actual $0.01234567 Estimated $0.00',
         'vendor/second · Actual $0.00 Estimated $0.05',
         'vendor/third · unpriced',
+        'vendor/legacy · Actual $0.004 Estimated $0.00',
       ]);
-      assert.match(await page.locator('[data-vacation-total]').textContent(), /Actual \$0.01434567 Estimated \$0.05 1 unpriced/);
+      assert.match(await page.locator('[data-vacation-total]').textContent(), /Actual \$0.02134567 Estimated \$0.05 1 unpriced/);
       assert.match(await page.locator('[data-review-result="qa"]').textContent(), /"score": 4/);
       assert.match(await page.locator('[data-review-result="survey"]').textContent(), /happy/);
       const dialogDownload = page.waitForEvent('download');
@@ -161,13 +208,13 @@ try {
       assert.deepEqual(await fs.readFile(await dialog.path()), pdf);
       await shot('dialog');
 
-      await page.selectOption('#adminView', 'trip');
+      await chooseView('Vacation site');
       const shared = page.frameLocator('[data-trip-frame]');
       await shared.locator('[data-ts-timeline-title]').first().waitFor({ timeout: 40000 });
       assert.equal(await shared.locator('[data-ts-detail-edit="1"], [contenteditable="true"]').count(), 0);
       await shot('vacation-site');
 
-      await page.selectOption('#adminView', 'keepsake');
+      await chooseView('Keepsake');
       const preview = page.frameLocator('[data-keepsake-frame]');
       await preview.locator('[data-ae-print="1"]').first().waitFor({ timeout: 40000, state: 'attached' });
       const generate = page.locator('[data-keepsake-generate]');
@@ -178,13 +225,13 @@ try {
       assert.equal((await routeRequest).method(), 'GET');
       await shot('keepsake');
 
-      await page.selectOption('#adminView', 'onboarding');
+      await chooseView('Onboarding');
       const replay = page.locator('[data-onboarding-replay]');
       assert.match(await replay.textContent(), /vacation app.*completed.*accept · Terms/s);
       assert.equal(await replay.locator('button, input, select, a, [contenteditable="true"]').count(), 0);
       await shot('onboarding');
 
-      await page.selectOption('#adminView', 'captures');
+      await chooseView('Chat screenshots');
       const captures = page.locator('[data-capture-turn]');
       assert.deepEqual(await captures.evaluateAll((images) => images.map((image) => Number(image.dataset.captureTurn))), [1, 2, 3, 4, 5]);
       for (const image of await captures.all()) {
@@ -195,7 +242,9 @@ try {
       await shot('captures');
 
       const selectedNote = `Private selected note ${width}`;
-      const generalNote = `Private general note ${width}`;
+      const olderNote = `Private earlier vacation note ${width}`;
+      const originalWelcome = (await readNotes(tripId))[0];
+      assert.equal(originalWelcome.kind, 'welcome');
       await page.setInputFiles('#fileInput', { name: 'note.txt', mimeType: 'text/plain', buffer: Buffer.from('admin attachment') });
       await page.fill('#messageText', selectedNote);
       await page.locator('#sendButton').click();
@@ -204,33 +253,67 @@ try {
       const uploadDownload = page.waitForEvent('download');
       await note.getByRole('link', { name: 'note.txt' }).click();
       assert.equal(await fs.readFile(await (await uploadDownload).path(), 'utf8'), 'admin attachment');
-      await page.click('#tripButton');
-      await page.click('[data-trip-id="all"]');
-      await page.fill('#messageText', generalNote);
+      await page.evaluate(() => { window.initialThread = document.getElementById('messages'); });
+      await chooseView('Dialog');
+      await page.locator('[data-dialog-pdf]').waitFor();
+      await chooseView('All vacations');
+      const vacationList = page.locator('#sitePane [data-admin-vacations]');
+      assert.deepEqual(await vacationList.locator('[data-open-vacation]').evaluateAll((buttons) =>
+        buttons.map((button) => button.dataset.openVacation)), [tripId, olderTrip]);
+      assert.match(await vacationList.textContent(), /Earlier fixture vacation.*Earlier destination/s);
+      await shot('all-vacations');
+      await vacationList.locator(`[data-open-vacation="${olderTrip}"]`).click();
+      await page.locator(`#sitePane[data-kind="chat"][data-run="${olderTrip}"]`).waitFor();
+      assert.equal(await page.evaluate(() => window.initialThread === document.getElementById('messages')), true);
+      assert.equal(await note.count(), 1);
+      assert.equal(await welcome.count(), 1);
+      await page.fill('#messageText', olderNote);
       await page.locator('#sendButton').click();
-      await page.locator('[data-admin-note]').filter({ hasText: generalNote }).waitFor();
-      assert.equal(await note.count(), 0);
+      const earlierNote = page.locator('[data-admin-note]').filter({ hasText: olderNote });
+      await earlierNote.waitFor();
+      assert.equal(await earlierNote.getAttribute('data-vacation-id'), olderTrip);
+      const stored = await readNotes(olderTrip);
+      assert.deepEqual(stored[0], originalWelcome);
+      for (const [text, vacationId] of [[selectedNote, tripId], [olderNote, olderTrip]]) {
+        const saved = stored.find((entry) => entry.text === text);
+        assert.equal(saved.vacationId, vacationId);
+        const record = await new LocalVkAdminStore(workspace).getJson(`notes/customer-fixture-1/${saved.id}.json`);
+        assert.equal(record.vacationId, vacationId);
+      }
+      const welcomeRecord = await new LocalVkAdminStore(workspace).getJson('notes/customer-fixture-1/welcome.json');
+      assert.equal(welcomeRecord.vacationId, tripId);
       await page.reload();
-      await page.locator('[data-admin-note]').filter({ hasText: generalNote }).waitFor();
-      await page.locator(`[data-customer-id="${tripId}"]`).click();
-      await note.waitFor();
-      assert.equal(await page.locator('[data-admin-note]').filter({ hasText: generalNote }).count(), 0);
+      await earlierNote.waitFor();
+      assert.equal(await note.getAttribute('data-vacation-id'), tripId);
+      assert.equal(await earlierNote.getAttribute('data-vacation-id'), olderTrip);
+      assert.deepEqual(await readNotes(olderTrip), stored);
       const owner = await (await fetch(`${base}/api/vacation-itinerary?app=1`)).text();
       const trip = await (await fetch(`${base}/api/shared/${orlando.shareSlug}/`)).text();
-      assert.ok(![owner, trip].some((payload) => payload.includes(selectedNote) || payload.includes(generalNote)));
+      assert.ok(![owner, trip].some((payload) => payload.includes(selectedNote) || payload.includes(olderNote)));
       assert.ok(requests.every(([method, pathname]) => method === 'GET' || pathname.startsWith('/api/admin/')));
       assert.deepEqual(server.writes, []);
 
-      await page.click('#tripButton');
-      await page.click('[data-trip-id="all"]');
+      await chooseView('All Customers');
       await page.locator(`[data-customer-id="${other}"]`).click();
       await page.getByText('No Dialog PDF yet').waitFor();
+      await welcome.waitFor();
+      assert.match(await welcome.textContent(), /Welcome to Second fixture's vacation/);
       assert.equal(await page.locator('[data-review-result]').count(), 0);
       assert.equal(await note.count(), 0);
-      await page.selectOption('#adminView', 'onboarding');
+      await menuButton.click();
+      assert.deepEqual(await viewOptions.allTextContents(), basicViews);
+      await shotMenu('header-single-vacation');
+      await page.keyboard.press('Escape');
+      await chooseView('Onboarding');
       await page.getByText('vacation app', { exact: true }).waitFor();
-      await page.selectOption('#adminView', 'captures');
+      await chooseView('Chat screenshots');
       await page.getByText('No captures', { exact: true }).waitFor();
+      await chooseView('All Customers');
+      await page.locator(`[data-customer-id="${tripId}"]`).click();
+      await note.waitFor();
+      assert.equal(await welcome.count(), 1);
+      assert.equal(await earlierNote.count(), 1);
+      assert.deepEqual(await readNotes(tripId), stored);
       console.log(`ok - VK admin review B at ${width}`);
     } finally {
       await context.close();

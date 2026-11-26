@@ -1,4 +1,37 @@
 import { randomUUID } from 'node:crypto';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { dirname } from 'node:path';
+import { DatabaseJsonStore, LocalJsonStore } from '../onboarding/eula-persistent-store.mjs';
+import { hasDatabase, sql } from './db.mjs';
+
+export class LocalVkAdminStore extends LocalJsonStore {
+  async putWelcome(key, value) {
+    const path = this.path(key);
+    mkdirSync(dirname(path), { recursive: true });
+    try {
+      writeFileSync(path, JSON.stringify(value), { flag: 'wx' });
+    } catch (error) {
+      if (error.code !== 'EEXIST') throw error;
+    }
+  }
+}
+
+class DatabaseVkAdminStore extends DatabaseJsonStore {
+  async putWelcome(key, value) {
+    const db = sql(this.env);
+    await db`
+      insert into eula_store_objects (key, document, updated_at)
+      values (${this.key(key)}, ${value}, now())
+      on conflict (key) do nothing
+    `;
+  }
+}
+
+export function vkAdminStorage(env) {
+  if (hasDatabase(env)) return new DatabaseVkAdminStore({ prefix: 'vk-admin-review', env });
+  if (env.VERCEL || env.VERCEL_ENV) throw new Error('VK admin storage requires a vacation database');
+  return new LocalVkAdminStore('runtime/vk-admin-review');
+}
 
 const MAX_BYTES = 3 * 1024 * 1024;
 const uuid = /^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/i;
@@ -13,7 +46,7 @@ function readBase64(value, remaining = MAX_BYTES) {
   return bytes;
 }
 
-export function noteFromBody(body) {
+export function noteFromBody(body, vacationId) {
   const text = typeof body.text === 'string' ? body.text.trim() : '';
   const files = body.attachments ?? [];
   if (text.length > 16000 || !Array.isArray(files) || files.length > 6 || (!text && !files.length)) return null;
@@ -25,25 +58,45 @@ export function noteFromBody(body) {
     remaining -= bytes.length;
     attachments.push({ name: file.name.trim().slice(0, 180), data: file.data });
   }
-  return { id: randomUUID(), at: new Date().toISOString(), text, attachments };
+  return { id: randomUUID(), at: new Date().toISOString(), text, attachments, vacationId };
 }
 
-export function presentNote({ id, at, text, attachments }) {
-  return { id, at, text, attachments: attachments.map(({ name }) => ({ name })) };
+export function presentNote({ id, at, text, attachments, vacationId, kind }) {
+  return { id, at, text, vacationId, kind, attachments: attachments.map(({ name }) => ({ name })) };
 }
 
-export function notesPath(customer) {
-  return `notes/${customer === null ? 'general' : `vacation-${encodeURIComponent(customer)}`}`;
+export function notesPath(customerId, vacationId) {
+  if (customerId != null) return `notes/customer-${encodeURIComponent(customerId)}`;
+  return vacationId ? `notes/vacation-${encodeURIComponent(vacationId)}` : 'notes/general';
 }
 
-export async function listNotes(store, customer) {
-  const notes = await store.listJson(notesPath(customer));
-  return notes.sort((a, b) => a.at.localeCompare(b.at) || a.id.localeCompare(b.id)).map(presentNote);
+export async function saveWelcome(store, member, vacation) {
+  const path = notesPath(member.id, vacation.tripId);
+  const title = vacation.title || vacation.destination || vacation.label;
+  const place = vacation.destination && !title.toLowerCase().includes(vacation.destination.toLowerCase())
+    ? ` in ${vacation.destination}` : '';
+  const dates = [vacation.startDate, vacation.endDate].filter(Boolean).join(' to ');
+  const text = `Welcome to ${member.customer_label}'s vacation. ${title}${place}${dates ? ` · ${dates}` : ''}.`;
+  await store.putWelcome(`${path}/welcome.json`, {
+    id: 'welcome', kind: 'welcome', at: new Date().toISOString(), text, vacationId: vacation.tripId, attachments: [],
+  });
 }
 
-export async function loadNoteFile(store, customer, id, index) {
+export async function listNotes(store, customerId, vacationId, legacyTripIds) {
+  const notes = await store.listJson(notesPath(customerId, vacationId));
+  const legacy = await Promise.all(legacyTripIds.map(async (tripId) => {
+    const records = await store.listJson(notesPath(null, tripId));
+    return records.map((note) => ({ ...note, vacationId: tripId }));
+  }));
+  return [...notes.map((note) => ({ vacationId, ...note })), ...legacy.flat()]
+    .sort((a, b) => Number(b.kind === 'welcome') - Number(a.kind === 'welcome') || a.at.localeCompare(b.at) || a.id.localeCompare(b.id))
+    .map(presentNote);
+}
+
+export async function loadNoteFile(store, customerId, vacationId, legacy, id, index) {
   if (!uuid.test(id) || !/^\d$/.test(index)) return null;
-  const note = await store.getJson(`${notesPath(customer)}/${id}.json`);
+  const note = await store.getJson(`${notesPath(customerId, vacationId)}/${id}.json`)
+    || (legacy ? await store.getJson(`${notesPath(null, vacationId)}/${id}.json`) : null);
   const file = note?.attachments?.[Number(index)];
   return file ? Buffer.from(file.data, 'base64') : null;
 }
@@ -77,7 +130,7 @@ export async function listReviewArtifacts(store, vacationId) {
   }));
   return {
     turns: captures.filter(Boolean),
-    dialogPdf: Boolean(await store.getJson(artifactPath(vacationId, 'dialog-pdf'))),
+    dialogPdf: Boolean(await loadReviewArtifact(store, vacationId, 'dialog-pdf')),
     review: await store.getJson(artifactPath(vacationId, 'review')),
   };
 }
