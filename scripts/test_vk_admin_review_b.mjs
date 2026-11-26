@@ -14,6 +14,9 @@ const [orlando] = JSON.parse(await fs.readFile(fixturePath, 'utf8')).vacations;
 const tripId = 'aaaaaaaa-0000-0000-0000-000000000116';
 const other = 'bbbbbbbb-0000-0000-0000-000000000116';
 const olderTrip = 'cccccccc-0000-0000-0000-000000000116';
+const customerId = 'fixture-lopez-current';
+const earlierCustomerId = 'fixture-lopez-earlier';
+const fixtureTrip = 'vk-fixture-trip-001';
 const current = '2026-11-26T12:00:00.000Z';
 const before = '2026-11-25T12:00:00.000Z';
 const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/FioAAAAASUVORK5CYII=', 'base64');
@@ -26,12 +29,13 @@ process.env.VK_ADMIN_SESSION_SECRET = 'fixture-admin-signing-stand-in';
 delete process.env.VERCEL_ENV;
 
 const vacations = [
-  { trip_id: tripId, title: 'Test harness review', destination: 'Fixture destination', customer_id: 'fixture-1', display_name: 'Test harness review',
+  { trip_id: tripId, title: 'Test harness review', destination: 'Fixture destination', customer_id: customerId, display_name: 'Sofia Lopez',
+    customer_email: 'harness+fixture-current+vk-001-lopez@harness.invalid',
     share_slug: orlando.shareSlug, harness_tag: 'harness:fixture:review', created_at: current,
     start_date: '2027-03-01', end_date: '2027-03-05', qa: { score: 4 }, survey: { rating: 'happy' } },
   { trip_id: other, title: 'Second fixture', destination: 'Fixture destination', customer_id: 'fixture-2', display_name: 'Second fixture', created_at: before },
-  { trip_id: olderTrip, title: 'Earlier fixture vacation', destination: 'Earlier destination', customer_id: 'fixture-1',
-    display_name: 'Test harness review', created_at: before },
+  { trip_id: olderTrip, title: 'Earlier fixture vacation', destination: 'Earlier destination', customer_id: earlierCustomerId,
+    customer_email: 'harness+fixture-earlier+vk-001-lopez@harness.invalid', display_name: 'Sofia Lopez', created_at: before },
 ];
 const names = ['vendor/first', 'vendor/second', 'vendor/third'];
 const ledger = (requestId, model, costSource, costUsd, extra = {}) => ({ tripId, requestId, model, costUsd, costSource, ...extra });
@@ -65,6 +69,10 @@ const db = async (parts, id) => {
   if (query.includes('from transcript_turns')) return id === tripId ? turns : [];
   if (query.includes('from onboarding_clicks')) return [{ session_id: 'fixture-session', event_type: 'accept', target: 'Terms', clicked_at: current }];
   if (query.includes('from onboarding_sessions')) return storedOnboarding;
+  if (query.includes('lower(c.email) like')) {
+    const aliasPrefix = id.split('%')[1];
+    return vacations.filter((row) => row.customer_email?.includes(aliasPrefix));
+  }
   if (query.includes('from trips where customer_id')) return vacations.filter((row) => row.customer_id === id);
   if (query.includes('from trips')) return id ? vacations.filter((row) => row.trip_id === id) : vacations;
   throw new Error('Unknown fixture query');
@@ -86,6 +94,15 @@ try {
     return response.headers.getSetCookie()[0].split(';')[0];
   }
   const cookie = await auth();
+  const picker = await (await fetch(`${base}/api/admin/customers`, { headers: { cookie } })).json();
+  assert.equal(picker.testCustomerCount, 100, 'roster runs do not add customers to the roster count');
+  assert.ok(!JSON.stringify(picker).includes('@harness.invalid'));
+  const store = new LocalVkAdminStore(workspace);
+  const earlierNoteId = 'dddddddd-0000-0000-0000-000000000116';
+  await store.putJson(`notes/customer-${earlierCustomerId}/${earlierNoteId}.json`, {
+    id: earlierNoteId, vacationId: olderTrip, at: before, text: 'Existing admin note',
+    attachments: [{ name: 'existing.txt', data: Buffer.from('existing admin attachment').toString('base64') }],
+  });
   const artifactPath = `/api/admin/customers/${tripId}/artifacts`;
   const uploaded = [];
   const staging = 'https://vacation-staging.timesyncher.com';
@@ -133,7 +150,7 @@ try {
   assert.equal((await fetch(`${base}${artifactPath}/dialog-pdf`)).status, 401);
   assert.equal((await fetch(`${base}/api/admin/notes`)).status, 401);
   assert.equal((await fetch(`${base}${artifactPath}/turn-6`, { headers: { cookie } })).status, 404);
-  const notesUrl = (id) => `${base}/api/admin/notes?vacationId=${id}&customerId=fixture-1`;
+  const notesUrl = (id) => `${base}/api/admin/notes?vacationId=${id}&customerId=1`;
   const readNotes = async (id) => {
     const response = await fetch(notesUrl(id), { headers: { cookie } });
     assert.equal(response.status, 200);
@@ -151,7 +168,7 @@ try {
       const page = await context.newPage();
       const shot = async (name) => {
         assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), name);
-        await page.screenshot({ path: path.join(log, `${name}-${width}.png`) });
+        await page.screenshot({ path: path.join(log, `${name}-${width}.png`), mask: [page.locator('.admin-coupon')] });
       };
       const menuButton = page.locator('#tripButton');
       const viewOptions = page.locator('#vacationDropdown [data-view]');
@@ -173,16 +190,24 @@ try {
       const timestamps = await page.locator('[data-sort-at]').evaluateAll((rows) => rows.map((row) => row.dataset.sortAt));
       assert.deepEqual(timestamps, [...timestamps].sort().reverse());
       assert.equal(await page.locator('[data-trip-group]').first().getAttribute('data-trip-group'), tripId);
-      assert.equal(await page.locator(`[data-trip-group="${olderTrip}"]`).count(), 0, 'one picker entry per customer');
+      const sofia = page.getByRole('button', { name: 'Open Sofia Lopez', exact: true });
+      assert.equal(await sofia.count(), 1, 'one Sofia Lopez picker entry across harness runs');
+      assert.equal(await page.getByRole('button', { name: 'Open Lopez family', exact: true }).count(), 0, 'roster vacation is in Sofia’s account');
       await shot('customers');
 
-      await page.locator(`[data-customer-id="${tripId}"]`).click();
+      await sofia.click();
+      await page.locator(`#sitePane[data-kind="chat"][data-run="${tripId}"]`).waitFor();
       await page.locator('[data-dialog-pdf]').waitFor();
       const welcome = page.locator('[data-admin-welcome]');
       await welcome.waitFor();
       assert.equal(await welcome.count(), 1);
-      assert.match(await welcome.textContent(), /Welcome to Test harness review's vacation\. Test harness review in Fixture destination · 2027-03-01 to 2027-03-05/);
+      assert.match(await welcome.textContent(), /Welcome to Sofia Lopez's vacation\. Test harness review in Fixture destination · 2027-03-01 to 2027-03-05/);
       assert.equal(await welcome.getAttribute('data-vacation-id'), tripId);
+      const existingNote = page.locator('#messages [data-admin-note]').filter({ hasText: 'Existing admin note' });
+      assert.equal(await existingNote.getAttribute('data-vacation-id'), olderTrip);
+      const existingDownload = page.waitForEvent('download');
+      await existingNote.getByRole('link', { name: 'existing.txt' }).click();
+      assert.equal(await fs.readFile(await (await existingDownload).path(), 'utf8'), 'existing admin attachment');
       assert.equal(await page.locator('#adminView, .admin-view-controls, select').count(), 0);
       assert.equal(await page.locator('#appHeader .vacation-dropdown').count(), 1);
       await menuButton.click();
@@ -259,7 +284,7 @@ try {
       await chooseView('All vacations');
       const vacationList = page.locator('#sitePane [data-admin-vacations]');
       assert.deepEqual(await vacationList.locator('[data-open-vacation]').evaluateAll((buttons) =>
-        buttons.map((button) => button.dataset.openVacation)), [tripId, olderTrip]);
+        buttons.map((button) => button.dataset.openVacation)), [tripId, olderTrip, fixtureTrip]);
       assert.match(await vacationList.textContent(), /Earlier fixture vacation.*Earlier destination/s);
       await shot('all-vacations');
       await vacationList.locator(`[data-open-vacation="${olderTrip}"]`).click();
@@ -277,10 +302,10 @@ try {
       for (const [text, vacationId] of [[selectedNote, tripId], [olderNote, olderTrip]]) {
         const saved = stored.find((entry) => entry.text === text);
         assert.equal(saved.vacationId, vacationId);
-        const record = await new LocalVkAdminStore(workspace).getJson(`notes/customer-fixture-1/${saved.id}.json`);
+        const record = await new LocalVkAdminStore(workspace).getJson(`notes/customer-1/${saved.id}.json`);
         assert.equal(record.vacationId, vacationId);
       }
-      const welcomeRecord = await new LocalVkAdminStore(workspace).getJson('notes/customer-fixture-1/welcome.json');
+      const welcomeRecord = await new LocalVkAdminStore(workspace).getJson('notes/customer-1/welcome.json');
       assert.equal(welcomeRecord.vacationId, tripId);
       await page.reload();
       await earlierNote.waitFor();
@@ -294,12 +319,13 @@ try {
       assert.deepEqual(server.writes, []);
 
       await chooseView('All Customers');
-      await page.locator(`[data-customer-id="${other}"]`).click();
+      await page.getByRole('button', { name: 'Open Second fixture', exact: true }).click();
       await page.getByText('No Dialog PDF yet').waitFor();
       await welcome.waitFor();
       assert.match(await welcome.textContent(), /Welcome to Second fixture's vacation/);
       assert.equal(await page.locator('[data-review-result]').count(), 0);
       assert.equal(await note.count(), 0);
+      assert.equal(await existingNote.count(), 0);
       await menuButton.click();
       assert.deepEqual(await viewOptions.allTextContents(), basicViews);
       await shotMenu('header-single-vacation');
@@ -309,7 +335,7 @@ try {
       await chooseView('Chat screenshots');
       await page.getByText('No captures', { exact: true }).waitFor();
       await chooseView('All Customers');
-      await page.locator(`[data-customer-id="${tripId}"]`).click();
+      await sofia.click();
       await note.waitFor();
       assert.equal(await welcome.count(), 1);
       assert.equal(await earlierNote.count(), 1);
