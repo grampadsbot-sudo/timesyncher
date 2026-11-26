@@ -28,6 +28,7 @@ function storedGroup(row) {
     label, destination: row.destination || '', customerCount: row.customer_id ? 1 : 0,
     customers: row.customer_id ? [member] : [],
     isTest: rosterId != null || Boolean(row.harness_tag),
+    harnessTag: row.harness_tag || '',
   };
 }
 
