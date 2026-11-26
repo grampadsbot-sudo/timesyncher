@@ -27,7 +27,7 @@ const CUSTOMER_DISCLOSURE_INSTRUCTIONS =
 export function personaSeed(story) {
   const turns = Array.isArray(story?.turns) ? story.turns : [];
   const party = story?.party || {};
-  const people = [...(party.collaborators || []), ...(party.kids || []), ...(party.viewers || []), ...(party.editors || [])];
+  const people = [...(party.collaborators || []), ...(party.kids || []), ...(party.preference_subjects || []), ...(party.viewers || []), ...(party.editors || [])];
   const privateNames = people.flatMap((person) => {
     const name = String(person?.name || '').trim();
     return [name, name.split(/\s+/)[0], person?.email].filter(Boolean);
@@ -38,10 +38,28 @@ export function personaSeed(story) {
   return {
     name: String(story?.customer?.name || '').trim() || 'Customer',
     destination: String(story?.destination || '').trim(),
+    customer: story?.customer || null,
+    party: {
+      primary: party.primary || null,
+      collaborators: Array.isArray(party.collaborators) ? party.collaborators : [],
+      kids: Array.isArray(party.kids) ? party.kids : (Array.isArray(party.preference_subjects) ? party.preference_subjects : []),
+      viewers: Array.isArray(party.viewers) ? party.viewers : [],
+      editors: Array.isArray(party.editors) ? party.editors : [],
+    },
     goals: turns.map((turn) => {
       const text = String(turn?.text || '');
       return (privateParty ? text.replace(privateParty, '') : text).trim();
     }).filter(Boolean),
+  };
+}
+
+function customerPersonaPayload(persona) {
+  if (!persona || typeof persona !== 'object') return { name: String(persona || '').trim() || 'Customer' };
+  return {
+    name: persona.name,
+    destination: persona.destination,
+    customer: persona.customer || null,
+    party: persona.party || null,
   };
 }
 
@@ -92,7 +110,7 @@ export async function speakCustomer({ persona, appReply = '', index = 0, transcr
   const disclosure = disclosureContext(transcript);
   const isFirstTurn = Number(index) === 0 && disclosure.customerTurns.length === 0;
   const spoken = await ask({
-    lane, persona: { name: persona?.name, destination: persona?.destination },
+    lane, persona: customerPersonaPayload(persona),
     appReply: String(appReply || ''), goal, index, transcript: priorTranscript, disclosure, isFirstTurn,
   });
   const text = String(spoken?.text || '').trim();
@@ -146,7 +164,7 @@ export function customerAskFromEnv(env = process.env, hosts = loadBannedHosts(),
       headers: { 'content-type': 'application/json', accept: 'application/json' },
       body: JSON.stringify({
         lane,
-        persona: persona?.name,
+        persona: customerPersonaPayload(persona),
         destination: persona?.destination,
         goal: [goal, disclosure.instructions].filter(Boolean).join('\n\n'),
         appReply,

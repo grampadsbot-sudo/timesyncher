@@ -107,7 +107,8 @@ assert.equal(customerChallengesPriorReply(response.text), true);
 const [request] = requests;
 assert.deepEqual(request.disclosure.customerTurns, [lopezCorpus]);
 assert.match(request.disclosure.instructions, /in your own words/);
-assert.doesNotMatch(JSON.stringify({ goal: request.goal, persona: request.persona, disclosure: request.disclosure }), /Mateo|Lily|Leo/);
+assert.match(request.persona?.party?.collaborators?.[0]?.name, /Mateo/);
+assert.doesNotMatch(JSON.stringify({ goal: request.goal, disclosure: request.disclosure }), /Mateo|Lily|Leo/);
 
 const priorExchange = { appReply: assumed, customerTurns: [lopezCorpus] };
 let decision = 'uncorrected';
