@@ -9,7 +9,7 @@ import {
   sumTurnCost,
 } from '../src/vacation/turn-cost.mjs';
 import { callVkBotMcp, routeVkBotMcpReply, sessionReplyBackend } from '../src/vacation/vk-bot-mcp-reply.mjs';
-import { OPENROUTER_CHAT_COMPLETIONS_URL } from './vacation-app-reply-rules.mjs';
+import { DEFAULT_JEV_DECISIONS_URL, OPENROUTER_CHAT_COMPLETIONS_URL } from './vacation-app-reply-rules.mjs';
 
 const MCP = 'http://127.0.0.1:9/v1/mcp';
 const env = {
@@ -110,7 +110,8 @@ assert.equal(reread.turns[0].backend, 'vk_bot_mcp');
 assert.equal(reread.turns[0].cost.status, 'unmeasured');
 assert.equal(reread.turns[0].modelId, 'vk-intake');
 
-const turn110 = "Please add a family collaborator with edit access, and tell me what they can do on the trip once they're added. Please keep planning only.";
+const turn110 = 'Thanks for keeping those meal notes as planning only and confirming nothing is booked. '
+  + "Please add a family collaborator with edit access, and tell me what they can do on the trip once they're added. Please keep planning only.";
 const inviteClaim = "I've added your family member as a collaborator with edit access.";
 assert.equal(replyActionClaimReason(inviteClaim, {}), 'reply_action_claim_unbacked');
 
@@ -142,7 +143,7 @@ async function verifyTurn110(mcpEnabled) {
     TIMESYNCHER_VK_BOT_MCP: mcpEnabled ? '1' : '0',
     TIMESYNCHER_VK_INTAKE_MCP_URL: MCP,
     TIMESYNCHER_VK_INTAKE_MCP_TOKEN: 'offline-test',
-    TIMESYNCHER_JEV_CLASSIFY_URL: 'http://127.0.0.1:9/api/alpha/decisions',
+    TIMESYNCHER_JEV_CLASSIFY_URL: DEFAULT_JEV_DECISIONS_URL,
     TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '1200',
     TIMESYNCHER_JEV_CLASSIFY_TOKEN: 'offline-test',
     TIMESYNCHER_GBRAIN_HTTP_BASE: '',
@@ -164,7 +165,7 @@ async function verifyTurn110(mcpEnabled) {
         assert.ok(request.params.arguments.message.includes(turn110));
         return rpc({ status: 'done', reply: inviteClaim, model: 'vk-intake' });
       }
-      if (String(url) === OPENROUTER_CHAT_COMPLETIONS_URL && !mcpEnabled && draftCalls === 0) {
+      if (String(url) === OPENROUTER_CHAT_COMPLETIONS_URL && !mcpEnabled) {
         draftCalls += 1;
         assert.ok(JSON.stringify(request.messages).includes(turn110));
         return Response.json({
@@ -219,6 +220,7 @@ async function verifyTurn110(mcpEnabled) {
   assert.equal(appTurns[0].body, queued.reply);
   assert.equal(appTurns[0].payload.liveTranscript.backend, 'vk_bot_mcp');
   assert.equal(queued.jev.jevRan, !mcpEnabled);
+  if (!mcpEnabled) assert.equal(queued.jev.via, 'openrouter-decisions');
   assert.ok(turnWrites.some((payload) => payload.liveTranscript?.text === turn110 && payload.turnActionResults));
   assert.ok(turnWrites.every((payload) => !payload.replyFailure));
   assert.deepEqual(collaboratorQueries, []);
