@@ -18,6 +18,7 @@ import { createCouponLedger, redeemRosterCoupon } from './coupon.mjs';
 import { couponPaymentSteps } from './onboarding-capture.mjs';
 import { stampUnstoredExchange } from './unstored-turn.mjs';
 import { vkAdminStorage } from '../../src/vacation/vk-admin-review-storage.mjs';
+import { assertAdminOnboardingCaptures } from './admin-onboarding-captures.mjs';
 import { captureVacationInviteOnboarding } from './onboarding-invites.mjs';
 import { attachSsrToKeepsakeMetadata } from '../customer_suite/ssr/dialog-hook.mjs';
 import { createLiveSsrHarness, primeLiveSsr } from './live-ssr-harness.mjs';
@@ -275,9 +276,9 @@ export function liveOptions(env = process.env) {
         };
       }
       const liveCustomer = story.reply_backend === 'vk_bot_mcp';
+      const harnessVacation = { db, tripId: created.tripId, tag: options.tag, openStore: () => vkAdminStorage(ready) };
       const putArtifact = createAdminArtifactWriter({
-        origin, login: ready.VK_ADMIN_LOGIN, fetchImpl,
-        harnessVacation: { db, tripId: created.tripId, tag: options.tag, openStore: () => vkAdminStorage(ready) },
+        origin, login: ready.VK_ADMIN_LOGIN, fetchImpl, harnessVacation,
       });
       const { ssrReactions, ssrSetupErrors, liveSsrRespond } = await primeLiveSsr({
         liveCustomer, story, ready, bannedHosts, customerAskFromEnv,
@@ -302,19 +303,21 @@ export function liveOptions(env = process.env) {
       });
       adminArtifacts.errors.push(...ssrSetupErrors);
       const storedTranscript = await storedLiveTranscript(db, created.token);
-      adminArtifacts.onboardingCaptures = [];
-      try {
-        const invited = await captureVacationInviteOnboarding({
-          db, story, ownerCustomerId: created.customerId, tripId: played.tripId || created.tripId,
-          tag: options.tag, origin, env: ready, outDir: options.outDir, put: ready.VK_ADMIN_LOGIN ? putArtifact : undefined,
-          issuePlanned: !played.reason,
-        });
-        adminArtifacts.onboardingCaptures.push(...invited.uploaded);
-        adminArtifacts.errors.push(...invited.errors);
-      } catch {
-        adminArtifacts.errors.push('invite-onboarding-capture-failed');
-      }
       const tripId = played.tripId || created.tripId;
+      harnessVacation.tripId = tripId;
+      adminArtifacts.onboardingCaptures = [];
+      const captureInviteOnboarding = async (issuePlanned = true) => {
+        try {
+          const invited = await captureVacationInviteOnboarding({
+            db, story, ownerCustomerId: created.customerId, tripId,
+            tag: options.tag, origin, env: ready, outDir: options.outDir, put: putArtifact, issuePlanned,
+          });
+          adminArtifacts.onboardingCaptures.push(...invited.uploaded);
+          adminArtifacts.errors.push(...invited.errors);
+        } catch {
+          adminArtifacts.errors.push('invite-onboarding-capture-failed');
+        }
+      };
       const shareToken = played.shareToken || created.shareToken;
       const keepsakeOptions = { origin, tripId, shareToken, fetchImpl, outDir: options.outDir, put: putArtifact, adminArtifacts };
       const base = {
@@ -374,6 +377,7 @@ export function liveOptions(env = process.env) {
         putArtifact, outDir: options.outDir, recordArtifactFailure, stampLivePdf, storedTranscript,
         created, secrets, origin, fetchImpl, replyBackend: story.reply_backend,
       });
+      await captureInviteOnboarding(!played.reason);
       if (chatLeftNoThing(played)) {
         const ssrRecord = await finalizeLiveSsr({ ok: false, detail: 'no-thing-after-chat' });
         const outDialog = ssrRecord ? await renderLiveDialogWithSsr(ssrRecord) : dialog;
@@ -425,8 +429,9 @@ export function liveOptions(env = process.env) {
       const pricingOk = played.pricingReactionCaptured === true;
       const itineraryOk = Number(played.itineraryCount) > 0;
       const keepsakeOk = keepsake.ok === true;
-      let reason = adminArtifacts.errors.length ? 'admin-artifact-upload-or-capture-failed'
-        : adminArtifacts.captures.length !== 5 ? 'admin-first-five-captures-missing' : '';
+      let reason = assertAdminOnboardingCaptures(story, adminArtifacts)
+        || (adminArtifacts.errors.length ? 'admin-artifact-upload-or-capture-failed' : '')
+        || (adminArtifacts.captures.length !== 5 ? 'admin-first-five-captures-missing' : '');
       if (liveCustomer && (!itineraryOk || !keepsakeOk || !pricingOk)) {
         const missing = [
           itineraryOk ? null : 'itinerary',

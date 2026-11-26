@@ -425,6 +425,7 @@ try {
       await chooseView('Onboarding');
       await page.getByText('vacation app', { exact: true }).waitFor();
       assert.equal(await page.locator('[data-onboarding-stage]').count(), 0);
+      assert.equal(await page.locator('[data-onboarding-missing]').count(), 0);
       await chooseView('Chat screenshots');
       await page.getByText('No captures', { exact: true }).waitFor();
       await chooseView('All Customers');
@@ -453,6 +454,25 @@ try {
   assert.deepEqual(failedArtifacts, { ok: true, turns: [1, 2], onboardingCaptures: [], dialogPdf: true, keepsakePdf: false, review: null });
   assert.equal(failedFeedback, null);
   assert.match(extractPdfText(await readArtifact(failedTrip, 'dialog-pdf')), /Stored customer message with no reply/);
+
+  {
+    const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const page = await context.newPage();
+  await page.goto(`${base}/vacation-app/admin`);
+  await page.fill('#adminLoginInput', LOGIN);
+  await page.locator('#adminLogin button').click();
+  await page.getByRole('button', { name: 'Open Kowalski family', exact: true }).click();
+  await page.locator(`#sitePane[data-run="${failedTrip}"]`).waitFor();
+  await page.locator('#tripButton').click();
+  await page.getByRole('option', { name: 'Onboarding', exact: true }).click();
+  const missing = page.locator('[data-onboarding-missing="1"]');
+  await missing.waitFor();
+  assert.match(await missing.textContent(), /harness:fixture:failed/);
+  const missingShot = path.join(log, 'onboarding-missing-390.png');
+  await page.screenshot({ path: missingShot, mask: [page.locator('.admin-coupon')] });
+  assert.ok((await fs.stat(missingShot)).size > 1000, 'onboarding-missing-390.png');
+  await context.close();
+  }
 
   const directPut = createAdminArtifactWriter({
     origin: staging, fetchImpl: () => assert.fail('database writer must stay on the staging database'),

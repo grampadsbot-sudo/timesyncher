@@ -34,10 +34,22 @@ export async function replayVkAdminReviewHarness({
       opened += 1;
       return { close: async () => { closed += 1; }, page: {
         async goto(url) { assert.equal(new URL(url).searchParams.get('tripId'), id); },
-        async waitForFunction(_callback, line) { assert.match(line, /^Customer line [1-5]$/); },
+        async waitForFunction(_callback, arg) {
+          if (arg == null || typeof arg === 'number') return;
+          assert.match(String(arg), /^Customer line [1-5]$/);
+        },
         locator(selector) {
-          assert.equal(selector, '#messages');
-          return { evaluate: async () => {} };
+          if (selector === '#messages') return { evaluate: async () => {} };
+          if (selector === '#workspace.chat-only' || selector === '.chat-pane') {
+            return {
+              count: async () => 1,
+              screenshot: async ({ path: file }) => { await fs.writeFile(file, png); return png; },
+            };
+          }
+          if (selector === '.site-pane iframe') {
+            return { count: async () => 0, first: () => ({ waitFor: async () => {}, contentFrame: () => null }) };
+          }
+          throw new Error(`unexpected selector ${selector}`);
         },
         async screenshot({ path: file }) { await fs.writeFile(file, png); return png; },
       } };

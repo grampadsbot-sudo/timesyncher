@@ -58,6 +58,57 @@ export function createAdminArtifactWriter({ origin, login, fetchImpl, harnessVac
   };
 }
 
+export async function waitForTurnCapture(page, { turn, text, timeout = 20000 }) {
+  const normalize = (value) => value.replace(/\s+/g, ' ').trim();
+  const expected = normalize(text);
+  await page.waitForFunction(() => document.querySelectorAll('#messages article.bubble').length, null, { timeout });
+  if (turn === 1) {
+    await page.waitForFunction(() => document.querySelectorAll('#messages article.bubble:not(.user)').length, null, { timeout });
+  }
+  await page.waitForFunction((needle) => {
+    const users = document.querySelectorAll('#messages article.bubble.user');
+    return [...users].some((bubble) => normalize(bubble.textContent).includes(needle));
+  }, expected, { timeout });
+  await page.waitForFunction((n) => {
+    const users = document.querySelectorAll('#messages article.bubble.user');
+    const apps = document.querySelectorAll('#messages article.bubble:not(.user)');
+    return users.length >= n && apps.length >= n + 1;
+  }, turn, { timeout });
+  await page.locator('#messages').evaluate((messages, n) => {
+    const users = messages.querySelectorAll('article.bubble.user');
+    const target = users[n - 1];
+  const apps = messages.querySelectorAll('article.bubble:not(.user)');
+    const reply = apps[n] || apps[apps.length - 1];
+    if (!target || !reply) {
+      messages.scrollTop = messages.scrollHeight;
+      return;
+    }
+    const top = Math.min(target.offsetTop, reply.offsetTop);
+    const bottom = Math.max(target.offsetTop + target.offsetHeight, reply.offsetTop + reply.offsetHeight);
+    messages.scrollTop = Math.max(0, top - 8);
+    if (bottom - messages.scrollTop > messages.clientHeight) messages.scrollTop = Math.max(0, bottom - messages.clientHeight + 8);
+  }, turn);
+}
+
+export async function shotTurnCapture(page, { turn, text, outFile }) {
+  await waitForTurnCapture(page, { turn, text });
+  const chatOnly = await page.locator('#workspace.chat-only').count();
+  if (chatOnly) return page.locator('.chat-pane').screenshot({ path: outFile });
+  const iframe = page.locator('.site-pane iframe');
+  if (await iframe.count()) {
+    await iframe.first().waitFor({ state: 'attached', timeout: 15000 });
+    const frame = await iframe.first().contentFrame();
+    if (frame) {
+      const title = frame.locator('[data-ts-timeline-title], h1, header h1').first();
+      await title.waitFor({ timeout: 12000 }).catch((error) => {
+        if (!String(error?.message || error).includes('Timeout')) throw error;
+      });
+    }
+    return page.locator('#workspace').screenshot({ path: outFile });
+  }
+  return page.locator('.chat-pane').screenshot({ path: outFile });
+}
+
 async function openCapturePage() {
   const playwright = resolvePlaywright();
   if (playwright.missing) throw new Error('Playwright is required for first-five-turn captures');
@@ -92,14 +143,9 @@ export function firstFiveTurnCapture({ origin, token, outDir, put, openPage = op
       url.search = new URLSearchParams({ session: token, tripId });
       const page = opened.page;
       await page.goto(url.href, { waitUntil: 'domcontentloaded', timeout: 20000 });
-      await page.waitForFunction((expected) => {
-        const normalize = (value) => value.replace(/\s+/g, ' ').trim();
-        const bubbles = document.querySelectorAll('#messages article.bubble.user');
-        return bubbles.length && normalize(bubbles[bubbles.length - 1].textContent).includes(normalize(expected));
-      }, text, { timeout: 15000 });
-      await page.locator('#messages').evaluate((messages) => { messages.scrollTop = messages.scrollHeight; });
       await mkdir(dir, { recursive: true });
-      const bytes = await page.screenshot({ path: path.join(dir, `turn-${turn}.png`) });
+      const file = path.join(dir, `turn-${turn}.png`);
+      const bytes = await shotTurnCapture(page, { turn, text, outFile: file });
       numbers.add(turn);
       pending.set(turn, { tripId, bytes });
       await upload(turn);
