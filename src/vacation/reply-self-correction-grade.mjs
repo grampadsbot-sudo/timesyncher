@@ -1,3 +1,6 @@
+export const jevQualitySelfCorrectionInstructions =
+  'Rate this draft as the customer-facing vacation reply. The customer is challenging a prior mistake. Use criterion 1 or 2 when the draft ignores the challenge, repeats the mistake, or does not acknowledge and correct. Use criterion 4 or 5 when it clearly acknowledges the error and gives an accurate correction. Return a score only.';
+
 export function customerChallengesPriorReply(customerTurn = '') {
   const text = String(customerTurn || '').trim();
   if (!text) return false;

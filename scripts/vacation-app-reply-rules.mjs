@@ -1,7 +1,7 @@
 import { sumTurnCost } from '../src/vacation/turn-cost.mjs';
 import { fetchOpenRouterJson } from '../src/vacation/openrouter-call-ledger.mjs';
 import { planFactsForReply } from '../src/vacation/reply-plan-entitlement.mjs';
-import { customerChallengesPriorReply } from '../src/vacation/reply-self-correction-grade.mjs';
+import { customerChallengesPriorReply, jevQualitySelfCorrectionInstructions } from '../src/vacation/reply-self-correction-grade.mjs';
 import { modelVisibleTripContext, namedSearchAreaAwayFromLodgingReplyLine } from '../src/vacation/provider-result-context.mjs';
 import { gapAskReplyPromptTripRaw, perFactGapAskRuleLines } from '../src/vacation/gap-ask-reply-context.mjs';
 import { spawnSync } from 'node:child_process';
@@ -25,7 +25,6 @@ export const TRIP_INTAKE_JEV_QUESTION = {
   type: 'noul',
   instructions: 'Is this customer message a trip intake? True when they are describing a vacation to plan: where, when, who is going, or what they want to do. False for a short follow-up, a price or access question, or a small change that is not a trip description.',
 };
-
 const BAKEOFF_TIER_MODELS = {
   1: 'anthropic/claude-haiku-5.5',
   2: 'anthropic/claude-haiku-5.5',
@@ -714,7 +713,6 @@ function splitBeat(answer) {
   const visible = kept.join('\n').replace(/(?:^|\s)BEAT:\s*[^\n]*/gi, '\n').replace(/\n{3,}/g, '\n\n').trim();
   return { text: visible, beats: beats.filter(Boolean) };
 }
-
 export function labeledJevScore(scoreRaw) {
   const raw = Number(scoreRaw);
   if (!Number.isFinite(raw)) return null;
@@ -723,7 +721,6 @@ export function labeledJevScore(scoreRaw) {
   if (labeled > 5) return 5;
   return labeled;
 }
-
 export function qualityFromDecisions(body) {
   const answers = body?.answers && typeof body.answers === 'object' ? body.answers : {};
   const scoreRaw = Number(answers.overall_quality?.score);
@@ -747,7 +744,6 @@ export function qualityFromDecisions(body) {
     model: JEV_DECISIONS_MODEL,
   };
 }
-
 export async function jevQualityRewrite({ customerTurn, draft, tripContext = null, planLine = '', env = process.env, purpose = 'jev_quality', routeContext = null } = {}) {
   const key = appOpenRouterKey(env);
   const url = text(env.TIMESYNCHER_JEV_CLASSIFY_URL, 500) || DEFAULT_JEV_DECISIONS_URL;
@@ -756,9 +752,6 @@ export async function jevQualityRewrite({ customerTurn, draft, tripContext = nul
   const requiredLine = text(planLine, 400);
   const itinerary = Array.isArray(tripContext?.itinerary) ? text(tripContext.itinerary.filter(Boolean).join('; '), 1500) : '';
   const selfCorrectionTurn = customerChallengesPriorReply(customerTurn);
-  const qualityInstructions = selfCorrectionTurn
-    ? 'Rate this draft as the customer-facing vacation reply. The customer is challenging a prior mistake. Use criterion 1 or 2 when the draft ignores the challenge, repeats the mistake, or does not acknowledge and correct. Use criterion 4 or 5 when it clearly acknowledges the error and gives an accurate correction. Return a score only.'
-    : 'Rate this draft as the customer-facing vacation reply. Return a score only. Criterion 1 is weak. Criterion 5 is excellent. Use criterion 1 or 2 when it misses the ask, names a place that has no search-result id, skips a price they asked for, says no extra fees instead of the price, says the plan is already owned, or uses a banned payment word. A place cited as (id:...) from a search or database result is already sourced. A price question that does not include required_payer_line, when that line is in the state, is criterion 3 or lower. Days and places listed in the itinerary state are already named.';
   const payload = {
     model: JEV_DECISIONS_MODEL,
     state: {
@@ -773,7 +766,7 @@ export async function jevQualityRewrite({ customerTurn, draft, tripContext = nul
     questions: {
       overall_quality: {
         type: 'score',
-        instructions: qualityInstructions,
+        instructions: 'Rate this draft as the customer-facing vacation reply. Return a score only. Criterion 1 is weak. Criterion 5 is excellent. Use criterion 1 or 2 when it misses the ask, names a place that has no search-result id, skips a price they asked for, says no extra fees instead of the price, says the plan is already owned, or uses a banned payment word. A place cited as (id:...) from a search or database result is already sourced. A price question that does not include required_payer_line, when that line is in the state, is criterion 3 or lower. Days and places listed in the itinerary state are already named.',
         criteria: ['1 weak or off-brief', '2 thin', '3 adequate', '4 strong', '5 excellent'],
       },
       disposition: {
@@ -797,6 +790,7 @@ export async function jevQualityRewrite({ customerTurn, draft, tripContext = nul
       },
     },
   };
+  if (selfCorrectionTurn) payload.questions.overall_quality.instructions = jevQualitySelfCorrectionInstructions;
   if (routeContext) {
     const { route_type, needs_day_for_note } = decisionsPayload({}).questions;
     payload.state = { ...vacationAppContext(routeContext), ...payload.state, current_turn: undefined };

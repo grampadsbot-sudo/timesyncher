@@ -854,7 +854,7 @@
   {
     "rule": "FILE-SIZE-500",
     "file": "scripts/vacation-app-reply-rules.mjs",
-    "symbol": "lines:966",
+    "symbol": "lines:960",
     "note": "existing; ratchet only shrinks"
   },
   {
