@@ -132,7 +132,7 @@ assert.equal(voiceFacts.collaborators, undefined);
 assert.equal(voiceFacts.invite_contact_needed, true);
 assert.ok(voiceFacts.gaps.includes('invite_contact'));
 assert.ok(!voiceFacts.gaps.includes('lodging'));
-assert.deepEqual(voiceFacts.who, ['Sam', 'Nico', 'Tess', 'Mara']);
+assert.deepEqual(voiceFacts.who, ['Nico', 'Tess', 'Mara']);
 assert.equal(voiceFacts.plan.plan_id, 'timesyncher_vacation_single');
 assert.equal(voiceFacts.plan.plan_name, 'TimeSyncher Vacation Single');
 assert.equal(voiceFacts.plan.purchased_plan, 'single');

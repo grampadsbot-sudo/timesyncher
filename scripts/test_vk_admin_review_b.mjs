@@ -115,6 +115,9 @@ try {
     id: earlierNoteId, vacationId: olderTrip, at: before, text: 'Existing admin note',
     attachments: [{ name: 'existing.txt', data: Buffer.from('existing admin attachment').toString('base64') }],
   });
+  await store.putJson(`notes/customer-${earlierCustomerId}/welcome.json`, {
+    id: 'welcome', kind: 'welcome', vacationId: olderTrip, at: before, text: 'Old welcome stub', attachments: [],
+  });
   const artifactPath = `/api/admin/customers/${tripId}/artifacts`;
   const staging = 'https://vacation-staging.timesyncher.com';
   const fetchStaging = async (url, init) => {
@@ -279,12 +282,9 @@ try {
       await sofia.click();
       await page.locator(`#sitePane[data-kind="chat"][data-run="${tripId}"]`).waitFor();
       await page.locator('[data-dialog-pdf]').waitFor();
-      const welcome = page.locator('[data-admin-welcome]');
-      await welcome.waitFor();
-      assert.equal(await welcome.count(), 1);
-      assert.match(await welcome.textContent(), /Welcome to Sofia Lopez's vacation\. Test harness review in Fixture destination · 2027-03-01 to 2027-03-05/);
-      assert.equal(await welcome.getAttribute('data-vacation-id'), tripId);
       const existingNote = page.locator('#messages [data-admin-note]').filter({ hasText: 'Existing admin note' });
+      await existingNote.waitFor();
+      assert.doesNotMatch(await page.locator('#messages').textContent(), /Old welcome stub|Welcome to.*vacation/);
       assert.equal(await existingNote.getAttribute('data-vacation-id'), olderTrip);
       const existingDownload = page.waitForEvent('download');
       await existingNote.getByRole('link', { name: 'existing.txt' }).click();
@@ -364,8 +364,7 @@ try {
 
       const selectedNote = `Private selected note ${width}`;
       const olderNote = `Private earlier vacation note ${width}`;
-      const originalWelcome = (await readNotes(tripId))[0];
-      assert.equal(originalWelcome.kind, 'welcome');
+      assert.ok((await readNotes(tripId)).every((note) => note.kind !== 'welcome'));
       await page.setInputFiles('#fileInput', { name: 'note.txt', mimeType: 'text/plain', buffer: Buffer.from('admin attachment') });
       await page.fill('#messageText', selectedNote);
       await page.locator('#sendButton').click();
@@ -387,14 +386,12 @@ try {
       await page.locator(`#sitePane[data-kind="chat"][data-run="${olderTrip}"]`).waitFor();
       assert.equal(await page.evaluate(() => window.initialThread === document.getElementById('messages')), true);
       assert.equal(await note.count(), 1);
-      assert.equal(await welcome.count(), 1);
       await page.fill('#messageText', olderNote);
       await page.locator('#sendButton').click();
       const earlierNote = page.locator('[data-admin-note]').filter({ hasText: olderNote });
       await earlierNote.waitFor();
       assert.equal(await earlierNote.getAttribute('data-vacation-id'), olderTrip);
       const stored = await readNotes(olderTrip);
-      assert.deepEqual(stored[0], originalWelcome);
       for (const [text, vacationId] of [[selectedNote, tripId], [olderNote, olderTrip]]) {
         const saved = stored.find((entry) => entry.text === text);
         assert.equal(saved.vacationId, vacationId);
@@ -402,7 +399,7 @@ try {
         assert.equal(record.vacationId, vacationId);
       }
       const welcomeRecord = await new LocalVkAdminStore(workspace).getJson('notes/customer-1/welcome.json');
-      assert.equal(welcomeRecord.vacationId, tripId);
+      assert.equal(welcomeRecord, null);
       await page.reload();
       await earlierNote.waitFor();
       assert.equal(await note.getAttribute('data-vacation-id'), tripId);
@@ -417,8 +414,7 @@ try {
       await chooseView('All Customers');
       await page.getByRole('button', { name: 'Open Second fixture', exact: true }).click();
       await page.getByText('No Dialog PDF yet').waitFor();
-      await welcome.waitFor();
-      assert.match(await welcome.textContent(), /Welcome to Second fixture's vacation/);
+      assert.equal(await page.locator('#messages [data-admin-note]').count(), 0);
       assert.equal(await page.locator('[data-review-result]').count(), 0);
       assert.equal(await note.count(), 0);
       assert.equal(await existingNote.count(), 0);
@@ -435,7 +431,6 @@ try {
       await chooseView('All Customers');
       await sofia.click();
       await note.waitFor();
-      assert.equal(await welcome.count(), 1);
       assert.equal(await earlierNote.count(), 1);
       assert.deepEqual(await readNotes(tripId), stored);
       console.log(`ok - VK admin review B at ${width}`);

@@ -21,12 +21,35 @@ export function formatCustomerTranscript(turns, { maxTurns = TRANSCRIPT_MAX_TURN
     .slice(-capTurns);
 }
 
+const CUSTOMER_DISCLOSURE_INSTRUCTIONS =
+  'Use the prior customer turns as the only record of what you have told the app. A question quoting the app is not a disclosure. If the latest app reply asserts a name, age, or roster fact you have not disclosed, question how it knows in your own words. Do not confirm, use as true, or supply that fact on this turn. Address the unsupported claim before pursuing the goal.';
+
 export function personaSeed(story) {
   const turns = Array.isArray(story?.turns) ? story.turns : [];
+  const party = story?.party || {};
+  const people = [...(party.collaborators || []), ...(party.kids || []), ...(party.viewers || []), ...(party.editors || [])];
+  const privateNames = people.flatMap((person) => {
+    const name = String(person?.name || '').trim();
+    return [name, name.split(/\s+/)[0], person?.email].filter(Boolean);
+  });
+  const names = [...new Set(privateNames)].sort((a, b) => b.length - a.length);
+  const escaped = names.map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const privateParty = escaped.length ? new RegExp(`\\b(?:${escaped.join('|')})\\b`, 'gi') : null;
   return {
     name: String(story?.customer?.name || '').trim() || 'Customer',
     destination: String(story?.destination || '').trim(),
-    goals: turns.map((turn) => String(turn?.text || '').trim()).filter(Boolean),
+    goals: turns.map((turn) => {
+      const text = String(turn?.text || '');
+      return (privateParty ? text.replace(privateParty, '') : text).trim();
+    }).filter(Boolean),
+  };
+}
+
+function disclosureContext(transcript) {
+  return {
+    customerTurns: (Array.isArray(transcript) ? transcript : []).filter((turn) => turn?.role === 'customer' && turn.odd !== true)
+      .map((turn) => String(turn.text ?? turn.body ?? '').trim()).filter(Boolean),
+    instructions: CUSTOMER_DISCLOSURE_INSTRUCTIONS,
   };
 }
 
@@ -66,8 +89,12 @@ export async function speakCustomer({ persona, appReply = '', index = 0, transcr
   if (typeof ask !== 'function') throw new Error('harness preflight missing HARNESS_CUSTOMER_MODEL_URL');
   const goal = persona?.goals?.[index] || persona?.goals?.[0] || persona?.destination || '';
   const priorTranscript = formatCustomerTranscript(transcript);
-  const isFirstTurn = Number(index) === 0 && !priorTranscript.some((turn) => turn.role === 'customer');
-  const spoken = await ask({ lane, persona, appReply: String(appReply || ''), goal, index, transcript: priorTranscript, isFirstTurn });
+  const disclosure = disclosureContext(transcript);
+  const isFirstTurn = Number(index) === 0 && disclosure.customerTurns.length === 0;
+  const spoken = await ask({
+    lane, persona: { name: persona?.name, destination: persona?.destination },
+    appReply: String(appReply || ''), goal, index, transcript: priorTranscript, disclosure, isFirstTurn,
+  });
   const text = String(spoken?.text || '').trim();
   if (!text) throw new Error('refused: customer model returned no line');
   if (spoken?.url && hostIsBanned(spoken.url, loadBannedHosts())) throw new Error('refused: harness blocked a model host');
@@ -106,7 +133,7 @@ export function pickCustomerLane(env = process.env, spawnImpl = spawnSync) {
 
 export function customerAskFromEnv(env = process.env, hosts = loadBannedHosts(), fetchImpl = globalThis.fetch) {
   const url = String(env?.HARNESS_CUSTOMER_MODEL_URL || '').trim();
-  return async ({ lane, persona, appReply, goal, index, transcript = [], isFirstTurn } = {}) => {
+  return async ({ lane, persona, appReply, goal, index, transcript = [], disclosure = disclosureContext(transcript), isFirstTurn } = {}) => {
     if (!url) throw new Error('harness preflight missing HARNESS_CUSTOMER_MODEL_URL');
     const banned = Array.isArray(hosts) ? hosts : loadBannedHosts();
     if (hostIsBanned(url, banned)) throw new Error('refused: harness blocked a model host');
@@ -114,6 +141,7 @@ export function customerAskFromEnv(env = process.env, hosts = loadBannedHosts(),
     const firstTurn = typeof isFirstTurn === 'boolean'
       ? isFirstTurn
       : (Number(index) === 0 && !priorTranscript.some((turn) => turn.role === 'customer'));
+    // The existing server reads goal and the recent transcript during the disclosure payload rollout.
     const response = await fetchImpl(url, {
       method: 'POST',
       headers: { 'content-type': 'application/json', accept: 'application/json' },
@@ -121,10 +149,11 @@ export function customerAskFromEnv(env = process.env, hosts = loadBannedHosts(),
         lane,
         persona: persona?.name,
         destination: persona?.destination,
-        goal,
+        goal: [goal, disclosure.instructions].filter(Boolean).join('\n\n'),
         appReply,
         index,
         transcript: priorTranscript,
+        disclosure,
         isFirstTurn: firstTurn,
       }),
       signal: AbortSignal.timeout(180000),

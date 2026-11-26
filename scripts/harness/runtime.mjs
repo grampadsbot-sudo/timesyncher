@@ -8,7 +8,7 @@ import { provisionThrowaway } from './live-provision.mjs';
 import { customerAskFromEnv } from './customer-live.mjs';
 import { sumUsageUsd } from './cost.mjs';
 import { playCustomerTurns } from './live-play.mjs';
-import { attachMedia, captureScreens, fetchKeepsake, renderDialog, renderStoredDialog, runSteps, writeVideoCheck } from './live-outputs.mjs';
+import { attachMedia, captureScreens, fetchKeepsake, renderDialog, renderStoredDialog, writeVideoCheck } from './live-outputs.mjs';
 import { captureOnboardingPdf, rebuildCustomerPdf } from './onboarding-capture.mjs';
 import { redactText, shortHash } from './redact.mjs';
 import { redactUrls } from './backends.mjs';
@@ -32,14 +32,6 @@ function stampLivePdf(doc, played) {
   last.appCost = appCosts.length ? appCosts : 'none';
   last.customerCost = customerCosts.length ? customerCosts : 'none';
   return doc;
-}
-
-function appEndpoint(origin, token, tripId) {
-  const url = new URL('/api/vacation-itinerary', origin);
-  url.searchParams.set('app', '1');
-  url.searchParams.set('session', token);
-  url.searchParams.set('tripId', tripId);
-  return url;
 }
 
 export function chatLeftNoThing(played) {
@@ -356,14 +348,7 @@ export function liveOptions(env = process.env) {
           recordArtifactFailure(adminArtifacts, 'review-upload-failed', error);
         }
       }
-      const steps = await runSteps(story, async () => {
-        const response = await fetchImpl(appEndpoint(origin, created.token, tripId), {
-          method: 'POST',
-          headers: { accept: 'application/json', 'content-type': 'application/json' },
-          body: JSON.stringify({ action: 'record-party', tripId, party: story.party }),
-        });
-        if (response.status >= 400) throw new Error('collaborator step failed');
-      });
+      const steps = [...(story.steps || [])];
       await captureInviteOnboarding(!played.reason);
       if (chatLeftNoThing(played)) {
         const video = await writeVideoCheck({ origin, attachment: { ok: false, detail: 'no-thing-after-chat', bindings: [] }, fetchImpl, outDir: options.outDir });

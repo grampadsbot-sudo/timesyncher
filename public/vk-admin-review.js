@@ -222,10 +222,9 @@ window.startVkAdminReview = (() => {
 
   function renderNote(note, customerId) {
     const query = notesQuery(note.vacationId, customerId);
-    const welcome = note.kind === 'welcome';
     const links = note.attachments.map((file, index) =>
       `<a href="/api/admin/notes/${safe(note.id)}/${index}${safe(query)}" download="${safe(file.name)}">${safe(file.name)}</a>`).join(' ');
-    return `<article class="bubble admin-note${welcome ? '' : ' user'}" data-admin-note data-vacation-id="${safe(note.vacationId)}"${welcome ? ' data-admin-welcome' : ''}><small>${welcome ? 'Vacay Keepsake' : 'Admin'} · <time datetime="${safe(note.at)}">${safe(new Date(note.at).toLocaleString())}</time></small>${safe(note.text)}${links ? `<div class="admin-note-files">${links}</div>` : ''}</article>`;
+    return `<article class="bubble admin-note user" data-admin-note data-vacation-id="${safe(note.vacationId)}"><small>Admin · <time datetime="${safe(note.at)}">${safe(new Date(note.at).toLocaleString())}</time></small>${safe(note.text)}${links ? `<div class="admin-note-files">${links}</div>` : ''}</article>`;
   }
 
   async function refreshNotes() {

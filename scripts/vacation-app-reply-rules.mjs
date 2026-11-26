@@ -1,7 +1,7 @@
 import { sumTurnCost } from '../src/vacation/turn-cost.mjs';
 import { fetchOpenRouterJson } from '../src/vacation/openrouter-call-ledger.mjs';
 import { planFactsForReply } from '../src/vacation/reply-plan-entitlement.mjs';
-import { customerChallengesPriorReply, jevQualitySelfCorrectionInstructions } from '../src/vacation/reply-self-correction-grade.mjs';
+import { selfCorrectionDecision, selfCorrectionReplyContext } from '../src/vacation/reply-self-correction-grade.mjs';
 import { modelVisibleTripContext, namedSearchAreaAwayFromLodgingReplyLine } from '../src/vacation/provider-result-context.mjs';
 import { gapAskReplyPromptTripRaw, perFactGapAskRuleLines } from '../src/vacation/gap-ask-reply-context.mjs';
 import { spawnSync } from 'node:child_process';
@@ -602,13 +602,11 @@ const STATIC_REPLY_RULES = [
   'Apply these ordinary reply rules unless the following instructions specify an intake or starter reply.',
   sourcedPlaceRule(),
   USE_SAVED_TRIP_RULE,
-  'Do not open with a comma-separated roster roll call like Name, you, Name are set or locked in.',
-  'Do not insert a welcome the customer did not ask for.',
-  'Day-advice turns name the people already on the saved roster. They do not add a household welcome.',
-  'You know only what the customer said in chat and what is in the saved trip record. Use the party size and the people already named. Never invent people. Do not name a person who is not in the saved roster or the customer turn. When the customer states a party size, the names you list are that party. Do not add extra people on top of that size.',
-  'The account holder in the saved roster is on the trip. Do not leave them off. When you say the crew and list names, include the account holder, the collaborators, and the children already named. A person who just joined is a collaborator, not the account holder. Do not say just the crew or the whole crew unless the account holder is in that list.',
+  'Avoid unsolicited welcomes and roster roll calls.',
+  'Only use roster facts the customer stated in chat. Keep unnamed people unnamed and respect the stated party size. A collaborator who joins does not become the account holder.',
+  'Vacation chat can save itinerary placements. A vacation owner can invite collaborators in chat by name and email. Use the action results to describe what was actually saved or sent. Ask only for missing invite details.',
+  selfCorrectionReplyContext,
   'Address the person who is speaking. Do not give that person an activity the saved trip record assigns to someone else.',
-  'Do not say we have corrected that, or I have corrected that, unless the customer asked for a correction.',
   'Do not put an activity on a day that is not already that activity on the saved trip record.',
   'When the customer asks to add a place, the chat box is the search. There is no separate search screen.',
   'Viewers and editors are not on the trip. Do not put them in the house, the crew, or the group for a day. A saved preference rule stays as saved. Do not call it locked in and do not rename it.',
@@ -640,7 +638,7 @@ function replyTurnRules(rules, destination, upsell, postIntake, customerTurn = '
   const unscheduledOpen = Array.isArray(tripRaw?.chatPlaceSearch?.unscheduled)
     && tripRaw.chatPlaceSearch.unscheduled.some((row) => row?.notOnADay === true);
   const customerInput = {};
-  const statedTripFields = new Set(['itinerary', 'dates', 'roster', 'rule']);
+  const statedTripFields = new Set(['itinerary', 'dates', 'roster', 'rule', 'priorExchange']);
   for (const [key, value] of Object.entries(tripRaw || {})) {
     if (statedTripFields.has(key) || key === 'unscheduledDayRule' || key === 'tripReplyGate' || key === 'placeSearchAreaScope' || key === 'namedSearchAwayFromStatedLodging') continue;
     if (Array.isArray(value)) {
@@ -728,7 +726,8 @@ export function qualityFromDecisions(body) {
   const score = labeledJevScore(scoreRaw);
   const disposition = text(answers.disposition?.choice, 40);
   const jevFocus = text(answers.fix_focus?.choice, 40);
-  const wantsRewrite = score <= 2;
+  const selfCorrection = answers.self_correction?.choice;
+  const wantsRewrite = score <= 2 || selfCorrection === 'uncorrected';
   return {
     judged: true,
     score,
@@ -741,6 +740,7 @@ export function qualityFromDecisions(body) {
     rewrite: '',
     rewritten: false,
     wantsRewrite,
+    ...(['corrected', 'uncorrected'].includes(selfCorrection) ? { selfCorrection } : {}),
     model: JEV_DECISIONS_MODEL,
   };
 }
@@ -751,7 +751,7 @@ export async function jevQualityRewrite({ customerTurn, draft, tripContext = nul
   if (!key) return { judged: false, reason: 'quality_credentials_missing', model: JEV_DECISIONS_MODEL };
   const requiredLine = text(planLine, 400);
   const itinerary = Array.isArray(tripContext?.itinerary) ? text(tripContext.itinerary.filter(Boolean).join('; '), 1500) : '';
-  const selfCorrectionTurn = customerChallengesPriorReply(customerTurn);
+  const correction = selfCorrectionDecision(tripContext);
   const payload = {
     model: JEV_DECISIONS_MODEL,
     state: {
@@ -761,7 +761,7 @@ export async function jevQualityRewrite({ customerTurn, draft, tripContext = nul
       ...(tripContext?.roster ? { roster: text(tripContext.roster, 400) } : {}),
       ...(tripContext?.dates ? { dates: text(tripContext.dates, 400) } : {}),
       ...(requiredLine ? { required_payer_line: requiredLine } : {}),
-      ...(selfCorrectionTurn ? { customer_challenged_prior_reply: true } : {}),
+      ...correction.state,
     },
     questions: {
       overall_quality: {
@@ -790,7 +790,7 @@ export async function jevQualityRewrite({ customerTurn, draft, tripContext = nul
       },
     },
   };
-  if (selfCorrectionTurn) payload.questions.overall_quality.instructions = jevQualitySelfCorrectionInstructions;
+  if (correction.question) payload.questions.self_correction = correction.question;
   if (routeContext) {
     const { route_type, needs_day_for_note } = decisionsPayload({}).questions;
     payload.state = { ...vacationAppContext(routeContext), ...payload.state, current_turn: undefined };

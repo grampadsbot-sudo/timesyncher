@@ -308,10 +308,7 @@ try {
 
       await orlandoRows.getByRole('button', { name: 'Open Lopez family', exact: true }).click();
       await page.waitForSelector('#sitePane[data-kind="chat"] #customerChatReplay article.bubble');
-      const welcome = page.locator('#messages [data-admin-welcome]');
-      await welcome.waitFor();
-      assert.match(await welcome.textContent(), /Welcome to Lopez family's vacation.*Orlando/s);
-      assert.equal(await welcome.getAttribute('data-vacation-id'), ORLANDO.tripId);
+      assert.doesNotMatch(await page.locator('#messages').textContent(), /Welcome to.*vacation/);
       assert.equal(await page.locator('#adminView, .admin-view-controls').count(), 0);
       const adminBubbles = await page.$$eval('#customerChatReplay article.bubble', (els) => els.map((el) => el.outerHTML));
       assert.deepEqual(adminBubbles, customerBubbles, 'admin Chat markup equals the real customer chat renderer');

@@ -1,22 +1,24 @@
-export const jevQualitySelfCorrectionInstructions =
-  'Rate this draft as the customer-facing vacation reply. The customer is challenging a prior mistake. Use criterion 1 or 2 when the draft ignores the challenge, repeats the mistake, or does not acknowledge and correct. Use criterion 4 or 5 when it clearly acknowledges the error and gives an accurate correction. Return a score only.';
+export const selfCorrectionReplyContext =
+  'Treat prior app replies as conversation history, not as evidence of what the customer shared. If the customer challenges an unsupported claim, acknowledge the mistake, withdraw it, and continue from the facts the customer gave.';
 
 export function customerChallengesPriorReply(customerTurn = '') {
-  const text = String(customerTurn || '').trim();
-  if (!text) return false;
-  return /\b(?:that(?:'s| is) (?:wrong|not)|you(?:'ve| have)? (?:said|told me|named|called)|we never|i never said|never said that|why did you|isn'?t right|mixed up|not what i|didn'?t say)\b/i.test(text);
+  return /\b(?:i (?:never|didn['’]t) (?:say|tell|give|mention|share)|we (?:never|didn['’]t) (?:say|tell|give|mention|share)|how (?:do|did) you know|where did you get|that(?:['’]s| is) (?:wrong|not right)|not what i said)\b/i
+    .test(String(customerTurn || ''));
 }
 
-export function selfCorrectionGrade(customerTurn = '', draft = '', { priorSnippet = '' } = {}) {
-  if (!customerChallengesPriorReply(customerTurn)) return null;
-  const body = String(draft || '').trim();
-  if (!body) return { pass: false, reason: 'empty_reply' };
-  const acknowledges = /\b(?:sorry|you(?:'re| are) right|good catch|my mistake|i misspoke|let me correct|thanks for (?:flagging|catching)|you(?:'re| are) correct|i (?:had|got) that wrong)\b/i.test(body);
-  const snippet = String(priorSnippet || '').trim().slice(0, 80);
-  const retractsPrior = /\b(?:shouldn'?t|should not|not have|didn'?t mean|instead|actually|meant|correction|my mistake)\b/i.test(body);
-  const corrects = acknowledges && (!snippet || retractsPrior || !new RegExp(snippet.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(body));
+export function selfCorrectionDecision(tripContext) {
+  const exchange = tripContext?.priorExchange;
+  if (!exchange?.appReply) return {};
   return {
-    pass: corrects,
-    reason: corrects ? 'acknowledged_and_corrected' : (acknowledges ? 'no_correction' : 'ignored_challenge'),
+    state: { previous_app_reply: exchange.appReply, previous_customer_turns: exchange.customerTurns },
+    question: {
+      type: 'choice',
+      instructions: 'Decide whether the customer challenges a claim in the previous app reply. Use the customer turns and roster as the evidence of what the customer said, including names, ages, and who is traveling. A customer quoting a claim in a challenge is not confirming it.',
+      criteria: {
+        not_applicable: 'The customer is not challenging a prior app claim.',
+        corrected: 'The draft acknowledges and withdraws the unsupported or mistaken claim and restates only supported facts, or clearly identifies what is still unknown.',
+        uncorrected: 'The draft ignores, defends, or repeats the claim as fact, adds guesses, or apologizes without correcting it.',
+      },
+    },
   };
 }

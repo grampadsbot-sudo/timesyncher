@@ -24,6 +24,7 @@ import { activeCollaboratorsFromParty, replyActionClaimReason, replyClaimContext
 import { enrichDraftingTripContext } from './reply-trip-context-facts.mjs';
 import { pushPlanAndStyleDraftErrors } from './reply-draft-fact-extra.mjs';
 import { payerLineFromDollars, priceAnswered } from './seat-price.mjs';
+import { completeRosterParty } from './transcript-roster.mjs';
 import { produceFirstIntakeReply } from './first-intake-reply.mjs';
 import { claimBlockedReply, failOpenLiveReply, heldJudgedDraft, jevJudgeErrored, requireReplyQuality, unjudgedReply } from './reply-quality-gate.mjs';
 import { applyJevTurn, draftTierForTurn, jevTurn } from './jev-turn.mjs';
@@ -124,6 +125,8 @@ export function runningBuildSha(env = process.env) {
   return String(env.VERCEL_GIT_COMMIT_SHA || env.TIMESYNCHER_BUILD_SHA || '').trim();
 }
 
+export { completeRosterParty };
+
 export function liveTurnRecord({
   turnIndex,
   role,
@@ -172,6 +175,7 @@ export function liveTurnRecord({
         score: scored(model.quality.score),
         scoreRaw: Number.isFinite(Number(model.quality.scoreRaw)) ? Number(model.quality.scoreRaw) : null,
         disposition: model.quality.disposition || null,
+        ...(model.quality.selfCorrection ? { selfCorrection: model.quality.selfCorrection } : {}),
         jevFocus: model.quality.jevFocus || null,
         comment: model.quality.comment || null,
         jevNoteReason: model.quality.jevNoteReason || null,
@@ -421,8 +425,8 @@ export function draftingFacts(priorTurns, customerTurn = '', saved = null) {
   const statedLine = 'List only people the customer named in chat. Do not invent people.';
   const holder = owner[0]?.name ? ` The account holder is ${owner[0].name}. A collaborator who just joined is not the account holder.` : '';
   const roster = [
-    `Party rule: ${statedLine}`,
-    travelers.length ? `Traveling: ${travelers.map((person) => person.payer ? `${person.name} (payer ${person.payer})` : person.name).join(', ')}.${holder}` : '',
+    `Party rule: ${statedLine} Use unnamed relationships, headcounts, and ages as the customer stated them. Prior app messages are not evidence for roster facts.`,
+    travelers.length ? `Traveling: ${travelers.map((person) => person.payer ? `${person.name} (payer ${person.payer})` : (Number.isFinite(person.age) ? `${person.name} (age ${person.age})` : person.name)).join(', ')}.${holder}` : '',
     absent.length ? `Not on the vacation: ${absent.join(', ')}. Viewers and editors are not coming, not in the house, and not in the day's group.` : '',
   ].filter(Boolean).join(' ');
   const span = record?.span || null;
@@ -439,6 +443,7 @@ export function draftingFacts(priorTurns, customerTurn = '', saved = null) {
 
 export function qualityFailureReason(quality, flags) {
   const parts = [];
+  if (quality?.selfCorrection === 'uncorrected') parts.push('Acknowledge and withdraw the prior unsupported claim, then answer from the customer’s stated facts.');
   if (flags?.missingPrice) parts.push('missing dollar line');
   if (flags?.split) parts.push('banned payment word');
   if (flags?.invented?.length) parts.push(`invented place: ${flags.invented.join(', ')}`);
@@ -1010,110 +1015,6 @@ export function applyAccuracyRewrite(quality, errors) {
   };
 }
 
-function rememberRoster(sources, field, value, source) {
-  sources.push({ field, value, source });
-}
-
-function rosterCustomerCorpus(doc) {
-  const parts = [];
-  for (const turn of Array.isArray(doc?.turns) ? doc.turns : []) {
-    if (turn?.role === 'customer') parts.push(String(turn.text || ''));
-  }
-  return parts.join('\n');
-}
-
-function customerMentionedName(corpus, name) {
-  const full = String(name || '').trim();
-  if (!full || !String(corpus || '').trim()) return false;
-  const escaped = full.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+');
-  if (new RegExp(`\\b${escaped}\\b`, 'i').test(corpus)) return true;
-  const first = full.split(/\s+/)[0];
-  if (first.length >= 3 && new RegExp(`\\b${first.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(corpus)) return true;
-  return false;
-}
-
-export function completeRosterParty(doc) {
-  const stored = doc?.party && typeof doc.party === 'object' ? doc.party : {};
-  const customerCorpus = rosterCustomerCorpus(doc);
-  const sources = [];
-  const party = {
-    primary: null,
-    collaborators: [],
-    preference_subjects: [],
-    viewers: [],
-    editors: [],
-    sources,
-  };
-  if (stored.primary?.name) {
-    party.primary = { name: stored.primary.name, role: stored.primary.role || 'Owner' };
-    rememberRoster(sources, 'primary', party.primary.name, 'trip.dialogParty');
-  } else if (doc?.customerName || doc?.targetPerson) {
-    party.primary = { name: doc.customerName || doc.targetPerson, role: 'Owner' };
-    rememberRoster(sources, 'primary', party.primary.name, 'session');
-  }
-  for (const person of Array.isArray(stored.collaborators) ? stored.collaborators : []) {
-    if (!person?.name) continue;
-    if (!customerMentionedName(customerCorpus, person.name)) continue;
-    party.collaborators.push({ ...person });
-    rememberRoster(sources, `collaborators.${person.name}`, person.payer || '', 'trip.dialogParty');
-  }
-  for (const kid of Array.isArray(stored.preference_subjects) ? stored.preference_subjects : []) {
-    if (!kid?.name || !Number.isFinite(Number(kid.age))) continue;
-    if (!customerMentionedName(customerCorpus, kid.name)) continue;
-    party.preference_subjects.push({ name: kid.name, age: Number(kid.age) });
-    rememberRoster(sources, `preference_subjects.${kid.name}`, Number(kid.age), 'trip.dialogParty');
-  }
-  for (const person of Array.isArray(stored.viewers) ? stored.viewers : []) {
-    if (!person?.name) continue;
-    if (!customerMentionedName(customerCorpus, person.name)) continue;
-    party.viewers.push({ name: person.name });
-    rememberRoster(sources, `viewers.${person.name}`, 'viewer', 'trip.dialogParty');
-  }
-  for (const person of Array.isArray(stored.editors) ? stored.editors : []) {
-    if (!person?.name) continue;
-    if (!customerMentionedName(customerCorpus, person.name)) continue;
-    party.editors.push({ name: person.name });
-    rememberRoster(sources, `editors.${person.name}`, 'editor', 'trip.dialogParty');
-  }
-  const samePerson = (left, right) => new RegExp(`^${String(left || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(String(right || ''));
-  let unplaced = false;
-  for (const person of Array.isArray(doc?.roster) ? doc.roster : []) {
-    const name = String(person?.name || '').trim();
-    const role = String(person?.role || '').trim().toLowerCase();
-    if (!name) continue;
-    if (role === 'owner') {
-      if (!party.primary?.name) {
-        party.primary = { name, role: 'Owner' };
-        rememberRoster(sources, 'primary', name, 'chat_extraction');
-      }
-    } else if (role === 'child') {
-      const age = person.age === null || person.age === undefined || person.age === '' ? NaN : Number(person.age);
-      if (party.preference_subjects.some((kid) => samePerson(name, kid.name))) continue;
-      party.preference_subjects.push(Number.isFinite(age) ? { name, age } : { name });
-      rememberRoster(sources, `preference_subjects.${name}`, Number.isFinite(age) ? age : '', 'chat_extraction');
-    } else if (role === 'viewer') {
-      if (party.viewers.some((item) => samePerson(name, item.name))) continue;
-      party.viewers.push({ name });
-      rememberRoster(sources, `viewers.${name}`, 'viewer', 'chat_extraction');
-    } else if (role === 'editor') {
-      if (party.editors.some((item) => samePerson(name, item.name))) continue;
-      party.editors.push({ name });
-      rememberRoster(sources, `editors.${name}`, 'editor', 'chat_extraction');
-    } else if (role === 'collaborator') {
-      continue;
-    } else {
-      unplaced = true;
-    }
-  }
-  if (doc?.rosterError) {
-    party.rosterError = String(doc.rosterError);
-    party.askRoster = true;
-  } else if (doc?.askRoster === true || unplaced) {
-    party.askRoster = true;
-  }
-  return party;
-}
-
 function rewriteAttempted(turn) {
   return turn?.quality?.rewritten === true
     || turn?.flagged === true
@@ -1402,8 +1303,8 @@ function mergeSavedTurn(saved, priorTurns, customerTurn, session, extraction = {
       ...(saved?.party || {}),
       primary: holder ? { name: holder, role: 'Owner' } : (saved?.party?.primary || null),
     },
-    customerName: holder,
-    turns: [{ role: 'customer', text: customerCorpus(priorTurns, customerTurn) }],
+    transcriptOnly: true,
+    turns: [...priorTurns, { role: 'customer', text: customerTurn }],
     ...(rosterKnown ? {
       roster: Array.isArray(extraction.roster) ? extraction.roster : [],
       rosterError: extraction.rosterError || null,
@@ -1482,6 +1383,12 @@ export async function produceLiveAppReply({
   });
   const upsell = commerce.upsell;
   tripContext.purchased_plan = commerce.purchasedPlan;
+  const priorAppReply = memory.findLast((turn) => turn.role === 'app')?.text;
+  if (priorAppReply) {
+    tripContext.priorExchange = {
+      appReply: priorAppReply, customerTurns: memory.filter((turn) => turn.role === 'customer').map((turn) => turn.text),
+    };
+  }
   if (mergedTrip?.rule) tripContext.rule = String(mergedTrip.rule);
   const seat = joiningSeatRecord(session);
   const tripFacts = savedTripFacts(mergedTrip);
@@ -1530,7 +1437,6 @@ export async function produceLiveAppReply({
   const draftExtra = [
     tripContext.roster || '',
     turnInviteExtra,
-    'When you list who is coming, name every traveler in the saved roster. Do not add a name that is not in that roster.',
     speaker ? `The person speaking now is ${speaker}. Address ${speaker}. Do not address ${tripFacts.ownerName || 'the account holder'} as if they sent this message.` : '',
     placeResultExtra(modelPlaceSources),
     resolvedDestination.ask ? DESTINATION_ASK : '',
@@ -1915,7 +1821,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
         request.systemExtra,
         'Keep the days already on the saved vacation.',
         'Never invent a place or id.',
-        'Do not copy the draft and do not put a lead line in front of it. Do not insert a sentence the draft did not earn. Do not repeat a paragraph. The account holder stays the account holder. Do not call a joining collaborator the account holder. Keep only people the customer already named in chat. Never invent people. If the customer stated a party size, do not list more people than that size. Address the person who is speaking. Do not give that person an activity the saved vacation record assigns to someone else. Do not say an activity is saved, now set, or on the list unless it is already saved. Do not say we have corrected that or I have corrected that. Do not call a saved preference rule locked and do not rename it. If you add or remove a person or a saved claim, the WHAT_I_CHANGED sentence must name it.',
+        'Do not copy the draft and do not put a lead line in front of it. Do not insert a sentence the draft did not earn. Do not repeat a paragraph. The account holder stays the account holder. Do not call a joining collaborator the account holder. Keep only people the customer already named in chat. Never invent people. If the customer stated a party size, do not list more people than that size. Address the person who is speaking. Do not give that person an activity the saved vacation record assigns to someone else. Do not say an activity is saved, now set, or on the list unless it is already saved. Do not call a saved preference rule locked and do not rename it. If you add or remove a person or a saved claim, the WHAT_I_CHANGED sentence must name it.',
         [pending?.tripContext?.roster && `Saved roster: ${pending.tripContext.roster}`, pending?.tripFacts?.rule && `Saved preference rule: ${pending.tripFacts.rule}`].filter(Boolean).join(' '),
         'Use the saved vacation dates. Do not shorten the vacation. Do not call a day the last day, the last evening, after check-out, or one last time, and do not say pack or head out, unless that day is the saved vacation end. Write hotel and lodging times as check-in and check-out, with the hyphen.',
         'Do not offer an activity on a day that is not already that activity on the saved vacation. Do not put viewers or editors on the vacation.', 'Item34 ban: never say "splitting payments", split payment, split-payer, splitting payment, or splitting anything up. If one seat is already covered and another person has their own seat, say that.',
@@ -1964,6 +1870,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
       rewriteQuality.jevNoteReason = 'jev_no_free_text';
       rewriteQuality.comment = null;
       rewriteQuality.judgeMs = null;
+      if (rewriteQuality.selfCorrection === 'uncorrected') failReason = 'self_correction_unresolved';
     } else {
       failReason = failReason || 'rewrite_not_judged';
     }

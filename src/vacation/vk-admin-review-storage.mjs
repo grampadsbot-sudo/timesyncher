@@ -1,25 +1,13 @@
 import { randomUUID } from 'node:crypto';
-import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { existsSync, readdirSync } from 'node:fs';
 import { DatabaseJsonStore, LocalJsonStore } from '../onboarding/eula-persistent-store.mjs';
 import { hasDatabase, sql } from './db.mjs';
-import { welcomeNoteText } from './welcome-note-text.mjs';
 import { listOnboardingCaptureTags, onboardingCaptureTag } from './vk-admin-onboarding-captures.mjs';
 
 export class LocalVkAdminStore extends LocalJsonStore {
   async listOnboardingArtifacts(vacationId) {
     const dir = this.path(onboardingPath(vacationId));
     return existsSync(dir) ? readdirSync(dir).map(artifactName) : [];
-  }
-
-  async putWelcome(key, value) {
-    const path = this.path(key);
-    mkdirSync(dirname(path), { recursive: true });
-    try {
-      writeFileSync(path, JSON.stringify(value), { flag: 'wx' });
-    } catch (error) {
-      if (error.code !== 'EEXIST') throw error;
-    }
   }
 }
 
@@ -31,15 +19,6 @@ class DatabaseVkAdminStore extends DatabaseJsonStore {
       from eula_store_objects where left(key, ${prefix.length}) = ${prefix}
     `;
     return rows.map((row) => artifactName(row.name));
-  }
-
-  async putWelcome(key, value) {
-    const db = sql(this.env);
-    await db`
-      insert into eula_store_objects (key, document, updated_at)
-      values (${this.key(key)}, ${value}, now())
-      on conflict (key) do nothing
-    `;
   }
 }
 
@@ -86,14 +65,6 @@ export function notesPath(customerId, vacationId) {
   return vacationId ? `notes/vacation-${encodeURIComponent(vacationId)}` : 'notes/general';
 }
 
-export async function saveWelcome(store, member, vacation) {
-  const path = notesPath(member.id, vacation.tripId);
-  const text = welcomeNoteText(member, vacation);
-  await store.putWelcome(`${path}/welcome.json`, {
-    id: 'welcome', kind: 'welcome', at: new Date().toISOString(), text, vacationId: vacation.tripId, attachments: [],
-  });
-}
-
 export async function listNotes(store, customerId, vacationId, legacySources) {
   const paths = new Map([[notesPath(customerId, vacationId), vacationId]]);
   for (const source of legacySources) {
@@ -102,9 +73,8 @@ export async function listNotes(store, customerId, vacationId, legacySources) {
   }
   const lists = await Promise.all([...paths].map(async ([path, vacationId]) =>
     (await store.listJson(path)).map((note) => ({ vacationId, ...note }))));
-  const notes = lists.flat().sort((a, b) =>
-    Number(b.kind === 'welcome') - Number(a.kind === 'welcome') || a.at.localeCompare(b.at) || a.id.localeCompare(b.id));
-  return notes.filter((note, index) => note.kind !== 'welcome' || index === 0).map(presentNote);
+  return lists.flat().filter((note) => note.kind !== 'welcome')
+    .sort((a, b) => a.at.localeCompare(b.at) || a.id.localeCompare(b.id)).map(presentNote);
 }
 
 export async function loadNoteFile(store, customerId, vacationId, legacy, id, index, recordId) {
