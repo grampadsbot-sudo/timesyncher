@@ -1,7 +1,6 @@
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 
 export const LIST_TAB_IDS: readonly string[];
-export const DEFAULT_SORT: { key: string; dir: 'asc' | 'desc' };
 
 export function parsePrice(value: unknown): number | null;
 export function formatUsd(amount: number, currency?: string): string;
@@ -41,7 +40,6 @@ export function emptyStateMessage(
   tab: string,
   ctx: { categoryCount: number; filterActive: boolean },
 ): string;
-export function fareDirectionLabel(override?: Record<string, unknown>): string;
 export function flightPriceDisplay(place: SharedPlace, trip: SharedTripPayload): string;
 export function flightSchedule(
   place: SharedPlace,

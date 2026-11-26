@@ -10,7 +10,7 @@ function esc(value) {
     .replace(/"/g, '&quot;');
 }
 
-export function cleanKeepsakeSlug(slug) {
+function cleanKeepsakeSlug(slug) {
   const value = String(slug || '').trim();
   if (!value || value.length > 180) return '';
   if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,179}$/.test(value)) return '';
@@ -114,7 +114,7 @@ export function keepsakeFromShared(data) {
   return { title: title || 'this trip' };
 }
 
-export async function lookupKeepsake(slug) {
+async function lookupKeepsake(slug) {
   try {
     const result = await invoke(sharedTripHandler, {
       method: 'GET',

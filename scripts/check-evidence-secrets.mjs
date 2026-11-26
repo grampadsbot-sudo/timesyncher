@@ -48,7 +48,7 @@ function lineNumber(text, index) {
   return text.slice(0, index).split('\n').length;
 }
 
-export function findSecretLocations(text) {
+function findSecretLocations(text) {
   const value = String(text || '');
   const hits = [];
   for (const [rule, pattern] of RULES) {
@@ -65,7 +65,7 @@ function pdfText(file) {
   return extracted.stdout || '';
 }
 
-export function scanFile(file) {
+function scanFile(file) {
   const ext = path.extname(file).toLowerCase();
   const raw = fs.readFileSync(file);
   const asText = raw.toString('utf8');

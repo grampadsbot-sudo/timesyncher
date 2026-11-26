@@ -70,7 +70,7 @@ const CATEGORY_LABELS = {
   transport: 'Transport',
 };
 
-export function detailCategoryKey(place, trip) {
+function detailCategoryKey(place, trip) {
   const override = overrideFor(trip, place);
   const raw = text(
     override.category || place.category?.name || place.category_name || tabCategoryKey(place, trip),
@@ -82,7 +82,7 @@ export function detailCategoryKey(place, trip) {
   return tabCategoryKey(place, trip);
 }
 
-export function detailCategoryLabel(category) {
+function detailCategoryLabel(category) {
   const key = text(category).toLowerCase();
   return CATEGORY_LABELS[key] || (key ? key.charAt(0).toUpperCase() + key.slice(1) : '');
 }
@@ -155,7 +155,7 @@ function reviewCompositeLabel(override, index) {
   return sources ? `Composite of ${sources} reviews` : 'Composite of reviews';
 }
 
-export function detailReviewTotals(override) {
+function detailReviewTotals(override) {
   const raw = override.review_totals || override.reviewTotals;
   if (!raw || typeof raw !== 'object') return null;
   const count = Number(raw.count);
@@ -177,7 +177,7 @@ export function detailReviewTotalsLine(override) {
   return `Based on ${totals.count} reviews, avg ${totals.average.toFixed(1)} (other ratings)`;
 }
 
-export function detailHeaderLabel(categoryLabel, source) {
+function detailHeaderLabel(categoryLabel, source) {
   const label = text(categoryLabel);
   const src = text(source);
   if (!label) return src;
@@ -192,7 +192,7 @@ export function detailSummary(place, trip) {
   return String(override.description ?? source.description ?? place.description ?? '');
 }
 
-export function detailItineraryNote(place, trip) {
+function detailItineraryNote(place, trip) {
   return itineraryNoteFor(place, trip);
 }
 
@@ -204,7 +204,7 @@ export function detailHappyHour(override) {
   return raw;
 }
 
-export function detailPriceLabel(place, trip, category) {
+function detailPriceLabel(place, trip, category) {
   const cat = text(category).toLowerCase();
   const override = overrideFor(trip, place);
   if (cat === 'flight') return flightPriceDisplay(place, trip);
@@ -269,7 +269,7 @@ export function detailReviews(override, category) {
   return reviews;
 }
 
-export function detailSummarySourceUrls(override) {
+function detailSummarySourceUrls(override) {
   const raw = override.summarySourceUrls;
   if (!Array.isArray(raw)) return [];
   const urls = [];

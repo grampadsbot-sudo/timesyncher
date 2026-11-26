@@ -39,7 +39,7 @@ function catalogPlace(trip, id) {
   return (trip?.places || []).find((p) => String(p.id) === String(id));
 }
 
-export function canonicalBudgetPlace(trip, placeOrId) {
+function canonicalBudgetPlace(trip, placeOrId) {
   const id = placeOrId && typeof placeOrId === 'object' ? placeOrId.id : placeOrId;
   return catalogPlace(trip, id) || (placeOrId && typeof placeOrId === 'object' ? placeOrId : null);
 }
@@ -127,7 +127,7 @@ export function bucketIcon(bucket) {
   return '🎭';
 }
 
-export function varianceLabel(planned, target, currency = 'USD') {
+function varianceLabel(planned, target, currency = 'USD') {
   if (target === null) return null;
   const delta = planned - target;
   if (delta === 0) return null;

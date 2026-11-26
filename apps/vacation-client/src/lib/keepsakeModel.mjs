@@ -76,7 +76,7 @@ export function resolveKeepsakePrintFlags(trip, searchParams = new URLSearchPara
   };
 }
 
-export function keepsakeStyleFromSearch(searchParams = new URLSearchParams()) {
+function keepsakeStyleFromSearch(searchParams = new URLSearchParams()) {
   const style = text(searchParams.get('style'));
   if (style === '2' || style === 'style-2') return 2;
   if (style === '1' || style === 'style-1') return 1;
@@ -143,11 +143,11 @@ export function savedStories(trip) {
   return stories;
 }
 
-export function eventExperienceCount(trip) {
+function eventExperienceCount(trip) {
   return placesForCategoryTab(trip, 'events').length;
 }
 
-export function directorySection(trip, tab, label) {
+function directorySection(trip, tab, label) {
   const places = placesForCategoryTab(trip, tab);
   if (!places.length) return null;
   return {
@@ -157,7 +157,7 @@ export function directorySection(trip, tab, label) {
   };
 }
 
-export function itineraryStatBuckets(trip) {
+function itineraryStatBuckets(trip) {
   const buckets = [
     ['Flights', placesForCategoryTab(trip, 'flights')],
     ['Hotels', placesForCategoryTab(trip, 'hotels')],
@@ -170,7 +170,7 @@ export function itineraryStatBuckets(trip) {
     .filter((row) => row.count > 0);
 }
 
-export function buildKeepsakeDayPages(trip) {
+function buildKeepsakeDayPages(trip) {
   const days = sortedDays(trip);
   return days.map((day) => {
     const timeline = buildDayTimeline(trip, day);

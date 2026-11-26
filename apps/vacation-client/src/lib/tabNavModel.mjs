@@ -37,7 +37,7 @@ export const TAB_ICONS = {
   budget: '💰',
 };
 
-export function sectionVisibilityMap(trip) {
+function sectionVisibilityMap(trip) {
   const raw = trip?.thingOverrides?.__sectionVisibility;
   return raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
 }
