@@ -7,6 +7,7 @@ import path from 'node:path';
 import { cannedWelcomeLiveTurn } from '../src/vacation/onboarding-welcome.mjs';
 import { LocalVkAdminStore } from '../src/vacation/vk-admin-review-storage.mjs';
 import { createAdminArtifactWriter } from './harness/admin-review-artifacts.mjs';
+import { inviteOnboardingTags } from './harness/onboarding-screens.mjs';
 import { playWithAdminArtifacts, storeHarnessKeepsake, writeOutcomes } from './harness/runtime.mjs';
 import { extractPdfText } from './live-transcript-dialog-pdf.mjs';
 import { startVkAdminLocalServer } from './qa/vk-admin-local-server.mjs';
@@ -204,8 +205,18 @@ try {
   assert.deepEqual(uploaded.at(-1), [`${artifactPath}/keepsake-pdf`, 200]);
   const keepsakePdf = await readArtifact(tripId, 'keepsake-pdf');
   assert.match(extractPdfText(keepsakePdf), /Complete List/);
-  assert.deepEqual(await readArtifact(tripId), { ok: true, turns: [1, 2, 3, 4, 5], dialogPdf: true, keepsakePdf: true, review: null });
-
+  assert.deepEqual(await readArtifact(tripId), { ok: true, turns: [1, 2, 3, 4, 5], onboardingCaptures: [], dialogPdf: true, keepsakePdf: true, review: null });
+  const onboardingTags = [
+    ['telegram_collaborator', '000000000001'], ['telegram_collaborator', '000000000002'],
+    ['web_editor', '000000000003'], ['viewer', '000000000004'],
+  ].flatMap(([role, guest]) => inviteOnboardingTags({ role, guest, vacationId: tripId }));
+  for (const { artifact } of onboardingTags) await put(tripId, artifact, png);
+  const onboardingImage = onboardingTags[0].artifact;
+  assert.equal((await fetch(`${base}${artifactPath}/${onboardingImage}`)).status, 401);
+  assert.equal((await fetch(`${base}/api/admin/customers/${other}/artifacts/${onboardingImage}`, { headers: { cookie } })).status, 404);
+  assert.equal((await fetch(`${base}${artifactPath}/onboarding-viewer-000000000004-invite-email-390`, { headers: { cookie } })).status, 404);
+  const listed = await (await fetch(`${base}${artifactPath}`, { headers: { cookie } })).json();
+  assert.deepEqual(listed.onboardingCaptures, onboardingTags);
   assert.equal((await fetch(`${base}${artifactPath}/turn-1`)).status, 401);
   assert.equal((await fetch(`${base}${artifactPath}/dialog-pdf`)).status, 401);
   assert.equal((await fetch(`${base}/api/admin/notes`)).status, 401);
@@ -321,6 +332,14 @@ try {
       const replay = page.locator('[data-onboarding-replay]');
       assert.match(await replay.textContent(), /vacation app.*completed.*accept · Terms/s);
       assert.equal(await replay.locator('button, input, select, a, [contenteditable="true"]').count(), 0);
+      const onboarding = page.locator('[data-onboarding-stage]');
+      await onboarding.first().waitFor();
+      assert.deepEqual(await onboarding.evaluateAll((figures) => figures.map(({ dataset }) =>
+        [dataset.onboardingRole, dataset.vacationId, dataset.onboardingStage, Number(dataset.captureWidth)])),
+      onboardingTags.map(({ role, vacationId, screen, width }) => [role, vacationId, screen, width]));
+      assert.deepEqual(await page.locator('section:has(> .admin-captures > [data-onboarding-stage]) > h3').allTextContents(),
+        ['Collaborator 1', 'Collaborator 2', 'Trip editor', 'Viewer']);
+      await onboarding.first().locator('img').evaluate((img) => img.decode());
       await shot('onboarding');
 
       await chooseView('Chat screenshots');
@@ -399,6 +418,7 @@ try {
       await page.keyboard.press('Escape');
       await chooseView('Onboarding');
       await page.getByText('vacation app', { exact: true }).waitFor();
+      assert.equal(await page.locator('[data-onboarding-stage]').count(), 0);
       await chooseView('Chat screenshots');
       await page.getByText('No captures', { exact: true }).waitFor();
       await chooseView('All Customers');
@@ -423,7 +443,7 @@ try {
   const failedOutcomes = JSON.parse(await fs.readFile(path.join(failed.outDir, 'outcomes.json'), 'utf8'));
   assert.equal(failedOutcomes.reason, 'harness-error');
   assert.deepEqual(failedOutcomes.adminArtifacts.httpFailures, [{ failure: 'turn-1-capture-or-upload-failed', operation: 'put', status: 503 }]);
-  assert.deepEqual(await readArtifact(failedTrip), { ok: true, turns: [1, 2], dialogPdf: true, keepsakePdf: false, review: null });
+  assert.deepEqual(await readArtifact(failedTrip), { ok: true, turns: [1, 2], onboardingCaptures: [], dialogPdf: true, keepsakePdf: false, review: null });
   assert.match(extractPdfText(await readArtifact(failedTrip, 'dialog-pdf')), /Stored customer message with no reply/);
 
   const directPut = createAdminArtifactWriter({

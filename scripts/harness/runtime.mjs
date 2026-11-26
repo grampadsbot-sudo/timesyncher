@@ -18,6 +18,7 @@ import { createCouponLedger, redeemRosterCoupon } from './coupon.mjs';
 import { couponPaymentSteps } from './onboarding-capture.mjs';
 import { stampUnstoredExchange } from './unstored-turn.mjs';
 import { vkAdminStorage } from '../../src/vacation/vk-admin-review-storage.mjs';
+import { captureVacationInviteOnboarding } from './onboarding-invites.mjs';
 
 function stampLivePdf(doc, played) {
   if (!doc || !Array.isArray(doc.turns)) return doc;
@@ -294,6 +295,18 @@ export function liveOptions(env = process.env) {
           maxTurns: maxTurnsFromEnv(ready.VK_TEST_MAX_TURNS != null ? ready : process.env),
         }),
       });
+      adminArtifacts.onboardingCaptures = [];
+      try {
+        const invited = await captureVacationInviteOnboarding({
+          db, story, ownerCustomerId: created.customerId, tripId: played.tripId || created.tripId,
+          tag: options.tag, origin, env: ready, outDir: options.outDir, put: ready.VK_ADMIN_LOGIN ? putArtifact : undefined,
+          issuePlanned: !played.reason,
+        });
+        adminArtifacts.onboardingCaptures.push(...invited.uploaded);
+        adminArtifacts.errors.push(...invited.errors);
+      } catch {
+        adminArtifacts.errors.push('invite-onboarding-capture-failed');
+      }
       const tripId = played.tripId || created.tripId;
       const shareToken = played.shareToken || created.shareToken;
       const keepsakeOptions = { origin, tripId, shareToken, fetchImpl, outDir: options.outDir, put: putArtifact, adminArtifacts };

@@ -17,10 +17,14 @@ function withConfiguredAmount(plan, env) {
   };
 }
 
-export function collaboratorPlan(codeOrScope = 'single_trip', env = process.env) {
-  if (COLLABORATOR_PLANS[codeOrScope]) return withConfiguredAmount(COLLABORATOR_PLANS[codeOrScope], env);
-  if (codeOrScope === 'single_trip') return withConfiguredAmount(COLLABORATOR_PLANS.telegram_collaborators_single_trip, env);
+function collaboratorPlanDefinition(codeOrScope) {
+  if (COLLABORATOR_PLANS[codeOrScope]) return COLLABORATOR_PLANS[codeOrScope];
+  if (codeOrScope === 'single_trip') return COLLABORATOR_PLANS.telegram_collaborators_single_trip;
   throw new Error(`Unsupported Telegram collaborator plan: ${codeOrScope}`);
+}
+
+export function collaboratorPlan(codeOrScope = 'single_trip', env = process.env) {
+  return withConfiguredAmount(collaboratorPlanDefinition(codeOrScope), env);
 }
 
 export function isCollaboratorInviteRequest(text = '') {
@@ -243,13 +247,15 @@ export async function createCollaboratorInvite(db, { ownerCustomerId, tripId, pl
   if (!normalizedTripId) {
     throw Object.assign(new Error('tripId or onboardingSessionId is required for a collaborator invite.'), { statusCode: 400 });
   }
-  const plan = collaboratorPlan(planCode || 'single_trip', env);
   const token = collaboratorToken();
   const inviteMetadata = {
     ...(metadata && typeof metadata === 'object' ? metadata : {}),
     ...(onboardingSessionId ? { onboardingSessionId } : {}),
   };
   const inviteStatus = ownerSeatInviteStatus(inviteMetadata);
+  const plan = inviteStatus === 'paid'
+    ? collaboratorPlanDefinition(planCode || 'single_trip')
+    : collaboratorPlan(planCode || 'single_trip', env);
   const rows = inviteStatus === 'paid'
     ? await db`
       insert into vacation_collaborator_invites (

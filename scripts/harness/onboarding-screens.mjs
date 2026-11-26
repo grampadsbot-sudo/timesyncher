@@ -1,5 +1,6 @@
 import { inflateSync } from 'node:zlib';
 import { assertThrowaway } from './protected.mjs';
+import { INVITE_ONBOARDING_STAGES, onboardingCaptureTag } from '../../src/vacation/vk-admin-onboarding-captures.mjs';
 
 export const ONBOARDING_SCREENS = [
   { id: 'homepage', title: 'Homepage' },
@@ -15,6 +16,13 @@ export const ONBOARDING_SCREENS = [
 
 export const ONBOARDING_WIDTHS = [390, 430];
 export const ONBOARDING_ENGINE = 'webkit';
+
+export function inviteOnboardingTags({ role, guest, vacationId }) {
+  const screens = Object.keys(INVITE_ONBOARDING_STAGES)
+    .filter((screen) => (role === 'viewer') === (screen === 'shared-landing'));
+  return screens.flatMap((screen) => ONBOARDING_WIDTHS.map((width) =>
+    onboardingCaptureTag(`onboarding-${role}-${guest}-${screen}-${width}`, vacationId)));
+}
 
 export function onboardingLabel(id, width) {
   return `onboarding ${id} ${width}`;

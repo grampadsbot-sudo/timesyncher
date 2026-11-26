@@ -6,6 +6,9 @@ const DETAIL_DAYS_GRID_NEEDLE = 'gridTemplateColumns:Mi(Dt)?"88px minmax(150px, 
 const DETAIL_DAYS_GRID_PATCH = 'gridTemplateColumns:Mi(Dt)?"minmax(72px,auto) minmax(0,1fr) minmax(88px,auto)":"minmax(72px,auto) minmax(72px,auto) minmax(0,1fr) minmax(88px,auto)",width:"100%",minWidth:0,maxWidth:"100%",boxSizing:"border-box"';
 const DAY_PILL_ROW_NEEDLE = 'display:"flex",gap:6,overflowX:"auto",paddingBottom:2},children:Qa.map';
 const DAY_PILL_ROW_PATCH = 'display:"flex",gap:6,overflowX:"auto",paddingBottom:2,flexWrap:"wrap",maxWidth:"100%",minWidth:0,boxSizing:"border-box"},children:Qa.map';
+const DAY_PILL_WEEK_GRID = 'display:"grid",gridTemplateColumns:"repeat(7,minmax(0,60px))",gap:3,paddingBottom:2,maxWidth:"100%",minWidth:0,boxSizing:"border-box"},children:Qa.map';
+const DAY_PILL_PADDING = 'borderRadius:999,padding:"6px 10px",fontSize:11,fontWeight:700,whiteSpace:"nowrap",cursor:"pointer"},children:["Day ",G.day_number||Re+1]';
+const DAY_PILL_COMPACT_STYLE = DAY_PILL_PADDING.replace('padding:"6px 10px",fontSize:11', 'padding:"6px 1px",fontSize:"clamp(10px,2.56vw,11px)"');
 const DAY_TIMELINE_GRID_NEEDLE = 'display:"grid",gridTemplateColumns:"74px 22px 1fr",gap:10,alignItems:"start"';
 const DAY_TIMELINE_GRID_NARROW_PATCH =
   'display:"grid",gridTemplateColumns:"minmax(52px,64px) 22px minmax(0,1fr)",gap:8,alignItems:"start",minWidth:0,maxWidth:"100%"';
@@ -43,9 +46,15 @@ export function patchSharedLayoutOverflow(source = '', options = {}) {
   else if (served && js.includes('88px 104px minmax(150px, 1fr) 128px')) {
     throw new Error('shared thing detail Days/Timeline grid overflow patch did not apply');
   }
-  if (js.includes(DAY_PILL_ROW_NEEDLE)) js = js.replace(DAY_PILL_ROW_NEEDLE, DAY_PILL_ROW_PATCH);
-  else if (served && !js.includes('flexWrap:"wrap",maxWidth:"100%",minWidth:0,boxSizing:"border-box"},children:Qa.map')) {
-    throw new Error('shared day pill row overflow patch did not apply');
+  if (served) {
+    js = js.replace(DAY_PILL_ROW_NEEDLE, DAY_PILL_WEEK_GRID)
+      .replace(DAY_PILL_ROW_PATCH, DAY_PILL_WEEK_GRID)
+      .replace(DAY_PILL_PADDING, DAY_PILL_COMPACT_STYLE);
+    if (!js.includes(DAY_PILL_WEEK_GRID) || !js.includes(DAY_PILL_COMPACT_STYLE)) {
+      throw new Error('shared day pill week grid patch did not apply');
+    }
+  } else if (js.includes(DAY_PILL_ROW_NEEDLE)) {
+    js = js.replace(DAY_PILL_ROW_NEEDLE, DAY_PILL_ROW_PATCH);
   }
   if (js.includes(DAY_TIMELINE_GRID_NARROW_PATCH)) {
     js = js.replace(DAY_TIMELINE_GRID_NARROW_PATCH, DAY_TIMELINE_GRID_PATCH);

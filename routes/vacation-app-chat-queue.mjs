@@ -19,11 +19,11 @@ import { failedInTurnSearchTurn, replyStageMillis, turnStageTimings } from '../s
 import { persistVacationAppCustomerTurn } from '../src/vacation/vacation-app-queue-persist.mjs';
 import { prepareChatItineraryEditForQueueTurn } from '../src/vacation/chat-itinerary-edit.mjs';
 import { producedDemoLockedChatEditReply } from '../src/vacation/chat-itinerary-edit-day.mjs';
-import { replyActionClaimReason } from '../src/vacation/reply-action-claim.mjs';
-import { createBoundedReplyShipGate, createBoundedRewriteClaim } from '../src/vacation/vacation-app-chat-postgen.mjs';
+import { createBoundedReplyShipGate, createBoundedRewriteClaim, rewriteVacationAppActionClaim } from '../src/vacation/vacation-app-chat-postgen.mjs';
 import { sessionReplyBackend } from '../src/vacation/vk-bot-mcp-reply.mjs';
 import { isOrdinaryPlanningTurn, recoverOrdinaryPlanningReply } from '../src/vacation/chat-plan-persist.mjs';
 import { openRouterTurnTelemetry } from '../src/vacation/openrouter-call-ledger.mjs';
+
 export async function queueVacationAppTurn(db, session, trip, body, hooks, intake = {}) {
   const env = process.env;
   const tripId = trip?.id ?? null;
@@ -438,25 +438,14 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
       error: null,
     };
   }
-  const vkBotTurn = produced?.model?.backend === 'vk_bot_mcp' || produced?.model?.via === 'vk_bot_mcp';
   const claimedFrom = produced.reply;
-  if (!produced.reply) {
-    const draft = String(produced.blockedDraft || '').trim();
-    if (!vkBotTurn && draft && (produced.reason === 'reply_action_claim_blocked' || replyActionClaimReason(draft, turnActionResults, replyClaimContext))) {
-      produced.reply = await rewriteClaim(draft);
-      if (produced.reply) produced.reason = null;
-    }
-  } else if (vkBotTurn && replyActionClaimReason(produced.reply, turnActionResults, replyClaimContext)) {
-    produced.reply = null;
-    produced.reason = 'vk_bot_mcp_claim_blocked';
-  } else if (!vkBotTurn) {
-    produced.reply = await rewriteClaim(produced.reply);
-  }
+  const replyBackend = sessionReplyBackend(session);
+  await rewriteVacationAppActionClaim(produced, { rewriteClaim, turnActionResults, replyClaimContext, seat, replyBackend });
   await applyReplyQuality(produced, { customerTurn: requestText, env, previousReply: claimedFrom });
   if (!String(produced?.reply || '').trim() && isOrdinaryPlanningTurn(requestText)) {
-    Object.assign(produced, recoverOrdinaryPlanningReply(produced, requestText, { backend: sessionReplyBackend(session), previousReply: claimedFrom }));
+    Object.assign(produced, recoverOrdinaryPlanningReply(produced, requestText, { backend: replyBackend, previousReply: claimedFrom }));
   }
-  const softSearchRecovered = recoverSoftSearchReply(produced, placeSearchReplyFacts, { backend: sessionReplyBackend(session), destination: cleanText(trip?.destination || '', 180) });
+  const softSearchRecovered = recoverSoftSearchReply(produced, placeSearchReplyFacts, { backend: replyBackend, destination: cleanText(trip?.destination || '', 180) });
   if (softSearchRecovered) Object.assign(produced, softSearchRecovered);
   if (!produced.reply) {
     const failure = applyLiveAppReplyFailureToPayload(payload, customerLive, produced);
@@ -490,7 +479,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     recordCustomerThingNotes: hooks.recordCustomerThingNotes,
     publishIntakeShare: hooks.publishIntakeShare,
     vacationAppTripSummary: hooks.vacationAppTripSummary,
-    replyBackend: sessionReplyBackend(session),
+    replyBackend,
     postStartedMs: Number(intake.postStartedMs) > 0 ? Number(intake.postStartedMs) : started, postBudgetMs: intake.postBudgetMs ?? null, activityCommitDecisionsImpl: intake.activityCommitDecisionsImpl ?? null,
   });
   if (itineraryEditResult?.client) {

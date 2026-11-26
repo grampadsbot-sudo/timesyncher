@@ -122,13 +122,34 @@ window.startVkAdminReview = (() => {
     return `<div class="admin-keepsake-actions">${pdf}<a class="admin-action" href="${generate}" target="_blank" rel="noopener" data-keepsake-generate>Generate</a></div><iframe title="${safe(vac.label)} keepsake" src="${preview}" credentialless data-keepsake-frame></iframe>`;
   }
 
-  function onboarding(vac) {
+  function onboarding(vac, artifacts) {
     const sessions = vac.onboarding || [];
-    if (!sessions.length) return '<p class="admin-empty">No onboarding is stored for this vacation yet.</p>';
-    return `<div class="admin-replay" data-onboarding-replay aria-label="Onboarding replay">${sessions.map((session) => `<section>
+    const replay = sessions.length ? `<div class="admin-replay" data-onboarding-replay aria-label="Onboarding replay">${sessions.map((session) => `<section>
       <h3>${safe(session.currentStep?.replaceAll('_', ' ') || 'Onboarding')}</h3><p>${safe(session.status?.replaceAll('_', ' '))}</p>
       <ol>${session.events.map((event) => `<li><span>${safe(event.label)}</span> <time datetime="${safe(event.at)}">${safe(new Date(event.at).toLocaleString())}</time></li>`).join('')}</ol>
-    </section>`).join('')}</div>`;
+    </section>`).join('')}</div>` : '';
+    if (!artifacts) return replay + '<p class="admin-empty">Loading onboarding captures…</p>';
+    if (artifacts.failed) return replay + '<p class="admin-empty" role="status">Onboarding captures could not be loaded.</p>';
+    const shots = artifacts.onboardingCaptures || [];
+    if (!shots.length) return replay || '<p class="admin-empty">No onboarding is stored for this vacation yet.</p>';
+    const guests = new Map();
+    for (const shot of shots) {
+      const key = `${shot.role}/${shot.guest}`;
+      if (!guests.has(key)) guests.set(key, []);
+      guests.get(key).push(shot);
+    }
+    const groups = [...guests.values()];
+    const sections = groups.map((group) => {
+      const { role, roleLabel } = group[0];
+      const sameRole = groups.filter(([shot]) => shot.role === role);
+      const label = sameRole.length > 1 ? `${roleLabel} ${sameRole.indexOf(group) + 1}` : roleLabel;
+      const figures = group.map(({ artifact, title, screen, width, vacationId }) => `<figure data-onboarding-stage="${safe(screen)}"
+        data-onboarding-role="${safe(role)}" data-vacation-id="${safe(vacationId)}" data-capture-width="${safe(width)}">
+        <figcaption>${safe(title)} · ${safe(width)} px</figcaption><img src="/api/admin/${artifactsPath(vac.tripId)}/${encodeURIComponent(artifact)}"
+          alt="${safe(`${label} ${title}`)}" width="${safe(width)}" height="844" loading="lazy"></figure>`).join('');
+      return `<section aria-label="${safe(label)}"><h3 class="admin-replay">${safe(label)}</h3><div class="admin-captures">${figures}</div></section>`;
+    });
+    return replay + sections.join('');
   }
 
   function captures(vac, artifacts) {
@@ -339,7 +360,7 @@ window.startVkAdminReview = (() => {
     const result = await api(artifactsPath(id)).catch(() => null);
     const artifacts = result?.res.ok ? result.data : { failed: true };
     state.artifacts.set(id, artifacts);
-    if (viewTrip() === id && ['chat', 'captures', 'keepsake'].includes(state.view)) {
+    if (viewTrip() === id && ['chat', 'captures', 'keepsake', 'onboarding'].includes(state.view)) {
       const vac = state.details.get(id);
       document.querySelector('.admin-view-panel').innerHTML = viewContent(vac);
       lockReplay(document.getElementById('customerChatReplay'));
