@@ -339,6 +339,9 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
           lastReply = storedApp.text;
           const isFallback = isPlanningFallbackTurn(storedApp.text, storedApp);
           customerTurns.push({ role: 'app', text: storedApp.text, model: storedApp.model, cost: storedApp.cost, planningFallback: isFallback });
+          if (afterCustomerTurn && index < 5) {
+            await afterCustomerTurn({ tripId: currentTrip, turn: index + 1, text: turn.text, webAccessToken });
+          }
           if (isFallback) {
             planningFallbackTurns.push(storedApp.turnIndex || (index + 1));
             consecutiveFallbacks += 1;
@@ -349,7 +352,7 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
             consecutiveFallbacks = 0;
           }
           const reachedAfterStored = chatGoalsReached({ itineraryCount: items, customerTurns, index, maxTurns: limit });
-          if (liveCustomer && reachedAfterStored.done) break;
+          if (liveCustomer && reachedAfterStored.done && (!afterCustomerTurn || index + 1 >= 5)) break;
           continue;
         }
       }

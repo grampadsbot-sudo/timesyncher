@@ -7,6 +7,8 @@ import { fileURLToPath } from 'node:url';
 import { chromeHits } from './chrome.mjs';
 import { nonEmpty, scrubFile } from './files.mjs';
 import { boundMediaPlayUrl } from '../../src/vacation/thing-media-bind.mjs';
+import { renderMinimalTextPdf } from '../../src/vacation/minimal-text-pdf.mjs';
+import { redactUrls } from './backends.mjs';
 import { redactText } from './redact.mjs';
 import { resolveDriveSha, stampMissingDriveSha, stampRunReplyBackend } from './drive-build.mjs';
 import { unstoredTurnNote } from './unstored-turn.mjs';
@@ -65,6 +67,7 @@ export async function renderDialog({
   ssrSummary = null,
   skipDialogPdf = false,
   skipReason = '',
+  redactForAdmin = false,
 } = {}) {
   const out = path.join(outDir, 'dialog.pdf');
   const jsonl = path.join(outDir, 'live-transcript.jsonl');
@@ -106,7 +109,10 @@ export async function renderDialog({
   fs.mkdirSync(outDir, { recursive: true });
   const stamped = stampRunReplyBackend(stampMissingDriveSha(doc, sha), replyBackend);
   const payload = ssrSummary ? { ...stamped, ssrSummary } : stamped;
-  fs.writeFileSync(transcriptFile, JSON.stringify(payload));
+  const scrub = redactForAdmin
+    ? (_key, value) => typeof value === 'string' ? redactUrls(redactText(value, secrets)) : value
+    : undefined;
+  fs.writeFileSync(transcriptFile, JSON.stringify(payload, scrub));
   const result = spawnImpl(process.execPath, [
     path.join(root, 'scripts/live-transcript-dialog-pdf.mjs'),
     '--transcript', transcriptFile,
@@ -119,7 +125,7 @@ export async function renderDialog({
   const detail = redactText(`${result.stdout || ''}\n${result.stderr || ''}`, secrets).trim();
   if (result.status !== 0) {
     const note = unstoredTurnNote(doc);
-    if (note) fs.writeFileSync(out, notePdf(note));
+    if (note && !redactForAdmin) fs.writeFileSync(out, notePdf(note));
     return { ok: false, detail: detail || 'dialog renderer refused', transcript: transcriptFromJsonl(jsonl), pdfText: note, out };
   }
   let parsed = {};
@@ -140,6 +146,25 @@ export async function renderDialog({
     refusals: parsed.contentFails || [],
     out,
   };
+}
+
+export function renderStoredDialog({ transcript, outDir, secrets, failed }) {
+  if (transcript?.live !== true || transcript.capture !== 'live-vacation-app' || !transcript.turns?.length) return null;
+  const clean = (value) => redactUrls(redactText(value, secrets));
+  const lines = [
+    failed ? 'Run stopped early. This PDF shows the stored conversation.' : 'Stored conversation. The Dialog verification checks did not pass.',
+    ...transcript.turns.map((turn) => {
+      const speaker = turn.role === 'app' ? 'APP' : 'Customer';
+      const model = turn.role === 'app' && (turn.shippedModel || turn.modelId || turn.model?.responseModel);
+      const cost = turn.cost;
+      const measured = cost?.status === 'measured' && cost.currency === 'USD' && Number.isFinite(cost.dollars);
+      const details = [model, measured ? `USD ${cost.dollars}` : ''].filter(Boolean);
+      return clean(`Turn ${turn.turnIndex} ${speaker}${details.length ? ` (${details.join(', ')})` : ''}\n${turn.text}`);
+    }),
+  ];
+  const out = path.join(outDir, 'dialog.pdf');
+  fs.writeFileSync(out, renderMinimalTextPdf({ title: 'Vacay Keepsake Dialog', lines }));
+  return { ok: true, out };
 }
 
 function mediaHeaders(env) {

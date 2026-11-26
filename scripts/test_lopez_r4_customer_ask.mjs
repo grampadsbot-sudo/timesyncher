@@ -157,11 +157,11 @@ try {
   else process.env.VK_TEST_NO_ODD = prevNoOdd;
 }
 
-assert.equal(maxTurnsFromEnv({}), 4);
+assert.equal(maxTurnsFromEnv({}), 5);
 assert.equal(maxTurnsFromEnv({ VK_TEST_MAX_TURNS: '100' }), 100);
 assert.equal(maxTurnsFromEnv({ VK_TEST_MAX_TURNS: '1' }), 1);
 assert.equal(maxTurnsFromEnv({ VK_TEST_MAX_TURNS: '-5' }), 1);
-assert.equal(maxTurnsFromEnv({ VK_TEST_MAX_TURNS: '0' }), 4);
+assert.equal(maxTurnsFromEnv({ VK_TEST_MAX_TURNS: '0' }), 5);
 const runtimeSrc = fs.readFileSync(new URL('./harness/runtime.mjs', import.meta.url), 'utf8');
 assert.equal(runtimeSrc.includes('maxTurns: 4'), false);
 assert.match(runtimeSrc, /VK_TEST_MAX_TURNS/);
