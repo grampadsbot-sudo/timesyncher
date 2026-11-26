@@ -1,0 +1,1 @@
+scripts/test_invite_onboarding_captures.mjs

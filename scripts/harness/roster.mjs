@@ -121,7 +121,9 @@ function rosterParty(entry) {
     payer: 'owner',
   }));
   const kids = ages.map((age, index) => ({ name: `${pick(KIDS, entry.id + index * 5)} ${surname}`, age }));
-  return { collaborators, kids, viewers: [], editors: [] };
+  const viewers = entry.id === 1 ? [{}] : [];
+  const editors = entry.id === 1 ? [{ name: 'Morgan Reed' }] : [];
+  return { collaborators, kids, viewers, editors };
 }
 
 function rosterDates(entry) {
