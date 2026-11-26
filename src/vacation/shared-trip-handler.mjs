@@ -307,7 +307,7 @@ async function respondSharedTripGet(req, res, shareToken) {
 }
 
 export async function loadSharedTripPayload(shareToken, req = null) {
-  if (vkAdminFixtureShareSlug(shareToken)) return sharedTripPayloadForHttp(buildVkAdminSharedTrip(shareToken));
+  if (vkAdminFixtureShareSlug(shareToken)) return sharedTripPayloadForHttp(buildVkAdminSharedTrip(shareToken, req));
   const local = await intakeSharedResponse(shareToken);
   if (local) return sharedTripPayloadForHttp(local);
   if (String(shareToken || '').startsWith('intake-')) return null;
@@ -337,7 +337,7 @@ function respondVkAdminFixture(req, res, trekPath, shareToken) {
   if (isShareEditAccess(req.method, trekPath)) return sendJson(res, 200, { canEdit: false, role: 'viewer' });
   if (req.method !== 'GET' && req.method !== 'HEAD') return sendJson(res, 403, { ok: false, code: 'admin_view_only' });
   if (!isSharedTripGet(req.method, trekPath)) return sendJson(res, 404, { ok: false, code: 'not_found' });
-  const payload = buildVkAdminSharedTrip(shareToken);
+  const payload = buildVkAdminSharedTrip(shareToken, req);
   return payload ? sendSharedTripPayload(res, 200, payload) : sendSlugMiss(res, shareToken);
 }
 

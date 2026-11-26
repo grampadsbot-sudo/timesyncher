@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import http from 'node:http';
 import { spawnSync } from 'node:child_process';
 import fs, { existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -122,11 +123,63 @@ const ADMIN_CALLS = [
   ['GET', '/api/admin/anything-else'],
 ];
 
-async function call(method, url, { cookie = '', body } = {}) {
+function httpCall(method, url, { cookie = '', body, host } = {}) {
+  const target = new URL(url, base);
+  const payload = body ? JSON.stringify(body) : '';
   const headers = {};
   if (cookie) headers.cookie = cookie;
   if (body) headers['content-type'] = 'application/json';
-  return fetch(`${base}${url}`, { method, headers, body: body ? JSON.stringify(body) : undefined });
+  if (payload) headers['content-length'] = Buffer.byteLength(payload);
+  if (host) headers.host = host;
+  return new Promise((resolve, reject) => {
+    const req = http.request(
+      {
+        hostname: target.hostname,
+        port: target.port || 80,
+        path: `${target.pathname}${target.search}`,
+        method,
+        headers,
+      },
+      (res) => {
+        const chunks = [];
+        res.on('data', (chunk) => chunks.push(chunk));
+        res.on('end', () => {
+          const text = Buffer.concat(chunks).toString('utf8');
+          const setCookie = res.headers['set-cookie'];
+          resolve({
+            status: res.statusCode,
+            headers: {
+              get(name) {
+                const key = String(name || '').toLowerCase();
+                if (key === 'set-cookie') return Array.isArray(setCookie) ? setCookie[0] || '' : setCookie || '';
+                return res.headers[key] || '';
+              },
+              getSetCookie() {
+                return Array.isArray(setCookie) ? setCookie : setCookie ? [setCookie] : [];
+              },
+            },
+            async json() {
+              return JSON.parse(text || '{}');
+            },
+            async text() {
+              return text;
+            },
+          });
+        });
+      },
+    );
+    req.on('error', reject);
+    if (payload) req.write(payload);
+    req.end();
+  });
+}
+
+async function call(method, url, opts = {}) {
+  if (opts.host) return httpCall(method, url, opts);
+  const headers = {};
+  if (opts.cookie) headers.cookie = opts.cookie;
+  if (opts.body) headers['content-type'] = 'application/json';
+  return fetch(`${base}${url}`, { method, headers, body: opts.body ? JSON.stringify(opts.body) : undefined });
 }
 
 function cookieOf(res) {
@@ -139,14 +192,49 @@ async function signIn() {
   return cookieOf(res).split(';')[0];
 }
 
-await test('production: admin page and every /api/admin/* return 404', async () => {
+const DISALLOWED_HOSTS = [
+  'vacaykeepsake.com',
+  'www.vacaykeepsake.com',
+  'vk-admin-gate-example.vercel.app',
+];
+
+await test('disallowed host: admin page and every /api/admin/* return 404', async () => {
   const cookie = await signIn();
+  for (const host of DISALLOWED_HOSTS) {
+    assert.equal((await call('GET', '/vacation-app/admin', { host })).status, 404, `admin page ${host}`);
+    assert.equal((await call('POST', '/api/admin/session', { body: { login: LOGIN }, host })).status, 404, `login ${host}`);
+    for (const [method, url] of ADMIN_CALLS) {
+      assert.equal((await call(method, url, { cookie, host })).status, 404, `${method} ${url} @ ${host}`);
+    }
+    assert.equal(
+      (await call('GET', '/api/shared/vk-admin-share-orlando-001/', { host })).status,
+      404,
+      `fixture trip not served on ${host}`,
+    );
+  }
+});
+
+await test('disallowed host: admin stays 404 when VERCEL_ENV is unset or production', async () => {
+  const cookie = await signIn();
+  for (const vercelEnv of [undefined, 'production']) {
+    if (vercelEnv === undefined) delete process.env.VERCEL_ENV;
+    else process.env.VERCEL_ENV = vercelEnv;
+    const label = vercelEnv === undefined ? 'unset' : vercelEnv;
+    assert.equal((await call('GET', '/vacation-app/admin', { host: 'vacaykeepsake.com' })).status, 404, label);
+    assert.equal((await call('POST', '/api/admin/session', { body: { login: LOGIN }, host: 'www.vacaykeepsake.com' })).status, 404, label);
+    assert.equal((await call('GET', '/api/admin/session', { cookie, host: 'vk-admin-gate-example.vercel.app' })).status, 404, label);
+  }
+  delete process.env.VERCEL_ENV;
+});
+
+await test('allowed host: VERCEL_ENV=production does not 404 admin sign-in', async () => {
   process.env.VERCEL_ENV = 'production';
   try {
-    assert.equal((await call('GET', '/vacation-app/admin')).status, 404);
-    assert.equal((await call('POST', '/api/admin/session', { body: { login: LOGIN } })).status, 404);
-    for (const [method, url] of ADMIN_CALLS) assert.equal((await call(method, url, { cookie })).status, 404, `${method} ${url}`);
-    assert.equal((await call('GET', '/api/shared/vk-admin-share-orlando-001/')).status, 404, 'fixture trip is not served in production');
+    assert.equal((await call('GET', '/vacation-app/admin', { host: 'vacation-staging.timesyncher.com' })).status, 200);
+    const res = await call('POST', '/api/admin/session', { body: { login: LOGIN }, host: 'vacation-staging.timesyncher.com' });
+    assert.equal(res.status, 200);
+    const bad = await call('POST', '/api/admin/session', { body: { login: 'wrong' }, host: 'vacation-staging.timesyncher.com' });
+    assert.ok(bad.status === 401 || bad.status === 403, `wrong login status ${bad.status}`);
   } finally {
     delete process.env.VERCEL_ENV;
   }
