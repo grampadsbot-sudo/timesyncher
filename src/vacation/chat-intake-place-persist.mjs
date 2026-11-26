@@ -324,6 +324,8 @@ export async function persistChatIntakePlaceThing(db, {
   const missReason = destination ? 'search_miss' : 'missing_destination';
   if (isCustomerIntakeProvenance(baseMeta)) {
     const origin = intakeProvenanceOrigin(baseMeta) || 'customer_turn';
+    const provenanceSrc = clean(baseMeta.source || baseMeta.intakeSource, 80).toLowerCase();
+    const fromChatExtraction = provenanceSrc === 'chat_extraction';
     const placeholder = unresolvedChatIntakePlaceThing({
       title: name,
       category: adjustedCategory || category || existing?.category || 'activity',
@@ -331,8 +333,10 @@ export async function persistChatIntakePlaceThing(db, {
       metadata: {
         ...baseMeta,
         origin,
-        source: 'customer_stated',
-        intakeSource: baseMeta.intakeSource || 'customer-turn',
+        source: fromChatExtraction ? 'chat_extraction' : 'customer_stated',
+        intakeSource: fromChatExtraction
+          ? (baseMeta.intakeSource || 'chat_extraction')
+          : (baseMeta.intakeSource || 'customer-turn'),
       },
       startsAt,
     });
