@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { abArmLabel } from './harness/dry.mjs';
-import { finishArtifactReport, liveFinishReason, ringArtifactMessage } from './harness/finish-artifacts.mjs';
+import { FINISH_ARTIFACTS, finishArtifactReport, liveFinishReason, ringArtifactMessage } from './harness/finish-artifacts.mjs';
 import { customerSection, waveSection } from './harness/findings.mjs';
 import { measureItemStorage } from './harness/itinerary-evidence.mjs';
 import { chatGoalsReached } from './harness/live-play.mjs';
@@ -89,8 +89,13 @@ const artifacts = Object.fromEntries(complete.rows.map((row) => [row.id, row.sta
 fs.writeFileSync(path.join(dir, 'finish-artifacts.json'), `${JSON.stringify({ itineraryCount: 19, artifacts }, null, 2)}\n`);
 const ready = spawnSync('python3', [launcher, 'lopez', '--check', dir], { encoding: 'utf8' });
 assert.equal(ready.status, 0, ready.stdout + ready.stderr);
-for (const name of ['dialog-pdf', 'keepsake-pdf', 'screenshots', 'admin-dialog', 'admin-turns', 'admin-astra-json', 'admin-timing-summary']) {
+const launcherText = fs.readFileSync(launcher, 'utf8');
+assert.deepEqual(FINISH_ARTIFACTS, [
+  'dialog-pdf', 'keepsake-pdf', 'screenshots', 'admin-dialog', 'admin-turns', 'admin-astra-json', 'admin-timing-summary',
+]);
+for (const name of FINISH_ARTIFACTS) {
   assert.match(ready.stdout, new RegExp(`${name}: present`));
+  assert.match(launcherText, new RegExp(`"${name}"`));
 }
 fs.rmSync(path.join(dir, 'keepsake.pdf'));
 const held = spawnSync('python3', [launcher, 'lopez', '--check', dir], { encoding: 'utf8' });

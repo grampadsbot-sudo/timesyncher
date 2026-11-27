@@ -56,7 +56,7 @@ export function liveFinishReason({ itineraryOk, hitTurnCap, artifacts, priorReas
   return `missing-artifacts:${missingArtifacts.join(',')}`;
 }
 
-export function finishArtifactRecord(report, extra = {}) {
+function finishArtifactRecord(report, extra = {}) {
   const done = extra.itineraryOk === true && report.complete === true && extra.harnessOk !== false;
   return {
     done,
