@@ -50,24 +50,40 @@ window.startVkAdminReview = (() => {
     pane?.querySelectorAll('[contenteditable]').forEach((el) => el.setAttribute('contenteditable', 'false'));
   }
 
+  function viewMenuActions(vac, artifacts) {
+    if (!vac) return '';
+    const rows = [];
+    const tripPath = artifactsPath(vac.tripId);
+    const statusRow = (label) =>
+      `<span class="trip-option admin-view-status" role="option" aria-disabled="true"><span></span><span class="trip-option-text"><b>${safe(label)}</b></span></span>`;
+    const actionRow = (title, href, attrs = '') =>
+      `<a class="trip-option admin-view-action" href="${href}" role="option" ${attrs}><span></span><span class="trip-option-text"><b>${safe(title)}</b></span></a>`;
+    if (state.view === 'chat') {
+      if (artifacts?.dialogPdf) rows.push(actionRow('Dialog PDF', `/api/admin/${tripPath}/dialog-pdf`, 'data-dialog-pdf="1" download'));
+      else if (artifacts?.failed) rows.push(statusRow('Dialog PDF could not be loaded.'));
+      else if (artifacts) rows.push(statusRow('No Dialog PDF yet'));
+    }
+    if (state.view === 'keepsake') {
+      const share = vac.shareSlug ? encodeURIComponent(vac.shareSlug) : '';
+      if (artifacts?.keepsakePdf) rows.push(actionRow('Keepsake PDF', `/api/admin/${tripPath}/keepsake-pdf`, 'data-keepsake-pdf download'));
+      if (share) rows.push(actionRow('Generate', `/api/pdf/shared/${share}/report/keepsake-style-2.pdf`, 'data-keepsake-generate target="_blank" rel="noopener"'));
+    }
+    if (!rows.length) return '';
+    return `<div class="admin-header-actions" role="group" aria-label="View actions">${rows.join('')}</div>`;
+  }
+
   function switcher() {
     const account = customer();
+    const vac = account ? state.details.get(viewTrip()) : null;
+    const artifacts = vac ? state.artifacts.get(vac.tripId) : null;
     const current = account ? `${views.find(([id]) => id === state.view)[1]} · ${account.name}` : 'All Customers';
     const option = (id, title, on, sub = '', attrs = '') => {
       return `<button class="trip-option ${on ? 'active' : ''}" type="button" data-trip-id="${safe(id)}" ${attrs} role="option" aria-selected="${on}"><span>${on ? check : ''}</span><span class="trip-option-text"><b>${safe(title)}</b>${sub ? `<small>${safe(sub)}</small>` : ''}</span></button>`;
     };
-    const artifacts = account ? state.artifacts.get(viewTrip()) : null;
-    const viewEntries = account ? views
-      .filter(([id]) => id !== 'vacations' || account.vacations.length > 1) : [];
-    const viewOptions = viewEntries
-      .filter(([id]) => id !== 'vacations')
-      .map(([id, label]) => option(id, label, id === state.view, '', `data-view="${id}"`)).join('');
-    const vacationsOption = viewEntries
-      .filter(([id]) => id === 'vacations')
-      .map(([id, label]) => option(id, label, id === state.view, '', `data-view="${id}"`)).join('');
-    const pdfOption = artifacts?.dialogPdf && viewTrip()
-      ? option('dialog-pdf', 'Dialog PDF', false, '', 'data-dialog-pdf="1"')
-      : '';
+    const viewOptions = account ? views
+      .filter(([id]) => id !== 'vacations' || account.vacations.length > 1)
+      .map(([id, label]) => option(id, label, id === state.view, '', `data-view="${id}"`)).join('') : '';
+    const viewActions = account ? viewMenuActions(vac, artifacts) : '';
     const runs = [...state.recent].map((key) => {
       const entry = state.customers.get(key);
       if (!entry) return '';
@@ -75,7 +91,7 @@ window.startVkAdminReview = (() => {
       return `<div data-run-group="${safe(latest.tripId)}">${option(key, entry.name, false, latest.destination, `data-open-account="${safe(key)}"`)}</div>`;
     }).join('');
     const clear = state.opened.length ? '<button class="trip-option admin-clear-all" type="button" data-clear-all="1"><span></span><span class="trip-option-text"><b>Clear all</b></span></button>' : '';
-    return `<div class="vacation-dropdown" id="vacationDropdown" data-trip-switcher-root="1"><button class="trip-button" id="tripButton" data-trip-switcher="1" type="button" aria-haspopup="listbox" aria-expanded="false"><span class="trip-trigger-text"><span class="trip-trigger-title">${safe(current)}</span></span>${chevron}</button><div class="trip-list" role="listbox">${viewOptions || pdfOption || vacationsOption ? `<div class="admin-header-views" role="group" aria-label="Vacation views">${viewOptions}${pdfOption}${vacationsOption}</div>` : ''}${option('all', 'All Customers', !account)}${runs}${clear}</div></div>`;
+    return `<div class="vacation-dropdown" id="vacationDropdown" data-trip-switcher-root="1"><button class="trip-button" id="tripButton" data-trip-switcher="1" type="button" aria-haspopup="listbox" aria-expanded="false"><span class="trip-trigger-text"><span class="trip-trigger-title">${safe(current)}</span></span>${chevron}</button><div class="trip-list" role="listbox">${viewOptions ? `<div class="admin-header-views" role="group" aria-label="Vacation views">${viewOptions}</div>` : ''}${viewActions}${option('all', 'All Customers', !account)}${runs}${clear}</div></div>`;
   }
 
   function customerList() {
@@ -94,21 +110,11 @@ window.startVkAdminReview = (() => {
       `<section class="admin-group"><header><b>${safe(vac.title || vac.destination || vac.label)}${testPill(vac)}</b><small>${safe(vac.destination)} · <time datetime="${safe(vac.sortAt)}">${safe(vac.sortAt.slice(0, 10))}</time></small></header><button class="admin-open" type="button" data-open-vacation="${safe(vac.tripId)}">${vac.tripId === viewTrip() ? 'Current vacation' : 'Open'}</button></section>`).join('')}</div>`;
   }
 
-  const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const money = (value) => usd.format(value);
+  const usdActual = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 8 });
+  const usdEstimated = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
 
   function costLines(costs) {
-    const estimated = costs?.hasEstimated && Number(costs.estimated) > 0
-      ? ` <span data-cost="estimated">Estimated ${money(costs.estimated)}</span>` : '';
-    return `<span data-cost="actual">Actual ${money(costs.actual)}</span>${estimated}${costs.unpriced ? ` <span data-cost="unpriced">${costs.unpriced} unpriced</span>` : ''}`;
-  }
-
-  function gradeLine(grade) {
-    if (!grade) return '';
-    if (grade.notGraded) {
-      return `<p class="admin-reply-grade" data-admin-turn-grade="not-graded">not graded</p>`;
-    }
-    return `<p class="admin-reply-grade" data-admin-turn-grade="graded"><span data-jev-score>${safe(grade.jevScore)}</span> · <span data-qa-verdict>${safe(grade.qaVerdict)}</span></p>`;
+    return `<span data-cost="actual">Actual ${usdActual.format(costs.actual)}</span> <span data-cost="estimated">Estimated ${usdEstimated.format(costs.estimated)}</span>${costs.unpriced ? ` <span data-cost="unpriced">${costs.unpriced} unpriced</span>` : ''}`;
   }
 
   function dialogResults(vac) {
@@ -120,11 +126,10 @@ window.startVkAdminReview = (() => {
     const turns = (vac.turns || []).map((turn, index) => {
       if (turn.speaker === 'system' || turn.direction === 'system') return '';
       const detail = vac.replyDetails?.[index];
-      const isAssistant = turn.speaker === 'app' || turn.speaker === 'assistant' || turn.direction === 'outbound';
       if (detail && turn.fixedOpener === true && !detail.model && !detail.priced) {
-        return `${turnMarkup(turn)}<p class="admin-reply-detail"><strong>Opening greeting (no model, no cost)</strong></p>${gradeLine(detail.grade)}`;
+        return `${turnMarkup(turn)}<p class="admin-reply-detail"><strong>Opening greeting (no model, no cost)</strong></p>`;
       }
-      const meta = detail ? `<p class="admin-reply-detail"><strong>${safe(detail.model || 'Model unavailable')}</strong> · ${detail.priced ? costLines(detail.costs) : '<span data-cost="unpriced">unpriced</span>'}</p>${isAssistant ? gradeLine(detail.grade) : ''}` : (isAssistant ? gradeLine({ notGraded: true }) : '');
+      const meta = detail ? `<p class="admin-reply-detail"><strong>${safe(detail.model || 'Model unavailable')}</strong> · ${detail.priced ? costLines(detail.costs) : '<span data-cost="unpriced">unpriced</span>'}</p>` : '';
       return `${turnMarkup(turn)}${meta}`;
     }).join('');
     return `<div class="admin-dialog-head"><div class="admin-costs" data-vacation-total aria-label="Vacation total"><strong>Vacation total</strong> ${costLines(vac.costs)}</div></div><div class="messages" id="customerChatReplay" data-readonly="true" aria-readonly="true" aria-label="${safe(vac.label)} chat (read only)">${turns || '<p class="admin-empty">No chat turns are stored for this vacation yet.</p>'}</div>${dialogResults({ qa: artifacts?.review?.qa ?? vac.qa, survey: artifacts?.review?.survey ?? vac.survey })}`;
@@ -136,14 +141,11 @@ window.startVkAdminReview = (() => {
     return `<iframe title="${safe(vac.label)} trip (view only)" src="${src}" credentialless sandbox="allow-scripts allow-same-origin" data-trip-frame="1"></iframe>`;
   }
 
-  function keepsake(vac, artifacts) {
-    const pdf = artifacts?.keepsakePdf
-      ? `<a class="admin-action" data-keepsake-pdf href="/api/admin/${artifactsPath(vac.tripId)}/keepsake-pdf" download>Keepsake PDF</a>` : '';
-    if (!vac.shareSlug) return pdf || '<p class="admin-empty">No keepsake is available for this vacation yet.</p>';
+  function keepsake(vac) {
+    if (!vac.shareSlug) return '<p class="admin-empty">No keepsake is available for this vacation yet.</p>';
     const share = encodeURIComponent(vac.shareSlug);
-    const generate = `/api/pdf/shared/${share}/report/keepsake-style-2.pdf`;
     const preview = `/shared/${share}/journey?style=2&printMode=report&pdfReport=keepsake-style-2`;
-    return `<div class="admin-keepsake-actions">${pdf}<a class="admin-action" href="${generate}" target="_blank" rel="noopener" data-keepsake-generate>Generate</a></div><iframe title="${safe(vac.label)} keepsake" src="${preview}" credentialless data-keepsake-frame></iframe>`;
+    return `<iframe title="${safe(vac.label)} keepsake" src="${preview}" credentialless data-keepsake-frame></iframe>`;
   }
 
   function onboarding(vac, artifacts) {
@@ -224,17 +226,6 @@ window.startVkAdminReview = (() => {
       event.stopPropagation();
       const open = document.getElementById('vacationDropdown').classList.toggle('open');
       button.setAttribute('aria-expanded', String(open));
-    } else if (button.dataset.dialogPdf) {
-      const tripId = viewTrip();
-      if (!tripId) return;
-      const link = document.createElement('a');
-      link.href = `/api/admin/${artifactsPath(tripId)}/dialog-pdf`;
-      link.download = '';
-      link.rel = 'noopener';
-      document.body.append(link);
-      link.click();
-      link.remove();
-      closeMenu();
     } else if (button.dataset.view) {
       state.view = button.dataset.view;
       renderViewPane();
@@ -441,8 +432,7 @@ window.startVkAdminReview = (() => {
       const vac = state.details.get(id);
       document.querySelector('.admin-view-panel').innerHTML = viewContent(vac);
       lockReplay(document.getElementById('customerChatReplay'));
-      const dropdown = document.getElementById('vacationDropdown');
-      if (dropdown) dropdown.outerHTML = switcher();
+      document.getElementById('vacationDropdown').outerHTML = switcher();
     }
   }
 

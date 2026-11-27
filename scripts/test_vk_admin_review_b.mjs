@@ -5,11 +5,10 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { LocalVkAdminStore } from '../src/vacation/vk-admin-review-storage.mjs';
-import { buildAdminReviewBFixture } from './harness/admin-review-b-fixture.mjs';
-import { replayAdminHarnessTurns } from './harness/admin-review-b-replay.mjs';
 import { createAdminArtifactWriter } from './harness/admin-review-artifacts.mjs';
+import { VK_ADMIN_REVIEW_B_IDS, buildVkAdminReviewBFixture, vkAdminReviewBReplayPage } from './harness/vk-admin-review-b-fixture.mjs';
 import { inviteOnboardingTags } from './harness/onboarding-screens.mjs';
-import { storeHarnessKeepsake, writeOutcomes } from './harness/runtime.mjs';
+import { playWithAdminArtifacts, storeHarnessKeepsake, writeOutcomes } from './harness/runtime.mjs';
 import { extractPdfText } from './live-transcript-dialog-pdf.mjs';
 import { startVkAdminLocalServer } from './qa/vk-admin-local-server.mjs';
 import { loadVkAdminPlaywright } from './qa/vk-admin-playwright.mjs';
@@ -19,8 +18,8 @@ const fixturePath = new URL('./fixtures/vk-admin-review/vacation-fixtures.json',
 const [orlando] = JSON.parse(await fs.readFile(fixturePath, 'utf8')).vacations;
 const {
   tripId, other, olderTrip, failedTrip, earlierCustomerId, fixtureTrip, before,
-  vacations, turns, openingGreeting, db, queries,
-} = buildAdminReviewBFixture(orlando);
+} = VK_ADMIN_REVIEW_B_IDS;
+const { vacations, turns, openingGreeting, db, queries } = buildVkAdminReviewBFixture(orlando.shareSlug);
 const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/FioAAAAASUVORK5CYII=', 'base64');
 
 const log = process.env.VK_ADMIN_REVIEW_SCREENSHOTS_DIR || path.join(os.tmpdir(), 'vk-admin-review-b');
@@ -89,9 +88,40 @@ try {
       return result;
     },
   });
-  const replay = (id, failed = false) => replayAdminHarnessTurns({
-    id, failed, workspace, staging, put, fetchStaging, fixture, png, sha,
-  });
+  async function replay(id, failed = false) {
+    const outDir = path.join(workspace, id);
+    const [customer, app] = fixture.turns;
+    const stored = [];
+    let opened = 0;
+    let closed = 0;
+    const result = await playWithAdminArtifacts({
+      origin: staging, token: 'fixture-browser-session', tripId: id, outDir, put,
+      secrets: ['fixture-browser-session'], fetchImpl: fetchStaging, replyBackend: 'vk_bot_mcp',
+      loadTranscript: async () => ({ ...fixture, turns: stored }),
+      play: async (capture) => {
+        for (let turn = 1; turn <= (failed ? 2 : 5); turn += 1) {
+          const text = `Customer line ${turn}`;
+          stored.push({ ...customer, turnIndex: turn * 2 - 1, text, storedText: text });
+          stored.push({ ...app, turnIndex: turn * 2, quality: { ...app.quality, comment: `Reply ${turn} addresses the trip.` } });
+          await capture({ tripId: id, turn, text });
+        }
+        if (failed) {
+          const text = 'Stored customer message with no reply';
+          stored.push({ ...customer, turnIndex: 5, text, storedText: text, buildSha: sha });
+          throw new Error('simulated mid-run failure');
+        }
+        await capture({ tripId: id, turn: 5, text: 'Customer line 5' });
+        await capture({ tripId: id, turn: 6, text: 'Customer line 6' });
+        return { reason: '', liveShaStart: sha };
+      },
+      openPage: async () => {
+        opened += 1;
+        return { close: async () => { closed += 1; }, page: vkAdminReviewBReplayPage({ assert, fs, png, tripId: id }) };
+      },
+    });
+    assert.deepEqual([opened, closed], [1, 1]);
+    return { ...result, outDir };
+  }
   const { adminArtifacts, outDir, played, dialog } = await replay(tripId);
   assert.equal(played.reason, '');
   assert.equal(dialog.ok, true, dialog.detail);
@@ -150,11 +180,15 @@ try {
         await page.waitForFunction(() => getComputedStyle(document.querySelector('#vacationDropdown .trip-list')).opacity === '1');
         await shot(name);
       };
-      const chooseView = async (name) => {
+      const openMenu = async () => {
         await menuButton.click();
+        await page.waitForFunction(() => document.getElementById('vacationDropdown')?.classList.contains('open'));
+      };
+      const chooseView = async (name) => {
+        await openMenu();
         await page.getByRole('option', { name, exact: true }).click();
       };
-      const basicViews = ['Dialog', 'Vacation site', 'Keepsake', 'Onboarding', 'Chat screenshots', 'Dialog PDF'];
+      const basicViews = ['Dialog', 'Vacation site', 'Keepsake', 'Onboarding', 'Chat screenshots'];
       const requests = [];
       page.on('request', (request) => requests.push([request.method(), new URL(request.url()).pathname]));
       await page.goto(`${base}/vacation-app/admin`);
@@ -170,14 +204,12 @@ try {
       assert.equal(await page.getByRole('button', { name: 'Open Lopez family', exact: true }).count(), 0, 'roster vacation is in Sofia’s account');
       await shot('customers');
 
-      const artifactsReady = page.waitForResponse((res) => res.url().includes(`${artifactPath}`) && res.ok());
       await sofia.click();
       await page.locator(`#sitePane[data-kind="chat"][data-run="${tripId}"]`).waitFor();
-      await artifactsReady;
-      assert.equal(await page.locator('.admin-dialog-head [data-dialog-pdf]').count(), 0);
-      await menuButton.click();
-      await page.getByRole('option', { name: 'Dialog PDF', exact: true }).waitFor();
+      await openMenu();
+      await page.locator('#vacationDropdown [data-dialog-pdf]').waitFor();
       await page.keyboard.press('Escape');
+      assert.equal(await page.locator('.admin-view-panel [data-dialog-pdf]').count(), 0);
       const welcome = page.locator('[data-admin-welcome]');
       await welcome.waitFor();
       assert.equal(await welcome.count(), 1);
@@ -191,11 +223,7 @@ try {
       assert.equal(await page.locator('#adminView, .admin-view-controls, select').count(), 0);
       assert.equal(await page.locator('#appHeader .vacation-dropdown').count(), 1);
       await menuButton.click();
-      assert.deepEqual(
-        await page.locator('.admin-header-views .trip-option b').allTextContents(),
-        [...basicViews, 'All vacations'],
-      );
-      assert.deepEqual(await viewOptions.allTextContents(), [...basicViews.slice(0, 5), 'All vacations']);
+      assert.deepEqual(await viewOptions.allTextContents(), [...basicViews, 'All vacations']);
       await shotMenu('header-multiple-vacations');
       await page.keyboard.press('Escape');
       assert.equal(await menuButton.getAttribute('aria-expanded'), 'false');
@@ -206,21 +234,17 @@ try {
       assert.deepEqual(text.slice(1).map((line) => line.match(/(?:Customer line|App reply) \d/)[0]), turns.slice(1).map((turn) => turn.body));
       assert.deepEqual(await page.locator('.admin-reply-detail').allTextContents(), [
         'Opening greeting (no model, no cost)',
-        'vendor/first · Actual $0.01',
+        'vendor/first · Actual $0.01234567 Estimated $0.00',
         'vendor/second · Actual $0.00 Estimated $0.05',
         'vendor/third · unpriced',
-        'vendor/legacy · Actual $0.00',
+        'vendor/legacy · Actual $0.004 Estimated $0.00',
       ]);
-      assert.match(await page.locator('[data-vacation-total]').textContent(), /Actual \$0.02 Estimated \$0.05 1 unpriced/);
-      assert.deepEqual(await page.locator('[data-admin-turn-grade="not-graded"]').count(), 1);
-      assert.deepEqual(await page.locator('[data-admin-turn-grade="graded"]').count(), 4);
-      assert.deepEqual(await page.locator('[data-jev-score]').evaluateAll((els) => els.map((el) => el.textContent)), ['4.25', '3.8', '3.5', '4']);
-      assert.deepEqual(await page.locator('[data-qa-verdict]').evaluateAll((els) => els.map((el) => el.textContent)), ['keep', 'rewrite', 'keep', 'keep']);
+      assert.match(await page.locator('[data-vacation-total]').textContent(), /Actual \$0.02134567 Estimated \$0.05 1 unpriced/);
       assert.match(await page.locator('[data-review-result="qa"]').textContent(), /"score": 4/);
       assert.match(await page.locator('[data-review-result="survey"]').textContent(), /happy/);
+      await openMenu();
       const dialogDownload = page.waitForEvent('download');
-      await menuButton.click();
-      await page.getByRole('option', { name: 'Dialog PDF', exact: true }).click();
+      await page.locator('#vacationDropdown [data-dialog-pdf]').click();
       const dialog = await dialogDownload;
       assert.equal(new URL(dialog.url()).pathname, `${artifactPath}/dialog-pdf`);
       assert.deepEqual(await fs.readFile(await dialog.path()), pdf);
@@ -235,10 +259,15 @@ try {
       await chooseView('Keepsake');
       const preview = page.frameLocator('[data-keepsake-frame]');
       await preview.locator('[data-ae-print="1"]').first().waitFor({ timeout: 40000, state: 'attached' });
+      assert.equal(await page.locator('.admin-view-panel [data-keepsake-pdf], .admin-view-panel [data-keepsake-generate]').count(), 0);
+      const keepsakeBody = await preview.locator('body').innerText().catch(() => '');
+      assert.ok(!/This is an initial take that can be revised through the Vacay Keepsake conversation/.test(keepsakeBody));
+      await openMenu();
       const keepsakeDownload = page.waitForEvent('download');
-      await page.locator('[data-keepsake-pdf]').click();
+      await page.locator('#vacationDropdown [data-keepsake-pdf]').click();
       assert.deepEqual(await fs.readFile(await (await keepsakeDownload).path()), keepsakePdf);
-      const generate = page.locator('[data-keepsake-generate]');
+      await openMenu();
+      const generate = page.locator('#vacationDropdown [data-keepsake-generate]');
       const existingRoute = `/api/pdf/shared/${orlando.shareSlug}/report/keepsake-style-2.pdf`;
       assert.equal(await generate.getAttribute('href'), existingRoute);
       const routeRequest = context.waitForEvent('request', (request) => new URL(request.url()).pathname === existingRoute);
@@ -284,9 +313,8 @@ try {
       assert.equal(await fs.readFile(await (await uploadDownload).path(), 'utf8'), 'admin attachment');
       await page.evaluate(() => { window.initialThread = document.getElementById('messages'); });
       await chooseView('Dialog');
-      assert.equal(await page.locator('.admin-dialog-head [data-dialog-pdf]').count(), 0);
-      await menuButton.click();
-      await page.getByRole('option', { name: 'Dialog PDF', exact: true }).waitFor();
+      await openMenu();
+      await page.locator('#vacationDropdown [data-dialog-pdf]').waitFor();
       await page.keyboard.press('Escape');
       await chooseView('All vacations');
       const vacationList = page.locator('#sitePane [data-admin-vacations]');
@@ -327,8 +355,8 @@ try {
 
       await chooseView('All Customers');
       await page.getByRole('button', { name: 'Open Second fixture', exact: true }).click();
-      await menuButton.click();
-      assert.equal(await page.getByRole('option', { name: 'Dialog PDF', exact: true }).count(), 0);
+      await openMenu();
+      await page.getByRole('option', { name: 'No Dialog PDF yet', exact: true }).waitFor();
       await page.keyboard.press('Escape');
       await welcome.waitFor();
       assert.match(await welcome.textContent(), /Welcome to Second fixture's vacation/);
@@ -336,8 +364,7 @@ try {
       assert.equal(await note.count(), 0);
       assert.equal(await existingNote.count(), 0);
       await menuButton.click();
-      assert.deepEqual(await viewOptions.allTextContents(), basicViews.slice(0, 5));
-      assert.equal(await page.getByRole('option', { name: 'Dialog PDF', exact: true }).count(), 0);
+      assert.deepEqual(await viewOptions.allTextContents(), basicViews);
       await shotMenu('header-single-vacation');
       await page.keyboard.press('Escape');
       await chooseView('Onboarding');
@@ -374,20 +401,20 @@ try {
   {
     const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
     const page = await context.newPage();
-    await page.goto(`${base}/vacation-app/admin`);
-    await page.fill('#adminLoginInput', LOGIN);
-    await page.locator('#adminLogin button').click();
-    await page.getByRole('button', { name: 'Open Kowalski family', exact: true }).click();
-    await page.locator(`#sitePane[data-run="${failedTrip}"]`).waitFor();
-    await page.locator('#tripButton').click();
-    await page.getByRole('option', { name: 'Onboarding', exact: true }).click();
-    const missing = page.locator('[data-onboarding-missing="1"]');
-    await missing.waitFor();
-    assert.match(await missing.textContent(), /harness:fixture:failed/);
-    const missingShot = path.join(log, 'onboarding-missing-390.png');
-    await page.screenshot({ path: missingShot, mask: [page.locator('.admin-coupon')] });
-    assert.ok((await fs.stat(missingShot)).size > 1000, 'onboarding-missing-390.png');
-    await context.close();
+  await page.goto(`${base}/vacation-app/admin`);
+  await page.fill('#adminLoginInput', LOGIN);
+  await page.locator('#adminLogin button').click();
+  await page.getByRole('button', { name: 'Open Kowalski family', exact: true }).click();
+  await page.locator(`#sitePane[data-run="${failedTrip}"]`).waitFor();
+  await page.locator('#tripButton').click();
+  await page.getByRole('option', { name: 'Onboarding', exact: true }).click();
+  const missing = page.locator('[data-onboarding-missing="1"]');
+  await missing.waitFor();
+  assert.match(await missing.textContent(), /harness:fixture:failed/);
+  const missingShot = path.join(log, 'onboarding-missing-390.png');
+  await page.screenshot({ path: missingShot, mask: [page.locator('.admin-coupon')] });
+  assert.ok((await fs.stat(missingShot)).size > 1000, 'onboarding-missing-390.png');
+  await context.close();
   }
 
   const directPut = createAdminArtifactWriter({
