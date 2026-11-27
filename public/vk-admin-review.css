@@ -32,14 +32,14 @@
 .app[data-admin] .trip-button .trip-trigger-title { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; overflow-wrap: normal; }
 .app[data-admin] .trip-list { max-height: min(70dvh, 540px); overflow: auto; }
 .admin-header-views { border-bottom: 1px solid var(--line); margin-bottom: 6px; padding-bottom: 6px; }
+.admin-header-actions { border-bottom: 1px solid var(--line); margin-bottom: 6px; padding-bottom: 6px; display: grid; gap: 2px; }
+.admin-header-actions .admin-view-status { opacity: 0.72; cursor: default; }
+.admin-header-actions a.trip-option { text-decoration: none; color: inherit; }
 .site-pane.admin-vacation { display: grid; grid-template-rows: minmax(0, 1fr); background: var(--panel); }
-.admin-dialog-head, .admin-keepsake-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 8px 16px; }
-.admin-action { font: inherit; color: var(--ink); background: var(--soft); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; }
-.admin-action { display: inline-block; font-weight: 700; }
-.admin-reply-grade { margin: 0.15rem 0 0.75rem; font-size: 0.82rem; color: var(--muted, #5b6470); }
+.admin-dialog-head { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 8px 16px; }
 .admin-view-panel { min-height: 0; overflow: auto; }
 .admin-view-panel iframe { width: 100%; height: 100%; display: block; border: 0; }
-.site-pane[data-kind="keepsake"] .admin-view-panel { display: grid; grid-template-rows: auto minmax(0, 1fr); }
+.site-pane[data-kind="keepsake"] .admin-view-panel { display: grid; grid-template-rows: minmax(0, 1fr); }
 .admin-costs, .admin-reply-detail { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; font-size: 0.8125rem; }
 .admin-reply-detail { margin: -4px 0 7px; color: var(--muted); }
 .admin-result, .admin-replay { padding: 0 16px 8px; }
