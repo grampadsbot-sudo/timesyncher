@@ -11,16 +11,6 @@ export function singlePlanEntitlement(meta, tripId) {
   };
 }
 
-function dialogParty(story) {
-  return {
-    primary: { name: story.customer.name, role: 'Owner' },
-    collaborators: story.party.collaborators || [],
-    preference_subjects: story.party.kids || [],
-    viewers: story.party.viewers || [],
-    editors: story.party.editors || [],
-  };
-}
-
 export async function provisionThrowaway(db, story, { tag, runId, env }) {
   assertThrowaway({ name: story.customer.name, displayName: story.customer.name, email: story.customer.email_alias });
   const email = `harness+${runId}+${story.customer.email_alias}@harness.invalid`.toLowerCase();
@@ -44,11 +34,10 @@ async function insertThrowaway(db, story, { tag, runId, env, meta, email }) {
   `;
   const customerId = customers[0].id;
   const trips = await db`
-    insert into trips (customer_id, title, destination, start_date, end_date, party, status, metadata)
+    insert into trips (customer_id, title, destination, start_date, end_date, status, metadata)
     values (
       ${customerId}, ${`${story.destination} harness`}, ${story.destination},
-      ${story.dates.start}::date, ${story.dates.end}::date, ${story.party}, 'planning',
-      ${{ ...meta, dialogParty: dialogParty(story) }}
+      ${story.dates.start}::date, ${story.dates.end}::date, 'planning', ${meta}
     )
     returning id
   `;

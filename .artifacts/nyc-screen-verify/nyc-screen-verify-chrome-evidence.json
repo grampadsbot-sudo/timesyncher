@@ -89,8 +89,8 @@
       "carboneHhHidden": true
     }
   ],
-  "origin": "http://127.0.0.1:34285",
-  "bundleSha256": "431c0bd29dc8c4c116de83c50a283b1765e508e6c5f3b0328809fdc478fb8538",
+  "origin": "http://127.0.0.1:35119",
+  "bundleSha256": "85b1f1ade7bd02c30394a866f37a5b193a49cb9350bb68bd359b0ae5f8036540",
   "slug": "8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y",
-  "liveApiPath": "/home/ubishere9995/tsv-work/vkfill-1159-vk-dialog-wording-bars-r1/scripts/fixtures/nyc-screen-trip99-live-shared-api.json"
+  "liveApiPath": "/home/ubishere9995/tsv-work/vkfill-1206-20261126225018/scripts/fixtures/nyc-screen-trip99-live-shared-api.json"
 }

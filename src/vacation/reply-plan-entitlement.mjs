@@ -1,5 +1,6 @@
 import { checkoutPlanFromMetadata, requiredConfigText } from './checkout-pricing.mjs';
 import { isCollaboratorAppSeat } from './collaborator-app-seat.mjs';
+import { canonicalCollaboratorAccessFacts } from './reply-access-plan-context.mjs';
 
 const OWNER_VACATION_PLANS = new Set(['single', 'unlimited']);
 
@@ -136,6 +137,7 @@ export function planFactsForReply({ upsell, postIntake = false, planLine = '', s
     payer_line: String(planLine || '').trim() || null,
     purchased_plan: purchased || null,
     plan_owned: Boolean(purchased) || planOwned === true,
+    collaborator_access: canonicalCollaboratorAccessFacts(),
   };
 }
 

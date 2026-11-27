@@ -44,23 +44,6 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
   const requestText = text || `Uploaded ${attachments.length} vacation file${attachments.length === 1 ? '' : 's'}.`;
   const modality = customerModality(body);
   const seat = seatFromSession(session);
-  if (!seat && tripId) {
-    const holder = [session.first_name, session.last_name].filter(Boolean).join(' ') || session.display_name || '';
-    if (holder) {
-      await db`
-        update trips
-        set metadata = jsonb_set(
-          coalesce(metadata, '{}'::jsonb),
-          '{dialogParty,primary}',
-          ${JSON.stringify({ name: holder, role: 'Owner' })}::jsonb,
-          true
-        ),
-          updated_at = now()
-        where id = ${tripId}
-          and coalesce(metadata#>>'{dialogParty,primary,name}', '') = ''
-      `;
-    }
-  }
   const transcriptOwnerId = transcriptCustomerId(session);
   const speakerName = seat?.displayName || [session.first_name, session.last_name].filter(Boolean).join(' ') || session.display_name || '';
   const prior = tripId

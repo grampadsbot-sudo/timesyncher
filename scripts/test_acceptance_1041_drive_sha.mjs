@@ -53,7 +53,7 @@ const written = JSON.parse(fs.readFileSync(path.join(dir, 'dialog-transcript.jso
 assert.equal(driveShaFromTranscript(written), drive);
 assert.equal(JSON.stringify(written).includes('fixture-session'), false);
 
-const hilo = ensurePostIntakeCollabCopy('Hilo from March 4 to March 8 can stay light.');
+const hilo = ensurePostIntakeCollabCopy('Hilo from March 4 to March 8 can stay light.', 'How do view access and edit access work?');
 assert.match(hilo, /build(?:ing)? (?:the|your) itinerary/i);
 assert.match(hilo, /\bview access\b/i);
 assert.match(hilo, /\bedit access\b/i);

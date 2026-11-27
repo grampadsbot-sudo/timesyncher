@@ -158,12 +158,15 @@ export function customerSection(card, { wave, at = new Date() } = {}) {
     ? (brokeBase === 'nothing' ? fbNote : clean(`${brokeBase}; ${fbNote}`))
     : brokeBase;
   const openRouter = openRouterTurnCosts(card);
+  const corrections = (card.turns || []).filter((turn) => turn.self_correction)
+    .map((turn) => `T${turn.n} ${turn.self_correction}`).join(', ');
   return [
     `### ${wave} / customer ${card.roster?.id ?? card.story_id} / ${hst(at)}`,
     `- Arm (A/B): ${card.ab_arm || card.reply_backend} | Coupon: ${clean(coupon.code_hint)} ${clean(coupon.status)} | Edge case: ${clean(card.roster?.edge_case)} | Result: ${card.verdict}${card.mode === 'dry' ? ' (dry)' : ''}`,
     `- What broke or confused: ${broke}`,
     `- Time per turn: ${turnTimes(card)} | Cost ($ replies / $ media): ${replyCost(card)} / ${mediaCost(card)} | Media GB: ${card.media?.gb ?? 'not measured'}${card.media?.source ? ` (${card.media.source})` : ''}`,
     ...(openRouter ? [`- OpenRouter per app turn: ${openRouter}`] : []),
+    ...(corrections ? [`- App self-correction (Jev): ${corrections}`] : []),
     `- Severity (blocker/major/minor): ${severityOf(card)}`,
     `- Redesign implication (one line): ${implicationOf(card)}`,
   ].join('\n');

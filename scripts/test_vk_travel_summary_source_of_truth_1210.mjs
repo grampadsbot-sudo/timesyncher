@@ -103,6 +103,9 @@ const ask = customerAskFromEnv({ HARNESS_CUSTOMER_MODEL_URL: 'http://127.0.0.1:1
 await speakCustomer({ persona: { name: 'Test traveler', goals: [hidden[0]] }, travelSummary: expected, index: 1, ask });
 assert.deepEqual(simulatorPayload.travelSummary, expected);
 assertNoPrivateData(simulatorPayload.travelSummary);
-assert.equal(simulatorPayload.goal, hidden[0]);
+const goalParts = simulatorPayload.goal.split('\n\n');
+assert.equal(goalParts[0], hidden[0]);
+assert.match(goalParts.slice(1).join('\n\n'), /prior customer turns/i);
+assert.equal(simulatorPayload.disclosure?.instructions, goalParts.slice(1).join('\n\n'));
 
 console.log('PASS Travel Summary disclosure, Haiku/Jev, same-tier rewrite, and simulator payload');
