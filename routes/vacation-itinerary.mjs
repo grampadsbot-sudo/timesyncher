@@ -60,13 +60,9 @@ import {
   resolveIntakePlace,
   tripIntakeJobFields,
 } from '../src/vacation/trip-intake-classify.mjs';
-<<<<<<< HEAD
-import { normalizeTripThingName, tripThingNameInText } from '../src/vacation/trip-thing-name-shape.mjs';
-import { keepPlannedDays, persistFollowupLodgingSafely, plannedCustomerThings } from '../src/vacation/chat-plan-persist.mjs';
-=======
+import { normalizeTripThingName } from '../src/vacation/trip-thing-name-shape.mjs';
 import { keepPlannedDays, persistCustomerNotesOnly, persistFollowupLodgingSafely, plannedCustomerThings, tripStateActionsEnabled } from '../src/vacation/chat-plan-persist.mjs';
 import { validatePlannedThings } from '../src/vacation/chat-planned-thing-validation.mjs';
->>>>>>> origin/vk
 import {
   intakeExtractedThings,
   runVacationAppInTurnSearch,
@@ -609,14 +605,9 @@ async function loadTripThings(db, tripId) {
 }
 
 async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch, customerTurnId = null, wantedThings = [], work = null, understanding = null } = {}) {
-<<<<<<< HEAD
-  const planned = namedCustomerActivities(text, intakeActivityThings(extracted)).filter((thing) => tripThingNameInText(thing.title, text));
-  const lodgingWanted = intakeLodgingWanted(extracted, wantedThings).filter((thing) => tripThingNameInText(thing.title, text));
-=======
   const validation = { customerOnly: tripStateActionsEnabled(env) };
   const planned = validatePlannedThings(namedCustomerActivities(text, intakeActivityThings(extracted)), validation);
   const lodgingWanted = validatePlannedThings(intakeLodgingWanted(extracted, wantedThings), validation);
->>>>>>> origin/vk
   const priorRows = await db`select title, destination, metadata from trips where id = ${tripId} limit 1`;
   const existing = await db`select count(*)::int as n from trip_things where trip_id = ${tripId}`;
   if (Number(existing[0]?.n) > 0) {
@@ -736,12 +727,8 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
   return loadTripThings(db, tripId);
 }
 
-<<<<<<< HEAD
-async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '', roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch, customerTurnId = null, wantedThings = [], requestId = null, postStartedMs = null, postBudgetMs = null, activityCommitDecisionsImpl = null, understanding = null } = {}, intakeText = '', extracted = []) {
-=======
 async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '', roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch, customerTurnId = null, wantedThings = [], requestId = null, postStartedMs = null, postBudgetMs = null, activityCommitDecisionsImpl = null, understanding = null } = {}, intakeText = '', extracted = [], legacyReply = '') {
   const customerOnly = tripStateActionsEnabled(env);
->>>>>>> origin/vk
   const work = createPostReplyWork({ db, tripId, requestId, postStartedMs, postBudgetMs, env, fetchImpl });
   if (intakeText) {
     await ensureIntakeItinerary(db, tripId, intakeText, extracted, {
@@ -752,11 +739,7 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
   let current = await loadTripThings(db, tripId);
   const lodgingLookups = [];
   if (!intakeText) {
-<<<<<<< HEAD
-    const lodgingWanted = intakeLodgingWanted(extracted, wantedThings).filter((thing) => tripThingNameInText(thing.title, text));
-=======
     const lodgingWanted = validatePlannedThings(intakeLodgingWanted(extracted, wantedThings), { customerOnly, existing: current });
->>>>>>> origin/vk
     if (lodgingWanted.length) {
       const lodgingOutcome = await persistFollowupLodgingSafely(work.lodging(persistIntakeLodgingThings), db, tripId, lodgingWanted, {
         destinationHint: extractedDestination,
@@ -776,11 +759,7 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
       await persistIntakeLodgingLookupOnCustomerTurn(db, customerTurnId, lodgingLookups);
     }
   }
-<<<<<<< HEAD
-  const wanted = await plannedCustomerThings(db, tripId, text, namedCustomerActivities(text, intakeActivityThings(extracted)));
-=======
   const wanted = await plannedCustomerThings(db, tripId, text, legacyReply, namedCustomerActivities(text, intakeActivityThings(extracted)), { env, existing: current });
->>>>>>> origin/vk
   if (!current.length && !wanted.length) return work.finish(current);
   if (!String(text || '').trim() && !wanted.length) return work.finish(current);
   const tripRows = await db`
@@ -789,13 +768,7 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
     where id = ${tripId}
     limit 1
   `;
-<<<<<<< HEAD
-  const start = tripRows[0]?.start_date || null;
-  const end = tripRows[0]?.end_date || null;
-  const tripDatesRow = { start_date: start, end_date: end };
-=======
   const tripDatesRow = tripRows[0] || {};
->>>>>>> origin/vk
   let next = keepPlannedDays(mergeWantedThings(current, wanted), wanted);
   let commits = null;
   try {

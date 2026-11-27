@@ -149,23 +149,6 @@ async function tripStartDate(db, tripId) {
   }
 }
 
-<<<<<<< HEAD
-export async function plannedCustomerThings(db, tripId, text, activities = []) {
-  const startDate = await tripStartDate(db, tripId);
-  const titled = new Map();
-  const base = Array.isArray(activities) ? activities : [];
-  for (const thing of base) {
-    if (!tripThingNameInText(thing?.title, text)) continue;
-    const key = normalizeTripThingName(thing.title);
-    if (!titled.has(key)) titled.set(key, thing);
-  }
-  for (const item of plannedItineraryItems(text, { startDate })) {
-    const key = normalizeTripThingName(item.title);
-    if (titled.has(key)) titled.set(key, { ...titled.get(key), ...item });
-    else titled.set(key, item);
-  }
-  return [...titled.values()];
-=======
 function mergeByTitle(base, extra) {
   const next = Array.isArray(base) ? [...base] : [];
   const seen = new Set(next.map((thing) => String(thing?.title || '').toLowerCase()).filter(Boolean));
@@ -203,7 +186,6 @@ export async function persistCustomerNotesOnly(db, thing) {
     where id = ${thing.id}
     returning id
   `;
->>>>>>> origin/vk
 }
 
 export async function persistFollowupLodgingSafely(persistFn, db, tripId, lodgingWanted, options) {
