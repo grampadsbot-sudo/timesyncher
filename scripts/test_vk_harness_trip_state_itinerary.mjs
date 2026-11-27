@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { PGlite } from '@electric-sql/pglite';
 import { pgcrypto } from '@electric-sql/pglite/contrib/pgcrypto';
 import { intId } from '../src/vacation/intake-shared-trip.mjs';
@@ -32,6 +33,7 @@ const artifacts = {
 };
 
 async function verifyLiveArmDefault() {
+  const roster = fileURLToPath(new URL('./fixtures/harness/vk-roster.json', import.meta.url));
   const credits = path.join(dir, 'credits.json');
   fs.writeFileSync(credits, JSON.stringify({ total_credits: 3, total_usage: 0, as_of: new Date().toISOString() }));
   const selected = [];
@@ -45,7 +47,7 @@ async function verifyLiveArmDefault() {
   for (const backend of [[], ['--reply-backend', 'vk_bot_mcp']]) {
     const findings = path.join(dir, 'findings.md');
     fs.writeFileSync(findings, '# VK customer test findings\n\n## Section format (harness appends)\n\n## Entries\n');
-    await runRosterCli(['--run-id', runId, '--wave-size', '2', '--findings', findings, ...backend], {
+    await runRosterCli(['--roster', roster, '--run-id', runId, '--wave-size', '2', '--findings', findings, ...backend], {
       outRoot: dir, liveOptions, log() {},
     });
   }
