@@ -273,6 +273,9 @@ export function customerNamedActivity(text) {
     notes: [],
     collaboratorNotes: [],
     source: 'customer',
+    origin: 'customer_turn',
+    customerTurnId: 'current',
+    customerSpan: title,
   };
 }
 

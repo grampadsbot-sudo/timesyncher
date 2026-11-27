@@ -217,17 +217,11 @@ export async function persistChatIntakePlaceThing(db, {
   if (!db || !tripId || !name) return null;
   const existingRows = await loadChatIntakeRows(db, tripId);
   let existing = await findExistingChatIntakeRow(db, tripId, name, metadata);
-  const preRows = existing
-    ? existingRows.filter((row) => String(row.id) !== String(existing.id))
-    : existingRows;
-  const pre = evaluateIntakePreSearch({
-    title: name,
-    category,
-    description,
-    metadata,
-    existingRows: preRows,
-    provenanceContext,
-  });
+  const preRows = existing ? existingRows.filter((row) => String(row.id) !== String(existing.id)) : existingRows;
+  const refreshingExisting = Boolean(existing?.id && rowNeedsPlaceSearch(existing));
+  const pre = refreshingExisting
+    ? { admit: true, adjustedCategory: clean(category, 80).toLowerCase() || existing.category || 'activity' }
+    : evaluateIntakePreSearch({ title: name, category, description, metadata, existingRows: preRows, provenanceContext });
   if (!pre.admit) {
     if (pre.reason === 'merge_duplicate' && pre.mergeIntoId) {
       const mergeRow = existingRows.find((row) => String(row.id) === pre.mergeIntoId);
@@ -242,8 +236,7 @@ export async function persistChatIntakePlaceThing(db, {
     return { ...tripThingRow({ ...existing, metadata: existingMeta }), id: String(existing.id), deduped: true };
   }
   const baseMeta = {
-    ...existingMeta,
-    ...metadata,
+    ...existingMeta, ...metadata,
     source: metadata?.source || existingMeta.source || 'chat_extraction',
     intakeSource: metadata?.intakeSource || existingMeta.intakeSource || 'chat_extraction',
   };
@@ -254,27 +247,15 @@ export async function persistChatIntakePlaceThing(db, {
       const outcome = await searchChatIntakePlace({
         title: name,
         category: adjustedCategory || category || existing?.category || 'activity',
-        destinationHint: destination,
-        detailText,
-        tripId,
-        db,
-        env,
-        fetchImpl,
-        searchImpl,
+        destinationHint: destination, detailText, tripId, db, env, fetchImpl, searchImpl,
       });
       if (outcome.ok && outcome.place) {
+        const coordsId = Number.isFinite(Number(outcome.place?.lat)) && Number.isFinite(Number(outcome.place?.lng)) ? `coord:${outcome.place.lat},${outcome.place.lng}` : '';
+        const providerResultId = outcome.place?.id || outcome.place?.providerResultId || outcome.place?.externalId || baseMeta.providerResultId || coordsId;
         const post = evaluateIntakeAdmission({
-          title: name,
-          category: adjustedCategory || category,
-          description,
-          metadata: {
-            ...baseMeta,
-            origin: intakeProvenanceOrigin(baseMeta) || 'provider_search',
-            providerResultId: outcome.place?.id || outcome.place?.providerResultId || baseMeta.providerResultId,
-          },
-          resolvedPlace: outcome.place,
-          existingRows,
-          provenanceContext,
+          title: name, category: adjustedCategory || category, description,
+          metadata: { ...baseMeta, origin: intakeProvenanceOrigin(baseMeta) || 'provider_search', providerResultId },
+          resolvedPlace: outcome.place, existingRows, provenanceContext,
         });
         const mergeId = post.reason === 'merge_duplicate' ? String(post.mergeIntoId || '') : '';
         const upgradingSameRow = mergeId && mergeId === String(existing?.id || '');
@@ -345,6 +326,18 @@ export async function persistChatIntakePlaceThing(db, {
       return upgradeTripThingInPlace(db, tripId, existing.id, requestId, placeholder, env);
     }
     return insertTripThing(db, { tripId, requestId, thing: placeholder, env });
+  }
+  if (refreshingExisting && metadata?.placeRefreshAttemptedAt) {
+    const stamped = unresolvedChatIntakePlaceThing({
+      title: name,
+      category: adjustedCategory || category || existing?.category || 'activity',
+      description: description || existing?.description || '',
+      metadata: baseMeta,
+      startsAt: startsAt || existing?.starts_at || null,
+    });
+    if (stamped) {
+      return upgradeTripThingInPlace(db, tripId, existing.id, requestId, stamped, env);
+    }
   }
   await recordChatIntakeSearchMiss(db, tripId, {
     title: name,

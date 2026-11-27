@@ -83,6 +83,9 @@ function itemFromLine(line, dayNumber, startDate) {
       notes: [],
       collaboratorNotes: [],
       source: 'customer',
+      origin: 'customer_turn',
+      customerTurnId: 'current',
+      customerSpan: title,
       dayNumber,
       starts_at: day ? `${day}T12:00:00.000Z` : null,
     });
