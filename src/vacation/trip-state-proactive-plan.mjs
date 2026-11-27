@@ -26,8 +26,18 @@ export function proactiveCriteria(state, history) {
     || history.map(({ text }) => text.match(budgetPattern)?.[0]).filter(Boolean).at(-1);
   const relaxed = facts.some(({ kind, value }) => kind === 'pace' && /\b(?:slow|relaxed|easy|leisurely)\b/i.test(value))
     || history.some(({ text }) => pacePattern.test(text));
-  const ages = [...new Set(Object.values(state.saved.travelers)
-    .filter(({ relation, age }) => relation === 'child' && /^\d{1,2}$/.test(age || '')).map(({ age }) => age))];
+  const ageMatches = [
+    ...Object.values(state.saved.travelers)
+      .filter(({ relation, age }) => relation === 'child' && /^\d{1,2}$/.test(age || ''))
+      .map(({ age }) => age),
+    ...facts.filter(({ kind }) => kind === 'party')
+      .flatMap(({ value }) => [...String(value).matchAll(/\b(?:ages?\s+(\d{1,2})(?:\s*(?:and|,)\s*(\d{1,2}))?|(\d{1,2})[- ]year[- ]olds?)\b/gi)]
+        .flatMap((match) => [match[1], match[2], match[3]]).filter(Boolean)),
+    ...history
+      .flatMap(({ text }) => [...String(text || '').matchAll(/\b(?:ages?\s+(\d{1,2})(?:\s*(?:and|,)\s*(\d{1,2}))?|(\d{1,2})[- ]year[- ]olds?)\b/gi)]
+        .flatMap((match) => [match[1], match[2], match[3]]).filter(Boolean)),
+  ];
+  const ages = [...new Set(ageMatches)];
   const family = ages.length > 0 || history.some(({ text }) => /\b(?:kids|children|toddler|family-friendly)\b/i.test(text));
   return {
     relaxed,
@@ -84,15 +94,34 @@ export function buildProactivePlan({ state, saved, history, criteria, key }) {
   const days = Object.entries(saved.days).sort(([, a], [, b]) => a.date.localeCompare(b.date))
     .map(([id, day]) => ({ id, date: day.date, count: day.assigned.length,
       times: day.assigned.map(({ time }) => time?.value).filter((value) => /^\d{2}:\d{2}$/.test(value)) }));
+  if (!days.length) {
+    return {
+      operations: [], gaps: [],
+      authority: { source: 'system_plan', id: key, researchKey: key, planKey: key, spans: {} },
+    };
+  }
   const assigned = new Set(Object.values(saved.days).flatMap(({ assigned }) => assigned.map(({ item }) => item)));
   const savedByName = new Map(Object.entries(saved.items).map(([id, item]) => [normalizeTripThingName(item.title), { id, ...item }]));
   const gaps = [];
   const spans = {};
   const wanted = wantedItems(history, days.map(({ date }) => date), spans);
   const wantedNames = new Set(wanted.map(({ title }) => normalizeTripThingName(title)));
+  const savedMustDos = Object.entries(saved.items)
+    .filter(([id, item]) => !assigned.has(id)
+      && !wantedNames.has(normalizeTripThingName(item.title))
+      && item.via !== 'search'
+      && !Object.hasOwn(proactivePlanBlocks, item.title)
+      && isTripThingName(item.title))
+    .map(([, item]) => ({ title: item.title, type: item.type }));
+  const allWanted = [...wanted, ...savedMustDos];
+  const allWantedNames = new Set(allWanted.map(({ title }) => normalizeTripThingName(title)));
   const candidates = Object.values(state.candidates)
-    .filter(({ title }) => !wantedNames.has(normalizeTripThingName(title)))
-    .filter(({ title }) => !assigned.has(savedByName.get(normalizeTripThingName(title))?.id));
+    .filter(({ title, type }) => {
+      const norm = normalizeTripThingName(title);
+      if (allWantedNames.has(norm)) return false;
+      const existing = savedByName.get(norm);
+      return !existing || (existing.type === type && !assigned.has(existing.id));
+    });
   const operations = [];
   const limit = criteria.relaxed ? 1 : 2;
   const first = days[0], last = days.at(-1);
@@ -114,7 +143,7 @@ export function buildProactivePlan({ state, saved, history, criteria, key }) {
     day.times.push(time.value);
   }
 
-  const namedHotel = wanted.find(({ type }) => type === 'hotel');
+  const namedHotel = allWanted.find(({ type }) => type === 'hotel');
   const currentHotel = [...savedByName.values()].find(({ type, id }) => type === 'hotel' && assigned.has(id));
   const hotel = namedHotel || (!currentHotel && candidates.find(({ type }) => type === 'hotel'));
   if (hotel && first !== last && !currentHotel && room(first, 2)) {
@@ -134,7 +163,7 @@ export function buildProactivePlan({ state, saved, history, criteria, key }) {
     last.count += 1;
     last.times.push('09:00');
   }
-  for (const entry of wanted) {
+  for (const entry of allWanted) {
     const existing = savedByName.get(normalizeTripThingName(entry.title));
     if (assigned.has(existing?.id) || (entry === hotel && first !== last && operations.some(({ op }) => op === 'set_stay'))) continue;
     const explicitDay = days.find(({ date }) => date === entry.date);

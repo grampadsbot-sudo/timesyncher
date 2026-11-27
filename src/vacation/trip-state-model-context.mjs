@@ -28,6 +28,22 @@ export const TRIP_STATE_REWRITE_INSTRUCTION = [
   'Do not write that chat cannot save, place, or invite.',
 ].join(' ');
 
+export const TRIP_STATE_PROACTIVE_PLAN_INSTRUCTION = [
+  'A first-pass itinerary was just laid out in last_actions with proposed times.',
+  'In your own words, let the customer know you took a shot at laying out the days and that she can change any item, day, or time.',
+].join(' ');
+
+export function hasProactiveFirstPassAction(state) {
+  const turn = state?.updated_turn;
+  if (!Number.isInteger(turn) || !state?.research?.key || state.research.turn !== turn) return false;
+  const saveActions = (state.last_actions || []).filter((entry) => entry?.op === 'save_plan' && entry.turn === turn);
+  if (!saveActions.length) return false;
+  const refs = new Set(saveActions.flatMap((entry) => entry.refs || []));
+  return Object.values(state.saved?.days || {}).some((day) =>
+    (day.assigned || []).some((row) => refs.has(row.id) && row.proposed_by === 'system' && row.turn === turn),
+  );
+}
+
 const WEEKDAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 const CORE_DISCLOSED_KINDS = new Set(['party', 'destination', 'dates', 'access']);
 
@@ -271,6 +287,7 @@ export function pinTripStateContext(revisionOrState, options = {}) {
 export function buildTripStateChatCall({ tripStateContext, customerTurn, mode = 'write', systemExtra = '' }) {
   const extraParts = [];
   if (mode === 'rewrite') extraParts.push(TRIP_STATE_REWRITE_INSTRUCTION);
+  if (hasProactiveFirstPassAction(tripStateContext.state)) extraParts.push(TRIP_STATE_PROACTIVE_PLAN_INSTRUCTION);
   if (String(systemExtra || '').trim()) extraParts.push(String(systemExtra).trim());
   const extraText = extraParts.join('\n\n');
   const trustedJson = stringifyTripState({

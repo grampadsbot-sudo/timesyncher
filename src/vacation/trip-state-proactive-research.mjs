@@ -13,7 +13,8 @@ const categories = [
 export async function searchProactiveItinerary({
   destination, start, end, criteria, turn, key, env, fetchImpl = globalThis.fetch,
 }) {
-  const waiting = { key, state: 'failed', turn, areas: [destination], gaps: [] };
+  const area = String(destination || '').trim().slice(0, 280);
+  const waiting = { key, state: 'failed', turn, areas: area ? [area] : [], gaps: [] };
   const providerEnv = buildProviderEnv(env);
   if (!providerEnv.VK_SEARCH_WAKE_URL && !providerEnv.VK_SEARCH_CENSUS_DIR) {
     return { research: { ...waiting, gaps: ['VK place search is unavailable.'] }, candidates: {} };
@@ -22,14 +23,19 @@ export async function searchProactiveItinerary({
   const fetchBounded = (url, options = {}) => fetchImpl(url, {
     ...options, signal: options.signal ? AbortSignal.any([options.signal, deadline]) : deadline,
   });
-  const center = await tryGeocodeLabel(fetchBounded, destination, [], null, { env: providerEnv });
+  let center = null;
+  try {
+    center = await tryGeocodeLabel(fetchBounded, area, [], null, { env: providerEnv });
+  } catch (error) {
+    center = error ? null : null;
+  }
   if (!center) {
     return { research: { ...waiting, gaps: ['The destination could not be resolved for place search.'] }, candidates: {} };
   }
   const attempts = await Promise.all(categories.map(async ({ type, category, target }) => {
-    const q = [destination, start === end ? start : `${start} to ${end}`, target, ...criteria].join(' ').slice(0, 240);
-    const search = () => queryVkSearchPlaces(fetchBounded, providerEnv, { center, locationText: destination },
-      [{ q, category, areaHint: destination }]);
+    const q = [area, start === end ? start : `${start} to ${end}`, target, ...criteria].join(' ').slice(0, 240);
+    const search = () => queryVkSearchPlaces(fetchBounded, providerEnv, { center, locationText: area },
+      [{ q, category, areaHint: area }]);
     let result;
     try {
       result = await search();
@@ -37,8 +43,8 @@ export async function searchProactiveItinerary({
       if (deadline.aborted || (error?.httpStatus && error.httpStatus < 500 && error.httpStatus !== 429)) return { type, failed: true };
       try {
         result = await search();
-      } catch {
-        return { type, failed: true };
+      } catch (retryError) {
+        return { type, failed: Boolean(retryError) || true };
       }
     }
     if (result.skipped) return { type, failed: true };
@@ -49,7 +55,7 @@ export async function searchProactiveItinerary({
         const result_id = `vk-${digestTripState([place.externalId, place.address, place.lat, place.lng]).slice(0, 40)}`;
         const facts = [place.address, place.price == null ? '' : `Reported price: ${place.price}`]
           .map((value) => String(value || '').trim().slice(0, 280)).filter(Boolean);
-        return { result_id, title: place.title, type, area: destination, source: 'vk_search', turn, facts: [...new Set(facts)] };
+        return { result_id, title: place.title.slice(0, 280), type, area, source: 'vk_search', turn, facts: [...new Set(facts)] };
       });
     return { type, candidates };
   }));

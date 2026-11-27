@@ -124,7 +124,7 @@ function visitOnDay(site, saved, context, args, requireExisting = false) {
   const anchor = before || (current?.day === day ? current.before : undefined);
   const system = context.authority.source === 'system_plan';
   const planKey = system ? context.authority.planKey : null;
-  const proposedBy = system && !(planKey && time_evidence) ? 'system' : 'customer';
+  const proposedBy = system && !(planKey && args.time_evidence) ? 'system' : 'customer';
   const samePlacement = current?.day === day && equal(current.time, time) && anchor === current.before;
   if (samePlacement && (system || current.proposed_by !== 'system')) return unchanged([current.id], item);
   if (system && current && current.proposed_by !== 'system') return denied('Customer or existing site placements take precedence.');

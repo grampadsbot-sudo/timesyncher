@@ -12,8 +12,13 @@ const validSaved = ajv.compile({ ...schema.$defs.saved, $defs: schema.$defs });
 const validFact = ajv.compile(schema.$defs.fact);
 const validTraveler = ajv.compile({ ...schema.$defs.traveler, $defs: schema.$defs });
 const validStatus = ajv.compile({ ...schema.$defs.status, $defs: schema.$defs });
+const validResearch = ajv.compile({ ...schema.$defs.research, $defs: schema.$defs });
+const validCandidate = ajv.compile({ ...schema.$defs.candidate, $defs: schema.$defs });
+const validStep = ajv.compile({ ...schema.$defs.step, $defs: schema.$defs });
 const actions = new Set(schema.$defs.action.properties.op.enum);
 const idPattern = new RegExp(schema.$defs.id.pattern);
+const budgetDisclosure = /(?:\$|USD\s*)\d[\d,]*(?:\.\d\d)?|\b(?:on a budget|budget-friendly|inexpensive|low-cost)\b/i;
+const paceDisclosure = /\b(?:slow|relaxed|easy|leisurely|low[- ]key)\s+(?:pace|days|trip)|\b(?:take it easy|don't pack|downtime|one (?:activity|thing) per day)\b/i;
 
 export function assertTripState(state) {
   if (!validState(state)) throw new TypeError(`Invalid Trip State: ${ajv.errorsText(validState.errors)}`);
@@ -76,6 +81,10 @@ function turnDisclosures({ classification, text, turn }) {
   const { destination, hasDates, startDate, endDate } = classification;
   if (destination && request.includes(destination.toLowerCase())) facts.dest = { kind: 'destination', value: destination, turn };
   if (hasDates && startDate && endDate) facts.dates = { kind: 'dates', value: `${startDate} – ${endDate}`, turn };
+  const budgetMatch = text.match(budgetDisclosure)?.[0];
+  if (budgetMatch) facts.budget = { kind: 'budget', value: budgetMatch.slice(0, 280), turn };
+  const paceMatch = text.match(paceDisclosure)?.[0];
+  if (paceMatch) facts.pace = { kind: 'pace', value: paceMatch.slice(0, 280), turn };
   return { travelers, facts };
 }
 
@@ -148,6 +157,7 @@ function projectReceipts({ receipts, saved, tripId, requestId, turn }) {
 export function projectTripState({
   trip, site, requestId, turn, revision, phase = 'reply_ready', previous,
   receipts = [], disclosures, travelers, classification, text, grant, env,
+  research, candidates, nextSteps,
 }) {
   const turnFacts = turnDisclosures({ classification, text, turn });
   const newTravelers = { ...turnFacts.travelers, ...travelers };
@@ -161,6 +171,15 @@ export function projectTripState({
     backing: tripStateBacking(site?.trip || trip), locked: tripStateSiteLocked(site?.trip || trip),
     read: saved.read, emailHeld: Object.values(saved.invites).some(({ status }) => status === 'held'),
   });
+  const hasResearch = Boolean(research && validResearch(research));
+  const nextResearch = hasResearch ? research : (previous?.research || { key: null, state: 'waiting', turn, areas: [], gaps: [] });
+  const hasCandidates = candidates != null && typeof candidates === 'object' && !Array.isArray(candidates);
+  const nextCandidates = hasCandidates
+    ? Object.fromEntries(Object.entries(candidates).filter(([id, value]) => idPattern.test(id) && validCandidate(value)))
+    : (previous?.candidates || {});
+  const hasNextSteps = Array.isArray(nextSteps) && nextSteps.length > 0 && nextSteps.length <= 3
+    && nextSteps.every((step) => validStep(step));
+  const steps = hasNextSteps ? nextSteps : [{ kind: 'wait', task: 'Wait for the next request.', refs: [] }];
   const updates = [
     { section: 'saved', source: 'site_read', turn },
     { section: 'capabilities', source: 'registry', turn },
@@ -168,13 +187,16 @@ export function projectTripState({
     { section: 'tool_status', source: tool_status.length ? 'tool_result' : 'turn_reset', turn },
   ];
   if (Object.keys(newDisclosures).length) updates.push({ section: 'disclosed', source: 'customer_turn', turn });
+  if (hasResearch) updates.push({ section: 'research', source: 'vk_search', turn });
+  if (hasCandidates) updates.push({ section: 'candidates', source: 'vk_search', turn });
+  if (hasNextSteps) updates.push({ section: 'next_steps', source: 'planner', turn });
   return {
     version: '1.0', trip_id: trip.id, updated_turn: turn, revision, phase, capabilities, saved, disclosed,
-    candidates: previous?.candidates || {},
-    research: previous?.research || { key: null, state: 'waiting', turn, areas: [], gaps: [] },
+    candidates: nextCandidates,
+    research: nextResearch,
     proposals: previous?.proposals || {}, open_asks: previous?.open_asks || [], answered: previous?.answered || [],
     said: previous?.said || [], last_actions, tool_status,
-    next_steps: [{ kind: 'wait', task: 'Wait for the next request.', refs: [] }],
+    next_steps: steps,
     scope: { mode: 'full', omitted: {} }, updates,
   };
 }

@@ -23,7 +23,7 @@ import { createBoundedReplyShipGate, createBoundedRewriteClaim, rewriteVacationA
 import { sessionReplyBackend } from '../src/vacation/vk-bot-mcp-reply.mjs';
 import { isOrdinaryPlanningTurn, recoverOrdinaryPlanningReply } from '../src/vacation/chat-plan-persist.mjs';
 import { openRouterTurnTelemetry, replyInstructionsPayload } from '../src/vacation/openrouter-call-ledger.mjs';
-import { createTripStateRevisionStore } from '../src/vacation/trip-state-revision-store.mjs';
+import { prepareProactiveTripState } from '../src/vacation/trip-state-proactive.mjs';
 export async function queueVacationAppTurn(db, session, trip, body, hooks, intake = {}) {
   const env = process.env;
   const tripId = trip?.id ?? null;
@@ -263,7 +263,22 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
   const { replyCustomerTurn, itineraryEditResult, itineraryEditAuthoritative, itineraryEditCannedReply } = await prepareChatItineraryEditForQueueTurn({
     db, trip, seat, tripId, requestText, turnId: turnRows[0]?.id || null, httpReq: intake?.httpReq || null, env,
   });
-  const tripStateRevision = await createTripStateRevisionStore({ env }).prepare({ trip, requestId, turn: customerTurnIndex, actorId: session.customer_id, classification, text: requestText });
+  const proactiveHistory = [...memoryRows].reverse().reduce((rows, row, index) => {
+    if (row.speaker === 'app') return rows;
+    const stored = row.payload && typeof row.payload === 'object' ? row.payload : {};
+    const live = stored.liveTranscript && typeof stored.liveTranscript === 'object' ? stored.liveTranscript : {};
+    const rowTurn = Number(live.turnIndex) || (index + 1);
+    rows.push({
+      turn: rowTurn,
+      text: row.body || '',
+      things: Array.isArray(stored.wantedThings) ? stored.wantedThings : [],
+    });
+    return rows;
+  }, []);
+  const tripStateRevision = await prepareProactiveTripState({
+    trip, requestId, turn: customerTurnIndex, actorId: session.customer_id,
+    classification, text: requestText, history: proactiveHistory, wantedThings: jobFields.wantedThings, env,
+  });
   const tripStateReady = Boolean(tripStateRevision);
   let produced;
   const replyStarted = Date.now();
