@@ -7,6 +7,7 @@ import { readCookie, requireWebEditAccess, webAccessCookieName } from './web-acc
 import { validatePlannedThings } from './chat-planned-thing-validation.mjs';
 
 const PLANNING_TURN_RE = /\b(?:itinerary|day-by-day|day by day|keep building|family plan|book early|want to book|we'?d want to book)\b|\bplan (?:the|our|a|my)\b|\bday\s+\d{1,2}\b/i;
+const PLAN_CONFIRM_RE = /\b(?:yes|lock it in|lock that in|save that plan|save this plan|save the plan|that plan works|confirm the plan|go with that)\b/i;
 const DAY_LINE_RE = /^(?:#{1,3}\s*)?(?:\*\*)?\s*day\s*(\d{1,2})\s*(?:\*\*)?\s*[:.)\-\u2013\u2014]*\s*(.*)$/i;
 const WEEKDAY_LINE_RE = /^(?:[-*•]\s*)?(?:#{1,3}\s*)?(?:\*\*)?\s*(sunday|monday|tuesday|wednesday|thursday|friday|saturday)(?:\s*,?\s*[a-z]{3,9}\.?\s+\d{1,2}(?:,?\s*\d{4})?)?\s*(?:\*\*)?\s*[:\-\u2013\u2014]\s*(.+)$/i;
 const WEEKDAY_INDEX = { sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 };
@@ -44,6 +45,13 @@ export function isOrdinaryPlanningTurn(rawText = '') {
   if (!text) return false;
   if (isReservationAsk(text) || isAiImportChatRequest(text)) return false;
   return PLANNING_TURN_RE.test(text);
+}
+
+function isPlanConfirmation(rawText = '') {
+  const text = asText(rawText, 2000);
+  if (!text || /^(?:yes|yeah|yep|yup|sure|ok|okay)[.!\s]*$/i.test(text)) return false;
+  if (!/\b(?:plan|itinerary|days?)\b/i.test(text)) return false;
+  return PLAN_CONFIRM_RE.test(text);
 }
 
 function categoryForPlanTitle(title) {
@@ -131,6 +139,26 @@ function sqlMessage(error) {
 
 function unsupportedTestSql(error) {
   return /Unhandled test SQL|unexpected sql/i.test(sqlMessage(error));
+}
+
+async function priorAppBodies(db, tripId) {
+  if (typeof db !== 'function' || !tripId) return [];
+  try {
+    const rows = await db`
+      select body, speaker
+      from transcript_turns
+      where trip_id = ${tripId}
+      order by sent_at desc
+      limit 8
+    `;
+    return (Array.isArray(rows) ? rows : [])
+      .filter((row) => !row?.speaker || row.speaker === 'app')
+      .map((row) => String(row?.body || ''))
+      .filter(Boolean);
+  } catch (error) {
+    if (unsupportedTestSql(error)) return [];
+    throw error;
+  }
 }
 
 async function tripStartDate(db, tripId) {
