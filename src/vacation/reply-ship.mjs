@@ -1,5 +1,4 @@
 import { sayVacationNotTrip } from './customer-visible-copy.mjs';
-import { ensurePostIntakeCollabCopy } from './post-intake-collab-copy.mjs';
 import { finalizeCustomerReplyText } from './reply-customer-wording.mjs';
 import { syncFirstIntakeCustomerInputOnTurn } from './first-intake-customer-input.mjs';
 import { transcriptCustomerId } from './collaborator-app-seat.mjs';
@@ -192,7 +191,6 @@ export async function persistVacationAppOutboundReply({
       error: String(produced?.quality?.reason || produced?.reason || 'quality_not_judged'),
     };
   }
-  if (firstIntake && produced?.reply) produced.reply = ensurePostIntakeCollabCopy(produced.reply);
   if (produced?.reply) produced.reply = sayVacationNotTrip(produced.reply);
   if (produced?.reply) produced.reply = finalizeCustomerReplyText(produced.reply);
   const appLive = liveTurnRecord({
