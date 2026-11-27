@@ -75,14 +75,44 @@ export async function vkAdminLegacyNoteSources(db, vacation, member) {
 }
 
 function costs(rows) {
-  const total = { actual: 0, estimated: 0, unpriced: 0 };
+  const total = { actual: 0, estimated: 0, unpriced: 0, hasEstimated: false };
   for (const row of rows) {
     const amount = row.costUsd == null || row.costUsd === '' ? NaN : Number(row.costUsd);
     if (Number.isFinite(amount) && row.costSource === 'openrouter_usage_cost') total.actual += Math.round(amount * 1e8);
-    else if (Number.isFinite(amount) && row.costSource === 'openrouter_listed_price') total.estimated += Math.round(amount * 1e8);
-    else total.unpriced += 1;
+    else if (Number.isFinite(amount) && row.costSource === 'openrouter_listed_price') {
+      total.hasEstimated = true;
+      total.estimated += Math.round(amount * 1e8);
+    } else total.unpriced += 1;
   }
-  return { actual: total.actual / 1e8, estimated: total.estimated / 1e8, unpriced: total.unpriced };
+  return {
+    actual: total.actual / 1e8,
+    estimated: total.estimated / 1e8,
+    unpriced: total.unpriced,
+    hasEstimated: total.hasEstimated,
+  };
+}
+
+function formatJevScore(value) {
+  const score = Number(value);
+  if (!Number.isFinite(score)) return '';
+  return Number.isInteger(score) ? String(score) : String(Math.round(score * 100) / 100);
+}
+
+export function adminReplyGrade(turn) {
+  if (!isReply(turn)) return null;
+  const live = turn.payload?.liveTranscript && typeof turn.payload.liveTranscript === 'object'
+    ? turn.payload.liveTranscript
+    : {};
+  if (turn.fixedOpener === true || live.fixedOpener === true) {
+    return { notGraded: true, reason: String(live.jev?.reason || 'fixed_onboarding_opener') };
+  }
+  const quality = live.quality && typeof live.quality === 'object' ? live.quality : null;
+  const disposition = String(live.jevDisposition || quality?.disposition || '').trim();
+  const scoreRaw = quality?.judged === true ? (quality.score ?? live.jevScoreDraft) : live.jevScoreDraft;
+  const jevScore = formatJevScore(scoreRaw);
+  if (jevScore && disposition) return { notGraded: false, jevScore, qaVerdict: disposition };
+  if (live.jev?.jevRan === false && live.jev?.reason) return { notGraded: true, reason: String(live.jev.reason) };
+  return { notGraded: true };
 }
 
 function isReply(turn) {
@@ -104,7 +134,12 @@ function dialog(vacation, ledger, replyCosts = []) {
     if (fallback) legacy.set(turn.requestId ?? index, fallback);
     const charge = call || fallback;
     const cost = costs(charge ? [charge] : []);
-    return { model: call?.model || turn.model || '', costs: cost, priced: Boolean(charge && !cost.unpriced) };
+    return {
+      model: call?.model || turn.model || '',
+      costs: cost,
+      priced: Boolean(charge && !cost.unpriced),
+      grade: adminReplyGrade(turn),
+    };
   });
   return {
     ...vacation,

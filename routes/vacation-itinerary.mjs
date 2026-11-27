@@ -363,15 +363,14 @@ function welcomeFirstName(value) {
   return text ? text.split(/\s+/)[0] : '';
 }
 
-function tripHasVacationSite(trip) {
-  if (String(trip?.publicUrl || '').trim()) return true;
-  return Boolean(String(trip?.shareToken || '').trim());
+function tripHasVacationContent(trip) {
+  return Boolean(String(trip?.destination || '').trim() || trip?.startDate || trip?.endDate || trip?.start_date || trip?.end_date);
 }
 
 function tripWelcomeSiteUrl(trip) {
-  if (!tripHasVacationSite(trip)) return '';
   const direct = String(trip?.publicUrl || '').trim();
   if (direct) return direct;
+  if (!String(trip?.shareToken || '').trim()) return '';
   return builtVacationSiteUrl({
     sharedToken: trip.shareToken,
     shareToken: trip.shareToken,
@@ -381,8 +380,7 @@ function tripWelcomeSiteUrl(trip) {
 
 async function welcomeInputs(db, session, trip) {
   const seat = seatFromSession(session);
-  const hasSite = tripHasVacationSite(trip);
-  const tripSiteUrl = hasSite ? tripWelcomeSiteUrl(trip) : '';
+  const tripSiteUrl = tripWelcomeSiteUrl(trip);
   const tripTitle = String(trip?.title || '').trim();
   if (seat) {
     const owners = await db`
@@ -394,7 +392,7 @@ async function welcomeInputs(db, session, trip) {
     const owner = owners[0] || {};
     const collabFirstName = welcomeFirstName(session.first_name || seat.displayName || session.display_name);
     const ownerFirstName = welcomeFirstName(owner.first_name || owner.display_name);
-    if (hasSite && tripSiteUrl) {
+    if (tripSiteUrl) {
       return {
         audience: 'collaborator',
         ownerFirstName,
@@ -411,7 +409,7 @@ async function welcomeInputs(db, session, trip) {
     };
   }
   const firstName = welcomeFirstName(session.first_name || session.display_name);
-  if (hasSite && tripSiteUrl) {
+  if (tripHasVacationContent(trip) && tripSiteUrl) {
     return { audience: 'owner', firstName, tripSiteUrl };
   }
   return { audience: 'owner_no_site', firstName };
@@ -910,7 +908,7 @@ async function handleVacationApp(req, res, db, url) {
       const synced = await syncSearchProgressStage(db, selected.id, { publicUrl: selected?.publicUrl || '' });
       searchProgress = searchProgressForClient(synced);
     }
-    const tripSiteUrl = selected ? tripWelcomeSiteUrl(selected) : '';
+    const tripSiteUrl = tripHasVacationContent(selected) ? tripWelcomeSiteUrl(selected) : '';
     if (!seat && selected?.id) await setVacationAppOwnerWebAccessCookie(db, req, res, { session, tripId: selected.id });
     if (seat && selected?.id) await setVacationAppCollaboratorWebAccessCookie(db, req, res, { session, seat, tripId: selected.id });
     return sendJson(res, 200, {

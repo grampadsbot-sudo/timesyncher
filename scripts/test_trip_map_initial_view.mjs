@@ -8,6 +8,7 @@ import {
   computeTripMapInitialView,
   coordsFromPlace,
   destinationCoordsFromTrip,
+  isUsableMapLatLng,
 } from '../src/vacation/trip-map-initial-view.mjs';
 import { patchTripMapInitialView } from '../src/vacation/trek-live-product-patches.mjs';
 import { sharedTripFromIntake } from '../src/vacation/intake-shared-trip.mjs';
@@ -55,6 +56,36 @@ assert.equal(destinationView.zoom, TRIP_MAP_DESTINATION_ZOOM);
 const unresolved = computeTripMapInitialView({ places: [], trip: { title: 'Trip' } });
 assert.equal(unresolved.ok, false);
 assert.equal(unresolved.code, MAP_CENTER_UNRESOLVED);
+
+assert.equal(isUsableMapLatLng(null, null), false);
+assert.equal(isUsableMapLatLng(undefined, -81), false);
+assert.equal(isUsableMapLatLng('', ''), false);
+assert.equal(isUsableMapLatLng(0, 0), false);
+assert.equal(isUsableMapLatLng('0', '0'), false);
+assert.equal(isUsableMapLatLng(0.2, 0.1), false);
+assert.equal(isUsableMapLatLng(28.5383, -81.3792), true);
+
+const zeroPlace = computeTripMapInitialView({
+  places: [{ id: 1, lat: 0, lng: 0 }, { id: 2, lat: null, lng: null }],
+  trip: { metadata: { destinationCenter: { lat: 28.5383, lng: -81.3792 } } },
+});
+assert.equal(zeroPlace.ok, true);
+assert.equal(zeroPlace.mode, 'destination');
+assert.deepEqual(zeroPlace.center, { lat: 28.5383, lng: -81.3792 });
+
+const mixed = computeTripMapInitialView({
+  places: [{ id: 1, lat: 0, lng: 0 }, { id: 2, lat: 28.4, lng: -81.3 }],
+  trip: {},
+});
+assert.equal(mixed.ok, true);
+assert.equal(mixed.mode, 'point');
+assert.deepEqual(mixed.center, { lat: 28.4, lng: -81.3 });
+
+const badDestination = computeTripMapInitialView({
+  places: [{ id: 1, lat: 0, lng: 0 }],
+  trip: { metadata: { destinationCenter: { lat: 0, lng: 0 } } },
+});
+assert.equal(badDestination.ok, false);
 
 const shared = sharedTripFromIntake({
   trip: {

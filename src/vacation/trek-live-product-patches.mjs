@@ -3,7 +3,7 @@ import { XA_STATIC_MAP_TILE_NEEDLE, XA_STATIC_MAP_TILE_PATCH } from './trek-day-
 import { patchSharedTripOeListRows } from './shared-trip-oe-list-row-patch.mjs';
 import { patchBudgetSavedTargetsOnly } from './trek-budget-target-patches.mjs';
 import { patchSharedLayoutOverflow, patchSharedTabRowOverflow } from './trek-shared-layout-patches.mjs';
-import { tripMapInitialViewBundleSnippet } from './trip-map-initial-view.mjs';
+import { patchMapUsableCoords } from './map-usable-coords-patches.mjs'; import { tripMapInitialViewBundleSnippet } from './trip-map-initial-view.mjs';
 import { tripMapHookBundleSnippet } from './trip-map-hook.mjs';
 import { patchLiveProductDetailBundle } from './trek-thing-detail-patches.mjs';
 import { patchBudgetUpstreamMiscBucket } from './trek-budget-upstream-misc-patch.mjs';
@@ -190,7 +190,7 @@ export function patchThingLogoChipAlignment(source = '') {
   return js;
 }
 
-export function patchTripMapInitialView(source = '') {
+export function patchTripMapInitialView(source = '', options = {}) {
   let js = String(source || '');
   if (!js.includes(TRIP_MAP_INJECT_NEEDLE) && !js.includes('tsTripMapInitialView=')) {
     return js;
@@ -297,7 +297,7 @@ export function applyLiveProductPatches(patched = '', options = {}) {
   js = js.replace(/Claude Desktop, Work laptop/g, 'Example client, Work laptop');
   js = js.replace(/Claude Desktop, Laptop di lavoro/g, 'Example client, Work laptop');
   js = js.replace(/Claude Desktop, Werklaptop/g, 'Example client, Work laptop');
-  return patchLiveProductDetailBundle(patchTripMapInitialView(js));
+  return patchMapUsableCoords(patchLiveProductDetailBundle(patchTripMapInitialView(js, options)), options);
 }
 
 const LIVE_TAB_NEEDLE = '$n=gt.filter(G=>Fs.some(Re=>vn(Re).includes(G))),Gn=Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re))),ci=ot.filter(G=>Oc.some(Re=>or(Re).includes(G))),Qn=Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re))),ki=Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G)))';
