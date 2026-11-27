@@ -10,7 +10,7 @@
 .admin-open { grid-column: 2; grid-row: 1 / span 2; border: 1px solid var(--line); border-radius: 8px; background: var(--soft); color: var(--ink); font-weight: 750; padding: 8px 12px; }
 .admin-empty { margin: 16px; color: var(--muted); }
 .admin-error { margin: 16px; padding: 12px 14px; border: 1px solid #c62828; border-radius: 8px; background: #ffebee; color: #b71c1c; }
-.site-pane[data-kind="customers"], .site-pane[data-kind="chat"], .site-pane[data-kind="trip"] { background: var(--panel); }
+.site-pane[data-kind="customers"], .site-pane[data-kind="dialog"], .site-pane[data-kind="turns"], .site-pane[data-kind="chat"], .site-pane[data-kind="trip"] { background: var(--panel); }
 .admin-clear-all b { color: var(--blue); }
 .app[data-admin].site-fullscreen {
   grid-template-rows: auto minmax(0, 1fr);
@@ -116,6 +116,11 @@
 .admin-travel-cap-item[data-capability-enabled="true"] .admin-travel-cap-state { background: #e8f5e9; color: #1b5e20; }
 .admin-travel-cap-reason { color: var(--muted); }
 .admin-travel-cap-empty { color: var(--muted); font-size: 0.8125rem; }
+.admin-turns { display: grid; gap: 12px; padding: 12px 16px; }
+.admin-turns article { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; min-width: 0; }
+.admin-turns h3 { margin: 0; font-size: 0.9375rem; }
+.admin-turns .admin-empty { margin: 0; }
+.admin-turns .admin-travel-json { padding: 8px 0 0; }
 .admin-travel-conversation { display: grid; gap: 8px; margin-top: 16px; }
 .admin-travel-conversation h2 { margin: 0; font-size: 1rem; }
 .admin-travel-conversation details { min-width: 0; border: 1px solid var(--line); border-radius: 8px; overflow-wrap: anywhere; }

@@ -187,7 +187,7 @@ try {
         await page.getByRole('option', { name, exact: true }).click();
       };
       const menuViews = [
-        'Dialog', 'Travel Summary', 'Feedback & QA', 'Vacation site', 'Keepsake', 'Onboarding', 'Chat screenshots',
+        'Dialog', 'Turns', 'Travel Summary', 'Feedback & QA', 'Vacation site', 'Keepsake', 'Onboarding', 'Chat screenshots',
       ];
       const requests = [];
       page.on('request', (request) => requests.push([request.method(), new URL(request.url()).pathname]));
@@ -205,7 +205,7 @@ try {
       await shot('customers');
 
       await sofia.click();
-      await page.locator(`#sitePane[data-kind="chat"][data-run="${tripId}"]`).waitFor();
+      await page.locator(`#sitePane[data-kind="dialog"][data-run="${tripId}"]`).waitFor();
       await openMenu();
       await page.locator('#vacationDropdown [data-dialog-pdf]').waitFor();
       await page.keyboard.press('Escape');
@@ -337,7 +337,7 @@ try {
       assert.match(await vacationList.textContent(), /Earlier fixture vacation.*Earlier destination/s);
       await shot('all-vacations');
       await vacationList.locator(`[data-open-vacation="${olderTrip}"]`).click();
-      await page.locator(`#sitePane[data-kind="chat"][data-run="${olderTrip}"]`).waitFor();
+      await page.locator(`#sitePane[data-kind="dialog"][data-run="${olderTrip}"]`).waitFor();
       assert.equal(await page.evaluate(() => window.initialThread === document.getElementById('messages')), true);
       assert.equal(await note.count(), 1);
       assert.equal(await welcome.count(), 1);

@@ -192,7 +192,7 @@ try {
   }
 
   await page.getByRole('button', { name: 'Open Elena Martinez', exact: true }).click();
-  await page.waitForSelector(`#sitePane[data-kind="chat"][data-run="${tripOne}"]`);
+  await page.waitForSelector(`#sitePane[data-kind="dialog"][data-run="${tripOne}"]`);
 
   const checkNotAllView = async (kind) => {
     assert.equal(await page.locator('#sitePane').getAttribute('data-kind'), kind);
@@ -201,7 +201,7 @@ try {
     assert.equal(text.includes(EXPECTED_INTRO), false, `${kind} text must not include All Customers intro`);
   };
 
-  await checkNotAllView('chat');
+  await checkNotAllView('dialog');
   for (const [label, kind] of [
     ['Vacation site', 'trip'],
     ['Keepsake', 'keepsake'],

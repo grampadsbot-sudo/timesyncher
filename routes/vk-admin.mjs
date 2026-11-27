@@ -15,6 +15,7 @@ import {
   loadReviewArtifact, noteFromBody, notesPath, presentNote, saveFeedbackArtifact, saveReviewArtifact,
   saveReviewResults, saveWelcome, vkAdminStorage,
 } from '../src/vacation/vk-admin-review-storage.mjs';
+import { adminViewsStatus } from '../src/vacation/vk-admin-views.mjs';
 
 const OWNER_SHELL = fileURLToPath(new URL('../vacation-app.html', import.meta.url));
 const ADMIN_SCRIPTS = [
@@ -194,7 +195,13 @@ async function handleArtifacts(req, res, env, db, getStore, tripId, artifact, ca
     });
     if (!vacation) return notFound(res);
     const snapshots = await listTravelSummarySnapshots(db, vacation);
-    return send(res, 200, { ok: true, snapshots, capabilities: vacation.capabilities, timing: travelSummaryTiming(vacation, snapshots) });
+    return send(res, 200, {
+      ok: true,
+      snapshots,
+      capabilities: vacation.capabilities,
+      timing: travelSummaryTiming(vacation, snapshots),
+      admin_views: adminViewsStatus(vacation, snapshots),
+    });
   }
   const type = artifact ? artifactType(artifact) : '';
   const review = artifact === 'review' && req.method === 'PUT';
