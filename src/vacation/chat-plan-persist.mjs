@@ -66,18 +66,15 @@ function categoryForPlanTitle(title) {
 function itemFromLine(line, dayNumber, startDate) {
   const trimmed = String(line || '').replace(/^[-*•]\s+/, '').replace(/^\d+[.)]\s+/, '').trim();
   if (!trimmed) return [];
+  if (trimmed.split(/\s+/).length > 14 && /[.!?]$/.test(trimmed)) return [];
   const parts = trimmed.includes(', ') ? trimmed.split(/\s*,\s*/) : [trimmed];
   const day = startDate ? addUtcDays(startDate, dayNumber - 1) : '';
   const items = [];
   for (const part of parts) {
-<<<<<<< HEAD
-    const title = part.trim();
-    if (!isTripThingName(title)) continue;
-=======
     const title = cleanText(part, 80);
     if (!title || title.length < 2 || title.split(/\s+/).length > 12 || title.includes('?')) continue;
+    if (!isTripThingName(title)) continue;
     if (tripItineraryTitleRejected(title)) continue;
->>>>>>> origin/vk
     items.push({
       title,
       category: categoryForPlanTitle(title),
