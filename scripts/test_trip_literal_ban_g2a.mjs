@@ -66,7 +66,7 @@ const prompt = replyRulesSystem({}, 'Rio', 'forbidden', false, 'What day works f
   tripContext: {
     itinerary: ['Market: Mon'],
     dates: 'Saved trip dates: Mon through Fri.',
-    roster: 'Traveling: Ada (payer account holder).',
+    travelSummary: { who: 'Ada (payer account holder)', where: 'Rio' },
     rule: 'Ada does not want two big activities stacked on the same day.',
   },
   seat: { name: 'Ada', payer: 'owner' },
@@ -74,7 +74,8 @@ const prompt = replyRulesSystem({}, 'Rio', 'forbidden', false, 'What day works f
 });
 assert.match(prompt, /Seat record: \{"name":"Ada","payer":"owner"\}/);
 assert.match(prompt, /Saved trip record:/);
-assert.match(prompt, /"roster":"Traveling: Ada \(payer account holder\)\."/);
+assert.match(prompt, /"travelSummary":\{"where":"Rio","who":"Ada \(payer account holder\)"/);
+assert.doesNotMatch(prompt, /"roster":/);
 assert.match(prompt, /Ada does not want two big activities/);
 assert.doesNotMatch(prompt, /\$\d+/);
 assert.doesNotMatch(prompt, /Welcome aboard/i);
