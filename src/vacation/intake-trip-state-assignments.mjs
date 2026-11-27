@@ -10,13 +10,14 @@ export function applyIntakeTripStateAssignments({ assignments, days, places, thi
     delete override.endTime;
     delete place.place_time;
     delete place.end_time;
-    for (const { id, day, role, time, before, turn } of rows) {
+    for (const { id, day, role, time, before, turn, via } of rows) {
       if (!dayIds.has(day)) continue;
       const schedule = time ? { startTime: time.value, timePrecision: time.precision } : {};
       const bucket = assignments[day] ??= [];
       bucket.push({
         id, day_id: Number(day), place_id: placeId, place: { ...place, ...schedule, place_time: time?.value || '' },
-        notes: place.notes, role, tripStateTime: time, tripStateTurn: turn, ...(before ? { before } : {}),
+        notes: place.notes, role, tripStateTime: time, tripStateTurn: turn, tripStateVia: via || 'chat_action',
+        ...(time ? { start_time: time.value } : {}), ...(before ? { before } : {}),
       });
       const dayId = Number(day);
       if (!override.dayIds.includes(dayId)) override.dayIds.push(dayId);

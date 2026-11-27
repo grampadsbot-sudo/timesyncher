@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { placeAssignedOnDay } from './chat-itinerary-edit-assignment.mjs';
+import { findPlaceAssignment, placeAssignmentsOnDay } from './chat-itinerary-edit-assignment.mjs';
 import { intId } from './intake-shared-trip.mjs';
 import { digestTripState, tripItemKinds } from './trip-state-action-site.mjs';
 import { actionFailure, itemEvidence, nameWasDisclosed, tripStateName, typedItemDetails, validatedTime, validTripStateId } from './trip-state-action-input.mjs';
@@ -16,8 +16,12 @@ function storedThing(site, item) {
 }
 
 function savedOccurrences(saved, item) {
-  return Object.entries(saved.days).flatMap(([day, { assigned }]) =>
-    assigned.filter((row) => row.item === item).map(({ id, role, time, turn }) => ({ id, day, role, time, turn })));
+  return Object.entries(saved.days).flatMap(([day, { assigned }]) => assigned.flatMap((row, index) => {
+    if (row.item !== item) return [];
+    const { id, role, time, turn, via } = row;
+    const before = assigned[index + 1]?.id;
+    return [{ id, day, role, time, via, turn, ...(before ? { before } : {}) }];
+  }));
 }
 
 function saveOccurrences(site, item, rows) {
@@ -68,41 +72,51 @@ function newNamedItem(site, saved, context, args) {
 }
 
 function visitOnDay(site, saved, context, args, requireExisting = false) {
-  const { item, day, role = requireExisting ? 'visit' : undefined, before, move, occurrence } = args;
-  const entity = saved.items[item];
-  if (!entity || !saved.days[day]) return needs('Identify an existing item and a day on this trip.');
+  const { item, day, before, move, occurrence } = args;
+  const entity = Object.hasOwn(saved.items, item) && saved.items[item];
+  if (!entity || !Object.hasOwn(saved.days, day)) return needs('Identify an existing item and a day on this trip.');
+  const assignments = Object.fromEntries(Object.entries(saved.days).map(([key, value]) => [key, value.assigned]));
+  const onDay = placeAssignmentsOnDay({ assignments }, item, day);
+  const role = args.role ?? (requireExisting && (move ? onDay.find((entry) => entry.id === move)?.role
+    : onDay.length === 1 ? onDay[0].role : undefined));
+  if (!role) return needs('Identify which occurrence role to update.');
   const permitted = entity.type === 'hotel' ? ['visit', 'check_in', 'check_out']
     : entity.type === 'flight_option' ? ['leg'] : entity.type === 'ground_ride' ? ['ride'] : ['visit'];
   if (!permitted.includes(role)) return conflict('The occurrence role does not match the item type.');
   if ([before, move, occurrence].some((value) => value != null && !validTripStateId(value))) return needs('Identify an occurrence on this trip.');
   const row = storedThing(site, item);
   const rows = row.metadata?.tripState?.occurrences || savedOccurrences(saved, item);
-  const assignmentPayload = { assignments: { [day]: saved.days[day].assigned.map((entry) => ({ place_id: entry.item })) } };
-  const present = placeAssignedOnDay(assignmentPayload, item, day);
-  const sameRole = present ? rows.filter((entry) => entry.day === day && entry.role === role) : [];
+  const sameRole = onDay.filter((entry) => entry.role === role);
   if (!move && !occurrence && sameRole.length > 1) return needs('Identify which occurrence to update.');
-  const current = move ? rows.find((entry) => entry.id === move)
-    : occurrence ? rows.find((entry) => entry.selector === occurrence && entry.day === day && entry.role === role) : sameRole[0];
+  const source = move && findPlaceAssignment({ assignments }, item, (entry) => entry.id === move);
+  const current = move ? rows.find((entry) => entry.id === source?.assignmentId)
+    : occurrence ? rows.find((entry) => entry.selector === occurrence && entry.day === day && entry.role === role)
+      : rows.find((entry) => entry.id === sameRole[0]?.id);
   if (move && (!current || current.role !== role || (occurrence && current.selector !== occurrence))) return conflict('The source occurrence no longer matches.');
-  if (requireExisting && !current) return needs('Identify the existing occurrence to time.');
+  if (requireExisting && current?.day !== day) return needs('Identify the existing occurrence to time on this day.');
   if (['check_in', 'check_out'].includes(role) && (!current || current.day !== day)) return needs('Use set_stay to change the stay endpoints.');
   if (before && (before === current?.id || !saved.days[day].assigned.some((entry) => entry.id === before))) return needs('Identify a different order anchor on the target day.');
-  for (let anchor = before; anchor; anchor = rows.find((entry) => entry.id === anchor)?.before) {
-    if (anchor === current?.id) return conflict('The requested order creates a cycle.');
+  const explicit = site.things.flatMap((thing) => thing.metadata?.tripState?.occurrences || []);
+  const anchors = new Map([...explicit, ...rows].filter((entry) => entry.day === day).map((entry) => [entry.id, entry.before]));
+  const visited = new Set([current?.id]);
+  for (let anchor = before; anchor; anchor = anchors.get(anchor)) {
+    if (visited.has(anchor)) return conflict('The requested order creates a cycle.');
+    visited.add(anchor);
   }
   const time = args.time === undefined ? current?.time || null : validatedTime(context, args.time, args.time_evidence);
   if (time === undefined || (requireExisting && !time)) return denied('The requested time needs matching customer wording.');
   const anchor = before || (current?.day === day ? current.before : undefined);
   if (current?.day === day && equal(current.time, time) && anchor === current.before) return unchanged([current.id], item);
   const id = current?.id || String(intId(randomUUID()));
-  const next = { id, day, role, time, turn: context.turn, ...(anchor ? { before: anchor } : {}), ...(occurrence ? { selector: occurrence } : {}) };
+  const selector = occurrence || current?.selector;
+  const next = { id, day, role, time, turn: context.turn, ...(anchor ? { before: anchor } : {}), ...(selector ? { selector } : {}) };
   saveOccurrences(site, item, current ? rows.map((entry) => entry.id === id ? next : entry) : [...rows, next]);
   return changed([id], item);
 }
 
 function saveStay(site, saved, context, args) {
   const { hotel, check_in, check_out } = args;
-  if (!saved.items[hotel] || !saved.days[check_in] || !saved.days[check_out]) return needs('Identify the hotel and both stay days on this trip.');
+  if (!Object.hasOwn(saved.items, hotel) || !Object.hasOwn(saved.days, check_in) || !Object.hasOwn(saved.days, check_out)) return needs('Identify the hotel and both stay days on this trip.');
   if (saved.items[hotel].type !== 'hotel') return conflict('The existing item is not a hotel.');
   if (saved.days[check_in].date > saved.days[check_out].date) return conflict('Checkout falls before check-in.');
   const row = storedThing(site, hotel);
@@ -138,7 +152,7 @@ function promoteSearch(site, saved, context, args) {
   if (!validTripStateId(candidate) || !context.authority.selectedCandidates?.includes(candidate)) return needs('Identify the search candidate selected by the customer.');
   const selection = context.state.candidates?.[candidate];
   const scoped = context.state.research?.key && context.authority.researchKey === context.state.research.key;
-  if (replacement && (!saved.items[replacement] || saved.items[replacement].type !== 'hotel')) return conflict('The replacement target is not an existing hotel.');
+  if (replacement && (!Object.hasOwn(saved.items, replacement) || saved.items[replacement].type !== 'hotel')) return conflict('The replacement target is not an existing hotel.');
   if (!selection && !scoped) return conflict('The selected candidate is outside the current search scope.');
   const existing = Object.entries(saved.items).find(([, item]) => item.candidate_id === candidate)?.[0];
   let item = existing;
@@ -161,7 +175,7 @@ function promoteSearch(site, saved, context, args) {
       if (!storedThing(site, named).metadata?.tripState?.provider) item = named;
     }
     if (replacement && (type !== 'hotel' || saved.items[replacement].basis !== 'placeholder'
-      || (item && item !== replacement))) return conflict('Select an unambiguous hotel placeholder to enrich.');
+      || (item && item !== replacement) || sameType.some(([key]) => key !== replacement))) return conflict('Select an unambiguous hotel placeholder to enrich.');
     const target = item || replacement;
     if (provider && !replacement) {
       item = String(intId(provider.id));

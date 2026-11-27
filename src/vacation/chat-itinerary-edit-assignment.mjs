@@ -1,13 +1,20 @@
-export function placeAssignedOnDay(payload, placeId, dayId) {
-  const rows = payload?.assignments?.[String(dayId)] || [];
-  return rows.some((row) => String(row.place_id ?? row.place?.id) === String(placeId));
+function matchesPlace(row, placeId) {
+  return String(row.place_id ?? row.place?.id ?? row.item) === String(placeId);
 }
 
-export function findPlaceAssignment(payload, placeId) {
-  const target = String(placeId);
+export function placeAssignmentsOnDay(payload, placeId, dayId) {
+  const rows = payload?.assignments?.[String(dayId)] || [];
+  return rows.filter((row) => matchesPlace(row, placeId));
+}
+
+export function placeAssignedOnDay(payload, placeId, dayId) {
+  return placeAssignmentsOnDay(payload, placeId, dayId).length > 0;
+}
+
+export function findPlaceAssignment(payload, placeId, matches = () => true) {
   for (const [dayId, rows] of Object.entries(payload?.assignments || {})) {
     for (const row of rows || []) {
-      if (String(row.place_id ?? row.place?.id) === target) {
+      if (matchesPlace(row, placeId) && matches(row)) {
         return {
           dayId,
           row,

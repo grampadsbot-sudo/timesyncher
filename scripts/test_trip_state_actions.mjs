@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
@@ -109,6 +110,7 @@ async function contextFor(f, requestId, options = {}) {
 
 const cmd = (op, args, as) => ({ op, args, ...(as ? { as } : {}) });
 const named = (type, label, evidence = 'name') => ({ type, label, evidence });
+const dayIds = (state) => Object.entries(state.saved.days).sort(([, a], [, b]) => a.date.localeCompare(b.date)).map(([id]) => id);
 
 {
   const f = fixture();
@@ -131,7 +133,7 @@ const named = (type, label, evidence = 'name') => ({ type, label, evidence });
   assert.equal(f.count(), 1);
 
   const item = first.status.refs[0];
-  const [day, next, third] = Object.keys(first.state.saved.days);
+  const [day, next, third] = dayIds(first.state);
   const a = { item, day, role: 'visit' };
   const b = { item, day: next, role: 'visit' };
   const placementCtx = await contextFor(f, 'placements', { state: first.state, commands: [cmd('place_on_day', a), cmd('place_on_day', b)] });
@@ -159,7 +161,7 @@ const named = (type, label, evidence = 'name') => ({ type, label, evidence });
 {
   const f = fixture();
   const initial = await contextFor(f, 'batch');
-  const [day] = Object.keys(initial.state.saved.days);
+  const [day] = dayIds(initial.state);
   const item = named('activity', 'Pool time');
   const bad = named('activity', 'Nothing has been booked', 'status');
   const a = cmd('add_named_item', item, 'pool');
@@ -202,7 +204,7 @@ const named = (type, label, evidence = 'name') => ({ type, label, evidence });
   assert.deepEqual(result.operations.map((row) => row.result), ['applied', ...Array(6).fill('no_change')]);
   assert.equal(Object.keys(result.state.saved.items).length, 1);
   const hotel = result.status.refs[0];
-  const [first, next, , , last] = Object.keys(result.state.saved.days);
+  const [first, next, , , last] = dayIds(result.state);
   const args = { hotel, check_in: first, check_out: last };
   const stayCtx = await contextFor(f, 'stay', { state: result.state, commands: [cmd('set_stay', args)] });
   const stayed = await f.execute(stayCtx, 'set_stay', args);
@@ -277,8 +279,8 @@ const named = (type, label, evidence = 'name') => ({ type, label, evidence });
     assert.equal(value.reason, 'not_wired', name);
   }
   conforms(offResult.state);
-  const promptHash = await import('node:crypto').then(({ createHash }) => createHash('sha256')
-    .update(replyRulesSystem({}, '', 'Spring trip', false, 'Please save Botanical Gardens.', { VK_TRIP_STATE_ACTIONS: '0' })).digest('hex'));
+  const promptHash = createHash('sha256')
+    .update(replyRulesSystem({}, '', 'Spring trip', false, 'Please save Botanical Gardens.', { VK_TRIP_STATE_ACTIONS: '0' })).digest('hex');
   assert.equal(promptHash, 'bff403fdd8a2593f1300c5f3ceb0e643fc0ab5042274dc7bcee1e5cda736d5d2');
 }
 
@@ -300,7 +302,7 @@ const named = (type, label, evidence = 'name') => ({ type, label, evidence });
   assert.equal(f.count(), 1);
 
   const [item] = recovered.status.refs;
-  const [day] = Object.keys(recovered.state.saved.days);
+  const [day] = dayIds(recovered.state);
   const time = { value: '08:30', precision: 'exact' };
   const timed = { item, day, role: 'visit', time, time_evidence: 'clock' };
   const noClock = await contextFor(f, 'no-clock', {
@@ -317,6 +319,50 @@ const named = (type, label, evidence = 'name') => ({ type, label, evidence });
   assert.equal(f.count(), 3);
   f.hideAssignments(true);
   assert.equal((await f.execute(clock, 'place_on_day', timed)).status.result, 'pending_readback');
+}
+
+{
+  const f = fixture();
+  const args = named('park', 'Botanical Gardens');
+  const op = 'add_named_item';
+  const ctx = await contextFor(f, 'concurrent', {
+    customerText: args.label, spans: { name: ['place', args.label] }, commands: [cmd(op, args)],
+  });
+  const results = await Promise.all([f.execute(ctx, op, args), f.execute(ctx, op, args)]);
+  assert.deepEqual(results.map((row) => row.status.result).sort(), ['applied', 'no_change']);
+  assert.equal(results[0].status.receipt, results[1].status.receipt);
+  assert.equal(f.count(), 1);
+}
+
+{
+  const f = fixture({ things: ['Morning Park', 'Second Park', 'Late Park'].map((title, index) => ({
+    id: `legacy-${index}`, category: 'park', title, source: 'customer',
+    starts_at: '2027-04-05T12:00:00Z', metadata: { whenLabel: 'April 5' },
+  })) });
+  const initial = await contextFor(f, 'ordered');
+  const [day, nextDay] = dayIds(initial.state);
+  const [first, second, third] = initial.state.saved.days[day].assigned;
+  const repeat = { item: first.item, day: nextDay, role: 'visit' };
+  const ctx = await contextFor(f, 'ordered', { commands: [cmd('place_on_day', repeat)] });
+  const repeated = await f.execute(ctx, 'place_on_day', repeat);
+  assert.equal(repeated.status.result, 'applied');
+  assert.deepEqual(repeated.state.saved.days[day].assigned, [first, second, third]);
+  assert.equal(f.current.things[0].metadata.whenLabel, undefined);
+
+  const before = { item: third.item, day, role: 'visit', before: first.id };
+  const next = await contextFor(f, 'anchor', { state: repeated.state, commands: [cmd('place_on_day', before)] });
+  const ordered = await f.execute(next, 'place_on_day', before);
+  assert.equal(ordered.status.result, 'applied');
+  assert.deepEqual(ordered.state.saved.days[day].assigned.map((row) => row.id), [third.id, first.id, second.id]);
+
+  const time = { value: '14:30', precision: 'approximate' };
+  const timed = cmd('set_time', { item: third.item, day, time, time_evidence: 'time' });
+  const timeCtx = await contextFor(f, 'batch-time', {
+    state: ordered.state, customerText: 'Around 2:30 pm.', spans: { time: ['time', 'Around 2:30 pm'] }, commands: [timed],
+  });
+  const result = await f.execute(timeCtx, 'save_plan', { operations: [timed], authority: 'current' });
+  assert.equal(result.status.result, 'applied');
+  assert.deepEqual(result.state.saved.days[day].assigned[0].time, time);
 }
 
 console.log('Trip State action executor tests passed.');

@@ -45,7 +45,8 @@ function nameInText(text, name) {
 
 export function nameWasDisclosed(context, label) {
   const name = tripStateName(label);
-  if (!name || /^(?:each|one|both|them|him|her|everyone|someone|collaborator|guest)\b/u.test(name)) return false;
+  if (!name || /^(?:each|one|both|them|him|her|everyone|someone|collaborator|guest)\b/u.test(name)
+    || /^(?:my )?(?:husband|wife|partner|kids?|children|friend|sister|brother|parents?)$/u.test(name)) return false;
   return nameInText(context.customerText, name)
     || Object.values(context.state.disclosed || {}).some((fact) => fact.kind === 'party' && nameInText(fact.value, name));
 }

@@ -150,16 +150,27 @@ function planRecord(op, args, site, saved, context, receipt, signature) {
   const results = planned.children.length ? planned.children.map((row) => row.outcome) : [planned.outcome];
   const refs = new Set(results.filter((row) => ['applied', 'no_change'].includes(row.result)).flatMap((row) => row.refs));
   const proof = Object.fromEntries([...refs].map((ref) => [ref, digestTripState(after.get(ref) ?? null)]));
+  const order = Object.fromEntries(next.things.flatMap((row) => row.metadata?.tripState?.occurrences || [])
+    .filter((row) => row.before && refs.has(row.id) && final.days[row.day]?.assigned.some((entry) => entry.id === row.before))
+    .map((row) => [row.id, row.before]));
   const changes = Object.fromEntries([...refs].filter((ref) => digestTripState(before.get(ref) ?? null) !== proof[ref])
     .map((ref) => [ref, { before: before.get(ref) ?? null, after: after.get(ref) ?? null }]));
-  return { next, record: { ...planned, signature, proof, changes, turn: context.turn } };
+  return { next, record: { ...planned, signature, proof, changes, order, turn: context.turn } };
 }
 
 function verifyRecord(record, saved, replay, op, args) {
   const actual = saved ? collectTargets(saved) : new Map();
   function verify(outcome) {
     if (!['applied', 'no_change'].includes(outcome.result)) return outcome;
-    if (!saved || !outcome.refs.length || outcome.refs.some((id) => record.proof[id] !== digestTripState(actual.get(id) ?? null))) {
+    function matches(id) {
+      const target = actual.get(id);
+      if (!target || record.proof[id] !== digestTripState(target)) return false;
+      const before = record.order?.[id];
+      if (!before) return true;
+      const rows = saved.days[target.day].assigned;
+      return rows.findIndex((row) => row.id === before) > rows.findIndex((row) => row.id === id);
+    }
+    if (!saved || !outcome.refs.length || !outcome.refs.every(matches)) {
       return actionFailure('pending_readback', 'Site readback could not yet confirm the requested targets.');
     }
     return outcome;

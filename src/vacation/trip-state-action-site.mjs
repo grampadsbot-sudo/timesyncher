@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { intakeShareSlug, intId, sharedTripFromIntake, thingRecordFromTripRow } from './intake-shared-trip.mjs';
 import { shareSlugEditGuardDecision } from './chat-itinerary-edit-slug-guard.mjs';
+import { finalizeServedSharedTripPayload } from './shared-trip-served-page.mjs';
 import { normalizeThingType } from './timeline-icons.mjs';
 
 export const tripItemKinds = new Set(['hotel', 'park', 'activity', 'meal', 'restaurant', 'flight_option', 'ground_ride', 'other']);
@@ -51,7 +52,7 @@ function legacyTime(row, overrides) {
 
 export function readTripStateSite(site, previous, turn) {
   const { trip, things, invites } = site;
-  const payload = sharedTripFromIntake({ trip, things: things.map(thingRecordFromTripRow) });
+  const payload = finalizeServedSharedTripPayload(sharedTripFromIntake({ trip, things: things.map(thingRecordFromTripRow) }));
   const stamp = { via: 'legacy_site', turn };
   const items = {}, days = {}, lodging = {}, flights = {}, ground = {};
   const byPlace = new Map(things.map((row) => [String(intId(row.id)), row]));
@@ -82,7 +83,7 @@ export function readTripStateSite(site, previous, turn) {
       return {
         id, item, type: items[item].type, role: row.role || 'visit',
         time: explicit ? row.tripStateTime : legacyTime(row, payload.thingOverrides[`place:${item}`]),
-        via: explicit ? 'chat_action' : prior?.via || stamp.via,
+        via: explicit ? row.tripStateVia : prior?.via || stamp.via,
         turn: explicit ? row.tripStateTurn : prior?.turn || turn,
       };
     });
