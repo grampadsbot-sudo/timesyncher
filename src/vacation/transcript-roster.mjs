@@ -100,15 +100,9 @@ export function completeRosterParty(doc) {
       if (party.preference_subjects.some((kid) => samePerson(name, kid.name))) continue;
       party.preference_subjects.push(Number.isFinite(age) ? { name, age } : { name });
       rememberRoster(sources, `preference_subjects.${name}`, Number.isFinite(age) ? age : '', 'chat_extraction');
-    } else if (role === 'viewer') {
-      if (party.viewers.some((item) => samePerson(name, item.name))) continue;
-      party.viewers.push({ name });
-      rememberRoster(sources, `viewers.${name}`, 'viewer', 'chat_extraction');
-    } else if (role === 'editor') {
-      if (party.editors.some((item) => samePerson(name, item.name))) continue;
-      party.editors.push({ name });
-      rememberRoster(sources, `editors.${name}`, 'editor', 'chat_extraction');
-    } else if (role === 'collaborator') {
+    } else if (role === 'viewer' || role === 'editor' || role === 'collaborator') {
+      // Chat extraction does not grant view or edit. vk completeRosterParty
+      // ignores these roles; scripts/test_roster_extraction_party.mjs:83.
       continue;
     } else {
       unplaced = true;
