@@ -1,0 +1,22 @@
+{
+  "repo": "grampadsbot-sudo/timesyncher",
+  "issue": 1189,
+  "source": "vkfill/1189-role-play-feedback-admin-view @ 22515a7c",
+  "note": "Issue #1189 only. The live harness collects four default SSR checkpoints (after_setup, after_keepsake, pricing_10, pricing_17) through role-played customer model replies, not canned survey strings. VK admin exposes Feedback & QA with a trip-level QA summary (QA Czar / Jev rollup when stored, otherwise the exact words not graded), checkpoint prompts, model free-text replies, SSR expected scores, a legacy end-of-chat tripSurvey row when present, and an All customers rollup. Hermetic tests only; no staging credentials and no NYC 8CQX / trip 99 writes.",
+  "assertions": [
+    {
+      "id": "harness-live-ssr-checkpoints",
+      "type": "unit_script",
+      "script": "scripts/test_harness_live_ssr.mjs",
+      "timeout_ms": 60000,
+      "note": "Four live SSR checkpoints use the role-play customer model path; replies are model-authored stubs, not It answered some of it or Keep the days lighter boilerplate; SSR scoring and receipt export succeed with the harness embedder fallback."
+    },
+    {
+      "id": "vk-admin-feedback-view",
+      "type": "unit_script",
+      "script": "scripts/test_vk_admin_feedback.mjs",
+      "timeout_ms": 180000,
+      "note": "Feedback artifact v1 persists and loads via admin API routes; rollup includes checkpoint and legacy survey rows; Feedback & QA view at 390 and 1280 shows trip QA summary not graded without duplicate QA blocks under Dialog."
+    }
+  ]
+}
