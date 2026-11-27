@@ -3,6 +3,11 @@
   "issue": 1189,
   "source": "vkfill/1189-role-play-feedback-admin-view @ 22515a7c",
   "note": "Issue #1189 only. The live harness collects four default SSR checkpoints (after_setup, after_keepsake, pricing_10, pricing_17) through role-played customer model replies, not canned survey strings. VK admin exposes Feedback & QA with a trip-level QA summary (QA Czar / Jev rollup when stored, otherwise the exact words not graded), checkpoint prompts, model free-text replies, SSR expected scores, a legacy end-of-chat tripSurvey row when present, and an All customers rollup. Hermetic tests only; no staging credentials and no NYC 8CQX / trip 99 writes.",
+  "touch": true,
+  "viewports": [
+    { "name": "iphone-390", "width": 390, "height": 844 },
+    { "name": "desktop-1280", "width": 1280, "height": 800 }
+  ],
   "assertions": [
     {
       "id": "harness-live-ssr-checkpoints",
