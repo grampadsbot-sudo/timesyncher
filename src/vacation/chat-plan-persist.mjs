@@ -3,6 +3,7 @@ import { isAiImportChatRequest } from './mcp-chat-import.mjs';
 import { isReservationAsk } from './mcp-reservations-handshake.mjs';
 import { vkBotUsageCost } from './turn-cost.mjs';
 import { readCookie, requireWebEditAccess, webAccessCookieName } from './web-access.mjs';
+import { validatePlannedThings } from './chat-planned-thing-validation.mjs';
 
 const PLANNING_TURN_RE = /\b(?:itinerary|day-by-day|day by day|keep building|family plan|book early|want to book|we'?d want to book)\b|\bplan (?:the|our|a|my)\b|\bday\s+\d{1,2}\b/i;
 const PLAN_CONFIRM_RE = /\b(?:yes|lock it in|lock that in|save that plan|save this plan|save the plan|that plan works|confirm the plan|go with that)\b/i;
@@ -188,17 +189,31 @@ function mergeByTitle(base, extra) {
   return next;
 }
 
-export async function plannedCustomerThings(db, tripId, text, appReply, activities = []) {
+export function tripStateActionsEnabled(env = process.env) {
+  return env.VK_TRIP_STATE_ACTIONS === '1';
+}
+
+export async function plannedCustomerThings(db, tripId, text, appReply, activities = [], { env = process.env, existing = [] } = {}) {
+  const customerOnly = tripStateActionsEnabled(env);
   const base = Array.isArray(activities) ? activities.filter(Boolean) : [];
   const startDate = await tripStartDate(db, tripId);
-  let corpus = `${text || ''}\n${appReply || ''}`;
-  let items = plannedItineraryItems(corpus, { startDate });
-  if (!items.length && isPlanConfirmation(text)) {
-    corpus = (await priorAppBodies(db, tripId)).join('\n');
-    items = plannedItineraryItems(corpus, { startDate });
+  let items = plannedItineraryItems(customerOnly ? text : `${text || ''}\n${appReply || ''}`, { startDate });
+  if (!customerOnly && !items.length && isPlanConfirmation(text)) {
+    items = plannedItineraryItems((await priorAppBodies(db, tripId)).join('\n'), { startDate });
   }
-  if (!items.length) return base;
-  return mergeByTitle(base, items);
+  return validatePlannedThings(mergeByTitle(base, items), { customerOnly, existing });
+}
+
+export async function persistCustomerNotesOnly(db, thing) {
+  return db`
+    update trip_things
+    set metadata = coalesce(metadata, '{}'::jsonb) || ${{
+      notes: thing.notes || [],
+      collaboratorNotes: thing.collaboratorNotes || [],
+    }}, updated_at = now()
+    where id = ${thing.id}
+    returning id
+  `;
 }
 
 export async function persistFollowupLodgingSafely(persistFn, db, tripId, lodgingWanted, options) {
