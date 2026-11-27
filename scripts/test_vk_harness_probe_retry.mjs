@@ -37,8 +37,10 @@ function makeServer(plan) {
     { speaker: 'app', body: 'Welcome! Tell me about your vacation.', payload: { liveTranscript: { fixedOpener: true, replyProducer: 'vacation-app-onboarding-opener', jev: { reason: 'fixed_onboarding_opener' } } } },
   ];
   const log = { posts: 0, gets: 0, getsAfterPost: [] };
+  const cap = { n: 0 };
   let postIndex = 0;
   let pending = null;
+  let shown = false;
   const fetchImpl = async (url, init = {}) => {
     const parsed = new URL(String(url));
     if (parsed.pathname === '/api/version') return { status: 200, text: async () => JSON.stringify({ sha: 'sha-1141' }) };
@@ -53,9 +55,11 @@ function makeServer(plan) {
       }
       stored.push(appTurn(stored, step.reply));
       log.getsAfterPost.push(0);
+      const itinerary = cap.n > 0 && log.posts === cap.n ? [{ id: 'thing-1', title: 'Magic Kingdom' }] : [];
+      if (itinerary.length) shown = true;
       return {
         status: 201,
-        text: async () => JSON.stringify({ ok: true, status: 'replied', reply: step.reply, modelId: MODEL, itinerary: [{ id: 'thing-1', title: 'Magic Kingdom' }], turns: stored, trip: { id: tripId } }),
+        text: async () => JSON.stringify({ ok: true, status: 'replied', reply: step.reply, modelId: MODEL, itinerary, turns: stored, trip: { id: tripId } }),
       };
     }
     log.gets += 1;
@@ -69,10 +73,10 @@ function makeServer(plan) {
     }
     return {
       status: 200,
-      text: async () => JSON.stringify({ ok: true, eula: { accepted: true }, itinerary: stored.length > 1 ? [{ id: 'thing-1', title: 'Magic Kingdom' }] : [], turns: stored, trip: { id: tripId } }),
+      text: async () => JSON.stringify({ ok: true, eula: { accepted: true }, itinerary: shown ? [{ id: 'thing-1', title: 'Magic Kingdom' }] : [], turns: stored, trip: { id: tripId } }),
     };
   };
-  return { fetchImpl, log };
+  return { fetchImpl, log, cap };
 }
 
 const sleeps = [];
@@ -85,6 +89,7 @@ for (const storeOnGet of [2, 3]) {
     { timeout: true, storeOnGet, reply: 'Day 2: Animal Kingdom is saved.' },
     { reply: 'Day 3: Resort pool day is saved.' },
   ]);
+  server.cap.n = 3;
   const played = await playCustomerTurns(
     { ...story, reply_backend: 'vk_bot_mcp' },
     {
@@ -175,6 +180,7 @@ for (const storeOnGet of [2, 3]) {
 
 {
   const server = makeServer([{ timeout: true, storeOnGet: 1, reply: 'Day 1: Magic Kingdom is saved.' }, { reply: 'Day 2: Epcot.' }]);
+  server.cap.n = 2;
   let realSleeps = 0;
   const played = await playCustomerTurns(
     { ...story, reply_backend: 'vk_bot_mcp' },

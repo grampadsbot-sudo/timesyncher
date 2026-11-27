@@ -51,7 +51,9 @@ function dryTurns(story) {
   }));
 }
 
-export function abArmLabel(story) {
+export function abArmLabel(story, evidence = {}) {
+  if (evidence?.storagePath === 'trip_state') return 'Trip State (OpenRouter)';
+  if (evidence?.storagePath === 'chat_persist') return 'chat persist';
   if (story.reply_backend === 'trip_state') return 'Trip State (OpenRouter)';
   const id = Number(story.roster?.id);
   if (!Number.isInteger(id) || id > 10) return `none (${story.reply_backend})`;

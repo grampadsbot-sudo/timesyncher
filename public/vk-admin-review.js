@@ -521,7 +521,7 @@ window.startVkAdminReview = (() => {
       pane.dataset.kind = state.view;
       pane.dataset.run = '';
       pane.innerHTML = state.view === 'feedback-all' ? feedbackRollupView() : customerList();
-      document.getElementById('vacationDropdown').outerHTML = switcher();
+      replaceSwitcher();
       return;
     }
     const vac = state.details.get(viewTrip());
@@ -530,7 +530,7 @@ window.startVkAdminReview = (() => {
     pane.dataset.adminViewsMissing = adminViewsMissing(vac).join(',');
     pane.querySelector('.admin-view-panel').innerHTML = viewContent(vac);
     lockReplay(document.getElementById('customerChatReplay'));
-    document.getElementById('vacationDropdown').outerHTML = switcher();
+    replaceSwitcher();
   }
 
   function renderNote(note, customerId) {
@@ -746,7 +746,7 @@ window.startVkAdminReview = (() => {
       const vac = state.details.get(id);
       document.querySelector('.admin-view-panel').innerHTML = viewContent(vac);
       lockReplay(document.getElementById('customerChatReplay'));
-      document.getElementById('vacationDropdown').outerHTML = switcher();
+      replaceSwitcher();
     }
   }
 
@@ -784,6 +784,16 @@ window.startVkAdminReview = (() => {
     state.artifacts.clear();
     state.travelSummaries.clear();
     showCustomer(null);
+  }
+
+  function replaceSwitcher() {
+    const menu = document.getElementById('vacationDropdown');
+    if (!menu) return;
+    const open = menu.classList.contains('open');
+    menu.outerHTML = switcher();
+    if (!open) return;
+    document.getElementById('vacationDropdown')?.classList.add('open');
+    document.getElementById('tripButton')?.setAttribute('aria-expanded', 'true');
   }
 
   function closeMenu() {

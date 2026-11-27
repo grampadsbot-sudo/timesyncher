@@ -33,6 +33,30 @@ export async function measureStoredItinerary(db, tripId, tag) {
   }
 }
 
+export async function measureItemStorage(db, tripId, tag) {
+  if (!tripId || !isHarnessTag(tag)) return { storagePath: 'unmeasured', tripStateRevisions: null, astraJsonTurns: null };
+  try {
+    assertThrowaway({ tripId });
+    const [row] = await db`
+      select (
+        select count(*)::int from vacation_trip_state_revisions rev
+        where rev.trip_id = t.id and rev.state_json is not null
+      ) as revisions,
+      (
+        select count(*)::int from trip_things thing where thing.trip_id = t.id
+      ) as things
+      from trips t where t.id = ${tripId} and t.metadata->>'harnessTag' = ${tag}
+    `;
+    if (!row) return { storagePath: 'unmeasured', tripStateRevisions: null, astraJsonTurns: null };
+    const revisions = Number(row.revisions) || 0;
+    const things = Number(row.things) || 0;
+    const storagePath = revisions > 0 ? 'trip_state' : (things > 0 ? 'chat_persist' : 'none');
+    return { storagePath, tripStateRevisions: revisions, astraJsonTurns: revisions };
+  } catch {
+    return { storagePath: 'unmeasured', tripStateRevisions: null, astraJsonTurns: null };
+  }
+}
+
 export async function countPlanningAgreementTurns(db, tripId, tag) {
   if (!tripId || !isHarnessTag(tag)) return null;
   try {
