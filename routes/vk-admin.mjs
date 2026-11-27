@@ -91,8 +91,19 @@ async function handleSession(req, res, env) {
 async function handleCustomers(req, res, session, db) {
   if (req.method !== 'GET') return send(res, 405, { ok: false, error: 'method not allowed' });
   const groups = await vkAdminGroups(db);
-  const testCustomerCount = new Set(groups.filter((g) => g.isTest).flatMap((g) => g.customers.map((member) => member.id))).size;
-  return send(res, 200, { ok: true, role: 'admin', opened: session.opened, groups, testCustomerCount });
+  const visible = groups.filter((group) => group.visibleByDefault);
+  const testGroups = groups.filter((group) => group.isTest);
+  const testCustomerCount = new Set(testGroups.flatMap((group) => group.customers.map((member) => member.id))).size;
+  const pickerKeys = (group) => group.customers.length
+    ? group.customers.map((member) => `customer:${member.id}`)
+    : [`vacation:${group.tripId}`];
+  const visibleKeys = new Set(visible.flatMap(pickerKeys));
+  const hiddenTestCount = new Set(testGroups.flatMap(pickerKeys).filter((key) => !visibleKeys.has(key))).size;
+  const includeTest = new URL(req.url, 'http://localhost').searchParams.get('includeTest') === '1';
+  return send(res, 200, {
+    ok: true, role: 'admin', opened: session.opened,
+    groups: includeTest ? groups : visible, testCustomerCount, hiddenTestCount,
+  });
 }
 
 async function handleCustomer(req, res, env, session, tripId, action, db, getStore) {
