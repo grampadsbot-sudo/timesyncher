@@ -955,9 +955,9 @@ export function draftFactErrors(reply, facts = {}) {
     }
     for (const person of facts.notTraveling || []) {
       const named = new RegExp(`\\b${String(person.name).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-      const absent = /\bnot (?:on the trip|traveling|with the crew|in the house)\b|\b(?:aren(?:'|’)t|are not) traveling\b|\bviewer\b|\beditor\b|\bview access\b|\bedit access\b/i.test(sentence);
-      if (!absent && named.test(sentence) && /\bon the trip|all together|sharing the|whole group|for your stay|with the crew|all on the trip|in the house|with you|joining you|coming along|along with/i.test(sentence)) {
-        pushError(errors, `${person.name} is a ${person.role}, not on the trip`);
+      const absent = /\bnot (?:on the (?:trip|vacation)|traveling|with the crew|in the house)\b|\b(?:aren(?:'|’)t|are not) traveling\b|\bviewer\b|\beditor\b|\bview access\b|\bedit access\b/i.test(sentence);
+      if (!absent && named.test(sentence) && /\bon the (?:trip|vacation)|all together|sharing the|whole group|for your stay|with the crew|all on the (?:trip|vacation)|in the house|with you|joining you|coming along|along with/i.test(sentence)) {
+        pushError(errors, `Not on the vacation: ${person.name} is a ${person.role}.`);
       }
     }
     if (DEPARTURE.test(sentence)) {
