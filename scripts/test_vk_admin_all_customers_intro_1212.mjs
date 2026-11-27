@@ -126,18 +126,18 @@ const vacations = [
   {
     trip_id: tripOne, title: 'Autumn Kyoto', destination: 'Kyoto, Japan',
     customer_id: 'fixture-cust-1', display_name: 'Elena Martinez',
-    customer_email: 'harness+current+vk-1212-elena@harness.invalid',
+    customer_email: 'fixture-one@gmail.com',
     share_slug: orlando.shareSlug, created_at: nowIso, start_date: '2027-04-01', end_date: '2027-04-06',
   },
   {
     trip_id: tripTwo, title: 'Spring Lisbon', destination: 'Lisbon, Portugal',
     customer_id: 'fixture-cust-1', display_name: 'Elena Martinez',
-    customer_email: 'harness+earlier+vk-1212-elena@harness.invalid',
+    customer_email: 'fixture-one@gmail.com',
     created_at: earlierIso, start_date: '2027-02-10', end_date: '2027-02-14',
   },
   {
     trip_id: tripOther, title: 'Summer Reykjavik', destination: 'Reykjavik, Iceland',
-    customer_id: 'fixture-cust-2', display_name: 'Noah Patel',
+    customer_id: 'fixture-cust-2', display_name: 'Noah Patel', customer_email: 'fixture-two@gmail.com',
     created_at: earlierIso, start_date: '2027-06-05', end_date: '2027-06-10',
   },
 ];
