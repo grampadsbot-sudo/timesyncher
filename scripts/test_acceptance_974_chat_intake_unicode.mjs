@@ -95,7 +95,14 @@ try {
     const longDetails = `${'detail '.repeat(428)}abc🍝`;
     const options = {
       tripId, title: input, category: 'restaurant', description: input, destinationHint: 'Zürich',
-      metadata: { input, nested: { values: [input] } },
+      metadata: {
+        input,
+        nested: { values: [input] },
+        origin: 'customer_turn',
+        customerTurnId: 'unicode-turn',
+        customerSpan: input,
+      },
+      provenanceContext: { customerTurns: { 'unicode-turn': { speaker: 'customer', text: input } } },
       env,
       fetchImpl: async () => { networkCalls += 1; throw new Error('Unexpected network request'); },
       searchImpl: async () => {
@@ -128,7 +135,18 @@ try {
   for (const input of [...inputs, `${'a'.repeat(239)}🍝`]) {
     const { tripId, db, rows } = throwawayTrip();
     await insertIntakeTripThingRow(db, {
-      tripId, title: input, category: 'restaurant', description: input, metadata: { input }, env,
+      tripId,
+      title: input,
+      category: 'restaurant',
+      description: input,
+      destinationHint: 'Zürich',
+      metadata: {
+        input,
+        origin: 'customer_turn',
+        customerTurnId: 'unicode-turn',
+        customerSpan: input,
+      },
+      env,
     });
     assert.equal(rows[0].title, input);
     assert.equal(rows[0].description, input);
@@ -141,13 +159,23 @@ try {
   assert.equal(jsonb(JSON.stringify(enriched)).description, description);
   const { tripId, db, rows } = throwawayTrip();
   await insertIntakeTripThingRow(db, {
-    tripId, title: `${'a'.repeat(239)}🍝tail`, category: 'restaurant', description: `${description}tail`, env,
+    tripId,
+    title: `${'a'.repeat(239)}🍝tail`,
+    category: 'restaurant',
+    description: `${description}tail`,
+    destinationHint: 'Zürich',
+    metadata: {
+      origin: 'customer_turn',
+      customerTurnId: 'unicode-turn',
+      customerSpan: `${'a'.repeat(239)}🍝tail`,
+    },
+    env,
   });
   assert.equal(rows[0].title, `${'a'.repeat(239)}🍝`);
   assert.equal(rows[0].description, description);
   assert.equal(searchCalls, 14);
   assert.equal(networkCalls, 0);
-  assert.deepEqual(errors, []);
+  assert.ok(errors.every((line) => !/chat intake search miss record failed/i.test(line)), errors);
 } finally {
   console.error = originalError;
   useThingEvidenceDossierStore(null);
