@@ -23,7 +23,7 @@ import { producedDemoLockedChatEditReply } from '../src/vacation/chat-itinerary-
 import { createBoundedReplyShipGate, createBoundedRewriteClaim, rewriteVacationAppActionClaim } from '../src/vacation/vacation-app-chat-postgen.mjs';
 import { sessionReplyBackend } from '../src/vacation/vk-bot-mcp-reply.mjs';
 import { isOrdinaryPlanningTurn, recoverOrdinaryPlanningReply } from '../src/vacation/chat-plan-persist.mjs';
-import { openRouterTurnTelemetry } from '../src/vacation/openrouter-call-ledger.mjs';
+import { openRouterTurnTelemetry, replyInstructionsPayload } from '../src/vacation/openrouter-call-ledger.mjs';
 import { createTripStateRevisionStore } from '../src/vacation/trip-state-revision-store.mjs';
 export async function queueVacationAppTurn(db, session, trip, body, hooks, intake = {}) {
   const env = process.env;
@@ -269,7 +269,6 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
       tripId,
       requestText,
       classification,
-      roster: Array.isArray(classification.roster) ? classification.roster : [],
       env,
     });
     payload.turnActionResults = turnActionResults;
@@ -284,9 +283,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
   const { replyCustomerTurn, itineraryEditResult, itineraryEditAuthoritative, itineraryEditCannedReply } = await prepareChatItineraryEditForQueueTurn({
     db, trip, seat, tripId, requestText, turnId: turnRows[0]?.id || null, httpReq: intake?.httpReq || null, env,
   });
-  const tripStateReady = Boolean(await createTripStateRevisionStore({ env }).prepare({
-    trip, requestId, turn: customerTurnIndex, actorId: session.customer_id, classification, text: requestText,
-  }));
+  const tripStateReady = Boolean(await createTripStateRevisionStore({ env }).prepare({ trip, requestId, turn: customerTurnIndex, actorId: session.customer_id, classification, text: requestText }));
   let produced;
   const replyStarted = Date.now();
   try {
@@ -348,6 +345,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     ? { ok: Boolean(produced.rules.ok), via: produced.rules.via || null, slug: produced.rules.slug || null }
     : null;
   stampCustomerLivePayload(payload, customerLive, { firstIntake, produced });
+  Object.assign(payload, replyInstructionsPayload());
   await db`
     update transcript_turns
     set payload = ${payload}
@@ -412,6 +410,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
   if (produced.status === 'interim' && produced.pending) {
     const interimDraft = produced.interimReply?.text || '';
     const interimText = await rewriteClaim(interimDraft);
+    Object.assign(payload, replyInstructionsPayload());
     if (String(interimDraft || '').trim() && !interimText) {
       const failure = applyLiveAppReplyFailureToPayload(payload, customerLive, produced);
       await storeReplyFailure(db, turnRows[0].id, payload);
@@ -452,6 +451,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
   const claimedFrom = produced.reply;
   const replyBackend = sessionReplyBackend(session);
   await rewriteVacationAppActionClaim(produced, { rewriteClaim, turnActionResults, replyClaimContext, seat, replyBackend });
+  Object.assign(payload, replyInstructionsPayload());
   await applyReplyQuality(produced, { customerTurn: requestText, env, previousReply: claimedFrom, tripContext: { travelSummary } });
   if (!String(produced?.reply || '').trim() && isOrdinaryPlanningTurn(requestText)) {
     Object.assign(produced, recoverOrdinaryPlanningReply(produced, requestText, { backend: replyBackend, previousReply: claimedFrom }));
@@ -469,29 +469,13 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
   if (citationBlocked) return citationBlocked;
 
   const shipped = await persistVacationAppOutboundReply({
-    db,
-    transcriptOwnerId,
-    tripId,
-    requestId,
-    jobId: jobRows[0].id,
-    produced,
-    base,
-    exchangeLatency,
-    sessionE2eMs: sessionE2eMs(),
-    customerTurnIndex,
-    speakerName,
-    seat,
-    classification,
-    jobFields,
-    firstIntake,
-    requestText,
+    db, transcriptOwnerId, tripId, requestId, jobId: jobRows[0].id, produced, base, exchangeLatency, sessionE2eMs: sessionE2eMs(),
+    customerTurnIndex, speakerName, seat, classification, jobFields, firstIntake, requestText,
     intakeThings: intakeThingsForPersistence(placeSearchTurn, classification, webResearchTurn, jobFields.wantedThings),
-    customerTurnId: turnRows[0].id,
-    recordCustomerThingNotes: hooks.recordCustomerThingNotes,
-    publishIntakeShare: hooks.publishIntakeShare,
-    vacationAppTripSummary: hooks.vacationAppTripSummary,
-    replyBackend, tripStateReady,
-    postStartedMs: Number(intake.postStartedMs) > 0 ? Number(intake.postStartedMs) : started, postBudgetMs: intake.postBudgetMs ?? null, activityCommitDecisionsImpl: intake.activityCommitDecisionsImpl ?? null,
+    customerTurnId: turnRows[0].id, recordCustomerThingNotes: hooks.recordCustomerThingNotes, publishIntakeShare: hooks.publishIntakeShare,
+    vacationAppTripSummary: hooks.vacationAppTripSummary, replyBackend, tripStateReady,
+    postStartedMs: Number(intake.postStartedMs) > 0 ? Number(intake.postStartedMs) : started, postBudgetMs: intake.postBudgetMs ?? null,
+    activityCommitDecisionsImpl: intake.activityCommitDecisionsImpl ?? null,
   });
   if (itineraryEditResult?.client) {
     return { ...shipped, itineraryEdit: itineraryEditResult.client };

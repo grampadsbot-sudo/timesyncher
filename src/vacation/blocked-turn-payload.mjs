@@ -16,6 +16,6 @@ export function logBlockedReplyReasons(reasons) {
 
 export function vacationAppTurnPayloadForClient(payload = {}) {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return payload;
-  const { blockedDraft, blockedReasons, ...visible } = payload;
+  const { blockedDraft, blockedReasons, modelRules, ...visible } = payload;
   return visible;
 }

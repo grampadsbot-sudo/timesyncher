@@ -185,12 +185,13 @@ function storedReplyCost(row) {
   return cost?.status === 'measured' && cost.currency === 'USD' ? { costUsd: cost.dollars, costSource: cost.source } : null;
 }
 
-function storedTurn(row, label) {
+function storedTurn(row, label, includeModelRules) {
   const payload = vacationAppTurnPayloadForClient(row.payload || {});
   const live = row.payload?.liveTranscript || {};
   return {
     turnId: row.id, speaker: row.speaker, direction: row.direction, body: row.body,
     at: iso(row.at), requestId: row.request_id, payload,
+    ...(includeModelRules ? { modelRules: row.payload?.modelRules } : {}),
     authorLabel: payload.authorName || live.speakerName || (row.direction === 'inbound' ? label : 'Vacay Keepsake'),
     model: live.shippedModel || live.quality?.shippedModel || live.model?.responseModel || live.modelId || '',
     fixedOpener: live.fixedOpener === true,
@@ -211,7 +212,7 @@ function storedLedger(transcript, tripId) {
   return [...snapshots.values()].flat();
 }
 
-export async function findVkAdminVacation(db, id, { detail = false } = {}) {
+export async function findVkAdminVacation(db, id, { detail = false, includeModelRules = false } = {}) {
   const fixture = presentVkAdminVacation(id);
   if (fixture) {
     const group = { ...fixture, ...fixtureVisibility };
@@ -262,7 +263,7 @@ export async function findVkAdminVacation(db, id, { detail = false } = {}) {
   }));
   return dialog({
     ...group, shareSlug: row.share_slug || (row.intake_share ? intakeShareSlug(id) : ''),
-    turns: transcript.map((turn) => storedTurn(turn, group.label)),
+    turns: transcript.map((turn) => storedTurn(turn, group.label, includeModelRules)),
     onboarding, qa: row.qa, survey: row.survey,
   }, storedLedger(transcript, id), transcript.map(storedReplyCost));
 }

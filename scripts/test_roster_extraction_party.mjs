@@ -80,12 +80,10 @@ const fromExtraction = completeRosterParty({
   roster: extracted.roster,
 });
 assert.deepEqual(fromExtraction.preference_subjects, [{ name: 'Kai', age: 4 }]);
-assert.deepEqual(fromExtraction.viewers, [{ name: 'Kai' }]);
-assert.deepEqual(fromExtraction.editors, [{ name: 'Kai' }]);
+assert.deepEqual(fromExtraction.viewers, []);
+assert.deepEqual(fromExtraction.editors, []);
 assert.deepEqual(fromExtraction.sources.map((item) => [item.field, item.value, item.source]), [
   ['preference_subjects.Kai', 4, 'chat_extraction'],
-  ['viewers.Kai', 'viewer', 'chat_extraction'],
-  ['editors.Kai', 'editor', 'chat_extraction'],
 ]);
 assert.equal(fromExtraction.preference_subjects.some((kid) => kid.age === 7), false);
 

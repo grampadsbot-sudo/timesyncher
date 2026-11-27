@@ -272,7 +272,10 @@ const dayIds = (state) => Object.entries(state.saved.days).sort(([, a], [, b]) =
   const f = fixture();
   const op = 'hold_invite';
   const args = { name: 'Morgan', access: 'edit' };
-  const ctx = await contextFor(f, 'hold', { customerText: 'Hold the edit invite for Morgan.', spans: { person: ['person', args.name] }, commands: [cmd(op, args)] });
+  const customerText = 'Hold the edit invite for Morgan.';
+  const ctx = await contextFor(f, 'hold', {
+    customerText, spans: { grant: ['access_grant', customerText, args] }, commands: [cmd(op, args)],
+  });
   const result = await f.execute(ctx, op, args);
   assert.equal(result.status.result, 'applied');
   assert.deepEqual(Object.values(result.state.saved.invites), [{ ...args, status: 'held', via: 'chat_action', turn: ctx.turn }]);
@@ -286,7 +289,7 @@ const dayIds = (state) => Object.entries(state.saved.days).sort(([, a], [, b]) =
   assert.equal(f.count(), 1);
   const bad = { name: 'Everyone in the group', access: 'edit' };
   const unnamed = await contextFor(f, 'unnamed', { customerText: 'Everyone in the group', commands: [cmd(op, bad)] });
-  assert.equal((await f.execute(unnamed, op, bad)).status.result, 'needs_info');
+  assert.equal((await f.execute(unnamed, op, bad)).status.result, 'denied');
 
   const off = createTripStateActions({ store: { transact: () => assert.fail('flag OFF entered store'), read: () => assert.fail('flag OFF read store') }, env: {} });
   const offResult = await off.execute({ context: ctx, op, args });

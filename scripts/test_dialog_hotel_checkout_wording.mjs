@@ -40,12 +40,17 @@ for (const line of untouched) assert.equal(normalizeLodgingCheckoutWording(line)
 assert.equal(normalizeLodgingCheckoutWording(null), '');
 
 const liveTurn = readFileSync(new URL('../src/vacation/live-app-turn.mjs', import.meta.url), 'utf8');
-const rules = readFileSync(new URL('./vacation-app-reply-rules.mjs', import.meta.url), 'utf8');
-for (const [name, source] of [['live-app-turn.mjs', liveTurn], ['vacation-app-reply-rules.mjs', rules]]) {
+const sharedRules = readFileSync(new URL('../src/vacation/reply-prompt-sections.mjs', import.meta.url), 'utf8');
+const tieredRules = readFileSync(new URL('./vacation-app-reply-rules.mjs', import.meta.url), 'utf8');
+for (const [name, source] of [
+  ['live-app-turn.mjs', liveTurn],
+  ['reply-prompt-sections.mjs', sharedRules],
+]) {
   assert.doesNotMatch(source, /\bcheckout\b/i, `${name} prompt/rule text has a bare checkout`);
   assert.match(source, /after check-out, or one last time/, name);
   assert.match(source, /Write hotel and lodging times as check-in and check-out, with the hyphen\./, name);
 }
+assert.doesNotMatch(tieredRules, /\bcheckout\b/i, 'vacation-app-reply-rules.mjs prompt/rule text has a bare checkout');
 
 const ship = readFileSync(new URL('../src/vacation/reply-ship.mjs', import.meta.url), 'utf8');
 assert.match(ship, /produced\.reply = finalizeCustomerReplyText\(produced\.reply\)/);

@@ -4,7 +4,7 @@ import { isTripThingName, normalizeTripThingName, tripThingNameInText } from './
 
 const argumentsByAction = {
   add_named_item: ['type', 'label', 'evidence', 'details'],
-  add_from_search: ['candidate', 'day', 'role', 'replace_hotel'],
+  add_from_search: ['candidate', 'day', 'role', 'replace_hotel', 'time', 'time_evidence'],
   place_on_day: ['item', 'day', 'role', 'time', 'time_evidence', 'before', 'move', 'occurrence'],
   set_time: ['item', 'day', 'role', 'time', 'time_evidence', 'move'],
   set_stay: ['hotel', 'check_in', 'check_out', 'check_in_time', 'check_out_time', 'check_in_evidence', 'check_out_evidence'],
@@ -29,6 +29,12 @@ export function authorizedActionIndex(authority, op, args, state, { after = -1, 
     && digestTripState([command?.op, command?.args, command?.as]) === signature);
 }
 
+export function systemPlanAllows(authority, op, saved) {
+  return authority?.source === 'system_plan' && validTripStateId(authority.id)
+    && ['save_plan', 'place_on_day', 'add_from_search'].includes(op)
+    && Boolean(saved.trip.destination && saved.trip.start && saved.trip.end && Object.keys(saved.days).length);
+}
+
 function customerSpan(context, ref) {
   if (!validTripStateId(ref) || !Object.hasOwn(context.authority?.spans || {}, ref)) return null;
   const span = context.authority.spans[ref];
@@ -45,14 +51,13 @@ function sameName(label, evidence) {
   return isTripThingName(evidence) && normalizeTripThingName(label) === normalizeTripThingName(evidence);
 }
 
-export function nameWasDisclosed(context, label) {
-  if (!isTripThingName(label)) return false;
-  const spans = Object.keys(context.authority?.spans || {}).map((ref) => customerSpan(context, ref));
-  if (spans.some((span) => span?.kind === 'person' && sameName(label, span.text))) return true;
-  if (!/^\p{Lu}/u.test(label)) return false;
-  const party = Object.values(context.state.disclosed || {}).filter((fact) => fact.kind === 'party');
-  return [context.customerText, ...party.map((fact) => fact.value)]
-    .some((text) => typeof text === 'string' && text.includes(label) && tripThingNameInText(label, text));
+export function hasExplicitAccessGrant(context, name, access) {
+  if (context.authority?.source !== 'customer' || !isTripThingName(name)) return false;
+  return Object.keys(context.authority.spans || {}).some((ref) => {
+    const span = customerSpan(context, ref);
+    return span?.kind === 'access_grant' && (span.turn == null || span.turn === context.turn)
+      && span.access === access && sameName(name, span.name) && tripThingNameInText(name, span.text);
+  });
 }
 
 export function itemEvidence(context, args) {
@@ -68,10 +73,14 @@ export function itemEvidence(context, args) {
   return span.kind === 'plan_block' ? 'plan_block' : 'named';
 }
 
-export function validatedTime(context, value, evidence) {
+export function validatedTime(context, value, evidence, allowProposed = false) {
   if (value == null) return value;
   if (typeof value !== 'object' || Object.keys(value).some((key) => key !== 'value' && key !== 'precision')
     || typeof value.value !== 'string' || value.value.length > 40) return undefined;
+  if (value.precision === 'proposed') {
+    return allowProposed && evidence == null && /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(value.value) ? value : undefined;
+  }
+  if (context.authority?.source === 'system_plan') return undefined;
   const span = customerSpan(context, evidence);
   if (span?.kind !== 'time' || !span.text || (span.precision && span.precision !== value.precision)) return undefined;
   if (value.precision === 'window') {

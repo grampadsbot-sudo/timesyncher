@@ -176,6 +176,7 @@ function parseExtraction(raw) {
     roster: Array.isArray(parsed.roster) ? parsed.roster : [],
     inviteeName: parsed.inviteeName,
     inviteeEmail: parsed.inviteeEmail,
+    sendCollaboratorInvite: parsed.sendCollaboratorInvite,
     destination: parsed.destination,
     hasDates: parsed.hasDates === true,
     startDate: parsed.startDate,
@@ -452,6 +453,7 @@ export async function classifyTripIntake({
       error: null,
       ...(turnSession ? { understanding: {
         intent: extractedFields.intent,
+        sendCollaboratorInvite: extractedFields.sendCollaboratorInvite ?? null,
         contentTags: extractedFields.contentTags,
         committedSentenceIndexes: Array.isArray(extractedFields.committedSentenceIndexes)
           ? extractedFields.committedSentenceIndexes.filter(Number.isSafeInteger)

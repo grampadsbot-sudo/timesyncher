@@ -9,7 +9,7 @@ export function stampCustomerLivePayload(payload, customerLive, { firstIntake, p
   payload.liveTranscript = customerLive;
   syncFirstIntakeCustomerInputOnTurn(payload, customerLive, { firstIntake, produced });
 }
-import { liveTurnRecord } from './live-app-turn.mjs';
+import { finishTierRewrite, liveTurnRecord } from './live-app-turn.mjs';
 import { appReplyTelemetry, logVacationAppReplyTelemetry } from './reply-telemetry.mjs';
 import { attachBlockedFirstIntakeDraft } from './blocked-turn-payload.mjs';
 import { assertCustomerReplyShippable } from './reply-id-citation.mjs';
@@ -17,7 +17,7 @@ import { replyClaimContextFromIntent } from './reply-action-claim.mjs';
 import { rewriteBlockedActionClaim } from './reply-action-claim-rewrite.mjs';
 import { savedThingFieldsForTurn } from './turn-saved-thing-ids.mjs';
 import { sessionReplyBackend } from './vk-bot-mcp-reply.mjs';
-import { openRouterTurnTelemetry, pendingOpenRouterCalls } from './openrouter-call-ledger.mjs';
+import { bindOpenRouterLedger, openRouterTurnTelemetry, pendingOpenRouterCalls, replyInstructionsPayload } from './openrouter-call-ledger.mjs';
 import { scheduleBackgroundWork } from './deferred-work.mjs';
 import { createTripStateRevisionStore } from './trip-state-revision-store.mjs';
 
@@ -88,6 +88,7 @@ async function writeOutboundAppTurn({
         ${transcriptOwnerId}, ${tripId}, ${requestId}, 'app', 'vacation-app', ${body},
         ${{
           source: 'vacation_app', surface: 'vacation-app', selectedTripId: tripId, liveTranscript: appLive,
+          ...replyInstructionsPayload(),
           ...(turnActionResults?.invite?.ok === false ? { inviteActionFailed: true } : {}),
         }},
         'outbound', now(), ${latency}
@@ -283,6 +284,23 @@ export async function persistVacationAppOutboundReply({
     travelSummary: await refreshTravelSummaryTripFields(db, vacationRows[0], customerTurnId, base?.travelSummary),
     error: null,
   };
+}
+
+export async function finishPendingReply(db, session, pending, hooks) {
+  bindOpenRouterLedger(pending);
+  const finished = pending.resolved?.reply ? pending.resolved : await finishTierRewrite({ pending });
+  if (!finished.reply) {
+    const { modelRules } = replyInstructionsPayload();
+    if (pending.customerTurnId && modelRules) {
+      await db`
+        update transcript_turns
+        set payload = jsonb_set(payload, '{modelRules}', coalesce(payload->'modelRules', '[]'::jsonb) || ${JSON.stringify(modelRules)}::jsonb)
+        where id = ${pending.customerTurnId}
+      `;
+    }
+    return { status: 502, body: { ok: false, error: finished.reason || 'The rewrite did not produce a reply.' } };
+  }
+  return { status: 200, body: await commitShippedRewrite(db, session, pending, finished, hooks) };
 }
 
 export async function commitShippedRewrite(db, session, pending, finished, { recordCustomerThingNotes, publishIntakeShare, postStartedMs = null, postBudgetMs = null }) {
