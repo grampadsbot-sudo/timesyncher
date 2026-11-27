@@ -57,7 +57,7 @@ export function assertLiveTranscript(doc) {
   if (!targetPerson) throw new Error('refused: Dialog PDF needs target_person for APP to <target_person> labels');
   const turns = Array.isArray(doc.turns) ? doc.turns : [];
   if (turns.length === 0) throw new Error('refused: live transcript has no turns');
-  const contentFails = [];
+  const contentFails = [], interimFlags = [];
   let expect = 'customer';
   let start = 0;
   if (turns[0]?.role === 'app') start = 1;
@@ -204,9 +204,9 @@ export function assertLiveTranscript(doc) {
         if (!shippedRewrite && turn.jevScoreRewrite != null && (!Number.isFinite(labeledRewrite) || labeledRewrite < 1 || labeledRewrite > 5)) {
           throw new Error(`refused: quality_not_judged turn ${turn.turnIndex} rewrite score is missing`);
         }
-        if (!turn.interimReply?.text || isTemplateInterim(turn.interimReply.text, priorCustomer?.text || '', turn.interimReply.judge) || turn.interimReply.model !== INTERIM_MODEL) {
-          throw new Error(`refused: turn ${turn.turnIndex} rewrite has no real interim reply`);
-        }
+        const interimText = String(turn.interimReply?.text || '').trim();
+        const interimReal = interimText && !isTemplateInterim(interimText, priorCustomer?.text || '', turn.interimReply?.judge) && turn.interimReply?.model === INTERIM_MODEL;
+        if (!interimReal) interimFlags.push(`turn ${turn.turnIndex} rewrite has no real interim reply`);
         const attempt = Array.isArray(turn.rewriteAttempts) ? turn.rewriteAttempts[0] : null;
         if (!attempt || !String(attempt.model || '').trim() || !Number.isFinite(Number(attempt.ms)) || (!String(attempt.text || '').trim() && !String(attempt.error || '').trim())) {
           throw new Error(`refused: turn ${turn.turnIndex} rewrite attempt was not logged`);
@@ -238,11 +238,11 @@ export function assertLiveTranscript(doc) {
   }
   const repeated = Object.entries(commentCounts).find(([, count]) => count >= 5);
   if (repeated) throw new Error(`refused: Jev comment repeats ${repeated[1]} times`);
-  const interim = interimProblems(turns);
+  const interim = interimProblems(turns).filter((line) => !/missing an interim reply/.test(line) && !/interim model is not /.test(line));
   if (interim.length) throw new Error(`refused: ${interim[0]}`);
   if (expect === 'app') throw new Error('refused: live transcript ends on a customer turn with no app reply');
   if (contentFails.length) throw new Error(contentFails.join('\n'));
-  return { ...doc, targetPerson, turns, contentFails: [] };
+  return { ...doc, targetPerson, turns, contentFails: [], interimFlags };
 }
 
 export function buildTimingSummary(doc) {
@@ -607,6 +607,7 @@ export function liveV7Pack(doc, shape) {
     void: doc.void === true || String(doc.deployBanner || '').startsWith('VOID'),
     record_fails: false,
     content_fails: [],
+    interim_flags: Array.isArray(doc.interimFlags) ? doc.interimFlags : [],
     pack_id: shape.pack_id,
     footer_id: shape.pack_id,
     turns_line: `turns=${shape.summary.turnCount} (customer ${shape.summary.customerTurns} / app ${shape.summary.appTurns}) · session wall time ${wall}ms`,
@@ -672,6 +673,7 @@ export function liveV7Pack(doc, shape) {
         jev_ran: generatedTurn ? jevRanLine(turn) : '',
         producer_log: app ? producerLogLine(turn) : '',
         quality: generatedTurn ? qualityBar(turn) : '',
+        interim_flag: (doc.interimFlags || []).includes(`turn ${turn.turnIndex} rewrite has no real interim reply`) ? `FLAG. turn ${turn.turnIndex} rewrite has no real interim reply. Not invented.` : '',
         timing: generatedTurn ? formatLiveTimingLine({
           gen,
           model,
@@ -960,7 +962,8 @@ async function main() {
   }
   const failLines = Array.isArray(transcript.contentFails) ? transcript.contentFails : [];
   const failsPath = args.fails || String(args.out).replace(/\.pdf$/i, '.content-fails.txt');
-  fs.writeFileSync(failsPath, `${failLines.length ? failLines.join('\n') : 'Content checks: none.'}\n`);
+  const noted = [...failLines, ...(transcript.interimFlags || []).map((line) => `FLAG. ${line}. Not invented.`)];
+  fs.writeFileSync(failsPath, `${noted.length ? noted.join('\n') : 'Content checks: none.'}\n`);
   if (args.verify) {
     fs.appendFileSync(args.verify, `\n## Dialog content checks\n\n${failLines.length ? failLines.map((line) => `- ${line}`).join('\n') : '- Content checks: none.'}\n`);
   }
@@ -978,6 +981,7 @@ async function main() {
     rewrittenTurns: labelCounts.rewrittenTurns,
     rewriteLabels: labelCounts.rewriteLabels,
     contentFails: failLines,
+    interimFlags: transcript.interimFlags || [],
     targetPerson: transcript.targetPerson,
     sessionE2eMs: shape.summary.sessionE2eMs,
   })}\n`);

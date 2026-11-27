@@ -152,6 +152,7 @@ export async function renderDialog({
     transcript: transcriptFromJsonl(jsonl),
     pdfText,
     refusals: parsed.contentFails || [],
+    interimFlags: Array.isArray(parsed.interimFlags) ? parsed.interimFlags : [],
     out,
   };
 }

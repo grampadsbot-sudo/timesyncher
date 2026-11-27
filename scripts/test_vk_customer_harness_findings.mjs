@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {
   DEFAULT_FINDINGS, REQUIRED_HEADINGS, appendSection, customerSection, implicationOf,
-  severityOf, waveSection, withFindingsLock,
+  interimFlagFinding, severityOf, waveSection, withFindingsLock,
 } from './harness/findings.mjs';
 
 assert.match(DEFAULT_FINDINGS, /vk-customer-test-findings\.md$/);
@@ -59,6 +59,13 @@ assert.match(s1, /VK-\.\.\.001 redeemed/);
 assert.match(s1, /3 turns, p50 600 ms, max 880 ms/);
 assert.match(s1, /\$0\.0125 replies \/ \$0\.02\/mo media/);
 assert.match(s1, /Media GB: 0\.852/);
+assert.equal(interimFlagFinding(passCard), '');
+const flagged = customerSection({
+  ...passCard,
+  interim_flags: ['turn 21 rewrite has no real interim reply'],
+}, { wave: 'wave 1 (r1-w1)', at: fixedTime });
+assert.match(flagged, /interim reply missing, not invented: turn 21 rewrite has no real interim reply/);
+assert.doesNotMatch(flagged, /Got it\. I saved that/);
 
 const r1 = appendSection(file, s1);
 assert.ok(r1.bytes > 0);
