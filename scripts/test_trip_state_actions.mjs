@@ -266,6 +266,11 @@ const dayIds = (state) => Object.entries(state.saved.days).sort(([, a], [, b]) =
   assert.equal(result.state.capabilities.actions.invite_collaborator.reason, 'on_hold');
   assert.equal(f.current.things.length, 0);
   assert.equal(Object.keys(f.current.invites).length, 1);
+  const sendCtx = await contextFor(f, 'send');
+  const send = await f.execute(sendCtx, 'invite_collaborator', { ...args, send_request: true });
+  assert.equal(send.status.result, 'denied');
+  assert.equal(send.status.detail, 'on_hold');
+  assert.equal(f.count(), 1);
   const bad = { name: 'Each of them', access: 'edit' };
   const unnamed = await contextFor(f, 'unnamed', { customerText: 'Each of them', commands: [cmd(op, bad)] });
   assert.equal((await f.execute(unnamed, op, bad)).status.result, 'needs_info');

@@ -1,11 +1,11 @@
 import { tripStateActionFlag, tripStateCapabilities } from './trip-state-action-registry.mjs';
 import { createTripStateActionStore } from './trip-state-action-store.mjs';
 import { digestTripState, readTripStateSite, tripStateBacking, tripStateSiteLocked } from './trip-state-action-site.mjs';
-import { actionAuthorized, actionFailure, validateActionArguments, validTripStateId } from './trip-state-action-input.mjs';
+import { authorizedActionIndex, actionFailure, validateActionArguments, validTripStateId } from './trip-state-action-input.mjs';
 import { siteActionWriters } from './trip-state-action-writes.mjs';
 
 const batchOps = new Set(['add_named_item', 'add_from_search', 'place_on_day', 'set_stay', 'set_time']);
-const topLevelOps = new Set([...batchOps, 'hold_invite', 'save_plan'].filter((op) => op !== 'set_time'));
+const topLevelOps = new Set([...batchOps, 'hold_invite', 'save_plan', 'invite_collaborator'].filter((op) => op !== 'set_time'));
 const handleFields = ['item', 'hotel', 'replace_hotel'];
 
 function statusOf(op, receipt, turn, { result, detail, refs }) {
@@ -17,7 +17,8 @@ function capabilitiesFor(context, site, env, read, serviceAvailable = true) {
     env, read, serviceAvailable, backing: site ? tripStateBacking(site.trip) : context.backing,
     grant: site ? 'owner' : context.grant,
     locked: site ? tripStateSiteLocked(site.trip) : context.locked,
-    emailHeld: context.emailHeld || Boolean(Object.keys(site?.invites || {}).length),
+    emailHeld: context.emailHeld || context.state.capabilities?.email === 'held'
+      || Boolean(Object.keys(site?.invites || {}).length),
     accessRights: context.state.capabilities?.access_rights,
     productFacts: context.state.capabilities?.product_facts,
   });
@@ -80,13 +81,13 @@ function publish(context, capabilities, saved, status, operations = [], action, 
   };
 }
 
-function planOperation({ op, args, site, saved, context, handles, batch }) {
+function planOperation({ op, args, site, saved, context, handles, authorized }) {
   if (!validateActionArguments(op, args)) return actionFailure('needs_info', 'Supply valid action arguments.');
-  if (!actionAuthorized(context.authority, op, args, context.state)) return actionFailure('denied', 'This action needs matching customer authorization.');
+  if (!authorized) return actionFailure('denied', 'This action needs matching customer authorization.');
   const resolved = { ...args };
   for (const key of handleFields) {
     if (typeof resolved[key] !== 'string' || !resolved[key].startsWith('$')) continue;
-    const value = batch && handles.get(resolved[key].slice(1));
+    const value = handles.get(resolved[key].slice(1));
     if (!value) return actionFailure('needs_info', 'Resolve the result handle from an earlier successful operation.');
     resolved[key] = value;
   }
@@ -117,11 +118,14 @@ function planBatch(args, site, saved, context, receipt) {
   const handles = new Map();
   const children = [];
   let current = saved;
+  let previous = -1;
   for (const child of args.operations) {
     const { op, args: command, as } = child;
+    const index = authorizedActionIndex(context.authority, op, command, context.state, { after: previous, as });
+    if (index >= 0) previous = index;
     const outcome = as != null && (!validTripStateId(as) || handles.has(as))
       ? actionFailure('needs_info', 'Use a unique valid result handle.')
-      : planOperation({ op, args: command, site, saved: current, context, handles, batch: true });
+      : planOperation({ op, args: command, site, saved: current, context, handles, authorized: index >= 0 });
     if (as && outcome.item) handles.set(as, outcome.item);
     if (outcome.result === 'applied') current = readTripStateSite(site, saved, context.turn);
     children.push({ op, receipt: `${receipt}-${children.length + 1}`, outcome, candidate: command?.candidate });
@@ -143,7 +147,10 @@ function summarizeBatch(results) {
 function planRecord(op, args, site, saved, context, receipt, signature) {
   const next = structuredClone(site);
   const planned = op === 'save_plan' ? planBatch(args, next, saved, context, receipt)
-    : { outcome: planOperation({ op, args, site: next, saved, context, handles: new Map() }), children: [] };
+    : { outcome: planOperation({
+      op, args, site: next, saved, context, handles: new Map(),
+      authorized: authorizedActionIndex(context.authority, op, args, context.state) >= 0,
+    }), children: [] };
   const final = readTripStateSite(next, saved, context.turn);
   const before = collectTargets(saved);
   const after = collectTargets(final);
@@ -177,7 +184,7 @@ function verifyRecord(record, saved, replay, op, args) {
   }
   const children = record.children.map((child) => ({ ...child, outcome: verify(child.outcome) }));
   const original = children.length ? summarizeBatch(children.map((child) => child.outcome)) : verify(record.outcome);
-  const results = children.length ? children : [{ op, outcome: original, candidate: args.candidate }];
+  const results = children.length ? children : [{ op, outcome: original, candidate: args?.candidate }];
   const mutations = results.filter((result) => result.outcome.result === 'applied').flatMap((result) => result.outcome.refs)
     .filter((id) => Object.hasOwn(record.changes, id));
   const promotions = results.filter((result) => result.op === 'add_from_search' && ['applied', 'no_change'].includes(result.outcome.result))
@@ -210,6 +217,7 @@ export function createTripStateActions({ env = process.env, store = createTripSt
       const initial = capabilitiesFor(context, null, env, state.saved.read, store.available);
       const done = (outcome, capabilities = initial, saved) => publish(context, capabilities, saved, statusOf(op, receipt, turn, outcome));
       if (!tripStateActionFlag(env)) return done(actionFailure('denied', 'not_wired'));
+      if (op === 'invite_collaborator' && initial.actions[op].reason === 'on_hold') return done(actionFailure('denied', 'on_hold'));
       if (store.available === false) return done(actionFailure('denied', 'service_unavailable'));
       let observed, saved, committed, transactionError, replay = false, rejected;
       for (let attempt = 0; attempt < 2; attempt += 1) {

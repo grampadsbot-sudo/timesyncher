@@ -21,12 +21,14 @@ export function validateActionArguments(op, args) {
     && Object.hasOwn(argumentsByAction, op) && Object.keys(args).every((key) => argumentsByAction[op].includes(key));
 }
 
-export function actionAuthorized(authority, op, args, state) {
-  if (authority?.source !== 'customer' && authority?.source !== 'proposal') return false;
+export function authorizedActionIndex(authority, op, args, state, { after = -1, as } = {}) {
+  if (authority?.source !== 'customer' && authority?.source !== 'proposal') return -1;
   if (authority.source === 'proposal' && (!validTripStateId(authority.id)
-    || !['offered', 'accepted'].includes(state.proposals?.[authority.id]?.status))) return false;
-  const signature = digestTripState([op, args]);
-  return authority.commands?.some((command) => digestTripState([command.op, command.args]) === signature) === true;
+    || !['offered', 'accepted'].includes(state.proposals?.[authority.id]?.status))) return -1;
+  if (!Array.isArray(authority.commands)) return -1;
+  const signature = digestTripState([op, args, as]);
+  return authority.commands.findIndex((command, index) => index > after
+    && digestTripState([command?.op, command?.args, command?.as]) === signature);
 }
 
 function customerSpan(context, ref) {
