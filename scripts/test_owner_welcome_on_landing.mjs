@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
+import path from 'node:path';
 
 import {
   ensureOnboardingOpener,
@@ -22,8 +23,43 @@ const templates = JSON.parse(await readFile(new URL('../content/onboarding-welco
 const firstName = 'leaabc12';
 const welcomeText = renderOnboardingWelcome({ audience: 'owner_no_site', firstName });
 assert.equal(welcomeText, templates.owner_no_site.replace('{firstName}', firstName));
-assert.match(welcomeText, /hold the mic button/i);
+assert.match(welcomeText, /^Welcome, /);
+assert.match(welcomeText, /You're all set\./);
+const paragraphs = welcomeText.split(/\n\n+/);
+assert.equal(paragraphs[0], `Welcome, ${firstName}! You're all set.`);
+assert.match(paragraphs[1], /^Here's how this works\./);
+assert.match(paragraphs[2], /^The easiest way to start is to tap the mic button/);
+assert.doesNotMatch(welcomeText, /your vacation already has its own website/i);
+assert.doesNotMatch(welcomeText, /Anyone you share that link with can see your plans and photos without signing in/i);
+assert.match(welcomeText, /tap the mic button/i);
+assert.doesNotMatch(welcomeText, /hold the mic/i);
 assert.doesNotMatch(welcomeText, /https?:\/\//);
+
+const customerCopyRoots = ['content', 'public', 'src/vacation'];
+const skipHoldMicScan = new Set([
+  path.join('content', 'onboarding-welcome.json'),
+]);
+async function scanCustomerHoldMic(dir, rel = '') {
+  const hits = [];
+  for (const name of await readdir(dir, { withFileTypes: true })) {
+    const relPath = rel ? `${rel}/${name.name}` : name.name;
+    const full = path.join(dir, name.name);
+    if (name.isDirectory()) {
+      hits.push(...await scanCustomerHoldMic(full, relPath));
+      continue;
+    }
+    if (!/\.(json|mjs|js|html|tsx?)$/.test(name.name)) continue;
+    if (skipHoldMicScan.has(relPath)) continue;
+    const body = await readFile(full, 'utf8');
+    if (/\bhold the mic\b/i.test(body)) hits.push(relPath);
+  }
+  return hits;
+}
+const holdMicHits = [];
+for (const root of customerCopyRoots) {
+  holdMicHits.push(...await scanCustomerHoldMic(new URL(`../${root}`, import.meta.url).pathname, root));
+}
+assert.deepEqual(holdMicHits, [], `customer-facing hold the mic copy: ${holdMicHits.join(', ')}`);
 
 const session = {
   id: 'session-1',
@@ -121,6 +157,36 @@ const state = {
   logs: [],
 };
 const db = createWelcomeDb(state);
+
+{
+  const mintedSiteState = {
+    welcomeClaims: new Set(),
+    welcomeTurns: [],
+    transcriptTurns: [],
+    logs: [],
+  };
+  const mintedSiteDb = createWelcomeDb(mintedSiteState);
+  const mintedSession = {
+    id: 'session-minted-site',
+    customer_id: 'owner-minted',
+    trip_id: null,
+    order_id: 'order-minted',
+    first_name: firstName,
+    display_name: firstName,
+    metadata: {},
+  };
+  const shellTrip = {
+    id: '01234567-89ab-4cde-8f01-23456789ab01',
+    title: 'Orlando Theme Parks Family Trip',
+    shareToken: 'intake-0123456789ab',
+    publicUrl: 'https://vacation-staging.timesyncher.com/shared/intake-0123456789ab/',
+  };
+  await ensureOnboardingOpener(mintedSiteDb, mintedSession, shellTrip, {});
+  assert.equal(mintedSiteState.welcomeTurns.length, 1);
+  assert.equal(mintedSiteState.welcomeTurns[0].liveTranscript.text, welcomeText);
+  assert.doesNotMatch(mintedSiteState.welcomeTurns[0].liveTranscript.text, /your vacation already has its own website/i);
+}
+
 const originalLog = console.log;
 console.log = (...args) => {
   state.logs.push(args.map((item) => String(item)).join(' '));
