@@ -86,6 +86,10 @@ export function presentVkAdminVacation(tripId) {
   };
 }
 
+export function vkAdminFixtureTrip(tripId) {
+  return vacationByTripId(String(tripId || ''))?.trip || null;
+}
+
 export function vkAdminFixtureShareSlug(slug) {
   return String(slug || '').startsWith(SHARE_PREFIX);
 }

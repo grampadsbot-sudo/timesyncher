@@ -1,7 +1,9 @@
 import { hasDatabase, sql } from './db.mjs';
 import { intakeShareSlug } from './intake-shared-trip.mjs';
 import { vacationAppTurnPayloadForClient } from './reply-ship.mjs';
-import { listVkAdminGroups, presentVkAdminVacation, vkAdminRosterId } from './vk-admin-fixtures.mjs';
+import { tripStateCapabilities } from './trip-state-action-registry.mjs';
+import { tripStateBacking, tripStateSiteLocked } from './trip-state-action-site.mjs';
+import { listVkAdminGroups, presentVkAdminVacation, vkAdminFixtureTrip, vkAdminRosterId } from './vk-admin-fixtures.mjs';
 
 const iso = (value) => value ? new Date(value).toISOString() : null;
 const date = (value) => iso(value)?.slice(0, 10) || '';
@@ -212,15 +214,65 @@ function storedLedger(transcript, tripId) {
   return [...snapshots.values()].flat();
 }
 
-export async function findVkAdminVacation(db, id, { detail = false, includeModelRules = false } = {}) {
+function tripRecordFromRow(row) {
+  const raw = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
+  const metadata = {
+    ...raw,
+    ...(row.intake_share === true && raw.intakeShare === undefined ? { intakeShare: true } : {}),
+    ...(row.share_slug && !raw.sharedToken && !raw.shareToken && !raw.publicSlug && !raw.source_token && !raw.slug
+      ? { sharedToken: row.share_slug } : {}),
+  };
+  return {
+    id: row.trip_id,
+    customer_id: row.customer_id ?? null,
+    status: row.status ?? null,
+    metadata,
+  };
+}
+
+async function hasHeldInvites(db, tripId) {
+  if (!db || !tripId) return false;
+  try {
+    const rows = await db`select 1 from vacation_trip_state_held_invites where trip_id = ${tripId} limit 1`;
+    return rows.length > 0;
+  } catch (error) {
+    if (error?.code === '42P01') return false;
+    throw error;
+  }
+}
+
+function computeTripCapabilities({ env, trip, hasOwner, emailHeld, serviceAvailable, capabilitiesFn = tripStateCapabilities }) {
+  return capabilitiesFn({
+    env,
+    trip,
+    backing: trip ? tripStateBacking(trip) : 'trek',
+    grant: hasOwner ? 'owner' : 'none',
+    locked: trip ? tripStateSiteLocked(trip) : true,
+    read: 'current',
+    serviceAvailable,
+    emailHeld,
+  });
+}
+
+export async function findVkAdminVacation(db, id, {
+  detail = false, includeModelRules = false, includeCapabilities = false, env = process.env, capabilities: capabilitiesFn = tripStateCapabilities,
+} = {}) {
   const fixture = presentVkAdminVacation(id);
   if (fixture) {
     const group = { ...fixture, ...fixtureVisibility };
-    return detail ? dialog(group, group.ledger || []) : group;
+    const result = detail ? dialog(group, group.ledger || []) : group;
+    if (!includeCapabilities) return result;
+    return {
+      ...result,
+      capabilities: computeTripCapabilities({
+        env, trip: vkAdminFixtureTrip(id), hasOwner: group.customers.length > 0, emailHeld: false, serviceAvailable: Boolean(db), capabilitiesFn,
+      }),
+    };
   }
   if (!db || !/^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/i.test(id)) return null;
   const [row] = await db`
     select t.id::text as trip_id, t.title, t.destination, t.created_at, t.start_date, t.end_date,
+      t.status, t.metadata,
       c.id as customer_id, c.email as customer_email, c.display_name, c.first_name, c.last_name,
       t.metadata->>'harnessTag' as harness_tag,
       coalesce(t.metadata->>'sharedToken', t.metadata->>'shareToken', t.metadata->>'publicSlug',
@@ -249,6 +301,7 @@ export async function findVkAdminVacation(db, id, { detail = false, includeModel
       where os.trip_id = ${id} order by oc.clicked_at, oc.id
     `,
   ]);
+  const emailHeld = includeCapabilities ? await hasHeldInvites(db, id) : false;
   const onboarding = sessions.map((session) => ({
     status: session.status, currentStep: session.current_step,
     events: [
@@ -261,10 +314,16 @@ export async function findVkAdminVacation(db, id, { detail = false, includeModel
       { label: 'Onboarding completed', at: iso(session.completed_at) },
     ].filter((event) => event.at).sort((a, b) => a.at.localeCompare(b.at)),
   }));
+  const capabilities = includeCapabilities
+    ? computeTripCapabilities({
+      env, trip: tripRecordFromRow(row), hasOwner: Boolean(row.customer_id), emailHeld, serviceAvailable: true, capabilitiesFn,
+    })
+    : undefined;
   return dialog({
     ...group, shareSlug: row.share_slug || (row.intake_share ? intakeShareSlug(id) : ''),
     turns: transcript.map((turn) => storedTurn(turn, group.label, includeModelRules)),
     onboarding, qa: row.qa, survey: row.survey,
+    ...(includeCapabilities ? { capabilities } : {}),
   }, storedLedger(transcript, id), transcript.map(storedReplyCost));
 }
 
