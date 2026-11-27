@@ -102,11 +102,11 @@ window.startVkAdminReview = (() => {
       `<section class="admin-group"><header><b>${safe(vac.title || vac.destination || vac.label)}</b><small>${safe(vac.destination)} · <time datetime="${safe(vac.sortAt)}">${safe(vac.sortAt.slice(0, 10))}</time></small></header><button class="admin-open" type="button" data-open-vacation="${safe(vac.tripId)}">${vac.tripId === viewTrip() ? 'Current vacation' : 'Open'}</button></section>`).join('')}</div>`;
   }
 
-  const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
-  const money = (value) => usd.format(value);
+  const usdActual = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 8 });
+  const usdEstimated = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
 
   function costLines(costs) {
-    return `<span data-cost="actual">Actual ${money(costs.actual)}</span> <span data-cost="estimated">Estimated ${money(costs.estimated)}</span>${costs.unpriced ? ` <span data-cost="unpriced">${costs.unpriced} unpriced</span>` : ''}`;
+    return `<span data-cost="actual">Actual ${usdActual.format(costs.actual)}</span> <span data-cost="estimated">Estimated ${usdEstimated.format(costs.estimated)}</span>${costs.unpriced ? ` <span data-cost="unpriced">${costs.unpriced} unpriced</span>` : ''}`;
   }
 
   function dialogResults(vac) {
