@@ -136,7 +136,7 @@ const follow = chatDb(followTrip);
 await attachIntakeItineraryFromReply(
   follow.db,
   followTrip.id,
-  "add Mama's Fish House for Saturday",
+  "add Mama's Fish House for Saturday and add Paia Fish Market",
   {},
   '',
   saturdayThings,
@@ -179,7 +179,7 @@ assert.doesNotMatch(system, /name the day \(required\)/i);
 
 const stringTrip = tripRow('6ce5eb7d-10f9-4022-ae4b-85620a616116', '2027-03-10', '2027-03-17');
 const created = chatDb(stringTrip);
-await writeIntakeItineraryFromChat(created.db, stringTrip.id, 'Maui week', saturdayThings, {
+await writeIntakeItineraryFromChat(created.db, stringTrip.id, "Maui week with Mama's Fish House on Saturday and Paia Fish Market", saturdayThings, {
   searchImpl: async () => ({ ok: true }),
 });
 const createdMama = created.things.find((row) => row.title === "Mama's Fish House");

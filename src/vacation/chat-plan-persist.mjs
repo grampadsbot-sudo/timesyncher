@@ -1,11 +1,11 @@
 import { cleanText } from './http.mjs';
 import { isAiImportChatRequest } from './mcp-chat-import.mjs';
 import { isReservationAsk } from './mcp-reservations-handshake.mjs';
+import { isTripThingName, normalizeTripThingName, tripThingNameInText } from './trip-thing-name-shape.mjs';
 import { vkBotUsageCost } from './turn-cost.mjs';
 import { readCookie, requireWebEditAccess, webAccessCookieName } from './web-access.mjs';
 
 const PLANNING_TURN_RE = /\b(?:itinerary|day-by-day|day by day|keep building|family plan|book early|want to book|we'?d want to book)\b|\bplan (?:the|our|a|my)\b|\bday\s+\d{1,2}\b/i;
-const PLAN_CONFIRM_RE = /\b(?:yes|lock it in|lock that in|save that plan|save this plan|save the plan|that plan works|confirm the plan|go with that)\b/i;
 const DAY_LINE_RE = /^(?:#{1,3}\s*)?(?:\*\*)?\s*day\s*(\d{1,2})\s*(?:\*\*)?\s*[:.)\-\u2013\u2014]*\s*(.*)$/i;
 const WEEKDAY_LINE_RE = /^(?:[-*•]\s*)?(?:#{1,3}\s*)?(?:\*\*)?\s*(sunday|monday|tuesday|wednesday|thursday|friday|saturday)(?:\s*,?\s*[a-z]{3,9}\.?\s+\d{1,2}(?:,?\s*\d{4})?)?\s*(?:\*\*)?\s*[:\-\u2013\u2014]\s*(.+)$/i;
 const WEEKDAY_INDEX = { sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 };
@@ -45,13 +45,6 @@ export function isOrdinaryPlanningTurn(rawText = '') {
   return PLANNING_TURN_RE.test(text);
 }
 
-export function isPlanConfirmation(rawText = '') {
-  const text = asText(rawText, 2000);
-  if (!text || /^(?:yes|yeah|yep|yup|sure|ok|okay)[.!\s]*$/i.test(text)) return false;
-  if (!/\b(?:plan|itinerary|days?)\b/i.test(text)) return false;
-  return PLAN_CONFIRM_RE.test(text);
-}
-
 function categoryForPlanTitle(title) {
   const text = String(title || '').toLowerCase();
   if (/\bflights?\b/.test(text)) return 'flight';
@@ -63,13 +56,12 @@ function categoryForPlanTitle(title) {
 function itemFromLine(line, dayNumber, startDate) {
   const trimmed = String(line || '').replace(/^[-*•]\s+/, '').replace(/^\d+[.)]\s+/, '').trim();
   if (!trimmed) return [];
-  if (trimmed.split(/\s+/).length > 14 && /[.!?]$/.test(trimmed)) return [];
   const parts = trimmed.includes(', ') ? trimmed.split(/\s*,\s*/) : [trimmed];
   const day = startDate ? addUtcDays(startDate, dayNumber - 1) : '';
   const items = [];
   for (const part of parts) {
-    const title = cleanText(part, 80);
-    if (!title || title.length < 2 || title.split(/\s+/).length > 12 || title.includes('?')) continue;
+    const title = part.trim();
+    if (!isTripThingName(title)) continue;
     items.push({
       title,
       category: categoryForPlanTitle(title),
@@ -102,7 +94,7 @@ export function plannedItineraryItems(corpus, { startDate = '' } = {}) {
   const start = isoDay(startDate);
   const pushItems = (text, dayNum) => {
     for (const item of itemFromLine(text, dayNum, start)) {
-      const key = item.title.toLowerCase();
+      const key = normalizeTripThingName(item.title);
       if (seen.has(key)) continue;
       seen.add(key);
       items.push(item);
@@ -140,26 +132,6 @@ function unsupportedTestSql(error) {
   return /Unhandled test SQL|unexpected sql/i.test(sqlMessage(error));
 }
 
-async function priorAppBodies(db, tripId) {
-  if (typeof db !== 'function' || !tripId) return [];
-  try {
-    const rows = await db`
-      select body, speaker
-      from transcript_turns
-      where trip_id = ${tripId}
-      order by sent_at desc
-      limit 8
-    `;
-    return (Array.isArray(rows) ? rows : [])
-      .filter((row) => !row?.speaker || row.speaker === 'app')
-      .map((row) => String(row?.body || ''))
-      .filter(Boolean);
-  } catch (error) {
-    if (unsupportedTestSql(error)) return [];
-    throw error;
-  }
-}
-
 async function tripStartDate(db, tripId) {
   if (typeof db !== 'function' || !tripId) return '';
   try {
@@ -176,29 +148,21 @@ async function tripStartDate(db, tripId) {
   }
 }
 
-function mergeByTitle(base, extra) {
-  const next = Array.isArray(base) ? [...base] : [];
-  const seen = new Set(next.map((thing) => String(thing?.title || '').toLowerCase()).filter(Boolean));
-  for (const item of extra || []) {
-    const key = String(item?.title || '').toLowerCase();
-    if (!key || seen.has(key)) continue;
-    seen.add(key);
-    next.push(item);
-  }
-  return next;
-}
-
-export async function plannedCustomerThings(db, tripId, text, appReply, activities = []) {
-  const base = Array.isArray(activities) ? activities.filter(Boolean) : [];
+export async function plannedCustomerThings(db, tripId, text, activities = []) {
   const startDate = await tripStartDate(db, tripId);
-  let corpus = `${text || ''}\n${appReply || ''}`;
-  let items = plannedItineraryItems(corpus, { startDate });
-  if (!items.length && isPlanConfirmation(text)) {
-    corpus = (await priorAppBodies(db, tripId)).join('\n');
-    items = plannedItineraryItems(corpus, { startDate });
+  const titled = new Map();
+  const base = Array.isArray(activities) ? activities : [];
+  for (const thing of base) {
+    if (!tripThingNameInText(thing?.title, text)) continue;
+    const key = normalizeTripThingName(thing.title);
+    if (!titled.has(key)) titled.set(key, thing);
   }
-  if (!items.length) return base;
-  return mergeByTitle(base, items);
+  for (const item of plannedItineraryItems(text, { startDate })) {
+    const key = normalizeTripThingName(item.title);
+    if (titled.has(key)) titled.set(key, { ...titled.get(key), ...item });
+    else titled.set(key, item);
+  }
+  return [...titled.values()];
 }
 
 export async function persistFollowupLodgingSafely(persistFn, db, tripId, lodgingWanted, options) {
@@ -217,9 +181,9 @@ export function keepPlannedDays(merged, wanted) {
   const planned = (Array.isArray(wanted) ? wanted : []).filter((thing) => Number(thing?.dayNumber) > 0 && thing?.title);
   if (!planned.length) return merged;
   const next = Array.isArray(merged) ? [...merged] : [];
-  const index = new Map(next.map((thing, at) => [String(thing?.title || '').toLowerCase(), at]));
+  const index = new Map(next.map((thing, at) => [normalizeTripThingName(thing?.title), at]));
   for (const item of planned) {
-    const key = String(item.title || '').toLowerCase();
+    const key = normalizeTripThingName(item.title);
     if (!key) continue;
     if (index.has(key)) {
       const at = index.get(key);

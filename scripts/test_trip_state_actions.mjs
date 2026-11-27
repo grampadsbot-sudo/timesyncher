@@ -6,6 +6,7 @@ import addFormats from 'ajv-formats';
 import { createTripStateActions } from '../src/vacation/trip-state-actions.mjs';
 import { tripStateCapabilities } from '../src/vacation/trip-state-action-registry.mjs';
 import { sharedTripFromIntake, thingRecordFromTripRow } from '../src/vacation/intake-shared-trip.mjs';
+import { isTripThingName, normalizeTripThingName } from '../src/vacation/trip-thing-name-shape.mjs';
 import { replyRulesSystem } from './vacation-app-reply-rules.mjs';
 
 const schema = JSON.parse(readFileSync(new URL('./fixtures/trip-state-actions/trip-state.schema.json', import.meta.url), 'utf8'));
@@ -15,10 +16,20 @@ const valid = ajv.compile(schema);
 function conforms(state) {
   assert.equal(valid(state), true, JSON.stringify(valid.errors));
 }
+for (const name of ['Harbor Lighthouse Museum', 'the Sunset Pier Diner', 'St. James Park', 'Baker’s Market', 'River walk']) {
+  assert.equal(isTripThingName(name), true, name);
+}
+for (const name of ['', 'Nobody has paid yet', 'We will see the aquarium first', 'Itinerary confirmed',
+  'The museum closes its doors', 'Harbor Lighthouse Museum. The aquarium is nearby.', 'Shall we sail?',
+  'North South East West Upper Lower River Valley Lake Hill Ferry Market Terminal']) {
+  assert.equal(isTripThingName(name), false, name);
+}
+assert.equal(normalizeTripThingName('the Sunset Pier Diner'), normalizeTripThingName('Sunset-Pier Diner.'));
+
 const tripId = 'cbb020d4-a8e4-4bc5-9150-d7712230adfa';
 const actorId = '31606504-cd3e-460d-8fbf-ff35e23a8205';
 const trip = {
-  id: tripId, customer_id: actorId, title: 'Spring trip', destination: 'Orlando',
+  id: tripId, customer_id: actorId, title: 'Spring trip', destination: 'Harbor City',
   start_date: '2027-04-05', end_date: '2027-04-09', metadata: { intakeShare: true }, status: 'onboarding',
 };
 
@@ -99,10 +110,10 @@ async function contextFor(f, requestId, options = {}) {
   context.customerText = customerText;
   context.authority = {
     source, id: authorityId, commands, selectedCandidates, researchKey,
-    spans: Object.fromEntries(Object.entries(spans).map(([ref, [kind, label]]) => {
+    spans: Object.fromEntries(Object.entries(spans).map(([ref, [kind, label, fields]]) => {
       const start = customerText.indexOf(label);
       assert.ok(start >= 0);
-      return [ref, { kind, start, end: start + label.length }];
+      return [ref, { kind, start, end: start + label.length, ...fields }];
     })),
   };
   return context;
@@ -162,14 +173,14 @@ const dayIds = (state) => Object.entries(state.saved.days).sort(([, a], [, b]) =
   const f = fixture();
   const initial = await contextFor(f, 'batch');
   const [day] = dayIds(initial.state);
-  const item = named('activity', 'Pool time');
-  const bad = named('activity', 'Nothing has been booked', 'status');
+  const item = named('activity', 'Harbor Lighthouse Museum');
+  const bad = named('activity', 'Nobody has paid yet', 'status');
   const a = cmd('add_named_item', item, 'pool');
   const b = cmd('place_on_day', { item: '$pool', day, role: 'visit' });
   const c = cmd('add_named_item', bad);
   const ctx = await contextFor(f, 'batch', {
-    customerText: 'Pool time on Monday. Nothing has been booked.',
-    spans: { name: ['plan_block', item.label], status: ['status', bad.label] }, commands: [a, b, c],
+    customerText: 'Harbor Lighthouse Museum on Monday. Nobody has paid yet.',
+    spans: { name: ['plan_block', item.label], status: ['plan_block', bad.label] }, commands: [a, b, c],
   });
   const args = { authority: 'current', operations: [a, b, c] };
   const batch = await f.execute(ctx, 'save_plan', args);
@@ -182,7 +193,7 @@ const dayIds = (state) => Object.entries(state.saved.days).sort(([, a], [, b]) =
   assert.equal(f.count(), 1);
 
   const asApp = await contextFor(f, 'reply', {
-    customerText: 'Pool time', source: 'app_reply', spans: { name: ['plan_block', 'Pool time'] }, commands: [a],
+    customerText: 'Harbor Lighthouse Museum', source: 'app_reply', spans: { name: ['plan_block', 'Harbor Lighthouse Museum'] }, commands: [a],
   });
   assert.equal((await f.execute(asApp, 'add_named_item', item)).status.result, 'denied');
   const oversized = await f.execute({ ...ctx, operationKey: 'oversized', siteRevision: batch.state.saved.site_revision },
@@ -192,11 +203,11 @@ const dayIds = (state) => Object.entries(state.saved.days).sort(([, a], [, b]) =
 
 {
   const f = fixture();
-  const labels = ['Lake Buena Vista hotel', 'THE LAKE BUENA VISTA HOTEL', 'The Lake Buena Vista Hotel.',
-    'Lake-Buena Vista Hotel!', 'lake  buena vista hotel', '“Lake Buena Vista Hotel”', 'lake buena vista hotel?'];
+  const labels = ['Crescent Bay Inn', 'THE CRESCENT BAY INN', 'The Crescent Bay Inn.',
+    'Crescent-Bay Inn', 'crescent  bay inn', '“Crescent Bay Inn”', 'crescent bay inn.'];
   const variants = labels.map((label, index) => cmd('add_named_item', named('hotel', label, `name-${index}`)));
   const ctx = await contextFor(f, 'hotel', {
-    customerText: labels.join(' / '), spans: Object.fromEntries(labels.map((label, index) => [`name-${index}`, ['place', label]])),
+    customerText: labels.join(' / '), spans: Object.fromEntries(labels.map((label, index) => [`name-${index}`, ['place', label, { basis: 'placeholder' }]])),
     commands: variants,
   });
   const result = await f.execute(ctx, 'save_plan', { authority: 'current', operations: variants });
@@ -218,10 +229,10 @@ const dayIds = (state) => Object.entries(state.saved.days).sort(([, a], [, b]) =
   assert.deepEqual(stayed.state.saved.lodging[hotel], { check_in: first, check_out: last, via: 'chat_action', turn: stayCtx.turn });
 
   const adjustment = {
-    ...args, check_in: next, check_out_time: { value: 'early morning', precision: 'window' }, check_out_evidence: 'window',
+    ...args, check_in: next, check_out_time: { value: 'after breakfast', precision: 'window' }, check_out_evidence: 'window',
   };
   const adjustedCtx = await contextFor(f, 'stay-move', {
-    state: stayed.state, customerText: 'Checkout early morning.', spans: { window: ['time', 'early morning'] },
+    state: stayed.state, customerText: 'Please check out after breakfast.', spans: { window: ['time', 'after breakfast'] },
     commands: [cmd('set_stay', adjustment)],
   });
   const adjusted = await f.execute(adjustedCtx, 'set_stay', adjustment);
@@ -239,8 +250,8 @@ const dayIds = (state) => Object.entries(state.saved.days).sort(([, a], [, b]) =
   assert.equal(f.current.things.length, 1);
 
   const pickedState = { ...adjusted.state,
-    research: { key: 'scope', state: 'complete', turn: adjusted.state.updated_turn, areas: ['Orlando'], gaps: [] },
-    candidates: { option: { type: 'hotel', title: 'Palm Court Inn', area: 'Orlando', source: 'vk_search',
+    research: { key: 'scope', state: 'complete', turn: adjusted.state.updated_turn, areas: ['Harbor City'], gaps: [] },
+    candidates: { option: { type: 'hotel', title: 'Northpoint Marina Inn', area: 'Harbor City', source: 'vk_search',
       result_id: 'provider-1', turn: adjusted.state.updated_turn, facts: [] } },
   };
   const promotion = { candidate: 'option', replace_hotel: hotel };
@@ -249,7 +260,7 @@ const dayIds = (state) => Object.entries(state.saved.days).sort(([, a], [, b]) =
   const picked = await f.execute({ ...unpicked, operationKey: 'picked', authority: { ...unpicked.authority, selectedCandidates: ['option'] } },
     'add_from_search', promotion);
   assert.equal(picked.status.result, 'applied');
-  assert.equal(picked.state.saved.items[hotel].title, 'Palm Court Inn');
+  assert.equal(picked.state.saved.items[hotel].title, 'Northpoint Marina Inn');
   assert.equal(picked.state.saved.days[next].assigned[0].id, checkIn.id);
   assert.deepEqual(picked.state.candidates, {});
   assert.equal(f.current.things.length, 1);
@@ -259,7 +270,7 @@ const dayIds = (state) => Object.entries(state.saved.days).sort(([, a], [, b]) =
   const f = fixture();
   const op = 'hold_invite';
   const args = { name: 'Morgan', access: 'edit' };
-  const ctx = await contextFor(f, 'hold', { customerText: 'Hold the edit invite for Morgan.', commands: [cmd(op, args)] });
+  const ctx = await contextFor(f, 'hold', { customerText: 'Hold the edit invite for Morgan.', spans: { person: ['person', args.name] }, commands: [cmd(op, args)] });
   const result = await f.execute(ctx, op, args);
   assert.equal(result.status.result, 'applied');
   assert.deepEqual(Object.values(result.state.saved.invites), [{ ...args, status: 'held', via: 'chat_action', turn: ctx.turn }]);
@@ -271,8 +282,8 @@ const dayIds = (state) => Object.entries(state.saved.days).sort(([, a], [, b]) =
   assert.equal(send.status.result, 'denied');
   assert.equal(send.status.detail, 'on_hold');
   assert.equal(f.count(), 1);
-  const bad = { name: 'Each of them', access: 'edit' };
-  const unnamed = await contextFor(f, 'unnamed', { customerText: 'Each of them', commands: [cmd(op, bad)] });
+  const bad = { name: 'Everyone in the group', access: 'edit' };
+  const unnamed = await contextFor(f, 'unnamed', { customerText: 'Everyone in the group', commands: [cmd(op, bad)] });
   assert.equal((await f.execute(unnamed, op, bad)).status.result, 'needs_info');
 
   const off = createTripStateActions({ store: { transact: () => assert.fail('flag OFF entered store'), read: () => assert.fail('flag OFF read store') }, env: {} });
@@ -363,11 +374,43 @@ const dayIds = (state) => Object.entries(state.saved.days).sort(([, a], [, b]) =
   const time = { value: '14:30', precision: 'approximate' };
   const timed = cmd('set_time', { item: third.item, day, time, time_evidence: 'time' });
   const timeCtx = await contextFor(f, 'batch-time', {
-    state: ordered.state, customerText: 'Around 2:30 pm.', spans: { time: ['time', 'Around 2:30 pm'] }, commands: [timed],
+    state: ordered.state, customerText: '2:30 pm or thereabouts.', spans: { time: ['time', '2:30 pm', { precision: 'approximate' }] }, commands: [timed],
   });
   const result = await f.execute(timeCtx, 'save_plan', { operations: [timed], authority: 'current' });
   assert.equal(result.status.result, 'applied');
   assert.deepEqual(result.state.saved.days[day].assigned[0].time, time);
+}
+
+{
+  const f = fixture();
+  const op = 'add_named_item';
+  const args = named('park', 'Cliffside Observatory');
+  const ctx = await contextFor(f, 'historical', { commands: [cmd(op, args)] });
+  const [day] = dayIds(ctx.state);
+  ctx.state.proposals.outline = { status: 'offered', turn: 1, lines: [
+    { day, type: 'park', label: args.label, item: null, time: null, role: 'visit' },
+  ] };
+  ctx.authority = {
+    ...ctx.authority, source: 'proposal', id: 'outline',
+    spans: { name: { kind: 'place', turn: 1, start: 0, end: args.label.length } },
+  };
+  ctx.priorTurns = [{ role: 'app', turn: 1, text: args.label }];
+  assert.equal((await f.execute(ctx, op, args)).status.result, 'denied');
+  const priorTurns = [{ ...ctx.priorTurns[0], role: 'customer' }];
+  assert.equal((await f.execute({ ...ctx, priorTurns, operationKey: 'customer-source' }, op, args)).status.result, 'applied');
+}
+
+{
+  const f = fixture();
+  const op = 'add_from_search';
+  const args = { candidate: 'selected' };
+  f.state.research = { key: 'scope', state: 'complete', turn: 1, areas: ['Harbor City'], gaps: [] };
+  f.state.candidates.selected = { type: 'restaurant', title: 'The vendor has closed', area: 'Harbor City',
+    source: 'vk_search', result_id: 'vendor-1', turn: 1, facts: [] };
+  const ctx = await contextFor(f, 'search-shape', { researchKey: 'scope', selectedCandidates: ['selected'], commands: [cmd(op, args)] });
+  const result = await f.execute(ctx, op, args);
+  assert.equal(result.status.result, 'denied');
+  assert.deepEqual(result.state.saved.items, {});
 }
 
 console.log('Trip State action executor tests passed.');

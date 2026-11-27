@@ -1,5 +1,11 @@
 const WEEKDAY_INDEX = { sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 };
 
+export function splitWeekdaySuffix(value) {
+  const match = value.match(/^(.+?)\s+(?:on|for)\s+(\p{L}+)$/iu);
+  return match && Object.hasOwn(WEEKDAY_INDEX, match[2].toLowerCase())
+    ? { title: match[1], whenLabel: match[2] } : { title: value, whenLabel: '' };
+}
+
 export function tripIsoDay(value) {
   if (!value) return '';
   if (value instanceof Date && !Number.isNaN(value.getTime())) {

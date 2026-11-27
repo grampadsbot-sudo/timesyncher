@@ -1,3 +1,5 @@
+import { splitWeekdaySuffix } from './intake-weekday-dates.mjs';
+import { normalizeTripThingName } from './trip-thing-name-shape.mjs';
 import { fetchOpenRouterJson } from './openrouter-call-ledger.mjs';
 import {
   DEFAULT_JEV_DECISIONS_URL,
@@ -266,14 +268,14 @@ export function customerNamedActivity(text) {
   const source = String(text || '').replace(/\s+/g, ' ').trim();
   const match = source.match(/\badd\s+(?:an?\s+)?([^.,!?]{2,80}?)(?=\s+and\b|[,.!?]|$)/i);
   if (!match) return null;
-  const title = match[1].replace(/\s+/g, ' ').trim();
+  const { title, whenLabel } = splitWeekdaySuffix(match[1].trim());
   if (!title || /^(collaborator|person|someone|them|it|that|this)$/i.test(title)) return null;
   return {
     title,
     category: 'activity',
     description: '',
     who: '',
-    whenLabel: '',
+    whenLabel,
     customerWhen: '',
     notes: [],
     collaboratorNotes: [],
@@ -285,20 +287,20 @@ export function namedCustomerActivities(text, activities = []) {
   const rows = Array.isArray(activities) ? [...activities] : [];
   const named = customerNamedActivity(text);
   if (!named) return rows;
-  const key = named.title.toLowerCase();
-  if (rows.some((thing) => String(thing?.title || thing?.name || '').toLowerCase() === key)) return rows;
+  const key = normalizeTripThingName(named.title);
+  if (rows.some((thing) => normalizeTripThingName(thing?.title || thing?.name) === key)) return rows;
   return [...rows, named];
 }
 
 export function mergeWantedThings(things, extracted) {
   const next = Array.isArray(things) ? [...things] : [];
-  const have = new Set(next.map((thing) => clean(thing?.title, 180).toLowerCase()).filter(Boolean));
+  const have = new Set(next.map((thing) => normalizeTripThingName(thing?.title)).filter(Boolean));
   const incoming = [
     ...thingsFromIntake(extracted),
     ...(Array.isArray(extracted) ? extracted : []).filter((thing) => thing?.source === 'customer' && clean(thing?.title, 180)),
   ];
   for (const thing of incoming) {
-    const key = String(thing.title || '').toLowerCase();
+    const key = normalizeTripThingName(thing.title);
     if (!key || have.has(key)) continue;
     have.add(key);
     next.push(thing);

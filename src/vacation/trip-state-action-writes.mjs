@@ -2,7 +2,8 @@ import { randomUUID } from 'node:crypto';
 import { findPlaceAssignment, placeAssignmentsOnDay } from './chat-itinerary-edit-assignment.mjs';
 import { intId } from './intake-shared-trip.mjs';
 import { digestTripState, tripItemKinds } from './trip-state-action-site.mjs';
-import { actionFailure, itemEvidence, nameWasDisclosed, tripStateName, typedItemDetails, validatedTime, validTripStateId } from './trip-state-action-input.mjs';
+import { actionFailure, itemEvidence, nameWasDisclosed, typedItemDetails, validatedTime, validTripStateId } from './trip-state-action-input.mjs';
+import { isTripThingName, normalizeTripThingName } from './trip-thing-name-shape.mjs';
 
 const needs = (detail) => actionFailure('needs_info', detail);
 const conflict = (detail) => actionFailure('conflict', detail);
@@ -48,8 +49,8 @@ function persistItem(site, row, type, label, info) {
 }
 
 function matchingItems(saved, args, details) {
-  const name = tripStateName(args.label);
-  const sameName = Object.entries(saved.items).filter(([, item]) => tripStateName(item.title) === name);
+  const name = normalizeTripThingName(args.label);
+  const sameName = Object.entries(saved.items).filter(([, item]) => normalizeTripThingName(item.title) === name);
   const sameType = sameName.filter(([key, item]) => item.type === args.type
     && (!details.flight || !saved.flights[key] || saved.flights[key].direction === details.flight.direction));
   return { sameType, wrongType: sameName.some(([, item]) => item.type !== args.type) };
@@ -75,6 +76,7 @@ function visitOnDay(site, saved, context, args, requireExisting = false) {
   const { item, day, before, move, occurrence } = args;
   const entity = Object.hasOwn(saved.items, item) && saved.items[item];
   if (!entity || !Object.hasOwn(saved.days, day)) return needs('Identify an existing item and a day on this trip.');
+  if (!isTripThingName(entity.title)) return denied('The existing item needs a valid name.');
   const assignments = Object.fromEntries(Object.entries(saved.days).map(([key, value]) => [key, value.assigned]));
   const onDay = placeAssignmentsOnDay({ assignments }, item, day);
   const role = args.role ?? (requireExisting && (move ? onDay.find((entry) => entry.id === move)?.role
@@ -118,6 +120,7 @@ function saveStay(site, saved, context, args) {
   const { hotel, check_in, check_out } = args;
   if (!Object.hasOwn(saved.items, hotel) || !Object.hasOwn(saved.days, check_in) || !Object.hasOwn(saved.days, check_out)) return needs('Identify the hotel and both stay days on this trip.');
   if (saved.items[hotel].type !== 'hotel') return conflict('The existing item is not a hotel.');
+  if (!isTripThingName(saved.items[hotel].title)) return denied('The existing hotel needs a valid name.');
   if (saved.days[check_in].date > saved.days[check_out].date) return conflict('Check-out falls before check-in.');
   const row = storedThing(site, hotel);
   const info = row.metadata?.tripState;
@@ -155,16 +158,18 @@ function promoteSearch(site, saved, context, args) {
   if (replacement && (!Object.hasOwn(saved.items, replacement) || saved.items[replacement].type !== 'hotel')) return conflict('The replacement target is not an existing hotel.');
   if (!selection && !scoped) return conflict('The selected candidate is outside the current search scope.');
   const existing = Object.entries(saved.items).find(([, item]) => item.candidate_id === candidate)?.[0];
+  if (existing && !isTripThingName(saved.items[existing].title)) return denied('The existing item needs a valid name.');
   let item = existing;
   let created = false;
   if (replacement && item && replacement !== item) return conflict('The selected candidate is already saved as another item.');
   if (!item) {
     if (!scoped || selection?.source !== 'vk_search' || !validTripStateId(selection.result_id)
-      || !tripItemKinds.has(selection.type) || !tripStateName(selection.title) || selection.title.length > 280
-      || !context.state.research.areas.some((area) => tripStateName(area) === tripStateName(selection.area))) {
+      || !tripItemKinds.has(selection.type)
+      || !context.state.research.areas.some((area) => normalizeTripThingName(area) === normalizeTripThingName(selection.area))) {
       return conflict('The selected candidate is outside the current search scope.');
     }
     const { result_id: providerId, type, title } = selection;
+    if (!isTripThingName(title)) return denied('The selected search result needs a valid place name.');
     const provider = site.things.find((row) => row.metadata?.tripState?.provider === providerId);
     if (provider) item = String(intId(provider.id));
     const { sameType, wrongType } = matchingItems(saved, { type, label: title }, {});
@@ -187,7 +192,7 @@ function promoteSearch(site, saved, context, args) {
     }
   }
   if (day != null || role != null) {
-    const place = visitOnDay(site, { ...saved, items: { ...saved.items, [item]: saved.items[item] || { type: selection.type } } },
+    const place = visitOnDay(site, { ...saved, items: { ...saved.items, [item]: saved.items[item] || { type: selection.type, title: selection.title } } },
       context, { item, day, role });
     if (place.result !== 'applied' && place.result !== 'no_change') return place;
     return created || place.result === 'applied' ? changed([item, ...place.refs], item) : unchanged([item, ...place.refs], item);
@@ -200,7 +205,7 @@ function holdInvite(site, saved, context, args) {
   if (typeof name !== 'string' || name.length > 280 || !nameWasDisclosed(context, name) || !['view', 'edit'].includes(access)) {
     return needs('Supply the disclosed name and requested view or edit access.');
   }
-  const id = `hold-${digestTripState([context.tripId, tripStateName(name)]).slice(0, 40)}`;
+  const id = `hold-${digestTripState([context.tripId, normalizeTripThingName(name)]).slice(0, 40)}`;
   if (site.invites[id]?.turn > context.turn) return conflict('A later turn already updated this held invite.');
   if (site.invites[id]?.access === access) return unchanged([id]);
   site.invites[id] = { name: name.trim(), access, status: 'held', via: 'chat_action', turn: context.turn };

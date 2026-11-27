@@ -41,6 +41,7 @@ const db = async (strings, ...values) => {
 
 await persistQueuedIntakeLodgingFromWanted(db, tripId, wantedThings, {
   extractedDestination: 'Kihei',
+  customerText: 'We are staying at Kihei Kai Nani.',
   customerTurnId: 'turn-1',
   env: { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key' },
   searchImpl: async () => ({
