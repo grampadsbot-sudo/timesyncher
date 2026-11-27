@@ -55,7 +55,7 @@ window.startVkAdminReview = (() => {
     const actionRow = (title, href, attrs = '') =>
       `<a class="trip-option admin-view-action" href="${href}" role="option" ${attrs}><span></span><span class="trip-option-text"><b>${safe(title)}</b></span></a>`;
     if (state.view === 'chat') {
-      if (artifacts?.dialogPdf) rows.push(actionRow('Dialog PDF', `/api/admin/${tripPath}/dialog-pdf`, 'data-dialog-pdf download'));
+      if (artifacts?.dialogPdf) rows.push(actionRow('Dialog PDF', `/api/admin/${tripPath}/dialog-pdf`, 'data-dialog-pdf="1" download'));
       else if (artifacts?.failed) rows.push(statusRow('Dialog PDF could not be loaded.'));
       else if (artifacts) rows.push(statusRow('No Dialog PDF yet'));
     }
@@ -102,7 +102,7 @@ window.startVkAdminReview = (() => {
       `<section class="admin-group"><header><b>${safe(vac.title || vac.destination || vac.label)}</b><small>${safe(vac.destination)} · <time datetime="${safe(vac.sortAt)}">${safe(vac.sortAt.slice(0, 10))}</time></small></header><button class="admin-open" type="button" data-open-vacation="${safe(vac.tripId)}">${vac.tripId === viewTrip() ? 'Current vacation' : 'Open'}</button></section>`).join('')}</div>`;
   }
 
-  const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 8 });
+  const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
   const money = (value) => usd.format(value);
 
   function costLines(costs) {
