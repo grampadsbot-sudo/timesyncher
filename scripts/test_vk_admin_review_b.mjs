@@ -188,11 +188,7 @@ try {
         await openMenu();
         await page.getByRole('option', { name, exact: true }).click();
       };
-<<<<<<< HEAD
       const basicViews = ['Dialog', 'Travel Summary', 'Vacation site', 'Keepsake', 'Onboarding', 'Chat screenshots', 'Dialog PDF'];
-=======
-      const basicViews = ['Dialog', 'Vacation site', 'Keepsake', 'Onboarding', 'Chat screenshots'];
->>>>>>> origin/vk
       const requests = [];
       page.on('request', (request) => requests.push([request.method(), new URL(request.url()).pathname]));
       await page.goto(`${base}/vacation-app/admin`);
@@ -227,15 +223,11 @@ try {
       assert.equal(await page.locator('#adminView, .admin-view-controls, select').count(), 0);
       assert.equal(await page.locator('#appHeader .vacation-dropdown').count(), 1);
       await menuButton.click();
-<<<<<<< HEAD
       assert.deepEqual(
         await page.locator('.admin-header-views .trip-option b').allTextContents(),
         [...basicViews, 'All vacations'],
       );
       assert.deepEqual(await viewOptions.allTextContents(), [...basicViews.slice(0, 6), 'All vacations']);
-=======
-      assert.deepEqual(await viewOptions.allTextContents(), [...basicViews, 'All vacations']);
->>>>>>> origin/vk
       await shotMenu('header-multiple-vacations');
       await page.keyboard.press('Escape');
       assert.equal(await menuButton.getAttribute('aria-expanded'), 'false');
@@ -376,12 +368,8 @@ try {
       assert.equal(await note.count(), 0);
       assert.equal(await existingNote.count(), 0);
       await menuButton.click();
-<<<<<<< HEAD
       assert.deepEqual(await viewOptions.allTextContents(), basicViews.slice(0, 6));
       assert.equal(await page.getByRole('option', { name: 'Dialog PDF', exact: true }).count(), 0);
-=======
-      assert.deepEqual(await viewOptions.allTextContents(), basicViews);
->>>>>>> origin/vk
       await shotMenu('header-single-vacation');
       await page.keyboard.press('Escape');
       await chooseView('Onboarding');

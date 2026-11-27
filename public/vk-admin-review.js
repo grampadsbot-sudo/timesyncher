@@ -75,14 +75,10 @@ window.startVkAdminReview = (() => {
 
   function switcher() {
     const account = customer();
-<<<<<<< HEAD
-    const viewLabel = views.find(([id]) => id === state.view)?.[1];
-    const current = account ? (state.view === 'travel-summary' ? viewLabel : `${viewLabel} · ${account.name}`) : 'All Customers';
-=======
     const vac = account ? state.details.get(viewTrip()) : null;
     const artifacts = vac ? state.artifacts.get(vac.tripId) : null;
-    const current = account ? `${views.find(([id]) => id === state.view)[1]} · ${account.name}` : 'All Customers';
->>>>>>> origin/vk
+    const viewLabel = views.find(([id]) => id === state.view)?.[1];
+    const current = account ? (state.view === 'travel-summary' ? viewLabel : `${viewLabel} · ${account.name}`) : 'All Customers';
     const option = (id, title, on, sub = '', attrs = '') => {
       return `<button class="trip-option ${on ? 'active' : ''}" type="button" data-trip-id="${safe(id)}" ${attrs} role="option" aria-selected="${on}"><span>${on ? check : ''}</span><span class="trip-option-text"><b>${safe(title)}</b>${sub ? `<small>${safe(sub)}</small>` : ''}</span></button>`;
     };
