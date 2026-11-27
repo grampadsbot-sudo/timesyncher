@@ -1,5 +1,6 @@
 import { requireIntakeAuth } from '../src/vacation/auth.mjs';
 import { sql } from '../src/vacation/db.mjs';
+import { loadCurrentTravelSummary } from '../src/vacation/vk-travel-summary.mjs';
 import { queueOrSendWebEditorInviteEmail } from '../src/vacation/email.mjs';
 import { cleanText, readJson, sendJson, vacationAppErrorBody } from '../src/vacation/http.mjs';
 import {
@@ -546,13 +547,12 @@ async function queueVacationAppTurn(db, session, trip, body, intakePrefill = nul
   if (aiMcpReply) return aiMcpReply;
   const pendingPreviewReply = await tryHandlePendingPreviewChatTurn(db, { session, trip, requestText });
   if (pendingPreviewReply) return pendingPreviewReply;
-  const intake = await resolveVacationAppQueueIntake(requestText, intakePrefill, process.env, session);
+  const intake = await resolveVacationAppQueueIntake(requestText, intakePrefill, process.env, session, { db, trip });
   return runQueueVacationAppTurn(db, session, trip, body, queueVacationAppHooks(), { requestText, ...intake, welcomeMs, httpReq, postStartedMs: httpReq ? postStartedByRequest.get(httpReq) : null });
 }
 
 export function chatSaveMetadata(thing, scheduled) {
-  const m = thing.metadata || {};
-  const prov = Object.fromEntries(['origin', 'customerTurnId', 'customerSpan', 'existingThingId'].map((k) => [k, thing[k] || m[k]]).filter(([, v]) => v));
+  const prov = Object.fromEntries(['origin', 'customerTurnId', 'customerSpan', 'existingThingId'].map((k) => [k, thing[k] || (thing.metadata || {})[k]]).filter(([, v]) => v));
   const meta = {
     source: thing.source || 'chat_extraction', ...prov, who: thing.who || '',
     whenLabel: scheduled.whenLabel || thing.whenLabel || '',
@@ -930,6 +930,7 @@ async function handleVacationApp(req, res, db, url) {
       publicUrl: selected?.publicUrl || '',
       vacations,
       turns,
+      travelSummary: eula.accepted ? await loadCurrentTravelSummary(db, selected?.id) : null,
       itinerary,
       searchProgress,
     });

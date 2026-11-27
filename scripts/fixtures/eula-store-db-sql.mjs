@@ -1,4 +1,7 @@
 export function handleEulaStoreDbSql(text, values, eulaStore) {
+  if (/insert into eula_store_objects/i.test(text) && /insert into transcript_turns/i.test(text)) {
+    return undefined;
+  }
   if (/insert into eula_store_objects/i.test(text)) {
     const key = values.find((v) => typeof v === 'string' && v.includes('timesyncher-eula'));
     const doc = values.find((v) => v && typeof v === 'object' && !Array.isArray(v));

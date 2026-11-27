@@ -1,4 +1,5 @@
 import { sayVacationNotTrip } from './customer-visible-copy.mjs';
+import { refreshTravelSummaryTripFields } from './vk-travel-summary.mjs';
 import { ensurePostIntakeCollabCopy } from './post-intake-collab-copy.mjs';
 import { finalizeCustomerReplyText } from './reply-customer-wording.mjs';
 import { syncFirstIntakeCustomerInputOnTurn } from './first-intake-customer-input.mjs';
@@ -258,6 +259,7 @@ export async function persistVacationAppOutboundReply({
     ...(deferredWork ? { deferredWork } : {}),
     ...(postReplyTimings ? { postReplyTimings } : {}),
     vacation: vacationRows[0] ? vacationAppTripSummary(vacationRows[0]) : null,
+    travelSummary: await refreshTravelSummaryTripFields(db, vacationRows[0], customerTurnId, base?.travelSummary),
     error: null,
   };
 }
@@ -284,6 +286,7 @@ export async function commitShippedRewrite(db, session, pending, finished, { rec
       replyClaimContext: claimContext,
       jev: finished.jev || pending.jev || null,
       rules: finished.rules || null,
+      travelSummary: pending.travelSummary,
     });
     if (!recovered.reply || recovered.reason) {
       return { ok: false, status: 'reply_unavailable', reply: null, error: 'reply_unavailable' };
@@ -378,6 +381,9 @@ export async function commitShippedRewrite(db, session, pending, finished, { rec
       updated_at = now()
     where id = ${session.id}
   `;
+  const [trip] = pending.tripId && pending.travelSummary ? await db`
+    select id, title, destination, start_date, end_date, status, metadata from trips where id = ${pending.tripId}
+  ` : [];
   return {
     ok: true,
     status: 'replied',
@@ -388,6 +394,7 @@ export async function commitShippedRewrite(db, session, pending, finished, { rec
     thingId: savedFields.thingId,
     sharedDayIds: savedFields.sharedDayIds,
     savedThings: savedFields.savedThings,
+    travelSummary: await refreshTravelSummaryTripFields(db, trip, pending.customerTurnId, pending.travelSummary),
     ...(deferredWork ? { deferredWork } : {}),
     ...(postReplyTimings ? { postReplyTimings } : {}),
     error: null,

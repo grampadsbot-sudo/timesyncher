@@ -182,6 +182,7 @@ function parseExtraction(raw) {
     intent: parsed.intent,
     contentTags: parsed.contentTags,
     committedSentenceIndexes: parsed.committedSentenceIndexes,
+    travelSummary: parsed.travelSummary,
   };
 }
 
@@ -321,6 +322,7 @@ export async function classifyTripIntake({
   fetchImpl = fetch,
   requireExtractedTripDates = false,
   turnSession = null,
+  travelSummaryContext,
   customerTurnId = '',
   customerTurns = [],
   existingThings = [],
@@ -407,7 +409,7 @@ export async function classifyTripIntake({
       fetchImpl,
       OPENROUTER_CHAT_COMPLETIONS_URL,
       key,
-      turnSession ? turnUnderstandingRequest(request, String(text || '').slice(0, 12000)) : request,
+      turnSession ? turnUnderstandingRequest(request, String(text || '').slice(0, 12000), travelSummaryContext) : request,
       turnSession ? 'turn_understanding' : 'intake_extract',
     );
     const extractedFields = parseExtraction(chatText(extracted));
@@ -453,6 +455,7 @@ export async function classifyTripIntake({
           ? extractedFields.committedSentenceIndexes.filter(Number.isSafeInteger)
           : [],
         destination: clean(extractedFields.destination, 180),
+        ...(extractedFields.travelSummary && { travelSummary: extractedFields.travelSummary }),
       } } : {}),
     };
   } catch (error) {
