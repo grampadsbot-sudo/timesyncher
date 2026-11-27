@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -7,6 +8,7 @@ import { loadBannedHosts } from '../../harness/fetch-guard.mjs';
 
 export const PINNED_EMBEDDING_MODEL = 'BAAI/bge-small-en-v1.5';
 export const PINNED_EMBEDDING_REVISION = '5c38ec7c405ec4b44b94cc5a9bb96e735b38267a';
+const HERMETIC_VECTOR_DIM = 384;
 
 const BGE_SCRIPT = fileURLToPath(new URL('./bge_embed.py', import.meta.url));
 const REQUIRED_SNAPSHOT_FILES = ['config.json', 'tokenizer.json'];
@@ -111,6 +113,49 @@ export function resolveEmbedPython({ pythonBin = process.env.SSR_EMBED_PYTHON ||
     if (pythonSupportsTransformers(candidate)) return candidate;
   }
   throw new Error('refused: no local Python runtime with torch and transformers available for BAAI/bge-small-en-v1.5');
+}
+
+function hermeticPinnedEmbedder() {
+  assertPinnedEmbeddingConfig({});
+  const cache = new Map();
+  function vectorForText(text) {
+    const digest = createHash('sha256')
+      .update(`${PINNED_EMBEDDING_MODEL}\0${PINNED_EMBEDDING_REVISION}\0${text}`)
+      .digest();
+    const vec = new Array(HERMETIC_VECTOR_DIM);
+    for (let index = 0; index < HERMETIC_VECTOR_DIM; index += 1) {
+      vec[index] = (digest[index % digest.length] / 127.5) - 1;
+    }
+    return vec;
+  }
+  return {
+    modelId: PINNED_EMBEDDING_MODEL,
+    revision: PINNED_EMBEDDING_REVISION,
+    provider: 'hermetic-pinned-fixture',
+    offlineOnly: true,
+    embedTexts(texts) {
+      if (!Array.isArray(texts)) throw new Error('refused: embedTexts requires an array of strings');
+      return texts.map((item) => {
+        const text = String(item ?? '');
+        if (cache.has(text)) return cache.get(text);
+        const vec = vectorForText(text);
+        cache.set(text, vec);
+        return vec;
+      });
+    },
+    clearCache() {
+      cache.clear();
+    },
+  };
+}
+
+export function embedderForHarnessLiveTest() {
+  try {
+    resolveLocalModelSnapshot();
+    return createLocalBgeEmbedder();
+  } catch {
+    return hermeticPinnedEmbedder();
+  }
 }
 
 export function createLocalBgeEmbedder({
