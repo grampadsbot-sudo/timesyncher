@@ -81,6 +81,15 @@ function turnDisclosures({ classification, text, turn }) {
   const { destination, hasDates, startDate, endDate } = classification;
   if (destination && request.includes(destination.toLowerCase())) facts.dest = { kind: 'destination', value: destination, turn };
   if (hasDates && startDate && endDate) facts.dates = { kind: 'dates', value: `${startDate} – ${endDate}`, turn };
+  const party = String(classification.planningParty || '').trim();
+  if (party && request.includes(party.toLowerCase())) facts.party = { kind: 'party', value: party.slice(0, 280), turn };
+  for (const entry of (Array.isArray(classification.planningWants) ? classification.planningWants : []).slice(0, 8)) {
+    const value = String(entry?.value || '').trim();
+    if (!value || !request.includes(value.toLowerCase())) continue;
+    const category = entry.category;
+    const id = `want-${digestTripState([category, value.toLowerCase()]).slice(0, 24)}`;
+    facts[id] = { kind: 'preference', value: value.slice(0, 280), category, turn };
+  }
   const budgetMatch = text.match(budgetDisclosure)?.[0];
   if (budgetMatch) facts.budget = { kind: 'budget', value: budgetMatch.slice(0, 280), turn };
   const paceMatch = text.match(paceDisclosure)?.[0];
@@ -154,6 +163,19 @@ function projectReceipts({ receipts, saved, tripId, requestId, turn }) {
   return { last_actions: [...mutations.values()], tool_status: [...statuses.values()] };
 }
 
+function placedBuildCounts(saved, actions) {
+  const refs = new Set(actions.filter(({ op }) => op === 'save_plan').flatMap(({ refs }) => refs));
+  const items = new Set(Object.values(saved.days).flatMap(({ assigned }) => assigned)
+    .filter(({ id }) => refs.has(id)).map(({ item }) => item));
+  const counts = {};
+  for (const id of items) {
+    const item = saved.items[id];
+    if (!item || item.basis === 'plan_block' || item.basis === 'placeholder') continue;
+    counts[item.type] = (counts[item.type] || 0) + 1;
+  }
+  return counts;
+}
+
 export function projectTripState({
   trip, site, requestId, turn, revision, phase = 'reply_ready', previous,
   receipts = [], disclosures, travelers, classification, text, grant, env,
@@ -173,6 +195,9 @@ export function projectTripState({
   });
   const hasResearch = Boolean(research && validResearch(research));
   const nextResearch = hasResearch ? research : (previous?.research || { key: null, state: 'waiting', turn, areas: [], gaps: [] });
+  const measuredResearch = hasResearch && research.build
+    ? { ...research, build: { ...research.build, items_by_type: placedBuildCounts(saved, last_actions) } }
+    : nextResearch;
   const hasCandidates = candidates != null && typeof candidates === 'object' && !Array.isArray(candidates);
   const nextCandidates = hasCandidates
     ? Object.fromEntries(Object.entries(candidates).filter(([id, value]) => idPattern.test(id) && validCandidate(value)))
@@ -187,13 +212,13 @@ export function projectTripState({
     { section: 'tool_status', source: tool_status.length ? 'tool_result' : 'turn_reset', turn },
   ];
   if (Object.keys(newDisclosures).length) updates.push({ section: 'disclosed', source: 'customer_turn', turn });
-  if (hasResearch) updates.push({ section: 'research', source: 'vk_search', turn });
+  if (hasResearch) updates.push({ section: 'research', source: research.key ? 'vk_search' : 'planner', turn });
   if (hasCandidates) updates.push({ section: 'candidates', source: 'vk_search', turn });
   if (hasNextSteps) updates.push({ section: 'next_steps', source: 'planner', turn });
   return {
     version: '1.0', trip_id: trip.id, updated_turn: turn, revision, phase, capabilities, saved, disclosed,
     candidates: nextCandidates,
-    research: nextResearch,
+    research: measuredResearch,
     proposals: previous?.proposals || {}, open_asks: previous?.open_asks || [], answered: previous?.answered || [],
     said: previous?.said || [], last_actions, tool_status,
     next_steps: steps,

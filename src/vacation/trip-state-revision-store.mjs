@@ -21,6 +21,15 @@ export async function getTripStateRevisionForTurn(tripId, turn, db = sql()) {
   return row || null;
 }
 
+export async function getTripStateRevisionForRequest(tripId, requestId, db = sql()) {
+  const [row] = await db`
+    select * from vacation_trip_state_revisions
+    where trip_id = ${tripId} and request_id = ${String(requestId)}
+    order by revision desc limit 1
+  `;
+  return row || null;
+}
+
 async function readSite(client, trip, requestId, turn) {
   const { rows: [site] } = await client.query(
     `select

@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { assertThrowaway } from './protected.mjs';
 import { deleteTaggedRows } from './cleanup.mjs';
+import { REPLY_BACKENDS } from './backends.mjs';
 
 export function singlePlanEntitlement(meta, tripId) {
   return {
@@ -11,12 +12,12 @@ export function singlePlanEntitlement(meta, tripId) {
   };
 }
 
-export async function provisionThrowaway(db, story, { tag, runId, env }) {
+export async function provisionThrowaway(db, story, { tag, runId, env, outDir, secrets }) {
   assertThrowaway({ name: story.customer.name, displayName: story.customer.name, email: story.customer.email_alias });
   const email = `harness+${runId}+${story.customer.email_alias}@harness.invalid`.toLowerCase();
   assertThrowaway({ email, displayName: story.customer.name });
-  await deleteTaggedRows(db, tag);
-  const replyBackend = story.reply_backend === 'openrouter' || story.reply_backend === 'vk_bot_mcp' ? story.reply_backend : '';
+  await deleteTaggedRows(db, tag, { snapshotDir: outDir, secrets });
+  const replyBackend = REPLY_BACKENDS.includes(story.reply_backend) ? story.reply_backend : '';
   const meta = { harnessTag: tag, harnessRunId: runId, harnessStoryId: story.story_id, ...(replyBackend ? { replyBackend } : {}) };
   try {
   return await insertThrowaway(db, story, { tag, runId, env, meta, email });
@@ -37,7 +38,8 @@ async function insertThrowaway(db, story, { tag, runId, env, meta, email }) {
     insert into trips (customer_id, title, destination, start_date, end_date, status, metadata)
     values (
       ${customerId}, ${`${story.destination} harness`}, ${story.destination},
-      ${story.dates.start}::date, ${story.dates.end}::date, 'planning', ${meta}
+      ${story.dates.start}::date, ${story.dates.end}::date, 'planning',
+      ${story.reply_backend === 'trip_state' ? { ...meta, trip_state_actions: true } : meta}
     )
     returning id
   `;

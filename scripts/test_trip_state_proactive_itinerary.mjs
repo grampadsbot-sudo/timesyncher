@@ -194,7 +194,7 @@ try {
     start_date: null, end_date: null, status: 'onboarding',
     metadata: { trip_state_actions: true, intakeShare: true },
   };
-  const turn1Text = 'We are planning Harbor City with our kids ages 6 and 9 on a $2,000 budget and want a relaxed pace. We must visit Harbor Aquarium and Sunset Lighthouse.';
+  const turn1Text = 'We are planning Harbor City with our kids ages 6 and 9 on a $2,000 budget and want a relaxed pace. We must visit Harbor Aquarium and Sunset Lighthouse and would like lodging and local seafood.';
   const turn1Things = [
     { name: 'Harbor Aquarium', kind: 'activity', when: '' },
     { name: 'Sunset Lighthouse', kind: 'park', when: '' },
@@ -204,6 +204,8 @@ try {
     classification: {
       ok: true, destination: 'Harbor City', hasDates: false, startDate: '', endDate: '',
       things: turn1Things,
+      planningParty: 'our kids ages 6 and 9',
+      planningWants: [{ category: 'hotel', value: 'lodging' }, { category: 'restaurant', value: 'local seafood' }],
       roster: [{ name: 'Maya', role: 'owner', age: null }, { name: 'Leo', role: 'child', age: 6 }, { name: 'Nora', role: 'child', age: 9 }],
     },
     text: turn1Text, history: [], wantedThings: turn1Things,
@@ -214,6 +216,7 @@ try {
   assert.equal(validate(state1), true, ajv.errorsText(validate.errors));
   assert.equal(searchCalls.length, 0);
   assert.equal(state1.research.state, 'waiting');
+  assert.deepEqual(state1.next_steps[0].missing_inputs, ['dates']);
   assert.equal(state1.last_actions.length, 0);
   assert.equal(state1.disclosed.budget?.value, '$2,000');
   assert.ok(state1.disclosed.pace?.value.includes('relaxed'));

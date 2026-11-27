@@ -8,7 +8,11 @@ const version = 1;
 const maxOperations = 32;
 const wantedTypes = {
   hotel: 'hotel', park: 'park', activity: 'activity', restaurant: 'restaurant', meal: 'meal',
-  family_event: 'activity', flight: 'flight_option', car: 'other', store: 'other',
+  bar: 'bar', event: 'event', family_event: 'event', flight: 'flight_option', car: 'other', store: 'other',
+};
+const searchTypes = {
+  hotel: 'hotel', park: 'park', activity: 'park', restaurant: 'restaurant', meal: 'restaurant',
+  bar: 'bar', event: 'event',
 };
 const timing = /\b(?:[01]?\d|2[0-3]):[0-5]\d(?:\s*[ap]\.?m\.?)?|\b(?:1[0-2]|0?[1-9])\s*[ap]\.?m\.?/i;
 const pacePattern = /\b(?:slow|relaxed|easy|leisurely|low[- ]key)\s+(?:pace|days|trip)|\b(?:take it easy|don't pack|downtime|one (?:activity|thing) per day)\b/i;
@@ -22,6 +26,16 @@ export function proactiveResearchKey(trip) {
 
 export function proactiveCriteria(state, history) {
   const facts = Object.values(state.disclosed);
+  const preferences = facts.filter(({ kind }) => kind === 'preference');
+  const wants = [...preferences.map(({ category, value }) => [category, value]),
+    ...history.flatMap(({ things }) => things.map(({ kind, name, title }) => [searchTypes[wantedTypes[kind]], name || title])),
+  ].filter(([, value]) => value);
+  const targets = {};
+  for (const [category, value] of wants) {
+    if (!Object.hasOwn(searchTypes, category)) continue;
+    const terms = targets[category] ||= [];
+    if (terms.length < 3 && !terms.includes(value)) terms.push(value);
+  }
   const budget = facts.filter(({ kind }) => kind === 'budget').at(-1)?.value
     || history.map(({ text }) => text.match(budgetPattern)?.[0]).filter(Boolean).at(-1);
   const relaxed = facts.some(({ kind, value }) => kind === 'pace' && /\b(?:slow|relaxed|easy|leisurely)\b/i.test(value))
@@ -41,7 +55,13 @@ export function proactiveCriteria(state, history) {
   const family = ages.length > 0 || history.some(({ text }) => /\b(?:kids|children|toddler|family-friendly)\b/i.test(text));
   return {
     relaxed,
-    budget,
+    targets,
+    missing: [
+      !state.saved.trip.destination && 'destination',
+      (!state.saved.trip.start || !state.saved.trip.end) && 'dates',
+      !facts.some(({ kind }) => kind === 'party') && !Object.keys(state.saved.travelers).length && 'party',
+      !wants.length && 'interests/wants',
+    ].filter(Boolean),
     search: [family ? `family-friendly${ages.length ? ` for ages ${ages.join(' and ')}` : ''}` : '',
       budget ? `budget-friendly ${budget}` : '', relaxed ? 'low-key, easy pace' : ''].filter(Boolean),
   };
@@ -86,7 +106,9 @@ function role(type) {
 }
 
 function slot(day, type) {
-  const choices = ['meal', 'restaurant'].includes(type) ? ['12:30', '18:00', '08:00'] : ['10:00', '14:30', '16:30'];
+  const choices = type === 'bar' ? ['20:30', '18:30', '22:00']
+    : type === 'event' ? ['18:30', '14:30', '20:30', '10:00']
+      : ['meal', 'restaurant'].includes(type) ? ['12:30', '18:00', '08:00'] : ['10:00', '14:30', '16:30'];
   return choices.find((time) => day.times.every((other) => Math.abs(minutesFromHHMM(time) - minutesFromHHMM(other)) >= 90));
 }
 
@@ -173,14 +195,18 @@ export function buildProactivePlan({ state, saved, history, criteria, key }) {
     else gaps.push(`Still to schedule: ${entry.title}`);
   }
 
-  const options = candidates.filter(({ type }) => ['park', 'restaurant'].includes(type));
+  const options = candidates.filter(({ type }) => type !== 'hotel');
+  const usedTypes = new Set(allWanted.map(({ type }) => type));
   for (const day of days) {
     if (day.count >= limit || !room(day)) continue;
     const edge = first !== last && (day === first || day === last);
-    const optionIndex = options.findIndex(({ type }) => (!edge || type === 'restaurant') && slot(day, type));
+    const fits = ({ type }) => (!edge || type !== 'park') && slot(day, type);
+    const freshIndex = options.findIndex((option) => !usedTypes.has(option.type) && fits(option));
+    const optionIndex = freshIndex >= 0 ? freshIndex : options.findIndex(fits);
     if (optionIndex >= 0) {
       const [option] = options.splice(optionIndex, 1);
       place(option, day, savedByName.get(normalizeTripThingName(option.title)));
+      usedTypes.add(option.type);
     }
     if (day.count) continue;
     const title = day === first && edge ? 'Settle in and get oriented'

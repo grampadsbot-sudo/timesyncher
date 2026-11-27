@@ -288,6 +288,9 @@ export function buildTripStateChatCall({ tripStateContext, customerTurn, mode = 
   const extraParts = [];
   if (mode === 'rewrite') extraParts.push(TRIP_STATE_REWRITE_INSTRUCTION);
   if (hasProactiveFirstPassAction(tripStateContext.state)) extraParts.push(TRIP_STATE_PROACTIVE_PLAN_INSTRUCTION);
+  if (tripStateContext.state.next_steps.some(({ missing_inputs }) => missing_inputs?.length)) {
+    extraParts.push('Use the ask in next_steps. Ask one concise question covering exactly the fields in missing_inputs, in your own words.');
+  }
   if (String(systemExtra || '').trim()) extraParts.push(String(systemExtra).trim());
   const extraText = extraParts.join('\n\n');
   const trustedJson = stringifyTripState({

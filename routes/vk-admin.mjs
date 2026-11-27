@@ -11,7 +11,7 @@ import {
 import { findVkAdminVacation, vkAdminDatabase, vkAdminGroups, vkAdminLegacyNoteSources, vkAdminMember } from '../src/vacation/vk-admin-review-data.mjs';
 import { feedbackRollupRows } from '../src/vacation/vk-admin-feedback.mjs';
 import {
-  artifactType, listNotes, listReviewArtifacts, listTravelSummarySnapshots, loadFeedbackArtifact, loadNoteFile,
+  artifactType, listNotes, listReviewArtifacts, listTravelSummarySnapshots, loadFeedbackArtifact, loadNoteFile, travelSummaryTiming,
   loadReviewArtifact, noteFromBody, notesPath, presentNote, saveFeedbackArtifact, saveReviewArtifact,
   saveReviewResults, saveWelcome, vkAdminStorage,
 } from '../src/vacation/vk-admin-review-storage.mjs';
@@ -194,7 +194,7 @@ async function handleArtifacts(req, res, env, db, getStore, tripId, artifact, ca
     });
     if (!vacation) return notFound(res);
     const snapshots = await listTravelSummarySnapshots(db, vacation);
-    return send(res, 200, { ok: true, snapshots, capabilities: vacation.capabilities });
+    return send(res, 200, { ok: true, snapshots, capabilities: vacation.capabilities, timing: travelSummaryTiming(vacation, snapshots) });
   }
   const type = artifact ? artifactType(artifact) : '';
   const review = artifact === 'review' && req.method === 'PUT';

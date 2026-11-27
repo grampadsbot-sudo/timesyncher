@@ -8,16 +8,18 @@ const categories = [
   { type: 'hotel', category: 'hotel', target: 'lodging options' },
   { type: 'park', category: 'activity', target: 'parks and local attractions' },
   { type: 'restaurant', category: 'restaurant', target: 'casual local dining' },
+  { type: 'bar', category: 'restaurant', target: 'bars and nightlife' },
+  { type: 'event', category: 'activity', target: 'local events on these dates' },
 ];
 
 export async function searchProactiveItinerary({
-  destination, start, end, criteria, turn, key, env, fetchImpl = globalThis.fetch,
+  destination, start, end, criteria, targets = {}, turn, key, env, fetchImpl = globalThis.fetch,
 }) {
   const area = String(destination || '').trim().slice(0, 280);
   const waiting = { key, state: 'failed', turn, areas: area ? [area] : [], gaps: [] };
   const providerEnv = buildProviderEnv(env);
   if (!providerEnv.VK_SEARCH_WAKE_URL && !providerEnv.VK_SEARCH_CENSUS_DIR) {
-    return { research: { ...waiting, gaps: ['VK place search is unavailable.'] }, candidates: {} };
+    return { research: { ...waiting, provider_unavailable: true, gaps: ['VK place search is unavailable.'] }, candidates: {} };
   }
   const deadline = AbortSignal.timeout(22_000);
   const fetchBounded = (url, options = {}) => fetchImpl(url, {
@@ -32,8 +34,10 @@ export async function searchProactiveItinerary({
   if (!center) {
     return { research: { ...waiting, gaps: ['The destination could not be resolved for place search.'] }, candidates: {} };
   }
-  const attempts = await Promise.all(categories.map(async ({ type, category, target }) => {
-    const q = [area, start === end ? start : `${start} to ${end}`, target, ...criteria].join(' ').slice(0, 240);
+  const requested = categories.filter(({ type }) => Object.hasOwn(targets, type));
+  const selected = requested.length ? requested : categories.slice(0, 3);
+  const attempts = await Promise.all(selected.map(async ({ type, category, target }) => {
+    const q = [area, start === end ? start : `${start} to ${end}`, target, ...(targets[type] || []), ...criteria].join(' ').slice(0, 240);
     const search = () => queryVkSearchPlaces(fetchBounded, providerEnv, { center, locationText: area },
       [{ q, category, areaHint: area }]);
     let result;

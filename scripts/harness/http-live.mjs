@@ -1,6 +1,7 @@
 import { pickCustomerLane } from './customer-live.mjs';
 import { httpHarnessEnv } from './env.mjs';
 import { guardedFetch, loadBannedHosts } from './fetch-guard.mjs';
+import { writeOutcomes } from './outcomes.mjs';
 
 function stopped(reason) {
   return {
@@ -11,7 +12,8 @@ function stopped(reason) {
     liveShaStart: '',
     liveShaEnd: '',
     storedTurns: 0,
-    itineraryCount: 0,
+    itineraryCount: null,
+    itineraryCountSource: 'unmeasured',
     tripId: '',
     shareToken: '',
     detail: reason === 'host-only-database' ? 'DATABASE_URL' : reason,
@@ -39,11 +41,11 @@ export function httpLiveOptions(env = process.env, { fetchImpl, pickLane = pickC
   const bannedHosts = loadBannedHosts();
   const send = fetchImpl || guardedFetch(globalThis.fetch.bind(globalThis), bannedHosts);
   const origin = prepared.origin;
-  const play = async () => {
+  const play = async (_story, options) => {
     const blocked = [];
     try { pickLane(prepared.env); } catch (error) { blocked.push(String(error?.message || error)); }
     blocked.push('staging HTTP API does not set replyBackend');
-    return { ...stopped(blocked.join('; ')), detail: blocked.join('; ') };
+    return writeOutcomes(options?.outDir, stopped(blocked.join('; ')));
   };
   return {
     env: prepared.env,
