@@ -15,15 +15,15 @@ import {
   appTextBanned,
   rewriteReplacesDraft,
   sameTierRewriteRequest,
+  plainCustomerText,
   splitRewriteChange,
-  stripChatMarkdown,
-  verifiedRewriteChange,
+  trimmedRewriteChange,
 } from './live-app-turn.mjs';
 
 const MAX_TOOL_CALLS = 8;
 
 function cleanReply(value) {
-  return finalizeCustomerReplyText(stripChatMarkdown(String(value || '').trim()));
+  return finalizeCustomerReplyText(plainCustomerText(String(value || '').trim()));
 }
 
 function rawScore(value) {
@@ -363,7 +363,7 @@ export async function finishTripStateRewrite({ pending, env = process.env, rules
   const draftGrounded = !tripStateNeedsRewrite(pending?.quality);
   const shippedText = rewritePassed ? rewritten : (draftGrounded ? String(pending?.draft || '').trim() : '');
   const rewriteModel = String(called?.responseModel || pending?.draftModel || '').trim();
-  const shownChange = rewritePassed ? (verifiedRewriteChange(split.change) || null) : null;
+  const shownChange = rewritePassed ? (trimmedRewriteChange(split.change) || null) : null;
   const shippedQuality = rewritePassed ? rewriteQuality : pending?.quality;
   const draftQualityMs = Number(pending?.qualityJevMs) || 0;
   const log = {

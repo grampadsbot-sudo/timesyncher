@@ -359,7 +359,7 @@ export function buildTripStateJevPayload({
       criteria: {
         missing_price: 'State the catalog price fact from trip_state.capabilities.product_facts.',
         unnamed_place: 'Remove any place not present in saved, candidates, or customer_turn.',
-        payment_wording: 'Keep payment wording compliant without inventing coverage or booking.',
+        payment_wording: 'Keep price wording compliant without inventing coverage or a stay the app did not place.',
         misses_ask: 'Ground every change claim in last_actions, do not refuse enabled capabilities, respect holds, and answer only open asks.',
         keep: 'Keep the grounded draft.',
       },

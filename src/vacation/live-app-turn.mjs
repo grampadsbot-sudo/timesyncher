@@ -710,6 +710,10 @@ export function verifiedRewriteChange(change) {
   return String(change || '').replace(/\s+/g, ' ').trim();
 }
 
+export function trimmedRewriteChange(change) {
+  return verifiedRewriteChange(change);
+}
+
 export function mustRewriteQuality(quality) {
   if (quality?.hardFlag === true) return true;
   if (quality?.wantsRewrite === true) return true;
@@ -721,6 +725,10 @@ export function stripChatMarkdown(value) {
   return String(value || '')
     .replace(/\*\*([^*\n]+)\*\*/g, '$1')
     .replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s).,!?;:]|$)/g, '$1$2');
+}
+
+export function plainCustomerText(value) {
+  return stripChatMarkdown(value);
 }
 
 const WEEKDAY_NAME = { sun: 'sunday', mon: 'monday', tue: 'tuesday', tues: 'tuesday', wed: 'wednesday', thu: 'thursday', thur: 'thursday', thurs: 'thursday', fri: 'friday', sat: 'saturday' };
