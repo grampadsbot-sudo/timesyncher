@@ -2,7 +2,8 @@ import { callTieredModel, jevQualityRewrite, JEV_QUALITY_MODEL } from '../../scr
 import { applyJevTurn, draftTierForTurn, jevTurn } from './jev-turn.mjs';
 import { customerIntent, emptyIntent } from './customer-intent.mjs';
 import { finalizeCustomerReplyText } from './reply-customer-wording.mjs';
-import { failOpenLiveReply, jevJudgeErrored, unjudgedReply } from './reply-quality-gate.mjs';
+import { sayVacationNotTrip } from './customer-visible-copy.mjs';
+import { unjudgedReply } from './reply-quality-gate.mjs';
 import { sumModelCost, sumTurnCost } from './turn-cost.mjs';
 import { tripStateActionsEnabled } from './trip-state-actions-enabled.mjs';
 import { assertTripState } from './trip-state-projector.mjs';
@@ -63,7 +64,7 @@ function plainCustomerText(value) {
 }
 
 function cleanReply(value) {
-  return finalizeCustomerReplyText(plainCustomerText(String(value || '').trim()));
+  return finalizeCustomerReplyText(sayVacationNotTrip(plainCustomerText(String(value || '').trim())));
 }
 
 function rawScore(value) {
@@ -199,7 +200,8 @@ export async function produceTripStateLiveReply({
   rules = null,
   understanding = null,
 } = {}) {
-  if (!tripStateRevision || !tripStateActionsEnabled({ env, trip })) return null;
+  if (!trip?.id || !tripStateActionsEnabled({ env, trip })) return null;
+  if (!tripStateRevision) return { reply: null, rules, reason: 'trip_state_revision_unavailable' };
   let intent = emptyIntent();
   try {
     intent = await customerIntent(customerTurn, { env, understanding });
@@ -307,14 +309,6 @@ export async function produceTripStateLiveReply({
     cost: model?.cost || null,
   };
   if (!quality?.judged) {
-    if (jevJudgeErrored(quality)) {
-      const open = failOpenLiveReply({
-        rules, jev, model, quality, log: baseLog, draft: reply, judgeMs: draftQualityMs, draftModel,
-        ship: (text) => text,
-        stamp: (input) => stampTripStateReply({ ...input, model }),
-      });
-      return { ...open, tripStateContext };
-    }
     return { ...unjudgedReply({ rules, jev, model, quality, log: baseLog, draft: reply }), tripStateContext };
   }
   if (!tripStateNeedsRewrite(quality)) {

@@ -44,6 +44,8 @@ async function captureTurn(enabled) {
         fix_focus: { choice: firstJudgeRequestsRewrite ? 'misses_ask' : 'keep' },
         route_type: { choice: 'itinerary_advice' },
         needs_day_for_note: { noul: 0.05 },
+        claims_mutation: { noul: 0.01 },
+        change_claim_grounded: { noul: 0.99 },
       } });
     }
     assert.ok(path.endsWith('/chat/completions'), `Unexpected request path ${path}`);

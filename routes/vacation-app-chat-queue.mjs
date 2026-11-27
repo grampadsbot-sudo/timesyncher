@@ -24,6 +24,8 @@ import { sessionReplyBackend } from '../src/vacation/vk-bot-mcp-reply.mjs';
 import { isOrdinaryPlanningTurn, recoverOrdinaryPlanningReply } from '../src/vacation/chat-plan-persist.mjs';
 import { openRouterTurnTelemetry, replyInstructionsPayload } from '../src/vacation/openrouter-call-ledger.mjs';
 import { prepareProactiveTripState } from '../src/vacation/trip-state-proactive.mjs';
+import { createTripStateRevisionStore } from '../src/vacation/trip-state-revision-store.mjs';
+import { tripStateActionsEnabled } from '../src/vacation/trip-state-actions-enabled.mjs';
 export async function queueVacationAppTurn(db, session, trip, body, hooks, intake = {}) {
   const env = process.env;
   const tripId = trip?.id ?? null;
@@ -275,11 +277,12 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     });
     return rows;
   }, []);
+  const tripStateStore = createTripStateRevisionStore({ env });
   const tripStateRevision = await prepareProactiveTripState({
     trip, requestId, turn: customerTurnIndex, actorId: session.customer_id,
     classification, text: requestText, history: proactiveHistory, wantedThings: jobFields.wantedThings, env,
   });
-  const tripStateReady = Boolean(tripStateRevision);
+  const useTripState = Boolean(tripId && tripStateActionsEnabled({ env, trip }));
   let produced;
   const replyStarted = Date.now();
   try {
@@ -289,7 +292,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
       env: opts?.env ?? env,
       db,
     });
-    if (itineraryEditCannedReply) produced = producedDemoLockedChatEditReply(itineraryEditCannedReply);
+    if (!useTripState && itineraryEditCannedReply) produced = producedDemoLockedChatEditReply(itineraryEditCannedReply);
     else if (!tripId) {
       const rules = await loadVacationAppReplyRules(env);
       produced = await produceNoTripStarterReply({
@@ -376,8 +379,8 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     turnActionResults,
     stageTimings: payload.stageTimings,
   };
-  const replyClaimContext = vacationAppReplyClaimContext(trip, placeSearchReplyFacts, { roster: classification.roster, turnActionResults });
-  const rewriteClaim = createBoundedRewriteClaim({
+  const replyClaimContext = useTripState ? null : vacationAppReplyClaimContext(trip, placeSearchReplyFacts, { roster: classification.roster, turnActionResults });
+  const rewriteClaim = useTripState ? null : createBoundedRewriteClaim({
     turnActionResults,
     replyClaimContext,
     requestText,
@@ -400,8 +403,9 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     turnActionResults,
     replyClaimContext,
     env,
+    tripStateReady: useTripState,
   });
-  if (produced.status === 'interim' && produced.pending) {
+  if (!useTripState && produced.status === 'interim' && produced.pending) {
     const interimDraft = produced.interimReply?.text || '';
     const interimText = await rewriteClaim(interimDraft);
     Object.assign(payload, replyInstructionsPayload());
@@ -421,7 +425,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
       speakerName,
       collaborator: Boolean(seat),
       understanding: classification.understanding,
-      tripId, ...(tripStateReady ? { tripStateReady, tripStateContext: produced.tripStateContext || null } : {}),
+      tripId,
       turnActionResults,
       sessionStartedMs,
       wallStarted: started, ...openRouterTurnTelemetry(),
@@ -441,16 +445,18 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
       error: null,
     };
   }
-  const claimedFrom = produced.reply;
   const replyBackend = sessionReplyBackend(session);
-  await rewriteVacationAppActionClaim(produced, { rewriteClaim, turnActionResults, replyClaimContext, seat, replyBackend });
-  Object.assign(payload, replyInstructionsPayload());
-  await applyReplyQuality(produced, { customerTurn: requestText, env, previousReply: claimedFrom, tripStateContext: produced.tripStateContext || null });
-  if (!String(produced?.reply || '').trim() && isOrdinaryPlanningTurn(requestText)) {
-    Object.assign(produced, recoverOrdinaryPlanningReply(produced, requestText, { backend: replyBackend, previousReply: claimedFrom }));
+  if (!useTripState) {
+    const claimedFrom = produced.reply;
+    await rewriteVacationAppActionClaim(produced, { rewriteClaim, turnActionResults, replyClaimContext, seat, replyBackend });
+    Object.assign(payload, replyInstructionsPayload());
+    await applyReplyQuality(produced, { customerTurn: requestText, env, previousReply: claimedFrom, tripStateContext: produced.tripStateContext || null });
+    if (!String(produced?.reply || '').trim() && isOrdinaryPlanningTurn(requestText)) {
+      Object.assign(produced, recoverOrdinaryPlanningReply(produced, requestText, { backend: replyBackend, previousReply: claimedFrom }));
+    }
+    const softSearchRecovered = recoverSoftSearchReply(produced, placeSearchReplyFacts, { backend: replyBackend, destination: cleanText(trip?.destination || '', 180) });
+    if (softSearchRecovered) Object.assign(produced, softSearchRecovered);
   }
-  const softSearchRecovered = recoverSoftSearchReply(produced, placeSearchReplyFacts, { backend: replyBackend, destination: cleanText(trip?.destination || '', 180) });
-  if (softSearchRecovered) Object.assign(produced, softSearchRecovered);
   if (!produced.reply) {
     const failure = applyLiveAppReplyFailureToPayload(payload, customerLive, produced);
     logBlockedReplyReasons(produced.blockedReasons);
@@ -466,7 +472,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     customerTurnIndex, speakerName, seat, classification, jobFields, firstIntake, requestText,
     intakeThings: intakeThingsForPersistence(placeSearchTurn, classification, webResearchTurn, jobFields.wantedThings),
     customerTurnId: turnRows[0].id, recordCustomerThingNotes: hooks.recordCustomerThingNotes, publishIntakeShare: hooks.publishIntakeShare,
-    vacationAppTripSummary: hooks.vacationAppTripSummary, replyBackend, tripStateReady,
+    vacationAppTripSummary: hooks.vacationAppTripSummary, replyBackend, tripStateReady: useTripState, tripStateStore,
     postStartedMs: Number(intake.postStartedMs) > 0 ? Number(intake.postStartedMs) : started, postBudgetMs: intake.postBudgetMs ?? null,
     activityCommitDecisionsImpl: intake.activityCommitDecisionsImpl ?? null,
   });
