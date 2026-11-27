@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { findPlaceAssignment, placeAssignmentsOnDay } from './chat-itinerary-edit-assignment.mjs';
 import { intId } from './intake-shared-trip.mjs';
 import { digestTripState, tripItemKinds } from './trip-state-action-site.mjs';
-import { actionFailure, hasExplicitAccessGrant, itemEvidence, typedItemDetails, validatedTime, validTripStateId } from './trip-state-action-input.mjs';
+import { actionFailure, hasExplicitAccessGrant, itemEvidence, proactivePlanBlocks, typedItemDetails, validatedTime, validTripStateId } from './trip-state-action-input.mjs';
 import { isTripThingName, normalizeTripThingName } from './trip-thing-name-shape.mjs';
 
 const needs = (detail) => actionFailure('needs_info', detail);
@@ -57,7 +57,13 @@ function matchingItems(saved, args, details) {
 }
 
 function newNamedItem(site, saved, context, args) {
-  const basis = itemEvidence(context, args);
+  const { day, role, time, time_evidence } = args;
+  const planKey = context.authority.planKey;
+  if (!planKey && [day, role, time, time_evidence].some((value) => value !== undefined)) {
+    return denied('Use a placement operation for an existing item.');
+  }
+  const planBlock = planKey && Object.hasOwn(proactivePlanBlocks, args.label) && proactivePlanBlocks[args.label] === args.type;
+  const basis = planBlock ? 'plan_block' : itemEvidence(context, args);
   if (!basis) return denied('A customer place or approved plan block is required.');
   const details = typedItemDetails(args.type, args.details, context);
   if (!details) return needs('Supply the grounded details for this item type.');
@@ -65,11 +71,19 @@ function newNamedItem(site, saved, context, args) {
   if (wrongType) return conflict('The matching site item has a different type.');
   if (sameType.length > 1) return needs('Identify the exact existing site item.');
   const existing = sameType[0]?.[0];
-  if (existing) return unchanged([existing], existing);
-  const id = persistItem(site, null, args.type, args.label.trim(), {
-    via: 'customer_named', turn: context.turn, basis, ...details,
+  const id = existing || persistItem(site, null, args.type, args.label.trim(), {
+    via: planBlock ? 'chat_action' : 'customer_named', turn: context.turn, basis, ...details,
+    ...(planBlock ? { proposed_by: 'system' } : {}),
   });
-  return changed([id], id);
+  if (!day && !role && time === undefined) return existing ? unchanged([id], id) : changed([id], id);
+  return placeSavedItem(site, saved, context, { item: id, day, role, time, time_evidence, type: args.type, title: args.label, created: !existing });
+}
+
+function placeSavedItem(site, saved, context, { item, day, role, time, time_evidence, type, title, created }) {
+  const place = visitOnDay(site, { ...saved, items: { ...saved.items, [item]: saved.items[item] || { type, title } } },
+    context, { item, day, role, time, time_evidence });
+  if (place.result !== 'applied' && place.result !== 'no_change') return place;
+  return created || place.result === 'applied' ? changed([item, ...place.refs], item) : unchanged([item, ...place.refs], item);
 }
 
 function visitOnDay(site, saved, context, args, requireExisting = false) {
@@ -109,12 +123,15 @@ function visitOnDay(site, saved, context, args, requireExisting = false) {
   if (time === undefined || (requireExisting && !time)) return denied('Supply a valid proposed clock time or a time supported by customer wording.');
   const anchor = before || (current?.day === day ? current.before : undefined);
   const system = context.authority.source === 'system_plan';
+  const planKey = system ? context.authority.planKey : null;
+  const proposedBy = system && !(planKey && time_evidence) ? 'system' : 'customer';
   const samePlacement = current?.day === day && equal(current.time, time) && anchor === current.before;
   if (samePlacement && (system || current.proposed_by !== 'system')) return unchanged([current.id], item);
   if (system && current && current.proposed_by !== 'system') return denied('Customer or existing site placements take precedence.');
   const id = current?.id || String(intId(randomUUID()));
   const selector = occurrence || current?.selector;
-  const next = { id, day, role, time, turn: context.turn, proposed_by: system ? 'system' : 'customer',
+  const next = { id, day, role, time, turn: context.turn, proposed_by: proposedBy,
+    ...(planKey && proposedBy === 'system' ? { plan_key: planKey } : {}),
     ...(anchor ? { before: anchor } : {}), ...(selector ? { selector } : {}) };
   saveOccurrences(site, item, current ? rows.map((entry) => entry.id === id ? next : entry) : [...rows, next]);
   return changed([id], item);
@@ -130,6 +147,7 @@ function saveStay(site, saved, context, args) {
   const info = row.metadata?.tripState;
   if (info?.stay?.turn > context.turn) return conflict('A later turn already updated this stay.');
   const rows = info?.occurrences || savedOccurrences(saved, hotel);
+  const planKey = context.authority.source === 'system_plan' ? context.authority.planKey : null;
   const next = [...rows];
   const refs = [], updated = [];
   for (const role of ['check_in', 'check_out']) {
@@ -137,20 +155,25 @@ function saveStay(site, saved, context, args) {
     const matching = next.filter((entry) => entry.role === role);
     if (matching.length > 1) return conflict('Multiple existing stay endpoints need reconciliation.');
     const current = matching[0];
+    if (planKey && current && current.proposed_by !== 'system') return denied('Customer or existing stay endpoints take precedence.');
     const time = args[`${role}_time`] === undefined ? current?.time || null
-      : validatedTime(context, args[`${role}_time`], args[`${role}_evidence`]);
+      : validatedTime(context, args[`${role}_time`], args[`${role}_evidence`], Boolean(planKey));
     if (time === undefined) return denied('The requested stay time needs matching customer wording.');
     const id = current?.id || String(intId(randomUUID()));
     refs.push(id);
     if (current?.day === day && equal(time, current.time)) continue;
-    const occurrence = { id, day, role, time, turn: context.turn };
+    const occurrence = { id, day, role, time, turn: context.turn,
+      ...(planKey ? { proposed_by: 'system', plan_key: planKey } : {}),
+    };
     if (current) next[next.indexOf(current)] = occurrence;
     else next.push(occurrence);
     updated.push(id);
   }
   if (!updated.length && info?.stay?.check_in === check_in && info.stay.check_out === check_out) return unchanged(refs, hotel);
   saveOccurrences(site, hotel, next);
-  row.metadata.tripState.stay = { check_in, check_out, via: 'chat_action', turn: context.turn };
+  row.metadata.tripState.stay = { check_in, check_out, via: 'chat_action', turn: context.turn,
+    ...(planKey ? { plan_key: planKey } : {}),
+  };
   return changed([hotel, ...updated], hotel);
 }
 
@@ -200,10 +223,8 @@ function promoteSearch(site, saved, context, args) {
     }
   }
   if (day != null || role != null) {
-    const place = visitOnDay(site, { ...saved, items: { ...saved.items, [item]: saved.items[item] || { type: selection.type, title: selection.title } } },
-      context, { item, day, role, time, time_evidence });
-    if (place.result !== 'applied' && place.result !== 'no_change') return place;
-    return created || place.result === 'applied' ? changed([item, ...place.refs], item) : unchanged([item, ...place.refs], item);
+    return placeSavedItem(site, saved, context, { item, day, role, time, time_evidence,
+      type: selection?.type, title: selection?.title, created });
   }
   return created ? changed([item], item) : unchanged([item], item);
 }

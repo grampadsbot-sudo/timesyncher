@@ -32,6 +32,28 @@ export function tripStateSiteLocked(trip) {
   return !shareSlugEditGuardDecision(slug).ok || ['archived', 'cancelled'].includes(trip?.status);
 }
 
+export function withoutPreviousSystemPlan(site, planKey) {
+  return {
+    ...site,
+    things: site.things.map((thing) => {
+      const info = thing.metadata?.tripState;
+      const obsolete = (row) => row.plan_key && row.plan_key !== planKey && row.proposed_by === 'system';
+      if (!info?.occurrences?.some(obsolete)) return thing;
+      const removed = new Set(info.occurrences.filter(obsolete).map(({ id }) => id));
+      const next = {
+        ...info,
+        occurrences: info.occurrences.filter((row) => !obsolete(row)).map((row) => {
+          if (!removed.has(row.before)) return row;
+          const { before, ...kept } = row;
+          return kept;
+        }),
+      };
+      if (info.stay?.plan_key && info.stay.plan_key !== planKey) delete next.stay;
+      return { ...thing, metadata: { ...thing.metadata, tripState: next } };
+    }),
+  };
+}
+
 function itemType(row, place) {
   const recorded = row.metadata?.tripState?.type;
   if (tripItemKinds.has(recorded)) return recorded;
@@ -91,8 +113,9 @@ export function readTripStateSite(site, previous, turn) {
     days[key] = { date: day.date, assigned: rows, via: previousDay?.via || stamp.via, turn: previousDay?.turn || turn };
   }
   for (const [item, stay] of Object.entries(lodging)) {
+    const { plan_key, ...details } = stay;
     lodging[item] = {
-      ...stay,
+      ...details,
       check_in: days[stay.check_in]?.assigned.some((row) => row.item === item && row.role === 'check_in') ? stay.check_in : null,
       check_out: days[stay.check_out]?.assigned.some((row) => row.item === item && row.role === 'check_out') ? stay.check_out : null,
     };
