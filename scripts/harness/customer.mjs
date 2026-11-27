@@ -171,7 +171,9 @@ export async function runCustomer(story, options) {
       ? createHarnessSsrHook({
           reactionsByStory: options.ssrReactions ? { [story.story_id]: options.ssrReactions } : null,
         })
-      : null);
+      : (story.reply_backend === 'vk_bot_mcp' && Array.isArray(played?.ssrReactions) && played.ssrReactions.length
+        ? createHarnessSsrHook({})
+        : null));
   if (ssrHook) {
     ssr = await ssrHook.scoreCustomer({ story, played, outDir: options.outDir });
     dialogPdfStatus = ssrHook.dialogPdfStatus({

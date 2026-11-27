@@ -61,11 +61,18 @@ export function isOddCustomerIndex(index, every = oddEvery()) {
   return Number(index) % every === every - 1;
 }
 
-export async function speakCustomer({ persona, appReply = '', index = 0, transcript = [], travelSummary = null, ask, order, env = process.env } = {}) {
+export async function speakCustomer({
+  persona, appReply = '', index = 0, transcript = [], travelSummary = null, ask, order,
+  goal: goalOverride, env = process.env,
+} = {}) {
   const lane = customerLane(order);
   if (isOddCustomerIndex(index, oddEvery(env))) return { ...oddCustomerTurn(index), lane: 'host', model: lane, cost: null };
   if (typeof ask !== 'function') throw new Error('harness preflight missing HARNESS_CUSTOMER_MODEL_URL');
-  const goal = persona?.goals?.[index] || persona?.goals?.[0] || persona?.destination || '';
+  const goal = String(goalOverride || '').trim()
+    || persona?.goals?.[index]
+    || persona?.goals?.[0]
+    || persona?.destination
+    || '';
   const priorTranscript = formatCustomerTranscript(transcript);
   const isFirstTurn = Number(index) === 0 && !priorTranscript.some((turn) => turn.role === 'customer');
   const spoken = await ask({ lane, persona, appReply: String(appReply || ''), goal, index, transcript: priorTranscript, isFirstTurn, travelSummary });
@@ -139,6 +146,7 @@ export function customerAskFromEnv(env = process.env, hosts = loadBannedHosts(),
 export function tripSurvey(persona, turns) {
   const heard = (turns || []).filter((turn) => turn.role === 'app').map((turn) => turn.text).filter(Boolean);
   return {
+    label: 'end of chat (legacy)',
     questions: ['Did the plan match what you asked?', 'What should change next time?'],
     answers: [
       heard.length ? 'It answered some of it.' : 'I did not get a plan.',

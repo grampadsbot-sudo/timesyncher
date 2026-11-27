@@ -9,9 +9,11 @@ import {
   writeVkAdminSession,
 } from '../src/vacation/vk-admin-session.mjs';
 import { findVkAdminVacation, vkAdminDatabase, vkAdminGroups, vkAdminLegacyNoteSources, vkAdminMember } from '../src/vacation/vk-admin-review-data.mjs';
+import { feedbackRollupRows } from '../src/vacation/vk-admin-feedback.mjs';
 import {
-  artifactType, listNotes, listReviewArtifacts, listTravelSummarySnapshots, loadNoteFile, loadReviewArtifact,
-  noteFromBody, notesPath, presentNote, saveReviewArtifact, saveReviewResults, saveWelcome, vkAdminStorage,
+  artifactType, listNotes, listReviewArtifacts, listTravelSummarySnapshots, loadFeedbackArtifact, loadNoteFile,
+  loadReviewArtifact, noteFromBody, notesPath, presentNote, saveFeedbackArtifact, saveReviewArtifact,
+  saveReviewResults, saveWelcome, vkAdminStorage,
 } from '../src/vacation/vk-admin-review-storage.mjs';
 
 const OWNER_SHELL = fileURLToPath(new URL('../vacation-app.html', import.meta.url));
@@ -195,23 +197,50 @@ async function handleArtifacts(req, res, db, getStore, tripId, artifact) {
   }
   const type = artifact ? artifactType(artifact) : '';
   const review = artifact === 'review' && req.method === 'PUT';
-  if (artifact && !type && !review) return notFound(res);
+  const feedback = artifact === 'feedback';
+  if (artifact && !type && !review && !feedback) return notFound(res);
   const vacation = await findVkAdminVacation(db, tripId);
   if (!vacation) return notFound(res);
   if (req.method === 'GET') {
     const store = getStore();
     if (!artifact) return send(res, 200, { ok: true, ...await listReviewArtifacts(store, tripId) });
+    if (feedback) {
+      const payload = await loadFeedbackArtifact(store, tripId);
+      return payload ? send(res, 200, { ok: true, feedback: payload }) : notFound(res);
+    }
     const file = await loadReviewArtifact(store, tripId, artifact);
     return file ? sendFile(res, file, type, type === 'application/pdf' ? `${artifact.slice(0, -4)}.pdf` : '') : notFound(res);
   }
   if (req.method !== 'PUT' || !artifact) return methodNotAllowed(res);
-  if (!vacation.isTest && artifact !== 'dialog-pdf') return send(res, 403, { ok: false, error: 'captures require a test vacation' });
+  if (!vacation.isTest && artifact !== 'dialog-pdf' && artifact !== 'feedback') {
+    return send(res, 403, { ok: false, error: 'captures require a test vacation' });
+  }
   if (!jsonRequest(req)) return send(res, 415, { ok: false, error: 'JSON required' });
   const body = await readBody(req);
-  const saved = review ? await saveReviewResults(getStore(), tripId, body)
-    : await saveReviewArtifact(getStore(), tripId, artifact, body.data);
+  const store = getStore();
+  const saved = review ? await saveReviewResults(store, tripId, body)
+    : feedback ? await saveFeedbackArtifact(store, tripId, body)
+      : await saveReviewArtifact(store, tripId, artifact, body.data);
   if (!saved) return send(res, 400, { ok: false, error: 'invalid artifact' });
   return send(res, 200, { ok: true });
+}
+
+async function handleFeedbackRollup(req, res, db, getStore) {
+  if (req.method !== 'GET') return methodNotAllowed(res);
+  const groups = await vkAdminGroups(db);
+  const store = getStore();
+  const entries = [];
+  for (const group of groups) {
+    const feedback = await loadFeedbackArtifact(store, group.tripId);
+    if (!feedback) continue;
+    entries.push({
+      tripId: group.tripId,
+      customerLabel: group.label,
+      destination: group.destination,
+      payload: feedback,
+    });
+  }
+  return send(res, 200, { ok: true, rows: feedbackRollupRows(entries) });
 }
 
 export function createVkAdminHandler({ database = vkAdminDatabase, storage = vkAdminStorage } = {}) {
@@ -232,6 +261,7 @@ export function createVkAdminHandler({ database = vkAdminDatabase, storage = vkA
         return await handleArtifacts(req, res, database(env), getStore, id, extra);
       }
       if (head === 'customers' && id && !extra) return await handleCustomer(req, res, env, session, id, action, database(env), getStore);
+      if (head === 'feedback' && !id) return await handleFeedbackRollup(req, res, database(env), getStore);
       if (head === 'notes' && !extra && (!id || action)) return await handleNotes(req, res, database(env), getStore, [id, action]);
       if (head === 'clear-all' && !id) return handleClearAll(req, res, env, session);
       return notFound(res);

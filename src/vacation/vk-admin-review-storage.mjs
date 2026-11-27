@@ -136,16 +136,32 @@ function artifactPath(vacationId, artifact) {
 
 export function artifactType(artifact) {
   if (/^turn-[1-5]$/.test(artifact) || onboardingCaptureTag(artifact)) return 'image/png';
-  return artifact === 'dialog-pdf' || artifact === 'keepsake-pdf' ? 'application/pdf' : '';
+  if (artifact === 'dialog-pdf' || artifact === 'keepsake-pdf') return 'application/pdf';
+  if (artifact === 'feedback') return 'application/json';
+  return '';
 }
 
 export async function saveReviewArtifact(store, vacationId, artifact, data) {
+  if (artifact === 'feedback') return saveFeedbackArtifact(store, vacationId, data);
   const bytes = readBase64(data);
   const type = artifactType(artifact);
   const signature = type === 'application/pdf' ? pdf : png;
   if (!type || !bytes?.subarray(0, signature.length).equals(signature)) return false;
   await store.putJson(artifactPath(vacationId, artifact), { data });
   return true;
+}
+
+export async function saveFeedbackArtifact(store, vacationId, payload) {
+  if (!payload || typeof payload !== 'object' || payload.schema !== 'vk-admin-feedback/v1') return false;
+  const body = JSON.stringify(payload);
+  if (Buffer.byteLength(body) > 256000) return false;
+  await store.putJson(artifactPath(vacationId, 'feedback'), payload);
+  return true;
+}
+
+export async function loadFeedbackArtifact(store, vacationId) {
+  const file = await store.getJson(artifactPath(vacationId, 'feedback'));
+  return file && typeof file === 'object' && file.schema === 'vk-admin-feedback/v1' ? file : null;
 }
 
 export async function loadReviewArtifact(store, vacationId, artifact) {
@@ -167,6 +183,7 @@ export async function listReviewArtifacts(store, vacationId) {
     dialogPdf: Boolean(dialog?.data),
     keepsakePdf: Boolean(keepsake?.data),
     review,
+    feedback: await loadFeedbackArtifact(store, vacationId),
   };
 }
 
