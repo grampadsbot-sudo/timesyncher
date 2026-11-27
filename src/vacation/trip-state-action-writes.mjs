@@ -118,7 +118,7 @@ function saveStay(site, saved, context, args) {
   const { hotel, check_in, check_out } = args;
   if (!Object.hasOwn(saved.items, hotel) || !Object.hasOwn(saved.days, check_in) || !Object.hasOwn(saved.days, check_out)) return needs('Identify the hotel and both stay days on this trip.');
   if (saved.items[hotel].type !== 'hotel') return conflict('The existing item is not a hotel.');
-  if (saved.days[check_in].date > saved.days[check_out].date) return conflict('Checkout falls before check-in.');
+  if (saved.days[check_in].date > saved.days[check_out].date) return conflict('Check-out falls before check-in.');
   const row = storedThing(site, hotel);
   const info = row.metadata?.tripState;
   if (info?.stay?.turn > context.turn) return conflict('A later turn already updated this stay.');

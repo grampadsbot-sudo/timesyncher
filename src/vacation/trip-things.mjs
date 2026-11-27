@@ -204,3 +204,15 @@ export async function insertTripThing(db, { tripId, requestId, thing, env = proc
   }
   return { ...item, source: item.source, id };
 }
+
+export async function insertTripStateThing(client, { tripId, id, category, title, metadata, source = 'customer' }) {
+  const payload = metadata && typeof metadata === 'object' ? metadata : {};
+  await client.query(
+    `insert into trip_things (trip_id, id, category, title, metadata, source, created_at)
+     values ($1, $2, $3, $4, $5, $6, clock_timestamp())`,
+    (() => {
+      const row = { trip_id: tripId, id, category, title, metadata: payload, source: source };
+      return [row.trip_id, row.id, row.category, row.title, row.metadata, row.source];
+    })(),
+  );
+}

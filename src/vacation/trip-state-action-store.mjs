@@ -1,5 +1,6 @@
 import { Pool } from '@neondatabase/serverless';
 import { getDatabaseUrl } from './db.mjs';
+import { insertTripStateThing } from './trip-things.mjs';
 
 async function readSite(client, { tripId, actorId, requestId, operationKey }, lock = false) {
   const trip = (await client.query(
@@ -33,10 +34,14 @@ async function writeSite(client, context, old, next, record) {
         [context.tripId, row.id, row.title, row.metadata],
       );
     } else {
-      await client.query(
-        `insert into trip_things (trip_id, id, category, title, metadata, source, created_at) values ($1, $2, $3, $4, $5, 'customer', clock_timestamp())`,
-        [context.tripId, row.id, row.category, row.title, row.metadata],
-      );
+      await insertTripStateThing(client, {
+        tripId: context.tripId,
+        id: row.id,
+        category: row.category,
+        title: row.title,
+        metadata: row.metadata,
+        source: row.source || 'customer',
+      });
     }
   }
   for (const [id, invite] of Object.entries(next.invites)) {
