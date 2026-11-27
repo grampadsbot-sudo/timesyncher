@@ -16,7 +16,7 @@ function tripDb({ history = [], things = [] } = {}) {
       state.historyReads += 1;
       return history;
     }
-    if (sql.startsWith('select start_date, end_date from trips')) return [dates];
+    if (sql.startsWith('select start_date, end_date') && sql.includes('from trips')) return [{ ...dates, metadata: {} }];
     if (sql.startsWith('select metadata from trips')) return [{ metadata: {} }];
     if (sql.startsWith('select count(*)::int as n from trip_things')) return [{ n: state.things.length }];
     if (sql.startsWith('select ') && sql.includes('from trip_things')) return state.things;

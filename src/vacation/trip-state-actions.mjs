@@ -1,4 +1,5 @@
-import { tripStateActionFlag, tripStateCapabilities } from './trip-state-action-registry.mjs';
+import { tripStateCapabilities } from './trip-state-action-registry.mjs';
+import { tripStateActionsEnabled } from './trip-state-actions-enabled.mjs';
 import { createTripStateActionStore } from './trip-state-action-store.mjs';
 import { digestTripState, readTripStateSite, tripStateBacking, tripStateSiteLocked } from './trip-state-action-site.mjs';
 import { authorizedActionIndex, actionFailure, validateActionArguments, validTripStateId } from './trip-state-action-input.mjs';
@@ -13,8 +14,9 @@ function statusOf(op, receipt, turn, { result, detail, refs }) {
 }
 
 function capabilitiesFor(context, site, env, read, serviceAvailable = true) {
+  const trip = site?.trip ?? context.trip;
   return tripStateCapabilities({
-    env, read, serviceAvailable, backing: site ? tripStateBacking(site.trip) : context.backing,
+    env, trip, read, serviceAvailable, backing: site ? tripStateBacking(site.trip) : context.backing,
     grant: site ? 'owner' : context.grant,
     locked: site ? tripStateSiteLocked(site.trip) : context.locked,
     emailHeld: context.emailHeld || context.state.capabilities?.email === 'held'
@@ -200,9 +202,10 @@ export function createTripStateActions({ env = process.env, store = createTripSt
   return {
     capabilities: (context) => capabilitiesFor(context, null, env, context.state.saved.read, store.available),
     async read(context) {
-      if (!tripStateActionFlag(env)) return null;
+      if (context.trip && !tripStateActionsEnabled({ env, trip: context.trip })) return null;
       const site = await store.read(context);
       if (!site || tripStateBacking(site.trip) !== 'intake') return null;
+      if (!tripStateActionsEnabled({ env, trip: site.trip })) return null;
       return readTripStateSite(site, context.state.saved, context.turn);
     },
     async execute({ context, op, args = {} }) {
@@ -216,7 +219,7 @@ export function createTripStateActions({ env = process.env, store = createTripSt
       const signature = digestTripState([actorId, turn, op, args]);
       const initial = capabilitiesFor(context, null, env, state.saved.read, store.available);
       const done = (outcome, capabilities = initial, saved) => publish(context, capabilities, saved, statusOf(op, receipt, turn, outcome));
-      if (!tripStateActionFlag(env)) return done(actionFailure('denied', 'not_wired'));
+      if (!tripStateActionsEnabled({ env, trip: context.trip })) return done(actionFailure('denied', 'not_wired'));
       if (op === 'invite_collaborator' && initial.actions[op].reason === 'on_hold') return done(actionFailure('denied', 'on_hold'));
       if (store.available === false) return done(actionFailure('denied', 'service_unavailable'));
       let observed, saved, committed, transactionError, replay = false, rejected;

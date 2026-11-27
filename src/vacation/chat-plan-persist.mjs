@@ -6,6 +6,8 @@ import { isTripThingName, normalizeTripThingName, tripThingNameInText } from './
 import { vkBotUsageCost } from './turn-cost.mjs';
 import { readCookie, requireWebEditAccess, webAccessCookieName } from './web-access.mjs';
 import { validatePlannedThings } from './chat-planned-thing-validation.mjs';
+import { tripStateActionsEnabled } from './trip-state-actions-enabled.mjs';
+export { tripStateActionsEnabled };
 
 const PLANNING_TURN_RE = /\b(?:itinerary|day-by-day|day by day|keep building|family plan|book early|want to book|we'?d want to book)\b|\bplan (?:the|our|a|my)\b|\bday\s+\d{1,2}\b/i;
 const PLAN_CONFIRM_RE = /\b(?:yes|lock it in|lock that in|save that plan|save this plan|save the plan|that plan works|confirm the plan|go with that)\b/i;
@@ -196,12 +198,8 @@ function mergeByTitle(base, extra) {
   return next;
 }
 
-export function tripStateActionsEnabled(env = process.env) {
-  return env.VK_TRIP_STATE_ACTIONS === '1';
-}
-
-export async function plannedCustomerThings(db, tripId, text, appReply, activities = [], { env = process.env, existing = [] } = {}) {
-  const customerOnly = tripStateActionsEnabled(env);
+export async function plannedCustomerThings(db, tripId, text, appReply, activities = [], { env = process.env, existing = [], trip } = {}) {
+  const customerOnly = tripStateActionsEnabled({ env, trip });
   const base = Array.isArray(activities) ? activities.filter(Boolean) : [];
   const startDate = await tripStartDate(db, tripId);
   let items = plannedItineraryItems(customerOnly ? text : `${text || ''}\n${appReply || ''}`, { startDate });

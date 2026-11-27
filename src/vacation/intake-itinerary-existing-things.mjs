@@ -23,6 +23,7 @@ export async function intakeItineraryExistingThings(
     fetchImpl = globalThis.fetch,
     customerTurnId = null,
     savedTripTitle = '',
+    trip = null,
   },
   loadTripThings,
 ) {
@@ -38,7 +39,7 @@ export async function intakeItineraryExistingThings(
   }
   if (lodgingWanted.length) {
     const current = await loadTripThings(db, tripId);
-    const uniqueLodging = validatePlannedThings(lodgingWanted, { customerOnly: tripStateActionsEnabled(env), existing: current });
+    const uniqueLodging = validatePlannedThings(lodgingWanted, { customerOnly: tripStateActionsEnabled({ env, trip }), existing: current });
     const lodgingOutcome = await persistIntakeLodgingThings(db, tripId, null, uniqueLodging, {
       destinationHint: extractedDestination,
       areaHint: extractedDestination,
