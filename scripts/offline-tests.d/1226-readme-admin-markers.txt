@@ -1,0 +1,1 @@
+scripts/test_issue_1226_rows.mjs

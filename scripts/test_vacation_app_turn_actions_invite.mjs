@@ -3,8 +3,11 @@ import assert from 'node:assert/strict';
 import { runVacationAppTurnActions } from '../src/vacation/vacation-app-turn-actions.mjs';
 
 const session = { id: 'session-1', customer_id: 'owner-1' };
-const requestText = 'Please add Alex, alex@example.com to the trip.';
-const classification = { inviteeName: 'Alex', inviteeEmail: 'alex@example.com' };
+const requestText = 'Please send Alex a collaborator invite at alex@example.com.';
+const classification = {
+  ok: true,
+  understanding: { sendCollaboratorInvite: { name: 'Alex', email: 'alex@example.com', explicitSendRequestSpan: requestText } },
+};
 
 const success = await runVacationAppTurnActions({
   db: {},

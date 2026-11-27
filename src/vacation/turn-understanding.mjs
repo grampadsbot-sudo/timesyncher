@@ -17,6 +17,10 @@ export function turnUnderstandingRequest(request, message, travelSummaryContext)
     }),
     contentTags: structuredObject({ tags: { type: 'array', items: { type: 'string', enum: CONTENT_TAGS } }, ask: boolean }),
     committedSentenceIndexes: { type: 'array', items: { type: 'integer' } },
+    sendCollaboratorInvite: { anyOf: [
+      { type: 'null' },
+      structuredObject({ name: string, email: string, explicitSendRequestSpan: string }),
+    ] },
   };
   if (travelSummaryContext) additional.travelSummary = structuredObject({
     where: string, who: string, transport: string, description: string,

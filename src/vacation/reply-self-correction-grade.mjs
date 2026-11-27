@@ -1,6 +1,3 @@
-export const selfCorrectionReplyContext =
-  'Treat prior app replies as conversation history, not as evidence of what the customer shared. If the customer challenges an unsupported claim, acknowledge the mistake, withdraw it, and continue from the facts the customer gave.';
-
 export function customerChallengesPriorReply(customerTurn = '') {
   return /\b(?:i (?:never|didn['’]t) (?:say|tell|give|mention|share)|we (?:never|didn['’]t) (?:say|tell|give|mention|share)|how (?:do|did) you know|where did you get|that(?:['’]s| is) (?:wrong|not right)|not what i said)\b/i
     .test(String(customerTurn || ''));

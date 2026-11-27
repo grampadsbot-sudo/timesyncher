@@ -241,6 +241,19 @@ window.startVkAdminReview = (() => {
     return `<article class="admin-travel-cover" data-travel-cover>${snapshot.tripName ? `<header><img src="/brand/vk-book-logo.svg" alt="" width="30" height="32"><h1 data-travel-field="tripName">${safe(snapshot.tripName)}</h1></header>` : ''}${facts ? `<dl>${facts}</dl>` : ''}${snapshot.description ? `<p data-travel-field="description">${safe(snapshot.description)}</p>` : ''}</article>`;
   }
 
+  function travelSummaryRules(snapshot) {
+    const prompts = snapshot.modelRules || [];
+    const rules = prompts.length ? prompts.map(({ purpose, sections }) => {
+      const label = { reply_draft: 'Draft', reply_rewrite: 'Rewrite', reply_interim: 'Interim reply' }[purpose];
+      return sections.map(({ title, text }) => `<details><summary>${safe(prompts.length > 1 ? `${label} · ${title}` : title)}</summary><div class="admin-travel-rule-text">${safe(text).replaceAll('\r', '&#13;')}</div></details>`).join('');
+    }).join('') : '<p class="admin-empty">No model rules were stored for this turn.</p>';
+    return `<section class="admin-travel-rules" aria-label="Model rules"><h2>Model rules</h2>${rules}</section>`;
+  }
+
+  function travelSummaryContent(snapshot) {
+    return travelSummaryCover(snapshot) + travelSummaryRules(snapshot);
+  }
+
   function travelSummary(vac) {
     const result = state.travelSummaries.get(vac.tripId);
     if (!result) return '<p class="admin-empty" role="status">Loading Travel Summary…</p>';
@@ -250,22 +263,36 @@ window.startVkAdminReview = (() => {
     const chosen = snapshots.findIndex(({ turnId }) => turnId === state.travelSummaryTurn);
     const index = chosen < 0 ? snapshots.length - 1 : chosen;
     const snapshot = snapshots[index];
-    return `<section class="admin-travel" aria-label="Travel Summary"><div class="admin-travel-scrubber"><label for="adminTravelTurn">Turn</label><input id="adminTravelTurn" type="range" min="1" max="${snapshots.length}" value="${index + 1}" aria-valuetext="${snapshot.turnNumber} of ${snapshots.length}"${snapshots.length === 1 ? ' disabled' : ''}><output for="adminTravelTurn">${snapshot.turnNumber} / ${snapshots.length}</output></div><div data-travel-snapshot="${safe(snapshot.turnId)}">${travelSummaryCover(snapshot)}</div></section>`;
+    return `<section class="admin-travel" aria-label="Travel Summary">
+      <div class="admin-travel-scrubber">
+        <label for="adminTravelTurn">Turn</label>
+        <button type="button" data-travel-step="-1" aria-label="Previous turn"${index === 0 ? ' disabled' : ''}>${chevron}</button>
+        <input id="adminTravelTurn" type="range" min="1" max="${snapshots.length}" value="${index + 1}" aria-valuetext="${snapshot.turnNumber} of ${snapshots.length}"${snapshots.length === 1 ? ' disabled' : ''}>
+        <button type="button" data-travel-step="1" aria-label="Next turn"${index === snapshots.length - 1 ? ' disabled' : ''}>${chevron}</button>
+        <output for="adminTravelTurn">${snapshot.turnNumber} / ${snapshots.length}</output>
+      </div>
+      <div data-travel-snapshot="${safe(snapshot.turnId)}">${travelSummaryContent(snapshot)}</div>
+    </section>`;
   }
 
-  function scrubTravelSummary(event) {
-    const control = event.target;
-    if (control.id !== 'adminTravelTurn') return;
+  function selectTravelSummaryTurn(control, position) {
     const { snapshots } = state.travelSummaries.get(viewTrip());
-    const snapshot = snapshots[control.valueAsNumber - 1];
+    const snapshot = snapshots[position - 1];
     if (!snapshot) return;
     state.travelSummaryTurn = snapshot.turnId;
+    control.value = position;
     control.setAttribute('aria-valuetext', `${snapshot.turnNumber} of ${snapshots.length}`);
     const view = control.closest('.admin-travel');
+    view.querySelector('[data-travel-step="-1"]').disabled = position === 1;
+    view.querySelector('[data-travel-step="1"]').disabled = position === snapshots.length;
     view.querySelector('output').textContent = `${snapshot.turnNumber} / ${snapshots.length}`;
     const content = view.querySelector('[data-travel-snapshot]');
     content.dataset.travelSnapshot = snapshot.turnId;
-    content.innerHTML = travelSummaryCover(snapshot);
+    content.innerHTML = travelSummaryContent(snapshot);
+  }
+
+  function scrubTravelSummary({ target: control }) {
+    if (control.id === 'adminTravelTurn') selectTravelSummaryTurn(control, control.valueAsNumber);
   }
 
   function onboarding(vac, artifacts) {
@@ -348,7 +375,11 @@ window.startVkAdminReview = (() => {
   function handleClick(event) {
     const button = event.target.closest('button');
     if (!button) return;
-    if (button.id === 'tripButton') {
+    if (button.dataset.travelStep) {
+      if (button.disabled) return;
+      const slider = button.parentElement.querySelector('#adminTravelTurn');
+      selectTravelSummaryTurn(slider, slider.valueAsNumber + Number(button.dataset.travelStep));
+    } else if (button.id === 'tripButton') {
       event.stopPropagation();
       const open = document.getElementById('vacationDropdown').classList.toggle('open');
       button.setAttribute('aria-expanded', String(open));
@@ -564,7 +595,7 @@ window.startVkAdminReview = (() => {
     const result = await api(artifactsPath(id)).catch(() => null);
     const artifacts = result?.res.ok ? result.data : { failed: true };
     state.artifacts.set(id, artifacts);
-    if (viewTrip() === id && ['chat', 'captures', 'keepsake', 'onboarding', 'feedback', 'travel-summary'].includes(state.view)) {
+    if (viewTrip() === id && ['chat', 'captures', 'keepsake', 'onboarding', 'feedback'].includes(state.view)) {
       const vac = state.details.get(id);
       document.querySelector('.admin-view-panel').innerHTML = viewContent(vac);
       lockReplay(document.getElementById('customerChatReplay'));

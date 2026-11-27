@@ -1,20 +1,22 @@
-import { tripStateActionFlag, tripStateCapabilities } from './trip-state-action-registry.mjs';
+import { tripStateCapabilities } from './trip-state-action-registry.mjs';
+import { tripStateActionsEnabled } from './trip-state-actions-enabled.mjs';
 import { createTripStateActionStore } from './trip-state-action-store.mjs';
 import { digestTripState, readTripStateSite, tripStateBacking, tripStateSiteLocked } from './trip-state-action-site.mjs';
-import { authorizedActionIndex, actionFailure, validateActionArguments, validTripStateId } from './trip-state-action-input.mjs';
+import { authorizedActionIndex, actionFailure, systemPlanAllows, validateActionArguments, validTripStateId } from './trip-state-action-input.mjs';
 import { siteActionWriters } from './trip-state-action-writes.mjs';
 
 const batchOps = new Set(['add_named_item', 'add_from_search', 'place_on_day', 'set_stay', 'set_time']);
 const topLevelOps = new Set([...batchOps, 'hold_invite', 'save_plan', 'invite_collaborator'].filter((op) => op !== 'set_time'));
 const handleFields = ['item', 'hotel', 'replace_hotel'];
 
-function statusOf(op, receipt, turn, { result, detail, refs }) {
-  return { op, receipt, result, detail, refs: [...new Set(refs)], turn };
+function statusOf(op, receipt, turn, { result, detail, refs }, authority) {
+  return { op, receipt, result, detail, refs: [...new Set(refs)], turn, ...(authority ? { authority } : {}) };
 }
 
 function capabilitiesFor(context, site, env, read, serviceAvailable = true) {
+  const trip = site?.trip ?? context.trip;
   return tripStateCapabilities({
-    env, read, serviceAvailable, backing: site ? tripStateBacking(site.trip) : context.backing,
+    env, trip, read, serviceAvailable, backing: site ? tripStateBacking(site.trip) : context.backing,
     grant: site ? 'owner' : context.grant,
     locked: site ? tripStateSiteLocked(site.trip) : context.locked,
     emailHeld: context.emailHeld || context.state.capabilities?.email === 'held'
@@ -83,7 +85,7 @@ function publish(context, capabilities, saved, status, operations = [], action, 
 
 function planOperation({ op, args, site, saved, context, handles, authorized }) {
   if (!validateActionArguments(op, args)) return actionFailure('needs_info', 'Supply valid action arguments.');
-  if (!authorized) return actionFailure('denied', 'This action needs matching customer authorization.');
+  if (!authorized) return actionFailure('denied', 'This action needs matching authorization.');
   const resolved = { ...args };
   for (const key of handleFields) {
     if (typeof resolved[key] !== 'string' || !resolved[key].startsWith('$')) continue;
@@ -108,8 +110,9 @@ function planBatch(args, site, saved, context, receipt) {
     || !Array.isArray(args.operations) || !args.operations.length || args.operations.length > 32) {
     return { outcome: actionFailure('needs_info', 'Supply authority and one to 32 ordered save operations.'), children: [] };
   }
-  if (args.authority !== context.authority?.id || !['customer', 'proposal'].includes(context.authority?.source)) {
-    return { outcome: actionFailure('denied', 'The plan needs matching customer authorization.'), children: [] };
+  const system = systemPlanAllows(context.authority, 'save_plan', saved);
+  if (args.authority !== context.authority?.id || (!system && !['customer', 'proposal'].includes(context.authority?.source))) {
+    return { outcome: actionFailure('denied', 'The plan needs matching authorization.'), children: [] };
   }
   if (args.operations.some((entry) => !batchOps.has(entry?.op)
     || Object.keys(entry).some((key) => !['op', 'args', 'as'].includes(key)))) {
@@ -125,7 +128,10 @@ function planBatch(args, site, saved, context, receipt) {
     if (index >= 0) previous = index;
     const outcome = as != null && (!validTripStateId(as) || handles.has(as))
       ? actionFailure('needs_info', 'Use a unique valid result handle.')
-      : planOperation({ op, args: command, site, saved: current, context, handles, authorized: index >= 0 });
+      : planOperation({
+        op, args: command, site, saved: current, context, handles,
+        authorized: system ? systemPlanAllows(context.authority, op, current) : index >= 0,
+      });
     if (as && outcome.item) handles.set(as, outcome.item);
     if (outcome.result === 'applied') current = readTripStateSite(site, saved, context.turn);
     children.push({ op, receipt: `${receipt}-${children.length + 1}`, outcome, candidate: command?.candidate });
@@ -146,10 +152,11 @@ function summarizeBatch(results) {
 
 function planRecord(op, args, site, saved, context, receipt, signature) {
   const next = structuredClone(site);
+  const system = systemPlanAllows(context.authority, op, saved) && (op !== 'save_plan' || args?.authority === context.authority.id);
   const planned = op === 'save_plan' ? planBatch(args, next, saved, context, receipt)
     : { outcome: planOperation({
       op, args, site: next, saved, context, handles: new Map(),
-      authorized: authorizedActionIndex(context.authority, op, args, context.state) >= 0,
+      authorized: system || authorizedActionIndex(context.authority, op, args, context.state) >= 0,
     }), children: [] };
   const final = readTripStateSite(next, saved, context.turn);
   const before = collectTargets(saved);
@@ -162,7 +169,7 @@ function planRecord(op, args, site, saved, context, receipt, signature) {
     .map((row) => [row.id, row.before]));
   const changes = Object.fromEntries([...refs].filter((ref) => digestTripState(before.get(ref) ?? null) !== proof[ref])
     .map((ref) => [ref, { before: before.get(ref) ?? null, after: after.get(ref) ?? null }]));
-  return { next, record: { ...planned, signature, proof, changes, order, turn: context.turn } };
+  return { next, record: { ...planned, signature, proof, changes, order, turn: context.turn, ...(system ? { authority: 'system_plan' } : {}) } };
 }
 
 function verifyRecord(record, saved, replay, op, args) {
@@ -200,9 +207,10 @@ export function createTripStateActions({ env = process.env, store = createTripSt
   return {
     capabilities: (context) => capabilitiesFor(context, null, env, context.state.saved.read, store.available),
     async read(context) {
-      if (!tripStateActionFlag(env)) return null;
+      if (context.trip && !tripStateActionsEnabled({ env, trip: context.trip })) return null;
       const site = await store.read(context);
       if (!site || tripStateBacking(site.trip) !== 'intake') return null;
+      if (!tripStateActionsEnabled({ env, trip: site.trip })) return null;
       return readTripStateSite(site, context.state.saved, context.turn);
     },
     async execute({ context, op, args = {} }) {
@@ -216,7 +224,7 @@ export function createTripStateActions({ env = process.env, store = createTripSt
       const signature = digestTripState([actorId, turn, op, args]);
       const initial = capabilitiesFor(context, null, env, state.saved.read, store.available);
       const done = (outcome, capabilities = initial, saved) => publish(context, capabilities, saved, statusOf(op, receipt, turn, outcome));
-      if (!tripStateActionFlag(env)) return done(actionFailure('denied', 'not_wired'));
+      if (!tripStateActionsEnabled({ env, trip: context.trip })) return done(actionFailure('denied', 'not_wired'));
       if (op === 'invite_collaborator' && initial.actions[op].reason === 'on_hold') return done(actionFailure('denied', 'on_hold'));
       if (store.available === false) return done(actionFailure('denied', 'service_unavailable'));
       let observed, saved, committed, transactionError, replay = false, rejected;
@@ -268,11 +276,14 @@ export function createTripStateActions({ env = process.env, store = createTripSt
       }
       if (record.signature !== signature) return done(actionFailure('conflict', 'This operation key already belongs to different arguments.'), capabilities, saved);
       const verified = verifyRecord(record, observed?.record && saved, replay, op, args);
-      const operations = verified.children.map((child) => statusOf(child.op, child.receipt, turn, child.outcome));
+      const { authority } = record;
+      const operations = verified.children.map((child) => statusOf(child.op, child.receipt, turn, child.outcome, authority));
       const recover = !replay || state.tool_status.some((row) => row.receipt === receipt && row.result === 'pending_readback');
-      const action = recover && verified.mutations.length ? { op, receipt, refs: [...new Set(verified.mutations)], turn } : undefined;
+      const action = recover && verified.mutations.length
+        ? { op, receipt, refs: [...new Set(verified.mutations)], turn, ...(authority ? { authority } : {}) }
+        : undefined;
       return publish(context, capabilities, saved || { ...state.saved, read: 'stale' },
-        statusOf(op, receipt, turn, verified.outcome), operations, action, verified.promotions);
+        statusOf(op, receipt, turn, verified.outcome, authority), operations, action, verified.promotions);
     },
   };
 }

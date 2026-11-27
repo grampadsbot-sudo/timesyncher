@@ -1,36 +1,15 @@
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, lstatSync, readFileSync, unlinkSync } from 'node:fs';
-import { createRequire } from 'node:module';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
+import Ajv2020 from 'ajv/dist/2020.js';
+import addFormats from 'ajv-formats';
 import { createTripStateActions } from '../src/vacation/trip-state-actions.mjs';
 import { tripStateCapabilities } from '../src/vacation/trip-state-action-registry.mjs';
 import { sharedTripFromIntake, thingRecordFromTripRow } from '../src/vacation/intake-shared-trip.mjs';
 import { isTripThingName, normalizeTripThingName } from '../src/vacation/trip-thing-name-shape.mjs';
 import { replyRulesSystem } from './vacation-app-reply-rules.mjs';
-
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-
-function ensureAcceptanceUnitDeps() {
-  const ajvPkg = path.join(repoRoot, 'node_modules', 'ajv', 'package.json');
-  if (existsSync(ajvPkg)) return;
-  const nm = path.join(repoRoot, 'node_modules');
-  if (existsSync(nm) && lstatSync(nm).isSymbolicLink()) unlinkSync(nm);
-  execFileSync('npm', ['ci', '--no-audit', '--no-fund', '--ignore-scripts'], {
-    cwd: repoRoot,
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-    timeout: 180000,
-  });
-  if (!existsSync(ajvPkg)) throw new Error('trip-state acceptance needs ajv; npm ci did not install it');
-}
-
-ensureAcceptanceUnitDeps();
-const requireFromRepo = createRequire(pathToFileURL(path.join(repoRoot, 'package.json')).href);
-const Ajv2020 = requireFromRepo('ajv/dist/2020.js').default;
-const addFormats = requireFromRepo('ajv-formats');
 
 const schema = JSON.parse(readFileSync(new URL('./fixtures/trip-state-actions/trip-state.schema.json', import.meta.url), 'utf8'));
 const ajv = new Ajv2020({ strictRequired: false, strictTypes: false });
@@ -125,7 +104,7 @@ function fixture({ things = [], invites = {} } = {}) {
 
 async function contextFor(f, requestId, options = {}) {
   const state = options.state || f.state;
-  const context = { tripId, actorId, requestId, operationKey: 'first', state, turn: state.updated_turn + 1, ...options };
+  const context = { tripId, actorId, requestId, operationKey: 'first', state, turn: state.updated_turn + 1, trip: f.current.trip, ...options };
   const saved = await f.executor.read(context);
   const { customerText = '', spans = {}, commands = [], source = 'customer', authorityId = 'current', selectedCandidates, researchKey } = options;
   context.state = { ...state, saved, tool_status: [], last_actions: [] };
@@ -293,7 +272,10 @@ const dayIds = (state) => Object.entries(state.saved.days).sort(([, a], [, b]) =
   const f = fixture();
   const op = 'hold_invite';
   const args = { name: 'Morgan', access: 'edit' };
-  const ctx = await contextFor(f, 'hold', { customerText: 'Hold the edit invite for Morgan.', spans: { person: ['person', args.name] }, commands: [cmd(op, args)] });
+  const customerText = 'Hold the edit invite for Morgan.';
+  const ctx = await contextFor(f, 'hold', {
+    customerText, spans: { grant: ['access_grant', customerText, args] }, commands: [cmd(op, args)],
+  });
   const result = await f.execute(ctx, op, args);
   assert.equal(result.status.result, 'applied');
   assert.deepEqual(Object.values(result.state.saved.invites), [{ ...args, status: 'held', via: 'chat_action', turn: ctx.turn }]);
@@ -307,7 +289,7 @@ const dayIds = (state) => Object.entries(state.saved.days).sort(([, a], [, b]) =
   assert.equal(f.count(), 1);
   const bad = { name: 'Everyone in the group', access: 'edit' };
   const unnamed = await contextFor(f, 'unnamed', { customerText: 'Everyone in the group', commands: [cmd(op, bad)] });
-  assert.equal((await f.execute(unnamed, op, bad)).status.result, 'needs_info');
+  assert.equal((await f.execute(unnamed, op, bad)).status.result, 'denied');
 
   const off = createTripStateActions({ store: { transact: () => assert.fail('flag OFF entered store'), read: () => assert.fail('flag OFF read store') }, env: {} });
   const offResult = await off.execute({ context: ctx, op, args });
@@ -320,7 +302,7 @@ const dayIds = (state) => Object.entries(state.saved.days).sort(([, a], [, b]) =
   conforms(offResult.state);
   const promptHash = createHash('sha256')
     .update(replyRulesSystem({}, '', 'Spring trip', false, 'Please save Botanical Gardens.', { VK_TRIP_STATE_ACTIONS: '0' })).digest('hex');
-  assert.equal(promptHash, '267f618eb5d2622560c74bbe442c4f3e66d4d3adebf84ab22428c48071d607ad');
+  assert.equal(promptHash, '0e521c896feb483dbf41b1c7726af6bb4bc63fdf8a53f704346367687dd37009');
 }
 
 {

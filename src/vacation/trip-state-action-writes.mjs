@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { findPlaceAssignment, placeAssignmentsOnDay } from './chat-itinerary-edit-assignment.mjs';
 import { intId } from './intake-shared-trip.mjs';
 import { digestTripState, tripItemKinds } from './trip-state-action-site.mjs';
-import { actionFailure, itemEvidence, nameWasDisclosed, typedItemDetails, validatedTime, validTripStateId } from './trip-state-action-input.mjs';
+import { actionFailure, hasExplicitAccessGrant, itemEvidence, typedItemDetails, validatedTime, validTripStateId } from './trip-state-action-input.mjs';
 import { isTripThingName, normalizeTripThingName } from './trip-thing-name-shape.mjs';
 
 const needs = (detail) => actionFailure('needs_info', detail);
@@ -19,9 +19,9 @@ function storedThing(site, item) {
 function savedOccurrences(saved, item) {
   return Object.entries(saved.days).flatMap(([day, { assigned }]) => assigned.flatMap((row, index) => {
     if (row.item !== item) return [];
-    const { id, role, time, turn, via } = row;
+    const { id, role, time, turn, via, proposed_by } = row;
     const before = assigned[index + 1]?.id;
-    return [{ id, day, role, time, via, turn, ...(before ? { before } : {}) }];
+    return [{ id, day, role, time, via, turn, ...(proposed_by ? { proposed_by } : {}), ...(before ? { before } : {}) }];
   }));
 }
 
@@ -105,13 +105,17 @@ function visitOnDay(site, saved, context, args, requireExisting = false) {
     if (visited.has(anchor)) return conflict('The requested order creates a cycle.');
     visited.add(anchor);
   }
-  const time = args.time === undefined ? current?.time || null : validatedTime(context, args.time, args.time_evidence);
-  if (time === undefined || (requireExisting && !time)) return denied('The requested time needs matching customer wording.');
+  const time = args.time === undefined ? current?.time || null : validatedTime(context, args.time, args.time_evidence, !requireExisting);
+  if (time === undefined || (requireExisting && !time)) return denied('Supply a valid proposed clock time or a time supported by customer wording.');
   const anchor = before || (current?.day === day ? current.before : undefined);
-  if (current?.day === day && equal(current.time, time) && anchor === current.before) return unchanged([current.id], item);
+  const system = context.authority.source === 'system_plan';
+  const samePlacement = current?.day === day && equal(current.time, time) && anchor === current.before;
+  if (samePlacement && (system || current.proposed_by !== 'system')) return unchanged([current.id], item);
+  if (system && current && current.proposed_by !== 'system') return denied('Customer or existing site placements take precedence.');
   const id = current?.id || String(intId(randomUUID()));
   const selector = occurrence || current?.selector;
-  const next = { id, day, role, time, turn: context.turn, ...(anchor ? { before: anchor } : {}), ...(selector ? { selector } : {}) };
+  const next = { id, day, role, time, turn: context.turn, proposed_by: system ? 'system' : 'customer',
+    ...(anchor ? { before: anchor } : {}), ...(selector ? { selector } : {}) };
   saveOccurrences(site, item, current ? rows.map((entry) => entry.id === id ? next : entry) : [...rows, next]);
   return changed([id], item);
 }
@@ -151,12 +155,16 @@ function saveStay(site, saved, context, args) {
 }
 
 function promoteSearch(site, saved, context, args) {
-  const { candidate, day, role, replace_hotel: replacement } = args;
-  if (!validTripStateId(candidate) || !context.authority.selectedCandidates?.includes(candidate)) return needs('Identify the search candidate selected by the customer.');
+  const { candidate, day, role, time, time_evidence, replace_hotel: replacement } = args;
+  const system = context.authority.source === 'system_plan';
+  if (!validTripStateId(candidate) || (!system && !context.authority.selectedCandidates?.includes(candidate))) {
+    return needs('Identify an authorized search candidate.');
+  }
+  if (time != null && (day == null || role == null)) return needs('Supply a day and role for the time.');
   const selection = context.state.candidates?.[candidate];
   const scoped = context.state.research?.key && context.authority.researchKey === context.state.research.key;
   if (replacement && (!Object.hasOwn(saved.items, replacement) || saved.items[replacement].type !== 'hotel')) return conflict('The replacement target is not an existing hotel.');
-  if (!selection && !scoped) return conflict('The selected candidate is outside the current search scope.');
+  if (!scoped && (system || !selection)) return conflict('The selected candidate is outside the current search scope.');
   const existing = Object.entries(saved.items).find(([, item]) => item.candidate_id === candidate)?.[0];
   if (existing && !isTripThingName(saved.items[existing].title)) return denied('The existing item needs a valid name.');
   let item = existing;
@@ -193,7 +201,7 @@ function promoteSearch(site, saved, context, args) {
   }
   if (day != null || role != null) {
     const place = visitOnDay(site, { ...saved, items: { ...saved.items, [item]: saved.items[item] || { type: selection.type, title: selection.title } } },
-      context, { item, day, role });
+      context, { item, day, role, time, time_evidence });
     if (place.result !== 'applied' && place.result !== 'no_change') return place;
     return created || place.result === 'applied' ? changed([item, ...place.refs], item) : unchanged([item, ...place.refs], item);
   }
@@ -202,9 +210,8 @@ function promoteSearch(site, saved, context, args) {
 
 function holdInvite(site, saved, context, args) {
   const { name, access } = args;
-  if (typeof name !== 'string' || name.length > 280 || !nameWasDisclosed(context, name) || !['view', 'edit'].includes(access)) {
-    return needs('Supply the disclosed name and requested view or edit access.');
-  }
+  if (typeof name !== 'string' || name.length > 280 || !['view', 'edit', 'collaborator'].includes(access)) return needs('Supply a name and access level.');
+  if (!hasExplicitAccessGrant(context, name, access)) return denied('An explicit access request from the owner is required.');
   const id = `hold-${digestTripState([context.tripId, normalizeTripThingName(name)]).slice(0, 40)}`;
   if (site.invites[id]?.turn > context.turn) return conflict('A later turn already updated this held invite.');
   if (site.invites[id]?.access === access) return unchanged([id]);

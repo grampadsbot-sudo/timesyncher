@@ -31,7 +31,7 @@ import { insertIntakeTripThingRow } from '../src/vacation/trip-things.mjs';
 import { createVacationFromChatMessage } from '../src/vacation/vacation-from-chat-intake.mjs';
 import { onboardingWelcomeFailure, welcomeFailureBody } from '../src/vacation/welcome-failure.mjs';
 import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-store.mjs';
-import { customerModality, jevStamp, liveTurnRecord, intakeSpan, firstMarkedIntake, produceLiveAppReply, finishTierRewrite, activityCommitDecisions, applyCustomerNotes, completeRosterParty } from '../src/vacation/live-app-turn.mjs';
+import { customerModality, jevStamp, liveTurnRecord, intakeSpan, firstMarkedIntake, produceLiveAppReply, activityCommitDecisions, applyCustomerNotes, completeRosterParty } from '../src/vacation/live-app-turn.mjs';
 import { queueVacationAppTurn as runQueueVacationAppTurn } from './vacation-app-chat-queue.mjs';
 import { cannedWelcomeLiveTurn, missingWelcomeFields, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
 import {
@@ -46,7 +46,7 @@ import { appReplyTelemetry, logVacationAppReplyTelemetry } from '../src/vacation
 import { bindOpenRouterLedger, openRouterTurnTelemetry, withOpenRouterLedger } from '../src/vacation/openrouter-call-ledger.mjs';
 import {
   applyLiveAppReplyFailureToPayload,
-  commitShippedRewrite,
+  finishPendingReply,
   markWorkerJobLiveHandled,
   persistVacationAppOutboundReply,
   storeReplyFailure,
@@ -63,6 +63,7 @@ import {
 } from '../src/vacation/trip-intake-classify.mjs';
 import { normalizeTripThingName } from '../src/vacation/trip-thing-name-shape.mjs';
 import { keepPlannedDays, persistCustomerNotesOnly, persistFollowupLodgingSafely, plannedCustomerThings, tripStateActionsEnabled } from '../src/vacation/chat-plan-persist.mjs';
+import { tripRowForStateActions } from '../src/vacation/trip-state-actions-enabled.mjs';
 import { validatePlannedThings } from '../src/vacation/chat-planned-thing-validation.mjs';
 import {
   intakeExtractedThings,
@@ -100,7 +101,6 @@ import { resolveVacationAppQueueIntake } from '../src/vacation/vacation-app-queu
 import { tryHandleAiMcpChatTurn } from '../src/vacation/mcp-reservations-chat.mjs';
 import { tryHandlePendingPreviewChatTurn } from '../src/vacation/mcp-chat-preview-edit.mjs';
 import { refreshSearchProgressFromTripThings, searchProgressForClient, searchProgressForVacationAppTrip, syncSearchProgressStage } from '../src/vacation/search-progress.mjs';
-
 let vacationAppDatabase = null;
 
 export function useVacationAppDatabase(db) {
@@ -605,15 +605,17 @@ async function loadTripThings(db, tripId) {
 }
 
 async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch, customerTurnId = null, wantedThings = [], work = null, understanding = null } = {}) {
-  const validation = { customerOnly: tripStateActionsEnabled(env) };
+  const priorRows = await db`select title, destination, metadata from trips where id = ${tripId} limit 1`;
+  const tripRow = priorRows[0] || null;
+  const validation = { customerOnly: tripStateActionsEnabled({ env, trip: tripRow }) };
   const planned = validatePlannedThings(namedCustomerActivities(text, intakeActivityThings(extracted)), validation);
   const lodgingWanted = validatePlannedThings(intakeLodgingWanted(extracted, wantedThings), validation);
-  const priorRows = await db`select title, destination, metadata from trips where id = ${tripId} limit 1`;
   const existing = await db`select count(*)::int as n from trip_things where trip_id = ${tripId}`;
   if (Number(existing[0]?.n) > 0) {
     return intakeItineraryExistingThings(db, tripId, text, lodgingWanted, {
       extractedDestination, extractedTitle, destinationError, titleError, searchImpl, searchPlacesImpl: work ? work.lodgingSearch(searchPlacesImpl) : searchPlacesImpl, env, fetchImpl: work ? work.fetchImpl : fetchImpl, customerTurnId,
       savedTripTitle: priorRows[0]?.title,
+      trip: tripRow,
     }, loadTripThings);
   }
   const span = intakeSpan(text);
@@ -726,13 +728,14 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
   return loadTripThings(db, tripId);
 }
 
-async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '', roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch, customerTurnId = null, wantedThings = [], requestId = null, postStartedMs = null, postBudgetMs = null, activityCommitDecisionsImpl = null, understanding = null } = {}, intakeText = '', extracted = [], legacyReply = '') {
-  const customerOnly = tripStateActionsEnabled(env);
+async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '', roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch, customerTurnId = null, wantedThings = [], requestId = null, postStartedMs = null, postBudgetMs = null, activityCommitDecisionsImpl = null, understanding = null, trip = null } = {}, intakeText = '', extracted = [], legacyReply = '') {
+  const tripRow = await tripRowForStateActions(db, tripId, trip);
+  const customerOnly = tripStateActionsEnabled({ env, trip: tripRow });
   const work = createPostReplyWork({ db, tripId, requestId, postStartedMs, postBudgetMs, env, fetchImpl });
   if (intakeText) {
     await ensureIntakeItinerary(db, tripId, intakeText, extracted, {
       roster, rosterError, askRoster, extractedDestination, extractedTitle, destinationError, titleError,
-      searchImpl, searchPlacesImpl, env, fetchImpl, customerTurnId, wantedThings, work, understanding,
+      searchImpl, searchPlacesImpl, env, fetchImpl, customerTurnId, wantedThings, work, understanding, trip: tripRow,
     });
   }
   let current = await loadTripThings(db, tripId);
@@ -758,16 +761,10 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
       await persistIntakeLodgingLookupOnCustomerTurn(db, customerTurnId, lodgingLookups);
     }
   }
-  const wanted = await plannedCustomerThings(db, tripId, text, legacyReply, namedCustomerActivities(text, intakeActivityThings(extracted)), { env, existing: current });
+  const wanted = await plannedCustomerThings(db, tripId, text, legacyReply, namedCustomerActivities(text, intakeActivityThings(extracted)), { env, existing: current, trip: tripRow });
   if (!current.length && !wanted.length) return work.finish(current);
   if (!String(text || '').trim() && !wanted.length) return work.finish(current);
-  const tripRows = await db`
-    select start_date, end_date
-    from trips
-    where id = ${tripId}
-    limit 1
-  `;
-  const tripDatesRow = tripRows[0] || {};
+  const tripDatesRow = tripRow || {};
   let next = keepPlannedDays(mergeWantedThings(current, wanted), wanted);
   let commits = null;
   try {
@@ -957,17 +954,12 @@ async function handleVacationApp(req, res, db, url) {
       const meta = session.metadata && typeof session.metadata === 'object' ? session.metadata : {};
       const pending = meta.pendingRewrite;
       if (!pending?.draft || !pending?.tripId) return sendJson(res, 409, { ok: false, error: 'No rewrite is waiting.' });
-      bindOpenRouterLedger(pending);
       const rewriteSeat = await seatForSessionTrip(db, session, pending.tripId);
-      const finished = pending.resolved?.reply
-        ? pending.resolved
-        : await finishTierRewrite({ pending, env: process.env });
-      if (!finished.reply) return sendJson(res, 502, { ok: false, error: finished.reason || 'The rewrite did not produce a reply.', ...openRouterTurnTelemetry() });
-      const shipped = await commitShippedRewrite(db, sessionWithTripSeat(session, rewriteSeat), pending, finished, {
+      const { status, body: replyBody } = await finishPendingReply(db, sessionWithTripSeat(session, rewriteSeat), pending, {
         recordCustomerThingNotes: attachIntakeItineraryFromReply,
         publishIntakeShare, postStartedMs: postStarted,
       });
-      return sendJson(res, 200, { ...shipped, ...openRouterTurnTelemetry() });
+      return sendJson(res, status, { ...replyBody, ...openRouterTurnTelemetry() });
     }
     let vacations = await loadVacationAppTrips(db, session);
     const requestedTripId = cleanText(body.tripId || body.trip_id, 80);
@@ -1087,7 +1079,7 @@ function isStagingHost(req) {
 }
 
 export async function attachIntakeItineraryFromReply(db, tripId, requestText, { appReply, ...options } = {}, intakeText, extracted) {
-  const legacyReply = tripStateActionsEnabled(options.env) ? undefined : appReply;
+  const legacyReply = tripStateActionsEnabled({ env: options.env, trip: options.trip }) ? undefined : appReply;
   return recordCustomerThingNotes(db, tripId, requestText, options, intakeText, extracted, legacyReply);
 }
 

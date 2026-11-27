@@ -307,7 +307,7 @@ async function detailSession(db, id) {
       order by created_at asc
     `,
     db`
-      select id, telegram_session_id, request_id, speaker, channel, direction, body, payload,
+      select id, telegram_session_id, request_id, speaker, channel, direction, body, payload - 'modelRules' as payload,
         telegram_message_id, received_at, sent_at, response_latency_ms, onboarding_step,
         turn_category, turn_tags, turn_tag_source, turn_tag_confidence, turn_tagged_at,
         created_at
