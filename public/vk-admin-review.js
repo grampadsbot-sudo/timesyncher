@@ -8,9 +8,12 @@ window.startVkAdminReview = (() => {
     ['chat', 'Dialog'], ['trip', 'Vacation site'], ['keepsake', 'Keepsake'],
     ['onboarding', 'Onboarding'], ['captures', 'Chat screenshots'], ['vacations', 'All vacations'],
   ];
+  const allCustomersIntro = 'Choose a customer to drill down into their trips, chat and QA.';
+  const showTestCustomersKey = 'vkAdminShowTestCustomers';
   const json = (method, body) => ({ method, headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
   const state = { customers: new Map(), opened: [], recent: new Set(), details: new Map(), artifacts: new Map(),
-    selection: null, view: 'all', attachments: [], voiceMode: false, voiceArmed: false, sending: false, opening: false };
+    selection: null, view: 'all', attachments: [], voiceMode: false, voiceArmed: false, sending: false, opening: false,
+    showTestCustomers: false, hiddenTestCount: 0, loadingCustomers: false };
   let notesRequest = 0;
   let root;
 
@@ -27,6 +30,7 @@ window.startVkAdminReview = (() => {
   const artifactsPath = (id) => `customers/${encodeURIComponent(id)}/artifacts`;
   const accountKey = (member, tripId) => member.id == null ? `vacation:${tripId}` : `customer:${member.id}`;
   const groupMembers = (group) => group.customers.length ? group.customers : [{ id: null, customer_label: group.label }];
+  const testPill = (group) => group.testTag ? ` <small class="admin-test-tag">${safe(group.testTag)}</small>` : '';
 
   async function api(path, init) {
     const res = await fetch(`/api/admin/${path}`, { credentials: 'same-origin', ...init });
@@ -52,36 +56,59 @@ window.startVkAdminReview = (() => {
     const option = (id, title, on, sub = '', attrs = '') => {
       return `<button class="trip-option ${on ? 'active' : ''}" type="button" data-trip-id="${safe(id)}" ${attrs} role="option" aria-selected="${on}"><span>${on ? check : ''}</span><span class="trip-option-text"><b>${safe(title)}</b>${sub ? `<small>${safe(sub)}</small>` : ''}</span></button>`;
     };
-    const viewOptions = account ? views
-      .filter(([id]) => id !== 'vacations' || account.vacations.length > 1)
-      .map(([id, label]) => option(id, label, id === state.view, '', `data-view="${id}"`)).join('') : '';
+    const artifacts = account ? state.artifacts.get(viewTrip()) : null;
+    const viewEntries = account ? views
+      .filter(([id]) => id !== 'vacations' || account.vacations.length > 1) : [];
+    const viewOptions = viewEntries
+      .filter(([id]) => id !== 'vacations')
+      .map(([id, label]) => option(id, label, id === state.view, '', `data-view="${id}"`)).join('');
+    const vacationsOption = viewEntries
+      .filter(([id]) => id === 'vacations')
+      .map(([id, label]) => option(id, label, id === state.view, '', `data-view="${id}"`)).join('');
+    const pdfOption = artifacts?.dialogPdf && viewTrip()
+      ? option('dialog-pdf', 'Dialog PDF', false, '', 'data-dialog-pdf="1"')
+      : '';
     const runs = [...state.recent].map((key) => {
       const entry = state.customers.get(key);
+      if (!entry) return '';
       const latest = entry.vacations[0];
       return `<div data-run-group="${safe(latest.tripId)}">${option(key, entry.name, false, latest.destination, `data-open-account="${safe(key)}"`)}</div>`;
     }).join('');
     const clear = state.opened.length ? '<button class="trip-option admin-clear-all" type="button" data-clear-all="1"><span></span><span class="trip-option-text"><b>Clear all</b></span></button>' : '';
-    return `<div class="vacation-dropdown" id="vacationDropdown" data-trip-switcher-root="1"><button class="trip-button" id="tripButton" data-trip-switcher="1" type="button" aria-haspopup="listbox" aria-expanded="false"><span class="trip-trigger-text"><span class="trip-trigger-title">${safe(current)}</span></span>${chevron}</button><div class="trip-list" role="listbox">${viewOptions ? `<div class="admin-header-views" role="group" aria-label="Vacation views">${viewOptions}</div>` : ''}${option('all', 'All Customers', !account)}${runs}${clear}</div></div>`;
+    return `<div class="vacation-dropdown" id="vacationDropdown" data-trip-switcher-root="1"><button class="trip-button" id="tripButton" data-trip-switcher="1" type="button" aria-haspopup="listbox" aria-expanded="false"><span class="trip-trigger-text"><span class="trip-trigger-title">${safe(current)}</span></span>${chevron}</button><div class="trip-list" role="listbox">${viewOptions || pdfOption || vacationsOption ? `<div class="admin-header-views" role="group" aria-label="Vacation views">${viewOptions}${pdfOption}${vacationsOption}</div>` : ''}${option('all', 'All Customers', !account)}${runs}${clear}</div></div>`;
   }
 
   function customerList() {
-    return `<div class="admin-customers" data-admin-customers="1">${[...state.customers].map(([key, account]) => {
+    const intro = `<p class="admin-view-note" data-admin-customers-intro="1">${safe(allCustomersIntro)}</p>`;
+    const count = state.hiddenTestCount ? ` (${safe(state.hiddenTestCount)})` : '';
+    const toggle = `<label class="admin-view-note admin-test-toggle"><input type="checkbox" data-admin-show-test${state.showTestCustomers ? ' checked' : ''} /> Show test customers${count}</label><p class="admin-view-note" role="status" data-admin-customers-status hidden></p>`;
+    return `<div class="admin-customers" data-admin-customers="1">${intro}${toggle}${[...state.customers].map(([key, account]) => {
       const latest = account.vacations[0];
       const coupon = account.coupon ? `<small class="admin-coupon">${safe(account.coupon)}</small>` : '';
-      return `<section class="admin-group" data-trip-group="${safe(latest.tripId)}" data-sort-at="${safe(latest.sortAt)}"><header><b>${safe(account.name)}</b><small>${safe(latest.destination)} · <time datetime="${safe(latest.sortAt)}">${safe(latest.sortAt.slice(0, 10))}</time></small>${coupon}</header><button class="admin-open" type="button" data-customer-id="${safe(account.id)}" data-open-account="${safe(key)}" aria-label="Open ${safe(account.name)}">${state.recent.has(key) ? 'Opened' : 'Open'}</button></section>`;
+      return `<section class="admin-group" data-trip-group="${safe(latest.tripId)}" data-sort-at="${safe(latest.sortAt)}"><header><b>${safe(account.name)}${testPill(latest)}</b><small>${safe(latest.destination)} · <time datetime="${safe(latest.sortAt)}">${safe(latest.sortAt.slice(0, 10))}</time></small>${coupon}</header><button class="admin-open" type="button" data-customer-id="${safe(account.id)}" data-open-account="${safe(key)}" aria-label="Open ${safe(account.name)}">${state.recent.has(key) ? 'Opened' : 'Open'}</button></section>`;
     }).join('')}</div>`;
   }
 
   function vacationList() {
     return `<div class="admin-customers" data-admin-vacations>${customer().vacations.map((vac) =>
-      `<section class="admin-group"><header><b>${safe(vac.title || vac.destination || vac.label)}</b><small>${safe(vac.destination)} · <time datetime="${safe(vac.sortAt)}">${safe(vac.sortAt.slice(0, 10))}</time></small></header><button class="admin-open" type="button" data-open-vacation="${safe(vac.tripId)}">${vac.tripId === viewTrip() ? 'Current vacation' : 'Open'}</button></section>`).join('')}</div>`;
+      `<section class="admin-group"><header><b>${safe(vac.title || vac.destination || vac.label)}${testPill(vac)}</b><small>${safe(vac.destination)} · <time datetime="${safe(vac.sortAt)}">${safe(vac.sortAt.slice(0, 10))}</time></small></header><button class="admin-open" type="button" data-open-vacation="${safe(vac.tripId)}">${vac.tripId === viewTrip() ? 'Current vacation' : 'Open'}</button></section>`).join('')}</div>`;
   }
 
-  const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 8 });
+  const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const money = (value) => usd.format(value);
 
   function costLines(costs) {
-    return `<span data-cost="actual">Actual ${money(costs.actual)}</span> <span data-cost="estimated">Estimated ${money(costs.estimated)}</span>${costs.unpriced ? ` <span data-cost="unpriced">${costs.unpriced} unpriced</span>` : ''}`;
+    const estimated = costs?.hasEstimated && Number(costs.estimated) > 0
+      ? ` <span data-cost="estimated">Estimated ${money(costs.estimated)}</span>` : '';
+    return `<span data-cost="actual">Actual ${money(costs.actual)}</span>${estimated}${costs.unpriced ? ` <span data-cost="unpriced">${costs.unpriced} unpriced</span>` : ''}`;
+  }
+
+  function gradeLine(grade) {
+    if (!grade) return '';
+    if (grade.notGraded) {
+      return `<p class="admin-reply-grade" data-admin-turn-grade="not-graded">not graded</p>`;
+    }
+    return `<p class="admin-reply-grade" data-admin-turn-grade="graded"><span data-jev-score>${safe(grade.jevScore)}</span> · <span data-qa-verdict>${safe(grade.qaVerdict)}</span></p>`;
   }
 
   function dialogResults(vac) {
@@ -93,17 +120,14 @@ window.startVkAdminReview = (() => {
     const turns = (vac.turns || []).map((turn, index) => {
       if (turn.speaker === 'system' || turn.direction === 'system') return '';
       const detail = vac.replyDetails?.[index];
+      const isAssistant = turn.speaker === 'app' || turn.speaker === 'assistant' || turn.direction === 'outbound';
       if (detail && turn.fixedOpener === true && !detail.model && !detail.priced) {
-        return `${turnMarkup(turn)}<p class="admin-reply-detail"><strong>Opening greeting (no model, no cost)</strong></p>`;
+        return `${turnMarkup(turn)}<p class="admin-reply-detail"><strong>Opening greeting (no model, no cost)</strong></p>${gradeLine(detail.grade)}`;
       }
-      const meta = detail ? `<p class="admin-reply-detail"><strong>${safe(detail.model || 'Model unavailable')}</strong> · ${detail.priced ? costLines(detail.costs) : '<span data-cost="unpriced">unpriced</span>'}</p>` : '';
+      const meta = detail ? `<p class="admin-reply-detail"><strong>${safe(detail.model || 'Model unavailable')}</strong> · ${detail.priced ? costLines(detail.costs) : '<span data-cost="unpriced">unpriced</span>'}</p>${isAssistant ? gradeLine(detail.grade) : ''}` : (isAssistant ? gradeLine({ notGraded: true }) : '');
       return `${turnMarkup(turn)}${meta}`;
     }).join('');
-    const pdf = artifacts?.dialogPdf
-      ? `<a class="admin-action" data-dialog-pdf href="/api/admin/${artifactsPath(vac.tripId)}/dialog-pdf" download>Dialog PDF</a>`
-      : (artifacts?.failed ? '<span class="admin-status">Dialog PDF could not be loaded.</span>' :
-        artifacts ? '<span class="admin-status">No Dialog PDF yet</span>' : '');
-    return `<div class="admin-dialog-head"><div class="admin-costs" data-vacation-total aria-label="Vacation total"><strong>Vacation total</strong> ${costLines(vac.costs)}</div>${pdf}</div><div class="messages" id="customerChatReplay" data-readonly="true" aria-readonly="true" aria-label="${safe(vac.label)} chat (read only)">${turns || '<p class="admin-empty">No chat turns are stored for this vacation yet.</p>'}</div>${dialogResults({ qa: artifacts?.review?.qa ?? vac.qa, survey: artifacts?.review?.survey ?? vac.survey })}`;
+    return `<div class="admin-dialog-head"><div class="admin-costs" data-vacation-total aria-label="Vacation total"><strong>Vacation total</strong> ${costLines(vac.costs)}</div></div><div class="messages" id="customerChatReplay" data-readonly="true" aria-readonly="true" aria-label="${safe(vac.label)} chat (read only)">${turns || '<p class="admin-empty">No chat turns are stored for this vacation yet.</p>'}</div>${dialogResults({ qa: artifacts?.review?.qa ?? vac.qa, survey: artifacts?.review?.survey ?? vac.survey })}`;
   }
 
   function vacationSite(vac) {
@@ -131,6 +155,10 @@ window.startVkAdminReview = (() => {
     if (!artifacts) return replay + '<p class="admin-empty">Loading onboarding captures…</p>';
     if (artifacts.failed) return replay + '<p class="admin-empty" role="status">Onboarding captures could not be loaded.</p>';
     const shots = artifacts.onboardingCaptures || [];
+    const harnessRun = String(vac.harnessTag || '').trim();
+    if (!shots.length && harnessRun) {
+      return `${replay}<p class="admin-error" role="alert" data-onboarding-missing="1" data-harness-run="${safe(harnessRun)}">Onboarding captures missing for this run <strong>${safe(harnessRun)}</strong>.</p>`;
+    }
     if (!shots.length) return replay || '<p class="admin-empty">No onboarding is stored for this vacation yet.</p>';
     const guests = new Map();
     for (const shot of shots) {
@@ -196,6 +224,17 @@ window.startVkAdminReview = (() => {
       event.stopPropagation();
       const open = document.getElementById('vacationDropdown').classList.toggle('open');
       button.setAttribute('aria-expanded', String(open));
+    } else if (button.dataset.dialogPdf) {
+      const tripId = viewTrip();
+      if (!tripId) return;
+      const link = document.createElement('a');
+      link.href = `/api/admin/${artifactsPath(tripId)}/dialog-pdf`;
+      link.download = '';
+      link.rel = 'noopener';
+      document.body.append(link);
+      link.click();
+      link.remove();
+      closeMenu();
     } else if (button.dataset.view) {
       state.view = button.dataset.view;
       renderViewPane();
@@ -302,13 +341,51 @@ window.startVkAdminReview = (() => {
     }
   }
 
+  const fetchCustomers = (includeTest) => api(includeTest ? 'customers?includeTest=1' : 'customers');
+
+  function updateCustomers(data) {
+    state.opened = data.opened || [];
+    state.hiddenTestCount = data.hiddenTestCount || 0;
+    indexCustomers(data.groups || []);
+  }
+
+  async function setTestCustomers(input) {
+    if (state.opening) {
+      input.checked = state.showTestCustomers;
+      return;
+    }
+    const includeTest = input.checked;
+    const status = root.querySelector('[data-admin-customers-status]');
+    status.hidden = true;
+    state.loadingCustomers = input.disabled = true;
+    try {
+      const { res, data } = await fetchCustomers(includeTest);
+      if (res.status === 401) return renderGate();
+      if (!res.ok) throw new Error('Customer list could not be loaded.');
+      state.showTestCustomers = includeTest;
+      try {
+        sessionStorage.setItem(showTestCustomersKey, includeTest ? '1' : '0');
+      } catch {
+        // The choice still applies if browser storage is unavailable.
+      }
+      updateCustomers(data);
+      showCustomer(null);
+      root.querySelector('[data-admin-show-test]').focus();
+    } catch {
+      input.checked = state.showTestCustomers;
+      status.textContent = 'Customer list could not be loaded.';
+      status.hidden = false;
+    } finally {
+      state.loadingCustomers = input.disabled = false;
+    }
+  }
+
   async function refresh() {
-    const { res, data } = await api('customers');
+    const { res, data } = await fetchCustomers(state.showTestCustomers);
     if (res.status === 401) return renderGate();
     if (res.status === 503) return renderGate('Admin sign-in is not configured here.');
     if (!res.ok) return renderGate('Admin review is not available.');
-    state.opened = data.opened || [];
-    indexCustomers(data.groups || []);
+    updateCustomers(data);
     const selection = history.state?.vkAdminSelection;
     const finish = state.opened.includes(selection?.tripId)
       && state.customers.get(selection.key)?.vacations.some((vac) => vac.tripId === selection.tripId);
@@ -324,7 +401,7 @@ window.startVkAdminReview = (() => {
   }
 
   async function openVacation(key, tripId = state.customers.get(key).vacations[0].tripId) {
-    if (state.opening) return;
+    if (state.opening || state.loadingCustomers) return;
     state.opening = true;
     try {
       const { id } = state.customers.get(key);
@@ -364,11 +441,13 @@ window.startVkAdminReview = (() => {
       const vac = state.details.get(id);
       document.querySelector('.admin-view-panel').innerHTML = viewContent(vac);
       lockReplay(document.getElementById('customerChatReplay'));
+      const dropdown = document.getElementById('vacationDropdown');
+      if (dropdown) dropdown.outerHTML = switcher();
     }
   }
 
   async function clearAll() {
-    if (state.opening) return;
+    if (state.opening || state.loadingCustomers) return;
     const { res, data } = await api('clear-all', { method: 'POST' });
     if (res.status === 401) return renderGate();
     if (!res.ok) return;
@@ -393,7 +472,15 @@ window.startVkAdminReview = (() => {
 
   return (mount) => {
     root = mount;
+    try {
+      state.showTestCustomers = sessionStorage.getItem(showTestCustomersKey) === '1';
+    } catch {
+      state.showTestCustomers = false;
+    }
     root.addEventListener('click', handleClick);
+    root.addEventListener('change', (event) => {
+      if (event.target.matches('[data-admin-show-test]')) void setTestCustomers(event.target);
+    });
     return refresh().catch((error) => {
       console.error(error);
       renderGate('Admin review could not load.');

@@ -4,6 +4,8 @@ import {
   persistIntakeLodgingLookupOnCustomerTurn,
 } from './intake-lodging-thing.mjs';
 import { searchIntakeLodgingPlaces } from './intake-lodging-search.mjs';
+import { tripStateActionsEnabled } from './chat-plan-persist.mjs';
+import { validatePlannedThings } from './chat-planned-thing-validation.mjs';
 
 export async function maybePersistFirstIntakeLodging({
   db, tripId, firstIntake, classificationOk, seat, wantedThings, customerTurnId, extractedDestination = '', env = process.env,
@@ -27,7 +29,9 @@ export async function persistQueuedIntakeLodgingFromWanted(db, tripId, wantedThi
     where trip_id = ${tripId}
     order by created_at asc
   `;
-  const lodgingOutcome = await persistIntakeLodgingThings(db, tripId, null, lodgingWanted, {
+  const uniqueLodging = validatePlannedThings(lodgingWanted, { customerOnly: tripStateActionsEnabled(env), existing: existingRows });
+  if (!uniqueLodging.length) return null;
+  const lodgingOutcome = await persistIntakeLodgingThings(db, tripId, null, uniqueLodging, {
     destinationHint: extractedDestination,
     areaHint: extractedDestination,
     env,

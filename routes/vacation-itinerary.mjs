@@ -30,7 +30,7 @@ import { insertIntakeTripThingRow } from '../src/vacation/trip-things.mjs';
 import { createVacationFromChatMessage } from '../src/vacation/vacation-from-chat-intake.mjs';
 import { onboardingWelcomeFailure, welcomeFailureBody } from '../src/vacation/welcome-failure.mjs';
 import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-store.mjs';
-import { customerModality, jevStamp, liveTurnRecord, intakeSpan, firstMarkedIntake, produceLiveAppReply, finishTierRewrite, activityCommitDecisions, applyAgreedAppSwim, applyCustomerNotes, completeRosterParty } from '../src/vacation/live-app-turn.mjs';
+import { customerModality, jevStamp, liveTurnRecord, intakeSpan, firstMarkedIntake, produceLiveAppReply, finishTierRewrite, activityCommitDecisions, applyCustomerNotes, completeRosterParty } from '../src/vacation/live-app-turn.mjs';
 import { queueVacationAppTurn as runQueueVacationAppTurn } from './vacation-app-chat-queue.mjs';
 import { cannedWelcomeLiveTurn, missingWelcomeFields, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
 import {
@@ -60,7 +60,8 @@ import {
   resolveIntakePlace,
   tripIntakeJobFields,
 } from '../src/vacation/trip-intake-classify.mjs';
-import { keepPlannedDays, persistFollowupLodgingSafely, plannedCustomerThings } from '../src/vacation/chat-plan-persist.mjs';
+import { keepPlannedDays, persistCustomerNotesOnly, persistFollowupLodgingSafely, plannedCustomerThings, tripStateActionsEnabled } from '../src/vacation/chat-plan-persist.mjs';
+import { validatePlannedThings } from '../src/vacation/chat-planned-thing-validation.mjs';
 import {
   intakeExtractedThings,
   runVacationAppInTurnSearch,
@@ -363,15 +364,14 @@ function welcomeFirstName(value) {
   return text ? text.split(/\s+/)[0] : '';
 }
 
-function tripHasVacationSite(trip) {
-  if (String(trip?.publicUrl || '').trim()) return true;
-  return Boolean(String(trip?.shareToken || '').trim());
+function tripHasVacationContent(trip) {
+  return Boolean(String(trip?.destination || '').trim() || trip?.startDate || trip?.endDate || trip?.start_date || trip?.end_date);
 }
 
 function tripWelcomeSiteUrl(trip) {
-  if (!tripHasVacationSite(trip)) return '';
   const direct = String(trip?.publicUrl || '').trim();
   if (direct) return direct;
+  if (!String(trip?.shareToken || '').trim()) return '';
   return builtVacationSiteUrl({
     sharedToken: trip.shareToken,
     shareToken: trip.shareToken,
@@ -381,8 +381,7 @@ function tripWelcomeSiteUrl(trip) {
 
 async function welcomeInputs(db, session, trip) {
   const seat = seatFromSession(session);
-  const hasSite = tripHasVacationSite(trip);
-  const tripSiteUrl = hasSite ? tripWelcomeSiteUrl(trip) : '';
+  const tripSiteUrl = tripWelcomeSiteUrl(trip);
   const tripTitle = String(trip?.title || '').trim();
   if (seat) {
     const owners = await db`
@@ -394,7 +393,7 @@ async function welcomeInputs(db, session, trip) {
     const owner = owners[0] || {};
     const collabFirstName = welcomeFirstName(session.first_name || seat.displayName || session.display_name);
     const ownerFirstName = welcomeFirstName(owner.first_name || owner.display_name);
-    if (hasSite && tripSiteUrl) {
+    if (tripSiteUrl) {
       return {
         audience: 'collaborator',
         ownerFirstName,
@@ -411,7 +410,7 @@ async function welcomeInputs(db, session, trip) {
     };
   }
   const firstName = welcomeFirstName(session.first_name || session.display_name);
-  if (hasSite && tripSiteUrl) {
+  if (tripHasVacationContent(trip) && tripSiteUrl) {
     return { audience: 'owner', firstName, tripSiteUrl };
   }
   return { audience: 'owner_no_site', firstName };
@@ -531,7 +530,7 @@ function queueVacationAppHooks() {
   return {
     ensureOnboardingOpener,
     publishIntakeShare,
-    recordCustomerThingNotes,
+    recordCustomerThingNotes: attachIntakeItineraryFromReply,
     vacationAppTripSummary,
   };
 }
@@ -605,8 +604,9 @@ async function loadTripThings(db, tripId) {
 }
 
 async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch, customerTurnId = null, wantedThings = [], work = null, understanding = null } = {}) {
-  const planned = namedCustomerActivities(text, intakeActivityThings(extracted));
-  const lodgingWanted = intakeLodgingWanted(extracted, wantedThings);
+  const validation = { customerOnly: tripStateActionsEnabled(env) };
+  const planned = validatePlannedThings(namedCustomerActivities(text, intakeActivityThings(extracted)), validation);
+  const lodgingWanted = validatePlannedThings(intakeLodgingWanted(extracted, wantedThings), validation);
   const priorRows = await db`select title, destination, metadata from trips where id = ${tripId} limit 1`;
   const existing = await db`select count(*)::int as n from trip_things where trip_id = ${tripId}`;
   if (Number(existing[0]?.n) > 0) {
@@ -726,7 +726,8 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
   return loadTripThings(db, tripId);
 }
 
-async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '', appReply = '', roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch, customerTurnId = null, wantedThings = [], requestId = null, postStartedMs = null, postBudgetMs = null, activityCommitDecisionsImpl = null, understanding = null } = {}, intakeText = '', extracted = []) {
+async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '', roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch, customerTurnId = null, wantedThings = [], requestId = null, postStartedMs = null, postBudgetMs = null, activityCommitDecisionsImpl = null, understanding = null } = {}, intakeText = '', extracted = [], legacyReply = '') {
+  const customerOnly = tripStateActionsEnabled(env);
   const work = createPostReplyWork({ db, tripId, requestId, postStartedMs, postBudgetMs, env, fetchImpl });
   if (intakeText) {
     await ensureIntakeItinerary(db, tripId, intakeText, extracted, {
@@ -737,7 +738,7 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
   let current = await loadTripThings(db, tripId);
   const lodgingLookups = [];
   if (!intakeText) {
-    const lodgingWanted = intakeLodgingWanted(extracted, wantedThings);
+    const lodgingWanted = validatePlannedThings(intakeLodgingWanted(extracted, wantedThings), { customerOnly, existing: current });
     if (lodgingWanted.length) {
       const lodgingOutcome = await persistFollowupLodgingSafely(work.lodging(persistIntakeLodgingThings), db, tripId, lodgingWanted, {
         destinationHint: extractedDestination,
@@ -757,7 +758,7 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
       await persistIntakeLodgingLookupOnCustomerTurn(db, customerTurnId, lodgingLookups);
     }
   }
-  const wanted = await plannedCustomerThings(db, tripId, text, appReply, namedCustomerActivities(text, intakeActivityThings(extracted)));
+  const wanted = await plannedCustomerThings(db, tripId, text, legacyReply, namedCustomerActivities(text, intakeActivityThings(extracted)), { env, existing: current });
   if (!current.length && !wanted.length) return work.finish(current);
   if (!String(text || '').trim() && !wanted.length) return work.finish(current);
   const tripRows = await db`
@@ -766,20 +767,17 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
     where id = ${tripId}
     limit 1
   `;
-  const start = tripRows[0]?.start_date || null;
-  const end = tripRows[0]?.end_date || null;
-  const year = start ? new Date(start).getUTCFullYear() : null;
-  const tripDatesRow = { start_date: start, end_date: end };
+  const tripDatesRow = tripRows[0] || {};
   let next = keepPlannedDays(mergeWantedThings(current, wanted), wanted);
   let commits = null;
   try {
-    commits = await work.activityCommits(next, text, activityCommitDecisionsImpl || activityCommitDecisions, activityCommitDecisionsImpl ? null : understanding);
+    if (!customerOnly) commits = await work.activityCommits(next, text, activityCommitDecisionsImpl || activityCommitDecisions, activityCommitDecisionsImpl ? null : understanding);
   } catch (error) {
     commits = { __ask: true, error: String(error?.message || error) };
   }
   next = applyCustomerNotes(next, text, { collaborator, speakerName, commits });
-  next = applyAgreedAppSwim(next, text, appReply, { start, end, year: Number.isFinite(year) ? year : null });
   next = next.map((thing) => {
+    if (customerOnly && thing.id) return thing;
     const scheduled = scheduleChatThing(thing, tripDatesRow);
     return {
       ...thing,
@@ -823,7 +821,8 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
     }) === JSON.stringify({
       notes: thing.notes, collaboratorNotes: thing.collaboratorNotes, customerWhen: thing.customerWhen, who: thing.who, askWhichDay: thing.askWhichDay === true,
     })) continue;
-    const updated = await db`
+    if (customerOnly) thing.metadata = { ...thing.metadata, notes: thing.notes, collaboratorNotes: thing.collaboratorNotes };
+    const updated = customerOnly ? await persistCustomerNotesOnly(db, thing) : await db`
       update trip_things
       set description = '',
           starts_at = ${thing.starts_at || null},
@@ -910,7 +909,7 @@ async function handleVacationApp(req, res, db, url) {
       const synced = await syncSearchProgressStage(db, selected.id, { publicUrl: selected?.publicUrl || '' });
       searchProgress = searchProgressForClient(synced);
     }
-    const tripSiteUrl = selected ? tripWelcomeSiteUrl(selected) : '';
+    const tripSiteUrl = tripHasVacationContent(selected) ? tripWelcomeSiteUrl(selected) : '';
     if (!seat && selected?.id) await setVacationAppOwnerWebAccessCookie(db, req, res, { session, tripId: selected.id });
     if (seat && selected?.id) await setVacationAppCollaboratorWebAccessCookie(db, req, res, { session, seat, tripId: selected.id });
     return sendJson(res, 200, {
@@ -964,7 +963,7 @@ async function handleVacationApp(req, res, db, url) {
         : await finishTierRewrite({ pending, env: process.env });
       if (!finished.reply) return sendJson(res, 502, { ok: false, error: finished.reason || 'The rewrite did not produce a reply.', ...openRouterTurnTelemetry() });
       const shipped = await commitShippedRewrite(db, sessionWithTripSeat(session, rewriteSeat), pending, finished, {
-        recordCustomerThingNotes,
+        recordCustomerThingNotes: attachIntakeItineraryFromReply,
         publishIntakeShare, postStartedMs: postStarted,
       });
       return sendJson(res, 200, { ...shipped, ...openRouterTurnTelemetry() });
@@ -1094,8 +1093,9 @@ function isStagingHost(req) {
     || host.includes('timesyncher-vacation-staging');
 }
 
-export async function attachIntakeItineraryFromReply(db, tripId, requestText, options, intakeText, extracted) {
-  return recordCustomerThingNotes(db, tripId, requestText, options, intakeText, extracted);
+export async function attachIntakeItineraryFromReply(db, tripId, requestText, { appReply, ...options } = {}, intakeText, extracted) {
+  const legacyReply = tripStateActionsEnabled(options.env) ? undefined : appReply;
+  return recordCustomerThingNotes(db, tripId, requestText, options, intakeText, extracted, legacyReply);
 }
 
 export async function writeIntakeItineraryFromChat(db, tripId, intakeText, extracted, options = {}) {
