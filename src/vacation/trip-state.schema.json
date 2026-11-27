@@ -282,6 +282,8 @@
         "activity",
         "meal",
         "restaurant",
+        "bar",
+        "event",
         "flight_option",
         "ground_ride",
         "other"
@@ -349,6 +351,8 @@
             "activity",
             "meal",
             "restaurant",
+            "bar",
+            "event",
             "flight_option",
             "ground_ride",
             "other"
@@ -407,6 +411,8 @@
             "activity",
             "meal",
             "restaurant",
+            "bar",
+            "event",
             "flight_option",
             "ground_ride",
             "other"
@@ -1335,6 +1341,9 @@
             "access"
           ]
         },
+        "category": {
+          "enum": ["restaurant", "bar", "event", "park", "hotel", "other"]
+        },
         "value": {
           "type": "string",
           "minLength": 1,
@@ -1362,6 +1371,8 @@
             "activity",
             "meal",
             "restaurant",
+            "bar",
+            "event",
             "flight_option",
             "ground_ride",
             "other"
@@ -1441,6 +1452,23 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 280
+          }
+        },
+        "provider_unavailable": {
+          "type": "boolean"
+        },
+        "build": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["started_offset_ms", "duration_ms", "items_by_type"],
+          "properties": {
+            "started_offset_ms": { "type": "integer", "minimum": 0 },
+            "duration_ms": { "type": "integer", "minimum": 0 },
+            "items_by_type": {
+              "type": "object",
+              "propertyNames": { "$ref": "#/$defs/kind" },
+              "additionalProperties": { "type": "integer", "minimum": 1 }
+            }
           }
         },
         "gaps": {
@@ -1665,6 +1693,12 @@
           "minLength": 1,
           "maxLength": 280
         },
+        "missing_inputs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["destination", "dates", "party", "interests/wants"] }
+        },
         "refs": {
           "type": "array",
           "items": {
@@ -1693,6 +1727,8 @@
             "activity",
             "meal",
             "restaurant",
+            "bar",
+            "event",
             "flight_option",
             "ground_ride",
             "other"

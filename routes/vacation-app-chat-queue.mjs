@@ -29,6 +29,7 @@ import { tripStateActionsEnabled } from '../src/vacation/trip-state-actions-enab
 export async function queueVacationAppTurn(db, session, trip, body, hooks, intake = {}) {
   const env = process.env;
   const tripId = trip?.id ?? null;
+  const useTripState = Boolean(tripId && tripStateActionsEnabled({ env, trip }));
   const started = Date.now();
   const text = cleanText(intake.requestText || body.text || body.message, 12000);
   const attachments = Array.isArray(body.attachments)
@@ -51,7 +52,9 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
   const prior = tripId
     ? await db`
       select count(*)::int as n,
-        min(coalesce(received_at, created_at)) as started_at
+        min(coalesce(received_at, created_at)) as started_at,
+        count(*) filter (where direction = 'inbound' and speaker = 'customer')::int as customer_n,
+        min(coalesce(received_at, created_at)) filter (where direction = 'inbound' and speaker = 'customer') as customer_started_at
       from transcript_turns
       where customer_id = ${transcriptOwnerId}
         and trip_id = ${tripId}
@@ -71,6 +74,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
   const sessionStartedMs = prior[0]?.started_at ? new Date(prior[0].started_at).getTime() : started;
   const sessionE2eMs = () => Math.max(1, Date.now() - (Number.isFinite(sessionStartedMs) ? sessionStartedMs : started));
   const customerTurnIndex = priorCount + 1;
+  const tripStateCustomerTurn = Number(prior[0]?.customer_n || 0) + 1;
   const receivedAt = new Date().toISOString();
   const memoryRows = tripId
     ? await db`
@@ -268,24 +272,21 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
   const { replyCustomerTurn, itineraryEditResult, itineraryEditAuthoritative, itineraryEditCannedReply } = await prepareChatItineraryEditForQueueTurn({
     db, trip, seat, tripId, requestText, turnId: turnRows[0]?.id || null, httpReq: intake?.httpReq || null, env,
   });
-  const proactiveHistory = [...memoryRows].reverse().reduce((rows, row, index) => {
-    if (row.speaker === 'app') return rows;
+  const earlierCustomers = [...memoryRows].reverse().filter(({ speaker }) => speaker === 'customer');
+  const proactiveHistory = earlierCustomers.map((row, index) => {
     const stored = row.payload && typeof row.payload === 'object' ? row.payload : {};
-    const live = stored.liveTranscript && typeof stored.liveTranscript === 'object' ? stored.liveTranscript : {};
-    const rowTurn = Number(live.turnIndex) || (index + 1);
-    rows.push({
-      turn: rowTurn,
+    return {
+      turn: tripStateCustomerTurn - earlierCustomers.length + index,
       text: row.body || '',
       things: Array.isArray(stored.wantedThings) ? stored.wantedThings : [],
-    });
-    return rows;
-  }, []);
+    };
+  });
   const tripStateStore = createTripStateRevisionStore({ env });
   const tripStateRevision = await prepareProactiveTripState({
-    trip, requestId, turn: customerTurnIndex, actorId: session.customer_id,
+    trip, requestId, turn: tripStateCustomerTurn, actorId: session.customer_id,
     classification, text: requestText, history: proactiveHistory, wantedThings: jobFields.wantedThings, env,
+    firstCustomerStartedMs: new Date(prior[0]?.customer_started_at || requestRow.received_at).getTime() || started,
   });
-  const useTripState = Boolean(tripId && tripStateActionsEnabled({ env, trip }));
   let produced;
   const replyStarted = Date.now();
   try {

@@ -3,6 +3,7 @@ import path from 'node:path';
 import { redactUrls } from './backends.mjs';
 import { sumUsageUsd } from './cost.mjs';
 import { countPlanningAgreementTurns, itineraryMeasurement, measureStoredItinerary } from './itinerary-evidence.mjs';
+import { measureInitialBuild } from './initial-build.mjs';
 import { redactText } from './redact.mjs';
 
 function rescuedTimeoutsSummary(raw) {
@@ -32,6 +33,7 @@ export function writeOutcomes(outDir, payload) {
       tripId: payload?.tripId ? String(payload.tripId) : '',
       ...itineraryMeasurement(payload),
       planningAgreementTurns: payload?.planningAgreementTurns ?? null,
+      ...(payload?.initialBuild ? { initialBuild: payload.initialBuild } : {}),
       keepsakeOk: payload?.keepsakeOk === true,
       pricingReactionCaptured: payload?.pricingReactionCaptured === true,
       customerTurnCount: Number(payload?.customerTurnCount) || turns.filter((turn) => turn.role === 'customer').length,
@@ -53,18 +55,19 @@ export function writeOutcomes(outDir, payload) {
   return payload;
 }
 
-export async function finishMeasuredPlay({ db, tag, outDir, secrets, play }) {
+export async function finishMeasuredPlay({ db, tag, outDir, secrets, play, replyBackend }) {
   let tripId = '';
   let evidence;
   const rememberTrip = (id) => { if (id) tripId = id; };
   const measure = async (id) => {
     rememberTrip(id);
     if (evidence) return evidence;
-    const [itinerary, planningAgreementTurns] = await Promise.all([
+    const [itinerary, planningAgreementTurns, initialBuild] = await Promise.all([
       measureStoredItinerary(db, tripId, tag),
       countPlanningAgreementTurns(db, tripId, tag),
+      replyBackend === 'trip_state' ? measureInitialBuild(db, tripId, tag) : null,
     ]);
-    evidence = { tripId, ...itinerary, planningAgreementTurns };
+    evidence = { tripId, ...itinerary, planningAgreementTurns, initialBuild };
     return evidence;
   };
   let played;

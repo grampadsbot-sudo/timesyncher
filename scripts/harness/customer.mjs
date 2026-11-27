@@ -209,6 +209,8 @@ export async function runCustomer(story, options) {
     reply_backend: replyBackend,
     ...itineraryMeasurement(played),
     planningAgreementTurns: played?.planningAgreementTurns ?? null,
+    initialBuild: played?.initialBuild,
+    timings: played?.timings,
     build_sha: options.buildSha || '',
     live_sha_start: played?.liveShaStart || '',
     live_sha_end: played?.liveShaEnd || '',

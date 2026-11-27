@@ -262,9 +262,12 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
     let turn = story.turns[index];
     let customerCost = null;
     let customerModel = '';
+    let customerMs = null;
     if (liveCustomer) {
       const priorForModel = [...openerTurns, ...customerTurns];
+      const customerStarted = Date.now();
       const spoken = await speakCustomer({ persona, appReply: lastReply, index, transcript: priorForModel, travelSummary, ask: customerAsk, order: customerLanes });
+      customerMs = Date.now() - customerStarted;
       customerCost = spoken.cost;
       customerModel = spoken.model;
       turn = { speaker: persona.name, modality: 'text', text: spoken.text, odd: spoken.kind !== 'goal' };
@@ -287,7 +290,7 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
     const final = draft.body?.status === 'interim' ? await send(endpoint, { action: 'finish-rewrite', tripId: currentTrip }) : draft;
     if (final !== draft) note('finish-rewrite', final);
     const failure = turnFailure(final.status, final.body) || turnFailure(draft.status, draft.body);
-    timings.push({ n: index + 1, wall_ms: draft.wall_ms + (final === draft ? 0 : final.wall_ms), http_status: final.status });
+    timings.push({ n: index + 1, customer_ms: customerMs, wall_ms: draft.wall_ms + (final === draft ? 0 : final.wall_ms), http_status: final.status });
     const failedBody = final.body?.ok === false || final.status >= 400 ? final.body : draft.body;
     const exchange = {
       post_status: (final.body?.ok === false || final.status >= 400 ? final : draft).status,
@@ -335,6 +338,7 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
             probes: probes.map((row) => ({ ...row })),
           });
           timings[timings.length - 1].rescued_by_probe = probes.length;
+          timings[timings.length - 1].wall_ms = Date.now() - turnStarted;
         }
         if (storedReplyGrew && storedApp?.text) {
           seen = historyWindowFull(probe.body) ? Math.max(seen + 1, probeCount) : probeCount;

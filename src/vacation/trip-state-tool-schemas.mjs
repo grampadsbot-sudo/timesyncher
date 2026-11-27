@@ -38,7 +38,7 @@ const ACTION_TOOL_SPECS = {
   add_named_item: {
     description: 'Create or upsert a customer-named place, placeholder, or plan block.',
     properties: {
-      type: { type: 'string', enum: ['hotel', 'park', 'activity', 'meal', 'restaurant', 'flight_option', 'ground_ride', 'other'] },
+      type: { type: 'string', enum: ['hotel', 'park', 'activity', 'meal', 'restaurant', 'bar', 'event', 'flight_option', 'ground_ride', 'other'] },
       label: { type: 'string' },
       evidence: { type: 'string' },
       details: { type: ['object', 'null'] },

@@ -112,9 +112,8 @@ function mediaCost(card) {
 
 export function severityOf(card) {
   if (card.mode === 'dry' && card.verdict !== 'FAIL') return 'minor';
-  if (card.verdict === 'PASS') return 'minor';
-  if (card.wave_stop || /payment|credit|key-limit|coupon|harness-error/.test(String(card.reason || ''))) return 'blocker';
-  return 'major';
+  if (card.verdict === 'FAIL' && (card.wave_stop || /payment|credit|key-limit|coupon|harness-error/.test(String(card.reason || '')))) return 'blocker';
+  return card.verdict === 'FAIL' || card.findings?.some(({ status }) => status === 'FLAGGED') ? 'major' : 'minor';
 }
 
 export function implicationOf(card) {
@@ -167,6 +166,8 @@ export function customerSection(card, { wave, at = new Date() } = {}) {
     `### ${wave} / customer ${card.roster?.id ?? card.story_id} / ${hst(at)}`,
     `- Arm (A/B): ${card.ab_arm || card.reply_backend} | Coupon: ${clean(coupon.code_hint)} ${clean(coupon.status)} | Edge case: ${clean(card.roster?.edge_case)} | Result: ${card.verdict}${card.mode === 'dry' ? ' (dry)' : ''}`,
     `- What broke or confused: ${broke}`,
+    ...(card.findings || []).map(({ id, detail, status, severity, itemsByType }) =>
+      `- ${id}: ${status}${severity ? ` (${severity})` : ''} · ${clean(detail)} · DB items by type ${itemsByType ? clean(JSON.stringify(itemsByType)) : 'unmeasured'}`),
     `- Time per turn: ${turnTimes(card)} | Cost ($ replies / $ media): ${replyCost(card)} / ${mediaCost(card)} | Media GB: ${card.media?.gb ?? 'not measured'}${card.media?.source ? ` (${card.media.source})` : ''}`,
     ...(openRouter ? [`- OpenRouter per app turn: ${openRouter}`] : []),
     ...(card.reply_backend === 'trip_state' ? [

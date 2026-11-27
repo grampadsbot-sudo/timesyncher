@@ -6,7 +6,7 @@ export function travelSummaryValues(value) {
   ]));
 }
 
-function parseRevisionState(row) {
+export function parseRevisionState(row) {
   if (!row || typeof row !== 'object') return null;
   if (typeof row.state_json === 'string') {
     try {
