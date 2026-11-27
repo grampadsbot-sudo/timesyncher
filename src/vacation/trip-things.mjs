@@ -104,9 +104,7 @@ export async function insertIntakeTripThingRow(
       env,
     });
   }
-  if (!written?.id) {
-    throw new TripThingInsertError(`insertIntakeTripThingRow returned no row for title "${String(title || '').trim()}"`);
-  }
+  if (!written?.id) return null;
   return written.id;
 }
 

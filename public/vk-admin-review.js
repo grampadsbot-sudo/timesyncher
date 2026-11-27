@@ -5,14 +5,15 @@ window.startVkAdminReview = (() => {
   const check = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m20 6-11 11-5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   const brandLockup = '<div class="brand vk-app-brand" data-vk-wordmark="1"><img class="mark" src="/brand/vk-book-logo.svg" alt="Vacay Keepsake" width="28" height="30" /><span class="vk-print-wordmark">vacay <i>keepsake</i></span></div>';
   const views = [
-    ['chat', 'Dialog'], ['trip', 'Vacation site'], ['keepsake', 'Keepsake'],
+    ['chat', 'Dialog'], ['feedback', 'Feedback & QA'], ['trip', 'Vacation site'], ['keepsake', 'Keepsake'],
     ['onboarding', 'Onboarding'], ['captures', 'Chat screenshots'], ['vacations', 'All vacations'],
   ];
   const allCustomersIntro = 'Choose a customer to drill down into their trips, chat and QA.';
   const showTestCustomersKey = 'vkAdminShowTestCustomers';
   const json = (method, body) => ({ method, headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
   const state = { customers: new Map(), opened: [], recent: new Set(), details: new Map(), artifacts: new Map(),
-    selection: null, view: 'all', attachments: [], voiceMode: false, voiceArmed: false, sending: false, opening: false,
+    selection: null, view: 'all', feedbackRollup: null, feedbackRollupFailed: false, attachments: [],
+    voiceMode: false, voiceArmed: false, sending: false, opening: false,
     showTestCustomers: false, hiddenTestCount: 0, loadingCustomers: false };
   let notesRequest = 0;
   let root;
@@ -50,24 +51,40 @@ window.startVkAdminReview = (() => {
     pane?.querySelectorAll('[contenteditable]').forEach((el) => el.setAttribute('contenteditable', 'false'));
   }
 
+  function viewMenuActions(vac, artifacts) {
+    if (!vac) return '';
+    const rows = [];
+    const tripPath = artifactsPath(vac.tripId);
+    const statusRow = (label) =>
+      `<span class="trip-option admin-view-status" role="option" aria-disabled="true"><span></span><span class="trip-option-text"><b>${safe(label)}</b></span></span>`;
+    const actionRow = (title, href, attrs = '') =>
+      `<a class="trip-option admin-view-action" href="${href}" role="option" ${attrs}><span></span><span class="trip-option-text"><b>${safe(title)}</b></span></a>`;
+    if (state.view === 'chat') {
+      if (artifacts?.dialogPdf) rows.push(actionRow('Dialog PDF', `/api/admin/${tripPath}/dialog-pdf`, 'data-dialog-pdf="1" download'));
+      else if (artifacts?.failed) rows.push(statusRow('Dialog PDF could not be loaded.'));
+      else if (artifacts) rows.push(statusRow('No Dialog PDF yet'));
+    }
+    if (state.view === 'keepsake') {
+      const share = vac.shareSlug ? encodeURIComponent(vac.shareSlug) : '';
+      if (artifacts?.keepsakePdf) rows.push(actionRow('Keepsake PDF', `/api/admin/${tripPath}/keepsake-pdf`, 'data-keepsake-pdf download'));
+      if (share) rows.push(actionRow('Generate', `/api/pdf/shared/${share}/report/keepsake-style-2.pdf`, 'data-keepsake-generate target="_blank" rel="noopener"'));
+    }
+    if (!rows.length) return '';
+    return `<div class="admin-header-actions" role="group" aria-label="View actions">${rows.join('')}</div>`;
+  }
+
   function switcher() {
     const account = customer();
+    const vac = account ? state.details.get(viewTrip()) : null;
+    const artifacts = vac ? state.artifacts.get(vac.tripId) : null;
     const current = account ? `${views.find(([id]) => id === state.view)[1]} · ${account.name}` : 'All Customers';
     const option = (id, title, on, sub = '', attrs = '') => {
       return `<button class="trip-option ${on ? 'active' : ''}" type="button" data-trip-id="${safe(id)}" ${attrs} role="option" aria-selected="${on}"><span>${on ? check : ''}</span><span class="trip-option-text"><b>${safe(title)}</b>${sub ? `<small>${safe(sub)}</small>` : ''}</span></button>`;
     };
-    const artifacts = account ? state.artifacts.get(viewTrip()) : null;
-    const viewEntries = account ? views
-      .filter(([id]) => id !== 'vacations' || account.vacations.length > 1) : [];
-    const viewOptions = viewEntries
-      .filter(([id]) => id !== 'vacations')
-      .map(([id, label]) => option(id, label, id === state.view, '', `data-view="${id}"`)).join('');
-    const vacationsOption = viewEntries
-      .filter(([id]) => id === 'vacations')
-      .map(([id, label]) => option(id, label, id === state.view, '', `data-view="${id}"`)).join('');
-    const pdfOption = artifacts?.dialogPdf && viewTrip()
-      ? option('dialog-pdf', 'Dialog PDF', false, '', 'data-dialog-pdf="1"')
-      : '';
+    const viewOptions = account ? views
+      .filter(([id]) => id !== 'vacations' || account.vacations.length > 1)
+      .map(([id, label]) => option(id, label, id === state.view, '', `data-view="${id}"`)).join('') : '';
+    const viewActions = account ? viewMenuActions(vac, artifacts) : '';
     const runs = [...state.recent].map((key) => {
       const entry = state.customers.get(key);
       if (!entry) return '';
@@ -75,14 +92,15 @@ window.startVkAdminReview = (() => {
       return `<div data-run-group="${safe(latest.tripId)}">${option(key, entry.name, false, latest.destination, `data-open-account="${safe(key)}"`)}</div>`;
     }).join('');
     const clear = state.opened.length ? '<button class="trip-option admin-clear-all" type="button" data-clear-all="1"><span></span><span class="trip-option-text"><b>Clear all</b></span></button>' : '';
-    return `<div class="vacation-dropdown" id="vacationDropdown" data-trip-switcher-root="1"><button class="trip-button" id="tripButton" data-trip-switcher="1" type="button" aria-haspopup="listbox" aria-expanded="false"><span class="trip-trigger-text"><span class="trip-trigger-title">${safe(current)}</span></span>${chevron}</button><div class="trip-list" role="listbox">${viewOptions || pdfOption || vacationsOption ? `<div class="admin-header-views" role="group" aria-label="Vacation views">${viewOptions}${pdfOption}${vacationsOption}</div>` : ''}${option('all', 'All Customers', !account)}${runs}${clear}</div></div>`;
+    return `<div class="vacation-dropdown" id="vacationDropdown" data-trip-switcher-root="1"><button class="trip-button" id="tripButton" data-trip-switcher="1" type="button" aria-haspopup="listbox" aria-expanded="false"><span class="trip-trigger-text"><span class="trip-trigger-title">${safe(current)}</span></span>${chevron}</button><div class="trip-list" role="listbox">${viewOptions ? `<div class="admin-header-views" role="group" aria-label="Vacation views">${viewOptions}</div>` : ''}${viewActions}${option('all', 'All Customers', !account)}${runs}${clear}</div></div>`;
   }
 
   function customerList() {
+    const rollup = '<div class="admin-feedback-rollup-link"><button class="admin-open" type="button" data-view="feedback-all">All customers Feedback & QA</button></div>';
     const intro = `<p class="admin-view-note" data-admin-customers-intro="1">${safe(allCustomersIntro)}</p>`;
     const count = state.hiddenTestCount ? ` (${safe(state.hiddenTestCount)})` : '';
     const toggle = `<label class="admin-view-note admin-test-toggle"><input type="checkbox" data-admin-show-test${state.showTestCustomers ? ' checked' : ''} /> Show test customers${count}</label><p class="admin-view-note" role="status" data-admin-customers-status hidden></p>`;
-    return `<div class="admin-customers" data-admin-customers="1">${intro}${toggle}${[...state.customers].map(([key, account]) => {
+    return `${rollup}<div class="admin-customers" data-admin-customers="1">${intro}${toggle}${[...state.customers].map(([key, account]) => {
       const latest = account.vacations[0];
       const coupon = account.coupon ? `<small class="admin-coupon">${safe(account.coupon)}</small>` : '';
       return `<section class="admin-group" data-trip-group="${safe(latest.tripId)}" data-sort-at="${safe(latest.sortAt)}"><header><b>${safe(account.name)}${testPill(latest)}</b><small>${safe(latest.destination)} · <time datetime="${safe(latest.sortAt)}">${safe(latest.sortAt.slice(0, 10))}</time></small>${coupon}</header><button class="admin-open" type="button" data-customer-id="${safe(account.id)}" data-open-account="${safe(key)}" aria-label="Open ${safe(account.name)}">${state.recent.has(key) ? 'Opened' : 'Open'}</button></section>`;
@@ -94,40 +112,107 @@ window.startVkAdminReview = (() => {
       `<section class="admin-group"><header><b>${safe(vac.title || vac.destination || vac.label)}${testPill(vac)}</b><small>${safe(vac.destination)} · <time datetime="${safe(vac.sortAt)}">${safe(vac.sortAt.slice(0, 10))}</time></small></header><button class="admin-open" type="button" data-open-vacation="${safe(vac.tripId)}">${vac.tripId === viewTrip() ? 'Current vacation' : 'Open'}</button></section>`).join('')}</div>`;
   }
 
-  const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const money = (value) => usd.format(value);
+  const usdActual = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 8 });
+  const usdEstimated = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
 
   function costLines(costs) {
-    const estimated = costs?.hasEstimated && Number(costs.estimated) > 0
-      ? ` <span data-cost="estimated">Estimated ${money(costs.estimated)}</span>` : '';
-    return `<span data-cost="actual">Actual ${money(costs.actual)}</span>${estimated}${costs.unpriced ? ` <span data-cost="unpriced">${costs.unpriced} unpriced</span>` : ''}`;
+    return `<span data-cost="actual">Actual ${usdActual.format(costs.actual)}</span> <span data-cost="estimated">Estimated ${usdEstimated.format(costs.estimated)}</span>${costs.unpriced ? ` <span data-cost="unpriced">${costs.unpriced} unpriced</span>` : ''}`;
   }
 
-  function gradeLine(grade) {
-    if (!grade) return '';
-    if (grade.notGraded) {
-      return `<p class="admin-reply-grade" data-admin-turn-grade="not-graded">not graded</p>`;
+  function storedJevRollup(vac, feedback) {
+    const rollup = feedback?.jev_rollup ?? feedback?.jev ?? vac?.jev ?? vac?.jevRollup;
+    if (rollup != null && (typeof rollup !== 'object' || Object.keys(rollup).length)) return rollup;
+    const summary = feedback?.ssr?.summary_by_construct;
+    if (summary && typeof summary === 'object' && Object.keys(summary).length) return feedback.ssr;
+    return null;
+  }
+
+  function tripLevelQaSummary(vac, artifacts) {
+    const feedback = artifacts?.failed ? null : artifacts?.feedback;
+    const qa = artifacts?.review?.qa ?? vac?.qa ?? null;
+    const jev = storedJevRollup(vac, feedback);
+    const survey = artifacts?.review?.survey ?? vac?.survey ?? null;
+    const body = (label, data, attr) => `<section class="admin-result" data-review-result="${attr}"><h4>${label}</h4><pre>${safe(typeof data === 'string' ? data : JSON.stringify(data, null, 2))}</pre></section>`;
+    const surveyLabel = survey?.label ? String(survey.label) : 'end of chat (legacy)';
+    const parts = [];
+    if (qa != null) parts.push(body('QA Czar', qa, 'qa-czar'));
+    if (jev != null) parts.push(body('Jev rollup', jev, 'jev-rollup'));
+    if (survey != null) parts.push(body(`Survey (${surveyLabel})`, survey, 'survey'));
+    const inner = parts.length
+      ? parts.join('')
+      : '<p class="admin-empty" data-qa-not-graded="1">not graded</p>';
+    return `<section class="admin-result" data-feedback-qa-summary="1"><h3>Trip-level QA</h3>${inner}</section>`;
+  }
+
+  const ratingFmt = (value) => (value == null || Number.isNaN(Number(value)) ? '—' : Number(value).toFixed(2));
+
+  function feedbackTableRows(rows) {
+    if (!rows?.length) return '<p class="admin-empty">No role-play checkpoint feedback is stored yet.</p>';
+    const head = '<tr><th>Customer</th><th>Vacation</th><th>Checkpoint</th><th>Question</th><th>Rating</th><th>Comment</th></tr>';
+    const body = rows.map((row) => `<tr>
+      <td>${safe(row.customer)}</td>
+      <td>${safe(row.destination || row.vacation)}</td>
+      <td>${safe(row.checkpoint)}</td>
+      <td>${safe(row.question)}</td>
+      <td>${safe(ratingFmt(row.rating))}</td>
+      <td>${safe(row.comment)}</td>
+    </tr>`).join('');
+    return `<div class="admin-feedback-table-wrap"><table class="admin-feedback-table">${head}${body}</table></div>`;
+  }
+
+  function feedbackView(vac, artifacts) {
+    const qaSummary = tripLevelQaSummary(vac, artifacts);
+    if (!artifacts) {
+      return `<div class="admin-feedback" data-feedback-view="customer">${qaSummary}<p class="admin-empty">Loading feedback…</p></div>`;
     }
-    return `<p class="admin-reply-grade" data-admin-turn-grade="graded"><span data-jev-score>${safe(grade.jevScore)}</span> · <span data-qa-verdict>${safe(grade.qaVerdict)}</span></p>`;
+    if (artifacts.failed) {
+      return `<div class="admin-feedback" data-feedback-view="customer">${qaSummary}<p class="admin-empty" role="status">Feedback could not be loaded.</p></div>`;
+    }
+    const payload = artifacts.feedback;
+    const checkpointRows = (payload?.checkpoints || []).flatMap((checkpoint) => {
+      const scores = checkpoint.scores?.length ? checkpoint.scores : [{ expected_score: null, construct: '' }];
+      return scores.map((score) => ({
+        customer: payload.customer?.name || vac.label,
+        vacation: vac.destination || vac.title,
+        checkpoint: checkpoint.label || checkpoint.id,
+        question: checkpoint.prompt,
+        rating: score.expected_score,
+        comment: checkpoint.reply,
+      }));
+    });
+    const legacy = payload?.legacy_trip_survey;
+    const legacyRows = legacy?.questions?.map((question, index) => ({
+      customer: payload.customer?.name || vac.label,
+      vacation: vac.destination || vac.title,
+      checkpoint: legacy.label || 'end of chat (legacy)',
+      question,
+      rating: null,
+      comment: legacy.answers?.[index] || '',
+    })) || [];
+    const rows = [...checkpointRows, ...legacyRows];
+    const table = rows.length
+      ? feedbackTableRows(rows)
+      : '<p class="admin-empty">No checkpoint feedback is stored for this vacation yet.</p>';
+    return `<div class="admin-feedback" data-feedback-view="customer">${qaSummary}${table}</div>`;
   }
 
-  function dialogResults(vac) {
-    return [['QA', vac.qa], ['Survey', vac.survey]].filter(([, data]) => data != null).map(([label, data]) =>
-      `<section class="admin-result" data-review-result="${label.toLowerCase()}"><h3>${label}</h3><pre>${safe(typeof data === 'string' ? data : JSON.stringify(data, null, 2))}</pre></section>`).join('');
+  function feedbackRollupView() {
+    if (state.feedbackRollupFailed) return '<p class="admin-empty" role="status">All-customers feedback could not be loaded.</p>';
+    if (state.feedbackRollup == null) return '<p class="admin-empty">Loading all-customers feedback…</p>';
+    return `<div class="admin-feedback" data-feedback-view="rollup">${feedbackTableRows(state.feedbackRollup)}</div>`;
   }
 
   function dialog(vac, artifacts) {
     const turns = (vac.turns || []).map((turn, index) => {
       if (turn.speaker === 'system' || turn.direction === 'system') return '';
       const detail = vac.replyDetails?.[index];
-      const isAssistant = turn.speaker === 'app' || turn.speaker === 'assistant' || turn.direction === 'outbound';
       if (detail && turn.fixedOpener === true && !detail.model && !detail.priced) {
-        return `${turnMarkup(turn)}<p class="admin-reply-detail"><strong>Opening greeting (no model, no cost)</strong></p>${gradeLine(detail.grade)}`;
+        return `${turnMarkup(turn)}<p class="admin-reply-detail"><strong>Opening greeting (no model, no cost)</strong></p>`;
       }
-      const meta = detail ? `<p class="admin-reply-detail"><strong>${safe(detail.model || 'Model unavailable')}</strong> · ${detail.priced ? costLines(detail.costs) : '<span data-cost="unpriced">unpriced</span>'}</p>${isAssistant ? gradeLine(detail.grade) : ''}` : (isAssistant ? gradeLine({ notGraded: true }) : '');
+      const meta = detail ? `<p class="admin-reply-detail"><strong>${safe(detail.model || 'Model unavailable')}</strong> · ${detail.priced ? costLines(detail.costs) : '<span data-cost="unpriced">unpriced</span>'}</p>` : '';
       return `${turnMarkup(turn)}${meta}`;
     }).join('');
-    return `<div class="admin-dialog-head"><div class="admin-costs" data-vacation-total aria-label="Vacation total"><strong>Vacation total</strong> ${costLines(vac.costs)}</div></div><div class="messages" id="customerChatReplay" data-readonly="true" aria-readonly="true" aria-label="${safe(vac.label)} chat (read only)">${turns || '<p class="admin-empty">No chat turns are stored for this vacation yet.</p>'}</div>${dialogResults({ qa: artifacts?.review?.qa ?? vac.qa, survey: artifacts?.review?.survey ?? vac.survey })}`;
+    return `<div class="admin-dialog-head"><div class="admin-costs" data-vacation-total aria-label="Vacation total"><strong>Vacation total</strong> ${costLines(vac.costs)}</div></div><div class="messages" id="customerChatReplay" data-readonly="true" aria-readonly="true" aria-label="${safe(vac.label)} chat (read only)">${turns || '<p class="admin-empty">No chat turns are stored for this vacation yet.</p>'}</div>`;
   }
 
   function vacationSite(vac) {
@@ -136,14 +221,11 @@ window.startVkAdminReview = (() => {
     return `<iframe title="${safe(vac.label)} trip (view only)" src="${src}" credentialless sandbox="allow-scripts allow-same-origin" data-trip-frame="1"></iframe>`;
   }
 
-  function keepsake(vac, artifacts) {
-    const pdf = artifacts?.keepsakePdf
-      ? `<a class="admin-action" data-keepsake-pdf href="/api/admin/${artifactsPath(vac.tripId)}/keepsake-pdf" download>Keepsake PDF</a>` : '';
-    if (!vac.shareSlug) return pdf || '<p class="admin-empty">No keepsake is available for this vacation yet.</p>';
+  function keepsake(vac) {
+    if (!vac.shareSlug) return '<p class="admin-empty">No keepsake is available for this vacation yet.</p>';
     const share = encodeURIComponent(vac.shareSlug);
-    const generate = `/api/pdf/shared/${share}/report/keepsake-style-2.pdf`;
     const preview = `/shared/${share}/journey?style=2&printMode=report&pdfReport=keepsake-style-2`;
-    return `<div class="admin-keepsake-actions">${pdf}<a class="admin-action" href="${generate}" target="_blank" rel="noopener" data-keepsake-generate>Generate</a></div><iframe title="${safe(vac.label)} keepsake" src="${preview}" credentialless data-keepsake-frame></iframe>`;
+    return `<iframe title="${safe(vac.label)} keepsake" src="${preview}" credentialless data-keepsake-frame></iframe>`;
   }
 
   function onboarding(vac, artifacts) {
@@ -189,13 +271,18 @@ window.startVkAdminReview = (() => {
   }
 
   function sitePane() {
+    if (state.view === 'feedback-all') {
+      return `<div class="site-pane" id="sitePane" data-kind="feedback-all">${feedbackRollupView()}</div>`;
+    }
     if (state.view === 'all') return `<div class="site-pane" id="sitePane" data-kind="customers">${customerList()}</div>`;
     const vac = state.details.get(viewTrip());
     return `<div class="site-pane admin-vacation" id="sitePane" data-kind="${state.view}" data-run="${safe(vac.tripId)}"><div class="admin-view-panel">${viewContent(vac)}</div></div>`;
   }
 
   function viewContent(vac) {
-    const renderView = { chat: dialog, trip: vacationSite, keepsake, onboarding, captures, vacations: vacationList }[state.view];
+    const renderView = {
+      chat: dialog, feedback: feedbackView, trip: vacationSite, keepsake, onboarding, captures, vacations: vacationList,
+    }[state.view];
     return renderView(vac, state.artifacts.get(vac.tripId));
   }
 
@@ -224,19 +311,9 @@ window.startVkAdminReview = (() => {
       event.stopPropagation();
       const open = document.getElementById('vacationDropdown').classList.toggle('open');
       button.setAttribute('aria-expanded', String(open));
-    } else if (button.dataset.dialogPdf) {
-      const tripId = viewTrip();
-      if (!tripId) return;
-      const link = document.createElement('a');
-      link.href = `/api/admin/${artifactsPath(tripId)}/dialog-pdf`;
-      link.download = '';
-      link.rel = 'noopener';
-      document.body.append(link);
-      link.click();
-      link.remove();
-      closeMenu();
     } else if (button.dataset.view) {
       state.view = button.dataset.view;
+      if (state.view === 'feedback-all') void loadFeedbackRollup();
       renderViewPane();
       document.getElementById('tripButton').focus();
     } else if (button.dataset.tripId === 'all') showCustomer(null);
@@ -247,6 +324,13 @@ window.startVkAdminReview = (() => {
 
   function renderViewPane() {
     const pane = document.getElementById('sitePane');
+    if (state.view === 'feedback-all' || state.view === 'all') {
+      pane.dataset.kind = state.view;
+      pane.dataset.run = '';
+      pane.innerHTML = state.view === 'feedback-all' ? feedbackRollupView() : customerList();
+      document.getElementById('vacationDropdown').outerHTML = switcher();
+      return;
+    }
     const vac = state.details.get(viewTrip());
     pane.dataset.kind = state.view;
     pane.dataset.run = vac.tripId;
@@ -437,12 +521,23 @@ window.startVkAdminReview = (() => {
     const result = await api(artifactsPath(id)).catch(() => null);
     const artifacts = result?.res.ok ? result.data : { failed: true };
     state.artifacts.set(id, artifacts);
-    if (viewTrip() === id && ['chat', 'captures', 'keepsake', 'onboarding'].includes(state.view)) {
+    if (viewTrip() === id && ['chat', 'captures', 'keepsake', 'onboarding', 'feedback'].includes(state.view)) {
       const vac = state.details.get(id);
       document.querySelector('.admin-view-panel').innerHTML = viewContent(vac);
       lockReplay(document.getElementById('customerChatReplay'));
-      const dropdown = document.getElementById('vacationDropdown');
-      if (dropdown) dropdown.outerHTML = switcher();
+      document.getElementById('vacationDropdown').outerHTML = switcher();
+    }
+  }
+
+  async function loadFeedbackRollup() {
+    state.feedbackRollup = null;
+    state.feedbackRollupFailed = false;
+    const { res, data } = await api('feedback').catch(() => ({ res: { ok: false }, data: {} }));
+    state.feedbackRollupFailed = !res.ok;
+    state.feedbackRollup = res.ok ? (data.rows || []) : [];
+    if (state.view === 'feedback-all') {
+      const pane = document.getElementById('sitePane');
+      if (pane?.dataset.kind === 'feedback-all') pane.innerHTML = feedbackRollupView();
     }
   }
 

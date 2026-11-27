@@ -57,10 +57,14 @@ assert.equal(card.wave_stop, true);
 assert.match(card.checks.find((check) => check.id === 'backend-available').detail, /backend not available/);
 fs.rmSync(dir, { recursive: true, force: true });
 
-const files = fs.readdirSync(path.join(root, 'scripts/harness')).filter((name) => name.endsWith('.mjs'));
-files.push('vk-customer-harness.mjs');
-for (const name of files) {
-  const text = fs.readFileSync(path.join(root, 'scripts', name.startsWith('vk-') ? name : `harness/${name}`), 'utf8');
+const harnessFiles = fs.readdirSync(path.join(root, 'scripts/harness')).filter((name) => name.endsWith('.mjs'));
+for (const name of harnessFiles) {
+  const text = fs.readFileSync(path.join(root, 'scripts/harness', name), 'utf8');
+  for (const host of hosts) assert.equal(text.includes(host), false, `harness/${name}`);
+}
+{
+  const name = 'vk-customer-harness.mjs';
+  const text = fs.readFileSync(path.join(root, 'scripts', name), 'utf8');
   for (const host of hosts) assert.equal(text.includes(host), false, name);
 }
 console.log('test_vk_customer_harness_no_openrouter: ok');

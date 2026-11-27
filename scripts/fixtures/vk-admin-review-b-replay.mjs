@@ -1,12 +1,11 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import path from 'node:path';
-import { playWithAdminArtifacts } from './runtime.mjs';
+import { playWithAdminArtifacts } from '../harness/runtime.mjs';
 
-export async function replayAdminHarnessTurns({
-  id, failed = false, workspace, staging, put, fetchStaging, fixture, png, sha,
+export async function replayVkAdminReviewHarness({
+  id, failed = false, fixture, outRoot, png, sha, put, fetchStaging, staging,
 }) {
-  const outDir = path.join(workspace, id);
+  const outDir = `${outRoot}/${id}`;
   const [customer, app] = fixture.turns;
   const stored = [];
   let opened = 0;
@@ -47,7 +46,9 @@ export async function replayAdminHarnessTurns({
               screenshot: async ({ path: file }) => { await fs.writeFile(file, png); return png; },
             };
           }
-          if (selector === '.site-pane iframe') return { count: async () => 0, first: () => ({ waitFor: async () => {}, contentFrame: () => null }) };
+          if (selector === '.site-pane iframe') {
+            return { count: async () => 0, first: () => ({ waitFor: async () => {}, contentFrame: () => null }) };
+          }
           throw new Error(`unexpected selector ${selector}`);
         },
         async screenshot({ path: file }) { await fs.writeFile(file, png); return png; },

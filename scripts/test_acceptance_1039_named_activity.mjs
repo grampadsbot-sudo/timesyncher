@@ -8,6 +8,7 @@ import {
   namedCustomerActivities,
   thingsFromIntake,
 } from '../src/vacation/trip-intake-classify.mjs';
+import { INTAKE_PROVENANCE_TEST_OPTIONS, thingWithFixtureProvenance } from './fixtures/intake-provenance-test-context.mjs';
 
 const line = 'Add a quiet morning walk and keep the afternoon open.';
 const named = customerNamedActivity(line);
@@ -20,16 +21,16 @@ assert.equal(intakeThingHasProperName('museum morning'), false);
 assert.equal(intakeThingHasProperName('taco spots'), false);
 assert.equal(intakeThingHasProperName('mid-range options'), false);
 assert.deepEqual(thingsFromIntake([
-  { name: 'museum morning', kind: 'activity' },
-  { name: 'taco spots', kind: 'restaurant' },
-  { name: 'mid-range options', kind: 'hotel' },
-]).map((thing) => thing.title), []);
+  thingWithFixtureProvenance({ name: 'museum morning', kind: 'activity' }),
+  thingWithFixtureProvenance({ name: 'taco spots', kind: 'restaurant' }),
+  thingWithFixtureProvenance({ name: 'mid-range options', kind: 'hotel' }),
+], INTAKE_PROVENANCE_TEST_OPTIONS).map((thing) => thing.title), []);
 
 const saved = mergeWantedThings([], namedCustomerActivities(line, []));
 assert.deepEqual(saved.map((thing) => thing.title), ['quiet morning walk']);
 assert.deepEqual(mergeWantedThings([], namedCustomerActivities('Keep the afternoon open.', [
-  { name: 'museum morning', kind: 'activity' },
-])).map((thing) => thing.title), []);
+  thingWithFixtureProvenance({ name: 'museum morning', kind: 'activity' }),
+]), INTAKE_PROVENANCE_TEST_OPTIONS).map((thing) => thing.title), []);
 
 const route = fs.readFileSync(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
 assert.match(route, /namedCustomerActivities\(text, intakeActivityThings\(extracted\)\)/);

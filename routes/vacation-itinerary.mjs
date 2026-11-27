@@ -552,9 +552,10 @@ async function queueVacationAppTurn(db, session, trip, body, intakePrefill = nul
 }
 
 export function chatSaveMetadata(thing, scheduled) {
+  const m = thing.metadata || {};
+  const prov = Object.fromEntries(['origin', 'customerTurnId', 'customerSpan', 'existingThingId'].map((k) => [k, thing[k] || m[k]]).filter(([, v]) => v));
   const meta = {
-    source: thing.source || 'chat_extraction',
-    who: thing.who || '',
+    source: thing.source || 'chat_extraction', ...prov, who: thing.who || '',
     whenLabel: scheduled.whenLabel || thing.whenLabel || '',
     customerWhen: scheduled.customerWhen || thing.customerWhen || '',
     askWhichDay: scheduled.askWhichDay === true,

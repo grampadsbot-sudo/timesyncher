@@ -89,14 +89,20 @@ export async function runChatIntakePlaceBackfill({
       continue;
     }
     counts.searched += 1;
+    const meta = row?.metadata && typeof row.metadata === 'object' ? row.metadata : {};
+    const customerTurnId = String(meta.customerTurnId || '').trim();
+    const customerSpan = String(meta.customerSpan || row.title || '').trim();
     const saved = await persistChatIntakePlaceThing(db, {
       tripId: row.trip_id,
       requestId: null,
       category: row.category,
       title: row.title,
       description: row.description || '',
-      metadata: row.metadata || {},
+      metadata: meta,
       startsAt: row.starts_at || null,
+      provenanceContext: customerTurnId
+        ? { customerTurns: { [customerTurnId]: { speaker: 'customer', text: customerSpan } } }
+        : {},
       destinationHint: row.destination || '',
       env,
       fetchImpl,

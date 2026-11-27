@@ -40,7 +40,19 @@ function assertStrictObjectSchema(schema) {
 function assertStrictThingItemSchema(schema) {
   assert.equal(schema.type, 'object');
   assert.equal(schema.additionalProperties, false);
-  assert.deepEqual(schema.required.sort(), ['kind', 'name', 'when', 'who'].sort());
+  assert.deepEqual(
+    schema.required.sort(),
+    [
+      'customerSpan',
+      'customerTurnId',
+      'existingThingId',
+      'kind',
+      'name',
+      'origin',
+      'when',
+      'who',
+    ].sort(),
+  );
 }
 
 const responseFormat = tripIntakeExtractionJsonSchema();

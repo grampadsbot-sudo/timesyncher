@@ -12,13 +12,17 @@ import {
 import { openRouterProviderForTier, openRouterTemperatureSpread, openRouterTier1CompactReasoningSpread } from '../../scripts/openrouter-tier-provider.mjs';
 import { intakeThingHasProperName } from './intake-thing-name.mjs';
 import {
+  cleanExtractedThingsWithProvenance,
+  extractionUserContent,
+  provenanceContextFromTurns,
+} from './intake-provenance-context.mjs';
+import {
   PLACE_SEARCH_CATEGORY_KEYS,
   intakePlaceSearchCategoryError,
   normalizePlaceSearchCategory,
 } from './place-search-category-keys.mjs';
 import { intakePlaceSearchTargetKindError, normalizePlaceSearchTargetKind } from './place-search-target-kind.mjs';
 import { tripIntakeExtractionJsonSchema } from './trip-intake-extraction-schema.mjs';
-import { intakeJobFieldsFromSavedTrip } from './trip-intake-job-saved-trip.mjs';
 import { turnUnderstandingRequest } from './turn-understanding.mjs';
 
 export { intakeThingHasProperName } from './intake-thing-name.mjs';
@@ -43,9 +47,10 @@ export const TRIP_INTAKE_EXTRACTION_SYSTEM_PROMPT = [
   `For place_search, category is required and must be exactly one of: ${PLACE_SEARCH_CATEGORY_KEYS.join(', ')} (map or OSM place-type scope only; never copy category into target). For place_search, targetKind is required named_place or category (named_place for one specific venue; category for a kind of place near the anchor).`,
   'For web_research, question is the research ask in their words; leave target, anchor, category empty and anchorIsLodging false.',
   `For ${TURN_KIND_TRIP_INTAKE} or other, leave target, anchor, category, question empty and anchorIsLodging false unless they named lodging as part of trip planning.`,
-  'things: name is their wording for one wanted item; kind is activity, restaurant, hotel, flight, car, or store; who and when are strings or empty.',
-  'things must be proper names only (a named hotel, restaurant, store, or venue), never generic categories like taco spots or mid-range options.',
-  `For ${TURN_KIND_TRIP_INTAKE}, when they state a named lodging property where they will stay (hotel, resort, inn, condo, rental, or similar), include exactly one things entry with kind hotel and name set to that property name; when they also name the neighborhood or area for the stay, set destination to that area.`,
+  'things: name is their wording for one wanted item; kind is activity, restaurant, hotel, flight, car, store, or family_event; who and when are strings or empty.',
+  'Each things row must include origin (customer_turn or customer_blurb), customerTurnId (the labelled customer turn id when origin is customer_turn), customerSpan (verbatim substring from that customer source naming the item), and existingThingId when the item matches an existing saved trip row id.',
+  'Use only customer-labelled turns as sources; never assistant or system text.',
+  `For ${TURN_KIND_TRIP_INTAKE}, when they state a named lodging property where they will stay, include one things row with kind hotel and that property name; when they name the stay area, set destination to that area.`,
   'roster lists people named; role is owner only when they name themselves, collaborator when they name someone traveling with them, or child, viewer, or editor; age is a number only when they stated a child age.',
   'inviteeName and inviteeEmail are filled only when the customer asks to add or invite a person to the trip, with that person name and email as they wrote them; otherwise leave both empty.',
   TRIP_INTAKE_HAS_DATES_PROMPT,
@@ -73,7 +78,12 @@ export function tripIntakeExtractionMaxTokens(schema = tripIntakeExtractionJsonS
   }
   sample.things = Array.from({ length: EXTRACTION_THING_SLOTS }, () => {
     const item = {};
-    for (const key of thingRequired) item[key] = 'named place saturday dinner';
+    for (const key of thingRequired) {
+      item[key] = key === 'existingThingId' || key === 'customerTurnId' ? ''
+        : key === 'origin' ? 'customer_turn'
+          : key === 'customerSpan' ? 'named place saturday dinner'
+            : 'named place saturday dinner';
+    }
     return item;
   });
   sample.roster = Array.from({ length: EXTRACTION_ROSTER_SLOTS }, () => {
@@ -84,7 +94,8 @@ export function tripIntakeExtractionMaxTokens(schema = tripIntakeExtractionJsonS
   return Math.max(2048, Math.ceil(JSON.stringify(sample).length / 3));
 }
 
-export function tripIntakeExtractionChatRequest({ message, model }) {
+export function tripIntakeExtractionChatRequest({ message, model, customerTurns = [], existingThings = [], tripBlurb = '' } = {}) {
+  const userContent = extractionUserContent({ customerTurns, message, tripBlurb, existingThings });
   return {
     model,
     ...openRouterTemperatureSpread(model, 0),
@@ -94,7 +105,7 @@ export function tripIntakeExtractionChatRequest({ message, model }) {
     response_format: tripIntakeExtractionJsonSchema(),
     messages: [
       { role: 'system', content: THING_SYSTEM },
-      { role: 'user', content: clean(message, 6000) },
+      { role: 'user', content: userContent },
     ],
   };
 }
@@ -196,26 +207,6 @@ function cleanRoster(list) {
 
 const CHAT_EXTRACTION = 'chat_extraction';
 
-function cleanThings(list) {
-  const things = [];
-  const seen = new Set();
-  for (const item of list) {
-    const name = clean(item?.name || item?.title, 180);
-    if (!name || !intakeThingHasProperName(name)) continue;
-    const key = name.toLowerCase();
-    if (seen.has(key)) continue;
-    seen.add(key);
-    things.push({
-      name,
-      kind: clean(item?.kind || item?.category, 40).toLowerCase(),
-      who: clean(item?.who, 120),
-      when: clean(item?.when || item?.whenLabel, 180),
-      source: CHAT_EXTRACTION,
-    });
-  }
-  return things;
-}
-
 async function postJson(fetchImpl, url, key, body, purpose, endpoint) {
   const { response, body: payload } = await fetchOpenRouterJson(url, {
     fetchImpl, key, payload: body, purpose, endpoint,
@@ -236,8 +227,8 @@ async function postJson(fetchImpl, url, key, body, purpose, endpoint) {
   return payload;
 }
 
-export function thingsFromIntake(extracted) {
-  return cleanThings(Array.isArray(extracted) ? extracted : []).map((thing) => ({
+export function thingsFromIntake(extracted, options = {}) {
+  return cleanExtractedThingsWithProvenance(Array.isArray(extracted) ? extracted : [], options).map((thing) => ({
     title: thing.name,
     category: KINDS.has(thing.kind) ? thing.kind : 'activity',
     description: '',
@@ -247,6 +238,10 @@ export function thingsFromIntake(extracted) {
     notes: [],
     collaboratorNotes: [],
     source: thing.source || CHAT_EXTRACTION,
+    origin: thing.origin || 'customer_turn',
+    customerTurnId: thing.customerTurnId || '',
+    customerSpan: thing.customerSpan || thing.name,
+    existingThingId: thing.existingThingId || '',
   }));
 }
 
@@ -280,6 +275,9 @@ export function customerNamedActivity(text) {
     notes: [],
     collaboratorNotes: [],
     source: 'customer',
+    origin: 'customer_turn',
+    customerTurnId: 'current',
+    customerSpan: title,
   };
 }
 
@@ -292,11 +290,11 @@ export function namedCustomerActivities(text, activities = []) {
   return [...rows, named];
 }
 
-export function mergeWantedThings(things, extracted) {
+export function mergeWantedThings(things, extracted, options = {}) {
   const next = Array.isArray(things) ? [...things] : [];
   const have = new Set(next.map((thing) => normalizeTripThingName(thing?.title)).filter(Boolean));
   const incoming = [
-    ...thingsFromIntake(extracted),
+    ...thingsFromIntake(extracted, options),
     ...(Array.isArray(extracted) ? extracted : []).filter((thing) => thing?.source === 'customer' && clean(thing?.title, 180)),
   ];
   for (const thing of incoming) {
@@ -308,51 +306,7 @@ export function mergeWantedThings(things, extracted) {
   return next;
 }
 
-export function tripIntakeJobFields({
-  requestText,
-  receivedAt,
-  classification,
-  firstIntake,
-  jobKind,
-  savedTripTitle = '',
-  savedTripDestination = '',
-} = {}) {
-  const ok = classification?.ok === true;
-  const intake = ok && classification.intake === true;
-  const wantedThings = ok ? cleanThings(classification.things) : [];
-  const roster = ok ? cleanRoster(classification.roster) : [];
-  let destination = ok ? clean(classification.destination, 180) : '';
-  let title = ok ? clean(classification.title, 180) : '';
-  ({ title, destination } = intakeJobFieldsFromSavedTrip({
-    ok,
-    title,
-    destination,
-    savedTripTitle,
-    savedTripDestination,
-  }));
-  const hasDates = ok && classification.hasDates === true;
-  const startDate = ok ? isoDay(classification.startDate) : '';
-  const endDate = ok ? isoDay(classification.endDate) : '';
-  return {
-    intakeEvent: intake ? {
-      kind: jobKind,
-      at: receivedAt || null,
-      requestText: String(requestText || ''),
-      firstIntake: firstIntake === true,
-    } : null,
-    wantedThings,
-    roster,
-    rosterError: ok ? null : clean(classification?.error || 'trip intake classification failed', 300),
-    destination,
-    hasDates,
-    startDate,
-    endDate,
-    title,
-    destinationError: ok ? (destination ? null : 'trip place was not in the extraction') : clean(classification?.error || 'trip intake classification failed', 300),
-    titleError: ok ? (title ? null : 'trip title was not in the extraction') : clean(classification?.error || 'trip intake classification failed', 300),
-    intakeError: ok ? null : clean(classification?.error || 'trip intake classification failed', 300),
-  };
-}
+export { tripIntakeJobFields } from './trip-intake-job-fields.mjs';
 
 function tripIntakeConfig(env = process.env) {
   return {
@@ -369,6 +323,10 @@ export async function classifyTripIntake({
   fetchImpl = fetch,
   requireExtractedTripDates = false,
   turnSession = null,
+  customerTurnId = '',
+  customerTurns = [],
+  existingThings = [],
+  tripBlurb = '',
 } = {}) {
   const message = clean(text, 6000);
   const config = tripIntakeConfig(env);
@@ -440,7 +398,13 @@ export async function classifyTripIntake({
     }
     if (score == null) return failed('trip intake classifier returned no decision');
     const extractionModel = bakeoffTierModels()[1];
-    const request = tripIntakeExtractionChatRequest({ message, model: extractionModel });
+    const request = tripIntakeExtractionChatRequest({
+      message,
+      model: extractionModel,
+      customerTurns: customerTurns.length ? customerTurns : (customerTurnId ? [{ id: customerTurnId, text: message }] : []),
+      existingThings,
+      tripBlurb,
+    });
     const extracted = await postJson(
       fetchImpl,
       OPENROUTER_CHAT_COMPLETIONS_URL,
@@ -454,7 +418,9 @@ export async function classifyTripIntake({
     const targetKindError = intakePlaceSearchTargetKindError(extractedFields);
     if (targetKindError) return failed(targetKindError, extractedFields);
     const turnKind = extractedFields.turnKind;
-    const things = cleanThings(extractedFields.things);
+    const activeCustomerTurnId = clean(customerTurnId, 120) || 'current';
+    const provenanceContext = provenanceContextFromTurns({ customerTurns, customerTurnId: activeCustomerTurnId, message, tripBlurb });
+    const things = cleanExtractedThingsWithProvenance(extractedFields.things, { customerTurnId: activeCustomerTurnId, provenanceContext });
     const roster = cleanRoster(extractedFields.roster);
     const intake = turnKind === TURN_KIND_TRIP_INTAKE && score >= INTAKE_THRESHOLD;
     if (requireExtractedTripDates && intake) {

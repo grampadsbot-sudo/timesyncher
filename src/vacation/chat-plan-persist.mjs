@@ -1,4 +1,5 @@
 import { cleanText } from './http.mjs';
+import { tripItineraryTitleRejected } from './intake-thing-admission.mjs';
 import { isAiImportChatRequest } from './mcp-chat-import.mjs';
 import { isReservationAsk } from './mcp-reservations-handshake.mjs';
 import { isTripThingName, normalizeTripThingName, tripThingNameInText } from './trip-thing-name-shape.mjs';
@@ -69,8 +70,14 @@ function itemFromLine(line, dayNumber, startDate) {
   const day = startDate ? addUtcDays(startDate, dayNumber - 1) : '';
   const items = [];
   for (const part of parts) {
+<<<<<<< HEAD
     const title = part.trim();
     if (!isTripThingName(title)) continue;
+=======
+    const title = cleanText(part, 80);
+    if (!title || title.length < 2 || title.split(/\s+/).length > 12 || title.includes('?')) continue;
+    if (tripItineraryTitleRejected(title)) continue;
+>>>>>>> origin/vk
     items.push({
       title,
       category: categoryForPlanTitle(title),
@@ -81,6 +88,9 @@ function itemFromLine(line, dayNumber, startDate) {
       notes: [],
       collaboratorNotes: [],
       source: 'customer',
+      origin: 'customer_turn',
+      customerTurnId: 'current',
+      customerSpan: title,
       dayNumber,
       starts_at: day ? `${day}T12:00:00.000Z` : null,
     });
