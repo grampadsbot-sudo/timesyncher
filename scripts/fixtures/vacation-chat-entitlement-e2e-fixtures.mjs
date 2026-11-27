@@ -208,6 +208,30 @@ export function dbFor(state) {
       state.welcomeClaims.add(key);
       return [{ id: 'welcome-claim-e2e' }];
     }
+    if (/create table if not exists vacation_web_access_grants/i.test(text)) return [];
+    if (/alter table vacation_web_access_grants/i.test(text)) return [];
+    if (/create unique index if not exists vacation_web_access_active_email_idx/i.test(text)) return [];
+    if (/insert into vacation_web_access_grants/i.test(text)) {
+      return [{
+        id: `grant-${crypto.randomUUID()}`,
+        trip_id: values.find((v) => v === TRIP_ID || v === TRIP_ID_B) || TRIP_ID,
+        role: values.find((v) => v === 'owner' || v === 'web_editor') || 'owner',
+        status: 'accepted',
+      }];
+    }
+    if (/from trips/i.test(text) && /join customers/i.test(text)) {
+      const tripId = values.find((v) => v === TRIP_ID || v === TRIP_ID_B);
+      const trip = state.trips.find((row) => row.id === tripId);
+      if (!trip) return [];
+      return [{
+        ...trip,
+        owner_email: 'buyer@example.com',
+        owner_display_name: 'Buyer Example',
+      }];
+    }
+    if (/insert into transcript_turns/i.test(text) && /insert into eula_store_objects/i.test(text)) {
+      return [{ id: `turn-${crypto.randomUUID()}` }];
+    }
     if (/insert into transcript_turns/i.test(text) && /where not exists/i.test(text)) return [];
     if (/insert into transcript_turns/i.test(text) && /returning id/i.test(text)) {
       return [{ id: `turn-${crypto.randomUUID()}` }];

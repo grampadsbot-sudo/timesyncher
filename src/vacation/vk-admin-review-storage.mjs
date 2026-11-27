@@ -4,6 +4,7 @@ import { dirname } from 'node:path';
 import { DatabaseJsonStore, LocalJsonStore } from '../onboarding/eula-persistent-store.mjs';
 import { hasDatabase, sql } from './db.mjs';
 import { listOnboardingCaptureTags, onboardingCaptureTag } from './vk-admin-onboarding-captures.mjs';
+import { travelSummaryFromDocument, travelSummaryPrefix, travelSummaryValues } from './vk-travel-summary.mjs';
 
 export class LocalVkAdminStore extends LocalJsonStore {
   async listOnboardingArtifacts(vacationId) {
@@ -103,11 +104,17 @@ export async function listNotes(store, customerId, vacationId, legacySources) {
     const path = notesPath(source.customerId, source.vacationId);
     if (!paths.has(path)) paths.set(path, source.vacationId);
   }
-  const lists = await Promise.all([...paths].map(async ([path, vacationId]) =>
-    (await store.listJson(path)).map((note) => ({ vacationId, ...note }))));
+  const lists = await Promise.all([...paths].map(async ([path, vacationId]) => {
+    const fromList = (await store.listJson(path))
+      .filter((note) => note?.kind !== 'welcome')
+      .map((note) => ({ vacationId, ...note }));
+    const savedWelcome = typeof store.getJson === 'function' ? await store.getJson(`${path}/welcome.json`) : null;
+    const welcome = savedWelcome ? [{ vacationId, ...savedWelcome }] : [];
+    return [...welcome, ...fromList];
+  }));
   const notes = lists.flat().sort((a, b) =>
     Number(b.kind === 'welcome') - Number(a.kind === 'welcome') || a.at.localeCompare(b.at) || a.id.localeCompare(b.id));
-  return notes.filter((note, index) => note.kind !== 'welcome' || index === 0).map(presentNote);
+  return notes.map(presentNote);
 }
 
 export async function loadNoteFile(store, customerId, vacationId, legacy, id, index, recordId) {
@@ -184,6 +191,33 @@ export async function listReviewArtifacts(store, vacationId) {
     review,
     feedback: await loadFeedbackArtifact(store, vacationId),
   };
+}
+
+export async function listTravelSummarySnapshots(store, vacation) {
+  const stored = await store.listJson(travelSummaryPrefix(vacation.tripId));
+  const byTurn = new Map(stored.filter((snapshot) => typeof snapshot?.turnId === 'string')
+    .map((snapshot) => [snapshot.turnId, snapshot]));
+  const turns = vacation.turns.filter((turn) => turn.turnId && turn.direction === 'inbound' && turn.speaker === 'customer');
+  const people = new Set();
+  let where = '';
+  return turns.map((turn, index) => {
+    const payload = turn.payload;
+    const snapshot = travelSummaryFromDocument(byTurn.get(turn.turnId));
+    where = snapshot?.where || payload?.destination || where;
+    for (const person of Array.isArray(payload?.roster) ? payload.roster : []) {
+      if (person?.name && ['owner', 'collaborator', 'child'].includes(person.role)) people.add(person.name);
+    }
+    const latest = index === turns.length - 1;
+    return {
+      turnId: turn.turnId,
+      turnNumber: index + 1,
+      ...travelSummaryValues(snapshot || {
+        where: latest ? vacation.destination || where : where,
+        tripName: latest && vacation.shareSlug ? vacation.title : '',
+        who: [...people].join(', '),
+      }),
+    };
+  });
 }
 
 export async function saveReviewResults(store, vacationId, { qa, survey }) {

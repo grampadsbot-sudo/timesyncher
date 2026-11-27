@@ -11,9 +11,9 @@ import {
 import { findVkAdminVacation, vkAdminDatabase, vkAdminGroups, vkAdminLegacyNoteSources, vkAdminMember } from '../src/vacation/vk-admin-review-data.mjs';
 import { feedbackRollupRows } from '../src/vacation/vk-admin-feedback.mjs';
 import {
-  artifactType, listNotes, listReviewArtifacts, loadFeedbackArtifact, loadNoteFile, loadReviewArtifact,
-  noteFromBody, notesPath, presentNote, saveFeedbackArtifact, saveReviewArtifact, saveReviewResults, saveWelcome,
-  vkAdminStorage,
+  artifactType, listNotes, listReviewArtifacts, listTravelSummarySnapshots, loadFeedbackArtifact, loadNoteFile,
+  loadReviewArtifact, noteFromBody, notesPath, presentNote, saveFeedbackArtifact, saveReviewArtifact,
+  saveReviewResults, saveWelcome, vkAdminStorage,
 } from '../src/vacation/vk-admin-review-storage.mjs';
 
 const OWNER_SHELL = fileURLToPath(new URL('../vacation-app.html', import.meta.url));
@@ -187,6 +187,13 @@ async function handleNotes(req, res, db, getStore, [id, index]) {
 }
 
 async function handleArtifacts(req, res, db, getStore, tripId, artifact) {
+  if (artifact === 'travel-summary') {
+    if (req.method !== 'GET') return methodNotAllowed(res);
+    const vacation = await findVkAdminVacation(db, tripId, { detail: true });
+    if (!vacation) return notFound(res);
+    const snapshots = await listTravelSummarySnapshots(getStore(), vacation);
+    return send(res, 200, { ok: true, snapshots });
+  }
   const type = artifact ? artifactType(artifact) : '';
   const review = artifact === 'review' && req.method === 'PUT';
   const feedback = artifact === 'feedback';

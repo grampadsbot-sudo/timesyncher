@@ -42,6 +42,7 @@ export async function produceFirstIntakeReply({
   loadOwnerPlan = loadTripOwnerReplyPlan,
   turnActionResults = null,
   understanding = null,
+  travelSummary = null,
 } = {}) {
   if (!rules?.ok) {
     return { reply: null, rules, jev: null, model: null, reason: rules?.error || 'reply_rules_unloaded' };
@@ -104,6 +105,7 @@ export async function produceFirstIntakeReply({
       postIntake: true,
       intakeReplyTurn: true,
       replyFacts: modelFacts,
+      tripContext: { travelSummary },
       env,
       forceModel: INTERIM_MODEL,
       tier1CompactReasoning: true,
@@ -164,7 +166,7 @@ export async function produceFirstIntakeReply({
     };
   }
   const judgeStarted = Date.now();
-  const jevTurnResult = await jevTurn({ customerTurn, draft: reply, session, env });
+  const jevTurnResult = await jevTurn({ customerTurn, draft: reply, tripContext: { travelSummary }, session, env });
   const judgeMs = Math.max(0, Date.now() - judgeStarted);
   let quality = applyJevTurn(jev, jevTurnResult, judgeMs);
   if (quality?.judged !== true) {

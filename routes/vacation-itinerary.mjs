@@ -1,5 +1,6 @@
 import { requireIntakeAuth } from '../src/vacation/auth.mjs';
 import { sql } from '../src/vacation/db.mjs';
+import { loadCurrentTravelSummary } from '../src/vacation/vk-travel-summary.mjs';
 import { queueOrSendWebEditorInviteEmail } from '../src/vacation/email.mjs';
 import { cleanText, readJson, sendJson, vacationAppErrorBody } from '../src/vacation/http.mjs';
 import {
@@ -60,6 +61,7 @@ import {
   resolveIntakePlace,
   tripIntakeJobFields,
 } from '../src/vacation/trip-intake-classify.mjs';
+import { normalizeTripThingName } from '../src/vacation/trip-thing-name-shape.mjs';
 import { keepPlannedDays, persistCustomerNotesOnly, persistFollowupLodgingSafely, plannedCustomerThings, tripStateActionsEnabled } from '../src/vacation/chat-plan-persist.mjs';
 import { validatePlannedThings } from '../src/vacation/chat-planned-thing-validation.mjs';
 import {
@@ -545,13 +547,12 @@ async function queueVacationAppTurn(db, session, trip, body, intakePrefill = nul
   if (aiMcpReply) return aiMcpReply;
   const pendingPreviewReply = await tryHandlePendingPreviewChatTurn(db, { session, trip, requestText });
   if (pendingPreviewReply) return pendingPreviewReply;
-  const intake = await resolveVacationAppQueueIntake(requestText, intakePrefill, process.env, session);
+  const intake = await resolveVacationAppQueueIntake(requestText, intakePrefill, process.env, session, { db, trip });
   return runQueueVacationAppTurn(db, session, trip, body, queueVacationAppHooks(), { requestText, ...intake, welcomeMs, httpReq, postStartedMs: httpReq ? postStartedByRequest.get(httpReq) : null });
 }
 
 export function chatSaveMetadata(thing, scheduled) {
-  const m = thing.metadata || {};
-  const prov = Object.fromEntries(['origin', 'customerTurnId', 'customerSpan', 'existingThingId'].map((k) => [k, thing[k] || m[k]]).filter(([, v]) => v));
+  const prov = Object.fromEntries(['origin', 'customerTurnId', 'customerSpan', 'existingThingId'].map((k) => [k, thing[k] || (thing.metadata || {})[k]]).filter(([, v]) => v));
   const meta = {
     source: thing.source || 'chat_extraction', ...prov, who: thing.who || '',
     whenLabel: scheduled.whenLabel || thing.whenLabel || '',
@@ -610,7 +611,7 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
   const priorRows = await db`select title, destination, metadata from trips where id = ${tripId} limit 1`;
   const existing = await db`select count(*)::int as n from trip_things where trip_id = ${tripId}`;
   if (Number(existing[0]?.n) > 0) {
-    return intakeItineraryExistingThings(db, tripId, text, extracted, wantedThings, {
+    return intakeItineraryExistingThings(db, tripId, text, lodgingWanted, {
       extractedDestination, extractedTitle, destinationError, titleError, searchImpl, searchPlacesImpl: work ? work.lodgingSearch(searchPlacesImpl) : searchPlacesImpl, env, fetchImpl: work ? work.fetchImpl : fetchImpl, customerTurnId,
       savedTripTitle: priorRows[0]?.title,
     }, loadTripThings);
@@ -791,7 +792,7 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
   for (const thing of next) {
     const prior = current.find((item) => item.id && item.id === thing.id);
     if (!prior) {
-      if (current.some((item) => item.title === thing.title)) continue;
+      if (current.some((item) => normalizeTripThingName(item.title) === normalizeTripThingName(thing.title))) continue;
       const metadata = chatSaveMetadata(thing, {
         whenLabel: thing.whenLabel,
         customerWhen: thing.customerWhen,
@@ -928,6 +929,7 @@ async function handleVacationApp(req, res, db, url) {
       publicUrl: selected?.publicUrl || '',
       vacations,
       turns,
+      travelSummary: eula.accepted ? await loadCurrentTravelSummary(db, selected?.id) : null,
       itinerary,
       searchProgress,
     });

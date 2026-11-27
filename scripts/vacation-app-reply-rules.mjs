@@ -596,14 +596,13 @@ export function sourcedPlaceRule() {
 export { planFactsForReply };
 
 const USE_SAVED_TRIP_RULE = 'Use the saved trip record. If a day or activity is not on that record, do not announce it as set. Do not call any day the last day, the last evening, after check-out, or one last time, and do not say pack or head out, unless that day is the saved trip end. Write hotel and lodging times as check-in and check-out, with the hyphen. Do not shorten a date range.';
-
 const STATIC_REPLY_RULES = [
   'You are the TimeSyncher vacation-app producer. Reply to the customer turn.',
   'Apply these ordinary reply rules unless the following instructions specify an intake or starter reply.',
   sourcedPlaceRule(),
   USE_SAVED_TRIP_RULE,
-  'Avoid unsolicited welcomes and roster roll calls.',
-  'Only use roster facts the customer stated in chat. Keep unnamed people unnamed and respect the stated party size. A collaborator who joins does not become the account holder.',
+  'Do not insert a welcome the customer did not ask for, and do not open with a comma-separated roster roll call.',
+  'Use Travel Summary as the trip state and only roster facts the customer stated in chat; keep unnamed people unnamed, respect the stated party size, and treat a joining person as a collaborator, not the account holder.',
   'From chat today a vacation owner can invite a collaborator by name and email once they ask, set the time of a place already on a day, add a nearby bar already on the vacation before a timed dinner, or undo the last chat itinerary edit. Chat cannot yet put a place, activity, hotel check-in or check-out, or flight onto a day; build or save a day-by-day plan onto days; move items between days; or complete those arrangements. Describe only what this turn\'s action results show was done. When the customer asks for something chat cannot do yet, say so once in plain words, then keep helping with planning without repeating that refusal on later turns. Ask only for missing invite details.',
   selfCorrectionReplyContext,
   'Address the person who is speaking. Do not give that person an activity the saved trip record assigns to someone else.',
@@ -631,14 +630,13 @@ function replyTurnRules(rules, destination, upsell, postIntake, customerTurn = '
   const { tripRaw, gapAskPromptTurn } = gapAskReplyPromptTripRaw(tripSource, postIntake, modelVisibleTripContext);
   const itinerary = Array.isArray(tripRaw?.itinerary) ? tripRaw.itinerary.filter(Boolean).slice(0, 12) : [];
   const dates = String(tripRaw?.dates || '').trim();
-  const roster = String(tripRaw?.roster || '').trim();
   const rule = String(tripRaw?.rule || '').trim();
   const turnInvitePending = tripRaw?.turnInvite?.ok === true;
   const turnInviteRule = String(tripRaw?.turnInviteRule || '').trim();
   const unscheduledOpen = Array.isArray(tripRaw?.chatPlaceSearch?.unscheduled)
     && tripRaw.chatPlaceSearch.unscheduled.some((row) => row?.notOnADay === true);
   const customerInput = {};
-  const statedTripFields = new Set(['itinerary', 'dates', 'roster', 'rule', 'priorExchange']);
+  const statedTripFields = new Set(['itinerary', 'dates', 'rule']);
   for (const [key, value] of Object.entries(tripRaw || {})) {
     if (statedTripFields.has(key) || key === 'unscheduledDayRule' || key === 'tripReplyGate' || key === 'placeSearchAreaScope' || key === 'namedSearchAwayFromStatedLodging') continue;
     if (Array.isArray(value)) {
@@ -655,8 +653,8 @@ function replyTurnRules(rules, destination, upsell, postIntake, customerTurn = '
     }
   }
   const hasCustomerInput = Object.keys(customerInput).length > 0;
-  const trip = itinerary.length || dates || roster || rule || hasCustomerInput
-    ? { itinerary, dates, roster, rule, ...customerInput }
+  const trip = itinerary.length || dates || rule || hasCustomerInput
+    ? { itinerary, dates, rule, ...customerInput }
     : null;
   const seatName = String(context.seat?.name || context.seat?.displayName || '').trim();
   const seat = seatName ? { name: seatName, payer: String(context.seat?.payer || '').trim() } : null;
@@ -758,7 +756,7 @@ export async function jevQualityRewrite({ customerTurn, draft, tripContext = nul
       customer_turn: text(customerTurn, 6000),
       draft: text(draft, 3500),
       ...(itinerary ? { itinerary } : {}),
-      ...(tripContext?.roster ? { roster: text(tripContext.roster, 400) } : {}),
+      ...(tripContext?.travelSummary ? { travelSummary: modelVisibleTripContext(tripContext).travelSummary } : {}),
       ...(tripContext?.dates ? { dates: text(tripContext.dates, 400) } : {}),
       ...(requiredLine ? { required_payer_line: requiredLine } : {}),
       ...correction.state,
@@ -901,7 +899,9 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
   }
   assertSharedReplyTargetAllowed(OPENROUTER_CHAT_COMPLETIONS_URL, 'tiered openrouter chat', { allowTieredOpenRouterChat: true });
   const request = replyRequestBody({ rules, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, tripContext, planTable });
-  const userContent = intakeReplyTurn ? JSON.stringify(replyFacts && typeof replyFacts === 'object' ? replyFacts : {}) : JSON.stringify(request);
+  const userContent = JSON.stringify(intakeReplyTurn
+    ? { ...replyFacts, ...(request.trip_context?.travelSummary && { travelSummary: request.trip_context.travelSummary }) }
+    : request);
   const turnRules = intakeReplyTurn
     ? systemExtra
     : [replyTurnRules(rules, destination, upsell, postIntake, customerTurn, {

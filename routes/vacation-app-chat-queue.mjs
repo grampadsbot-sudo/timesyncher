@@ -17,6 +17,7 @@ import { loadOwnerReplyPlanForTurn } from '../src/vacation/reply-plan-entitlemen
 import { placeSearchClientError, recoverSoftSearchReply } from '../src/vacation/place-search-reply-facts.mjs';
 import { failedInTurnSearchTurn, replyStageMillis, turnStageTimings } from '../src/vacation/turn-stage-timings.mjs';
 import { persistVacationAppCustomerTurn } from '../src/vacation/vacation-app-queue-persist.mjs';
+import { travelSummaryForTurn } from '../src/vacation/vk-travel-summary.mjs';
 import { prepareChatItineraryEditForQueueTurn } from '../src/vacation/chat-itinerary-edit.mjs';
 import { producedDemoLockedChatEditReply } from '../src/vacation/chat-itinerary-edit-day.mjs';
 import { createBoundedReplyShipGate, createBoundedRewriteClaim, rewriteVacationAppActionClaim } from '../src/vacation/vacation-app-chat-postgen.mjs';
@@ -103,6 +104,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
   const classification = intake.classification;
   const { placeSearchTurn, webResearchTurn } = intake;
   if (!classification) throw new Error('vacation app queue intake classification is required');
+  const travelSummary = travelSummaryForTurn(trip, classification.understanding?.travelSummary ?? intake.previousTravelSummary);
   const firstIntake = firstMarkedIntake({ text: requestText, intake: classification.ok === true && classification.intake === true }, priorTurns);
   const queuedJobType = tripIntakeJobKind();
   const jobFields = tripIntakeJobFields({
@@ -179,6 +181,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     jobFields,
     customerTurnIndex,
     intakeLatency,
+    travelSummary,
   });
   const turnRows = [{ id: persistedCustomerTurnId }];
   const jobRows = [{ id: persistedJobId }];
@@ -283,6 +286,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
         rules,
         loadOwnerPlan,
         turnActionResults, understanding: classification.understanding,
+        travelSummary,
       });
     } else {
       produced = await produceLiveAppReply({
@@ -308,6 +312,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
         loadOwnerPlan,
         turnActionResults: itineraryEditAuthoritative ? { ...(turnActionResults || {}), itineraryEditAuthoritative } : turnActionResults,
         placeSearchReplyFacts, understanding: classification.understanding,
+        travelSummary,
       });
     }
   } catch (error) {
@@ -342,6 +347,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     sessionE2eMs: sessionE2eMs(),
     jev: customerLive.jev,
     reply: null,
+    travelSummary,
     intakeEvent: jobFields.intakeEvent,
     wantedThings: jobFields.wantedThings,
     roster: jobFields.roster,
@@ -369,6 +375,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     env,
     jobFields,
     firstIntake,
+    travelSummary,
   });
   const blockReplyShipGate = createBoundedReplyShipGate({
     tripId,
@@ -401,6 +408,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
       speakerName,
       collaborator: Boolean(seat),
       understanding: classification.understanding,
+      travelSummary,
       tripId,
       turnActionResults,
       sessionStartedMs,
@@ -424,7 +432,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
   const claimedFrom = produced.reply;
   const replyBackend = sessionReplyBackend(session);
   await rewriteVacationAppActionClaim(produced, { rewriteClaim, turnActionResults, replyClaimContext, seat, replyBackend });
-  await applyReplyQuality(produced, { customerTurn: requestText, env, previousReply: claimedFrom });
+  await applyReplyQuality(produced, { customerTurn: requestText, env, previousReply: claimedFrom, tripContext: { travelSummary } });
   if (!String(produced?.reply || '').trim() && isOrdinaryPlanningTurn(requestText)) {
     Object.assign(produced, recoverOrdinaryPlanningReply(produced, requestText, { backend: replyBackend, previousReply: claimedFrom }));
   }

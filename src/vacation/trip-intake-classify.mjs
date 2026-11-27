@@ -1,3 +1,5 @@
+import { splitWeekdaySuffix } from './intake-weekday-dates.mjs';
+import { normalizeTripThingName } from './trip-thing-name-shape.mjs';
 import { fetchOpenRouterJson } from './openrouter-call-ledger.mjs';
 import {
   DEFAULT_JEV_DECISIONS_URL,
@@ -182,6 +184,7 @@ function parseExtraction(raw) {
     intent: parsed.intent,
     contentTags: parsed.contentTags,
     committedSentenceIndexes: parsed.committedSentenceIndexes,
+    travelSummary: parsed.travelSummary,
   };
 }
 
@@ -261,14 +264,14 @@ export function customerNamedActivity(text) {
   const source = String(text || '').replace(/\s+/g, ' ').trim();
   const match = source.match(/\badd\s+(?:an?\s+)?([^.,!?]{2,80}?)(?=\s+and\b|[,.!?]|$)/i);
   if (!match) return null;
-  const title = match[1].replace(/\s+/g, ' ').trim();
+  const { title, whenLabel } = splitWeekdaySuffix(match[1].trim());
   if (!title || /^(collaborator|person|someone|them|it|that|this)$/i.test(title)) return null;
   return {
     title,
     category: 'activity',
     description: '',
     who: '',
-    whenLabel: '',
+    whenLabel,
     customerWhen: '',
     notes: [],
     collaboratorNotes: [],
@@ -283,20 +286,20 @@ export function namedCustomerActivities(text, activities = []) {
   const rows = Array.isArray(activities) ? [...activities] : [];
   const named = customerNamedActivity(text);
   if (!named) return rows;
-  const key = named.title.toLowerCase();
-  if (rows.some((thing) => String(thing?.title || thing?.name || '').toLowerCase() === key)) return rows;
+  const key = normalizeTripThingName(named.title);
+  if (rows.some((thing) => normalizeTripThingName(thing?.title || thing?.name) === key)) return rows;
   return [...rows, named];
 }
 
 export function mergeWantedThings(things, extracted, options = {}) {
   const next = Array.isArray(things) ? [...things] : [];
-  const have = new Set(next.map((thing) => clean(thing?.title, 180).toLowerCase()).filter(Boolean));
+  const have = new Set(next.map((thing) => normalizeTripThingName(thing?.title)).filter(Boolean));
   const incoming = [
     ...thingsFromIntake(extracted, options),
     ...(Array.isArray(extracted) ? extracted : []).filter((thing) => thing?.source === 'customer' && clean(thing?.title, 180)),
   ];
   for (const thing of incoming) {
-    const key = String(thing.title || '').toLowerCase();
+    const key = normalizeTripThingName(thing.title);
     if (!key || have.has(key)) continue;
     have.add(key);
     next.push(thing);
@@ -321,6 +324,7 @@ export async function classifyTripIntake({
   fetchImpl = fetch,
   requireExtractedTripDates = false,
   turnSession = null,
+  travelSummaryContext,
   customerTurnId = '',
   customerTurns = [],
   existingThings = [],
@@ -407,7 +411,7 @@ export async function classifyTripIntake({
       fetchImpl,
       OPENROUTER_CHAT_COMPLETIONS_URL,
       key,
-      turnSession ? turnUnderstandingRequest(request, String(text || '').slice(0, 12000)) : request,
+      turnSession ? turnUnderstandingRequest(request, String(text || '').slice(0, 12000), travelSummaryContext) : request,
       turnSession ? 'turn_understanding' : 'intake_extract',
     );
     const extractedFields = parseExtraction(chatText(extracted));
@@ -453,6 +457,7 @@ export async function classifyTripIntake({
           ? extractedFields.committedSentenceIndexes.filter(Number.isSafeInteger)
           : [],
         destination: clean(extractedFields.destination, 180),
+        ...(extractedFields.travelSummary && { travelSummary: extractedFields.travelSummary }),
       } } : {}),
     };
   } catch (error) {

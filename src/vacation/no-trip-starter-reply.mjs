@@ -79,9 +79,10 @@ export async function produceNoTripStarterReply({
   loadOwnerPlan = loadSessionOwnerReplyPlan,
   turnActionResults = null,
   understanding = null,
+  travelSummary = null,
 } = {}) {
   const vkBotReply = await routeVkBotMcpReply({ customerTurn, session, priorTurns: [], tripTitle: '', env });
-  if (vkBotReply) return requireReplyQuality(vkBotReply, { customerTurn, env });
+  if (vkBotReply) return requireReplyQuality(vkBotReply, { customerTurn, tripContext: { travelSummary }, env });
   if (!rules?.ok) {
     return { reply: null, rules, jev: null, model: null, reason: rules?.error || 'reply_rules_unloaded' };
   }
@@ -110,6 +111,7 @@ export async function produceNoTripStarterReply({
       postIntake: false,
       intakeReplyTurn: true,
       replyFacts: facts,
+      tripContext: { travelSummary },
       env,
       systemExtra: prompt, purpose: attempt ? 'reply_rewrite' : 'reply_draft',
     }));
@@ -147,7 +149,7 @@ export async function produceNoTripStarterReply({
   }
   const judge = async () => {
     const started = Date.now();
-    const result = await jevTurn({ customerTurn, draft: reply, session, env });
+    const result = await jevTurn({ customerTurn, draft: reply, tripContext: { travelSummary }, session, env });
     return applyJevTurn(jev, result, Date.now() - started);
   };
   return requireReplyQuality({ reply, rules, jev, model, reason: null }, { customerTurn, env, judge });

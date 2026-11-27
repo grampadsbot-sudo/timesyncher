@@ -1148,7 +1148,7 @@
   {
     "rule": "FILE-SIZE-500",
     "file": "src/vacation/live-app-turn.mjs",
-    "symbol": "lines:2260",
+    "symbol": "lines:2254",
     "note": "existing; ratchet only shrinks"
   },
   {
