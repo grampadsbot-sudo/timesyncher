@@ -17,7 +17,7 @@ const firstId = randomUUID();
 const lastId = randomUUID();
 const token = () => randomUUID().slice(0, 8);
 const tripRow = { trip_id: tripId, customer_id: customerId, title: token(), destination: token(),
-  display_name: 'Summary test account', created_at: '2026-11-26T18:00:00Z' };
+  customer_email: 'summary-test@gmail.com', display_name: 'Summary test account', created_at: '2026-11-26T18:00:00Z' };
 const turn = (id, direction, hour) => ({
   id, direction, speaker: direction === 'inbound' ? 'customer' : 'app',
   body: '', payload: {}, at: `2026-11-26T${hour}:00:00Z`,
