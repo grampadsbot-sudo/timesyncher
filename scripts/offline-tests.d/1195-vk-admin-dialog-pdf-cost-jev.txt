@@ -1,0 +1,1 @@
+scripts/test_vk_admin_dialog_pdf_cost_jev.mjs
