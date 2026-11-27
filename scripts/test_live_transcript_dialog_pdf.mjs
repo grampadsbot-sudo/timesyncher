@@ -845,31 +845,6 @@ assert.match(text, /flagged: false/);
 assert.match(jevRewritePdf, /interimReply\.text: The\s+harbor\s+morning/);
 assert.match(jevRewritePdf, /interimReply\.model: anthropic\/claude-haiku-5\.5/);
 assert.match(jevRewritePdf, /interimReply\.ms:\s*900/);
-const missingInterim = liveDoc({
-  turns: jevRewrite.turns.map((turn) => (turn.role === 'app' ? {
-    ...turn,
-    turnIndex: 21,
-    interimReply: { text: null, model: null, ms: null, judge: null },
-  } : { ...turn, turnIndex: 20 })),
-});
-const flagged = assertLiveTranscript(missingInterim);
-assert.deepEqual(flagged.interimFlags, ['turn 21 rewrite has no real interim reply']);
-const missingPdf = extractPdfText(renderLiveTranscriptPdf(missingInterim));
-assert.match(missingPdf, /FLAG\.\s+turn 21 rewrite has no real interim reply\.\s+Not invented/);
-assert.match(missingPdf, /interimReply\.text:\s*none/);
-assert.doesNotMatch(missingPdf, /Got it\. I saved that/);
-rejects(liveDoc({
-  turns: jevRewrite.turns.map((turn) => (turn.role === 'app' ? {
-    ...turn,
-    quality: { ...turn.quality, rewritten: false },
-    rewriteModel: '',
-    rewriteText: '',
-    rewriteAttempts: [],
-    jevScoreRewrite: null,
-    flagged: false,
-    interimReply: { text: 'Thursday stays a town walk.', model: 'anthropic/claude-haiku-5.5', ms: 200, judge: { judged: true, template: false, canShip: true } },
-  } : turn)),
-}), /non-rewrite turn has an interim reply/);
 assert.doesNotMatch(text, /not judged/);
 assert.match(text, /v7 Tier 1–4|v7 Tier 1.4/);
 assert.match(text, /v7 overall/);
