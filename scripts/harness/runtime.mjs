@@ -8,7 +8,7 @@ import { provisionThrowaway } from './live-provision.mjs';
 import { customerAskFromEnv } from './customer-live.mjs';
 import { sumUsageUsd } from './cost.mjs';
 import { playCustomerTurns } from './live-play.mjs';
-import { attachMedia, captureScreens, fetchKeepsake, renderDialog, renderStoredDialog, writeVideoCheck } from './live-outputs.mjs';
+import { attachMedia, captureScreens, fetchKeepsake, renderDialog, renderStoredDialog, runSteps, writeVideoCheck } from './live-outputs.mjs';
 import { captureOnboardingPdf, rebuildCustomerPdf } from './onboarding-capture.mjs';
 import { redactText, shortHash } from './redact.mjs';
 import { redactUrls } from './backends.mjs';
@@ -20,6 +20,8 @@ import { stampUnstoredExchange } from './unstored-turn.mjs';
 import { vkAdminStorage } from '../../src/vacation/vk-admin-review-storage.mjs';
 import { assertAdminOnboardingCaptures } from './admin-onboarding-captures.mjs';
 import { captureVacationInviteOnboarding } from './onboarding-invites.mjs';
+import { attachSsrToKeepsakeMetadata } from '../customer_suite/ssr/dialog-hook.mjs';
+import { createLiveSsrHarness, primeLiveSsr } from './live-ssr-harness.mjs';
 
 function stampLivePdf(doc, played) {
   if (!doc || !Array.isArray(doc.turns)) return doc;
@@ -32,6 +34,14 @@ function stampLivePdf(doc, played) {
   last.appCost = appCosts.length ? appCosts : 'none';
   last.customerCost = customerCosts.length ? customerCosts : 'none';
   return doc;
+}
+
+function appEndpoint(origin, token, tripId) {
+  const url = new URL('/api/vacation-itinerary', origin);
+  url.searchParams.set('app', '1');
+  url.searchParams.set('session', token);
+  url.searchParams.set('tripId', tripId);
+  return url;
 }
 
 export function chatLeftNoThing(played) {
@@ -270,6 +280,9 @@ export function liveOptions(env = process.env) {
       const putArtifact = createAdminArtifactWriter({
         origin, login: ready.VK_ADMIN_LOGIN, fetchImpl, harnessVacation,
       });
+      const { ssrReactions, ssrSetupErrors, liveSsrRespond } = await primeLiveSsr({
+        liveCustomer, story, ready, bannedHosts, customerAskFromEnv,
+      });
       const { played, adminArtifacts, dialog, transcript } = await playWithAdminArtifacts({
         origin, token: created.token, tripId: created.tripId, outDir: options.outDir, secrets, fetchImpl,
         replyBackend: story.reply_backend, put: putArtifact,
@@ -288,6 +301,8 @@ export function liveOptions(env = process.env) {
           maxTurns: maxTurnsFromEnv(ready.VK_TEST_MAX_TURNS != null ? ready : process.env),
         }),
       });
+      adminArtifacts.errors.push(...ssrSetupErrors);
+      const storedTranscript = await storedLiveTranscript(db, created.token);
       const tripId = played.tripId || created.tripId;
       harnessVacation.tripId = tripId;
       adminArtifacts.onboardingCaptures = [];
@@ -331,6 +346,7 @@ export function liveOptions(env = process.env) {
         return writeOutcomes(options.outDir, {
           ...base,
           tripId,
+          ssrReactions,
           transcript,
           pdfText: dialog.pdfText,
           keepsakeOk: keepsake?.ok === true,
@@ -348,19 +364,36 @@ export function liveOptions(env = process.env) {
           recordArtifactFailure(adminArtifacts, 'review-upload-failed', error);
         }
       }
-      const steps = [...(story.steps || [])];
+      const steps = await runSteps(story, async () => {
+        const response = await fetchImpl(appEndpoint(origin, created.token, tripId), {
+          method: 'POST',
+          headers: { accept: 'application/json', 'content-type': 'application/json' },
+          body: JSON.stringify({ action: 'record-party', tripId, party: story.party }),
+        });
+        if (response.status >= 400) throw new Error('collaborator step failed');
+      });
+      const { finalizeLiveSsr, renderLiveDialogWithSsr } = createLiveSsrHarness({
+        liveCustomer, liveSsrRespond, ssrReactions, adminArtifacts, story, played, tripId,
+        putArtifact, outDir: options.outDir, recordArtifactFailure, stampLivePdf, storedTranscript,
+        created, secrets, origin, fetchImpl, replyBackend: story.reply_backend,
+      });
       await captureInviteOnboarding(!played.reason);
       if (chatLeftNoThing(played)) {
+        const ssrRecord = await finalizeLiveSsr({ ok: false, detail: 'no-thing-after-chat' });
+        const outDialog = ssrRecord ? await renderLiveDialogWithSsr(ssrRecord) : dialog;
+        const outTranscript = transcriptForScorecard(outDialog.transcript, transcript);
         const video = await writeVideoCheck({ origin, attachment: { ok: false, detail: 'no-thing-after-chat', bindings: [] }, fetchImpl, outDir: options.outDir });
         return writeOutcomes(options.outDir, {
           ...base,
           tripId,
           steps,
-          transcript,
-          pdfText: dialog.pdfText,
-          dialogOk: dialog.ok === true,
-          dialogDetail: dialog.detail,
-          dialogRefused: dialog.ok !== true,
+          ssrReactions,
+          ssr: ssrRecord,
+          transcript: outTranscript,
+          pdfText: outDialog.pdfText,
+          dialogOk: outDialog.ok === true,
+          dialogDetail: outDialog.detail,
+          dialogRefused: outDialog.ok !== true,
           videoExists: !String(video.detail || '').startsWith('video-missing'),
           videoPass: false,
           videoDetail: video.detail,
@@ -375,6 +408,18 @@ export function liveOptions(env = process.env) {
       const attachment = await attachMedia({ origin, shareToken, story, fetchImpl, env: ready });
       const video = await writeVideoCheck({ origin, attachment, fetchImpl, outDir: options.outDir });
       const keepsake = await storeHarnessKeepsake(keepsakeOptions);
+      const ssrRecord = await finalizeLiveSsr(keepsake);
+      if (ssrRecord) {
+        attachSsrToKeepsakeMetadata({
+          outDir: options.outDir,
+          keepsakePath: keepsake.ok ? path.join(options.outDir, 'keepsake.pdf') : '',
+          ssrRecord,
+          keepsakeStatus: keepsake.ok ? 'shown' : 'skipped',
+          keepsakeNote: keepsake.detail || '',
+        });
+      }
+      const outDialog = ssrRecord ? await renderLiveDialogWithSsr(ssrRecord) : dialog;
+      const outTranscript = ssrRecord ? transcriptForScorecard(outDialog.transcript, transcript) : transcript;
       const screens = await captureScreens({ origin, shareToken, sessionToken: created.token, outDir: options.outDir });
       try {
         onboard = await rebuildCustomerPdf(onboard, screens.files || []);
@@ -401,12 +446,14 @@ export function liveOptions(env = process.env) {
         ...base,
         tripId,
         steps,
-        transcript,
-        pdfText: dialog.pdfText,
-        dialogOk: dialog.ok === true,
-        dialogDetail: dialog.detail,
-        dialogRefused: dialog.ok !== true,
-        refusals: dialog.refusals || [],
+        ssrReactions,
+        ssr: ssrRecord,
+        transcript: outTranscript,
+        pdfText: outDialog.pdfText,
+        dialogOk: outDialog.ok === true,
+        dialogDetail: outDialog.detail,
+        dialogRefused: outDialog.ok !== true,
+        refusals: outDialog.refusals || [],
         keepsakeOk,
         keepsakeDetail: keepsake.detail || '',
         pricingReactionCaptured: pricingOk,

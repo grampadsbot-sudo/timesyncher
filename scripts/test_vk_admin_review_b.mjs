@@ -4,11 +4,14 @@ import { execFileSync } from 'node:child_process';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { LocalVkAdminStore } from '../src/vacation/vk-admin-review-storage.mjs';
+import { buildFeedbackArtifact } from '../src/vacation/vk-admin-feedback.mjs';
+import { LocalVkAdminStore, saveFeedbackArtifact } from '../src/vacation/vk-admin-review-storage.mjs';
+import { SSR_CHECKPOINTS } from './customer_suite/ssr/checkpoints.mjs';
 import { createAdminArtifactWriter } from './harness/admin-review-artifacts.mjs';
-import { VK_ADMIN_REVIEW_B_IDS, buildVkAdminReviewBFixture, vkAdminReviewBReplayPage } from './harness/vk-admin-review-b-fixture.mjs';
+import { buildAdminReviewBFixture } from './harness/admin-review-b-fixture.mjs';
 import { inviteOnboardingTags } from './harness/onboarding-screens.mjs';
-import { playWithAdminArtifacts, storeHarnessKeepsake, writeOutcomes } from './harness/runtime.mjs';
+import { replayVkAdminReviewHarness } from './fixtures/vk-admin-review-b-replay.mjs';
+import { storeHarnessKeepsake, writeOutcomes } from './harness/runtime.mjs';
 import { extractPdfText } from './live-transcript-dialog-pdf.mjs';
 import { startVkAdminLocalServer } from './qa/vk-admin-local-server.mjs';
 import { loadVkAdminPlaywright } from './qa/vk-admin-playwright.mjs';
@@ -18,8 +21,8 @@ const fixturePath = new URL('./fixtures/vk-admin-review/vacation-fixtures.json',
 const [orlando] = JSON.parse(await fs.readFile(fixturePath, 'utf8')).vacations;
 const {
   tripId, other, olderTrip, failedTrip, earlierCustomerId, fixtureTrip, before,
-} = VK_ADMIN_REVIEW_B_IDS;
-const { vacations, turns, openingGreeting, db, queries } = buildVkAdminReviewBFixture(orlando.shareSlug);
+  vacations, turns, openingGreeting, db, queries,
+} = buildAdminReviewBFixture(orlando);
 const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/FioAAAAASUVORK5CYII=', 'base64');
 
 const log = process.env.VK_ADMIN_REVIEW_SCREENSHOTS_DIR || path.join(os.tmpdir(), 'vk-admin-review-b');
@@ -51,6 +54,29 @@ try {
   assert.ok(picker.groups.every((group) => group.tripId !== other), 'the email-less owner is hidden by default');
   assert.ok(!JSON.stringify(picker).includes('@harness.invalid'));
   const store = new LocalVkAdminStore(workspace);
+  const feedbackReactions = SSR_CHECKPOINTS.map((checkpoint, index) => ({
+    checkpoint: checkpoint.id,
+    label: checkpoint.label,
+    constructs: [...checkpoint.constructs],
+    prompt: checkpoint.prompt,
+    reply: `Fixture role-play reply ${index + 1} for ${checkpoint.id}.`,
+  }));
+  await saveFeedbackArtifact(store, tripId, buildFeedbackArtifact({
+    story: { story_id: 'fixture-review', customer: { name: 'Sofia Lopez' }, destination: 'Fixture destination' },
+    played: { tripId, survey: { label: 'end of chat (legacy)', questions: ['Legacy?'], answers: ['Legacy only.'] } },
+    reactions: feedbackReactions,
+    ssr: {
+      method: 'ssr-maier-2025',
+      anchor_set_version: 'fixture',
+      summary_by_construct: {},
+      checkpoints: feedbackReactions.map((reaction) => ({
+        checkpoint: reaction.checkpoint,
+        construct: reaction.constructs[0],
+        expected_score: 3.8,
+        pmf_by_rating: { 4: 0.6 },
+      })),
+    },
+  }));
   const earlierNoteId = 'dddddddd-0000-0000-0000-000000000116';
   await store.putJson(`notes/customer-${earlierCustomerId}/${earlierNoteId}.json`, {
     id: earlierNoteId, vacationId: olderTrip, at: before, text: 'Existing admin note',
@@ -88,40 +114,9 @@ try {
       return result;
     },
   });
-  async function replay(id, failed = false) {
-    const outDir = path.join(workspace, id);
-    const [customer, app] = fixture.turns;
-    const stored = [];
-    let opened = 0;
-    let closed = 0;
-    const result = await playWithAdminArtifacts({
-      origin: staging, token: 'fixture-browser-session', tripId: id, outDir, put,
-      secrets: ['fixture-browser-session'], fetchImpl: fetchStaging, replyBackend: 'vk_bot_mcp',
-      loadTranscript: async () => ({ ...fixture, turns: stored }),
-      play: async (capture) => {
-        for (let turn = 1; turn <= (failed ? 2 : 5); turn += 1) {
-          const text = `Customer line ${turn}`;
-          stored.push({ ...customer, turnIndex: turn * 2 - 1, text, storedText: text });
-          stored.push({ ...app, turnIndex: turn * 2, quality: { ...app.quality, comment: `Reply ${turn} addresses the trip.` } });
-          await capture({ tripId: id, turn, text });
-        }
-        if (failed) {
-          const text = 'Stored customer message with no reply';
-          stored.push({ ...customer, turnIndex: 5, text, storedText: text, buildSha: sha });
-          throw new Error('simulated mid-run failure');
-        }
-        await capture({ tripId: id, turn: 5, text: 'Customer line 5' });
-        await capture({ tripId: id, turn: 6, text: 'Customer line 6' });
-        return { reason: '', liveShaStart: sha };
-      },
-      openPage: async () => {
-        opened += 1;
-        return { close: async () => { closed += 1; }, page: vkAdminReviewBReplayPage({ assert, fs, png, tripId: id }) };
-      },
-    });
-    assert.deepEqual([opened, closed], [1, 1]);
-    return { ...result, outDir };
-  }
+  const replay = (id, failed = false) => replayVkAdminReviewHarness({
+    id, failed, fixture, outRoot: workspace, png, sha, put, fetchStaging, staging,
+  });
   const { adminArtifacts, outDir, played, dialog } = await replay(tripId);
   assert.equal(played.reason, '');
   assert.equal(dialog.ok, true, dialog.detail);
@@ -138,7 +133,10 @@ try {
   assert.deepEqual(uploaded.at(-1), [`${artifactPath}/keepsake-pdf`, 200]);
   const keepsakePdf = await readArtifact(tripId, 'keepsake-pdf');
   assert.match(extractPdfText(keepsakePdf), /Complete List/);
-  assert.deepEqual(await readArtifact(tripId), { ok: true, turns: [1, 2, 3, 4, 5], onboardingCaptures: [], dialogPdf: true, keepsakePdf: true, review: null });
+  const { feedback: listedFeedback, ...listedArtifacts } = await readArtifact(tripId);
+  assert.deepEqual(listedArtifacts, { ok: true, turns: [1, 2, 3, 4, 5], onboardingCaptures: [], dialogPdf: true, keepsakePdf: true, review: null });
+  assert.equal(listedFeedback?.schema, 'vk-admin-feedback/v1');
+  assert.equal(listedFeedback?.vacation?.tripId, tripId);
   const onboardingTags = [
     ['telegram_collaborator', '000000000001'], ['telegram_collaborator', '000000000002'],
     ['web_editor', '000000000003'], ['viewer', '000000000004'],
@@ -188,7 +186,7 @@ try {
         await openMenu();
         await page.getByRole('option', { name, exact: true }).click();
       };
-      const basicViews = ['Dialog', 'Vacation site', 'Keepsake', 'Onboarding', 'Chat screenshots'];
+      const basicViews = ['Dialog', 'Feedback & QA', 'Vacation site', 'Keepsake', 'Onboarding', 'Chat screenshots'];
       const requests = [];
       page.on('request', (request) => requests.push([request.method(), new URL(request.url()).pathname]));
       await page.goto(`${base}/vacation-app/admin`);
@@ -222,7 +220,7 @@ try {
       assert.equal(await fs.readFile(await (await existingDownload).path(), 'utf8'), 'existing admin attachment');
       assert.equal(await page.locator('#adminView, .admin-view-controls, select').count(), 0);
       assert.equal(await page.locator('#appHeader .vacation-dropdown').count(), 1);
-      await menuButton.click();
+      await openMenu();
       assert.deepEqual(await viewOptions.allTextContents(), [...basicViews, 'All vacations']);
       await shotMenu('header-multiple-vacations');
       await page.keyboard.press('Escape');
@@ -240,8 +238,7 @@ try {
         'vendor/legacy · Actual $0.004 Estimated $0.00',
       ]);
       assert.match(await page.locator('[data-vacation-total]').textContent(), /Actual \$0.02134567 Estimated \$0.05 1 unpriced/);
-      assert.match(await page.locator('[data-review-result="qa"]').textContent(), /"score": 4/);
-      assert.match(await page.locator('[data-review-result="survey"]').textContent(), /happy/);
+      assert.equal(await page.locator('[data-feedback-qa-summary]').count(), 0);
       await openMenu();
       const dialogDownload = page.waitForEvent('download');
       await page.locator('#vacationDropdown [data-dialog-pdf]').click();
@@ -249,6 +246,17 @@ try {
       assert.equal(new URL(dialog.url()).pathname, `${artifactPath}/dialog-pdf`);
       assert.deepEqual(await fs.readFile(await dialog.path()), pdf);
       await shot('dialog');
+
+      await chooseView('Feedback & QA');
+      const feedback = page.locator('[data-feedback-view="customer"]');
+      await feedback.waitFor();
+      assert.match(await feedback.locator('[data-review-result="qa-czar"]').textContent(), /"score": 4/);
+      assert.match(await feedback.locator('[data-review-result="survey"]').textContent(), /happy/);
+      assert.match(await feedback.textContent(), /After setup/);
+      assert.match(await feedback.textContent(), /Fixture role-play reply/);
+      assert.match(await feedback.textContent(), /end of chat \(legacy\)/);
+      assert.doesNotMatch(await feedback.textContent(), /It answered some of it/);
+      await shot('feedback');
 
       await chooseView('Vacation site');
       const shared = page.frameLocator('[data-trip-frame]');
@@ -354,6 +362,12 @@ try {
       assert.deepEqual(server.writes, []);
 
       await chooseView('All Customers');
+      await page.getByRole('button', { name: 'All customers Feedback & QA', exact: true }).click();
+      const rollup = page.locator('[data-feedback-view="rollup"]');
+      await rollup.waitFor();
+      assert.match(await rollup.textContent(), /Fixture role-play reply/);
+      await shot('feedback-rollup');
+      await chooseView('All Customers');
       await page.getByRole('button', { name: 'Open Second fixture', exact: true }).click();
       await openMenu();
       await page.getByRole('option', { name: 'No Dialog PDF yet', exact: true }).waitFor();
@@ -363,7 +377,7 @@ try {
       assert.equal(await page.locator('[data-review-result]').count(), 0);
       assert.equal(await note.count(), 0);
       assert.equal(await existingNote.count(), 0);
-      await menuButton.click();
+      await openMenu();
       assert.deepEqual(await viewOptions.allTextContents(), basicViews);
       await shotMenu('header-single-vacation');
       await page.keyboard.press('Escape');
@@ -395,26 +409,28 @@ try {
   const failedOutcomes = JSON.parse(await fs.readFile(path.join(failed.outDir, 'outcomes.json'), 'utf8'));
   assert.equal(failedOutcomes.reason, 'harness-error');
   assert.deepEqual(failedOutcomes.adminArtifacts.httpFailures, [{ failure: 'turn-1-capture-or-upload-failed', operation: 'put', status: 503 }]);
-  assert.deepEqual(await readArtifact(failedTrip), { ok: true, turns: [1, 2], onboardingCaptures: [], dialogPdf: true, keepsakePdf: false, review: null });
+  const { feedback: failedFeedback, ...failedArtifacts } = await readArtifact(failedTrip);
+  assert.deepEqual(failedArtifacts, { ok: true, turns: [1, 2], onboardingCaptures: [], dialogPdf: true, keepsakePdf: false, review: null });
+  assert.equal(failedFeedback, null);
   assert.match(extractPdfText(await readArtifact(failedTrip, 'dialog-pdf')), /Stored customer message with no reply/);
 
   {
     const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
     const page = await context.newPage();
-  await page.goto(`${base}/vacation-app/admin`);
-  await page.fill('#adminLoginInput', LOGIN);
-  await page.locator('#adminLogin button').click();
-  await page.getByRole('button', { name: 'Open Kowalski family', exact: true }).click();
-  await page.locator(`#sitePane[data-run="${failedTrip}"]`).waitFor();
-  await page.locator('#tripButton').click();
-  await page.getByRole('option', { name: 'Onboarding', exact: true }).click();
-  const missing = page.locator('[data-onboarding-missing="1"]');
-  await missing.waitFor();
-  assert.match(await missing.textContent(), /harness:fixture:failed/);
-  const missingShot = path.join(log, 'onboarding-missing-390.png');
-  await page.screenshot({ path: missingShot, mask: [page.locator('.admin-coupon')] });
-  assert.ok((await fs.stat(missingShot)).size > 1000, 'onboarding-missing-390.png');
-  await context.close();
+    await page.goto(`${base}/vacation-app/admin`);
+    await page.fill('#adminLoginInput', LOGIN);
+    await page.locator('#adminLogin button').click();
+    await page.getByRole('button', { name: 'Open Kowalski family', exact: true }).click();
+    await page.locator(`#sitePane[data-run="${failedTrip}"]`).waitFor();
+    await page.locator('#tripButton').click();
+    await page.getByRole('option', { name: 'Onboarding', exact: true }).click();
+    const missing = page.locator('[data-onboarding-missing="1"]');
+    await missing.waitFor();
+    assert.match(await missing.textContent(), /harness:fixture:failed/);
+    const missingShot = path.join(log, 'onboarding-missing-390.png');
+    await page.screenshot({ path: missingShot, mask: [page.locator('.admin-coupon')] });
+    assert.ok((await fs.stat(missingShot)).size > 1000, 'onboarding-missing-390.png');
+    await context.close();
   }
 
   const directPut = createAdminArtifactWriter({

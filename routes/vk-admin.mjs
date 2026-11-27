@@ -9,9 +9,11 @@ import {
   writeVkAdminSession,
 } from '../src/vacation/vk-admin-session.mjs';
 import { findVkAdminVacation, vkAdminDatabase, vkAdminGroups, vkAdminLegacyNoteSources, vkAdminMember } from '../src/vacation/vk-admin-review-data.mjs';
+import { feedbackRollupRows } from '../src/vacation/vk-admin-feedback.mjs';
 import {
-  artifactType, listNotes, listReviewArtifacts, loadNoteFile, loadReviewArtifact,
-  noteFromBody, notesPath, presentNote, saveReviewArtifact, saveReviewResults, vkAdminStorage,
+  artifactType, listNotes, listReviewArtifacts, loadFeedbackArtifact, loadNoteFile, loadReviewArtifact,
+  noteFromBody, notesPath, presentNote, saveFeedbackArtifact, saveReviewArtifact, saveReviewResults, saveWelcome,
+  vkAdminStorage,
 } from '../src/vacation/vk-admin-review-storage.mjs';
 
 const OWNER_SHELL = fileURLToPath(new URL('../vacation-app.html', import.meta.url));
@@ -104,7 +106,7 @@ async function handleCustomers(req, res, session, db) {
   });
 }
 
-async function handleCustomer(req, res, env, session, tripId, action, db) {
+async function handleCustomer(req, res, env, session, tripId, action, db, getStore) {
   if ((!action && req.method !== 'GET') || (action && (action !== 'open' || req.method !== 'POST'))) return methodNotAllowed(res);
   const vacation = await findVkAdminVacation(db, tripId, { detail: true });
   if (!vacation) return notFound(res);
@@ -112,6 +114,7 @@ async function handleCustomer(req, res, env, session, tripId, action, db) {
   const customerId = new URL(req.url, 'http://localhost').searchParams.get('customerId');
   const member = vkAdminMember(vacation, customerId);
   if (!member) return notFound(res);
+  await saveWelcome(getStore(), member, vacation);
   const opened = [...new Set([...session.opened, tripId])].slice(-40);
   writeVkAdminSession(res, req, { ...session, opened }, env);
   return send(res, 200, { ok: true, role: 'admin', opened, vacation });
@@ -186,23 +189,50 @@ async function handleNotes(req, res, db, getStore, [id, index]) {
 async function handleArtifacts(req, res, db, getStore, tripId, artifact) {
   const type = artifact ? artifactType(artifact) : '';
   const review = artifact === 'review' && req.method === 'PUT';
-  if (artifact && !type && !review) return notFound(res);
+  const feedback = artifact === 'feedback';
+  if (artifact && !type && !review && !feedback) return notFound(res);
   const vacation = await findVkAdminVacation(db, tripId);
   if (!vacation) return notFound(res);
   if (req.method === 'GET') {
     const store = getStore();
     if (!artifact) return send(res, 200, { ok: true, ...await listReviewArtifacts(store, tripId) });
+    if (feedback) {
+      const payload = await loadFeedbackArtifact(store, tripId);
+      return payload ? send(res, 200, { ok: true, feedback: payload }) : notFound(res);
+    }
     const file = await loadReviewArtifact(store, tripId, artifact);
     return file ? sendFile(res, file, type, type === 'application/pdf' ? `${artifact.slice(0, -4)}.pdf` : '') : notFound(res);
   }
   if (req.method !== 'PUT' || !artifact) return methodNotAllowed(res);
-  if (!vacation.isTest && artifact !== 'dialog-pdf') return send(res, 403, { ok: false, error: 'captures require a test vacation' });
+  if (!vacation.isTest && artifact !== 'dialog-pdf' && artifact !== 'feedback') {
+    return send(res, 403, { ok: false, error: 'captures require a test vacation' });
+  }
   if (!jsonRequest(req)) return send(res, 415, { ok: false, error: 'JSON required' });
   const body = await readBody(req);
-  const saved = review ? await saveReviewResults(getStore(), tripId, body)
-    : await saveReviewArtifact(getStore(), tripId, artifact, body.data);
+  const store = getStore();
+  const saved = review ? await saveReviewResults(store, tripId, body)
+    : feedback ? await saveFeedbackArtifact(store, tripId, body)
+      : await saveReviewArtifact(store, tripId, artifact, body.data);
   if (!saved) return send(res, 400, { ok: false, error: 'invalid artifact' });
   return send(res, 200, { ok: true });
+}
+
+async function handleFeedbackRollup(req, res, db, getStore) {
+  if (req.method !== 'GET') return methodNotAllowed(res);
+  const groups = await vkAdminGroups(db);
+  const store = getStore();
+  const entries = [];
+  for (const group of groups) {
+    const feedback = await loadFeedbackArtifact(store, group.tripId);
+    if (!feedback) continue;
+    entries.push({
+      tripId: group.tripId,
+      customerLabel: group.label,
+      destination: group.destination,
+      payload: feedback,
+    });
+  }
+  return send(res, 200, { ok: true, rows: feedbackRollupRows(entries) });
 }
 
 export function createVkAdminHandler({ database = vkAdminDatabase, storage = vkAdminStorage } = {}) {
@@ -222,7 +252,8 @@ export function createVkAdminHandler({ database = vkAdminDatabase, storage = vkA
       if (head === 'customers' && id && action === 'artifacts' && !tail) {
         return await handleArtifacts(req, res, database(env), getStore, id, extra);
       }
-      if (head === 'customers' && id && !extra) return await handleCustomer(req, res, env, session, id, action, database(env));
+      if (head === 'customers' && id && !extra) return await handleCustomer(req, res, env, session, id, action, database(env), getStore);
+      if (head === 'feedback' && !id) return await handleFeedbackRollup(req, res, database(env), getStore);
       if (head === 'notes' && !extra && (!id || action)) return await handleNotes(req, res, database(env), getStore, [id, action]);
       if (head === 'clear-all' && !id) return handleClearAll(req, res, env, session);
       return notFound(res);

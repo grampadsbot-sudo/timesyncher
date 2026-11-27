@@ -379,3 +379,12 @@ export async function captureScreens({ origin, shareToken, sessionToken, outDir 
   const hits = chromeHits(texts.join('\n'));
   return { ok: files.length === ENGINES.length * WIDTHS.length * SURFACES.length && files.every(nonEmpty) && hits.length === 0, files, texts, hits, error: hits.join(',') };
 }
+
+export async function runSteps(story, recordParty) {
+  const present = [];
+  for (const step of story.steps || []) {
+    if (step === 'collaborator' && recordParty) await recordParty();
+    present.push(step);
+  }
+  return present;
+}

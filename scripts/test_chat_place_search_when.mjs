@@ -78,7 +78,7 @@ function placeClassification(when = '') {
   };
 }
 
-function mockPlace(title) {
+function mockPlace(title, externalId = `brave-${title.replace(/\s+/g, '-').toLowerCase()}`) {
   return {
     source: 'brave',
     title,
@@ -87,7 +87,7 @@ function mockPlace(title) {
     lng: -122.3,
     address: 'Seattle, WA',
     url: 'https://example.com/place',
-    externalId: 'brave-place-1',
+    externalId,
   };
 }
 
@@ -126,7 +126,10 @@ const plainApplied = await applyChatPlaceSearchForVacationTurn({
   turnId: 'turn-plain',
   publishShare: async () => {},
   searchImpl: async () => ({
-    places: [mockPlace('Plain Taco Spot'), mockPlace('Second Taco Spot')],
+    places: [
+      mockPlace('Plain Taco Spot', 'brave-place-1'),
+      mockPlace('Second Taco Spot', 'brave-place-2'),
+    ],
     notes: [],
   }),
 });
