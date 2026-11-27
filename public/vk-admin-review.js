@@ -8,9 +8,12 @@ window.startVkAdminReview = (() => {
     ['chat', 'Dialog'], ['trip', 'Vacation site'], ['keepsake', 'Keepsake'],
     ['onboarding', 'Onboarding'], ['captures', 'Chat screenshots'], ['vacations', 'All vacations'],
   ];
+  const allCustomersIntro = 'Choose a customer to drill down into their trips, chat and QA.';
+  const showTestCustomersKey = 'vkAdminShowTestCustomers';
   const json = (method, body) => ({ method, headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
   const state = { customers: new Map(), opened: [], recent: new Set(), details: new Map(), artifacts: new Map(),
-    selection: null, view: 'all', attachments: [], voiceMode: false, voiceArmed: false, sending: false, opening: false };
+    selection: null, view: 'all', attachments: [], voiceMode: false, voiceArmed: false, sending: false, opening: false,
+    showTestCustomers: false, hiddenTestCount: 0, loadingCustomers: false };
   let notesRequest = 0;
   let root;
 
@@ -27,6 +30,7 @@ window.startVkAdminReview = (() => {
   const artifactsPath = (id) => `customers/${encodeURIComponent(id)}/artifacts`;
   const accountKey = (member, tripId) => member.id == null ? `vacation:${tripId}` : `customer:${member.id}`;
   const groupMembers = (group) => group.customers.length ? group.customers : [{ id: null, customer_label: group.label }];
+  const testPill = (group) => group.testTag ? ` <small class="admin-test-tag">${safe(group.testTag)}</small>` : '';
 
   async function api(path, init) {
     const res = await fetch(`/api/admin/${path}`, { credentials: 'same-origin', ...init });
@@ -66,6 +70,7 @@ window.startVkAdminReview = (() => {
       : '';
     const runs = [...state.recent].map((key) => {
       const entry = state.customers.get(key);
+      if (!entry) return '';
       const latest = entry.vacations[0];
       return `<div data-run-group="${safe(latest.tripId)}">${option(key, entry.name, false, latest.destination, `data-open-account="${safe(key)}"`)}</div>`;
     }).join('');
@@ -74,16 +79,19 @@ window.startVkAdminReview = (() => {
   }
 
   function customerList() {
-    return `<div class="admin-customers" data-admin-customers="1">${[...state.customers].map(([key, account]) => {
+    const intro = `<p class="admin-view-note" data-admin-customers-intro="1">${safe(allCustomersIntro)}</p>`;
+    const count = state.hiddenTestCount ? ` (${safe(state.hiddenTestCount)})` : '';
+    const toggle = `<label class="admin-view-note admin-test-toggle"><input type="checkbox" data-admin-show-test${state.showTestCustomers ? ' checked' : ''} /> Show test customers${count}</label><p class="admin-view-note" role="status" data-admin-customers-status hidden></p>`;
+    return `<div class="admin-customers" data-admin-customers="1">${intro}${toggle}${[...state.customers].map(([key, account]) => {
       const latest = account.vacations[0];
       const coupon = account.coupon ? `<small class="admin-coupon">${safe(account.coupon)}</small>` : '';
-      return `<section class="admin-group" data-trip-group="${safe(latest.tripId)}" data-sort-at="${safe(latest.sortAt)}"><header><b>${safe(account.name)}</b><small>${safe(latest.destination)} · <time datetime="${safe(latest.sortAt)}">${safe(latest.sortAt.slice(0, 10))}</time></small>${coupon}</header><button class="admin-open" type="button" data-customer-id="${safe(account.id)}" data-open-account="${safe(key)}" aria-label="Open ${safe(account.name)}">${state.recent.has(key) ? 'Opened' : 'Open'}</button></section>`;
+      return `<section class="admin-group" data-trip-group="${safe(latest.tripId)}" data-sort-at="${safe(latest.sortAt)}"><header><b>${safe(account.name)}${testPill(latest)}</b><small>${safe(latest.destination)} · <time datetime="${safe(latest.sortAt)}">${safe(latest.sortAt.slice(0, 10))}</time></small>${coupon}</header><button class="admin-open" type="button" data-customer-id="${safe(account.id)}" data-open-account="${safe(key)}" aria-label="Open ${safe(account.name)}">${state.recent.has(key) ? 'Opened' : 'Open'}</button></section>`;
     }).join('')}</div>`;
   }
 
   function vacationList() {
     return `<div class="admin-customers" data-admin-vacations>${customer().vacations.map((vac) =>
-      `<section class="admin-group"><header><b>${safe(vac.title || vac.destination || vac.label)}</b><small>${safe(vac.destination)} · <time datetime="${safe(vac.sortAt)}">${safe(vac.sortAt.slice(0, 10))}</time></small></header><button class="admin-open" type="button" data-open-vacation="${safe(vac.tripId)}">${vac.tripId === viewTrip() ? 'Current vacation' : 'Open'}</button></section>`).join('')}</div>`;
+      `<section class="admin-group"><header><b>${safe(vac.title || vac.destination || vac.label)}${testPill(vac)}</b><small>${safe(vac.destination)} · <time datetime="${safe(vac.sortAt)}">${safe(vac.sortAt.slice(0, 10))}</time></small></header><button class="admin-open" type="button" data-open-vacation="${safe(vac.tripId)}">${vac.tripId === viewTrip() ? 'Current vacation' : 'Open'}</button></section>`).join('')}</div>`;
   }
 
   const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -332,13 +340,51 @@ window.startVkAdminReview = (() => {
     }
   }
 
+  const fetchCustomers = (includeTest) => api(includeTest ? 'customers?includeTest=1' : 'customers');
+
+  function updateCustomers(data) {
+    state.opened = data.opened || [];
+    state.hiddenTestCount = data.hiddenTestCount || 0;
+    indexCustomers(data.groups || []);
+  }
+
+  async function setTestCustomers(input) {
+    if (state.opening) {
+      input.checked = state.showTestCustomers;
+      return;
+    }
+    const includeTest = input.checked;
+    const status = root.querySelector('[data-admin-customers-status]');
+    status.hidden = true;
+    state.loadingCustomers = input.disabled = true;
+    try {
+      const { res, data } = await fetchCustomers(includeTest);
+      if (res.status === 401) return renderGate();
+      if (!res.ok) throw new Error('Customer list could not be loaded.');
+      state.showTestCustomers = includeTest;
+      try {
+        sessionStorage.setItem(showTestCustomersKey, includeTest ? '1' : '0');
+      } catch {
+        // The choice still applies if browser storage is unavailable.
+      }
+      updateCustomers(data);
+      showCustomer(null);
+      root.querySelector('[data-admin-show-test]').focus();
+    } catch {
+      input.checked = state.showTestCustomers;
+      status.textContent = 'Customer list could not be loaded.';
+      status.hidden = false;
+    } finally {
+      state.loadingCustomers = input.disabled = false;
+    }
+  }
+
   async function refresh() {
-    const { res, data } = await api('customers');
+    const { res, data } = await fetchCustomers(state.showTestCustomers);
     if (res.status === 401) return renderGate();
     if (res.status === 503) return renderGate('Admin sign-in is not configured here.');
     if (!res.ok) return renderGate('Admin review is not available.');
-    state.opened = data.opened || [];
-    indexCustomers(data.groups || []);
+    updateCustomers(data);
     const selection = history.state?.vkAdminSelection;
     const finish = state.opened.includes(selection?.tripId)
       && state.customers.get(selection.key)?.vacations.some((vac) => vac.tripId === selection.tripId);
@@ -354,7 +400,7 @@ window.startVkAdminReview = (() => {
   }
 
   async function openVacation(key, tripId = state.customers.get(key).vacations[0].tripId) {
-    if (state.opening) return;
+    if (state.opening || state.loadingCustomers) return;
     state.opening = true;
     try {
       const { id } = state.customers.get(key);
@@ -400,7 +446,7 @@ window.startVkAdminReview = (() => {
   }
 
   async function clearAll() {
-    if (state.opening) return;
+    if (state.opening || state.loadingCustomers) return;
     const { res, data } = await api('clear-all', { method: 'POST' });
     if (res.status === 401) return renderGate();
     if (!res.ok) return;
@@ -425,7 +471,15 @@ window.startVkAdminReview = (() => {
 
   return (mount) => {
     root = mount;
+    try {
+      state.showTestCustomers = sessionStorage.getItem(showTestCustomersKey) === '1';
+    } catch {
+      state.showTestCustomers = false;
+    }
     root.addEventListener('click', handleClick);
+    root.addEventListener('change', (event) => {
+      if (event.target.matches('[data-admin-show-test]')) void setTestCustomers(event.target);
+    });
     return refresh().catch((error) => {
       console.error(error);
       renderGate('Admin review could not load.');

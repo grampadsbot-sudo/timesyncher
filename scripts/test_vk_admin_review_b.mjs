@@ -48,7 +48,8 @@ try {
   }
   const cookie = await auth();
   const picker = await (await fetch(`${base}/api/admin/customers`, { headers: { cookie } })).json();
-  assert.equal(picker.testCustomerCount, 100, 'roster runs do not add customers to the roster count');
+  assert.equal(picker.testCustomerCount, 101, 'roster runs share roster members and the email-less owner counts as test');
+  assert.ok(picker.groups.every((group) => group.tripId !== other), 'the email-less owner is hidden by default');
   assert.ok(!JSON.stringify(picker).includes('@harness.invalid'));
   const store = new LocalVkAdminStore(workspace);
   const earlierNoteId = 'dddddddd-0000-0000-0000-000000000116';
@@ -162,7 +163,8 @@ try {
       await page.goto(`${base}/vacation-app/admin`);
       await page.fill('#adminLoginInput', LOGIN);
       await page.locator('#adminLogin button').click();
-      await page.locator('[data-trip-group]').first().waitFor();
+      await page.getByRole('checkbox', { name: /Show test customers/ }).check();
+      await page.locator('[data-trip-group="vk-fixture-decoy"]').waitFor();
       const timestamps = await page.locator('[data-sort-at]').evaluateAll((rows) => rows.map((row) => row.dataset.sortAt));
       assert.deepEqual(timestamps, [...timestamps].sort().reverse());
       assert.equal(await page.locator('[data-trip-group]').first().getAttribute('data-trip-group'), tripId);

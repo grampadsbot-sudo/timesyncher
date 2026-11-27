@@ -6,6 +6,25 @@ import { listVkAdminGroups, presentVkAdminVacation, vkAdminRosterId } from './vk
 const iso = (value) => value ? new Date(value).toISOString() : null;
 const date = (value) => iso(value)?.slice(0, 10) || '';
 
+export const VK_ADMIN_TEST_DOMAINS = Object.freeze([
+  'agentmail.to', 'example.com', 'example.test', 'example.invalid',
+  'harness.invalid', 'resend.dev', 'timesyncher.test', 'test.com',
+]);
+const testDomainSuffixes = ['.invalid', '.test', '.local', '.example'];
+
+export function classifyVkAdminGroup({ customerId, email, rosterId, harnessTag }, { fixture = false } = {}) {
+  const domain = email?.trim().split('@')[1]?.toLowerCase();
+  let testReason = null;
+  if (fixture) testReason = 'fixture';
+  else if (harnessTag) testReason = 'harness';
+  else if (!customerId) testReason = 'no-owner';
+  else if (rosterId != null) testReason = 'fixture';
+  else if (!domain) testReason = 'no-email';
+  else if (VK_ADMIN_TEST_DOMAINS.includes(domain) || testDomainSuffixes.some((suffix) => domain.endsWith(suffix))) testReason = 'test-domain';
+  const isTest = testReason !== null;
+  return { isTest, testReason, visibleByDefault: !isTest, testTag: isTest ? 'Test' : null };
+}
+
 function groupByKey(items, keyFn) {
   const map = new Map();
   for (const item of items) {
@@ -20,6 +39,7 @@ function groupByKey(items, keyFn) {
 function storedGroup(row) {
   const label = row.display_name || [row.first_name, row.last_name].filter(Boolean).join(' ') || row.title;
   const rosterId = vkAdminRosterId(row.customer_email);
+  const harnessTag = row.harness_tag || '';
   const member = rosterId != null
     ? { id: rosterId, customer_label: label, recordId: row.customer_id }
     : { id: row.customer_id, customer_label: label };
@@ -27,13 +47,15 @@ function storedGroup(row) {
     tripId: row.trip_id, sortAt: iso(row.created_at), title: row.title,
     label, destination: row.destination || '', customerCount: row.customer_id ? 1 : 0,
     customers: row.customer_id ? [member] : [],
-    isTest: rosterId != null || Boolean(row.harness_tag),
-    harnessTag: row.harness_tag || '',
+    harnessTag,
+    ...classifyVkAdminGroup({ customerId: row.customer_id, email: row.customer_email, rosterId, harnessTag }),
   };
 }
 
+const fixtureVisibility = classifyVkAdminGroup({}, { fixture: true });
+
 export async function vkAdminGroups(db) {
-  const fixtures = listVkAdminGroups();
+  const fixtures = listVkAdminGroups().map((group) => ({ ...group, ...fixtureVisibility }));
   if (!db) return fixtures;
   const rows = await db`
     select t.id::text as trip_id, t.title, t.destination, t.created_at,
@@ -42,7 +64,16 @@ export async function vkAdminGroups(db) {
     from trips t left join customers c on c.id = t.customer_id
     order by t.created_at desc, t.id
   `;
-  return [...rows.map(storedGroup), ...fixtures].sort((a, b) => Date.parse(b.sortAt) - Date.parse(a.sortAt));
+  const groups = [...rows.map(storedGroup), ...fixtures].sort((a, b) =>
+    (Date.parse(b.sortAt) || 0) - (Date.parse(a.sortAt) || 0));
+  const harnessStories = new Set();
+  for (const group of groups) {
+    const story = /^harness:[^:\s]+:([^:\s]+)$/.exec(group.harnessTag)?.[1];
+    if (!story || harnessStories.has(story)) continue;
+    harnessStories.add(story);
+    group.visibleByDefault = true;
+  }
+  return groups;
 }
 
 export function vkAdminMember(vacation, customerId = null) {
@@ -182,7 +213,10 @@ function storedLedger(transcript, tripId) {
 
 export async function findVkAdminVacation(db, id, { detail = false } = {}) {
   const fixture = presentVkAdminVacation(id);
-  if (fixture) return detail ? dialog(fixture, fixture.ledger || []) : fixture;
+  if (fixture) {
+    const group = { ...fixture, ...fixtureVisibility };
+    return detail ? dialog(group, group.ledger || []) : group;
+  }
   if (!db || !/^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/i.test(id)) return null;
   const [row] = await db`
     select t.id::text as trip_id, t.title, t.destination, t.created_at, t.start_date, t.end_date,
