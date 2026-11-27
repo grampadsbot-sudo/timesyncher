@@ -4,21 +4,13 @@ import { execFileSync } from 'node:child_process';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-<<<<<<< HEAD
-import { cannedWelcomeLiveTurn } from '../src/vacation/onboarding-welcome.mjs';
 import { buildFeedbackArtifact } from '../src/vacation/vk-admin-feedback.mjs';
 import { LocalVkAdminStore, saveFeedbackArtifact } from '../src/vacation/vk-admin-review-storage.mjs';
 import { SSR_CHECKPOINTS } from './customer_suite/ssr/checkpoints.mjs';
-import { createAdminArtifactWriter, firstFiveTurnCapture, storeDialogPdf } from './harness/admin-review-artifacts.mjs';
+import { createAdminArtifactWriter } from './harness/admin-review-artifacts.mjs';
+import { buildAdminReviewBFixture } from './harness/admin-review-b-fixture.mjs';
 import { inviteOnboardingTags } from './harness/onboarding-screens.mjs';
 import { replayVkAdminReviewHarness } from './fixtures/vk-admin-review-b-replay.mjs';
-=======
-import { LocalVkAdminStore } from '../src/vacation/vk-admin-review-storage.mjs';
-import { buildAdminReviewBFixture } from './harness/admin-review-b-fixture.mjs';
-import { replayAdminHarnessTurns } from './harness/admin-review-b-replay.mjs';
-import { createAdminArtifactWriter } from './harness/admin-review-artifacts.mjs';
-import { inviteOnboardingTags } from './harness/onboarding-screens.mjs';
->>>>>>> origin/vk
 import { storeHarnessKeepsake, writeOutcomes } from './harness/runtime.mjs';
 import { extractPdfText } from './live-transcript-dialog-pdf.mjs';
 import { startVkAdminLocalServer } from './qa/vk-admin-local-server.mjs';
@@ -121,13 +113,8 @@ try {
       return result;
     },
   });
-<<<<<<< HEAD
   const replay = (id, failed = false) => replayVkAdminReviewHarness({
     id, failed, fixture, outRoot: workspace, png, sha, put, fetchStaging, staging,
-=======
-  const replay = (id, failed = false) => replayAdminHarnessTurns({
-    id, failed, workspace, staging, put, fetchStaging, fixture, png, sha,
->>>>>>> origin/vk
   });
   const { adminArtifacts, outDir, played, dialog } = await replay(tripId);
   assert.equal(played.reason, '');
@@ -194,11 +181,7 @@ try {
         await menuButton.click();
         await page.getByRole('option', { name, exact: true }).click();
       };
-<<<<<<< HEAD
       const basicViews = ['Dialog', 'Feedback & QA', 'Vacation site', 'Keepsake', 'Onboarding', 'Chat screenshots'];
-=======
-      const basicViews = ['Dialog', 'Vacation site', 'Keepsake', 'Onboarding', 'Chat screenshots', 'Dialog PDF'];
->>>>>>> origin/vk
       const requests = [];
       page.on('request', (request) => requests.push([request.method(), new URL(request.url()).pathname]));
       await page.goto(`${base}/vacation-app/admin`);
@@ -236,9 +219,9 @@ try {
       await menuButton.click();
       assert.deepEqual(
         await page.locator('.admin-header-views .trip-option b').allTextContents(),
-        [...basicViews, 'All vacations'],
+        [...basicViews, 'Dialog PDF', 'All vacations'],
       );
-      assert.deepEqual(await viewOptions.allTextContents(), [...basicViews.slice(0, 5), 'All vacations']);
+      assert.deepEqual(await viewOptions.allTextContents(), [...basicViews, 'All vacations']);
       await shotMenu('header-multiple-vacations');
       await page.keyboard.press('Escape');
       assert.equal(await menuButton.getAttribute('aria-expanded'), 'false');
@@ -254,18 +237,12 @@ try {
         'vendor/third · unpriced',
         'vendor/legacy · Actual $0.00',
       ]);
-<<<<<<< HEAD
-      assert.match(await page.locator('[data-vacation-total]').textContent(), /Actual \$0.02134567 Estimated \$0.05 1 unpriced/);
-      assert.equal(await page.locator('[data-feedback-qa-summary]').count(), 0);
-=======
       assert.match(await page.locator('[data-vacation-total]').textContent(), /Actual \$0.02 Estimated \$0.05 1 unpriced/);
+      assert.equal(await page.locator('[data-feedback-qa-summary]').count(), 0);
       assert.deepEqual(await page.locator('[data-admin-turn-grade="not-graded"]').count(), 1);
       assert.deepEqual(await page.locator('[data-admin-turn-grade="graded"]').count(), 4);
       assert.deepEqual(await page.locator('[data-jev-score]').evaluateAll((els) => els.map((el) => el.textContent)), ['4.25', '3.8', '3.5', '4']);
       assert.deepEqual(await page.locator('[data-qa-verdict]').evaluateAll((els) => els.map((el) => el.textContent)), ['keep', 'rewrite', 'keep', 'keep']);
-      assert.match(await page.locator('[data-review-result="qa"]').textContent(), /"score": 4/);
-      assert.match(await page.locator('[data-review-result="survey"]').textContent(), /happy/);
->>>>>>> origin/vk
       const dialogDownload = page.waitForEvent('download');
       await menuButton.click();
       await page.getByRole('option', { name: 'Dialog PDF', exact: true }).click();
@@ -401,7 +378,7 @@ try {
       assert.equal(await note.count(), 0);
       assert.equal(await existingNote.count(), 0);
       await menuButton.click();
-      assert.deepEqual(await viewOptions.allTextContents(), basicViews.slice(0, 5));
+      assert.deepEqual(await viewOptions.allTextContents(), basicViews);
       assert.equal(await page.getByRole('option', { name: 'Dialog PDF', exact: true }).count(), 0);
       await shotMenu('header-single-vacation');
       await page.keyboard.press('Escape');

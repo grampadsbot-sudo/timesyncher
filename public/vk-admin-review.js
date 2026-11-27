@@ -199,15 +199,7 @@ window.startVkAdminReview = (() => {
       const meta = detail ? `<p class="admin-reply-detail"><strong>${safe(detail.model || 'Model unavailable')}</strong> · ${detail.priced ? costLines(detail.costs) : '<span data-cost="unpriced">unpriced</span>'}</p>${isAssistant ? gradeLine(detail.grade) : ''}` : (isAssistant ? gradeLine({ notGraded: true }) : '');
       return `${turnMarkup(turn)}${meta}`;
     }).join('');
-<<<<<<< HEAD
-    const pdf = artifacts?.dialogPdf
-      ? `<a class="admin-action" data-dialog-pdf href="/api/admin/${artifactsPath(vac.tripId)}/dialog-pdf" download>Dialog PDF</a>`
-      : (artifacts?.failed ? '<span class="admin-status">Dialog PDF could not be loaded.</span>' :
-        artifacts ? '<span class="admin-status">No Dialog PDF yet</span>' : '');
-    return `<div class="admin-dialog-head"><div class="admin-costs" data-vacation-total aria-label="Vacation total"><strong>Vacation total</strong> ${costLines(vac.costs)}</div>${pdf}</div><div class="messages" id="customerChatReplay" data-readonly="true" aria-readonly="true" aria-label="${safe(vac.label)} chat (read only)">${turns || '<p class="admin-empty">No chat turns are stored for this vacation yet.</p>'}</div>`;
-=======
-    return `<div class="admin-dialog-head"><div class="admin-costs" data-vacation-total aria-label="Vacation total"><strong>Vacation total</strong> ${costLines(vac.costs)}</div></div><div class="messages" id="customerChatReplay" data-readonly="true" aria-readonly="true" aria-label="${safe(vac.label)} chat (read only)">${turns || '<p class="admin-empty">No chat turns are stored for this vacation yet.</p>'}</div>${dialogResults({ qa: artifacts?.review?.qa ?? vac.qa, survey: artifacts?.review?.survey ?? vac.survey })}`;
->>>>>>> origin/vk
+    return `<div class="admin-dialog-head"><div class="admin-costs" data-vacation-total aria-label="Vacation total"><strong>Vacation total</strong> ${costLines(vac.costs)}</div></div><div class="messages" id="customerChatReplay" data-readonly="true" aria-readonly="true" aria-label="${safe(vac.label)} chat (read only)">${turns || '<p class="admin-empty">No chat turns are stored for this vacation yet.</p>'}</div>`;
   }
 
   function vacationSite(vac) {
