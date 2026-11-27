@@ -10,6 +10,7 @@ import { thingDetailOverrideFields } from './thing-detail-fields.mjs';
 import { categoryFor } from './intake-shared-trip-category.mjs';
 import { formatLocalClockTime } from './mcp-exif.mjs';
 import { reservationPlaceFields } from './mcp-reservations-submit.mjs';
+import { applyIntakeTripStateAssignments } from './intake-trip-state-assignments.mjs';
 
 const MONTHS = {
   jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
@@ -261,7 +262,7 @@ export function sharedTripFromIntake({ trip, things }) {
   const dayByDate = new Map(days.map((day, index) => [tripDates[index], day]));
   const todayIso = new Date().toISOString().slice(0, 10);
   const places = [];
-  const assignments = {};
+  const assignments = {}, occurrences = new Map();
   const thingOverrides = {};
   for (const thing of things || []) {
     if (!customerStatedLodgingThing(thing)) continue;
@@ -331,7 +332,8 @@ export function sharedTripFromIntake({ trip, things }) {
       ...(thing.logoUrl ? { logoUrl: thing.logoUrl } : {}),
       ...(thing.logoCaptureReason ? { logoCaptureReason: thing.logoCaptureReason } : {}),
     };
-    if (!isUnscheduled) {
+    if (Array.isArray(thingMeta.tripState?.occurrences)) occurrences.set(id, thingMeta.tripState.occurrences);
+    else if (!isUnscheduled) {
       for (const date of scheduledDates) {
         const day = dayByDate.get(date);
         if (!day) continue;
@@ -350,6 +352,7 @@ export function sharedTripFromIntake({ trip, things }) {
       }
     }
   }
+  if (occurrences.size) applyIntakeTripStateAssignments({ assignments, days, places, thingOverrides, occurrences });
   const categoryRegistry = new Map();
   for (const place of places) {
     const name = String(place.category_name || '').trim() || 'Place';

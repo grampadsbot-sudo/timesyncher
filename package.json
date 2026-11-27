@@ -42,6 +42,8 @@
     "test:dossier-bot-primary-seed": "node scripts/test_dossier_bot_primary_seed.mjs"
   },
   "devDependencies": {
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
     "vite": "^7.3.1"
   },
   "dependencies": {
