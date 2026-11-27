@@ -1,18 +1,17 @@
 import { cleanText } from './http.mjs';
 import { openCollaboratorAppSeats, seatFromSession } from './collaborator-app-seat.mjs';
+import { tripThingNameInText } from './trip-thing-name-shape.mjs';
 
-export function collaboratorInviteFromClassification(classification) {
-  if (!classification || typeof classification !== 'object') return null;
-  const inviteeEmail = cleanText(classification.inviteeEmail, 180).toLowerCase();
-  if (!inviteeEmail || !inviteeEmail.includes('@')) return null;
-  return {
-    name: cleanText(classification.inviteeName, 180),
-    email: inviteeEmail,
-  };
-}
-
-export function shouldRunCollaboratorInviteFromChat(classification = null) {
-  return Boolean(collaboratorInviteFromClassification(classification));
+export function collaboratorInviteFromClassification(classification, customerText) {
+  const request = classification?.understanding?.sendCollaboratorInvite;
+  const span = request?.explicitSendRequestSpan;
+  if (classification?.ok !== true || typeof customerText !== 'string' || typeof span !== 'string'
+    || !span.trim() || !customerText.includes(span)) return null;
+  const name = cleanText(request.name, 180);
+  const email = cleanText(request.email, 180).toLowerCase();
+  const addresses = span.toLowerCase().split(/[\s<>,();]+/).map((part) => part.replace(/[.!?]+$/, ''));
+  if ((name && !tripThingNameInText(name, span)) || (email && !addresses.includes(email))) return null;
+  return { name, email };
 }
 
 function resolveInviteScope(session, trip) {

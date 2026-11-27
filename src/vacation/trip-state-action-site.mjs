@@ -83,6 +83,7 @@ export function readTripStateSite(site, previous, turn) {
       return {
         id, item, type: items[item].type, role: row.role || 'visit',
         time: explicit ? row.tripStateTime : legacyTime(row, payload.thingOverrides[`place:${item}`]),
+        ...(row.tripStateProposedBy ? { proposed_by: row.tripStateProposedBy } : {}),
         via: explicit ? row.tripStateVia : prior?.via || stamp.via,
         turn: explicit ? row.tripStateTurn : prior?.turn || turn,
       };

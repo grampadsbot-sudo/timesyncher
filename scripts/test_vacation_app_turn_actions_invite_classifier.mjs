@@ -3,38 +3,36 @@ import assert from 'node:assert/strict';
 import { runVacationAppTurnActions } from '../src/vacation/vacation-app-turn-actions.mjs';
 
 const session = { id: 'session-1', customer_id: 'owner-1' };
-const requestText = 'my wife Kim, kim.rivera.sct@agentmail.to';
+const requestText = 'My sister Ana is coming. Her email is ana@example.com.';
 
-const success = await runVacationAppTurnActions({
+const inferred = await runVacationAppTurnActions({
   db: {},
   session,
   tripId: 'trip-1',
   requestText,
   classification: {
-    inviteeName: 'Kim',
-    inviteeEmail: 'kim.rivera.sct@agentmail.to',
+    ok: true,
+    inviteeName: 'Ana',
+    inviteeEmail: 'ana@example.com',
+    roster: [{ name: 'Ana', role: 'collaborator' }],
   },
-  openSeats: async () => [{ name: 'Kim', email: 'kim.rivera.sct@agentmail.to', emailStatus: 'sent' }],
+  openSeats: async () => assert.fail('Contact details and roster data cannot send an invite.'),
 });
-assert.deepEqual(success.invite, {
-  ok: true,
-  code: 'collaborator_invite_sent',
-  inviteeEmail: 'kim.rivera.sct@agentmail.to',
-  inviteeName: 'Kim',
-});
+assert.deepEqual(inferred, {});
 
+const explicitSendRequestSpan = 'Please send a collaborator invite to ana@example.com.';
 const missingName = await runVacationAppTurnActions({
   db: {},
   session,
   tripId: 'trip-1',
-  requestText,
+  requestText: explicitSendRequestSpan,
   classification: {
-    inviteeName: '',
-    inviteeEmail: 'kim.rivera.sct@agentmail.to',
+    ok: true,
+    understanding: { sendCollaboratorInvite: { name: '', email: 'ana@example.com', explicitSendRequestSpan } },
   },
 });
 assert.equal(missingName.invite.ok, false);
 assert.equal(missingName.invite.code, 'missing_invitee_name');
-assert.equal(missingName.invite.inviteeEmail, 'kim.rivera.sct@agentmail.to');
+assert.equal(missingName.invite.inviteeEmail, 'ana@example.com');
 
 console.log('test_vacation_app_turn_actions_invite_classifier: ok');

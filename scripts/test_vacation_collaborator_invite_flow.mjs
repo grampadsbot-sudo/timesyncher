@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 
 import {
   runCollaboratorInviteAction,
-  shouldRunCollaboratorInviteFromChat,
+  collaboratorInviteFromClassification,
 } from '../src/vacation/collaborator-invite-action.mjs';
 import { createCollaboratorInvite } from '../src/vacation/collaborators.mjs';
 import { renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
@@ -26,8 +26,8 @@ assert.match(queue, /runVacationAppTurnActions/);
 assert.match(queue, /turnActionResults/);
 
 const classification = { inviteeName: 'Alex', inviteeEmail: 'alex@example.com' };
-assert.equal(shouldRunCollaboratorInviteFromChat(classification), true);
-assert.equal(shouldRunCollaboratorInviteFromChat(null), false);
+assert.equal(collaboratorInviteFromClassification(classification, 'Alex, alex@example.com'), null);
+assert.equal(collaboratorInviteFromClassification(null), null);
 
 const templates = JSON.parse(await readFile(new URL('../content/onboarding-welcome.json', import.meta.url), 'utf8'));
 const collabWelcome = renderOnboardingWelcome({
