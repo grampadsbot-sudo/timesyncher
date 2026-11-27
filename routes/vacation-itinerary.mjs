@@ -102,7 +102,6 @@ import { resolveVacationAppQueueIntake } from '../src/vacation/vacation-app-queu
 import { tryHandleAiMcpChatTurn } from '../src/vacation/mcp-reservations-chat.mjs';
 import { tryHandlePendingPreviewChatTurn } from '../src/vacation/mcp-chat-preview-edit.mjs';
 import { refreshSearchProgressFromTripThings, searchProgressForClient, searchProgressForVacationAppTrip, syncSearchProgressStage } from '../src/vacation/search-progress.mjs';
-
 let vacationAppDatabase = null;
 
 export function useVacationAppDatabase(db) {
