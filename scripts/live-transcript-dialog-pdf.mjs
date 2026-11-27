@@ -57,8 +57,7 @@ export function assertLiveTranscript(doc) {
   if (!targetPerson) throw new Error('refused: Dialog PDF needs target_person for APP to <target_person> labels');
   const turns = Array.isArray(doc.turns) ? doc.turns : [];
   if (turns.length === 0) throw new Error('refused: live transcript has no turns');
-  const contentFails = [];
-  const interimFlags = [];
+  const contentFails = [], interimFlags = [];
   let expect = 'customer';
   let start = 0;
   if (turns[0]?.role === 'app') start = 1;
@@ -206,9 +205,7 @@ export function assertLiveTranscript(doc) {
           throw new Error(`refused: quality_not_judged turn ${turn.turnIndex} rewrite score is missing`);
         }
         const interimText = String(turn.interimReply?.text || '').trim();
-        const interimReal = Boolean(interimText)
-          && !isTemplateInterim(interimText, priorCustomer?.text || '', turn.interimReply?.judge)
-          && turn.interimReply?.model === INTERIM_MODEL;
+        const interimReal = interimText && !isTemplateInterim(interimText, priorCustomer?.text || '', turn.interimReply?.judge) && turn.interimReply?.model === INTERIM_MODEL;
         if (!interimReal) interimFlags.push(`turn ${turn.turnIndex} rewrite has no real interim reply`);
         const attempt = Array.isArray(turn.rewriteAttempts) ? turn.rewriteAttempts[0] : null;
         if (!attempt || !String(attempt.model || '').trim() || !Number.isFinite(Number(attempt.ms)) || (!String(attempt.text || '').trim() && !String(attempt.error || '').trim())) {
@@ -676,7 +673,7 @@ export function liveV7Pack(doc, shape) {
         jev_ran: generatedTurn ? jevRanLine(turn) : '',
         producer_log: app ? producerLogLine(turn) : '',
         quality: generatedTurn ? qualityBar(turn) : '',
-        interim_flag: interimFlagLine(turn, doc.interimFlags),
+        interim_flag: (doc.interimFlags || []).includes(`turn ${turn.turnIndex} rewrite has no real interim reply`) ? `FLAG. turn ${turn.turnIndex} rewrite has no real interim reply. Not invented.` : '',
         timing: generatedTurn ? formatLiveTimingLine({
           gen,
           model,
@@ -761,11 +758,6 @@ function qualityBar(turn) {
   const held = turn?.heldRewriteLine != null ? String(turn.heldRewriteLine) : heldRewriteLine(turn);
   if (score && held) return `${score} · ${held}`;
   return score || held;
-}
-
-function interimFlagLine(turn, flags) {
-  const line = (Array.isArray(flags) ? flags : []).find((item) => item === `turn ${turn?.turnIndex} rewrite has no real interim reply`);
-  return line ? `FLAG. ${line}. Not invented.` : '';
 }
 
 export function shippedRewriteLabel(turn) {
@@ -969,10 +961,9 @@ async function main() {
     exitUntrusted(new Error('untrusted: dialog PDF on disk does not print the drive build'));
   }
   const failLines = Array.isArray(transcript.contentFails) ? transcript.contentFails : [];
-  const flagLines = (Array.isArray(transcript.interimFlags) ? transcript.interimFlags : []).map((line) => `FLAG. ${line}. Not invented.`);
   const failsPath = args.fails || String(args.out).replace(/\.pdf$/i, '.content-fails.txt');
-  const failBody = [...failLines, ...flagLines];
-  fs.writeFileSync(failsPath, `${failBody.length ? failBody.join('\n') : 'Content checks: none.'}\n`);
+  const noted = [...failLines, ...(transcript.interimFlags || []).map((line) => `FLAG. ${line}. Not invented.`)];
+  fs.writeFileSync(failsPath, `${noted.length ? noted.join('\n') : 'Content checks: none.'}\n`);
   if (args.verify) {
     fs.appendFileSync(args.verify, `\n## Dialog content checks\n\n${failLines.length ? failLines.map((line) => `- ${line}`).join('\n') : '- Content checks: none.'}\n`);
   }
