@@ -72,6 +72,25 @@
 .admin-travel-cover dt { color: var(--muted); font-size: 0.875rem; font-weight: 700; white-space: nowrap; }
 .admin-travel-cover dd { margin: 0; }
 .admin-travel-cover p { margin: 12px 0 0; line-height: 1.5; white-space: pre-wrap; }
+.admin-travel-capabilities { display: grid; gap: 8px; margin-top: 16px; }
+.admin-travel-capabilities h2 { margin: 0; font-size: 1rem; }
+.admin-travel-capabilities details { min-width: 0; border: 1px solid var(--line); border-radius: 8px; overflow-wrap: anywhere; }
+.admin-travel-capabilities summary { padding: 12px; cursor: pointer; }
+.admin-travel-capabilities .admin-empty { margin: 0; }
+.admin-travel-capabilities-body { display: grid; gap: 12px; padding: 0 12px 12px; font-size: 0.875rem; }
+.admin-travel-cap-flags { display: flex; flex-wrap: wrap; gap: 6px 12px; list-style: none; margin: 0; padding: 0 0 10px; border-bottom: 1px solid var(--line); font-size: 0.8125rem; }
+.admin-travel-cap-flag { display: inline-flex; align-items: baseline; gap: 4px; min-width: 0; }
+.admin-travel-cap-flag-key { color: var(--muted); font-weight: 700; }
+.admin-travel-cap-group { display: grid; gap: 6px; min-width: 0; }
+.admin-travel-cap-group h3 { margin: 0; font-size: 0.8125rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
+.admin-travel-cap-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.admin-travel-cap-item { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 8px; padding-top: 4px; border-top: 1px solid var(--line); min-width: 0; }
+.admin-travel-cap-name { font-weight: 600; font-size: 0.8125rem; }
+.admin-travel-cap-meta { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 6px; font-size: 0.8125rem; }
+.admin-travel-cap-state { padding: 1px 6px; border-radius: 999px; background: var(--soft); font-weight: 600; }
+.admin-travel-cap-item[data-capability-enabled="true"] .admin-travel-cap-state { background: #e8f5e9; color: #1b5e20; }
+.admin-travel-cap-reason { color: var(--muted); }
+.admin-travel-cap-empty { color: var(--muted); font-size: 0.8125rem; }
 .admin-travel-rules { display: grid; gap: 8px; margin-top: 16px; }
 .admin-travel-rules h2 { margin: 0; font-size: 1rem; }
 .admin-travel-rules details { min-width: 0; border: 1px solid var(--line); border-radius: 8px; overflow-wrap: anywhere; }

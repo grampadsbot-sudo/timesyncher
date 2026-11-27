@@ -187,13 +187,15 @@ async function handleNotes(req, res, db, getStore, [id, index]) {
   return send(res, 201, { ok: true, note: presentNote(note) });
 }
 
-async function handleArtifacts(req, res, db, getStore, tripId, artifact) {
+async function handleArtifacts(req, res, env, db, getStore, tripId, artifact, capabilitiesFn) {
   if (artifact === 'travel-summary') {
     if (req.method !== 'GET') return methodNotAllowed(res);
-    const vacation = await findVkAdminVacation(db, tripId, { detail: true, includeModelRules: true });
+    const vacation = await findVkAdminVacation(db, tripId, {
+      detail: true, includeModelRules: true, includeCapabilities: true, env, capabilities: capabilitiesFn,
+    });
     if (!vacation) return notFound(res);
     const snapshots = await listTravelSummarySnapshots(getStore(), vacation);
-    return send(res, 200, { ok: true, snapshots });
+    return send(res, 200, { ok: true, snapshots, capabilities: vacation.capabilities });
   }
   const type = artifact ? artifactType(artifact) : '';
   const review = artifact === 'review' && req.method === 'PUT';
@@ -243,7 +245,7 @@ async function handleFeedbackRollup(req, res, db, getStore) {
   return send(res, 200, { ok: true, rows: feedbackRollupRows(entries) });
 }
 
-export function createVkAdminHandler({ database = vkAdminDatabase, storage = vkAdminStorage } = {}) {
+export function createVkAdminHandler({ database = vkAdminDatabase, storage = vkAdminStorage, capabilities } = {}) {
   return async function handler(req, res) {
     const env = process.env;
     if (!isVkAdminAllowedHost(req, env)) return notFound(res);
@@ -258,7 +260,7 @@ export function createVkAdminHandler({ database = vkAdminDatabase, storage = vkA
     try {
       if (head === 'customers' && !id) return await handleCustomers(req, res, session, database(env));
       if (head === 'customers' && id && action === 'artifacts' && !tail) {
-        return await handleArtifacts(req, res, database(env), getStore, id, extra);
+        return await handleArtifacts(req, res, env, database(env), getStore, id, extra, capabilities);
       }
       if (head === 'customers' && id && !extra) return await handleCustomer(req, res, env, session, id, action, database(env), getStore);
       if (head === 'feedback' && !id) return await handleFeedbackRollup(req, res, database(env), getStore);

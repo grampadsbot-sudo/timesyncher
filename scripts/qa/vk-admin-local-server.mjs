@@ -43,8 +43,8 @@ async function withBody(req) {
   return req;
 }
 
-export async function startVkAdminLocalServer({ port = 0, ownerAppPayload = null, adminDatabase, adminStore } = {}) {
-  const vkAdmin = createVkAdminHandler({ database: adminDatabase || (() => null), storage: adminStore });
+export async function startVkAdminLocalServer({ port = 0, ownerAppPayload = null, adminDatabase, adminStore, adminCapabilities } = {}) {
+  const vkAdmin = createVkAdminHandler({ database: adminDatabase || (() => null), storage: adminStore, capabilities: adminCapabilities });
   const writes = [];
   const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, 'http://local.test');

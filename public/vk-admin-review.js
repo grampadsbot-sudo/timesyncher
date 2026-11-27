@@ -241,6 +241,27 @@ window.startVkAdminReview = (() => {
     return `<article class="admin-travel-cover" data-travel-cover>${snapshot.tripName ? `<header><img src="/brand/vk-book-logo.svg" alt="" width="30" height="32"><h1 data-travel-field="tripName">${safe(snapshot.tripName)}</h1></header>` : ''}${facts ? `<dl>${facts}</dl>` : ''}${snapshot.description ? `<p data-travel-field="description">${safe(snapshot.description)}</p>` : ''}</article>`;
   }
 
+  function travelSummaryCapabilities(capabilities) {
+    if (!capabilities || typeof capabilities !== 'object') {
+      return '<section class="admin-travel-capabilities" aria-label="What the assistant can do" data-travel-capabilities><h2>What the assistant can do</h2><p class="admin-empty">No capabilities were reported for this vacation.</p></section>';
+    }
+    const entries = Object.entries(capabilities.actions && typeof capabilities.actions === 'object' ? capabilities.actions : {});
+    const enabled = entries.filter(([, entry]) => entry?.enabled === true);
+    const disabled = entries.filter(([, entry]) => entry?.enabled !== true);
+    const renderAction = ([name, entry]) => {
+      const isEnabled = entry?.enabled === true;
+      const reason = String(entry?.reason ?? '');
+      return `<li class="admin-travel-cap-item" data-capability-action="${safe(name)}" data-capability-enabled="${isEnabled}" data-capability-reason="${safe(reason)}"><code class="admin-travel-cap-name" data-capability-name>${safe(name)}</code><span class="admin-travel-cap-meta"><span class="admin-travel-cap-state" data-capability-state>${isEnabled ? 'enabled' : 'disabled'}</span><code class="admin-travel-cap-reason" data-capability-reason-text>${safe(reason)}</code></span></li>`;
+    };
+    const flags = ['booking', 'payment', 'email']
+      .filter((key) => Object.hasOwn(capabilities, key))
+      .map((key) => `<li class="admin-travel-cap-flag" data-capability-flag="${safe(key)}"><span class="admin-travel-cap-flag-key">${safe(key)}</span><code class="admin-travel-cap-flag-val" data-capability-flag-value>${safe(String(capabilities[key]))}</code></li>`)
+      .join('');
+    const enabledGroup = `<div class="admin-travel-cap-group" data-capability-group="enabled"><h3>Enabled (${enabled.length})</h3>${enabled.length ? `<ul class="admin-travel-cap-list">${enabled.map(renderAction).join('')}</ul>` : '<div class="admin-travel-cap-empty">None</div>'}</div>`;
+    const disabledGroup = `<div class="admin-travel-cap-group" data-capability-group="disabled"><h3>Off (${disabled.length})</h3>${disabled.length ? `<ul class="admin-travel-cap-list">${disabled.map(renderAction).join('')}</ul>` : '<div class="admin-travel-cap-empty">None</div>'}</div>`;
+    return `<section class="admin-travel-capabilities" aria-label="What the assistant can do" data-travel-capabilities><h2>What the assistant can do</h2><details><summary>${enabled.length} of ${entries.length} actions enabled</summary><div class="admin-travel-capabilities-body">${flags ? `<ul class="admin-travel-cap-flags" data-capability-flags>${flags}</ul>` : ''}${enabledGroup}${disabledGroup}</div></details></section>`;
+  }
+
   function travelSummaryRules(snapshot) {
     const prompts = snapshot.modelRules || [];
     const rules = prompts.length ? prompts.map(({ purpose, sections }) => {
@@ -250,16 +271,18 @@ window.startVkAdminReview = (() => {
     return `<section class="admin-travel-rules" aria-label="Model rules"><h2>Model rules</h2>${rules}</section>`;
   }
 
-  function travelSummaryContent(snapshot) {
-    return travelSummaryCover(snapshot) + travelSummaryRules(snapshot);
+  function travelSummaryContent(snapshot, capabilities) {
+    return travelSummaryCover(snapshot) + travelSummaryCapabilities(capabilities) + travelSummaryRules(snapshot);
   }
 
   function travelSummary(vac) {
     const result = state.travelSummaries.get(vac.tripId);
     if (!result) return '<p class="admin-empty" role="status">Loading Travel Summary…</p>';
     if (result.failed) return '<p class="admin-empty" role="status">Travel Summary could not be loaded.</p>';
-    const { snapshots } = result;
-    if (!snapshots.length) return '<p class="admin-empty" role="status">No customer turns recorded for this vacation.</p>';
+    const { snapshots, capabilities } = result;
+    if (!snapshots.length) {
+      return `<section class="admin-travel" aria-label="Travel Summary"><p class="admin-empty" role="status">No customer turns recorded for this vacation.</p>${travelSummaryCapabilities(capabilities)}</section>`;
+    }
     const chosen = snapshots.findIndex(({ turnId }) => turnId === state.travelSummaryTurn);
     const index = chosen < 0 ? snapshots.length - 1 : chosen;
     const snapshot = snapshots[index];
@@ -271,12 +294,12 @@ window.startVkAdminReview = (() => {
         <button type="button" data-travel-step="1" aria-label="Next turn"${index === snapshots.length - 1 ? ' disabled' : ''}>${chevron}</button>
         <output for="adminTravelTurn">${snapshot.turnNumber} / ${snapshots.length}</output>
       </div>
-      <div data-travel-snapshot="${safe(snapshot.turnId)}">${travelSummaryContent(snapshot)}</div>
+      <div data-travel-snapshot="${safe(snapshot.turnId)}">${travelSummaryContent(snapshot, capabilities)}</div>
     </section>`;
   }
 
   function selectTravelSummaryTurn(control, position) {
-    const { snapshots } = state.travelSummaries.get(viewTrip());
+    const { snapshots, capabilities } = state.travelSummaries.get(viewTrip());
     const snapshot = snapshots[position - 1];
     if (!snapshot) return;
     state.travelSummaryTurn = snapshot.turnId;
@@ -288,7 +311,7 @@ window.startVkAdminReview = (() => {
     view.querySelector('output').textContent = `${snapshot.turnNumber} / ${snapshots.length}`;
     const content = view.querySelector('[data-travel-snapshot]');
     content.dataset.travelSnapshot = snapshot.turnId;
-    content.innerHTML = travelSummaryContent(snapshot);
+    content.innerHTML = travelSummaryContent(snapshot, capabilities);
   }
 
   function scrubTravelSummary({ target: control }) {
