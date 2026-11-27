@@ -8,7 +8,7 @@ import { provisionThrowaway } from './live-provision.mjs';
 import { customerAskFromEnv } from './customer-live.mjs';
 import { sumUsageUsd } from './cost.mjs';
 import { playCustomerTurns } from './live-play.mjs';
-import { attachMedia, captureScreens, fetchKeepsake, renderDialog, renderStoredDialog, runSteps, writeVideoCheck } from './live-outputs.mjs';
+import { attachMedia, captureScreens, collaboratorStepFailure, fetchKeepsake, renderDialog, renderStoredDialog, runSteps, writeVideoCheck } from './live-outputs.mjs';
 import { captureOnboardingPdf, rebuildCustomerPdf } from './onboarding-capture.mjs';
 import { redactText, shortHash } from './redact.mjs';
 import { redactUrls } from './backends.mjs';
@@ -370,7 +370,7 @@ export function liveOptions(env = process.env) {
           headers: { accept: 'application/json', 'content-type': 'application/json' },
           body: JSON.stringify({ action: 'record-party', tripId, party: story.party }),
         });
-        if (response.status >= 400) throw new Error('collaborator step failed');
+        if (response.status >= 400) throw new Error(await collaboratorStepFailure(response));
       });
       const { finalizeLiveSsr, renderLiveDialogWithSsr } = createLiveSsrHarness({
         liveCustomer, liveSsrRespond, ssrReactions, adminArtifacts, story, played, tripId,
