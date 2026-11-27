@@ -4,6 +4,7 @@ import { isReservationAsk } from './mcp-reservations-handshake.mjs';
 import { isTripThingName, normalizeTripThingName, tripThingNameInText } from './trip-thing-name-shape.mjs';
 import { vkBotUsageCost } from './turn-cost.mjs';
 import { readCookie, requireWebEditAccess, webAccessCookieName } from './web-access.mjs';
+import { validatePlannedThings } from './chat-planned-thing-validation.mjs';
 
 const PLANNING_TURN_RE = /\b(?:itinerary|day-by-day|day by day|keep building|family plan|book early|want to book|we'?d want to book)\b|\bplan (?:the|our|a|my)\b|\bday\s+\d{1,2}\b/i;
 const DAY_LINE_RE = /^(?:#{1,3}\s*)?(?:\*\*)?\s*day\s*(\d{1,2})\s*(?:\*\*)?\s*[:.)\-\u2013\u2014]*\s*(.*)$/i;
@@ -148,6 +149,7 @@ async function tripStartDate(db, tripId) {
   }
 }
 
+<<<<<<< HEAD
 export async function plannedCustomerThings(db, tripId, text, activities = []) {
   const startDate = await tripStartDate(db, tripId);
   const titled = new Map();
@@ -163,6 +165,45 @@ export async function plannedCustomerThings(db, tripId, text, activities = []) {
     else titled.set(key, item);
   }
   return [...titled.values()];
+=======
+function mergeByTitle(base, extra) {
+  const next = Array.isArray(base) ? [...base] : [];
+  const seen = new Set(next.map((thing) => String(thing?.title || '').toLowerCase()).filter(Boolean));
+  for (const item of extra || []) {
+    const key = String(item?.title || '').toLowerCase();
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    next.push(item);
+  }
+  return next;
+}
+
+export function tripStateActionsEnabled(env = process.env) {
+  return env.VK_TRIP_STATE_ACTIONS === '1';
+}
+
+export async function plannedCustomerThings(db, tripId, text, appReply, activities = [], { env = process.env, existing = [] } = {}) {
+  const customerOnly = tripStateActionsEnabled(env);
+  const base = Array.isArray(activities) ? activities.filter(Boolean) : [];
+  const startDate = await tripStartDate(db, tripId);
+  let items = plannedItineraryItems(customerOnly ? text : `${text || ''}\n${appReply || ''}`, { startDate });
+  if (!customerOnly && !items.length && isPlanConfirmation(text)) {
+    items = plannedItineraryItems((await priorAppBodies(db, tripId)).join('\n'), { startDate });
+  }
+  return validatePlannedThings(mergeByTitle(base, items), { customerOnly, existing });
+}
+
+export async function persistCustomerNotesOnly(db, thing) {
+  return db`
+    update trip_things
+    set metadata = coalesce(metadata, '{}'::jsonb) || ${{
+      notes: thing.notes || [],
+      collaboratorNotes: thing.collaboratorNotes || [],
+    }}, updated_at = now()
+    where id = ${thing.id}
+    returning id
+  `;
+>>>>>>> origin/vk
 }
 
 export async function persistFollowupLodgingSafely(persistFn, db, tripId, lodgingWanted, options) {

@@ -1,5 +1,11 @@
 import { assignTripSiteUrlWhenThingsPresent } from './trip-site-url-after-insert.mjs';
 import { applyIntakeExtractedTripTitle } from './intake-title-persist.mjs';
+<<<<<<< HEAD
+=======
+import { intakeLodgingWanted } from './trip-intake-classify.mjs';
+import { validatePlannedThings } from './chat-planned-thing-validation.mjs';
+import { tripStateActionsEnabled } from './chat-plan-persist.mjs';
+>>>>>>> origin/vk
 import {
   persistIntakeLodgingLookupOnCustomerTurn,
   persistIntakeLodgingThings,
@@ -36,7 +42,8 @@ export async function intakeItineraryExistingThings(
   }
   if (lodgingWanted.length) {
     const current = await loadTripThings(db, tripId);
-    const lodgingOutcome = await persistIntakeLodgingThings(db, tripId, null, lodgingWanted, {
+    const uniqueLodging = validatePlannedThings(lodgingWanted, { customerOnly: tripStateActionsEnabled(env), existing: current });
+    const lodgingOutcome = await persistIntakeLodgingThings(db, tripId, null, uniqueLodging, {
       destinationHint: extractedDestination,
       areaHint: extractedDestination,
       env,

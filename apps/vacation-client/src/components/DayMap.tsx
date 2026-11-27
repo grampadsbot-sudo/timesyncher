@@ -3,6 +3,7 @@ import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import type { LatLngBoundsExpression, Map as LeafletMap, TileLayer as LeafletTileLayer } from 'leaflet';
 import type { SharedPlace } from '../types/sharedTrip';
 import { placeName } from '../lib/placeHelpers';
+import { isUsableMapLatLng } from '../lib/usableMapCoords.mjs';
 
 type Props = {
   places: SharedPlace[];
@@ -44,7 +45,7 @@ function FitBounds({ boundsKey, places }: { boundsKey: string; places: SharedPla
 
 export function DayMap({ places, hideHeading = false }: Props) {
   const withCoords = useMemo(
-    () => places.filter((p) => typeof p.lat === 'number' && typeof p.lng === 'number'),
+    () => places.filter((p) => isUsableMapLatLng(p.lat, p.lng)),
     [places],
   );
   const boundsKey = useMemo(
@@ -53,11 +54,7 @@ export function DayMap({ places, hideHeading = false }: Props) {
   );
 
   if (!withCoords.length) {
-    return (
-      <section className="tsv-day-map tsv-day-map--empty" data-ts-day-map="1">
-        <p className="tsv-muted">Map appears when places include coordinates.</p>
-      </section>
-    );
+    return null;
   }
   const center = withCoords[0];
   return (

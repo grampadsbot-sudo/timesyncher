@@ -1,3 +1,4 @@
+import { patchDayMapConditionalRender } from './map-usable-coords-patches.mjs';
 import { TREK_STATIC_MAP_TILE_HOST } from './trek-default-map-tiles.mjs';
 
 export const XA_STATIC_MAP_TILE_NEEDLE = 'static-map-tile" src="https://tile.openstreetmap.org/';
@@ -53,5 +54,5 @@ export function patchDayByDayKeepsakeMap(source = '', options = {}) {
     }
   }
 
-  return js;
+  return patchDayMapConditionalRender(js, options);
 }

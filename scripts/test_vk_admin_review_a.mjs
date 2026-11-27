@@ -216,7 +216,7 @@ await test('sign-in sets a signed httpOnly cookie with role=admin', async () => 
 
 await test('list: 100 test customers, grouped by tripId, newest first, test customers not forced to top', async () => {
   const cookie = await signIn();
-  const { groups, testCustomerCount } = await (await call('GET', '/api/admin/customers', { cookie })).json();
+  const { groups, testCustomerCount } = await (await call('GET', '/api/admin/customers?includeTest=1', { cookie })).json();
   assert.equal(testCustomerCount, 100);
   const coupons = groups.flatMap((g) => g.customers.map((c) => c.test_coupon)).sort();
   assert.deepEqual(coupons, Array.from({ length: 100 }, (_, i) => `VK-TEST-${String(i + 1).padStart(3, '0')}`));
@@ -231,7 +231,7 @@ await test('list: 100 test customers, grouped by tripId, newest first, test cust
   const times = groups.map((g) => Date.parse(g.sortAt));
   assert.deepEqual(times, [...times].sort((a, b) => b - a), 'newest first');
   assert.equal(groups[0].tripId, 'vk-fixture-decoy');
-  assert.equal(groups[0].isTest, false, 'newer non-test decoy is above the test vacations');
+  assert.equal(groups[0].testReason, 'fixture', 'the fixture decoy sorts first and is classified by its source');
   assert.ok(groups.indexOf(orlando) < groups.indexOf(anaheim), 'later test vacation above earlier one');
   assert.ok(orlando.isTest && anaheim.isTest);
 });
@@ -293,6 +293,8 @@ try {
       await page.fill('#adminLoginInput', LOGIN);
       await page.click('#adminLogin button[type="submit"]');
       await page.waitForSelector('[data-admin-customers]');
+      await page.getByRole('checkbox', { name: /Show test customers/ }).check();
+      await page.locator('[data-trip-group="vk-fixture-decoy"]').waitFor();
       const order = await page.$$eval('[data-trip-group]', (els) => els.map((el) => el.dataset.tripGroup));
       assert.equal(order[0], 'vk-fixture-decoy');
       assert.ok(order.indexOf('vk-fixture-trip-001') < order.indexOf('vk-fixture-trip-002'));
