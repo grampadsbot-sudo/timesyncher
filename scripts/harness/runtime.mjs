@@ -430,11 +430,10 @@ export function liveOptions(env = process.env) {
   };
   const play = async (story, options) => {
     const { sql } = await import('../../src/vacation/db.mjs');
-    const db = sql(ready);
     const secrets = secretValues(ready);
     return finishMeasuredPlay({
-      db, tag: options.tag, outDir: options.outDir, secrets, replyBackend: story.reply_backend,
-      play: async (measurement) => await playProvisioned(story, options, db, secrets, measurement),
+      connect: () => sql(ready), tag: options.tag, outDir: options.outDir, secrets, replyBackend: story.reply_backend,
+      play: async (measurement) => await playProvisioned(story, options, measurement.db, secrets, measurement),
     });
   };
   return {

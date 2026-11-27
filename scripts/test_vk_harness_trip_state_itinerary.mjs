@@ -62,6 +62,16 @@ try {
   const httpOutcome = JSON.parse(fs.readFileSync(path.join(httpDir, 'outcomes.json')));
   assert.equal(httpOutcome.itineraryCount, null);
   assert.equal(httpOutcome.itineraryCountSource, 'unmeasured');
+  const connectDir = path.join(dir, 'connect');
+  await finishMeasuredPlay({
+    async connect() { throw new Error('fixture connection failure'); },
+    tag, outDir: connectDir, secrets: [],
+    play: () => assert.fail('attempted to play without a connection'),
+  });
+  const connectOutcome = JSON.parse(fs.readFileSync(path.join(connectDir, 'outcomes.json')));
+  assert.equal(connectOutcome.reason, 'harness-error');
+  assert.equal(connectOutcome.itineraryCount, null);
+  assert.equal(connectOutcome.itineraryCountSource, 'unmeasured');
   for (const migration of ['001_vacation_mvp', '003_trip_things_source', '010_vacation_trip_state_actions', '011_vacation_trip_state_revisions']) {
     await raw.exec(fs.readFileSync(new URL(`../db/migrations/${migration}.sql`, import.meta.url), 'utf8'));
   }
