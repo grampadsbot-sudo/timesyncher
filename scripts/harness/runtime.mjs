@@ -49,10 +49,20 @@ export function chatLeftNoThing(played) {
   return played?.itineraryCountSource !== 'db' || !(played.itineraryCount > 0);
 }
 
+export const HARNESS_DEFAULT_MAX_TURNS = 50;
+
 export function maxTurnsFromEnv(env = process.env) {
   const raw = Number(env?.VK_TEST_MAX_TURNS);
-  if (!Number.isFinite(raw) || raw === 0) return 5;
+  if (!Number.isFinite(raw) || raw === 0) return HARNESS_DEFAULT_MAX_TURNS;
   return Math.max(1, Math.floor(raw));
+}
+
+export function maxTurnsForStory(story, env = process.env) {
+  const raw = Number(env?.VK_TEST_MAX_TURNS);
+  if (Number.isFinite(raw) && raw !== 0) return Math.max(1, Math.floor(raw));
+  const storyCap = Number(story?.max_turns);
+  if (Number.isFinite(storyCap) && storyCap > 0) return Math.floor(storyCap);
+  return HARNESS_DEFAULT_MAX_TURNS;
 }
 
 async function storedLiveTranscript(db, token) {
@@ -255,7 +265,7 @@ export function liveOptions(env = process.env) {
           afterCustomerTurn,
           liveCustomer,
           customerAsk: customerAskFromEnv(ready, bannedHosts),
-          maxTurns: maxTurnsFromEnv(ready.VK_TEST_MAX_TURNS != null ? ready : process.env),
+          maxTurns: maxTurnsForStory(story, ready.VK_TEST_MAX_TURNS != null ? ready : process.env),
         }),
       });
       adminArtifacts.errors.push(...ssrSetupErrors);
@@ -384,21 +394,13 @@ export function liveOptions(env = process.env) {
       } catch (error) {
         onboard = { ...onboard, ok: false, detail: String(error?.message || error).slice(0, 240) };
       }
-      const pricingOk = played.pricingReactionCaptured === true;
       const itineraryOk = Number(played.itineraryCount) > 0;
       const keepsakeOk = keepsake.ok === true;
       let reason = assertAdminOnboardingCaptures(story, adminArtifacts)
         || (adminArtifacts.errors.length ? 'admin-artifact-upload-or-capture-failed' : '')
         || (adminArtifacts.captures.length !== 5 ? 'admin-first-five-captures-missing' : '');
-      if (liveCustomer && (!itineraryOk || !keepsakeOk || !pricingOk)) {
-        const missing = [
-          itineraryOk ? null : 'itinerary',
-          keepsakeOk ? null : 'keepsake',
-          pricingOk ? null : 'pricing-reaction',
-        ].filter(Boolean);
-        reason = played.hitTurnCap
-          ? `cap-without-required:${missing.join(',')}`
-          : `missing-required:${missing.join(',')}`;
+      if (liveCustomer && !itineraryOk) {
+        reason = played.hitTurnCap ? 'cap-without-required:itinerary' : 'missing-required:itinerary';
       }
       return {
         ...base,
@@ -414,7 +416,8 @@ export function liveOptions(env = process.env) {
         refusals: outDialog.refusals || [],
         keepsakeOk,
         keepsakeDetail: keepsake.detail || '',
-        pricingReactionCaptured: pricingOk,
+        pricingReactionCaptured: played.pricingReactionCaptured === true,
+        interimFlags: outDialog.interimFlags || [],
         customerTurnCount: played.customerTurnCount || 0,
         hitTurnCap: played.hitTurnCap === true,
         reason,

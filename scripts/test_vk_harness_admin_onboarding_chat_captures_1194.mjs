@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import vm from 'node:vm';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -127,6 +128,23 @@ function capturePage({ chatOnly, siteTitle = 'Fixture Trip' } = {}) {
   await shotTurnCapture(page, { turn: 3, text: 'Customer line 3', outFile: out });
   assert.equal(page.shotVia(), '#workspace', 'with-site capture includes workspace header');
   assert.equal(page.titleWaited(), true, 'with-site capture waits for site header title');
+}
+
+
+{
+  const page = capturePage({ chatOnly: true });
+  const user = { textContent: 'Customer   line\n1' };
+  const document = { querySelectorAll: (selector) => {
+    if (selector.endsWith('.user')) return [user];
+    if (selector.includes(':not(.user)')) return [{}, {}];
+    return [user, {}, {}];
+  } };
+  page.waitForFunction = async (fn, arg) => {
+    const value = vm.runInNewContext(`(${fn.toString()})(arg)`, { document, arg });
+    assert.ok(value, 'serialized browser predicate recognizes stored turn without host closures');
+  };
+  await waitForTurnCapture(page, { turn: 1, text: 'Customer line 1' });
+  console.log('serialized first-turn predicates pass in isolated browser realm');
 }
 
 console.log('ok - vk harness admin onboarding and chat captures #1194');

@@ -82,6 +82,7 @@
       }
     },
     "media_plan": { "enum": ["11-18-spec"] },
+    "max_turns": { "type": "number" },
     "steps": { "type": "array", "items": { "type": "string", "minLength": 1 } },
     "media": {
       "type": "array",
