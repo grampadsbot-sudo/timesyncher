@@ -15,7 +15,7 @@ import {
 } from '../src/vacation/live-app-turn.mjs';
 import { recoverOrdinaryPlanningReply } from '../src/vacation/chat-plan-persist.mjs';
 import { buildCustomerPdf } from './harness/onboarding-pdf.mjs';
-import { purchaseEmailSurface, walkOnboardingWidth } from './harness/onboarding-capture.mjs';
+import { appEntryKind, combineTermsClicks, purchaseEmailSurface, walkOnboardingWidth } from './harness/onboarding-capture.mjs';
 import { ONBOARDING_WIDTHS, assessOnboardingScreens, shotBlank } from './harness/onboarding-screens.mjs';
 import { waitForCaptureSurface } from './harness/live-outputs.mjs';
 import { readTipSha } from './void-stale-build.mjs';
@@ -312,7 +312,7 @@ function spaFakePage() {
     },
     async waitForSelector(selector, opts = {}) {
       events.push(`wait:${selector}:${opts.state || ''}`);
-      if (selector === '#eulaScreen') eulaPainted = true;
+      if (String(selector).includes('#eulaScreen')) eulaPainted = true;
     },
     async waitForURL() {},
     async waitForFunction() {},
@@ -384,6 +384,65 @@ const built = buildCustomerPdf({ shots: allShots, laterFiles: [], outPath: path.
 const assessed = assessOnboardingScreens({ shots: allShots, pdfText: built.pdfText, termsClick: 'ui' });
 assert.equal(assessed.ok, true, assessed.detail);
 fs.rmSync(tmpOnboard, { recursive: true, force: true });
+
+function acceptedSkipPage() {
+  let url = `${origin}/`;
+  const page = {
+    async setViewportSize() {},
+    async goto(next) { url = next; },
+    async waitForSelector() {},
+    async waitForURL() {},
+    async waitForFunction() {},
+    async fill() {},
+    async click(selector) {
+      if (String(selector).includes('eula')) throw new Error('accepted-skip must not click the terms control');
+    },
+    async setContent() {},
+    url() { return url; },
+    async screenshot({ path: file }) { fs.writeFileSync(file, entryPainted); },
+    locator(selector) {
+      return {
+        count: async () => (selector === '#eulaScreen' ? 0 : 1),
+        innerText: async () => 'Welcome to Vacay Keepsake',
+      };
+    },
+  };
+  return page;
+}
+
+assert.equal(await appEntryKind({
+  async waitForSelector() {},
+  locator: (selector) => ({ count: async () => (selector === '#eulaScreen' ? 1 : 0) }),
+}), 'eula');
+assert.equal(await appEntryKind(acceptedSkipPage()), 'chat');
+assert.equal(combineTermsClicks(['ui', 'ui']), 'ui');
+assert.equal(combineTermsClicks(['accepted-skip', 'accepted-skip']), 'accepted-skip');
+assert.equal(combineTermsClicks(['ui', 'accepted-skip']), '');
+
+const skipDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lopez-r3-skip-eula-'));
+const skipShots = [];
+for (const width of ONBOARDING_WIDTHS) {
+  const walked = await walkOnboardingWidth({
+    page: acceptedSkipPage(),
+    origin,
+    customer: { name: 'Sofia Lopez', email: `sofia-skip-${width}@harness.invalid` },
+    width,
+    outDir: skipDir,
+    showPayment: async (current) => { await current.click('#continueBtn'); },
+    submitPayment: async (current) => {
+      await current.goto(`${origin}/order-success.html?session=throwaway-lopez`);
+    },
+  });
+  assert.equal(walked.termsClick, 'accepted-skip', `width ${width} follows the already-accepted app`);
+  assert.ok(walked.shots.some((shot) => shot.id === 'app-entry' && !shot.gap && !shot.blank));
+  assert.ok(walked.shots.some((shot) => shot.id === 'welcome' && !shot.gap));
+  assert.ok(walked.shots.some((shot) => shot.id === 'first-talk' && !shot.gap));
+  skipShots.push(...walked.shots);
+}
+const skipBuilt = buildCustomerPdf({ shots: skipShots, laterFiles: [], outPath: path.join(skipDir, 'customer.pdf') });
+const skipAssessed = assessOnboardingScreens({ shots: skipShots, pdfText: skipBuilt.pdfText, termsClick: 'accepted-skip' });
+assert.equal(skipAssessed.ok, true, skipAssessed.detail);
+fs.rmSync(skipDir, { recursive: true, force: true });
 
 const surfaceWaits = [];
 await waitForCaptureSurface({

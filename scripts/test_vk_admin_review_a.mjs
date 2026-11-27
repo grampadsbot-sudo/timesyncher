@@ -309,7 +309,7 @@ try {
       await page.screenshot({ path: path.join(SHOTS, `list-${width}.png`), mask: [page.locator('.admin-coupon')] });
 
       await orlandoRows.getByRole('button', { name: 'Open Lopez family', exact: true }).click();
-      await page.waitForSelector('#sitePane[data-kind="chat"] #customerChatReplay article.bubble');
+      await page.waitForSelector('#sitePane[data-kind="dialog"] #customerChatReplay article.bubble');
       const welcome = page.locator('#messages [data-admin-welcome]');
       await welcome.waitFor();
       assert.match(await welcome.textContent(), /Welcome to Lopez family's vacation.*Orlando/s);
@@ -354,7 +354,7 @@ try {
       await page.click('#tripButton');
       await page.click('[data-trip-id="all"]');
       await page.locator('[data-trip-group="vk-fixture-trip-002"] button').first().click();
-      await page.waitForSelector('#sitePane[data-kind="chat"][data-run="vk-fixture-trip-002"]');
+      await page.waitForSelector('#sitePane[data-kind="dialog"][data-run="vk-fixture-trip-002"]');
       assert.equal(await page.locator('#vacationDropdown [data-run-group]').count(), 2, 'two customers open at once');
       const clears = await page.$$eval('button', (els) => els.filter((el) => /clear/i.test(el.textContent || '') || el.matches('[data-clear-run], [data-clear-all]')).map((el) => el.textContent.trim()));
       assert.deepEqual(clears, ['Clear all'], 'Clear all is the only clear control');

@@ -5,7 +5,7 @@ window.startVkAdminReview = (() => {
   const check = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m20 6-11 11-5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   const brandLockup = '<div class="brand vk-app-brand" data-vk-wordmark="1"><img class="mark" src="/brand/vk-book-logo.svg" alt="Vacay Keepsake" width="28" height="30" /><span class="vk-print-wordmark">vacay <i>keepsake</i></span></div>';
   const views = [
-    ['chat', 'Dialog'], ['travel-summary', 'Travel Summary'], ['feedback', 'Feedback & QA'],
+    ['dialog', 'Dialog'], ['turns', 'Turns'], ['travel-summary', 'Travel Summary'], ['feedback', 'Feedback & QA'],
     ['trip', 'Vacation site'], ['keepsake', 'Keepsake'],
     ['onboarding', 'Onboarding'], ['captures', 'Chat screenshots'], ['vacations', 'All vacations'],
   ];
@@ -61,7 +61,7 @@ window.startVkAdminReview = (() => {
       `<span class="trip-option admin-view-status" role="option" aria-disabled="true"><span></span><span class="trip-option-text"><b>${safe(label)}</b></span></span>`;
     const actionRow = (title, href, attrs = '') =>
       `<a class="trip-option admin-view-action" href="${href}" role="option" ${attrs}><span></span><span class="trip-option-text"><b>${safe(title)}</b></span></a>`;
-    if (state.view === 'chat') {
+    if (state.view === 'dialog') {
       if (artifacts?.dialogPdf) rows.push(actionRow('Dialog PDF', `/api/admin/${tripPath}/dialog-pdf`, 'data-dialog-pdf="1" download'));
       else if (artifacts?.failed) rows.push(statusRow('Dialog PDF could not be loaded.'));
       else if (artifacts) rows.push(statusRow('No Dialog PDF yet'));
@@ -119,7 +119,8 @@ window.startVkAdminReview = (() => {
   const usdEstimated = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
 
   function costLines(costs) {
-    return `<span data-cost="actual">Actual ${usdActual.format(costs.actual)}</span> <span data-cost="estimated">Estimated ${usdEstimated.format(costs.estimated)}</span>${costs.unpriced ? ` <span data-cost="unpriced">${costs.unpriced} unpriced</span>` : ''}`;
+    const row = costs && typeof costs === 'object' ? costs : { actual: 0, estimated: 0, unpriced: 0 };
+    return `<span data-cost="actual">Actual ${usdActual.format(row.actual)}</span> <span data-cost="estimated">Estimated ${usdEstimated.format(row.estimated)}</span>${row.unpriced ? ` <span data-cost="unpriced">${row.unpriced} unpriced</span>` : ''}`;
   }
 
   function storedJevRollup(vac, feedback) {
@@ -215,7 +216,23 @@ window.startVkAdminReview = (() => {
       const meta = detail ? `<p class="admin-reply-detail"><strong>${safe(detail.model || 'Model unavailable')}</strong> · ${detail.priced ? costLines(detail.costs) : '<span data-cost="unpriced">unpriced</span>'}</p>` : '';
       return `${turnMarkup(turn)}${meta}`;
     }).join('');
-    return `<div class="admin-dialog-head"><div class="admin-costs" data-vacation-total aria-label="Vacation total"><strong>Vacation total</strong> ${costLines(vac.costs)}</div></div><div class="messages" id="customerChatReplay" data-readonly="true" aria-readonly="true" aria-label="${safe(vac.label)} chat (read only)">${turns || '<p class="admin-empty">No chat turns are stored for this vacation yet.</p>'}</div>`;
+    return `<div data-admin-view="dialog"><div class="admin-dialog-head"><div class="admin-costs" data-vacation-total aria-label="Vacation total"><strong>Vacation total</strong> ${costLines(vac.costs)}</div></div><div class="messages" id="customerChatReplay" data-readonly="true" aria-readonly="true" aria-label="${safe(vac.label)} chat (read only)">${turns || '<p class="admin-empty">No chat turns are stored for this vacation yet.</p>'}</div></div>`;
+  }
+
+  function conversationTurns(vac) {
+    const result = state.travelSummaries.get(vac.tripId);
+    if (!result) return '<section class="admin-turns" data-admin-view="turns" aria-label="Conversation management"><p class="admin-empty" role="status">Loading conversation management…</p></section>';
+    if (result.failed) return '<section class="admin-turns" data-admin-view="turns" aria-label="Conversation management"><p class="admin-empty" role="status">Conversation management could not be loaded.</p></section>';
+    const snapshots = result.snapshots || [];
+    if (!snapshots.length) return '<section class="admin-turns" data-admin-view="turns" aria-label="Conversation management"><p class="admin-empty" role="status">No customer turns are stored for this vacation yet.</p></section>';
+    const rows = snapshots.map((snapshot) => {
+      const json = snapshot.conversationState;
+      const body = json
+        ? `<pre class="admin-travel-json" data-conversation-json>${safe(JSON.stringify(json, null, 2))}</pre>`
+        : '<p class="admin-empty">No conversation management was stored for this turn.</p>';
+      return `<article data-conversation-turn="${safe(snapshot.turnNumber)}"><h3>Turn ${safe(snapshot.turnNumber)}</h3>${body}</article>`;
+    }).join('');
+    return `<section class="admin-turns" data-admin-view="turns" aria-label="Conversation management">${rows}</section>`;
   }
 
   function vacationSite(vac) {
@@ -432,12 +449,26 @@ window.startVkAdminReview = (() => {
     }
     if (state.view === 'all') return `<div class="site-pane" id="sitePane" data-kind="customers">${customerList()}</div>`;
     const vac = state.details.get(viewTrip());
-    return `<div class="site-pane admin-vacation" id="sitePane" data-kind="${state.view}" data-run="${safe(vac.tripId)}"><div class="admin-view-panel">${viewContent(vac)}</div></div>`;
+    return `<div class="site-pane admin-vacation" id="sitePane" data-kind="${state.view}" data-run="${safe(vac.tripId)}" data-admin-views-missing="${safe(adminViewsMissing(vac).join(','))}"><div class="admin-view-panel">${viewContent(vac)}</div></div>`;
+  }
+
+  function adminViewsMissing(vac) {
+    const missing = [];
+    if (!Array.isArray(vac?.turns)) missing.push('dialog');
+    const stored = state.travelSummaries.get(vac?.tripId);
+    if (!stored || stored.failed || !Array.isArray(stored.snapshots)) missing.push('turns');
+    return missing;
+  }
+
+  function markAdminViews(vac) {
+    const pane = document.getElementById('sitePane');
+    if (!pane || !vac || pane.dataset.run !== vac.tripId) return;
+    pane.dataset.adminViewsMissing = adminViewsMissing(vac).join(',');
   }
 
   function viewContent(vac) {
     const renderView = {
-      chat: dialog, 'travel-summary': travelSummary, feedback: feedbackView, trip: vacationSite, keepsake,
+      dialog, turns: conversationTurns, 'travel-summary': travelSummary, feedback: feedbackView, trip: vacationSite, keepsake,
       onboarding, captures, vacations: vacationList,
     }[state.view];
     return renderView(vac, state.artifacts.get(vac.tripId));
@@ -476,7 +507,7 @@ window.startVkAdminReview = (() => {
       state.view = button.dataset.view;
       if (state.view === 'feedback-all') void loadFeedbackRollup();
       renderViewPane();
-      if (state.view === 'travel-summary') void loadTravelSummary(viewTrip());
+      if (state.view === 'travel-summary' || state.view === 'turns') void loadTravelSummary(viewTrip());
       document.getElementById('tripButton').focus();
     } else if (button.dataset.tripId === 'all') showCustomer(null);
     else if (button.hasAttribute('data-clear-all')) void clearAll();
@@ -496,6 +527,7 @@ window.startVkAdminReview = (() => {
     const vac = state.details.get(viewTrip());
     pane.dataset.kind = state.view;
     pane.dataset.run = vac.tripId;
+    pane.dataset.adminViewsMissing = adminViewsMissing(vac).join(',');
     pane.querySelector('.admin-view-panel').innerHTML = viewContent(vac);
     lockReplay(document.getElementById('customerChatReplay'));
     replaceSwitcher();
@@ -632,6 +664,7 @@ window.startVkAdminReview = (() => {
     if (res.status === 503) return renderGate('Admin sign-in is not configured here.');
     if (!res.ok) return renderGate('Admin review is not available.');
     updateCustomers(data);
+    if (await openLinkedVacation()) return;
     const selection = history.state?.vkAdminSelection;
     const finish = state.opened.includes(selection?.tripId)
       && state.customers.get(selection.key)?.vacations.some((vac) => vac.tripId === selection.tripId);
@@ -665,26 +698,51 @@ window.startVkAdminReview = (() => {
     }
   }
 
-  function showCustomer(selection) {
+  async function openLinkedVacation() {
+    const params = new URLSearchParams(location.search);
+    const id = params.get('vacationId');
+    if (!id) return false;
+    const { res, data } = await api(`customers/${encodeURIComponent(id)}`);
+    if (!res.ok || !data.vacation) return false;
+    const vacation = data.vacation;
+    const member = vacation.customers?.[0] || { id: null, customer_label: vacation.label };
+    const key = accountKey(member, vacation.tripId);
+    if (!state.customers.has(key)) {
+      state.customers.set(key, { id: member.id, name: member.customer_label || vacation.label || 'Vacation', vacations: [] });
+    }
+    const account = state.customers.get(key);
+    if (!account.vacations.some((row) => row.tripId === vacation.tripId)) account.vacations.unshift(vacation);
+    state.details.set(vacation.tripId, vacation);
+    state.recent.add(key);
+    showCustomer({ key, tripId: vacation.tripId }, params.get('view') === 'turns' ? 'turns' : 'dialog');
+    return true;
+  }
+
+  function showCustomer(selection, view) {
     const sameCustomer = selection && selection.key === state.selection?.key;
     if (!sameCustomer) {
       state.attachments = [];
       state.voiceArmed = false;
     }
     state.selection = selection;
-    state.view = selection ? 'chat' : 'all';
+    state.view = selection ? (view || 'dialog') : 'all';
     state.travelSummaryTurn = null;
     history.replaceState({ ...history.state, vkAdminSelection: selection }, '');
     if (sameCustomer) renderViewPane();
     else render();
-    if (selection) void loadArtifacts(selection.tripId);
+    if (selection) {
+      void loadArtifacts(selection.tripId);
+      if (state.view === 'turns' || state.view === 'travel-summary' || new URLSearchParams(location.search).get('vacationId') === selection.tripId) {
+        void loadTravelSummary(selection.tripId);
+      }
+    }
   }
 
   async function loadArtifacts(id) {
     const result = await api(artifactsPath(id)).catch(() => null);
     const artifacts = result?.res.ok ? result.data : { failed: true };
     state.artifacts.set(id, artifacts);
-    if (viewTrip() === id && ['chat', 'captures', 'keepsake', 'onboarding', 'feedback'].includes(state.view)) {
+    if (viewTrip() === id && ['dialog', 'turns', 'captures', 'keepsake', 'onboarding', 'feedback'].includes(state.view)) {
       const vac = state.details.get(id);
       document.querySelector('.admin-view-panel').innerHTML = viewContent(vac);
       lockReplay(document.getElementById('customerChatReplay'));
@@ -695,8 +753,11 @@ window.startVkAdminReview = (() => {
   async function loadTravelSummary(id) {
     const result = await api(`${artifactsPath(id)}/travel-summary`).catch(() => null);
     state.travelSummaries.set(id, result?.res.ok ? result.data : { failed: true });
-    if (viewTrip() === id && state.view === 'travel-summary') {
-      document.querySelector('.admin-view-panel').innerHTML = travelSummary(state.details.get(id));
+    if (viewTrip() !== id) return;
+    const vac = state.details.get(id);
+    markAdminViews(vac);
+    if (state.view === 'travel-summary' || state.view === 'turns') {
+      document.querySelector('.admin-view-panel').innerHTML = viewContent(vac);
     }
   }
 

@@ -165,8 +165,15 @@ const query = async (strings, ...values) => {
   const sql = strings.join('?');
   if (sql.includes('from trips t left join customers c')) return [tripRow];
   if (sql.includes('from vacation_trip_state_revisions')) {
-    const row = sql.includes('request_id =') ? revisionsByRequest.get(values[1]) : revisionsByTurn.get(values[1]);
-    return row ? [row] : [];
+    if (sql.includes('request_id =')) {
+      const row = revisionsByRequest.get(values[1]);
+      return row ? [row] : [];
+    }
+    if (sql.includes('turn =')) {
+      const row = revisionsByTurn.get(values[1]);
+      return row ? [row] : [];
+    }
+    return [firstRevRow, lastRevRow];
   }
   if (sql.includes('from transcript_turns')) return [
     { ...turn(firstId, 'inbound', 19), payload: { modelRules: firstRules } },

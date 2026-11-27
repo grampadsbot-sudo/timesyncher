@@ -50,10 +50,20 @@ export function chatLeftNoThing(played) {
   return played?.itineraryCountSource !== 'db' || !(played.itineraryCount > 0);
 }
 
+export const HARNESS_DEFAULT_MAX_TURNS = 50;
+
 export function maxTurnsFromEnv(env = process.env) {
   const raw = Number(env?.VK_TEST_MAX_TURNS);
-  if (!Number.isFinite(raw) || raw === 0) return 5;
+  if (!Number.isFinite(raw) || raw === 0) return HARNESS_DEFAULT_MAX_TURNS;
   return Math.max(1, Math.floor(raw));
+}
+
+export function maxTurnsForStory(story, env = process.env) {
+  const raw = Number(env?.VK_TEST_MAX_TURNS);
+  if (Number.isFinite(raw) && raw !== 0) return Math.max(1, Math.floor(raw));
+  const storyCap = Number(story?.max_turns);
+  if (Number.isFinite(storyCap) && storyCap > 0) return Math.floor(storyCap);
+  return HARNESS_DEFAULT_MAX_TURNS;
 }
 
 async function storedLiveTranscript(db, token) {
@@ -256,7 +266,7 @@ export function liveOptions(env = process.env) {
           afterCustomerTurn,
           liveCustomer,
           customerAsk: customerAskFromEnv(ready, bannedHosts),
-          maxTurns: maxTurnsFromEnv(ready.VK_TEST_MAX_TURNS != null ? ready : process.env),
+          maxTurns: maxTurnsForStory(story, ready.VK_TEST_MAX_TURNS != null ? ready : process.env),
         }),
       });
       adminArtifacts.errors.push(...ssrSetupErrors);
@@ -428,6 +438,7 @@ export function liveOptions(env = process.env) {
         keepsakeOk,
         keepsakeDetail: keepsake.detail || '',
         pricingReactionCaptured: played.pricingReactionCaptured === true,
+        interimFlags: outDialog.interimFlags || [],
         customerTurnCount: played.customerTurnCount || 0,
         hitTurnCap: played.hitTurnCap === true,
         reason,

@@ -67,7 +67,7 @@ export async function waitForTurnCapture(page, { turn, text, timeout = 20000 }) 
   }
   await page.waitForFunction((needle) => {
     const users = document.querySelectorAll('#messages article.bubble.user');
-    return [...users].some((bubble) => normalize(bubble.textContent).includes(needle));
+    return [...users].some((bubble) => String(bubble.textContent || '').replace(/\s+/g, ' ').trim().includes(needle));
   }, expected, { timeout });
   await page.waitForFunction((n) => {
     const users = document.querySelectorAll('#messages article.bubble.user');

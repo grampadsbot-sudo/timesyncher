@@ -141,6 +141,14 @@ export function couponPaymentSteps({ code, sessionToken, origin, minted = '' }) 
   };
 }
 
+export async function appEntryKind(page) {
+  await page.waitForSelector('#eulaScreen, #messageText', { state: 'visible', timeout: 20000 });
+  if (typeof page.locator !== 'function') return 'eula';
+  const eula = page.locator('#eulaScreen');
+  if (!eula || typeof eula.count !== 'function') return 'eula';
+  return (await eula.count()) > 0 ? 'eula' : 'chat';
+}
+
 export async function walkOnboardingWidth({
   page,
   origin,
@@ -196,14 +204,20 @@ export async function walkOnboardingWidth({
     await page.setContent(mail.html, { waitUntil: 'domcontentloaded' });
     shots.push(await shoot(page, dir, 'purchase-email', width, readText));
     await page.goto(mail.launchUrl, { waitUntil: 'domcontentloaded', timeout: 45000 });
-    await page.waitForSelector('#eulaScreen', { state: 'visible', timeout: 20000 });
+    const entry = await appEntryKind(page);
     shots.push(await shoot(page, dir, 'app-entry', width, readText));
-    await page.fill('#eulaName', customer.name);
-    shots.push(await shoot(page, dir, 'terms-gate', width, readText));
-    await page.click('#eulaAgree');
-    await page.click('#eulaAgreeButton');
-    termsClick = 'ui';
-    await page.waitForFunction(() => !document.querySelector('#eulaScreen'), null, { timeout: 20000 });
+    if (entry === 'eula') {
+      await page.fill('#eulaName', customer.name);
+      shots.push(await shoot(page, dir, 'terms-gate', width, readText));
+      await page.click('#eulaAgree');
+      await page.click('#eulaAgreeButton');
+      termsClick = 'ui';
+      await page.waitForFunction(() => !document.querySelector('#eulaScreen'), null, { timeout: 20000 });
+    } else {
+      await page.waitForFunction(() => /welcome/i.test(document.body.innerText || ''), null, { timeout: 20000 });
+      shots.push(await shoot(page, dir, 'terms-gate', width, readText));
+      termsClick = 'accepted-skip';
+    }
     await page.waitForFunction(() => /welcome/i.test(document.body.innerText || ''), null, { timeout: 20000 });
     shots.push(await shoot(page, dir, 'welcome', width, readText));
     await page.waitForSelector('#messageText', { timeout: 20000 });
@@ -217,9 +231,17 @@ export async function walkOnboardingWidth({
   }
 }
 
+export function combineTermsClicks(clicks) {
+  const rows = Array.isArray(clicks) ? clicks : [];
+  if (rows.length !== ONBOARDING_WIDTHS.length) return '';
+  if (rows.every((click) => click === 'ui')) return 'ui';
+  if (rows.every((click) => click === 'accepted-skip')) return 'accepted-skip';
+  return '';
+}
+
 function resultFrom(shots, termsClick, laterFiles, outPath) {
   const everyClick = ONBOARDING_WIDTHS.every((width) => shots.some((shot) => shot.width === width && shot.id === 'terms-gate' && !shot.gap && !shot.missing));
-  const click = everyClick && termsClick === 'ui' ? 'ui' : '';
+  const click = everyClick && (termsClick === 'ui' || termsClick === 'accepted-skip') ? termsClick : '';
   const written = buildCustomerPdf({ shots, laterFiles, outPath });
   const assessed = assessOnboardingScreens({ shots, pdfText: written.pdfText, termsClick: click });
   return { ...assessed, shots, termsClick: click, outPath };
@@ -272,19 +294,19 @@ export async function captureOnboardingPdf({ origin, outDir, customer, runId, pa
         ...(payment ? { showPayment: payment.showPayment, submitPayment: payment.submitPayment } : {}),
       });
       shots.push(...walked.shots);
-      clicks.push(walked.termsClick === 'ui');
+      clicks.push(walked.termsClick);
     } finally {
       await opened.close?.();
     }
   }
-  const combinedClick = clicks.length === ONBOARDING_WIDTHS.length && clicks.every(Boolean) ? 'ui' : '';
+  const combinedClick = combineTermsClicks(clicks);
   return { ...resultFrom(shots, combinedClick, [], outPath), laterFiles: [] };
 }
 
 export async function rebuildCustomerPdf(captured, laterFiles = []) {
   if (!captured?.shots) return captured;
   const outPath = captured.outPath;
-  const click = captured.termsClick === 'ui' ? 'ui' : '';
+  const click = captured.termsClick === 'ui' || captured.termsClick === 'accepted-skip' ? captured.termsClick : '';
   return { ...resultFrom(captured.shots, click, laterFiles, outPath), laterFiles };
 }
 

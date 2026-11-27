@@ -148,9 +148,15 @@ export function rescuedTimeoutFinding(card) {
   return `POST failed/timed out but reply was stored x${count}${turns}`;
 }
 
+export function interimFlagFinding(card) {
+  const flags = Array.isArray(card?.interim_flags) ? card.interim_flags.map((line) => String(line || '').trim()).filter(Boolean) : [];
+  if (!flags.length) return '';
+  return `interim reply missing, not invented: ${flags.join('; ')}`;
+}
+
 export function customerSection(card, { wave, at = new Date() } = {}) {
   const coupon = card.coupon_redemption || {};
-  const fbNote = [fallbackFinding(card), rescuedTimeoutFinding(card)].filter(Boolean).join('; ');
+  const fbNote = [fallbackFinding(card), rescuedTimeoutFinding(card), interimFlagFinding(card)].filter(Boolean).join('; ');
   const brokeBase = card.verdict === 'FAIL'
     ? clean(`${card.reason}; ${(card.checks || []).filter((check) => !check.pass).sort((a, b) => Number(b.id === 'app-billing') - Number(a.id === 'app-billing')).map((check) => `${check.id}: ${check.detail}`).slice(0, 3).join('; ')}`)
     : card.mode === 'dry' ? 'dry run: live steps not run' : 'nothing';

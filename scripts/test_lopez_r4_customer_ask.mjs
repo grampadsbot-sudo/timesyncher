@@ -160,11 +160,11 @@ try {
   else process.env.VK_TEST_NO_ODD = prevNoOdd;
 }
 
-assert.equal(maxTurnsFromEnv({}), 5);
+assert.equal(maxTurnsFromEnv({}), 50);
 assert.equal(maxTurnsFromEnv({ VK_TEST_MAX_TURNS: '100' }), 100);
 assert.equal(maxTurnsFromEnv({ VK_TEST_MAX_TURNS: '1' }), 1);
 assert.equal(maxTurnsFromEnv({ VK_TEST_MAX_TURNS: '-5' }), 1);
-assert.equal(maxTurnsFromEnv({ VK_TEST_MAX_TURNS: '0' }), 5);
+assert.equal(maxTurnsFromEnv({ VK_TEST_MAX_TURNS: '0' }), 50);
 const runtimeSrc = fs.readFileSync(new URL('./harness/runtime.mjs', import.meta.url), 'utf8');
 assert.equal(runtimeSrc.includes('maxTurns: 4'), false);
 assert.match(runtimeSrc, /VK_TEST_MAX_TURNS/);
@@ -187,13 +187,14 @@ const pricedTurns = [
   { role: 'customer', odd: false, text: 'That price sounds fair and works for us.' },
 ];
 assert.equal(pricingReactionCaptured(pricedTurns), true);
-assert.equal(chatGoalsReached({ itineraryCount: 0, customerTurns: pricedTurns, index: 1, maxTurns: 100 }).done, false);
-assert.equal(chatGoalsReached({ itineraryCount: 2, customerTurns: [{ role: 'app', text: 'Itinerary ready.' }], index: 1, maxTurns: 100 }).done, true);
-const reached = chatGoalsReached({ itineraryCount: 2, customerTurns: pricedTurns, index: 1, maxTurns: 100 });
+assert.equal(chatGoalsReached({ itineraryCount: 0, index: 1, maxTurns: 100 }).done, false);
+assert.equal(chatGoalsReached({ itineraryCount: 2, index: 1, maxTurns: 100 }).done, true);
+const reached = chatGoalsReached({ itineraryCount: 2, index: 1, maxTurns: 100 });
 assert.equal(reached.itineraryOk, true);
 assert.equal(Object.hasOwn(reached, 'pricingOk'), false);
 assert.equal(reached.atCap, false);
 assert.equal(reached.done, true);
+assert.equal(chatGoalsReached({ itineraryCount: 2, index: 49, maxTurns: 50 }).atCap, true);
 assert.equal(chatGoalsReached({ itineraryCount: 0, customerTurns: [], index: 99, maxTurns: 100 }).atCap, true);
 
 const origin = 'https://vacation-staging.timesyncher.com';
@@ -407,6 +408,6 @@ const paymentSteps = couponPaymentSteps({ code: mintedCode, sessionToken: 'tok_m
 assert.equal(paymentSteps.mode, 'coupon');
 
 const onboardingSrc = fs.readFileSync(new URL('./harness/onboarding-capture.mjs', import.meta.url), 'utf8');
-assert.match(onboardingSrc, /waitForSelector\('#eulaScreen', \{ state: 'visible'/);
+assert.match(onboardingSrc, /waitForSelector\('#eulaScreen, #messageText', \{ state: 'visible'/);
 
 console.log('test_lopez_r4_customer_ask: ok');
