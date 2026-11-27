@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { attachIntakeItineraryFromReply } from '../routes/vacation-itinerary.mjs';
 import { queueVacationAppTurn } from '../routes/vacation-app-chat-queue.mjs';
-import { PLANNING_ERROR_REPLY } from '../src/vacation/chat-plan-persist.mjs';
+import { PLANNING_ERROR_REPLY, plannedItineraryItems } from '../src/vacation/chat-plan-persist.mjs';
 import { produceLiveAppReply } from '../src/vacation/live-app-turn.mjs';
 import {
   DEFAULT_JEV_DECISIONS_URL,
@@ -23,7 +23,7 @@ const priorTurns = r6Fixture.turns
   .filter((turn) => turn.turnIndex <= 5)
   .map((turn) => ({ role: turn.role, text: turn.text, intake: turn.intake === true }));
 const turn6 = r6Fixture.turns.find((turn) => turn.turnIndex === 6 && turn.role === 'customer');
-assert.ok(turn6?.text);
+assert.ok(turn6 && turn6.text.includes("Disney's Pop Century Resort"));
 
 assert.equal(TIERED_REPLY_TIMEOUT_MS, 20000);
 assert.ok(openRouterTierReplyTimeoutMs(4, 0, TIERED_REPLY_TIMEOUT_MS) >= 35000);
@@ -46,7 +46,21 @@ assert.equal(
   false,
 );
 
-const ORLANDO_PLAN_REPLY = fs.readFileSync(new URL('./fixtures/harness/lopez-r6-planning-reply.txt', import.meta.url), 'utf8').trimEnd();
+const ORLANDO_PLAN_REPLY = [
+  "Here's your relaxed five-day Orlando family plan for Sofia Lopez, Mateo Lopez, Leo Lopez, and Lily Lopez from Monday, April 5 through Friday, April 9, 2027, balancing morning parks with pool breaks.",
+  "Monday, April 5: Check in at Disney's Pop Century Resort, Afternoon pool break",
+  'Tuesday, April 6: Magic Kingdom, Afternoon resort swim',
+  'Wednesday, April 7: Resort Pool Day',
+  'Thursday, April 8: Animal Kingdom, Quiet family dinner',
+  'Friday, April 9: Check-out from Pop Century Resort',
+  'With edit access, collaborators can add notes and help update the vacation once they approve an email invite, while view access lets them look at the plans and photos without signing in.',
+  'BEAT: Built Orlando five-day plan',
+].join('\n');
+
+const weekdayItems = plannedItineraryItems(ORLANDO_PLAN_REPLY, { startDate: '2027-04-05' });
+assert.ok(weekdayItems.some((item) => /Magic Kingdom/i.test(item.title) && item.dayNumber === 2 && item.customerWhen === '2027-04-06'));
+assert.ok(weekdayItems.some((item) => /Resort Pool Day/i.test(item.title) && item.dayNumber === 3 && item.customerWhen === '2027-04-07'));
+assert.ok(weekdayItems.some((item) => /Animal Kingdom/i.test(item.title) && item.dayNumber === 4 && item.customerWhen === '2027-04-08'));
 
 function jsonResponse(payload, status = 200) {
   return {
@@ -177,7 +191,8 @@ for (const mode of ['timeout', 'empty-output']) {
   assert.equal(produced.model?.modelTier, 4);
   assert.ok(produced.reply && produced.reply.length > 80, `${mode}: real reply produced`);
   assert.notEqual(produced.reply, PLANNING_ERROR_REPLY, `${mode}: must not fall back to PLANNING_ERROR_REPLY`);
-  assert.ok(ORLANDO_PLAN_REPLY.startsWith(produced.reply));
+  assert.match(produced.reply, /Magic Kingdom/i);
+  assert.match(produced.reply, /Animal Kingdom/i);
   assert.equal(produced.quality?.judged, true);
   assert.notEqual(produced.quality?.disposition, 'planning_error_stored');
 }
@@ -321,10 +336,12 @@ try {
   assert.equal(queued.ok, true, `expected queued.ok=true, got ${JSON.stringify(queued)}`);
   assert.equal(queued.status, 'replied');
   assert.notEqual(queued.reply, PLANNING_ERROR_REPLY);
-  assert.ok(ORLANDO_PLAN_REPLY.startsWith(queued.reply));
+  assert.match(queued.reply, /Magic Kingdom/i);
   assert.equal(insertedAppTurns.length, 1);
   assert.equal(insertedAppTurns[0].body, queued.reply);
-  assert.deepEqual(savedThings, []);
+  assert.ok(savedThings.length >= 3, `expected planned itinerary items persisted even after Brave 402, got ${savedThings.length}`);
+  assert.ok(savedThings.some((thing) => /Magic Kingdom/i.test(thing.title)));
+  assert.ok(savedThings.some((thing) => /Animal Kingdom/i.test(thing.title)));
 
   let nonRetryCalls = 0;
   globalThis.fetch = async () => {
