@@ -320,7 +320,7 @@ const dayIds = (state) => Object.entries(state.saved.days).sort(([, a], [, b]) =
   conforms(offResult.state);
   const promptHash = createHash('sha256')
     .update(replyRulesSystem({}, '', 'Spring trip', false, 'Please save Botanical Gardens.', { VK_TRIP_STATE_ACTIONS: '0' })).digest('hex');
-  assert.equal(promptHash, 'bff403fdd8a2593f1300c5f3ceb0e643fc0ab5042274dc7bcee1e5cda736d5d2');
+  assert.equal(promptHash, '267f618eb5d2622560c74bbe442c4f3e66d4d3adebf84ab22428c48071d607ad');
 }
 
 {
