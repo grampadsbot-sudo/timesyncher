@@ -89,6 +89,7 @@ export function createBoundedReplyShipGate({
   turnActionResults,
   replyClaimContext,
   env,
+  tripStateReady = false,
 }) {
   const postgenTimeoutMs = chatReplyPostgenTimeoutMs(env);
   return async (replyText) => {
@@ -105,6 +106,7 @@ export function createBoundedReplyShipGate({
         storeReplyFailure,
         turnActionResults,
         replyClaimContext,
+        tripStateReady,
       }),
       postgenTimeoutMs,
       () => ({ ...base, ok: false, status: 'reply_unavailable', error: 'reply_gate_timeout' }),

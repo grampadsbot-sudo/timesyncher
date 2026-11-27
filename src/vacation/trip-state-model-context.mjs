@@ -411,8 +411,11 @@ export function applyTripStateJevQuality(quality, body, state) {
   const answers = body?.answers && typeof body.answers === 'object' ? body.answers : {};
   const claimsProb = answerProbability(answers.claims_mutation);
   const groundedProb = answerProbability(answers.change_claim_grounded);
-  const claimsMutation = claimsProb !== null && claimsProb >= 0.5;
-  const groundedFalse = groundedProb !== null && groundedProb < 0.5;
+  if (claimsProb === null || groundedProb === null) {
+    return { ...quality, judged: false, reason: 'trip_state_grounding_unavailable' };
+  }
+  const claimsMutation = claimsProb >= 0.5;
+  const groundedFalse = groundedProb < 0.5;
   const hasReceipt = tripStateHasMatchingReceipt(state);
   const unbackedChangeClaim = groundedFalse || (claimsMutation && !hasReceipt);
   if (unbackedChangeClaim) {
@@ -435,8 +438,7 @@ export function applyTripStateJevQuality(quality, body, state) {
 }
 
 export function tripStateNeedsRewrite(quality) {
-  if (!quality || quality.judged !== true) return true;
-  if (quality.unbackedChangeClaim === true) return true;
+  if (quality?.judged !== true || quality.judgeFailed || quality.unbackedChangeClaim !== false) return true;
   if (quality.hardFlag === true || quality.wantsRewrite === true) return true;
   if (quality.disposition === 'rewrite') return true;
   const score = Number(quality.score);

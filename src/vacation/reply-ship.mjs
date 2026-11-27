@@ -18,6 +18,11 @@ import { sessionReplyBackend } from './vk-bot-mcp-reply.mjs';
 import { bindOpenRouterLedger, openRouterTurnTelemetry, pendingOpenRouterCalls, replyInstructionsPayload } from './openrouter-call-ledger.mjs';
 import { scheduleBackgroundWork } from './deferred-work.mjs';
 import { createTripStateRevisionStore } from './trip-state-revision-store.mjs';
+import { tripStateNeedsRewrite } from './trip-state-model-context.mjs';
+
+function tripStateReplyFailure(error) {
+  return { ok: false, status: 'reply_unavailable', reply: null, error };
+}
 
 async function withPostReplyCallTelemetry(db, requestId, appLive, work) {
   let storedCalls = appLive.openrouterTotals?.calls ?? 0;
@@ -69,10 +74,10 @@ export async function outboundAppReplyForRequest(db, requestId) {
 
 async function writeOutboundAppTurn({
   db, tripId, requestId, transcriptOwnerId, appLive, body, latency, turnActionResults,
-  tripStateReady, deduplicate = false,
+  tripStatePin, tripStateStore, deduplicate = false,
 }) {
   const writeReply = async (query) => {
-    if (deduplicate || tripStateReady) {
+    if (deduplicate || tripStatePin) {
       const existing = await outboundAppReplyForRequest(query, requestId);
       if (existing) return { ...existing, duplicateSuppressed: true };
     }
@@ -95,9 +100,9 @@ async function writeOutboundAppTurn({
     `;
     return row;
   };
-  if (tripStateReady) {
-    const shipped = await createTripStateRevisionStore().ship({ tripId, requestId, writeReply });
-    if (shipped) return shipped.reply;
+  if (tripStatePin) {
+    const shipped = await (tripStateStore || createTripStateRevisionStore()).ship({ tripId, requestId, pin: tripStatePin, writeReply });
+    return shipped?.reply ?? null;
   }
   return writeReply(db);
 }
@@ -178,6 +183,7 @@ export async function persistVacationAppOutboundReply({
   postBudgetMs = null,
   activityCommitDecisionsImpl = null,
   tripStateReady = false,
+  tripStateStore = null,
 }) {
   const judgedQuality = produced?.model?.quality?.judged === true
     ? produced.model.quality
@@ -191,8 +197,11 @@ export async function persistVacationAppOutboundReply({
       error: String(produced?.quality?.reason || produced?.reason || 'quality_not_judged'),
     };
   }
-  if (produced?.reply) produced.reply = sayVacationNotTrip(produced.reply);
-  if (produced?.reply) produced.reply = finalizeCustomerReplyText(produced.reply);
+  const tripStatePin = tripStateReady ? produced.tripStateContext?.pin : null;
+  if (tripStateReady && (!tripStatePin || tripStateNeedsRewrite(judgedQuality))) {
+    return { ...base, ...tripStateReplyFailure('trip_state_reply_unverified') };
+  }
+  if (!tripStateReady && produced?.reply) produced.reply = finalizeCustomerReplyText(sayVacationNotTrip(produced.reply));
   const appLive = liveTurnRecord({
     turnIndex: customerTurnIndex + 1,
     role: 'app',
@@ -208,8 +217,9 @@ export async function persistVacationAppOutboundReply({
   Object.assign(appLive, openRouterTurnTelemetry());
   const outbound = await writeOutboundAppTurn({
     db, tripId, requestId, transcriptOwnerId, appLive, body: produced.reply, latency: exchangeLatency,
-    turnActionResults: base?.turnActionResults, tripStateReady, deduplicate: true,
+    turnActionResults: base?.turnActionResults, tripStatePin, tripStateStore, deduplicate: true,
   });
+  if (tripStateReady && !outbound) return { ...base, ...tripStateReplyFailure('trip_state_revision_changed') };
   if (outbound?.duplicateSuppressed) {
     await markWorkerJobLiveHandled(db, jobId);
     return { ...base, ok: true, status: 'replied', reply: outbound.body, duplicateSuppressed: true, error: null };
@@ -299,8 +309,9 @@ export async function finishPendingReply(db, session, pending, hooks) {
   return { status: 200, body: await commitShippedRewrite(db, session, pending, finished, hooks) };
 }
 
-export async function commitShippedRewrite(db, session, pending, finished, { recordCustomerThingNotes, publishIntakeShare, postStartedMs = null, postBudgetMs = null }) {
-  const claimContext = replyClaimContextFromIntent({
+export async function commitShippedRewrite(db, session, pending, finished, { recordCustomerThingNotes, publishIntakeShare, postStartedMs = null, postBudgetMs = null, tripStateStore = null }) {
+  const tripStateReady = pending.tripStateReady === true || Boolean(pending.tripStateContext);
+  const claimContext = tripStateReady ? null : replyClaimContextFromIntent({
     ...(pending.intent && typeof pending.intent === 'object' ? pending.intent : {}),
     turnActionResults: pending.turnActionResults || null,
     classification: pending.turnActionResults?.invite
@@ -308,7 +319,7 @@ export async function commitShippedRewrite(db, session, pending, finished, { rec
       : null,
   });
   try {
-    assertCustomerReplyShippable(finished.reply, pending.tripId, pending.turnActionResults || null, claimContext);
+    assertCustomerReplyShippable(finished.reply, pending.tripId, pending.turnActionResults || null, claimContext, { tripStateReady });
   } catch (error) {
     if (error?.name !== 'reply_action_claim_blocked') throw error;
     const recovered = await rewriteBlockedActionClaim({
@@ -334,8 +345,11 @@ export async function commitShippedRewrite(db, session, pending, finished, { rec
   if (!judgedQuality) {
     return { ok: false, status: 'reply_unavailable', reply: null, error: String(finished?.quality?.reason || finished?.reason || 'quality_not_judged') };
   }
-  finished = { ...finished, reply: sayVacationNotTrip(finished.reply) };
-  finished.reply = finalizeCustomerReplyText(finished.reply);
+  const tripStatePin = tripStateReady ? pending.tripStateContext?.pin : null;
+  if (tripStateReady && (!tripStatePin || tripStateNeedsRewrite(judgedQuality))) {
+    return tripStateReplyFailure('trip_state_reply_unverified');
+  }
+  if (!tripStateReady) finished = { ...finished, reply: finalizeCustomerReplyText(sayVacationNotTrip(finished.reply)) };
   const wallMs = Math.max(1, Date.now() - (Number(pending.wallStarted) || Date.now()));
   const appLive = liveTurnRecord({
     turnIndex: Number(pending.customerTurnIndex) + 1,
@@ -354,8 +368,9 @@ export async function commitShippedRewrite(db, session, pending, finished, { rec
   const outbound = await writeOutboundAppTurn({
     db, tripId: pending.tripId, requestId: pending.requestId, transcriptOwnerId: transcriptCustomerId(session),
     appLive, body: finished.reply, latency: wallMs, turnActionResults: pending.turnActionResults,
-    tripStateReady: pending.tripStateReady,
+    tripStatePin, tripStateStore,
   });
+  if (tripStateReady && !outbound) return tripStateReplyFailure('trip_state_revision_changed');
   const itinerary = await withPostReplyCallTelemetry(db, pending.requestId, appLive, () => recordCustomerThingNotes(
     db,
     pending.tripId,

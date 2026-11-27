@@ -425,8 +425,7 @@ const queueRoute = fs.readFileSync(new URL('../routes/vacation-app-chat-queue.mj
 assert.match(queueRoute, /itineraryEditCannedReply/);
 assert.match(queueRoute, /producedDemoLockedChatEditReply/);
 assert.doesNotMatch(queueRoute, /buildItineraryEditDemoLockedAuthoritativeSystemExtra/);
-const cannedBranch = queueRoute.match(/if \(itineraryEditCannedReply\) produced = producedDemoLockedChatEditReply\(itineraryEditCannedReply\);/);
-assert.ok(cannedBranch);
+assert.match(queueRoute, /if \(!useTripState && itineraryEditCannedReply\) produced = producedDemoLockedChatEditReply\(itineraryEditCannedReply\);/);
 const produced = producedDemoLockedChatEditReply(DEMO_LOCKED_CHAT_EDIT_CUSTOMER_REPLY);
 assert.equal(produced.reply, DEMO_LOCKED_CHAT_EDIT_CUSTOMER_REPLY);
 assert.equal(produced.jev?.jevRan, false);

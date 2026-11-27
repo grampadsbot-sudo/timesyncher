@@ -32,6 +32,7 @@ import { buildLiveAppRewritePending } from './chat-place-search.mjs';
 import { inTurnPlaceLiveReplyHooks, placeSearchTieredReplyTimeoutMs } from './in-turn-place-reply-fallback.mjs';
 import { placeResultExtra, unsourcedAgainstInTurnResults } from './provider-result-context.mjs';
 import { finishTripStateRewrite, produceTripStateLiveReply } from './trip-state-live-turn.mjs';
+import { tripStateActionsEnabled } from './trip-state-actions-enabled.mjs';
 import { liveReplyCommerceGate } from './collaborator-app-seat.mjs';
 import { savedTripWithOwnerPlan } from './reply-plan-entitlement.mjs';
 import { applyStoredTurnRoute, sumModelCost, sumTurnCost } from './turn-cost.mjs';
@@ -39,7 +40,6 @@ import { routeVkBotMcpReply } from './vk-bot-mcp-reply.mjs';
 import { judgedInterimOrNull, readInterimJudge } from './interim-judge.mjs';
 export { judgeInterimReply } from './interim-judge.mjs';
 import { finalizeCustomerReplyText, HOUSEHOLD_PLAN_YEAR_LINE, HOUSEHOLD_PLAN_YEAR_PATTERN } from './reply-customer-wording.mjs';
-
 export const LIVE_TRANSCRIPT_CAPTURE = 'live-vacation-app';
 export const LIVE_REPLY_PRODUCER = 'vacation-app-reply-rules';
 export const LIVE_OPENER_PRODUCER = 'vacation-app-onboarding-opener';
@@ -1326,7 +1326,7 @@ export async function produceLiveAppReply({
   seatDollars: suppliedSeatDollars = null, intake = false, wantedThings = [], roster = null, rosterError = null, extractedDestination = '', extractedTitle = '',
   destinationError = null, titleError = null, savedStart = '', savedEnd = '', loadOwnerPlan = null, loadSavedTripRecordFn = loadSavedTripRecord,
   turnActionResults = null, placeSearchReplyFacts = null, understanding = null, travelSummary = null, trip = null, tripStateRevision = null, tripStateActions = null, tripStateActionContext = null, tripStateStore = null } = {}) {
-  const vkBotReply = await routeVkBotMcpReply({ customerTurn, session, priorTurns, tripTitle, env });
+  const vkBotReply = trip?.id && tripStateActionsEnabled({ env, trip }) ? null : await routeVkBotMcpReply({ customerTurn, session, priorTurns, tripTitle, env });
   if (vkBotReply) return requireReplyQuality(vkBotReply, { customerTurn, tripContext: { travelSummary }, env });
   const rules = await loadVacationAppReplyRules(env);
   const tripStateResult = await produceTripStateLiveReply({ trip, tripStateRevision, tripStateActions, tripStateActionContext, tripStateStore, customerTurn, session, env, rules, understanding }); if (tripStateResult) return tripStateResult;

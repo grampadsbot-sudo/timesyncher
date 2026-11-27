@@ -28,13 +28,15 @@ export function failReplyIdCitation(reason, tripId = '') {
   throw new ReplyIdCitationBlockedError(reason, id);
 }
 
-export function assertCustomerReplyShippable(reply, tripId = '', turnActionResults = null, replyClaimContext = null) {
+export function assertCustomerReplyShippable(reply, tripId = '', turnActionResults = null, replyClaimContext = null, { tripStateReady = false } = {}) {
   const leakReason = replyPlaceSearchProviderLeakReason(reply);
   if (leakReason) failReplyIdCitation(leakReason, tripId);
   const reason = replyIdCitationReason(reply);
   if (reason) failReplyIdCitation(reason, tripId);
-  const actionReason = replyActionClaimReason(reply, turnActionResults, replyClaimContext);
-  if (actionReason) failReplyActionClaim(actionReason, tripId);
+  if (!tripStateReady) {
+    const actionReason = replyActionClaimReason(reply, turnActionResults, replyClaimContext);
+    if (actionReason) failReplyActionClaim(actionReason, tripId);
+  }
   return reply;
 }
 
@@ -49,9 +51,10 @@ export async function blockVacationAppReplyIdCitation({
   storeReplyFailure,
   turnActionResults = null,
   replyClaimContext = null,
+  tripStateReady = false,
 }) {
   try {
-    assertCustomerReplyShippable(replyText, tripId, turnActionResults, replyClaimContext);
+    assertCustomerReplyShippable(replyText, tripId, turnActionResults, replyClaimContext, { tripStateReady });
     return null;
   } catch (error) {
     if (error?.name !== 'reply_id_citation_blocked' && error?.name !== 'reply_place_search_provider_leak' && error?.name !== 'reply_action_claim_blocked') throw error;

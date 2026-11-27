@@ -3,6 +3,7 @@ import { Pool } from '@neondatabase/serverless';
 import { getDatabaseUrl, sql } from './db.mjs';
 import { tripStateActionsEnabled } from './trip-state-actions-enabled.mjs';
 import { assertTripState, projectTripState } from './trip-state-projector.mjs';
+import { digestTripState } from './trip-state-action-site.mjs';
 
 export async function listTripStateRevisions(tripId, db = sql()) {
   return db`
@@ -84,6 +85,10 @@ function transactionSql(client) {
   };
 }
 
+function replyStateDigest({ saved, last_actions, tool_status }) {
+  return digestTripState({ saved, last_actions, tool_status });
+}
+
 export function createTripStateRevisionStore({ env = process.env, pool } = {}) {
   async function withTripLock(tripId, callback) {
     const activePool = pool || new Pool({ connectionString: getDatabaseUrl(env) });
@@ -135,8 +140,8 @@ export function createTripStateRevisionStore({ env = process.env, pool } = {}) {
       });
     },
 
-    async ship({ tripId, requestId, writeReply }) {
-      return withTripLock(tripId, async (client) => {
+    async ship({ tripId, requestId, writeReply, pin = null }) {
+      return withTripLock(tripId, async (client, trip) => {
         const existing = await revisionForRequest(client, tripId, requestId, 'shipped');
         if (existing) {
           const { rows: [reply] } = await client.query(
@@ -146,8 +151,17 @@ export function createTripStateRevisionStore({ env = process.env, pool } = {}) {
         }
         const ready = await revisionForRequest(client, tripId, requestId, 'reply_ready');
         if (!ready) return null;
+        const readyState = JSON.parse(ready.state_json);
+        if (pin) {
+          if (pin.trip_id !== tripId || pin.revision !== ready.revision || pin.revision_digest !== ready.digest) return null;
+          const { receipts, ...site } = await readSite(client, trip, requestId, ready.turn);
+          const current = projectTripState({
+            trip, site, receipts, requestId, turn: ready.turn, revision: ready.revision, previous: readyState, env,
+          });
+          if (replyStateDigest(current) !== replyStateDigest(readyState)) return null;
+        }
         const reply = await writeReply(transactionSql(client));
-        const state = { ...JSON.parse(ready.state_json), phase: 'shipped', revision: await nextRevision(client, tripId) };
+        const state = { ...readyState, phase: 'shipped', revision: await nextRevision(client, tripId) };
         const revision = await insertRevision(client, requestId, state, reply.id);
         return { reply, revision };
       });
