@@ -231,14 +231,59 @@ window.startVkAdminReview = (() => {
     return `<iframe title="${safe(vac.label)} keepsake" src="${preview}" credentialless data-keepsake-frame></iframe>`;
   }
 
-  function travelSummaryCover(snapshot) {
-    if (!snapshot || !['tripName', 'where', 'who', 'transport', 'description'].some((field) => snapshot[field])) {
-      return '<p class="admin-empty" role="status">No travel details recorded for this turn.</p>';
+  function travelSummaryRevision(tripState) {
+    if (!tripState || typeof tripState !== 'object') {
+      return '<p class="admin-empty" role="status" data-travel-no-trip-state="1">No Trip State for this turn.</p>';
     }
-    const facts = [['where', 'Where'], ['who', 'Who'], ['transport', 'Getting there']]
-      .filter(([field]) => snapshot[field])
-      .map(([field, label]) => `<div><dt>${label}</dt><dd data-travel-field="${field}">${safe(snapshot[field])}</dd></div>`).join('');
-    return `<article class="admin-travel-cover" data-travel-cover>${snapshot.tripName ? `<header><img src="/brand/vk-book-logo.svg" alt="" width="30" height="32"><h1 data-travel-field="tripName">${safe(snapshot.tripName)}</h1></header>` : ''}${facts ? `<dl>${facts}</dl>` : ''}${snapshot.description ? `<p data-travel-field="description">${safe(snapshot.description)}</p>` : ''}</article>`;
+    const trip = tripState.trip || {};
+    const headerFacts = [
+      trip.destination ? `<div><dt>Destination</dt><dd data-revision-trip-destination>${safe(trip.destination)}</dd></div>` : '',
+      trip.start || trip.end
+        ? `<div><dt>Dates</dt><dd>${trip.start ? `<span data-revision-trip-start>${safe(trip.start)}</span>` : ''}${trip.start && trip.end ? ' – ' : ''}${trip.end ? `<span data-revision-trip-end>${safe(trip.end)}</span>` : ''}</dd></div>`
+        : '',
+    ].filter(Boolean).join('');
+    const meta = `<div class="admin-travel-meta"><span class="admin-travel-pill">r<span data-revision-number>${safe(tripState.revision)}</span></span><span class="admin-travel-pill" data-revision-phase>${safe(tripState.phase)}</span><span class="admin-travel-pill" data-revision-read>${safe(tripState.read)}</span>${tripState.siteRevision ? `<code class="admin-travel-site-rev" data-revision-site-revision>${safe(tripState.siteRevision)}</code>` : ''}</div>`;
+    const days = Array.isArray(tripState.days) ? tripState.days : [];
+    const daysMarkup = days.length
+      ? days.map((day) => {
+        const assigned = Array.isArray(day.assigned) ? day.assigned : [];
+        const rows = assigned.length
+          ? `<ul class="admin-travel-assignments">${assigned.map((row) => `<li class="admin-travel-assignment" data-revision-assignment="${safe(row.id)}" data-revision-item="${safe(row.item)}" data-revision-proposed-by="${safe(row.proposedBy)}" data-revision-time-precision="${safe(row.time ? row.time.precision : '')}"><span class="admin-travel-assignment-title" data-revision-assignment-title>${safe(row.title)}</span><span class="admin-travel-assignment-meta">${row.time ? `<span class="admin-travel-time" data-revision-time-value>${safe(row.time.value)}</span><span class="admin-travel-pill admin-travel-time-precision" data-revision-time-precision-label>${safe(row.time.precision)}</span>` : ''}<span class="admin-travel-pill admin-travel-origin" data-revision-proposed-by-label>${safe(row.proposedBy)}</span><span class="admin-travel-role" data-revision-assignment-role>${safe(row.role)}</span></span></li>`).join('')}</ul>`
+          : '<p class="admin-travel-day-empty">No items assigned.</p>';
+        return `<div class="admin-travel-day" data-revision-day="${safe(day.id)}" data-revision-day-date="${safe(day.date)}"><h3 data-revision-day-heading>${safe(day.date)}</h3>${rows}</div>`;
+      }).join('')
+      : '<p class="admin-empty">No saved days.</p>';
+    const unassigned = Array.isArray(tripState.unassigned) ? tripState.unassigned : [];
+    const unassignedMarkup = unassigned.length
+      ? `<div class="admin-travel-sub" data-revision-unassigned><h3>Unassigned</h3><ul class="admin-travel-list">${unassigned.map((item) => `<li class="admin-travel-row" data-revision-unassigned-item="${safe(item.id)}"><span class="admin-travel-row-primary" data-revision-unassigned-title>${safe(item.title)}</span>${item.type ? `<span class="admin-travel-pill" data-revision-unassigned-type>${safe(item.type)}</span>` : ''}</li>`).join('')}</ul></div>`
+      : '';
+    const travelers = Array.isArray(tripState.travelers) ? tripState.travelers : [];
+    const disclosed = Array.isArray(tripState.disclosed) ? tripState.disclosed : [];
+    const partyDisclosures = disclosed.filter((fact) => fact.kind === 'party');
+    const otherDisclosures = disclosed.filter((fact) => fact.kind !== 'party');
+    const travelersMarkup = travelers.length
+      ? `<ul class="admin-travel-list" data-revision-travelers>${travelers.map((t) => `<li class="admin-travel-row" data-revision-traveler="${safe(t.id)}">${t.name ? `<span class="admin-travel-row-primary" data-revision-traveler-name>${safe(t.name)}</span>` : ''}${t.relation ? `<span class="admin-travel-pill" data-revision-traveler-relation>${safe(t.relation)}</span>` : ''}${t.age ? `<span class="admin-travel-pill" data-revision-traveler-age>${safe(t.age)}</span>` : ''}</li>`).join('')}</ul>`
+      : '';
+    const partyDisclosuresMarkup = partyDisclosures.length
+      ? `<ul class="admin-travel-list" data-revision-party-disclosures>${partyDisclosures.map((fact) => `<li class="admin-travel-row" data-revision-disclosed="${safe(fact.id)}" data-revision-disclosed-kind="${safe(fact.kind)}"><span class="admin-travel-row-primary" data-revision-disclosed-value>${safe(fact.value)}</span></li>`).join('')}</ul>`
+      : '';
+    const otherDisclosuresMarkup = otherDisclosures.length
+      ? `<div class="admin-travel-sub" data-revision-other-disclosures><h3>Other disclosures</h3><dl class="admin-travel-facts">${otherDisclosures.map((fact) => `<div><dt data-revision-disclosed-kind>${safe(fact.kind)}</dt><dd data-revision-disclosed="${safe(fact.id)}" data-revision-disclosed-value>${safe(fact.value)}</dd></div>`).join('')}</dl></div>`
+      : '';
+    const collaborators = Array.isArray(tripState.collaborators) ? tripState.collaborators : [];
+    const invites = Array.isArray(tripState.invites) ? tripState.invites : [];
+    const accessMarkup = collaborators.length || invites.length
+      ? `<div class="admin-travel-sub" data-revision-access><h3>Access grants &amp; invites</h3><ul class="admin-travel-list">${collaborators.map((m) => `<li class="admin-travel-row" data-revision-collaborator="${safe(m.id)}">${m.name ? `<span class="admin-travel-row-primary" data-revision-collaborator-name>${safe(m.name)}</span>` : ''}<span class="admin-travel-pill" data-revision-collaborator-access>${safe(m.access)}</span><span class="admin-travel-pill" data-revision-collaborator-status>${safe(m.status)}</span></li>`).join('')}${invites.map((inv) => `<li class="admin-travel-row" data-revision-invite="${safe(inv.id)}">${inv.name ? `<span class="admin-travel-row-primary" data-revision-invite-name>${safe(inv.name)}</span>` : ''}<span class="admin-travel-pill" data-revision-invite-access>${safe(inv.access)}</span><span class="admin-travel-pill" data-revision-invite-status>${safe(inv.status)}</span></li>`).join('')}</ul></div>`
+      : '';
+    const openAsks = Array.isArray(tripState.openAsks) ? tripState.openAsks : [];
+    const openAsksMarkup = openAsks.length
+      ? `<ul class="admin-travel-list" data-revision-open-asks>${openAsks.map((ask) => `<li class="admin-travel-row" data-revision-open-ask="${safe(ask.id)}" data-revision-ask-status="${safe(ask.status)}"><span class="admin-travel-row-primary" data-revision-ask-text>${safe(ask.text)}</span><span class="admin-travel-pill" data-revision-ask-status-label>${safe(ask.status)}</span></li>`).join('')}</ul>`
+      : '<p class="admin-empty" data-revision-open-asks-empty="1">No open asks.</p>';
+    const nextSteps = Array.isArray(tripState.nextSteps) ? tripState.nextSteps : [];
+    const nextStepsMarkup = nextSteps.length
+      ? `<ul class="admin-travel-list" data-revision-next-steps>${nextSteps.map((step, i) => `<li class="admin-travel-row" data-revision-next-step="${i}" data-revision-step-kind="${safe(step.kind)}"><span class="admin-travel-pill" data-revision-step-kind-label>${safe(step.kind)}</span><span class="admin-travel-row-primary" data-revision-step-task>${safe(step.task)}</span></li>`).join('')}</ul>`
+      : '<p class="admin-empty" data-revision-next-steps-empty="1">No next steps.</p>';
+    return `<article class="admin-travel-revision" data-travel-revision="${safe(tripState.revision)}" data-travel-phase="${safe(tripState.phase)}" data-travel-read="${safe(tripState.read)}"><header class="admin-travel-revision-head"><img src="/brand/vk-book-logo.svg" alt="" width="30" height="32"><div class="admin-travel-revision-title-wrap">${trip.title ? `<h1 data-revision-trip-title>${safe(trip.title)}</h1>` : ''}${meta}</div></header>${headerFacts ? `<dl class="admin-travel-facts">${headerFacts}</dl>` : ''}<section class="admin-travel-section" aria-label="Saved days" data-revision-section="days"><h2>Saved days</h2>${daysMarkup}${unassignedMarkup}</section><section class="admin-travel-section" aria-label="Disclosed party" data-revision-section="party"><h2>Disclosed party</h2>${travelersMarkup || partyDisclosuresMarkup ? travelersMarkup + partyDisclosuresMarkup : '<p class="admin-empty">No party disclosed.</p>'}${otherDisclosuresMarkup}${accessMarkup}</section><section class="admin-travel-section" aria-label="Open asks" data-revision-section="open-asks"><h2>Open asks</h2>${openAsksMarkup}</section><section class="admin-travel-section" aria-label="Next steps" data-revision-section="next-steps"><h2>Next steps</h2>${nextStepsMarkup}</section></article>`;
   }
 
   function travelSummaryCapabilities(capabilities) {
@@ -272,7 +317,9 @@ window.startVkAdminReview = (() => {
   }
 
   function travelSummaryContent(snapshot, capabilities) {
-    return travelSummaryCover(snapshot) + travelSummaryCapabilities(capabilities) + travelSummaryRules(snapshot);
+    return travelSummaryRevision(snapshot.tripState)
+      + travelSummaryCapabilities(snapshot.tripState?.capabilities || capabilities)
+      + travelSummaryRules(snapshot);
   }
 
   function travelSummary(vac) {

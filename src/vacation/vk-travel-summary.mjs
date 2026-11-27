@@ -1,7 +1,4 @@
-import { isPlaceholderTripRecord } from './owner-shell-trip.mjs';
-
 const travelSummaryFields = ['where', 'who', 'transport', 'tripName', 'description'];
-const summaryVersion = 2;
 
 export function travelSummaryValues(value) {
   return Object.fromEntries(travelSummaryFields.map((field) => [
@@ -9,69 +6,109 @@ export function travelSummaryValues(value) {
   ]));
 }
 
-export function travelSummaryPrefix(tripId) {
-  return `artifacts/${encodeURIComponent(tripId)}/travel-summary`;
-}
-
-export async function loadCurrentTravelSummary(db, tripId) {
-  if (!tripId) return null;
-  const prefix = `vk-admin-review/${travelSummaryPrefix(tripId)}`;
-  const [row] = await db`
-    select a.document as summary
-    from transcript_turns t
-    join eula_store_objects a on a.key = ${prefix} || '/' || t.id::text || '.json'
-    where t.trip_id = ${tripId} and t.direction = 'inbound' and t.speaker = 'customer'
-      and a.document->>'version' = ${String(summaryVersion)}
-    order by coalesce(t.received_at, t.created_at) desc, t.id desc limit 1
-  `;
-  return travelSummaryFromDocument(row?.summary);
-}
-
-export async function travelSummaryContext(db, trip) {
-  if (!trip?.id) return {};
-  const previousSummary = await loadCurrentTravelSummary(db, trip.id);
-  const [turns, things] = await Promise.all([
-    db`
-      select t.body from transcript_turns t
-      where t.trip_id = ${trip.id} and t.direction = 'inbound' and t.speaker = 'customer'
-      order by coalesce(t.received_at, t.created_at) desc, t.id desc limit 16
-    `,
-    db`
-      select category, title, starts_at
-      from trip_things where trip_id = ${trip.id}
-      order by updated_at desc, id desc limit 25
-    `,
-  ]);
-  return {
-    where: isPlaceholderTripRecord(trip) ? '' : trip.destination,
-    things,
-    previousSummary,
-    customerTurns: turns.reverse().map(({ body }) => String(body || '').slice(0, 2400)),
-  };
-}
-
-export function travelSummaryDocument(summary) {
-  return { ...travelSummaryValues(summary), version: summaryVersion };
-}
-
-export function travelSummaryFromDocument(document) {
-  return document?.version === summaryVersion ? travelSummaryValues(document) : null;
-}
-
-export function travelSummaryForTurn(trip, modelSummary) {
-  const saved = isPlaceholderTripRecord(trip) ? {} : trip;
-  return travelSummaryValues({ ...modelSummary, tripName: saved.title, where: modelSummary?.where || saved.destination });
-}
-
-export async function refreshTravelSummaryTripFields(db, trip, turnId, summary) {
-  if (!trip?.id || !turnId || !summary) return summary;
-  const current = travelSummaryForTurn(trip, summary);
-  if (current.tripName !== summary.tripName || current.where !== summary.where) {
-    const key = `vk-admin-review/${travelSummaryPrefix(trip.id)}/${turnId}.json`;
-    await db`
-      update eula_store_objects set document = ${{ ...travelSummaryDocument(current), turnId }}, updated_at = now()
-      where key = ${key}
-    `;
+function parseRevisionState(row) {
+  if (!row || typeof row !== 'object') return null;
+  if (typeof row.state_json === 'string') {
+    try {
+      return JSON.parse(row.state_json);
+    } catch {
+      return null;
+    }
   }
-  return current;
+  return row.state_json && typeof row.state_json === 'object' ? row.state_json : null;
+}
+
+export function projectTravelSummaryFromRevision(row) {
+  const state = parseRevisionState(row);
+  if (!state || typeof state !== 'object' || !state.saved || typeof state.saved !== 'object') return null;
+  const saved = state.saved;
+  const items = saved.items && typeof saved.items === 'object' ? saved.items : {};
+  const days = Object.entries(saved.days && typeof saved.days === 'object' ? saved.days : {})
+    .map(([id, day]) => ({
+      id,
+      date: day?.date ?? '',
+      assigned: (Array.isArray(day?.assigned) ? day.assigned : []).map((entry) => ({
+        id: entry.id,
+        item: entry.item,
+        title: items[entry.item]?.title ?? entry.item,
+        type: entry.type,
+        role: entry.role,
+        proposedBy: entry.proposed_by,
+        time: entry.time ? { value: entry.time.value, precision: entry.time.precision } : null,
+      })),
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
+  const unassigned = (Array.isArray(saved.unassigned) ? saved.unassigned : []).map((id) => ({
+    id,
+    title: items[id]?.title ?? id,
+    type: items[id]?.type ?? null,
+  }));
+  const travelers = Object.entries(saved.travelers && typeof saved.travelers === 'object' ? saved.travelers : {})
+    .map(([id, traveler]) => ({
+      id,
+      name: traveler?.name ?? null,
+      relation: traveler?.relation ?? null,
+      age: traveler?.age ?? null,
+      turn: traveler?.turn ?? null,
+    }));
+  const disclosed = Object.entries(state.disclosed && typeof state.disclosed === 'object' ? state.disclosed : {})
+    .map(([id, fact]) => ({
+      id,
+      kind: fact?.kind ?? '',
+      value: fact?.value ?? '',
+      turn: fact?.turn ?? null,
+    }));
+  const collaborators = Object.entries(saved.collaborators && typeof saved.collaborators === 'object' ? saved.collaborators : {})
+    .map(([id, member]) => ({
+      id,
+      name: member?.name ?? null,
+      access: member?.access ?? '',
+      status: member?.status ?? '',
+      turn: member?.turn ?? null,
+    }));
+  const invites = Object.entries(saved.invites && typeof saved.invites === 'object' ? saved.invites : {})
+    .map(([id, invite]) => ({
+      id,
+      name: invite?.name ?? null,
+      access: invite?.access ?? '',
+      status: invite?.status ?? '',
+      turn: invite?.turn ?? null,
+    }));
+  const openAsks = (Array.isArray(state.open_asks) ? state.open_asks : []).map((ask) => ({
+    id: ask.id,
+    text: ask.text,
+    status: ask.status,
+    firstTurn: ask.first_turn,
+    turn: ask.turn,
+  }));
+  const nextSteps = (Array.isArray(state.next_steps) ? state.next_steps : []).map((step) => ({
+    kind: step.kind,
+    task: step.task,
+    refs: Array.isArray(step.refs) ? step.refs : [],
+  }));
+  return {
+    version: state.version,
+    tripId: state.trip_id,
+    revision: state.revision,
+    turn: state.updated_turn,
+    phase: state.phase,
+    digest: typeof row.digest === 'string' ? row.digest : null,
+    siteRevision: saved.site_revision ?? null,
+    read: saved.read ?? null,
+    trip: {
+      title: saved.trip?.title ?? null,
+      destination: saved.trip?.destination ?? null,
+      start: saved.trip?.start ?? null,
+      end: saved.trip?.end ?? null,
+    },
+    days,
+    unassigned,
+    travelers,
+    disclosed,
+    collaborators,
+    invites,
+    openAsks,
+    nextSteps,
+    capabilities: state.capabilities && typeof state.capabilities === 'object' ? state.capabilities : null,
+  };
 }

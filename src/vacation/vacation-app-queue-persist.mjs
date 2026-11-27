@@ -1,6 +1,5 @@
 import { initTripSearchProgress } from './search-progress.mjs';
 import { bindOpenRouterLedger } from './openrouter-call-ledger.mjs';
-import { travelSummaryDocument, travelSummaryPrefix } from './vk-travel-summary.mjs';
 
 export async function persistVacationAppCustomerTurn(db, {
   transcriptOwnerId,
@@ -12,7 +11,6 @@ export async function persistVacationAppCustomerTurn(db, {
   jobFields,
   customerTurnIndex,
   intakeLatency,
-  travelSummary,
 } = {}) {
   const requestRows = await db`
     insert into vacation_requests (
@@ -27,9 +25,7 @@ export async function persistVacationAppCustomerTurn(db, {
   `;
   const requestId = requestRows[0].id;
   bindOpenRouterLedger({ tripId, requestId });
-  const summaryPrefix = tripId && travelSummary ? `vk-admin-review/${travelSummaryPrefix(tripId)}` : null;
   const turnRows = await db`
-    with turn as (
     insert into transcript_turns (
       customer_id, trip_id, request_id, speaker, channel, body, payload, direction,
       received_at, response_latency_ms,
@@ -41,14 +37,6 @@ export async function persistVacationAppCustomerTurn(db, {
       ${turnTag.category}, ${turnTag.tags}, ${turnTag.source}, ${turnTag.confidence}, now()
     )
     returning id
-    ), summary as (
-      insert into eula_store_objects (key, document, updated_at)
-      select ${summaryPrefix}::text || '/' || id::text || '.json',
-        ${travelSummary ? travelSummaryDocument(travelSummary) : null}::jsonb || jsonb_build_object('turnId', id), now()
-      from turn where ${summaryPrefix}::text is not null
-      on conflict (key) do nothing
-    )
-    select id from turn
   `;
   await db`
     insert into vacation_request_events (request_id, event_type, actor, details)
