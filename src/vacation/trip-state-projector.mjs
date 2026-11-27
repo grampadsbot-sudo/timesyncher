@@ -169,9 +169,9 @@ function placedBuildCounts(saved, actions) {
     .filter(({ id }) => refs.has(id)).map(({ item }) => item));
   const counts = {};
   for (const id of items) {
-    const { type, basis } = saved.items[id];
-    if (basis === 'plan_block' || basis === 'placeholder') continue;
-    counts[type] = (counts[type] || 0) + 1;
+    const item = saved.items[id];
+    if (!item || item.basis === 'plan_block' || item.basis === 'placeholder') continue;
+    counts[item.type] = (counts[item.type] || 0) + 1;
   }
   return counts;
 }

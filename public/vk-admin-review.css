@@ -116,13 +116,19 @@
 .admin-travel-cap-item[data-capability-enabled="true"] .admin-travel-cap-state { background: #e8f5e9; color: #1b5e20; }
 .admin-travel-cap-reason { color: var(--muted); }
 .admin-travel-cap-empty { color: var(--muted); font-size: 0.8125rem; }
+.admin-travel-conversation { display: grid; gap: 8px; margin-top: 16px; }
+.admin-travel-conversation h2 { margin: 0; font-size: 1rem; }
+.admin-travel-conversation details { min-width: 0; border: 1px solid var(--line); border-radius: 8px; overflow-wrap: anywhere; }
+.admin-travel-conversation summary { padding: 12px; cursor: pointer; }
+.admin-travel-json { margin: 0; padding: 0 12px 12px; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.45; font-size: 0.75rem; }
 .admin-travel-rules { display: grid; gap: 8px; margin-top: 16px; }
 .admin-travel-rules h2 { margin: 0; font-size: 1rem; }
 .admin-travel-rules details { min-width: 0; border: 1px solid var(--line); border-radius: 8px; overflow-wrap: anywhere; }
 .admin-travel-rules summary { padding: 12px; cursor: pointer; }
 .admin-travel-rule-text { padding: 0 12px 12px; white-space: pre-wrap; line-height: 1.5; }
 .admin-travel-rules .admin-empty { margin: 0; }
-.admin-travel-rules pre { margin: 0; overflow-wrap: anywhere; }
+.admin-travel-timing { margin-top: 16px; }
+.admin-travel-timing .admin-travel-facts > div { grid-template-columns: max-content minmax(0, 1fr); }
 .admin-travel-timing details { margin-top: 8px; }
 .admin-travel-timing summary { cursor: pointer; }
 .admin-travel-timing table { width: 100%; border-collapse: collapse; margin-top: 8px; }

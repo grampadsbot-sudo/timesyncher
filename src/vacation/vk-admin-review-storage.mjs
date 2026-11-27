@@ -249,7 +249,8 @@ export function travelSummaryTiming(vacation, snapshots) {
     if (turn.direction === 'outbound' && turn.speaker === 'app' && turn.requestId) replies.set(turn.requestId, turn);
   }
   const latency = (turn) => {
-    const value = turn?.responseLatencyMs ?? turn?.payload?.liveTranscript?.latencyMs;
+    const raw = turn?.responseLatencyMs ?? turn?.payload?.liveTranscript?.latencyMs;
+    const value = raw == null ? NaN : Number(raw);
     return Number.isFinite(value) && value >= 0 ? value : null;
   };
   const buildSnapshot = snapshots.find(({ conversationState }) => conversationState?.research?.build);

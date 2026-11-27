@@ -320,7 +320,7 @@ window.startVkAdminReview = (() => {
     const conversation = snapshot.conversationState;
     return travelSummaryRevision(snapshot.tripState)
       + travelSummaryCapabilities(snapshot.tripState?.capabilities || capabilities)
-      + (conversation ? `<section class="admin-travel-rules" aria-label="Conversation management"><h2>Conversation management</h2><details><summary>Stored JSON for turn ${safe(snapshot.turnNumber)}</summary><pre class="admin-travel-rule-text" data-conversation-json>${safe(JSON.stringify(conversation, null, 2))}</pre></details></section>` : '')
+      + (conversation ? `<section class="admin-travel-conversation" aria-label="Conversation management"><h2>Conversation management</h2><details><summary>Stored JSON for turn ${safe(snapshot.turnNumber)}</summary><pre class="admin-travel-json" data-conversation-json>${safe(JSON.stringify(conversation, null, 2))}</pre></details></section>` : '')
       + travelSummaryRules(snapshot);
   }
 

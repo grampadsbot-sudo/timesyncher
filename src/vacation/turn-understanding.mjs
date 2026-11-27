@@ -46,7 +46,7 @@ export function turnUnderstandingRequest(request, message, includePlanningInputs
         'For committedSentenceIndexes, list zero-based sentence indexes only when that sentence puts an activity on the plan. Leave out requests for suggestions, possibilities, and questions that do not commit to an activity.',
         ...(includePlanningInputs ? [
           'For planningParty, quote the stated vacation party, including unnamed people, group size, or traveling alone. Return an empty string when the turn does not say who is traveling.',
-          'For planningWants, quote desired dining, nightlife, events, attractions, lodging, and other vacation interests from this turn. Use park for attractions and activities. Include general interests even if no venue is named. Use an empty list if the turn states no preferences or wants. Exclude rejected options and existing reservations.',
+          'For planningWants, quote desired dining, nightlife, events, attractions, lodging, and other vacation interests from this turn. Use park for attractions and activities. Include general interests even if no venue is named. Use an empty list if the turn states no preferences or wants. Exclude rejected options and already confirmed plans.',
           'Use thing kinds bar and event for named bars and events. Put general preferences only in planningWants.',
         ] : []),
       ].join('\n'),

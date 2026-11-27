@@ -9,10 +9,13 @@ import { buildTripStateChatCall, pinTripStateContext } from '../src/vacation/tri
 import { prepareProactiveTripState } from '../src/vacation/trip-state-proactive.mjs';
 import { persistVacationAppCustomerTurn } from '../src/vacation/vacation-app-queue-persist.mjs';
 import { useNominatimStore } from '../src/vacation/nominatim-store.mjs';
+import { LocalVkAdminStore } from '../src/vacation/vk-admin-review-storage.mjs';
 import { customerSection, severityOf } from './harness/findings.mjs';
 import { measureInitialBuild } from './harness/initial-build.mjs';
 import { provisionThrowaway } from './harness/live-provision.mjs';
 import { buildScorecard } from './harness/scorecard.mjs';
+import { startVkAdminLocalServer } from './qa/vk-admin-local-server.mjs';
+import { loadVkAdminPlaywright } from './qa/vk-admin-playwright.mjs';
 
 const raw = new PGlite({ extensions: { pgcrypto } });
 const db = async (parts, ...params) => (await raw.query(parts.reduce((sql, part, index) => index ? `${sql}$${index}${part}` : part, ''), params)).rows;
@@ -46,11 +49,23 @@ const fetchImpl = async (url, init) => {
   const index = places.findIndex(([term, category]) => place.category === category && place.query.includes(term));
   if (index < 0) return Response.json({ places: [] });
   const [, category, title] = places[index];
-  return Response.json({ places: [{ externalId: `venue-${index}`, title, category, address: `${100 + index} Main Street, Orlando`, lat: 28.54, lng: -81.38 }] });
+  return Response.json({
+    places: [{
+      externalId: `venue-${index}`, title, category,
+      address: `${100 + index} Main Street, Orlando`, lat: 28.54, lng: -81.38,
+      url: `https://venue-${index}.example.com`,
+    }],
+  });
 };
 
 useNominatimStore({
-  async getCachedGeocode() { return { lat: 28.54, lng: -81.38, label: 'Orlando' }; },
+  async getCachedGeocode() {
+    return [{
+      lat: '28.54', lon: '-81.38',
+      display_name: 'Orlando, Florida, United States',
+      address: { city: 'Orlando', state: 'Florida', country_code: 'us' },
+    }];
+  },
   async putCachedGeocode() {},
   async runNominatimThrottled() { assert.fail('fixture geocoding must use the cached center'); },
 });
@@ -65,17 +80,30 @@ async function provision(runId, clearHeader = false) {
   return { trip, tripId, customerId, tag };
 }
 
-async function send({ trip, tripId, customerId }, turn, text, fields, activeEnv = env) {
+async function send({ trip, tripId, customerId }, turn, text, fields, activeEnv = env, appLatencyMs = null) {
   const { requestId } = await persistVacationAppCustomerTurn(db, {
     transcriptOwnerId: customerId, tripId, queuedJobType: 'vacation_intake', requestText: text,
-    payload: { liveTranscript: { turnIndex: turn * 2 } }, customerTurnIndex: turn * 2, intakeLatency: 5,
+    payload: { liveTranscript: { turnIndex: turn * 2, latencyMs: 15 * turn } }, customerTurnIndex: turn * 2,
+    intakeLatency: 15 * turn,
     turnTag: { category: null, tags: [] }, jobFields: {},
   });
   const revision = await prepareProactiveTripState({
     trip, requestId, turn, actorId: customerId, classification: fields, text,
     firstCustomerStartedMs: Date.now() - 100, env: activeEnv, pool, fetchImpl,
   });
-  return { revision, state: JSON.parse(revision.state_json) };
+  if (appLatencyMs != null) {
+    await db`
+      insert into transcript_turns (
+        customer_id, trip_id, request_id, speaker, channel, body, payload, direction, sent_at, response_latency_ms
+      )
+      values (
+        ${customerId}, ${tripId}, ${requestId}, 'app', 'vacation-app', ${`Reply for turn ${turn}`},
+        ${{ liveTranscript: { turnIndex: turn * 2 + 1, latencyMs: appLatencyMs } }},
+        'outbound', now() + (${turn} * interval '1 second'), ${appLatencyMs}
+      )
+    `;
+  }
+  return { requestId, revision, state: JSON.parse(revision.state_json) };
 }
 
 const checks = ['dialog-pdf', 'keepsake-pdf', 'screens', 'onboarding-screens-in-pdf', 'video-check', 'scorecard',
@@ -122,7 +150,7 @@ try {
   const thin = await provision('thin-orlando', true);
   const thinText = 'Can you help plan a vacation?';
   const beforeCount = queries.length;
-  const first = await send(thin, 1, thinText, { ok: true });
+  const first = await send(thin, 1, thinText, { ok: true }, env, 240);
   assert.equal(queries.length, beforeCount);
   const missing = ['destination', 'dates', 'party', 'interests/wants'];
   assert.deepEqual(first.state.research.gaps, missing);
@@ -135,10 +163,80 @@ try {
   assert.equal(trusted.capabilities.actions.save_plan.enabled, true);
   const noBuild = await measureInitialBuild(db, thin.tripId, thin.tag);
   assert.equal(noBuild.turn, null);
-  const second = await send(thin, 2, blurb, classification);
+  const second = await send(thin, 2, blurb, classification, env, 680);
   assert.equal(second.state.research.turn, 2);
   assert.deepEqual(second.state.research.build.items_by_type, expected);
   assert.equal((await measureInitialBuild(db, thin.tripId, thin.tag)).turn, 2);
+
+  process.env.VK_ADMIN_LOGIN = randomUUID();
+  process.env.VK_ADMIN_SESSION_SECRET = randomUUID();
+  const adminStore = new LocalVkAdminStore(path.join(outDir, 'admin-store'));
+  const server = await startVkAdminLocalServer({ adminDatabase: () => db, adminStore: () => adminStore });
+  const browser = await loadVkAdminPlaywright().chromium.launch();
+  try {
+    for (const viewport of [{ width: 390, height: 844, isMobile: true, hasTouch: true }, { width: 1280, height: 800 }]) {
+      const page = await browser.newPage(viewport);
+      assert.ok((await page.request.post(`${server.base}/api/admin/session`, { data: { login: process.env.VK_ADMIN_LOGIN } })).ok());
+      const res = await page.request.get(`${server.base}/api/admin/customers/${thin.tripId}/artifacts/travel-summary`);
+      assert.equal(res.status(), 200);
+      const summaryBody = await res.json();
+      assert.equal(summaryBody.snapshots.length, 2);
+      assert.deepEqual(summaryBody.snapshots[0].conversationState.next_steps[0].missing_inputs, missing);
+      assert.deepEqual(summaryBody.snapshots[1].conversationState.research.build.items_by_type, expected);
+      assert.equal(summaryBody.timing.buildTurn, 2);
+      assert.equal(summaryBody.timing.timeToBuildMs, second.state.research.build.started_offset_ms);
+      assert.equal(summaryBody.timing.buildDurationMs, second.state.research.build.duration_ms);
+      assert.deepEqual(summaryBody.timing.itemsByType, expected);
+      assert.deepEqual(summaryBody.timing.turns, [
+        { turnNumber: 1, customerMs: 15, appMs: 240 },
+        { turnNumber: 2, customerMs: 30, appMs: 680 },
+      ]);
+      assert.ok(summaryBody.timing.totalWallMs >= 0);
+
+      await page.goto(`${server.base}/vacation-app/admin`);
+      const showTest = page.locator('[data-admin-show-test]');
+      await showTest.waitFor();
+      if (!(await showTest.isChecked())) await showTest.check();
+      await page.getByRole('button', { name: 'Open Synthetic Setup', exact: true }).first().click();
+      await page.locator('#tripButton').click();
+      await page.getByRole('option', { name: 'Travel Summary', exact: true }).click();
+      const conversationRegion = page.getByRole('region', { name: 'Conversation management' });
+      await conversationRegion.waitFor();
+      assert.equal(await conversationRegion.locator('details').evaluate((el) => el.open), false);
+      await conversationRegion.locator('summary').click();
+      assert.deepEqual(JSON.parse(await conversationRegion.locator('[data-conversation-json]').textContent()), second.state);
+
+      const timingRegion = page.getByRole('region', { name: 'Timing summary' });
+      await timingRegion.waitFor();
+      const timingText = await timingRegion.textContent();
+      assert.match(timingText, /\(turn 2\)/);
+      assert.match(timingText, /hotel 1/);
+      assert.match(timingText, /bar 1/);
+      assert.match(timingText, /event 1/);
+      assert.equal(/\btrip\b/i.test(timingText), false);
+      await timingRegion.locator('summary').click();
+      const rows = await timingRegion.locator('tbody tr').allTextContents();
+      assert.deepEqual(rows.map((row) => row.replace(/\s+/g, ' ').trim()), ['115 ms240 ms', '230 ms680 ms']);
+
+      await page.getByRole('button', { name: 'Previous turn' }).click();
+      await conversationRegion.locator('summary').click();
+      assert.deepEqual(JSON.parse(await conversationRegion.locator('[data-conversation-json]').textContent()), first.state);
+
+      const overflow = await page.locator('.admin-travel').evaluate((view) => {
+        const pane = view.closest('.admin-view-panel');
+        return [pane, view, ...view.querySelectorAll('section, dl, dt, dd, details, summary, table, pre')].map((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.left >= 0 && rect.right <= innerWidth && node.scrollWidth <= node.clientWidth + 1
+            ? null : [node.tagName, rect.left, rect.right, node.scrollWidth, node.clientWidth];
+        }).filter(Boolean);
+      });
+      assert.deepEqual(overflow, [], `admin travel summary must not overflow at ${viewport.width}px`);
+      await page.close();
+    }
+  } finally {
+    await browser.close();
+    await server.close();
+  }
 
   const empty = await provision('empty-search');
   const { state: emptyState } = await send(empty, 1, blurb, classification, {});
