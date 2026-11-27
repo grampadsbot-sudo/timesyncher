@@ -13,11 +13,8 @@ window.startVkAdminReview = (() => {
   const json = (method, body) => ({ method, headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
   const state = { customers: new Map(), opened: [], recent: new Set(), details: new Map(), artifacts: new Map(),
     selection: null, view: 'all', attachments: [], voiceMode: false, voiceArmed: false, sending: false, opening: false,
-<<<<<<< HEAD
-    travelSummaries: new Map(), travelSummaryTurn: null };
-=======
+    travelSummaries: new Map(), travelSummaryTurn: null,
     showTestCustomers: false, hiddenTestCount: 0, loadingCustomers: false };
->>>>>>> origin/vk
   let notesRequest = 0;
   let root;
 
@@ -531,13 +528,10 @@ window.startVkAdminReview = (() => {
       state.showTestCustomers = false;
     }
     root.addEventListener('click', handleClick);
-<<<<<<< HEAD
     root.addEventListener('input', scrubTravelSummary);
-=======
     root.addEventListener('change', (event) => {
       if (event.target.matches('[data-admin-show-test]')) void setTestCustomers(event.target);
     });
->>>>>>> origin/vk
     return refresh().catch((error) => {
       console.error(error);
       renderGate('Admin review could not load.');
