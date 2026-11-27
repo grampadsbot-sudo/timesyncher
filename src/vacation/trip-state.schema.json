@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "VK Trip State v1 \u2014 canonical trip and turn snapshot (final merged v1, updated for Craig 11/26 8:22 PM HST: proactive itinerary, travelers \u2260 access grants, proposed times)",
+  "title": "VK Trip State v1 \u2014 canonical trip and turn snapshot (final merged v1, updated for the 11/26 8:22 PM HST ruling: proactive itinerary, travelers \u2260 access grants, proposed times)",
   "description": "Map keys are stable trip-scoped IDs. Provenance, readback, transitions and relational invariants are specified in SPEC.md. Assignments carry proposed_by=system|customer. Clock times the system guesses use time.precision=proposed. saved.travelers are people on the trip and never imply collaborator, editor, or viewer access.",
   "type": "object",
   "additionalProperties": false,
