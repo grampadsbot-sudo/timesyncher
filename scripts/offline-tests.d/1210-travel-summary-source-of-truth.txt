@@ -1,0 +1,1 @@
+scripts/test_vk_travel_summary_source_of_truth_1210.mjs

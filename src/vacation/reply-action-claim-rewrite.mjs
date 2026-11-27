@@ -15,6 +15,7 @@ export async function rewriteBlockedActionClaim({
   env = process.env,
   destination = '',
   postIntake = false,
+  travelSummary = null,
 } = {}) {
   const originalText = String(draft || '').trim();
   const blockedReason = String(
@@ -41,6 +42,7 @@ export async function rewriteBlockedActionClaim({
     memory: [],
     upsell: 'forbidden',
     postIntake: postIntake === true,
+    tripContext: { travelSummary },
     env,
     systemExtra: request.systemExtra, purpose: 'reply_rewrite',
   });

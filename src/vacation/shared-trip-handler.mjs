@@ -164,7 +164,7 @@ export async function intakeSharedResponse(shareToken, db = null) {
     select id, category, title, description, metadata, ratings, location, source, starts_at, ends_at
     from trip_things
     where trip_id = ${trip.id}
-    order by created_at asc
+    order by created_at asc, id
   `;
   const mappedThings = things.map((row) => thingRecordFromTripRow(row));
   const shared = sharedTripFromIntake({ trip, things: mappedThings });

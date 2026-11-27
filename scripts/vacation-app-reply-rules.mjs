@@ -604,9 +604,7 @@ const STATIC_REPLY_RULES = [
   USE_SAVED_TRIP_RULE,
   'Do not open with a comma-separated roster roll call like Name, you, Name are set or locked in.',
   'Do not insert a welcome the customer did not ask for.',
-  'Day-advice turns name the people already on the saved roster. They do not add a household welcome.',
-  'You know only what the customer said in chat and what is in the saved trip record. Use the party size and the people already named. Never invent people. Do not name a person who is not in the saved roster or the customer turn. When the customer states a party size, the names you list are that party. Do not add extra people on top of that size.',
-  'The account holder in the saved roster is on the trip. Do not leave them off. When you say the crew and list names, include the account holder, the collaborators, and the children already named. A person who just joined is a collaborator, not the account holder. Do not say just the crew or the whole crew unless the account holder is in that list.',
+  'Use Travel Summary as the trip state. Use who and the customer’s own messages for traveler names, relationships and group size. If the customer gave a relationship without a name, keep that relationship. A person who just joined is a collaborator, not the account holder.',
   'Address the person who is speaking. Do not give that person an activity the saved trip record assigns to someone else.',
   'Do not say we have corrected that, or I have corrected that, unless the customer asked for a correction.',
   'Do not put an activity on a day that is not already that activity on the saved trip record.',
@@ -633,14 +631,13 @@ function replyTurnRules(rules, destination, upsell, postIntake, customerTurn = '
   const { tripRaw, gapAskPromptTurn } = gapAskReplyPromptTripRaw(tripSource, postIntake, modelVisibleTripContext);
   const itinerary = Array.isArray(tripRaw?.itinerary) ? tripRaw.itinerary.filter(Boolean).slice(0, 12) : [];
   const dates = String(tripRaw?.dates || '').trim();
-  const roster = String(tripRaw?.roster || '').trim();
   const rule = String(tripRaw?.rule || '').trim();
   const turnInvitePending = tripRaw?.turnInvite?.ok === true;
   const turnInviteRule = String(tripRaw?.turnInviteRule || '').trim();
   const unscheduledOpen = Array.isArray(tripRaw?.chatPlaceSearch?.unscheduled)
     && tripRaw.chatPlaceSearch.unscheduled.some((row) => row?.notOnADay === true);
   const customerInput = {};
-  const statedTripFields = new Set(['itinerary', 'dates', 'roster', 'rule']);
+  const statedTripFields = new Set(['itinerary', 'dates', 'rule']);
   for (const [key, value] of Object.entries(tripRaw || {})) {
     if (statedTripFields.has(key) || key === 'unscheduledDayRule' || key === 'tripReplyGate' || key === 'placeSearchAreaScope' || key === 'namedSearchAwayFromStatedLodging') continue;
     if (Array.isArray(value)) {
@@ -657,8 +654,8 @@ function replyTurnRules(rules, destination, upsell, postIntake, customerTurn = '
     }
   }
   const hasCustomerInput = Object.keys(customerInput).length > 0;
-  const trip = itinerary.length || dates || roster || rule || hasCustomerInput
-    ? { itinerary, dates, roster, rule, ...customerInput }
+  const trip = itinerary.length || dates || rule || hasCustomerInput
+    ? { itinerary, dates, rule, ...customerInput }
     : null;
   const seatName = String(context.seat?.name || context.seat?.displayName || '').trim();
   const seat = seatName ? { name: seatName, payer: String(context.seat?.payer || '').trim() } : null;
@@ -760,7 +757,7 @@ export async function jevQualityRewrite({ customerTurn, draft, tripContext = nul
       customer_turn: text(customerTurn, 6000),
       draft: text(draft, 3500),
       ...(itinerary ? { itinerary } : {}),
-      ...(tripContext?.roster ? { roster: text(tripContext.roster, 400) } : {}),
+      ...(tripContext?.travelSummary ? { travelSummary: modelVisibleTripContext(tripContext).travelSummary } : {}),
       ...(tripContext?.dates ? { dates: text(tripContext.dates, 400) } : {}),
       ...(requiredLine ? { required_payer_line: requiredLine } : {}),
     },
@@ -901,7 +898,9 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
   }
   assertSharedReplyTargetAllowed(OPENROUTER_CHAT_COMPLETIONS_URL, 'tiered openrouter chat', { allowTieredOpenRouterChat: true });
   const request = replyRequestBody({ rules, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, tripContext, planTable });
-  const userContent = intakeReplyTurn ? JSON.stringify(replyFacts && typeof replyFacts === 'object' ? replyFacts : {}) : JSON.stringify(request);
+  const userContent = JSON.stringify(intakeReplyTurn
+    ? { ...replyFacts, ...(request.trip_context?.travelSummary && { travelSummary: request.trip_context.travelSummary }) }
+    : request);
   const turnRules = intakeReplyTurn
     ? systemExtra
     : [replyTurnRules(rules, destination, upsell, postIntake, customerTurn, {

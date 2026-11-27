@@ -5,7 +5,8 @@ window.startVkAdminReview = (() => {
   const check = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m20 6-11 11-5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   const brandLockup = '<div class="brand vk-app-brand" data-vk-wordmark="1"><img class="mark" src="/brand/vk-book-logo.svg" alt="Vacay Keepsake" width="28" height="30" /><span class="vk-print-wordmark">vacay <i>keepsake</i></span></div>';
   const views = [
-    ['chat', 'Dialog'], ['feedback', 'Feedback & QA'], ['trip', 'Vacation site'], ['keepsake', 'Keepsake'],
+    ['chat', 'Dialog'], ['travel-summary', 'Travel Summary'], ['feedback', 'Feedback & QA'],
+    ['trip', 'Vacation site'], ['keepsake', 'Keepsake'],
     ['onboarding', 'Onboarding'], ['captures', 'Chat screenshots'], ['vacations', 'All vacations'],
   ];
   const allCustomersIntro = 'Choose a customer to drill down into their trips, chat and QA.';
@@ -14,6 +15,7 @@ window.startVkAdminReview = (() => {
   const state = { customers: new Map(), opened: [], recent: new Set(), details: new Map(), artifacts: new Map(),
     selection: null, view: 'all', feedbackRollup: null, feedbackRollupFailed: false, attachments: [],
     voiceMode: false, voiceArmed: false, sending: false, opening: false,
+    travelSummaries: new Map(), travelSummaryTurn: null,
     showTestCustomers: false, hiddenTestCount: 0, loadingCustomers: false };
   let notesRequest = 0;
   let root;
@@ -77,7 +79,8 @@ window.startVkAdminReview = (() => {
     const account = customer();
     const vac = account ? state.details.get(viewTrip()) : null;
     const artifacts = vac ? state.artifacts.get(vac.tripId) : null;
-    const current = account ? `${views.find(([id]) => id === state.view)[1]} · ${account.name}` : 'All Customers';
+    const viewLabel = views.find(([id]) => id === state.view)?.[1];
+    const current = account ? (state.view === 'travel-summary' ? viewLabel : `${viewLabel} · ${account.name}`) : 'All Customers';
     const option = (id, title, on, sub = '', attrs = '') => {
       return `<button class="trip-option ${on ? 'active' : ''}" type="button" data-trip-id="${safe(id)}" ${attrs} role="option" aria-selected="${on}"><span>${on ? check : ''}</span><span class="trip-option-text"><b>${safe(title)}</b>${sub ? `<small>${safe(sub)}</small>` : ''}</span></button>`;
     };
@@ -228,6 +231,43 @@ window.startVkAdminReview = (() => {
     return `<iframe title="${safe(vac.label)} keepsake" src="${preview}" credentialless data-keepsake-frame></iframe>`;
   }
 
+  function travelSummaryCover(snapshot) {
+    if (!snapshot || !['tripName', 'where', 'who', 'transport', 'description'].some((field) => snapshot[field])) {
+      return '<p class="admin-empty" role="status">No travel details recorded for this turn.</p>';
+    }
+    const facts = [['where', 'Where'], ['who', 'Who'], ['transport', 'Getting there']]
+      .filter(([field]) => snapshot[field])
+      .map(([field, label]) => `<div><dt>${label}</dt><dd data-travel-field="${field}">${safe(snapshot[field])}</dd></div>`).join('');
+    return `<article class="admin-travel-cover" data-travel-cover>${snapshot.tripName ? `<header><img src="/brand/vk-book-logo.svg" alt="" width="30" height="32"><h1 data-travel-field="tripName">${safe(snapshot.tripName)}</h1></header>` : ''}${facts ? `<dl>${facts}</dl>` : ''}${snapshot.description ? `<p data-travel-field="description">${safe(snapshot.description)}</p>` : ''}</article>`;
+  }
+
+  function travelSummary(vac) {
+    const result = state.travelSummaries.get(vac.tripId);
+    if (!result) return '<p class="admin-empty" role="status">Loading Travel Summary…</p>';
+    if (result.failed) return '<p class="admin-empty" role="status">Travel Summary could not be loaded.</p>';
+    const { snapshots } = result;
+    if (!snapshots.length) return '<p class="admin-empty" role="status">No customer turns recorded for this vacation.</p>';
+    const chosen = snapshots.findIndex(({ turnId }) => turnId === state.travelSummaryTurn);
+    const index = chosen < 0 ? snapshots.length - 1 : chosen;
+    const snapshot = snapshots[index];
+    return `<section class="admin-travel" aria-label="Travel Summary"><div class="admin-travel-scrubber"><label for="adminTravelTurn">Turn</label><input id="adminTravelTurn" type="range" min="1" max="${snapshots.length}" value="${index + 1}" aria-valuetext="${snapshot.turnNumber} of ${snapshots.length}"${snapshots.length === 1 ? ' disabled' : ''}><output for="adminTravelTurn">${snapshot.turnNumber} / ${snapshots.length}</output></div><div data-travel-snapshot="${safe(snapshot.turnId)}">${travelSummaryCover(snapshot)}</div></section>`;
+  }
+
+  function scrubTravelSummary(event) {
+    const control = event.target;
+    if (control.id !== 'adminTravelTurn') return;
+    const { snapshots } = state.travelSummaries.get(viewTrip());
+    const snapshot = snapshots[control.valueAsNumber - 1];
+    if (!snapshot) return;
+    state.travelSummaryTurn = snapshot.turnId;
+    control.setAttribute('aria-valuetext', `${snapshot.turnNumber} of ${snapshots.length}`);
+    const view = control.closest('.admin-travel');
+    view.querySelector('output').textContent = `${snapshot.turnNumber} / ${snapshots.length}`;
+    const content = view.querySelector('[data-travel-snapshot]');
+    content.dataset.travelSnapshot = snapshot.turnId;
+    content.innerHTML = travelSummaryCover(snapshot);
+  }
+
   function onboarding(vac, artifacts) {
     const sessions = vac.onboarding || [];
     const replay = sessions.length ? `<div class="admin-replay" data-onboarding-replay aria-label="Onboarding replay">${sessions.map((session) => `<section>
@@ -281,7 +321,8 @@ window.startVkAdminReview = (() => {
 
   function viewContent(vac) {
     const renderView = {
-      chat: dialog, feedback: feedbackView, trip: vacationSite, keepsake, onboarding, captures, vacations: vacationList,
+      chat: dialog, 'travel-summary': travelSummary, feedback: feedbackView, trip: vacationSite, keepsake,
+      onboarding, captures, vacations: vacationList,
     }[state.view];
     return renderView(vac, state.artifacts.get(vac.tripId));
   }
@@ -315,6 +356,7 @@ window.startVkAdminReview = (() => {
       state.view = button.dataset.view;
       if (state.view === 'feedback-all') void loadFeedbackRollup();
       renderViewPane();
+      if (state.view === 'travel-summary') void loadTravelSummary(viewTrip());
       document.getElementById('tripButton').focus();
     } else if (button.dataset.tripId === 'all') showCustomer(null);
     else if (button.hasAttribute('data-clear-all')) void clearAll();
@@ -511,6 +553,7 @@ window.startVkAdminReview = (() => {
     }
     state.selection = selection;
     state.view = selection ? 'chat' : 'all';
+    state.travelSummaryTurn = null;
     history.replaceState({ ...history.state, vkAdminSelection: selection }, '');
     if (sameCustomer) renderViewPane();
     else render();
@@ -521,11 +564,19 @@ window.startVkAdminReview = (() => {
     const result = await api(artifactsPath(id)).catch(() => null);
     const artifacts = result?.res.ok ? result.data : { failed: true };
     state.artifacts.set(id, artifacts);
-    if (viewTrip() === id && ['chat', 'captures', 'keepsake', 'onboarding', 'feedback'].includes(state.view)) {
+    if (viewTrip() === id && ['chat', 'captures', 'keepsake', 'onboarding', 'feedback', 'travel-summary'].includes(state.view)) {
       const vac = state.details.get(id);
       document.querySelector('.admin-view-panel').innerHTML = viewContent(vac);
       lockReplay(document.getElementById('customerChatReplay'));
       document.getElementById('vacationDropdown').outerHTML = switcher();
+    }
+  }
+
+  async function loadTravelSummary(id) {
+    const result = await api(`${artifactsPath(id)}/travel-summary`).catch(() => null);
+    state.travelSummaries.set(id, result?.res.ok ? result.data : { failed: true });
+    if (viewTrip() === id && state.view === 'travel-summary') {
+      document.querySelector('.admin-view-panel').innerHTML = travelSummary(state.details.get(id));
     }
   }
 
@@ -550,6 +601,7 @@ window.startVkAdminReview = (() => {
     state.recent.clear();
     state.details.clear();
     state.artifacts.clear();
+    state.travelSummaries.clear();
     showCustomer(null);
   }
 
@@ -573,6 +625,7 @@ window.startVkAdminReview = (() => {
       state.showTestCustomers = false;
     }
     root.addEventListener('click', handleClick);
+    root.addEventListener('input', scrubTravelSummary);
     root.addEventListener('change', (event) => {
       if (event.target.matches('[data-admin-show-test]')) void setTestCustomers(event.target);
     });

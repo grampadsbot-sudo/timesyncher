@@ -250,6 +250,7 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
   const persona = personaSeed(story);
   const customerTurns = [];
   let lastReply = openerTurns.at(-1)?.text || '';
+  let travelSummary = opened.body?.travelSummary ?? null;
   const limit = liveCustomer ? Math.max(1, Number(maxTurns) || persona.goals.length || 4) : story.turns.length;
   for (let index = 0; index < limit; index += 1) {
     let turn = story.turns[index];
@@ -257,7 +258,7 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
     let customerModel = '';
     if (liveCustomer) {
       const priorForModel = [...openerTurns, ...customerTurns];
-      const spoken = await speakCustomer({ persona, appReply: lastReply, index, transcript: priorForModel, ask: customerAsk, order: customerLanes });
+      const spoken = await speakCustomer({ persona, appReply: lastReply, index, transcript: priorForModel, travelSummary, ask: customerAsk, order: customerLanes });
       customerCost = spoken.cost;
       customerModel = spoken.model;
       turn = { speaker: persona.name, modality: 'text', text: spoken.text, odd: spoken.kind !== 'goal' };
@@ -337,6 +338,7 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
           shareToken = tripFields(probe.body).shareToken || shareToken;
           if (tripFields(probe.body).tripId) currentTrip = tripFields(probe.body).tripId;
           lastReply = storedApp.text;
+          travelSummary = probe.body?.travelSummary ?? draft.body?.travelSummary ?? travelSummary;
           const isFallback = isPlanningFallbackTurn(storedApp.text, storedApp);
           customerTurns.push({ role: 'app', text: storedApp.text, model: storedApp.model, cost: storedApp.cost, planningFallback: isFallback });
           if (afterCustomerTurn && index < 5) {
@@ -388,6 +390,7 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
     shareToken = tripFields(history.body).shareToken || shareToken;
     if (tripFields(history.body).tripId) currentTrip = tripFields(history.body).tripId;
     lastReply = reply || lastReply;
+    travelSummary = final.body?.travelSummary ?? history.body?.travelSummary ?? draft.body?.travelSummary ?? travelSummary;
     const replyBody = final.body?.reply ? final.body : draft.body;
     const isFallback = isPlanningFallbackTurn(reply, replyBody);
     customerTurns.push({ role: 'app', text: reply, model: stamp.modelId || stamp.responseModel, cost: final.body?.cost || draft.body?.cost || null, planningFallback: isFallback });

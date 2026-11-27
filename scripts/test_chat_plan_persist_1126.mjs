@@ -7,7 +7,6 @@ import { runChatItineraryEditTurn } from '../src/vacation/chat-itinerary-edit.mj
 import { scheduleChatThing } from '../src/vacation/chat-thing-schedule.mjs';
 import {
   isOrdinaryPlanningTurn,
-  isPlanConfirmation,
   keepPlannedDays,
   plannedCustomerThings,
   plannedItineraryItems,
@@ -45,9 +44,6 @@ assert.equal(isOrdinaryPlanningTurn(DECLINE), true);
 assert.equal(isOrdinaryPlanningTurn('book Carbone for 8 on Wednesday'), false);
 assert.equal(isOrdinaryPlanningTurn('set up my AI for reservations'), false);
 assert.equal(isOrdinaryPlanningTurn('Connect my Claude to this vacation'), false);
-assert.equal(isPlanConfirmation('yes'), false);
-assert.equal(isPlanConfirmation('Yes, please set it up'), false);
-assert.equal(isPlanConfirmation('yes, save that plan'), true);
 
 const planning = await tryHandleAiMcpChatTurn(async () => {
   throw new Error('planning lookup');
@@ -107,16 +103,16 @@ const stillEdit = await runChatItineraryEditTurn({
 });
 assert.equal(stillEdit.reason, 'web_edit_access_required');
 
-function planDb(startDate, priorBody) {
+function planDb(startDate) {
   return async (strings) => {
     const sql = strings.join(' ');
-    if (sql.includes('transcript_turns')) return [{ speaker: 'app', body: priorBody }];
     if (sql.includes('from trips')) return [{ start_date: startDate }];
     throw new Error(`Unhandled test SQL: ${sql}`);
   };
 }
 
-const described = await plannedCustomerThings(planDb('2026-06-10', ''), 'vac-1', 'plan our days day by day', DRAFT, []);
+const described = await plannedCustomerThings(planDb('2026-06-10'), 'vac-1',
+  `${DRAFT}\nNobody has paid yet.\nWe will see the aquarium first.`);
 const saved = keepPlannedDays(mergeWantedThings([], described), described).map((thing) => {
   const slot = scheduleChatThing(thing, { start_date: '2026-06-10', end_date: '2026-06-12' });
   return { ...thing, starts_at: slot.starts_at, whenLabel: slot.whenLabel || thing.whenLabel };
@@ -134,12 +130,16 @@ for (const thing of saved) {
   assert.equal(meta.dayNumber, thing.dayNumber);
   assert.equal(meta.price, undefined);
 }
-const confirmed = await plannedCustomerThings(planDb('2026-06-10', DRAFT), 'vac-1', 'yes, save that plan', 'Saved.', []);
-assert.equal(confirmed.length, 3);
-assert.equal(confirmed[0].dayNumber, 1);
-assert.equal(plannedItineraryItems('yes').length, 0);
-const bareYes = await plannedCustomerThings(planDb('2026-06-10', DRAFT), 'vac-1', 'yes', '', []);
-assert.equal(bareYes.length, 0);
+for (const acknowledgement of ['yes, save that plan', 'yes']) {
+  const confirmed = await plannedCustomerThings(planDb('2026-06-10'), 'vac-1', acknowledgement, [
+    { title: 'Harbor Hotel', category: 'hotel' },
+  ]);
+  assert.deepEqual(confirmed, []);
+}
+assert.deepEqual(plannedItineraryItems('yes'), []);
+const repeated = await plannedCustomerThings(planDb('2026-06-10'), 'vac-1',
+  'Day 1: the Sunset Pier Diner\nSUNSET-PIER DINER.');
+assert.equal(repeated.length, 1);
 
 const recovered = recoverOrdinaryPlanningReply({
   reply: '',

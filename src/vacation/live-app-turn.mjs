@@ -407,34 +407,13 @@ export function draftingFacts(priorTurns, customerTurn = '', saved = null) {
     const when = String(thing.customerWhen || thing.whenLabel || '').trim();
     return when ? `${thing.title}: ${when}` : thing.title;
   }).filter(Boolean);
-  const party = record?.party && typeof record.party === 'object' ? record.party : {};
-  const owner = party.primary?.name ? [{ name: party.primary.name, payer: 'account holder' }] : [];
-  const travelers = [
-    ...owner,
-    ...(Array.isArray(party.collaborators) ? party.collaborators : []),
-    ...(Array.isArray(party.preference_subjects) ? party.preference_subjects : []),
-  ].filter((person) => person?.name);
-  const absent = [
-    ...(Array.isArray(party.viewers) ? party.viewers.map((person) => person?.name && `${person.name} (viewer)`) : []),
-    ...(Array.isArray(party.editors) ? party.editors.map((person) => person?.name && `${person.name} (editor)`) : []),
-  ].filter(Boolean);
-  const statedLine = 'List only people the customer named in chat. Do not invent people.';
-  const holder = owner[0]?.name ? ` The account holder is ${owner[0].name}. A collaborator who just joined is not the account holder.` : '';
-  const roster = [
-    `Party rule: ${statedLine}`,
-    travelers.length ? `Traveling: ${travelers.map((person) => person.payer ? `${person.name} (payer ${person.payer})` : person.name).join(', ')}.${holder}` : '',
-    absent.length ? `Not on the vacation: ${absent.join(', ')}. Viewers and editors are not coming, not in the house, and not in the day's group.` : '',
-  ].filter(Boolean).join(' ');
   const span = record?.span || null;
   const gap = draftingGapFields(record, things);
-  const facts = {
+  return {
     itinerary,
-    roster,
     dates: span?.spanLabel ? `Saved vacation dates: ${span.spanLabel}.` : '',
     ...gap.facts,
   };
-  if (party.askRoster === true) facts.askRoster = true;
-  return facts;
 }
 
 export function qualityFailureReason(quality, flags) {
@@ -976,9 +955,9 @@ export function draftFactErrors(reply, facts = {}) {
     }
     for (const person of facts.notTraveling || []) {
       const named = new RegExp(`\\b${String(person.name).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-      const absent = /\bnot (?:on the trip|traveling|with the crew|in the house)\b|\b(?:aren(?:'|’)t|are not) traveling\b|\bviewer\b|\beditor\b|\bview access\b|\bedit access\b/i.test(sentence);
-      if (!absent && named.test(sentence) && /\bon the trip|all together|sharing the|whole group|for your stay|with the crew|all on the trip|in the house|with you|joining you|coming along|along with/i.test(sentence)) {
-        pushError(errors, `${person.name} is a ${person.role}, not on the trip`);
+      const absent = /\bnot (?:on the (?:trip|vacation)|traveling|with the crew|in the house)\b|\b(?:aren(?:'|’)t|are not) traveling\b|\bviewer\b|\beditor\b|\bview access\b|\bedit access\b/i.test(sentence);
+      if (!absent && named.test(sentence) && /\bon the (?:trip|vacation)|all together|sharing the|whole group|for your stay|with the crew|all on the (?:trip|vacation)|in the house|with you|joining you|coming along|along with/i.test(sentence)) {
+        pushError(errors, `Not on the vacation: ${person.name} is a ${person.role}.`);
       }
     }
     if (DEPARTURE.test(sentence)) {
@@ -1371,14 +1350,9 @@ function mergeSavedTurn(saved, priorTurns, customerTurn, session, extraction = {
   const things = applyAgreedAppSwim(noted, customerTurn, '', span);
   const seat = session?.metadata?.seat || session?.seat;
   const collaborator = seat?.role === 'collaborator' || Boolean(seat?.ownerCustomerId);
-  const storedOwner = String(saved?.party?.primary?.name || '').trim();
-  const holder = storedOwner || (collaborator ? '' : String(session?.display_name || session?.displayName || '').trim());
+  const holder = collaborator ? '' : String(session?.display_name || session?.displayName || '').trim();
   const rosterKnown = Array.isArray(extraction.roster) || Boolean(extraction.rosterError);
   const party = completeRosterParty({
-    party: {
-      ...(saved?.party || {}),
-      primary: holder ? { name: holder, role: 'Owner' } : (saved?.party?.primary || null),
-    },
     customerName: holder,
     turns: [{ role: 'customer', text: customerCorpus(priorTurns, customerTurn) }],
     ...(rosterKnown ? {
@@ -1404,15 +1378,15 @@ export async function produceLiveAppReply({
   customerTurn, session, priorTurns, tripTitle, placeResults = [], placeSearchTurn = false, webResearchTurn = false, env = process.env,
   seatDollars: suppliedSeatDollars = null, intake = false, wantedThings = [], roster = null, rosterError = null, extractedDestination = '', extractedTitle = '',
   destinationError = null, titleError = null, savedStart = '', savedEnd = '', loadOwnerPlan = null, loadSavedTripRecordFn = loadSavedTripRecord,
-  turnActionResults = null, placeSearchReplyFacts = null, understanding = null } = {}) {
+  turnActionResults = null, placeSearchReplyFacts = null, understanding = null, travelSummary = null } = {}) {
   const vkBotReply = await routeVkBotMcpReply({ customerTurn, session, priorTurns, tripTitle, env });
-  if (vkBotReply) return requireReplyQuality(vkBotReply, { customerTurn, env });
+  if (vkBotReply) return requireReplyQuality(vkBotReply, { customerTurn, tripContext: { travelSummary }, env });
   const rules = await loadVacationAppReplyRules(env);
   const history = Array.isArray(priorTurns) ? priorTurns : [];
   const memory = memoryTurns(history);
   const intakeTurn = { text: customerTurn, intake: intake === true };
   const postIntake = firstMarkedIntake(intakeTurn, history);
-  if (postIntake) return produceFirstIntakeReply({ customerTurn, session, tripTitle, env, rules, wantedThings, roster, extractedDestination, savedStart, savedEnd, turnActionResults, understanding, ...(loadOwnerPlan ? { loadOwnerPlan } : {}) });
+  if (postIntake) return produceFirstIntakeReply({ customerTurn, session, tripTitle, env, rules, wantedThings, roster, extractedDestination, savedStart, savedEnd, turnActionResults, understanding, travelSummary, ...(loadOwnerPlan ? { loadOwnerPlan } : {}) });
   let intent = emptyIntent();
   try {
     intent = await customerIntent(customerTurn, { env, understanding });
@@ -1436,7 +1410,7 @@ export async function produceLiveAppReply({
   const tripId = String(session?.trip_id || session?.tripId || '').trim();
 
   const drafting = await draftingFactsForLiveReply(draftingFacts, history, customerTurn, mergedTrip, env, tripId);
-  let tripContext = await enrichDraftingTripContext(drafting, {
+  let tripContext = await enrichDraftingTripContext({ ...drafting, travelSummary }, {
     things: mergedTrip.things, session, env, turnActionResults, placeSearchReplyFacts,
     savedStart: savedStart || mergedTrip.start, savedEnd: savedEnd || mergedTrip.end,
     wantedThings, inTurnPlaceResults: inTurnProviderResults,
@@ -1461,7 +1435,7 @@ export async function produceLiveAppReply({
   tripContext.purchased_plan = commerce.purchasedPlan;
   if (mergedTrip?.rule) tripContext.rule = String(mergedTrip.rule);
   const seat = joiningSeatRecord(session);
-  const tripFacts = savedTripFacts(mergedTrip);
+  const tripFacts = savedTripFacts(travelSummary ? { ...mergedTrip, party: null } : mergedTrip);
   tripFacts.customerTurn = String(customerTurn || '');
   if (commerce.collaboratorSeat) tripFacts.collaboratorSeat = true;
   tripFacts.seatDollars = commerce.pricedSeat;
@@ -1505,10 +1479,8 @@ export async function produceLiveAppReply({
     ? String(tripContext.turnInviteRule || 'This turn only sent a pending collaborator invite. Do not welcome the invitee or say they are joining or on the vacation.')
     : '';
   const draftExtra = [
-    tripContext.roster || '',
     turnInviteExtra,
-    'When you list who is coming, name every traveler in the saved roster. Do not add a name that is not in that roster.',
-    speaker ? `The person speaking now is ${speaker}. Address ${speaker}. Do not address ${tripFacts.ownerName || 'the account holder'} as if they sent this message.` : '',
+    speaker ? `The person speaking now is ${speaker}. Address ${speaker}.` : '',
     placeResultExtra(modelPlaceSources),
     resolvedDestination.ask ? DESTINATION_ASK : '',
     inviteContactLiveReplySystemExtra(tripContext),
@@ -1638,7 +1610,7 @@ export async function produceLiveAppReply({
     return { reply: shipped.reply, rules, jev, model: shipped.model, quality: shipped.quality, log: shipped.log, reason: null };
   }
   const interimStarted = Date.now();
-  const interimPromise = interimFromTierOne({ rules, customerTurn, destination, env, facts: tripFacts, seat, intake: intake === true, intent }).then((interim) => {
+  const interimPromise = interimFromTierOne({ rules, customerTurn, destination, env, facts: tripFacts, seat, intake: intake === true, intent, travelSummary }).then((interim) => {
     interim.ms = String(interim.text || '').trim() ? Math.max(Number(interim.ms) || 0, Date.now() - interimStarted) : null;
     return interim;
   }).catch(() => ({ text: null, model: null, ms: null, judge: null }));
@@ -1759,20 +1731,15 @@ export function upsellFactsForTurn(customerTurn, facts = {}, intake = false, int
   };
 }
 
-async function interimFromTierOne({ rules, customerTurn, destination, env, facts = {}, seat = null, intake = false, intent = null }) {
+async function interimFromTierOne({ rules, customerTurn, destination, env, facts = {}, seat = null, intake = false, intent = null, travelSummary = null }) {
   const started = Date.now();
-  const absent = (Array.isArray(facts.notTraveling) ? facts.notTraveling : []).map((person) => person.name).filter(Boolean);
-  const owner = String(facts.ownerName || '').trim();
   const speaker = String(facts.addressedTo || '').trim();
   const upsell = upsellFactsForTurn(customerTurn, facts, intake, intent);
   const systemExtra = [
     intake === true ? 'This holding reply covers the intake. Use the upsell facts. Do not recite a script.' : 'This is a one or two sentence holding line.',
     interimFacts(customerTurn, destination),
     destination ? '' : DESTINATION_ASK,
-    speaker
-      ? `The person speaking now is ${speaker}. Address ${speaker}. Do not address ${owner || 'someone else'} as the speaker.`
-      : (owner ? `The customer is ${owner}. Do not call anyone else the account holder.` : 'Do not name an account holder.'),
-    absent.length ? `Do not put ${absent.join(' or ')} on the vacation.` : 'Do not add viewers or editors to the traveling party.',
+    speaker ? `The person speaking now is ${speaker}. Address ${speaker}.` : '',
     upsell ? `Upsell facts: ${JSON.stringify(upsell)}` : '',
     customerAsksPrice(customerTurn, intent) && Number(facts.seatDollars) > 0
       ? `This turn asks the price. State this line exactly and do not say the plan is already owned: ${payerLineFromDollars(customerTurn, facts.seatDollars, intent?.seats || facts.payerRows)}.`
@@ -1793,6 +1760,7 @@ async function interimFromTierOne({ rules, customerTurn, destination, env, facts
     forceModel: INTERIM_MODEL,
     timeoutMs: intake === true ? 20000 : 8000, purpose: 'reply_interim',
     seat,
+    tripContext: { travelSummary },
     systemExtra,
   });
   const model = await call();
@@ -1893,7 +1861,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
         'Keep the days already on the saved vacation.',
         'Never invent a place or id.',
         'Do not copy the draft and do not put a lead line in front of it. Do not insert a sentence the draft did not earn. Do not repeat a paragraph. The account holder stays the account holder. Do not call a joining collaborator the account holder. Keep only people the customer already named in chat. Never invent people. If the customer stated a party size, do not list more people than that size. Address the person who is speaking. Do not give that person an activity the saved vacation record assigns to someone else. Do not say an activity is saved, now set, or on the list unless it is already saved. Do not say we have corrected that or I have corrected that. Do not call a saved preference rule locked and do not rename it. If you add or remove a person or a saved claim, the WHAT_I_CHANGED sentence must name it.',
-        [pending?.tripContext?.roster && `Saved roster: ${pending.tripContext.roster}`, pending?.tripFacts?.rule && `Saved preference rule: ${pending.tripFacts.rule}`].filter(Boolean).join(' '),
+        pending?.tripFacts?.rule && `Saved preference rule: ${pending.tripFacts.rule}`,
         'Use the saved vacation dates. Do not shorten the vacation. Do not call a day the last day, the last evening, after check-out, or one last time, and do not say pack or head out, unless that day is the saved vacation end. Write hotel and lodging times as check-in and check-out, with the hyphen.',
         'Do not offer an activity on a day that is not already that activity on the saved vacation. Do not put viewers or editors on the vacation.', 'Item34 ban: never say "splitting payments", split payment, split-payer, splitting payment, or splitting anything up. If one seat is already covered and another person has their own seat, say that.',
         placeResultExtra(pending?.placeResults),

@@ -126,7 +126,10 @@ async function verifyTurn110(mcpEnabled) {
     if (sql.startsWith('select count(*)::int as n,')) return [{ n: 109 }];
     if (sql.startsWith('insert into vacation_requests')) return [{ id: 'request-110' }];
     if (sql.startsWith('insert into worker_jobs')) return [{ id: 'job-110' }];
-    if (sql.startsWith('insert into transcript_turns')) {
+    if (/insert into transcript_turns/i.test(sql) && /insert into eula_store_objects/i.test(sql)) {
+      return [{ id: 'customer-turn-110' }];
+    }
+    if (/insert into transcript_turns/i.test(sql)) {
       if (sql.includes("'outbound'")) {
         appTurns.push({ requestId: values[2], body: values[3], payload: values[4] });
         return [];

@@ -2,6 +2,7 @@ import { cleanText } from './http.mjs';
 import { tripItineraryTitleRejected } from './intake-thing-admission.mjs';
 import { isAiImportChatRequest } from './mcp-chat-import.mjs';
 import { isReservationAsk } from './mcp-reservations-handshake.mjs';
+import { isTripThingName, normalizeTripThingName, tripThingNameInText } from './trip-thing-name-shape.mjs';
 import { vkBotUsageCost } from './turn-cost.mjs';
 import { readCookie, requireWebEditAccess, webAccessCookieName } from './web-access.mjs';
 import { validatePlannedThings } from './chat-planned-thing-validation.mjs';
@@ -47,7 +48,7 @@ export function isOrdinaryPlanningTurn(rawText = '') {
   return PLANNING_TURN_RE.test(text);
 }
 
-export function isPlanConfirmation(rawText = '') {
+function isPlanConfirmation(rawText = '') {
   const text = asText(rawText, 2000);
   if (!text || /^(?:yes|yeah|yep|yup|sure|ok|okay)[.!\s]*$/i.test(text)) return false;
   if (!/\b(?:plan|itinerary|days?)\b/i.test(text)) return false;
@@ -72,6 +73,7 @@ function itemFromLine(line, dayNumber, startDate) {
   for (const part of parts) {
     const title = cleanText(part, 80);
     if (!title || title.length < 2 || title.split(/\s+/).length > 12 || title.includes('?')) continue;
+    if (!isTripThingName(title)) continue;
     if (tripItineraryTitleRejected(title)) continue;
     items.push({
       title,
@@ -108,7 +110,7 @@ export function plannedItineraryItems(corpus, { startDate = '' } = {}) {
   const start = isoDay(startDate);
   const pushItems = (text, dayNum) => {
     for (const item of itemFromLine(text, dayNum, start)) {
-      const key = item.title.toLowerCase();
+      const key = normalizeTripThingName(item.title);
       if (seen.has(key)) continue;
       seen.add(key);
       items.push(item);
@@ -237,9 +239,9 @@ export function keepPlannedDays(merged, wanted) {
   const planned = (Array.isArray(wanted) ? wanted : []).filter((thing) => Number(thing?.dayNumber) > 0 && thing?.title);
   if (!planned.length) return merged;
   const next = Array.isArray(merged) ? [...merged] : [];
-  const index = new Map(next.map((thing, at) => [String(thing?.title || '').toLowerCase(), at]));
+  const index = new Map(next.map((thing, at) => [normalizeTripThingName(thing?.title), at]));
   for (const item of planned) {
-    const key = String(item.title || '').toLowerCase();
+    const key = normalizeTripThingName(item.title);
     if (!key) continue;
     if (index.has(key)) {
       const at = index.get(key);

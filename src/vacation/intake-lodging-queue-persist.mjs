@@ -1,3 +1,4 @@
+import { tripThingNameInText } from './trip-thing-name-shape.mjs';
 import { intakeLodgingWanted } from './trip-intake-classify.mjs';
 import {
   persistIntakeLodgingThings,
@@ -8,20 +9,21 @@ import { tripStateActionsEnabled } from './chat-plan-persist.mjs';
 import { validatePlannedThings } from './chat-planned-thing-validation.mjs';
 
 export async function maybePersistFirstIntakeLodging({
-  db, tripId, firstIntake, classificationOk, seat, wantedThings, customerTurnId, extractedDestination = '', env = process.env,
+  db, tripId, firstIntake, classificationOk, seat, wantedThings, customerText, customerTurnId, extractedDestination = '', env = process.env,
 } = {}) {
   if (!firstIntake || classificationOk !== true || !tripId || seat) return null;
-  return persistQueuedIntakeLodgingFromWanted(db, tripId, wantedThings, { extractedDestination, customerTurnId, env });
+  return persistQueuedIntakeLodgingFromWanted(db, tripId, wantedThings, { extractedDestination, customerText, customerTurnId, env });
 }
 
 export async function persistQueuedIntakeLodgingFromWanted(db, tripId, wantedThings, {
   extractedDestination = '',
+  customerText = '',
   customerTurnId = null,
   env = process.env,
   fetchImpl = globalThis.fetch,
   searchImpl = searchIntakeLodgingPlaces,
 } = {}) {
-  const lodgingWanted = intakeLodgingWanted([], wantedThings);
+  const lodgingWanted = intakeLodgingWanted([], wantedThings).filter((thing) => tripThingNameInText(thing.title, customerText));
   if (!lodgingWanted.length || !db || !tripId) return null;
   const existingRows = await db`
     select id, category, title, description, metadata, location

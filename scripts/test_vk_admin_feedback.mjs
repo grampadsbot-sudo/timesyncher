@@ -130,7 +130,7 @@ try {
       const viewOptions = page.locator('#vacationDropdown [data-view]');
       await menuButton.click();
       assert.deepEqual(await viewOptions.allTextContents(), [
-        'Dialog', 'Feedback & QA', 'Vacation site', 'Keepsake', 'Onboarding', 'Chat screenshots',
+        'Dialog', 'Travel Summary', 'Feedback & QA', 'Vacation site', 'Keepsake', 'Onboarding', 'Chat screenshots',
       ]);
       await page.keyboard.press('Escape');
       assert.equal(await page.locator('[data-feedback-qa-summary]').count(), 0);
