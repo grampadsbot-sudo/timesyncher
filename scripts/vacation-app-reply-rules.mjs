@@ -1,6 +1,7 @@
 import { sumTurnCost } from '../src/vacation/turn-cost.mjs';
 import { fetchOpenRouterJson, recordReplyInstructions } from '../src/vacation/openrouter-call-ledger.mjs';
 import { planFactsForReply } from '../src/vacation/reply-plan-entitlement.mjs';
+import { selfCorrectionDecision } from '../src/vacation/reply-self-correction-grade.mjs';
 import { modelVisibleTripContext, namedSearchAreaAwayFromLodgingReplyLine } from '../src/vacation/provider-result-context.mjs';
 import { gapAskReplyPromptTripRaw, perFactGapAskRuleLines } from '../src/vacation/gap-ask-reply-context.mjs';
 import { ruleSections, staticReplySections, STATIC_REPLY_RULES } from '../src/vacation/reply-prompt-sections.mjs';
@@ -27,7 +28,6 @@ export const TRIP_INTAKE_JEV_QUESTION = {
   type: 'noul',
   instructions: 'Is this customer message a trip intake? True when they are describing a vacation to plan: where, when, who is going, or what they want to do. False for a short follow-up, a price or access question, or a small change that is not a trip description.',
 };
-
 const BAKEOFF_TIER_MODELS = {
   1: 'anthropic/claude-haiku-5.5',
   2: 'anthropic/claude-haiku-5.5',
@@ -699,7 +699,6 @@ function splitBeat(answer) {
   const visible = kept.join('\n').replace(/(?:^|\s)BEAT:\s*[^\n]*/gi, '\n').replace(/\n{3,}/g, '\n\n').trim();
   return { text: visible, beats: beats.filter(Boolean) };
 }
-
 export function labeledJevScore(scoreRaw) {
   const raw = Number(scoreRaw);
   if (!Number.isFinite(raw)) return null;
@@ -708,7 +707,6 @@ export function labeledJevScore(scoreRaw) {
   if (labeled > 5) return 5;
   return labeled;
 }
-
 export function qualityFromDecisions(body) {
   const answers = body?.answers && typeof body.answers === 'object' ? body.answers : {};
   const scoreRaw = Number(answers.overall_quality?.score);
@@ -716,7 +714,8 @@ export function qualityFromDecisions(body) {
   const score = labeledJevScore(scoreRaw);
   const disposition = text(answers.disposition?.choice, 40);
   const jevFocus = text(answers.fix_focus?.choice, 40);
-  const wantsRewrite = score <= 2;
+  const selfCorrection = answers.self_correction?.choice;
+  const wantsRewrite = score <= 2 || selfCorrection === 'uncorrected';
   return {
     judged: true,
     score,
@@ -729,10 +728,10 @@ export function qualityFromDecisions(body) {
     rewrite: '',
     rewritten: false,
     wantsRewrite,
+    ...(['corrected', 'uncorrected'].includes(selfCorrection) ? { selfCorrection } : {}),
     model: JEV_DECISIONS_MODEL,
   };
 }
-
 export async function jevQualityRewrite({ customerTurn, draft, tripContext = null, planLine = '', env = process.env, purpose = 'jev_quality', routeContext = null } = {}) {
   const key = appOpenRouterKey(env);
   const url = text(env.TIMESYNCHER_JEV_CLASSIFY_URL, 500) || DEFAULT_JEV_DECISIONS_URL;
@@ -740,6 +739,7 @@ export async function jevQualityRewrite({ customerTurn, draft, tripContext = nul
   if (!key) return { judged: false, reason: 'quality_credentials_missing', model: JEV_DECISIONS_MODEL };
   const requiredLine = text(planLine, 400);
   const itinerary = Array.isArray(tripContext?.itinerary) ? text(tripContext.itinerary.filter(Boolean).join('; '), 1500) : '';
+  const correction = selfCorrectionDecision(tripContext);
   const payload = {
     model: JEV_DECISIONS_MODEL,
     state: {
@@ -749,6 +749,7 @@ export async function jevQualityRewrite({ customerTurn, draft, tripContext = nul
       ...(tripContext?.travelSummary ? { travelSummary: modelVisibleTripContext(tripContext).travelSummary } : {}),
       ...(tripContext?.dates ? { dates: text(tripContext.dates, 400) } : {}),
       ...(requiredLine ? { required_payer_line: requiredLine } : {}),
+      ...correction.state,
     },
     questions: {
       overall_quality: {
@@ -777,6 +778,7 @@ export async function jevQualityRewrite({ customerTurn, draft, tripContext = nul
       },
     },
   };
+  if (correction.question) payload.questions.self_correction = correction.question;
   if (routeContext) {
     const { route_type, needs_day_for_note } = decisionsPayload({}).questions;
     payload.state = { ...vacationAppContext(routeContext), ...payload.state, current_turn: undefined };

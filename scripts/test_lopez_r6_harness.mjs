@@ -299,7 +299,7 @@ try {
   assert.equal(postedBodies[1].transcript.length, 12);
   assert.equal(postedBodies[1].transcript[0].role, 'customer');
   assert.ok(postedBodies[1].transcript.every((item) => item.text.length <= 1200));
-  assert.equal(postedBodies[1].persona, seed.name);
+  assert.equal(postedBodies[1].persona?.name, seed.name);
   assert.equal(postedBodies[1].destination, seed.destination);
 } finally {
   await new Promise((resolve) => customerServer.close(resolve));

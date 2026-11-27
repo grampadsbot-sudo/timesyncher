@@ -49,6 +49,7 @@ export function confirmStoredTurns(transcript, pdfText, replyBackend) {
       stored_model: model,
       stored_backend: backend,
       jev_score: score,
+      ...(turn.quality?.selfCorrection ? { self_correction: turn.quality.selfCorrection } : {}),
       wall_ms: null,
       ruled: generated,
       cost_state: cost.state,
