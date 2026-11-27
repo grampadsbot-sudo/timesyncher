@@ -60,8 +60,9 @@ assert.deepEqual(later.preference_subjects, [{ name: 'Leo Lopez', age: 6 }, { na
 
 for (const postIntake of [true, false]) {
   const prompt = replyRulesSystem({}, 'Orlando', 'forbidden', postIntake, lopezCorpus, { tripContext: { roster } });
-  assert.ok(prompt.includes('can save itinerary placements'));
-  assert.ok(prompt.includes('can invite collaborators in chat by name and email'));
+  assert.doesNotMatch(prompt, /can save itinerary placements/i);
+  assert.match(prompt, /cannot yet put a place/i);
+  assert.match(prompt, /invite a collaborator by name and email/i);
   assert.doesNotMatch(prompt, /Mateo|Lily|Leo/);
 }
 

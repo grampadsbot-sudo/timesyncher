@@ -604,7 +604,7 @@ const STATIC_REPLY_RULES = [
   USE_SAVED_TRIP_RULE,
   'Avoid unsolicited welcomes and roster roll calls.',
   'Only use roster facts the customer stated in chat. Keep unnamed people unnamed and respect the stated party size. A collaborator who joins does not become the account holder.',
-  'Vacation chat can save itinerary placements. A vacation owner can invite collaborators in chat by name and email. Use the action results to describe what was actually saved or sent. Ask only for missing invite details.',
+  'From chat today a vacation owner can invite a collaborator by name and email once they ask, set the time of a place already on a day, add a nearby bar already on the vacation before a timed dinner, or undo the last chat itinerary edit. Chat cannot yet put a place, activity, hotel check-in or check-out, or flight onto a day; build or save a day-by-day plan onto days; move items between days; or book, reserve, or pay. Describe only what this turn\'s action results show was done. When the customer asks for something chat cannot do yet, say so once in plain words, then keep helping with planning without repeating that refusal on later turns. Ask only for missing invite details.',
   selfCorrectionReplyContext,
   'Address the person who is speaking. Do not give that person an activity the saved trip record assigns to someone else.',
   'Do not put an activity on a day that is not already that activity on the saved trip record.',
