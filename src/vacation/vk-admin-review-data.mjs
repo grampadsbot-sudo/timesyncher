@@ -4,6 +4,7 @@ import { vacationAppTurnPayloadForClient } from './reply-ship.mjs';
 import { tripStateCapabilities } from './trip-state-action-registry.mjs';
 import { tripStateBacking, tripStateSiteLocked } from './trip-state-action-site.mjs';
 import { listVkAdminGroups, presentVkAdminVacation, vkAdminFixtureTrip, vkAdminRosterId } from './vk-admin-fixtures.mjs';
+import { isVkAdminStagingHost, vkAdminRequestHostname } from './vk-admin-session.mjs';
 
 const iso = (value) => value ? new Date(value).toISOString() : null;
 const date = (value) => iso(value)?.slice(0, 10) || '';
@@ -56,8 +57,24 @@ function storedGroup(row) {
 
 const fixtureVisibility = classifyVkAdminGroup({}, { fixture: true });
 
-export async function vkAdminGroups(db) {
-  const fixtures = listVkAdminGroups().map((group) => ({ ...group, ...fixtureVisibility }));
+const LOOPBACK_HOSTS = new Set(['', 'localhost', '127.0.0.1', '::1']);
+
+export function vkAdminIncludeFixtureRoster(req, env = process.env) {
+  if (isVkAdminStagingHost(req)) return false;
+  const mode = String(env.VK_ADMIN_FIXTURE_ROSTER ?? '');
+  if (mode === '1') return true;
+  if (mode === '0') return false;
+  if (LOOPBACK_HOSTS.has(vkAdminRequestHostname(req))) return true;
+  if (env.VERCEL || env.VERCEL_ENV) return false;
+  return true;
+}
+
+function fixtureGroups(includeFixtures) {
+  return includeFixtures ? listVkAdminGroups().map((group) => ({ ...group, ...fixtureVisibility })) : [];
+}
+
+export async function vkAdminGroups(db, { includeFixtures = true } = {}) {
+  const fixtures = fixtureGroups(!db || includeFixtures);
   if (!db) return fixtures;
   const rows = await db`
     select t.id::text as trip_id, t.title, t.destination, t.created_at,
@@ -84,11 +101,13 @@ export function vkAdminMember(vacation, customerId = null) {
   return members[0] || { id: null, customer_label: vacation.label };
 }
 
-export async function vkAdminLegacyNoteSources(db, vacation, member) {
+export async function vkAdminLegacyNoteSources(db, vacation, member, { includeFixtures = true } = {}) {
   if (member.id == null) return [];
   if (typeof member.id === 'number') {
-    const sources = listVkAdminGroups().filter((group) => group.customers[0]?.id === member.id)
-      .map((group) => ({ vacationId: group.tripId }));
+    const sources = !db || includeFixtures
+      ? listVkAdminGroups().filter((group) => group.customers[0]?.id === member.id)
+        .map((group) => ({ vacationId: group.tripId }))
+      : [];
     if (!db) return sources;
     const pattern = `harness+%+vk-${String(member.id).padStart(3, '0')}-%@harness.invalid`;
     const rows = await db`
@@ -256,8 +275,9 @@ function computeTripCapabilities({ env, trip, hasOwner, emailHeld, serviceAvaila
 
 export async function findVkAdminVacation(db, id, {
   detail = false, includeModelRules = false, includeCapabilities = false, env = process.env, capabilities: capabilitiesFn = tripStateCapabilities,
+  includeFixtures = true,
 } = {}) {
-  const fixture = presentVkAdminVacation(id);
+  const fixture = !db || includeFixtures ? presentVkAdminVacation(id) : null;
   if (fixture) {
     const group = { ...fixture, ...fixtureVisibility };
     const result = detail ? dialog(group, group.ledger || []) : group;

@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { createVkAdminHandler } from '../routes/vk-admin.mjs';
 import { listVkAdminGroups } from '../src/vacation/vk-admin-fixtures.mjs';
 import {
-  classifyVkAdminGroup, findVkAdminVacation, VK_ADMIN_TEST_DOMAINS, vkAdminGroups,
+  classifyVkAdminGroup, findVkAdminVacation, VK_ADMIN_TEST_DOMAINS, vkAdminGroups, vkAdminIncludeFixtureRoster,
 } from '../src/vacation/vk-admin-review-data.mjs';
 
 const real = { isTest: false, testReason: null, visibleByDefault: true, testTag: null };
@@ -80,15 +80,15 @@ process.env.VK_ADMIN_LOGIN = login;
 process.env.VK_ADMIN_SESSION_SECRET = randomUUID();
 delete process.env.VERCEL_ENV;
 const handle = createVkAdminHandler({ database: () => db });
-async function request(url, { method = 'GET', cookie, body } = {}) {
+async function request(url, { method = 'GET', cookie, body, host = 'localhost', handler = handle, status = 200 } = {}) {
   const headers = {};
   let data;
   const res = {
     setHeader(name, value) { headers[name.toLowerCase()] = value; },
-    end(value) { data = JSON.parse(value); },
+    end(value) { data = value ? JSON.parse(value) : {}; },
   };
-  await handle({ url, method, headers: { host: 'localhost', cookie }, body }, res);
-  assert.equal(res.statusCode, 200);
+  await handler({ url, method, headers: { host, cookie }, body }, res);
+  assert.equal(res.statusCode, status);
   return { headers, data };
 }
 
@@ -115,4 +115,65 @@ for (const [query, expectedIds] of [
 }
 const detail = await request(`/api/admin/customers/${fixture.tripId}`, { cookie });
 assert.equal(detail.data.vacation.tripId, fixture.tripId);
+
+const stagingHost = 'vacation-staging.timesyncher.com';
+const lopezVacation = '159bf80f-5c6c-44f3-8b67-df2afeead39c';
+assert.equal(vkAdminIncludeFixtureRoster({ headers: { host: stagingHost } }, { VK_ADMIN_FIXTURE_ROSTER: '1' }), false);
+assert.equal(vkAdminIncludeFixtureRoster({ headers: { host: 'localhost' } }, {}), true);
+assert.equal(vkAdminIncludeFixtureRoster({ headers: { host: '127.0.0.1' } }, { VERCEL_ENV: 'production' }), true);
+assert.equal(vkAdminIncludeFixtureRoster({ headers: { host: 'timesyncher-vacation-staging.vercel.app' } }, { VERCEL_ENV: 'production' }), false);
+assert.equal(vkAdminIncludeFixtureRoster({ headers: { host: 'timesyncher-vacation-staging.vercel.app' } }, { VERCEL_ENV: 'production', VK_ADMIN_FIXTURE_ROSTER: '1' }), true);
+assert.equal(vkAdminIncludeFixtureRoster({ headers: { host: '127.0.0.1' } }, { VK_ADMIN_FIXTURE_ROSTER: '0' }), false);
+
+const stagingRows = [
+  vacation(lopezVacation, '21', {
+    customer_id: 'sofia-lopez', customer_email: 'sofia.lopez@gmail.com', display_name: 'Sofia Lopez',
+    title: 'Orlando theme parks', destination: 'Orlando theme parks',
+  }),
+  vacation('alex-rivera-vacation', '18', {
+    customer_id: 'alex-rivera', customer_email: 'alex.rivera@example.com', display_name: 'Alex Rivera',
+  }),
+];
+const stagingDb = async (strings, id) => {
+  const query = Array.isArray(strings) ? strings.join('?') : String(strings);
+  if (/where t\.id/.test(query)) return stagingRows.filter((row) => row.trip_id === id);
+  if (/from trips/.test(query)) return stagingRows;
+  return [];
+};
+const rosterAlias = await vkAdminGroups(async () => [vacation(lopezVacation, '21', {
+  customer_id: 'sofia-lopez',
+  customer_email: 'harness+live+vk-001-lopez@harness.invalid',
+  display_name: 'Sofia Lopez',
+  harness_tag: 'harness:live:vk-001',
+})], { includeFixtures: false });
+assert.equal(rosterAlias.length, 1);
+assert.equal(rosterAlias[0].tripId, lopezVacation);
+assert.equal(rosterAlias[0].customers[0].id, 1);
+assert.equal(rosterAlias[0].customers[0].customer_label, 'Sofia Lopez');
+assert.equal(rosterAlias[0].visibleByDefault, true);
+assert.equal(rosterAlias.some((entry) => String(entry.tripId).startsWith('vk-fixture-')), false);
+
+const stagingHandle = createVkAdminHandler({ database: () => stagingDb });
+const stagingSession = await request('/api/admin/session', { method: 'POST', body: { login }, host: stagingHost, handler: stagingHandle });
+const stagingCookie = stagingSession.headers['set-cookie'].split(';')[0];
+const fixtureOnlyIds = new Set(fixtures.map((entry) => entry.tripId));
+for (const [query, expectedIds] of [
+  ['', [lopezVacation]],
+  ['?includeTest=1', [lopezVacation, 'alex-rivera-vacation']],
+]) {
+  const { data } = await request(`/api/admin/customers${query}`, { cookie: stagingCookie, host: stagingHost, handler: stagingHandle });
+  assert.equal(data.hiddenTestCount, 1, `${query || 'default'} hiddenTestCount`);
+  assert.equal(data.testCustomerCount, 1, `${query || 'default'} testCustomerCount`);
+  assert.deepEqual(data.groups.map((entry) => entry.tripId), expectedIds);
+  assert.equal(data.groups.some((entry) => fixtureOnlyIds.has(entry.tripId)), false);
+  assert.equal(data.groups.some((entry) => /portland weekend/i.test(entry.label || '')), false);
+  assert.equal(data.groups.some((entry) => entry.customers.some((member) => member.customer_label === 'Lopez family')), false);
+}
+const stagingSofia = await request(`/api/admin/customers/${lopezVacation}`, { cookie: stagingCookie, host: stagingHost, handler: stagingHandle });
+assert.equal(stagingSofia.data.vacation.tripId, lopezVacation);
+assert.equal(stagingSofia.data.vacation.label, 'Sofia Lopez');
+const stagingFixture = await request(`/api/admin/customers/${fixture.tripId}`, {
+  cookie: stagingCookie, host: stagingHost, handler: stagingHandle, status: 404,
+});
+assert.equal(stagingFixture.data.ok, false);
 console.log('VK Admin customer visibility passed');

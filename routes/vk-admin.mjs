@@ -8,7 +8,9 @@ import {
   vkAdminConfigured,
   writeVkAdminSession,
 } from '../src/vacation/vk-admin-session.mjs';
-import { findVkAdminVacation, vkAdminDatabase, vkAdminGroups, vkAdminLegacyNoteSources, vkAdminMember } from '../src/vacation/vk-admin-review-data.mjs';
+import {
+  findVkAdminVacation, vkAdminDatabase, vkAdminGroups, vkAdminIncludeFixtureRoster, vkAdminLegacyNoteSources, vkAdminMember,
+} from '../src/vacation/vk-admin-review-data.mjs';
 import { feedbackRollupRows } from '../src/vacation/vk-admin-feedback.mjs';
 import {
   artifactType, listNotes, listReviewArtifacts, listTravelSummarySnapshots, loadFeedbackArtifact, loadNoteFile, travelSummaryTiming,
@@ -88,9 +90,9 @@ async function handleSession(req, res, env) {
   return send(res, 200, { ok: true, role: 'admin', opened: session.opened });
 }
 
-async function handleCustomers(req, res, session, db) {
+async function handleCustomers(req, res, session, db, env) {
   if (req.method !== 'GET') return send(res, 405, { ok: false, error: 'method not allowed' });
-  const groups = await vkAdminGroups(db);
+  const groups = await vkAdminGroups(db, { includeFixtures: vkAdminIncludeFixtureRoster(req, env) });
   const visible = groups.filter((group) => group.visibleByDefault);
   const testGroups = groups.filter((group) => group.isTest);
   const testCustomerCount = new Set(testGroups.flatMap((group) => group.customers.map((member) => member.id))).size;
@@ -108,7 +110,7 @@ async function handleCustomers(req, res, session, db) {
 
 async function handleCustomer(req, res, env, session, tripId, action, db, getStore) {
   if ((!action && req.method !== 'GET') || (action && (action !== 'open' || req.method !== 'POST'))) return methodNotAllowed(res);
-  const vacation = await findVkAdminVacation(db, tripId, { detail: true });
+  const vacation = await findVkAdminVacation(db, tripId, { detail: true, includeFixtures: vkAdminIncludeFixtureRoster(req, env) });
   if (!vacation) return notFound(res);
   if (!action && req.method === 'GET') return send(res, 200, { ok: true, role: 'admin', vacation });
   const customerId = new URL(req.url, 'http://localhost').searchParams.get('customerId');
@@ -153,7 +155,7 @@ function jsonRequest(req) {
   return String(req.headers?.['content-type'] || '').split(';')[0].trim().toLowerCase() === 'application/json';
 }
 
-async function handleNotes(req, res, db, getStore, [id, index]) {
+async function handleNotes(req, res, env, db, getStore, [id, index]) {
   if (req.method !== 'GET' && (req.method !== 'POST' || id)) return methodNotAllowed(res);
   if (req.method === 'POST' && !jsonRequest(req)) return send(res, 415, { ok: false, error: 'JSON required' });
   const params = new URL(req.url, 'http://localhost').searchParams;
@@ -167,7 +169,8 @@ async function handleNotes(req, res, db, getStore, [id, index]) {
     return file ? sendFile(res, file, 'application/octet-stream') : notFound(res);
   }
   if (typeof vacationId !== 'string' || (customerId !== null && typeof customerId !== 'string')) return notFound(res);
-  const vacation = await findVkAdminVacation(db, vacationId);
+  const includeFixtures = vkAdminIncludeFixtureRoster(req, env);
+  const vacation = await findVkAdminVacation(db, vacationId, { includeFixtures });
   const member = vacation && vkAdminMember(vacation, customerId);
   if (!member) return notFound(res);
   const store = getStore();
@@ -177,7 +180,7 @@ async function handleNotes(req, res, db, getStore, [id, index]) {
     return file ? sendFile(res, file, 'application/octet-stream') : notFound(res);
   }
   if (!body) {
-    const legacySources = await vkAdminLegacyNoteSources(db, vacation, member);
+    const legacySources = await vkAdminLegacyNoteSources(db, vacation, member, { includeFixtures });
     return send(res, 200, { ok: true, notes: await listNotes(store, member.id, vacationId, legacySources) });
   }
   const note = noteFromBody(body, vacationId);
@@ -187,10 +190,11 @@ async function handleNotes(req, res, db, getStore, [id, index]) {
 }
 
 async function handleArtifacts(req, res, env, db, getStore, tripId, artifact, capabilitiesFn) {
+  const includeFixtures = vkAdminIncludeFixtureRoster(req, env);
   if (artifact === 'travel-summary') {
     if (req.method !== 'GET') return methodNotAllowed(res);
     const vacation = await findVkAdminVacation(db, tripId, {
-      detail: true, includeModelRules: true, includeCapabilities: true, env, capabilities: capabilitiesFn,
+      detail: true, includeModelRules: true, includeCapabilities: true, env, capabilities: capabilitiesFn, includeFixtures,
     });
     if (!vacation) return notFound(res);
     const snapshots = await listTravelSummarySnapshots(db, vacation);
@@ -200,7 +204,7 @@ async function handleArtifacts(req, res, env, db, getStore, tripId, artifact, ca
   const review = artifact === 'review' && req.method === 'PUT';
   const feedback = artifact === 'feedback';
   if (artifact && !type && !review && !feedback) return notFound(res);
-  const vacation = await findVkAdminVacation(db, tripId);
+  const vacation = await findVkAdminVacation(db, tripId, { includeFixtures });
   if (!vacation) return notFound(res);
   if (req.method === 'GET') {
     const store = getStore();
@@ -226,9 +230,9 @@ async function handleArtifacts(req, res, env, db, getStore, tripId, artifact, ca
   return send(res, 200, { ok: true });
 }
 
-async function handleFeedbackRollup(req, res, db, getStore) {
+async function handleFeedbackRollup(req, res, env, db, getStore) {
   if (req.method !== 'GET') return methodNotAllowed(res);
-  const groups = await vkAdminGroups(db);
+  const groups = await vkAdminGroups(db, { includeFixtures: vkAdminIncludeFixtureRoster(req, env) });
   const store = getStore();
   const entries = [];
   for (const group of groups) {
@@ -257,13 +261,13 @@ export function createVkAdminHandler({ database = vkAdminDatabase, storage = vkA
     if (!session) return;
     const getStore = () => storage(env);
     try {
-      if (head === 'customers' && !id) return await handleCustomers(req, res, session, database(env));
+      if (head === 'customers' && !id) return await handleCustomers(req, res, session, database(env), env);
       if (head === 'customers' && id && action === 'artifacts' && !tail) {
         return await handleArtifacts(req, res, env, database(env), getStore, id, extra, capabilities);
       }
       if (head === 'customers' && id && !extra) return await handleCustomer(req, res, env, session, id, action, database(env), getStore);
-      if (head === 'feedback' && !id) return await handleFeedbackRollup(req, res, database(env), getStore);
-      if (head === 'notes' && !extra && (!id || action)) return await handleNotes(req, res, database(env), getStore, [id, action]);
+      if (head === 'feedback' && !id) return await handleFeedbackRollup(req, res, env, database(env), getStore);
+      if (head === 'notes' && !extra && (!id || action)) return await handleNotes(req, res, env, database(env), getStore, [id, action]);
       if (head === 'clear-all' && !id) return handleClearAll(req, res, env, session);
       return notFound(res);
     } catch {
