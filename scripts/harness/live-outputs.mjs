@@ -388,3 +388,10 @@ export async function runSteps(story, recordParty) {
   }
   return present;
 }
+
+export async function collaboratorStepFailure(response) {
+  const body = await response.json().catch(() => null);
+  const detail = String(body?.error || body?.message || '').replace(/\s+/g, ' ').trim();
+  const status = Number(response?.status) || 0;
+  return ['collaborator step failed', status || '', detail].filter(Boolean).join(': ').slice(0, 300);
+}

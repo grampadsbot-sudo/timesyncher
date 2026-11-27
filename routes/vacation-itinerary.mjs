@@ -76,6 +76,7 @@ import { POST_STEP_SKIPPED, boundedPostStep, createPostReplyWork } from '../src/
 import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
 import { mergeTripCreateServerTiming } from '../src/vacation/trip-create-server-timing.mjs';
 import {
+  applyRecordPartyAction,
   collaboratorSeatJoinEvent,
   loadVacationAppTripRows,
   openCollaboratorAppSeats,
@@ -960,6 +961,10 @@ async function handleVacationApp(req, res, db, url) {
         publishIntakeShare, postStartedMs: postStarted,
       });
       return sendJson(res, status, { ...replyBody, ...openRouterTurnTelemetry() });
+    }
+    if (body.action === 'record-party') {
+      const recorded = await applyRecordPartyAction(db, session, body);
+      return sendJson(res, recorded.status, recorded.body);
     }
     let vacations = await loadVacationAppTrips(db, session);
     const requestedTripId = cleanText(body.tripId || body.trip_id, 80);

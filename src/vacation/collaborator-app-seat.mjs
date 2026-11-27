@@ -316,6 +316,28 @@ export async function openCollaboratorAppSeats(db, { ownerCustomerId, tripId, on
   return opened;
 }
 
+async function recordDialogParty(db, tripId, party) {
+  if (!tripId || !party || typeof party !== 'object') {
+    throw Object.assign(new Error('A party roster is required.'), { statusCode: 400 });
+  }
+  await db`
+    update trips
+    set metadata = coalesce(metadata, '{}'::jsonb) || ${{ dialogParty: party }},
+      updated_at = now()
+    where id = ${tripId}
+  `;
+  return party;
+}
+
+export async function applyRecordPartyAction(db, session, body = {}) {
+  const partyTripId = clean(body.tripId || body.trip_id, 80) || clean(session?.trip_id, 80);
+  if (await seatForSessionTrip(db, session, partyTripId) || (!partyTripId && seatFromSession(session))) {
+    return { status: 403, body: { ok: false, error: 'A collaborator seat cannot record the roster.' } };
+  }
+  const party = await recordDialogParty(db, partyTripId, body.party);
+  return { status: 200, body: { ok: true, party } };
+}
+
 export async function joinCollaboratorAppSession(db, { invite, contact, env = process.env } = {}) {
   if (!invite?.owner_customer_id) {
     throw Object.assign(new Error('Collaborator invite is missing an owner.'), { statusCode: 409 });
