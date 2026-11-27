@@ -199,17 +199,9 @@ export async function plannedCustomerThings(db, tripId, text, appReply, activiti
   const customerOnly = tripStateActionsEnabled(env);
   const base = Array.isArray(activities) ? activities.filter(Boolean) : [];
   const startDate = await tripStartDate(db, tripId);
-<<<<<<< HEAD
-  const corpus = `${text || ''}\n${appReply || ''}`;
-  let items = plannedItineraryItems(corpus, { startDate });
-  if (!items.length && isPlanConfirmation(text)) {
-    const prior = (await priorAppBodies(db, tripId)).join('\n');
-    items = plannedItineraryItems(prior, { startDate });
-=======
   let items = plannedItineraryItems(customerOnly ? text : `${text || ''}\n${appReply || ''}`, { startDate });
   if (!customerOnly && !items.length && isPlanConfirmation(text)) {
     items = plannedItineraryItems((await priorAppBodies(db, tripId)).join('\n'), { startDate });
->>>>>>> origin/vk
   }
   return validatePlannedThings(mergeByTitle(base, items), { customerOnly, existing });
 }
