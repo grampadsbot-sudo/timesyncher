@@ -170,7 +170,10 @@ try {
   assert.deepEqual(dispatched, ['save_plan', 'save_plan', 'place_on_day', 'save_plan', 'place_on_day']);
   assert.deepEqual(savedClaims(lastState).sort(), dialog.slice(0, -1).flatMap((exchange) => exchange.claims || []).sort());
   assert.deepEqual(await measureStoredItinerary(db, tripId, tag), { itineraryCount: 4, itineraryCountSource: 'db' });
-  assert.equal((await db`select id from transcript_turns where trip_id = ${tripId} and speaker = 'app'`).length, 6);
+  const turns = await db`select payload from transcript_turns where trip_id = ${tripId} and speaker = 'app' order by created_at, id`;
+  assert.equal(turns.length, 6);
+  assert.ok(turns.every(({ payload }) => payload.liveTranscript.backend === 'openrouter'));
+  assert.ok(turns.every(({ payload }) => payload.liveTranscript.replyProducer === 'vacation-app-reply-rules'));
 } finally {
   globalThis.fetch = originalFetch;
   if (originalPath === undefined) delete process.env.PATH;

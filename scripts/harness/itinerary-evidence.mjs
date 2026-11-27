@@ -20,7 +20,11 @@ export async function measureStoredItinerary(db, tripId, tag) {
       from trips t where t.id = ${tripId} and t.metadata->>'harnessTag' = ${tag}
     `;
     if (!row?.trip || !Array.isArray(row.things)) return itineraryMeasurement();
-    assertThrowaway({ tripId, shareToken: row.trip.metadata?.publicSlug || row.trip.metadata?.shareToken || row.trip.metadata?.sharedToken });
+    assertThrowaway({ tripId });
+    const metadata = row.trip.metadata || {};
+    for (const shareToken of [metadata.publicSlug, metadata.shareToken, metadata.sharedToken, metadata.source_token]) {
+      assertThrowaway({ shareToken });
+    }
     const { assignments } = sharedTripFromIntake({ trip: row.trip, things: row.things.map(thingRecordFromTripRow) });
     const placed = new Set(Object.values(assignments).flatMap((day) => day.map((assignment) => assignment.place_id)));
     return { itineraryCount: placed.size, itineraryCountSource: 'db' };

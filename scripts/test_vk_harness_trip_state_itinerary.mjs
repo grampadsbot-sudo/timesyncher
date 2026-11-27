@@ -6,9 +6,11 @@ import { PGlite } from '@electric-sql/pglite';
 import { pgcrypto } from '@electric-sql/pglite/contrib/pgcrypto';
 import { intId } from '../src/vacation/intake-shared-trip.mjs';
 import { runCustomer } from './harness/customer.mjs';
+import { httpLiveOptions } from './harness/http-live.mjs';
 import { itineraryStoredCheck, measureStoredItinerary } from './harness/itinerary-evidence.mjs';
 import { provisionThrowaway } from './harness/live-provision.mjs';
 import { finishMeasuredPlay } from './harness/outcomes.mjs';
+import { runRosterCli } from './harness/roster-cli.mjs';
 import { snapshotHarnessVacation } from './harness/vacation-snapshot.mjs';
 
 const raw = new PGlite({ extensions: { pgcrypto } });
@@ -29,7 +31,35 @@ const artifacts = {
   screensOk: true, onboardingPdfOk: true, videoExists: true, videoPass: true, chromeOk: true,
 };
 
+async function verifyLiveArmDefault() {
+  const credits = path.join(dir, 'credits.json');
+  fs.writeFileSync(credits, JSON.stringify({ total_credits: 3, total_usage: 0, as_of: new Date().toISOString() }));
+  const selected = [];
+  const liveOptions = {
+    env: { HARNESS_OPENROUTER_CREDITS_FILE: credits, HARNESS_REPLY_DOLLARS_PER_CUSTOMER: '0.01' },
+    async run(chosen) {
+      selected.push(chosen.reply_backend);
+      return { story_id: chosen.story_id, reply_backend: chosen.reply_backend, verdict: 'PASS' };
+    },
+  };
+  for (const backend of [[], ['--reply-backend', 'vk_bot_mcp']]) {
+    const findings = path.join(dir, 'findings.md');
+    fs.writeFileSync(findings, '# VK customer test findings\n\n## Section format (harness appends)\n\n## Entries\n');
+    await runRosterCli(['--run-id', runId, '--wave-size', '2', '--findings', findings, ...backend], {
+      outRoot: dir, liveOptions, log() {},
+    });
+  }
+  assert.deepEqual(selected, ['trip_state', 'trip_state', 'vk_bot_mcp', 'vk_bot_mcp']);
+}
+
 try {
+  await verifyLiveArmDefault();
+  const httpDir = path.join(dir, 'http');
+  const http = httpLiveOptions({}, { pickLane() {}, fetchImpl: () => assert.fail('blocked HTTP-only play fetched') });
+  await http.play(story, { outDir: httpDir });
+  const httpOutcome = JSON.parse(fs.readFileSync(path.join(httpDir, 'outcomes.json')));
+  assert.equal(httpOutcome.itineraryCount, null);
+  assert.equal(httpOutcome.itineraryCountSource, 'unmeasured');
   for (const migration of ['001_vacation_mvp', '003_trip_things_source', '010_vacation_trip_state_actions', '011_vacation_trip_state_revisions']) {
     await raw.exec(fs.readFileSync(new URL(`../db/migrations/${migration}.sql`, import.meta.url), 'utf8'));
   }
@@ -121,6 +151,10 @@ try {
   assert.deepEqual(await measureStoredItinerary(db, tripId, controlTag), { itineraryCount: null, itineraryCountSource: 'unmeasured' });
 
   await assert.rejects(snapshotHarnessVacation(db, { tripId, tag: controlTag, outDir }), /prior harness vacation missing/);
+  const blockedSnapshotDir = path.join(dir, 'not-a-directory');
+  fs.writeFileSync(blockedSnapshotDir, '');
+  await assert.rejects(provisionThrowaway(db, story, { tag, runId, outDir: blockedSnapshotDir, env }));
+  assert.equal((await db`select id from trips where id = ${tripId}`).length, 1);
   const replacement = await provisionThrowaway(db, story, { tag, runId, outDir, env });
   assert.notEqual(replacement.tripId, tripId);
   const prior = fs.readdirSync(outDir).filter((file) => file.startsWith('prior-vacation-'));

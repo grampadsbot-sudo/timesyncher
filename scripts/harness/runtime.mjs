@@ -46,7 +46,7 @@ function appEndpoint(origin, token, tripId) {
 }
 
 export function chatLeftNoThing(played) {
-  return !Number(played?.itineraryCount);
+  return played?.itineraryCountSource !== 'db' || !(played.itineraryCount > 0);
 }
 
 export function maxTurnsFromEnv(env = process.env) {
@@ -336,7 +336,8 @@ export function liveOptions(env = process.env) {
       });
       await captureInviteOnboarding(!played.reason);
       if (chatLeftNoThing(played)) {
-        const ssrRecord = await finalizeLiveSsr({ ok: false, detail: 'no-thing-after-chat' });
+        const reason = played.itineraryCountSource === 'db' ? 'no-thing-after-chat' : 'itinerary-unmeasured';
+        const ssrRecord = await finalizeLiveSsr({ ok: false, detail: reason });
         const outDialog = ssrRecord ? await renderLiveDialogWithSsr(ssrRecord) : dialog;
         const outTranscript = transcriptForScorecard(outDialog.transcript, transcript);
         const video = await writeVideoCheck({ origin, attachment: { ok: false, detail: 'no-thing-after-chat', bindings: [] }, fetchImpl, outDir: options.outDir });
@@ -354,7 +355,7 @@ export function liveOptions(env = process.env) {
           videoExists: !String(video.detail || '').startsWith('video-missing'),
           videoPass: false,
           videoDetail: video.detail,
-          reason: 'no-thing-after-chat',
+          reason,
           pricingReactionCaptured: played.pricingReactionCaptured === true,
           customerTurnCount: played.customerTurnCount || 0,
           hitTurnCap: played.hitTurnCap === true,

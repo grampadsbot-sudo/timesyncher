@@ -30,7 +30,7 @@ export async function snapshotHarnessVacation(db, { tripId, tag, outDir, secrets
   if (!snapshot?.trip) throw new Error('refused: prior harness vacation missing for snapshot');
   const { owner_email: email, owner_name: displayName, ...rows } = snapshot;
   const metadata = rows.trip.metadata || {};
-  const shareTokens = [metadata.publicSlug, metadata.shareToken, metadata.sharedToken].filter(Boolean);
+  const shareTokens = [metadata.publicSlug, metadata.shareToken, metadata.sharedToken, metadata.source_token].filter(Boolean);
   assertThrowaway({ tripId, email, displayName });
   if (!email?.toLowerCase().endsWith('@harness.invalid')) throw new Error('refused: prior vacation snapshot needs a harness owner');
   for (const shareToken of shareTokens) assertThrowaway({ shareToken });

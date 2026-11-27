@@ -112,13 +112,13 @@ function stripValue(value) {
   if (Array.isArray(value)) return value.map(stripValue);
   if (typeof value === 'string') {
     let next = value;
-    for (const label of LABELS) next = next.split(label).join('');
+    for (const label of REPLY_BACKENDS) next = next.split(label).join('');
     return next;
   }
   if (!value || typeof value !== 'object') return value;
   const out = {};
   for (const [key, item] of Object.entries(value)) {
-    if (key === 'reply_backend' || key === 'stored_backend' || key === 'backend') continue;
+    if (['reply_backend', 'stored_backend', 'backend', 'stored_producer', 'app_reply_path', 'ab_arm'].includes(key)) continue;
     out[key] = stripValue(item);
   }
   return out;
