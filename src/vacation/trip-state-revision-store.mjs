@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { Pool } from '@neondatabase/serverless';
 import { getDatabaseUrl, sql } from './db.mjs';
 import { tripStateActionsEnabled } from './trip-state-actions-enabled.mjs';
+import { tripStateBacking, tripStateSiteLocked } from './trip-state-action-site.mjs';
 import { assertTripState, projectTripState } from './trip-state-projector.mjs';
 import { digestTripState } from './trip-state-action-site.mjs';
 
@@ -115,6 +116,34 @@ export function createTripStateRevisionStore({ env = process.env, pool } = {}) {
   }
 
   return {
+    async getForRequest({ tripId, requestId, phase }) {
+      if (!tripId || !requestId || !phase) return null;
+      return withTripLock(tripId, async (client) => revisionForRequest(client, tripId, requestId, phase));
+    },
+
+    async syncHeader({ tripId, actorId, destination, startDate, endDate }) {
+      if (!tripId) return null;
+      return withTripLock(tripId, async (client, currentTrip) => {
+        if (actorId !== currentTrip.customer_id || tripStateBacking(currentTrip) !== 'intake' || tripStateSiteLocked(currentTrip)) {
+          return currentTrip;
+        }
+        const nextDestination = destination || currentTrip.destination || null;
+        const nextStart = startDate || currentTrip.start_date || null;
+        const nextEnd = endDate || currentTrip.end_date || null;
+        if (nextDestination === currentTrip.destination && nextStart === currentTrip.start_date && nextEnd === currentTrip.end_date) {
+          return currentTrip;
+        }
+        const { rows: [updated] } = await client.query(
+          `update trips
+           set destination = $2, start_date = $3::date, end_date = $4::date, updated_at = now()
+           where id = $1
+           returning id, customer_id, title, destination, start_date::text, end_date::text, metadata, status`,
+          [tripId, nextDestination, nextStart, nextEnd],
+        );
+        return updated || currentTrip;
+      });
+    },
+
     async prepare({ trip, requestId, turn, phase = 'reply_ready', actorId, ...context }) {
       if (!trip?.id || !tripStateActionsEnabled({ env, trip })) return null;
       if (!['planning', 'reply_ready'].includes(phase)) throw new TypeError('Invalid Trip State preparation phase');

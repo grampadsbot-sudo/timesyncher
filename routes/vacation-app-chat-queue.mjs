@@ -23,6 +23,7 @@ import { createBoundedReplyShipGate, createBoundedRewriteClaim, rewriteVacationA
 import { sessionReplyBackend } from '../src/vacation/vk-bot-mcp-reply.mjs';
 import { isOrdinaryPlanningTurn, recoverOrdinaryPlanningReply } from '../src/vacation/chat-plan-persist.mjs';
 import { openRouterTurnTelemetry, replyInstructionsPayload } from '../src/vacation/openrouter-call-ledger.mjs';
+import { prepareProactiveTripState } from '../src/vacation/trip-state-proactive.mjs';
 import { createTripStateRevisionStore } from '../src/vacation/trip-state-revision-store.mjs';
 import { tripStateActionsEnabled } from '../src/vacation/trip-state-actions-enabled.mjs';
 export async function queueVacationAppTurn(db, session, trip, body, hooks, intake = {}) {
@@ -264,8 +265,23 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
   const { replyCustomerTurn, itineraryEditResult, itineraryEditAuthoritative, itineraryEditCannedReply } = await prepareChatItineraryEditForQueueTurn({
     db, trip, seat, tripId, requestText, turnId: turnRows[0]?.id || null, httpReq: intake?.httpReq || null, env,
   });
+  const proactiveHistory = [...memoryRows].reverse().reduce((rows, row, index) => {
+    if (row.speaker === 'app') return rows;
+    const stored = row.payload && typeof row.payload === 'object' ? row.payload : {};
+    const live = stored.liveTranscript && typeof stored.liveTranscript === 'object' ? stored.liveTranscript : {};
+    const rowTurn = Number(live.turnIndex) || (index + 1);
+    rows.push({
+      turn: rowTurn,
+      text: row.body || '',
+      things: Array.isArray(stored.wantedThings) ? stored.wantedThings : [],
+    });
+    return rows;
+  }, []);
   const tripStateStore = createTripStateRevisionStore({ env });
-  const tripStateRevision = await tripStateStore.prepare({ trip, requestId, turn: customerTurnIndex, actorId: session.customer_id, classification, text: requestText });
+  const tripStateRevision = await prepareProactiveTripState({
+    trip, requestId, turn: customerTurnIndex, actorId: session.customer_id,
+    classification, text: requestText, history: proactiveHistory, wantedThings: jobFields.wantedThings, env,
+  });
   const useTripState = Boolean(tripId && tripStateActionsEnabled({ env, trip }));
   let produced;
   const replyStarted = Date.now();
@@ -374,6 +390,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     env,
     jobFields,
     firstIntake,
+    tripStateContext: produced.tripStateContext || null,
   });
   const blockReplyShipGate = createBoundedReplyShipGate({
     tripId,
@@ -433,7 +450,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     const claimedFrom = produced.reply;
     await rewriteVacationAppActionClaim(produced, { rewriteClaim, turnActionResults, replyClaimContext, seat, replyBackend });
     Object.assign(payload, replyInstructionsPayload());
-    await applyReplyQuality(produced, { customerTurn: requestText, env, previousReply: claimedFrom });
+    await applyReplyQuality(produced, { customerTurn: requestText, env, previousReply: claimedFrom, tripStateContext: produced.tripStateContext || null });
     if (!String(produced?.reply || '').trim() && isOrdinaryPlanningTurn(requestText)) {
       Object.assign(produced, recoverOrdinaryPlanningReply(produced, requestText, { backend: replyBackend, previousReply: claimedFrom }));
     }

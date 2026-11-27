@@ -28,6 +28,22 @@ export const TRIP_STATE_REWRITE_INSTRUCTION = [
   'Do not write that chat cannot save, place, or invite.',
 ].join(' ');
 
+export const TRIP_STATE_PROACTIVE_PLAN_INSTRUCTION = [
+  'A first-pass itinerary was just laid out in last_actions with proposed times.',
+  'In your own words, let the customer know you took a shot at laying out the days and that she can change any item, day, or time.',
+].join(' ');
+
+export function hasProactiveFirstPassAction(state) {
+  const turn = state?.updated_turn;
+  if (!Number.isInteger(turn) || !state?.research?.key || state.research.turn !== turn) return false;
+  const saveActions = (state.last_actions || []).filter((entry) => entry?.op === 'save_plan' && entry.turn === turn);
+  if (!saveActions.length) return false;
+  const refs = new Set(saveActions.flatMap((entry) => entry.refs || []));
+  return Object.values(state.saved?.days || {}).some((day) =>
+    (day.assigned || []).some((row) => refs.has(row.id) && row.proposed_by === 'system' && row.turn === turn),
+  );
+}
+
 const WEEKDAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 const CORE_DISCLOSED_KINDS = new Set(['party', 'destination', 'dates', 'access']);
 
@@ -271,6 +287,7 @@ export function pinTripStateContext(revisionOrState, options = {}) {
 export function buildTripStateChatCall({ tripStateContext, customerTurn, mode = 'write', systemExtra = '' }) {
   const extraParts = [];
   if (mode === 'rewrite') extraParts.push(TRIP_STATE_REWRITE_INSTRUCTION);
+  if (hasProactiveFirstPassAction(tripStateContext.state)) extraParts.push(TRIP_STATE_PROACTIVE_PLAN_INSTRUCTION);
   if (String(systemExtra || '').trim()) extraParts.push(String(systemExtra).trim());
   const extraText = extraParts.join('\n\n');
   const trustedJson = stringifyTripState({
@@ -339,7 +356,8 @@ export function buildTripStateJevPayload({
       instructions: [
         'Rate this draft against trip_state and customer_turn. Return a score only. Criterion 1 is weak. Criterion 5 is excellent.',
         'Score 1 or 2 when the draft refuses a capability whose enabled flag is true in trip_state.capabilities.actions, including when the truthful reply is to ask for a missing input.',
-        'Score 1 or 2 when the draft answers an answered ask the customer did not ask again, or recites a said topic she did not ask about.',
+        'Score 1 or 2 for repetition when the draft repeats an earlier answer or refusal in trip_state.answered or trip_state.said without a renewed request or changed facts, or asks for information the customer already supplied. Judge the meaning even when the wording differs.',
+        'Use trip_state.open_asks to distinguish information still needed from questions the customer already answered. A requested reminder or an honest confirmation that nothing changed can still score 4 or 5.',
         'Score 1 or 2 when the draft claims a save, placement, time change, stay change, booking, or sent invite that trip_state.last_actions does not show with a matching verified receipt, or names a person absent from disclosed, saved.travelers, saved.collaborators, or saved.invites, or names a place absent from saved, candidates, or customer_turn.',
         'Score 4 or 5 when the draft accurately reports verified last_actions receipts or existing saved state, respects holds, explains real blockers or missing inputs, and advances open asks.',
       ].join(' '),
@@ -349,8 +367,8 @@ export function buildTripStateJevPayload({
       type: 'choice',
       instructions: 'Choose keep or rewrite. Return the choice only.',
       criteria: {
-        keep: 'The draft is grounded in trip_state: every claimed change matches trip_state.last_actions, enabled capabilities are not falsely refused, holds are respected, and every person or place is grounded.',
-        rewrite: 'Replace the draft: it claims a change absent from trip_state.last_actions, refuses an enabled capability, repeats an answered ask or unrequested said topic, or invents an undisclosed person or place.',
+        keep: 'The draft is grounded in trip_state: every claimed change matches trip_state.last_actions, enabled capabilities are not falsely refused, holds are respected, every person or place is grounded, and the draft advances the current request without unnecessary repetition.',
+        rewrite: 'Replace the draft for repetition as defined in overall_quality, a change claim absent from trip_state.last_actions, refusal of an enabled capability, or an invented person or place.',
       },
     },
     fix_focus: {
@@ -360,7 +378,7 @@ export function buildTripStateJevPayload({
         missing_price: 'State the catalog price fact from trip_state.capabilities.product_facts.',
         unnamed_place: 'Remove any place not present in saved, candidates, or customer_turn.',
         payment_wording: 'Keep price wording compliant without inventing coverage or a stay the app did not place.',
-        misses_ask: 'Ground every change claim in last_actions, do not refuse enabled capabilities, respect holds, and answer only open asks.',
+        misses_ask: 'Use for repetition as defined in overall_quality or a draft that otherwise misses the current ask. Ground every change claim in last_actions, honor enabled capabilities and holds, and ask only for information still needed.',
         keep: 'Keep the grounded draft.',
       },
     },

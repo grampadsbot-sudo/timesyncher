@@ -58,10 +58,11 @@ async function writeSite(client, context, old, next, record) {
   );
 }
 
-export function createTripStateActionStore({ env = process.env, pool } = {}) {
-  const connectionString = getDatabaseUrl(env);
-  const available = Boolean(pool || connectionString);
+export function createTripStateActionStore({ env = process.env, pool, transactionClient } = {}) {
+  const connectionString = transactionClient ? null : getDatabaseUrl(env);
+  const available = Boolean(transactionClient || pool || connectionString);
   async function inTransaction(write, callback) {
+    if (transactionClient) return callback(transactionClient);
     if (!available) throw new Error('Trip State action store is unavailable');
     const activePool = pool || new Pool({ connectionString });
     try {

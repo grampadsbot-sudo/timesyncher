@@ -3,7 +3,7 @@ import { digestTripState, tripItemKinds } from './trip-state-action-site.mjs';
 import { isTripThingName, normalizeTripThingName, tripThingNameInText } from './trip-thing-name-shape.mjs';
 
 const argumentsByAction = {
-  add_named_item: ['type', 'label', 'evidence', 'details'],
+  add_named_item: ['type', 'label', 'evidence', 'details', 'day', 'role', 'time', 'time_evidence'],
   add_from_search: ['candidate', 'day', 'role', 'replace_hotel', 'time', 'time_evidence'],
   place_on_day: ['item', 'day', 'role', 'time', 'time_evidence', 'before', 'move', 'occurrence'],
   set_time: ['item', 'day', 'role', 'time', 'time_evidence', 'move'],
@@ -14,6 +14,11 @@ const argumentsByAction = {
 
 export const validTripStateId = (value) => typeof value === 'string' && /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$/.test(value);
 export const actionFailure = (result, detail) => ({ result, detail, refs: [] });
+export const proactivePlanBlocks = {
+  'Settle in and get oriented': 'activity',
+  'Free time to explore nearby': 'activity',
+  'Pack and get ready to leave': 'activity',
+};
 export function validateActionArguments(op, args) {
   return args != null && typeof args === 'object' && !Array.isArray(args)
     && Object.hasOwn(argumentsByAction, op) && Object.keys(args).every((key) => argumentsByAction[op].includes(key));
@@ -31,7 +36,9 @@ export function authorizedActionIndex(authority, op, args, state, { after = -1, 
 
 export function systemPlanAllows(authority, op, saved) {
   return authority?.source === 'system_plan' && validTripStateId(authority.id)
-    && ['save_plan', 'place_on_day', 'add_from_search'].includes(op)
+    && (['save_plan', 'place_on_day', 'add_from_search'].includes(op)
+      || (authority.planKey === authority.researchKey && validTripStateId(authority.planKey)
+        && ['add_named_item', 'set_stay'].includes(op)))
     && Boolean(saved.trip.destination && saved.trip.start && saved.trip.end && Object.keys(saved.days).length);
 }
 
@@ -80,7 +87,7 @@ export function validatedTime(context, value, evidence, allowProposed = false) {
   if (value.precision === 'proposed') {
     return allowProposed && evidence == null && /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(value.value) ? value : undefined;
   }
-  if (context.authority?.source === 'system_plan') return undefined;
+  if (context.authority?.source === 'system_plan' && !context.authority.planKey) return undefined;
   const span = customerSpan(context, evidence);
   if (span?.kind !== 'time' || !span.text || (span.precision && span.precision !== value.precision)) return undefined;
   if (value.precision === 'window') {
