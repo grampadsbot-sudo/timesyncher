@@ -1,7 +1,7 @@
 import { tripStateCapabilities } from './trip-state-action-registry.mjs';
 import { tripStateActionsEnabled } from './trip-state-actions-enabled.mjs';
 import { createTripStateActionStore } from './trip-state-action-store.mjs';
-import { digestTripState, readTripStateSite, tripStateBacking, tripStateSiteLocked } from './trip-state-action-site.mjs';
+import { digestTripState, readTripStateSite, tripStateBacking, tripStateSiteLocked, withoutPreviousSystemPlan } from './trip-state-action-site.mjs';
 import { authorizedActionIndex, actionFailure, systemPlanAllows, validateActionArguments, validTripStateId } from './trip-state-action-input.mjs';
 import { siteActionWriters } from './trip-state-action-writes.mjs';
 
@@ -151,13 +151,16 @@ function summarizeBatch(results) {
 }
 
 function planRecord(op, args, site, saved, context, receipt, signature) {
-  const next = structuredClone(site);
   const system = systemPlanAllows(context.authority, op, saved) && (op !== 'save_plan' || args?.authority === context.authority.id);
-  const planned = op === 'save_plan' ? planBatch(args, next, saved, context, receipt)
+  const planKey = system && op === 'save_plan' ? context.authority.planKey : null;
+  let next = structuredClone(planKey ? withoutPreviousSystemPlan(site, planKey) : site);
+  const planSaved = planKey ? readTripStateSite(next, saved, context.turn) : saved;
+  const planned = op === 'save_plan' ? planBatch(args, next, planSaved, context, receipt)
     : { outcome: planOperation({
       op, args, site: next, saved, context, handles: new Map(),
       authorized: system || authorizedActionIndex(context.authority, op, args, context.state) >= 0,
     }), children: [] };
+  if (planKey && !['applied', 'no_change', 'partial'].includes(planned.outcome.result)) next = site;
   const final = readTripStateSite(next, saved, context.turn);
   const before = collectTargets(saved);
   const after = collectTargets(final);
@@ -283,7 +286,8 @@ export function createTripStateActions({ env = process.env, store = createTripSt
         ? { op, receipt, refs: [...new Set(verified.mutations)], turn, ...(authority ? { authority } : {}) }
         : undefined;
       return publish(context, capabilities, saved || { ...state.saved, read: 'stale' },
-        statusOf(op, receipt, turn, verified.outcome, authority), operations, action, verified.promotions);
+        statusOf(op, receipt, turn, verified.outcome, authority), operations, action,
+        context.authority?.planKey ? [] : verified.promotions);
     },
   };
 }
