@@ -104,11 +104,17 @@ export async function listNotes(store, customerId, vacationId, legacySources) {
     const path = notesPath(source.customerId, source.vacationId);
     if (!paths.has(path)) paths.set(path, source.vacationId);
   }
-  const lists = await Promise.all([...paths].map(async ([path, vacationId]) =>
-    (await store.listJson(path)).map((note) => ({ vacationId, ...note }))));
+  const lists = await Promise.all([...paths].map(async ([path, vacationId]) => {
+    const fromList = (await store.listJson(path))
+      .filter((note) => note?.kind !== 'welcome')
+      .map((note) => ({ vacationId, ...note }));
+    const savedWelcome = typeof store.getJson === 'function' ? await store.getJson(`${path}/welcome.json`) : null;
+    const welcome = savedWelcome ? [{ vacationId, ...savedWelcome }] : [];
+    return [...welcome, ...fromList];
+  }));
   const notes = lists.flat().sort((a, b) =>
     Number(b.kind === 'welcome') - Number(a.kind === 'welcome') || a.at.localeCompare(b.at) || a.id.localeCompare(b.id));
-  return notes.filter((note, index) => note.kind !== 'welcome' || index === 0).map(presentNote);
+  return notes.map(presentNote);
 }
 
 export async function loadNoteFile(store, customerId, vacationId, legacy, id, index, recordId) {

@@ -1,4 +1,5 @@
 import { failReplyPlanEntitlement, loadTripOwnerReplyPlan } from './reply-plan-entitlement.mjs';
+import { customerNamedInRoster } from './transcript-roster.mjs';
 import { isCollaboratorAppSeat } from './collaborator-app-seat.mjs';
 import { intakeFactsGrounded, intakeReplyBlock, intakeReplyBlockReasons } from './first-intake-gate.mjs';
 import {
@@ -293,7 +294,8 @@ export function firstIntakeReplyFacts({
   const offer = [];
   let inviteContactNeeded = false;
   const childNames = new Set();
-  for (const person of Array.isArray(roster) ? roster : []) {
+  const disclosedRoster = (Array.isArray(roster) ? roster : []).filter((person) => customerNamedInRoster(said, person?.name));
+  for (const person of disclosedRoster) {
     const name = namedPerson(person?.name, hidden);
     const role = intakeFactText(person?.role, 40).toLowerCase();
     if (!name || role !== 'child') continue;
@@ -305,10 +307,10 @@ export function firstIntakeReplyFacts({
     const kind = intakeFactText(thing?.kind || thing?.category, 40).toLowerCase();
     const person = namedPerson(thing?.who, hidden);
     const when = intakeFactText(thing?.when || thing?.whenLabel || thing?.customerWhen, 180);
-    if (person) {
+    if (customerNamedInRoster(said, person)) {
       mentioned.push(person);
       if (!childNames.has(person.toLowerCase())) {
-        if (collaboratorMayBeOffered(person, roster)) offer.push(person);
+        if (collaboratorMayBeOffered(person, disclosedRoster)) offer.push(person);
         else inviteContactNeeded = true;
       }
     }
@@ -317,7 +319,7 @@ export function firstIntakeReplyFacts({
     if (kind === 'hotel') lodging.push(line);
     else plans.push(line);
   }
-  for (const person of Array.isArray(roster) ? roster : []) {
+  for (const person of disclosedRoster) {
     const name = namedPerson(person?.name, hidden);
     const role = intakeFactText(person?.role, 40).toLowerCase();
     const contact = personContact(person);

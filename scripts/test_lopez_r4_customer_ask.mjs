@@ -66,8 +66,11 @@ try {
   assert.equal(requests.length, 1);
   assert.equal(requests[0].method, 'POST');
   assert.match(requests[0].contentType, /application\/json/);
-  assert.equal(requests[0].body.goal, seed.goals[0]);
-  assert.equal(requests[0].body.persona, seed.name);
+  assert.ok(requests[0].body.goal.startsWith(seed.goals[0]));
+  assert.deepEqual(requests[0].body.disclosure.customerTurns, []);
+  assert.ok(requests[0].body.goal.includes(requests[0].body.disclosure.instructions));
+  assert.equal(requests[0].body.persona?.name, seed.name);
+  assert.deepEqual(requests[0].body.persona?.party?.collaborators, seed.party.collaborators);
   assert.equal(requests[0].body.destination, seed.destination);
 
   const viaSpeak = await speakCustomer({

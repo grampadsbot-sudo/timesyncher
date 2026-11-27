@@ -182,7 +182,6 @@ async function handleNotes(req, res, db, getStore, [id, index]) {
   }
   const note = noteFromBody(body, vacationId);
   if (!note) return send(res, 400, { ok: false, error: 'Add a message or files. The combined upload limit is 3 MB.' });
-  await saveWelcome(store, member, vacation);
   await store.putJson(`${notesPath(member.id, vacationId)}/${note.id}.json`, note);
   return send(res, 201, { ok: true, note: presentNote(note) });
 }

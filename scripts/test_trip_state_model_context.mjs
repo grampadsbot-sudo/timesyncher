@@ -24,8 +24,8 @@ addFormats(ajv);
 const validate = ajv.compile(JSON.parse(file('../src/vacation/trip-state.schema.json')));
 const sha256 = (value) => createHash('sha256').update(String(value), 'utf8').digest('hex');
 
-const OFF_CHAT_BASELINE_HASH = '508d3729a9db13f5a6171c0d9f55768b8dc383107b108f4d03db13684aae1b62';
-const OFF_JEV_BASELINE_HASH = '66e902b4132ac077b186a7a17cfa3206338f9edc3d79febe6598f12b47244777';
+const OFF_CHAT_BASELINE_HASH = '56b85e1cbab3a3a22ddedc41ffbe7e8511eb41e57530eacbf450d6ae216bddd0';
+const OFF_JEV_BASELINE_HASH = '6911ce7e3051f7ba7d2a2d6851a1c89a3e13e78d85c28cebb3bc108a5836a957';
 const BASE_INTENT = { intent: { asksPrice: false, asksAccess: false, pullsAccess: false, seats: [], ask: false } };
 const OFFLINE_ENV = { OPENROUTER_API_KEY: 'test-key-offline' };
 
@@ -79,7 +79,7 @@ async function withMockFetch(handler, fn) {
   assert.equal(sha256(offWithUnusedTrip[1].raw), OFF_JEV_BASELINE_HASH);
   assert.equal(
     sha256(replyRulesSystem({}, '', 'Spring trip', false, 'Please save Botanical Gardens.', { VK_TRIP_STATE_ACTIONS: '0' })),
-    '51a721073433d0ee64458c9e1a98f8cbdd576b5c7ede120ddb13d846b7a04170',
+    '0e521c896feb483dbf41b1c7726af6bb4bc63fdf8a53f704346367687dd37009',
   );
 }
 

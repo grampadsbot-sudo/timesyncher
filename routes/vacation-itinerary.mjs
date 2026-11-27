@@ -79,7 +79,6 @@ import {
   collaboratorSeatJoinEvent,
   loadVacationAppTripRows,
   openCollaboratorAppSeats,
-  recordDialogParty,
   seatForSessionTrip,
   seatFromSession,
   sessionWithTripSeat,
@@ -632,7 +631,7 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
   const priorParty = priorMeta.dialogParty && typeof priorMeta.dialogParty === 'object' ? priorMeta.dialogParty : {};
   const party = completeRosterParty({
     party: priorParty,
-    customerName: priorParty.primary?.name || '',
+    transcriptOnly: true,
     turns: [{ role: 'customer', text }],
     ...(Array.isArray(roster) || rosterError ? {
       roster: Array.isArray(roster) ? roster : [],
@@ -640,7 +639,6 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
       askRoster: askRoster === true,
     } : {}),
   });
-  if (!party.primary?.name && priorParty.primary?.name) party.primary = priorParty.primary;
   const resolved = await resolveIntakePlace({
     destination: extractedDestination || resolvedDestination.destination,
     title: extractedTitle,
@@ -962,14 +960,6 @@ async function handleVacationApp(req, res, db, url) {
         publishIntakeShare, postStartedMs: postStarted,
       });
       return sendJson(res, status, { ...replyBody, ...openRouterTurnTelemetry() });
-    }
-    if (body.action === 'record-party') {
-      const partyTripId = cleanText(body.tripId || body.trip_id, 80) || session.trip_id || '';
-      if (await seatForSessionTrip(db, session, partyTripId) || (!partyTripId && seatFromSession(session))) {
-        return sendJson(res, 403, { ok: false, error: 'A collaborator seat cannot record the roster.' });
-      }
-      const party = await recordDialogParty(db, partyTripId, body.party);
-      return sendJson(res, 200, { ok: true, party });
     }
     let vacations = await loadVacationAppTrips(db, session);
     const requestedTripId = cleanText(body.tripId || body.trip_id, 80);
