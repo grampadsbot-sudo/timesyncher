@@ -254,6 +254,7 @@ export async function insertStampedChatPlaceThings(db, {
     const hasCoords = Number.isFinite(Number(thing?.location?.lat)) && Number.isFinite(Number(thing?.location?.lng));
     const providerResultId = clean(
       thing?.metadata?.providerResultId
+        || thing?.metadata?.sourceRef?.id
         || thing?.metadata?.sourceRecord?.id
         || thing?.id
         || (hasCoords ? `coord:${thing.location.lat},${thing.location.lng}` : ''),

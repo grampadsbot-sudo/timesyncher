@@ -44,6 +44,7 @@ function thingProvenanceRef(metadata = {}) {
     customerSpan: clean(metadata.customerSpan, 240),
     providerResultId: clean(
       metadata.providerResultId
+        || metadata.sourceRef?.id
         || metadata.sourceRecord?.id
         || metadata.sourceRecord?.providerResultId,
       120,
@@ -139,7 +140,11 @@ function sameProviderIdentity(resolvedPlace = {}, row = {}) {
   const meta = row?.metadata && typeof row.metadata === 'object' ? row.metadata : {};
   const ref = thingProvenanceRef(meta);
   const leftId = clean(
-    resolvedPlace?.providerResultId || resolvedPlace?.id || resolvedPlace?.sourceRecord?.id,
+    resolvedPlace?.providerResultId
+      || resolvedPlace?.metadata?.sourceRef?.id
+      || resolvedPlace?.id
+      || resolvedPlace?.sourceRecord?.id
+      || resolvedPlace?.metadata?.sourceRecord?.id,
     120,
   );
   if (leftId && ref.providerResultId && leftId === ref.providerResultId) return true;

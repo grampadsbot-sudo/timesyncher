@@ -46,7 +46,7 @@ export const TRIP_INTAKE_EXTRACTION_SYSTEM_PROMPT = [
   'For web_research, question is the research ask in their words; leave target, anchor, category empty and anchorIsLodging false.',
   `For ${TURN_KIND_TRIP_INTAKE} or other, leave target, anchor, category, question empty and anchorIsLodging false unless they named lodging as part of trip planning.`,
   'things: name is their wording for one wanted item; kind is activity, restaurant, hotel, flight, car, store, or family_event; who and when are strings or empty.',
-  'Each things row must include origin (customer_turn or customer_blurb), customerTurnId (the labelled customer turn id when origin is customer_turn), customerSpan (verbatim substring from that customer source naming the item), and existingThingId when the item matches an existing Thing id.',
+  'Each things row must include origin (customer_turn or customer_blurb), customerTurnId (the labelled customer turn id when origin is customer_turn), customerSpan (verbatim substring from that customer source naming the item), and existingThingId when the item matches an existing saved trip row id.',
   'Use only customer-labelled turns as sources; never assistant or system text.',
   `For ${TURN_KIND_TRIP_INTAKE}, when they state a named lodging property where they will stay, include one things row with kind hotel and that property name; when they name the stay area, set destination to that area.`,
   'roster lists people named; role is owner only when they name themselves, collaborator when they name someone traveling with them, or child, viewer, or editor; age is a number only when they stated a child age.',
