@@ -4,11 +4,12 @@ import { execFileSync } from 'node:child_process';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { cannedWelcomeLiveTurn } from '../src/vacation/onboarding-welcome.mjs';
 import { LocalVkAdminStore } from '../src/vacation/vk-admin-review-storage.mjs';
+import { buildAdminReviewBFixture } from './harness/admin-review-b-fixture.mjs';
+import { replayAdminHarnessTurns } from './harness/admin-review-b-replay.mjs';
 import { createAdminArtifactWriter } from './harness/admin-review-artifacts.mjs';
 import { inviteOnboardingTags } from './harness/onboarding-screens.mjs';
-import { playWithAdminArtifacts, storeHarnessKeepsake, writeOutcomes } from './harness/runtime.mjs';
+import { storeHarnessKeepsake, writeOutcomes } from './harness/runtime.mjs';
 import { extractPdfText } from './live-transcript-dialog-pdf.mjs';
 import { startVkAdminLocalServer } from './qa/vk-admin-local-server.mjs';
 import { loadVkAdminPlaywright } from './qa/vk-admin-playwright.mjs';
@@ -16,15 +17,10 @@ import { loadVkAdminPlaywright } from './qa/vk-admin-playwright.mjs';
 const { chromium } = loadVkAdminPlaywright();
 const fixturePath = new URL('./fixtures/vk-admin-review/vacation-fixtures.json', import.meta.url);
 const [orlando] = JSON.parse(await fs.readFile(fixturePath, 'utf8')).vacations;
-const tripId = 'aaaaaaaa-0000-0000-0000-000000000116';
-const other = 'bbbbbbbb-0000-0000-0000-000000000116';
-const olderTrip = 'cccccccc-0000-0000-0000-000000000116';
-const failedTrip = 'eeeeeeee-0000-0000-0000-000000000116';
-const customerId = 'fixture-lopez-current';
-const earlierCustomerId = 'fixture-lopez-earlier';
-const fixtureTrip = 'vk-fixture-trip-001';
-const current = '2026-11-26T12:00:00.000Z';
-const before = '2026-11-25T12:00:00.000Z';
+const {
+  tripId, other, olderTrip, failedTrip, earlierCustomerId, fixtureTrip, before,
+  vacations, turns, openingGreeting, db, queries,
+} = buildAdminReviewBFixture(orlando);
 const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/FioAAAAASUVORK5CYII=', 'base64');
 
 const log = process.env.VK_ADMIN_REVIEW_SCREENSHOTS_DIR || path.join(os.tmpdir(), 'vk-admin-review-b');
@@ -34,61 +30,6 @@ process.env.VK_ADMIN_LOGIN = LOGIN;
 process.env.VK_ADMIN_SESSION_SECRET = 'fixture-admin-signing-stand-in';
 delete process.env.VERCEL_ENV;
 
-const vacations = [
-  { trip_id: tripId, title: 'Test harness review', destination: 'Fixture destination', customer_id: customerId, display_name: 'Sofia Lopez',
-    customer_email: 'harness+fixture-current+vk-001-lopez@harness.invalid',
-    share_slug: orlando.shareSlug, harness_tag: 'harness:fixture:review', created_at: current,
-    start_date: '2027-03-01', end_date: '2027-03-05', qa: { score: 4 }, survey: { rating: 'happy' } },
-  { trip_id: other, title: 'Second fixture', destination: 'Fixture destination', customer_id: 'fixture-2', display_name: 'Second fixture', created_at: before },
-  { trip_id: olderTrip, title: 'Earlier fixture vacation', destination: 'Earlier destination', customer_id: earlierCustomerId,
-    customer_email: 'harness+fixture-earlier+vk-001-lopez@harness.invalid', display_name: 'Sofia Lopez', created_at: before },
-  { trip_id: failedTrip, title: 'Failed fixture', destination: 'Fixture destination', customer_id: 'fixture-kowalski-failed',
-    customer_email: 'harness+fixture-failed+vk-002-kowalski@harness.invalid', display_name: 'Kowalski family',
-    harness_tag: 'harness:fixture:failed', created_at: before },
-];
-const names = ['vendor/first', 'vendor/second', 'vendor/third'];
-const ledger = (requestId, model, costSource, costUsd, extra = {}) => ({ tripId, requestId, model, costUsd, costSource, ...extra });
-const replies = [
-  [ledger('req-1', names[0], 'openrouter_usage_cost', 0.01234567, { purpose: 'reply_draft' }),
-    ledger('req-1', 'vendor/judge', 'openrouter_usage_cost', 0.002, { purpose: 'jev_quality' }),
-    ledger('req-1', names[0], 'openrouter_usage_cost', 99, { tripId: other, purpose: 'reply_draft' })],
-  [ledger(null, names[1], 'openrouter_listed_price', 0.05, { tripId: null, purpose: 'reply_rewrite' }),
-    ledger('req-2', names[0], 'openrouter_usage_cost', 0.003, { purpose: 'reply_draft' })],
-  [ledger('req-3', names[2], 'unpriced', null, { purpose: 'reply_draft' })],
-];
-const turns = replies.flatMap((rows, index) => {
-  const common = { request_id: `req-${index + 1}`, at: current };
-  return [
-    { ...common, speaker: 'customer', direction: 'inbound', body: `Customer line ${index + 1}`,
-      payload: index === 0 ? { liveTranscript: { openrouterCalls: rows.slice(0, 1) } } : {} },
-    { ...common, speaker: 'app', direction: 'outbound', body: `App reply ${index + 1}`,
-      payload: { liveTranscript: index === 1
-        ? { modelId: names[0], quality: { shippedModel: names[index] }, shippedRewrite: true, openrouterCalls: rows }
-        : { shippedModel: names[index], openrouterCalls: rows } } },
-  ];
-});
-const openingGreeting = "Welcome, Sofia! You're all set to start planning your vacation.";
-turns.unshift({ at: current, speaker: 'app', direction: 'outbound', body: openingGreeting,
-  payload: { welcomeAudience: 'owner', liveTranscript: cannedWelcomeLiveTurn({ text: openingGreeting, at: current }) } });
-turns.push({ request_id: 'req-4', at: current, speaker: 'app', direction: 'outbound', body: 'App reply 4',
-  payload: { liveTranscript: { model: { responseModel: 'vendor/legacy',
-    cost: { status: 'measured', currency: 'USD', dollars: 0.004, source: 'openrouter_usage_cost' } } } } });
-const storedOnboarding = [{ id: 'fixture-session', status: 'completed', current_step: 'vacation_app', created_at: before, completed_at: current }];
-let queries = [];
-const db = async (parts, id) => {
-  const query = parts.join('?');
-  queries.push(query);
-  if (query.includes('from transcript_turns')) return id === tripId ? turns : [];
-  if (query.includes('from onboarding_clicks')) return [{ session_id: 'fixture-session', event_type: 'accept', target: 'Terms', clicked_at: current }];
-  if (query.includes('from onboarding_sessions')) return storedOnboarding;
-  if (query.includes('lower(c.email) like')) {
-    const aliasPrefix = id.split('%')[1];
-    return vacations.filter((row) => row.customer_email?.includes(aliasPrefix));
-  }
-  if (query.includes('from trips where customer_id')) return vacations.filter((row) => row.customer_id === id);
-  if (query.includes('from trips')) return id ? vacations.filter((row) => row.trip_id === id) : vacations;
-  throw new Error('Unknown fixture query');
-};
 const server = await startVkAdminLocalServer({
   adminDatabase: () => db,
   adminStore: () => new LocalVkAdminStore(workspace),
@@ -147,58 +88,9 @@ try {
       return result;
     },
   });
-  async function replay(id, failed = false) {
-    const outDir = path.join(workspace, id);
-    const [customer, app] = fixture.turns;
-    const stored = [];
-    let opened = 0;
-    let closed = 0;
-    const result = await playWithAdminArtifacts({
-      origin: staging, token: 'fixture-browser-session', tripId: id, outDir, put,
-      secrets: ['fixture-browser-session'], fetchImpl: fetchStaging, replyBackend: 'vk_bot_mcp',
-      loadTranscript: async () => ({ ...fixture, turns: stored }),
-      play: async (capture) => {
-        for (let turn = 1; turn <= (failed ? 2 : 5); turn += 1) {
-          const text = `Customer line ${turn}`;
-          stored.push({ ...customer, turnIndex: turn * 2 - 1, text, storedText: text });
-          stored.push({ ...app, turnIndex: turn * 2, quality: { ...app.quality, comment: `Reply ${turn} addresses the trip.` } });
-          await capture({ tripId: id, turn, text });
-        }
-        if (failed) {
-          const text = 'Stored customer message with no reply';
-          stored.push({ ...customer, turnIndex: 5, text, storedText: text, buildSha: sha });
-          throw new Error('simulated mid-run failure');
-        }
-        await capture({ tripId: id, turn: 5, text: 'Customer line 5' });
-        await capture({ tripId: id, turn: 6, text: 'Customer line 6' });
-        return { reason: '', liveShaStart: sha };
-      },
-      openPage: async () => {
-        opened += 1;
-        return { close: async () => { closed += 1; }, page: {
-          async goto(url) { assert.equal(new URL(url).searchParams.get('tripId'), id); },
-          async waitForFunction(_callback, arg) {
-            if (arg == null || typeof arg === 'number') return;
-            assert.match(String(arg), /^Customer line [1-5]$/);
-          },
-          locator(selector) {
-            if (selector === '#messages') return { evaluate: async () => {} };
-            if (selector === '#workspace.chat-only' || selector === '.chat-pane') {
-              return {
-                count: async () => 1,
-                screenshot: async ({ path: file }) => { await fs.writeFile(file, png); return png; },
-              };
-            }
-            if (selector === '.site-pane iframe') return { count: async () => 0, first: () => ({ waitFor: async () => {}, contentFrame: () => null }) };
-            throw new Error(`unexpected selector ${selector}`);
-          },
-          async screenshot({ path: file }) { await fs.writeFile(file, png); return png; },
-        } };
-      },
-    });
-    assert.deepEqual([opened, closed], [1, 1]);
-    return { ...result, outDir };
-  }
+  const replay = (id, failed = false) => replayAdminHarnessTurns({
+    id, failed, workspace, staging, put, fetchStaging, fixture, png, sha,
+  });
   const { adminArtifacts, outDir, played, dialog } = await replay(tripId);
   assert.equal(played.reason, '');
   assert.equal(dialog.ok, true, dialog.detail);
@@ -261,7 +153,7 @@ try {
         await menuButton.click();
         await page.getByRole('option', { name, exact: true }).click();
       };
-      const basicViews = ['Dialog', 'Vacation site', 'Keepsake', 'Onboarding', 'Chat screenshots'];
+      const basicViews = ['Dialog', 'Vacation site', 'Keepsake', 'Onboarding', 'Chat screenshots', 'Dialog PDF'];
       const requests = [];
       page.on('request', (request) => requests.push([request.method(), new URL(request.url()).pathname]));
       await page.goto(`${base}/vacation-app/admin`);
@@ -276,9 +168,14 @@ try {
       assert.equal(await page.getByRole('button', { name: 'Open Lopez family', exact: true }).count(), 0, 'roster vacation is in Sofia’s account');
       await shot('customers');
 
+      const artifactsReady = page.waitForResponse((res) => res.url().includes(`${artifactPath}`) && res.ok());
       await sofia.click();
       await page.locator(`#sitePane[data-kind="chat"][data-run="${tripId}"]`).waitFor();
-      await page.locator('[data-dialog-pdf]').waitFor();
+      await artifactsReady;
+      assert.equal(await page.locator('.admin-dialog-head [data-dialog-pdf]').count(), 0);
+      await menuButton.click();
+      await page.getByRole('option', { name: 'Dialog PDF', exact: true }).waitFor();
+      await page.keyboard.press('Escape');
       const welcome = page.locator('[data-admin-welcome]');
       await welcome.waitFor();
       assert.equal(await welcome.count(), 1);
@@ -292,7 +189,11 @@ try {
       assert.equal(await page.locator('#adminView, .admin-view-controls, select').count(), 0);
       assert.equal(await page.locator('#appHeader .vacation-dropdown').count(), 1);
       await menuButton.click();
-      assert.deepEqual(await viewOptions.allTextContents(), [...basicViews, 'All vacations']);
+      assert.deepEqual(
+        await page.locator('.admin-header-views .trip-option b').allTextContents(),
+        [...basicViews, 'All vacations'],
+      );
+      assert.deepEqual(await viewOptions.allTextContents(), [...basicViews.slice(0, 5), 'All vacations']);
       await shotMenu('header-multiple-vacations');
       await page.keyboard.press('Escape');
       assert.equal(await menuButton.getAttribute('aria-expanded'), 'false');
@@ -303,16 +204,21 @@ try {
       assert.deepEqual(text.slice(1).map((line) => line.match(/(?:Customer line|App reply) \d/)[0]), turns.slice(1).map((turn) => turn.body));
       assert.deepEqual(await page.locator('.admin-reply-detail').allTextContents(), [
         'Opening greeting (no model, no cost)',
-        'vendor/first · Actual $0.01234567 Estimated $0.00',
+        'vendor/first · Actual $0.01',
         'vendor/second · Actual $0.00 Estimated $0.05',
         'vendor/third · unpriced',
-        'vendor/legacy · Actual $0.004 Estimated $0.00',
+        'vendor/legacy · Actual $0.00',
       ]);
-      assert.match(await page.locator('[data-vacation-total]').textContent(), /Actual \$0.02134567 Estimated \$0.05 1 unpriced/);
+      assert.match(await page.locator('[data-vacation-total]').textContent(), /Actual \$0.02 Estimated \$0.05 1 unpriced/);
+      assert.deepEqual(await page.locator('[data-admin-turn-grade="not-graded"]').count(), 1);
+      assert.deepEqual(await page.locator('[data-admin-turn-grade="graded"]').count(), 4);
+      assert.deepEqual(await page.locator('[data-jev-score]').evaluateAll((els) => els.map((el) => el.textContent)), ['4.25', '3.8', '3.5', '4']);
+      assert.deepEqual(await page.locator('[data-qa-verdict]').evaluateAll((els) => els.map((el) => el.textContent)), ['keep', 'rewrite', 'keep', 'keep']);
       assert.match(await page.locator('[data-review-result="qa"]').textContent(), /"score": 4/);
       assert.match(await page.locator('[data-review-result="survey"]').textContent(), /happy/);
       const dialogDownload = page.waitForEvent('download');
-      await page.locator('[data-dialog-pdf]').click();
+      await menuButton.click();
+      await page.getByRole('option', { name: 'Dialog PDF', exact: true }).click();
       const dialog = await dialogDownload;
       assert.equal(new URL(dialog.url()).pathname, `${artifactPath}/dialog-pdf`);
       assert.deepEqual(await fs.readFile(await dialog.path()), pdf);
@@ -376,7 +282,10 @@ try {
       assert.equal(await fs.readFile(await (await uploadDownload).path(), 'utf8'), 'admin attachment');
       await page.evaluate(() => { window.initialThread = document.getElementById('messages'); });
       await chooseView('Dialog');
-      await page.locator('[data-dialog-pdf]').waitFor();
+      assert.equal(await page.locator('.admin-dialog-head [data-dialog-pdf]').count(), 0);
+      await menuButton.click();
+      await page.getByRole('option', { name: 'Dialog PDF', exact: true }).waitFor();
+      await page.keyboard.press('Escape');
       await chooseView('All vacations');
       const vacationList = page.locator('#sitePane [data-admin-vacations]');
       assert.deepEqual(await vacationList.locator('[data-open-vacation]').evaluateAll((buttons) =>
@@ -416,14 +325,17 @@ try {
 
       await chooseView('All Customers');
       await page.getByRole('button', { name: 'Open Second fixture', exact: true }).click();
-      await page.getByText('No Dialog PDF yet').waitFor();
+      await menuButton.click();
+      assert.equal(await page.getByRole('option', { name: 'Dialog PDF', exact: true }).count(), 0);
+      await page.keyboard.press('Escape');
       await welcome.waitFor();
       assert.match(await welcome.textContent(), /Welcome to Second fixture's vacation/);
       assert.equal(await page.locator('[data-review-result]').count(), 0);
       assert.equal(await note.count(), 0);
       assert.equal(await existingNote.count(), 0);
       await menuButton.click();
-      assert.deepEqual(await viewOptions.allTextContents(), basicViews);
+      assert.deepEqual(await viewOptions.allTextContents(), basicViews.slice(0, 5));
+      assert.equal(await page.getByRole('option', { name: 'Dialog PDF', exact: true }).count(), 0);
       await shotMenu('header-single-vacation');
       await page.keyboard.press('Escape');
       await chooseView('Onboarding');
@@ -460,20 +372,20 @@ try {
   {
     const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
     const page = await context.newPage();
-  await page.goto(`${base}/vacation-app/admin`);
-  await page.fill('#adminLoginInput', LOGIN);
-  await page.locator('#adminLogin button').click();
-  await page.getByRole('button', { name: 'Open Kowalski family', exact: true }).click();
-  await page.locator(`#sitePane[data-run="${failedTrip}"]`).waitFor();
-  await page.locator('#tripButton').click();
-  await page.getByRole('option', { name: 'Onboarding', exact: true }).click();
-  const missing = page.locator('[data-onboarding-missing="1"]');
-  await missing.waitFor();
-  assert.match(await missing.textContent(), /harness:fixture:failed/);
-  const missingShot = path.join(log, 'onboarding-missing-390.png');
-  await page.screenshot({ path: missingShot, mask: [page.locator('.admin-coupon')] });
-  assert.ok((await fs.stat(missingShot)).size > 1000, 'onboarding-missing-390.png');
-  await context.close();
+    await page.goto(`${base}/vacation-app/admin`);
+    await page.fill('#adminLoginInput', LOGIN);
+    await page.locator('#adminLogin button').click();
+    await page.getByRole('button', { name: 'Open Kowalski family', exact: true }).click();
+    await page.locator(`#sitePane[data-run="${failedTrip}"]`).waitFor();
+    await page.locator('#tripButton').click();
+    await page.getByRole('option', { name: 'Onboarding', exact: true }).click();
+    const missing = page.locator('[data-onboarding-missing="1"]');
+    await missing.waitFor();
+    assert.match(await missing.textContent(), /harness:fixture:failed/);
+    const missingShot = path.join(log, 'onboarding-missing-390.png');
+    await page.screenshot({ path: missingShot, mask: [page.locator('.admin-coupon')] });
+    assert.ok((await fs.stat(missingShot)).size > 1000, 'onboarding-missing-390.png');
+    await context.close();
   }
 
   const directPut = createAdminArtifactWriter({

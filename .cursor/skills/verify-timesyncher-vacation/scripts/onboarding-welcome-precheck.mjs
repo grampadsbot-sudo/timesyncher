@@ -37,7 +37,7 @@ export function onboardingBars() {
     { id: 'app_site_url', audience: 'app_welcome', text: 'Includes the trip website URL.' },
     { id: 'app_viewer_access', audience: 'app_welcome', text: 'Includes a viewer access line saying people can see the site without signing in.' },
     { id: 'app_how_it_works', audience: 'app_welcome', text: 'Explains day-by-day itinerary, notes per day and place, photos, videos and stories, then a keepsake at the end.' },
-    { id: 'app_voice_invite', audience: 'app_welcome', text: 'Invites the customer to hold the mic and talk for a minute or two about where, when, who, where they are staying, and what they are excited about or still deciding.' },
+    { id: 'app_voice_invite', audience: 'app_welcome', text: 'Invites the customer to tap the mic and talk for a minute or two about where, when, who, where they are staying, and what they are excited about or still deciding.' },
     { id: 'app_banned_words', audience: 'app_welcome', text: 'Never contains Thing, EULA, terms, or seat, and nothing about payments or reservations.' },
     { id: 'app_one_access_line', audience: 'app_welcome', text: 'Has at most one access line.' },
     { id: 'app_before_first_turn', audience: 'app_welcome', text: 'Arrives after EULA accept and before the customer\'s first turn.' },
