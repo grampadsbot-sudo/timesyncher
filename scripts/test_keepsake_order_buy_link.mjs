@@ -67,9 +67,6 @@ async function keepsakeOrderSendsSameOriginAndOtherPathsStayDeny() {
     rule.source,
     rule.headers.find((header) => header.key === 'X-Frame-Options')?.value,
   ]);
-  // #1019 adds a hashed-asset cache rule. Platform framing stays DENY: the
-  // catch-all is DENY, an extra rule may only omit X-Frame-Options or set DENY,
-  // and a hashed asset still resolves to DENY. SAMEORIGIN stays out of vercel.json.
   assert.deepEqual(frameBySource.filter(([source]) => source === '/(.*)'), [['/(.*)', defaultFrame]]);
   for (const [source, value] of frameBySource) {
     assert.ok(value === undefined || value === defaultFrame, source);
