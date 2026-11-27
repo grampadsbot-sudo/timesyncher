@@ -125,12 +125,12 @@ try {
       await page.fill('#adminLoginInput', LOGIN);
       await page.locator('#adminLogin button').click();
       await page.getByRole('button', { name: 'Open Taylor Moss', exact: true }).click();
-      await page.locator(`#sitePane[data-kind="chat"][data-run="${tripId}"]`).waitFor();
+      await page.locator(`#sitePane[data-kind="dialog"][data-run="${tripId}"]`).waitFor();
       const menuButton = page.locator('#tripButton');
       const viewOptions = page.locator('#vacationDropdown [data-view]');
       await menuButton.click();
       assert.deepEqual(await viewOptions.allTextContents(), [
-        'Dialog', 'Travel Summary', 'Feedback & QA', 'Vacation site', 'Keepsake', 'Onboarding', 'Chat screenshots',
+        'Dialog', 'Turns', 'Travel Summary', 'Feedback & QA', 'Vacation site', 'Keepsake', 'Onboarding', 'Chat screenshots',
       ]);
       await page.keyboard.press('Escape');
       assert.equal(await page.locator('[data-feedback-qa-summary]').count(), 0);
