@@ -269,6 +269,7 @@ export function rosterToStory(entry) {
       source: 'templated',
     },
     media_plan: '11-18-spec',
+    ...(entry.id === 1 ? { max_turns: 50 } : {}),
   };
   return story;
 }

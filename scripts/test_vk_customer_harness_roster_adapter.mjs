@@ -55,6 +55,8 @@ assert.equal(one.roster.tech_comfort, 'Medium');
 assert.equal(one.roster.planner, 'Mom');
 assert.equal(one.roster.source, 'templated');
 assert.equal(one.coupon.misuse, false);
+assert.equal(one.max_turns, 50);
+assert.equal(all[1].max_turns, undefined);
 
 assert.deepEqual(kidAges('1 single mom and twins age 7'), [7, 7]);
 assert.deepEqual(kidAges('2 grandparents, 4 parents, and 4 kids ages 4 to 12'), [4, 7, 9, 12]);

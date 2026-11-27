@@ -231,6 +231,7 @@ export async function runCustomer(story, options) {
     ...(played?.rescuedTimeouts?.count ? { rescued_timeouts: { count: played.rescuedTimeouts.count, turns: played.rescuedTimeouts.turns || [], timeouts: played.rescuedTimeouts.timeouts || 0 } } : {}),
     ...(reason === 'turn-not-stored' || reason === 'first-intake-reply-flagged' || reason === 'key-limit' ? { turn_http: played?.exchange || null } : {}),
   });
+  if (Array.isArray(played?.interimFlags) && played.interimFlags.length) card.interim_flags = played.interimFlags;
   if (story.coupon) card.coupon_redemption = publicCouponResult(played?.couponRedemption) || { status: 'not-run', pass: false, detail: reason || 'not-run' };
   if (story.roster) {
     card.roster = story.roster;

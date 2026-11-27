@@ -204,6 +204,10 @@ def build(pack):
     story.append(Paragraph("QUALITY COMPARISON vs v6 gpt-5-mini", styles["Section"]))
     story.append(Paragraph(f"<b>Headline:</b> {latin(pack.get('headline'))}", styles["Headline"]))
     story.append(Paragraph("Content checks: none.", styles["Body"]))
+    for line in pack.get("interim_flags") or []:
+        text = str(line).strip()
+        if text:
+            story.append(Paragraph(latin(f"FLAG. {text}. Not invented."), styles["Body"]))
     story.append(tbl(pack.get("quality_rows") or [], [1.7 * inch, 2.4 * inch, 2.6 * inch]))
     story.append(Spacer(1, 6))
     story.append(Paragraph("Per-tier mean overall (v7)", styles["SubSec"]))
@@ -264,6 +268,8 @@ def build(pack):
             block.append(Paragraph(latin(turn.get("quality")), styles["Qual"]))
         if turn.get("timing"):
             block.append(Paragraph(guard_timing(turn.get("timing")), styles["Tim"]))
+        if turn.get("interim_flag"):
+            block.append(Paragraph(latin(turn.get("interim_flag")), styles["Qual"]))
         if turn.get("producer_log"):
             block.append(Paragraph(latin(turn.get("producer_log")), styles["Qual"]))
         story.append(CondPageBreak(1.6 * inch))

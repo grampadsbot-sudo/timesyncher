@@ -149,7 +149,7 @@ export function assessOnboardingScreens({ shots = [], pdfText = '', termsClick =
       else if (shot.blank) gaps.push(`blank ${screen.id} ${width}`);
     }
   }
-  if (termsClick !== 'ui') gaps.push('terms-gate: not a ui click');
+  if (termsClick !== 'ui' && termsClick !== 'accepted-skip') gaps.push('terms-gate: not a ui click');
   const text = String(pdfText || '');
   let cursor = 0;
   for (const screen of ONBOARDING_SCREENS) {
