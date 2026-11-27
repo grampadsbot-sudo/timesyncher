@@ -30,10 +30,8 @@ import { claimBlockedReply, failOpenLiveReply, heldJudgedDraft, jevJudgeErrored,
 import { applyJevTurn, draftTierForTurn, jevTurn } from './jev-turn.mjs';
 import { buildLiveAppRewritePending } from './chat-place-search.mjs';
 import { inTurnPlaceLiveReplyHooks, placeSearchTieredReplyTimeoutMs } from './in-turn-place-reply-fallback.mjs';
-import {
-  placeResultExtra,
-  unsourcedAgainstInTurnResults,
-} from './provider-result-context.mjs';
+import { placeResultExtra, unsourcedAgainstInTurnResults } from './provider-result-context.mjs';
+import { finishTripStateRewrite, produceTripStateLiveReply } from './trip-state-live-turn.mjs';
 import { liveReplyCommerceGate } from './collaborator-app-seat.mjs';
 import { savedTripWithOwnerPlan } from './reply-plan-entitlement.mjs';
 import { applyStoredTurnRoute, sumModelCost, sumTurnCost } from './turn-cost.mjs';
@@ -1327,10 +1325,11 @@ export async function produceLiveAppReply({
   customerTurn, session, priorTurns, tripTitle, placeResults = [], placeSearchTurn = false, webResearchTurn = false, env = process.env,
   seatDollars: suppliedSeatDollars = null, intake = false, wantedThings = [], roster = null, rosterError = null, extractedDestination = '', extractedTitle = '',
   destinationError = null, titleError = null, savedStart = '', savedEnd = '', loadOwnerPlan = null, loadSavedTripRecordFn = loadSavedTripRecord,
-  turnActionResults = null, placeSearchReplyFacts = null, understanding = null, travelSummary = null } = {}) {
+  turnActionResults = null, placeSearchReplyFacts = null, understanding = null, travelSummary = null, trip = null, tripStateRevision = null, tripStateActions = null, tripStateActionContext = null, tripStateStore = null } = {}) {
   const vkBotReply = await routeVkBotMcpReply({ customerTurn, session, priorTurns, tripTitle, env });
   if (vkBotReply) return requireReplyQuality(vkBotReply, { customerTurn, tripContext: { travelSummary }, env });
   const rules = await loadVacationAppReplyRules(env);
+  const tripStateResult = await produceTripStateLiveReply({ trip, tripStateRevision, tripStateActions, tripStateActionContext, tripStateStore, customerTurn, session, env, rules, understanding }); if (tripStateResult) return tripStateResult;
   const history = Array.isArray(priorTurns) ? priorTurns : [];
   const memory = memoryTurns(history);
   const intakeTurn = { text: customerTurn, intake: intake === true };
@@ -1782,6 +1781,7 @@ export function sameTierRewriteRequest({ customerTurn = '', draft = '', scoreRaw
 
 export async function finishTierRewrite({ pending, env = process.env, interimPromise = null } = {}) {
   const rules = await loadVacationAppReplyRules(env);
+  if (pending?.tripStateContext) return finishTripStateRewrite({ pending, env, rules });
   const facts = pending?.tripFacts || customerTripFacts([], pending?.customerTurn || '');
   const draftErrors = draftFactErrors(pending?.draft, facts);
   async function askRewrite(failure) {

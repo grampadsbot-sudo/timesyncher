@@ -5,6 +5,7 @@ import { selfCorrectionDecision } from '../src/vacation/reply-self-correction-gr
 import { modelVisibleTripContext, namedSearchAreaAwayFromLodgingReplyLine } from '../src/vacation/provider-result-context.mjs';
 import { gapAskReplyPromptTripRaw, perFactGapAskRuleLines } from '../src/vacation/gap-ask-reply-context.mjs';
 import { ruleSections, staticReplySections, STATIC_REPLY_RULES } from '../src/vacation/reply-prompt-sections.mjs';
+import { applyTripStateJevQuality, buildTripStateChatCall, buildTripStateJevPayload } from '../src/vacation/trip-state-model-context.mjs';
 export { sourcedPlaceRule } from '../src/vacation/reply-prompt-sections.mjs';
 export { planFactsForReply };
 import { spawnSync } from 'node:child_process';
@@ -732,7 +733,7 @@ export function qualityFromDecisions(body) {
     model: JEV_DECISIONS_MODEL,
   };
 }
-export async function jevQualityRewrite({ customerTurn, draft, tripContext = null, planLine = '', env = process.env, purpose = 'jev_quality', routeContext = null } = {}) {
+export async function jevQualityRewrite({ customerTurn, draft, tripContext = null, planLine = '', env = process.env, purpose = 'jev_quality', routeContext = null, tripStateContext = null } = {}) {
   const key = appOpenRouterKey(env);
   const url = text(env.TIMESYNCHER_JEV_CLASSIFY_URL, 500) || DEFAULT_JEV_DECISIONS_URL;
   if (!JEV_DECISIONS_PATH.test(url)) return { judged: false, reason: 'quality_decisions_url_required', model: JEV_DECISIONS_MODEL };
@@ -740,46 +741,48 @@ export async function jevQualityRewrite({ customerTurn, draft, tripContext = nul
   const requiredLine = text(planLine, 400);
   const itinerary = Array.isArray(tripContext?.itinerary) ? text(tripContext.itinerary.filter(Boolean).join('; '), 1500) : '';
   const correction = selfCorrectionDecision(tripContext);
-  const payload = {
-    model: JEV_DECISIONS_MODEL,
-    state: {
-      customer_turn: text(customerTurn, 6000),
-      draft: text(draft, 3500),
-      ...(itinerary ? { itinerary } : {}),
-      ...(tripContext?.travelSummary ? { travelSummary: modelVisibleTripContext(tripContext).travelSummary } : {}),
-      ...(tripContext?.dates ? { dates: text(tripContext.dates, 400) } : {}),
-      ...(requiredLine ? { required_payer_line: requiredLine } : {}),
-      ...correction.state,
-    },
-    questions: {
-      overall_quality: {
-        type: 'score',
-        instructions: 'Rate this draft as the customer-facing vacation reply. Return a score only. Criterion 1 is weak. Criterion 5 is excellent. Use criterion 1 or 2 when it misses the ask, names a place that has no search-result id, skips a price they asked for, says no extra fees instead of the price, says the plan is already owned, or uses a banned payment word. A place cited as (id:...) from a search or database result is already sourced. A price question that does not include required_payer_line, when that line is in the state, is criterion 3 or lower. Days and places listed in the itinerary state are already named.',
-        criteria: ['1 weak or off-brief', '2 thin', '3 adequate', '4 strong', '5 excellent'],
+  const payload = tripStateContext
+    ? buildTripStateJevPayload({ tripStateContext, customerTurn, draft, routeContext, decisionsQuestions: routeContext ? decisionsPayload({}).questions : null, model: JEV_DECISIONS_MODEL })
+    : {
+      model: JEV_DECISIONS_MODEL,
+      state: {
+        customer_turn: text(customerTurn, 6000),
+        draft: text(draft, 3500),
+        ...(itinerary ? { itinerary } : {}),
+        ...(tripContext?.travelSummary ? { travelSummary: modelVisibleTripContext(tripContext).travelSummary } : {}),
+        ...(tripContext?.dates ? { dates: text(tripContext.dates, 400) } : {}),
+        ...(requiredLine ? { required_payer_line: requiredLine } : {}),
+        ...correction.state,
       },
-      disposition: {
-        type: 'choice',
-        instructions: 'Choose keep or rewrite. Return the choice only.',
-        criteria: {
-          keep: 'The draft should stand. It answers this turn, and every place it names is in the itinerary state or cited as (id:...).',
-          rewrite: 'Replace the draft. It misses this turn, names a place with no search-result id, skips the price, or uses a banned payment word.',
+      questions: {
+        overall_quality: {
+          type: 'score',
+          instructions: 'Rate this draft as the customer-facing vacation reply. Return a score only. Criterion 1 is weak. Criterion 5 is excellent. Use criterion 1 or 2 when it misses the ask, names a place that has no search-result id, skips a price they asked for, says no extra fees instead of the price, says the plan is already owned, or uses a banned payment word. A place cited as (id:...) from a search or database result is already sourced. A price question that does not include required_payer_line, when that line is in the state, is criterion 3 or lower. Days and places listed in the itinerary state are already named.',
+          criteria: ['1 weak or off-brief', '2 thin', '3 adequate', '4 strong', '5 excellent'],
+        },
+        disposition: {
+          type: 'choice',
+          instructions: 'Choose keep or rewrite. Return the choice only.',
+          criteria: {
+            keep: 'The draft should stand. It answers this turn, and every place it names is in the itinerary state or cited as (id:...).',
+            rewrite: 'Replace the draft. It misses this turn, names a place with no search-result id, skips the price, or uses a banned payment word.',
+          },
+        },
+        fix_focus: {
+          type: 'choice',
+          instructions: 'Jev scores only. Pick one focus label. Do not write a note or a replacement reply.',
+          criteria: {
+            missing_price: 'Name each seat, the plan dollar amount, and who pays.',
+            unnamed_place: 'Take out the place that has no search-result id. A place cited as (id:...) stays.',
+            payment_wording: 'Name each seat and who pays without a banned payment word.',
+            misses_ask: 'Answer the ask and keep the days already named.',
+            keep: 'Keep the draft. It answers without adding a place.',
+          },
         },
       },
-      fix_focus: {
-        type: 'choice',
-        instructions: 'Jev scores only. Pick one focus label. Do not write a note or a replacement reply.',
-        criteria: {
-          missing_price: 'Name each seat, the plan dollar amount, and who pays.',
-          unnamed_place: 'Take out the place that has no search-result id. A place cited as (id:...) stays.',
-          payment_wording: 'Name each seat and who pays without a banned payment word.',
-          misses_ask: 'Answer the ask and keep the days already named.',
-          keep: 'Keep the draft. It answers without adding a place.',
-        },
-      },
-    },
-  };
-  if (correction.question) payload.questions.self_correction = correction.question;
-  if (routeContext) {
+    };
+  if (!tripStateContext && correction.question) payload.questions.self_correction = correction.question;
+  if (routeContext && !tripStateContext) {
     const { route_type, needs_day_for_note } = decisionsPayload({}).questions;
     payload.state = { ...vacationAppContext(routeContext), ...payload.state, current_turn: undefined };
     payload.questions = { route_type, needs_day_for_note, ...payload.questions };
@@ -800,7 +803,8 @@ export async function jevQualityRewrite({ customerTurn, draft, tripContext = nul
     if (!response.ok || body.ok === false) {
       return { judged: false, reason: text(body.error?.message || body.error || `quality HTTP ${response.status}`, 300), model: JEV_DECISIONS_MODEL };
     }
-    return routeContext ? { ...qualityFromDecisions(body), routing: decisionRouting(body?.answers || {}, decisionsVia(url)) } : qualityFromDecisions(body);
+    const baseQuality = tripStateContext ? applyTripStateJevQuality(qualityFromDecisions(body), body, tripStateContext.state) : qualityFromDecisions(body);
+    return routeContext ? { ...baseQuality, routing: decisionRouting(body?.answers || {}, decisionsVia(url)) } : baseQuality;
   } catch (error) {
     return { judged: false, reason: text(error?.message || error, 300), model: JEV_DECISIONS_MODEL };
   }
@@ -859,14 +863,14 @@ export async function jevChooseRewrite({ customerTurn, draft, options, env = pro
 export const INTERIM_MODEL = OPENROUTER_TIER_CHAT_MODELS[1];
 export const TIERED_REPLY_TIMEOUT_MS = 20000;
 
-export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = null, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null, tier1CompactReasoning = false, purpose = 'reply_draft' }) {
+export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = null, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null, tier1CompactReasoning = false, purpose = 'reply_draft', tripStateContext = null, tripStateMode = 'write' }) {
   const modelTier = Number(jev?.modelTier);
   const responseModel = forceModel || openRouterChatModelForTier(modelTier);
   if ((!forceModel && !jev?.jevRan) || !isBakeoffModelId(responseModel)) {
     return { called: false, via: null, modelTier: Number.isInteger(modelTier) ? modelTier : null, responseModel: responseModel || null, reason: 'model_not_in_bakeoff_map' };
   }
   const effectiveTier = forceModel ? (Number.isInteger(modelTier) ? modelTier : 1) : modelTier;
-  const args = { rules, jev, customerTurn, stage, screen, modelTier: effectiveTier, responseModel, destination, memory, upsell, postIntake, env, timeoutMs, systemExtra, tripContext, planTable, planLine, seatDollars, seat, planOwned, intakeReplyTurn, replyFacts, tier1CompactReasoning, purpose };
+  const args = { rules, jev, customerTurn, stage, screen, modelTier: effectiveTier, responseModel, destination, memory, upsell, postIntake, env, timeoutMs, systemExtra, tripContext, planTable, planLine, seatDollars, seat, planOwned, intakeReplyTurn, replyFacts, tier1CompactReasoning, purpose, tripStateContext, tripStateMode };
   const first = await callOpenRouterTieredChat(args);
   if (!openRouterShouldCompactRetry({ modelTier: effectiveTier, tier1CompactReasoning, result: first })) return first;
   const retry = await callOpenRouterTieredChat({ ...args, tier1CompactReasoning: true, timeoutMs: timeoutMs > 0 ? timeoutMs : TIERED_REPLY_TIMEOUT_MS });
@@ -876,49 +880,36 @@ export async function callTieredModel({ rules, jev, customerTurn, stage, screen,
   return { ...retry, modelTier: effectiveTier, compactRetry: true, cost: combinedCost, genLatencyMs: combinedMs };
 }
 
-async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env, timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = null, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null, tier1CompactReasoning = false, purpose = 'reply_draft' }) {
+async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env, timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = null, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null, tier1CompactReasoning = false, purpose = 'reply_draft', tripStateContext = null, tripStateMode = 'write' }) {
   const key = appOpenRouterKey(env);
-  if (!key) {
-    return {
-      called: false,
-      via: 'openrouter-chat',
-      modelTier,
-      responseModel,
-      reason: 'tiered_model_credentials_missing: set OPENROUTER_API_KEY or TIMESYNCHER_OPENROUTER_API_KEY for the app/server OpenRouter chat fallback',
-    };
-  }
+  if (!key) return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: 'tiered_model_credentials_missing: set OPENROUTER_API_KEY or TIMESYNCHER_OPENROUTER_API_KEY for the app/server OpenRouter chat fallback' };
   assertSharedReplyTargetAllowed(OPENROUTER_CHAT_COMPLETIONS_URL, 'tiered openrouter chat', { allowTieredOpenRouterChat: true });
-  const request = replyRequestBody({ rules, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, tripContext, planTable });
-  const userContent = JSON.stringify(intakeReplyTurn
-    ? { ...replyFacts, ...(request.trip_context?.travelSummary && { travelSummary: request.trip_context.travelSummary }) }
-    : request);
-  const turnSections = intakeReplyTurn ? [] : replyTurnRuleSections(rules, destination, upsell, postIntake, customerTurn, {
-      tripContext, planLine, seatDollars, seat, planOwned, purchasedPlan: tripContext?.purchased_plan || '',
-  });
+  const tripStateCall = tripStateContext ? buildTripStateChatCall({ tripStateContext, customerTurn, mode: tripStateMode, systemExtra }) : null;
+  const request = tripStateCall ? null : replyRequestBody({ rules, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, tripContext, planTable });
+  const userContent = tripStateCall ? '' : JSON.stringify(intakeReplyTurn ? { ...replyFacts, ...(request.trip_context?.travelSummary && { travelSummary: request.trip_context.travelSummary }) } : request);
+  const turnSections = tripStateCall || intakeReplyTurn ? [] : replyTurnRuleSections(rules, destination, upsell, postIntake, customerTurn, { tripContext, planLine, seatDollars, seat, planOwned, purchasedPlan: tripContext?.purchased_plan || '' });
   const extraSection = { title: intakeReplyTurn ? 'Intake or starter instructions' : 'Additional instructions for this turn', text: systemExtra };
-  const turnRules = [turnSections.map(({ text }) => text).join('\n'), systemExtra].filter(Boolean).join('\n\n');
-  const intakeDirective = intakeReplyTurn ? { title: 'Intake or starter priority', text: 'Follow the intake or starter instructions in the next block for this turn.' } : null;
+  const turnRules = tripStateCall ? '' : [turnSections.map(({ text }) => text).join('\n'), systemExtra].filter(Boolean).join('\n\n');
+  const intakeDirective = !tripStateCall && intakeReplyTurn ? { title: 'Intake or starter priority', text: 'Follow the intake or starter instructions in the next block for this turn.' } : null;
   const genStarted = Date.now();
   try {
     const { response, body, cost } = await fetchOpenRouterJson(OPENROUTER_CHAT_COMPLETIONS_URL, {
       purpose, key, replyCost: true,
       method: 'POST',
       headers: {
-        authorization: `Bearer ${key}`,
-        'content-type': 'application/json',
-        accept: 'application/json',
-        'HTTP-Referer': 'https://timesyncher.com',
-        'X-Title': 'TimeSyncher Vacation App Shared Reply',
+        authorization: `Bearer ${key}`, 'content-type': 'application/json', accept: 'application/json',
+        'HTTP-Referer': 'https://timesyncher.com', 'X-Title': 'TimeSyncher Vacation App Shared Reply',
       },
       payload: {
         model: responseModel,
         usage: { include: true },
-        prompt_cache_key: 'timesyncher-vacation-reply',
+        prompt_cache_key: tripStateCall ? 'timesyncher-vacation-trip-state-reply' : 'timesyncher-vacation-reply',
         ...openRouterTemperatureSpread(responseModel, 0.55),
         max_tokens: openRouterTierRequestMaxTokens(tier1CompactReasoning ? 1 : modelTier, 900),
         ...openRouterProviderSpread(modelTier),
         ...openRouterTierReasoningSpread(tier1CompactReasoning ? 1 : modelTier),
-        messages: [
+        ...(tripStateCall ? tripStateCall.toolsSpread : {}),
+        messages: tripStateCall ? tripStateCall.messages : [
           {
             role: 'system',
             content: [
@@ -936,21 +927,22 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
     if (!response.ok || body.ok === false) {
       return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: text(body.error?.message || body.error || `tiered model HTTP ${response.status}`, 300), genLatencyMs: elapsed, cost };
     }
+    const toolCalls = tripStateCall && Array.isArray(body.choices?.[0]?.message?.tool_calls) ? body.choices[0].message.tool_calls : [];
     const answer = chatReplyText(body.choices?.[0]?.message?.content) || text(body.answer || body.reply || body.text, 3500);
-    if (!answer) return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: 'tiered model returned an empty reply', genLatencyMs: elapsed, cost };
+    if (!answer && !toolCalls.length) return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: 'tiered model returned an empty reply', genLatencyMs: elapsed, cost };
     const returned = text(body.model || responseModel, 120);
     if (!openRouterReturnedModelMatches(responseModel, returned) || !isBakeoffModelId(responseModel)) {
       return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: 'model_not_in_bakeoff_map', genLatencyMs: elapsed, cost };
     }
-    const visible = splitBeat(answer);
-    if (!visible.text) return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: 'tiered model returned an empty reply', genLatencyMs: elapsed, cost };
-    recordReplyInstructions(purpose, [
+    const visible = answer ? splitBeat(answer) : { text: '', beats: [] };
+    if (!visible.text && !toolCalls.length) return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: 'tiered model returned an empty reply', genLatencyMs: elapsed, cost };
+    recordReplyInstructions(purpose, tripStateCall ? tripStateCall.sections : [
       ...staticReplySections,
       ...(intakeDirective ? [intakeDirective] : []),
       ...turnSections,
       ...(systemExtra ? [extraSection] : []),
     ]);
-    return { called: true, via: 'openrouter-chat', modelTier, responseModel, text: visible.text, beats: visible.beats, maxTokens: 900, genLatencyMs: elapsed, cost, backend: 'openrouter' };
+    return { called: true, via: 'openrouter-chat', modelTier, responseModel, text: visible.text, ...(toolCalls.length ? { toolCalls } : {}), beats: visible.beats, maxTokens: 900, genLatencyMs: elapsed, cost, backend: 'openrouter' };
   } catch (error) {
     return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: text(error?.message || error?.name || error, 300), genLatencyMs: Math.max(0, Date.now() - genStarted), cost: null };
   }

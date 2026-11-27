@@ -15,9 +15,9 @@ export function draftTierForTurn({ intent = null } = {}) {
   };
 }
 
-export async function jevTurn({ customerTurn, draft, tripContext = null, planLine = '', session = null, env = process.env } = {}) {
+export async function jevTurn({ customerTurn, draft, tripContext = null, planLine = '', session = null, env = process.env, tripStateContext = null } = {}) {
   const routeContext = { stage: 'vacation_conversation', screen: 'vacation-app', session: { seed_id: session?.token || null } };
-  const { routing, ...quality } = await jevQualityRewrite({ customerTurn, draft, tripContext, planLine, env, purpose: 'jev_turn', routeContext });
+  const { routing, ...quality } = await jevQualityRewrite({ customerTurn, draft, tripContext, planLine, env, purpose: 'jev_turn', routeContext, tripStateContext });
   if (!routing) return { jevRan: false, error: quality.reason || 'jev_turn_failed', quality };
   return { jevRan: true, ...routing, quality };
 }

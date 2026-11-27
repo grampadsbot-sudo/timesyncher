@@ -321,7 +321,7 @@ export async function commitShippedRewrite(db, session, pending, finished, { rec
       replyClaimContext: claimContext,
       jev: finished.jev || pending.jev || null,
       rules: finished.rules || null,
-      travelSummary: pending.travelSummary,
+      travelSummary: pending.travelSummary, tripStateContext: pending.tripStateContext || null,
     });
     if (!recovered.reply || recovered.reason) {
       return { ok: false, status: 'reply_unavailable', reply: null, error: 'reply_unavailable' };
