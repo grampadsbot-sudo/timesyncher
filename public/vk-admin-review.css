@@ -63,15 +63,40 @@
 .admin-travel-scrubber [data-travel-step="1"] svg { transform: rotate(-90deg); }
 .admin-travel-scrubber input { width: 100%; min-width: 0; height: 44px; margin: 0; accent-color: var(--blue); }
 .admin-travel-scrubber output { color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
-.admin-travel-cover { margin-top: 6px; padding: 16px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); overflow-wrap: anywhere; }
-.admin-travel-cover header { display: flex; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
-.admin-travel-cover header img { flex: none; }
-.admin-travel-cover h1 { min-width: 0; margin: 0; font: 700 clamp(1.3rem, 5vw, 2rem)/1.15 Georgia, serif; }
-.admin-travel-cover dl { display: grid; gap: 8px; margin: 12px 0; }
-.admin-travel-cover dl > div { display: grid; grid-template-columns: 7rem minmax(0, 1fr); align-items: baseline; gap: 8px; }
-.admin-travel-cover dt { color: var(--muted); font-size: 0.875rem; font-weight: 700; white-space: nowrap; }
-.admin-travel-cover dd { margin: 0; }
-.admin-travel-cover p { margin: 12px 0 0; line-height: 1.5; white-space: pre-wrap; }
+.admin-travel-revision { margin-top: 8px; padding: 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); overflow-wrap: anywhere; display: grid; gap: 14px; min-width: 0; }
+.admin-travel-revision-head { display: flex; align-items: flex-start; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--line); min-width: 0; }
+.admin-travel-revision-head img { flex: none; }
+.admin-travel-revision-title-wrap { min-width: 0; display: grid; gap: 6px; flex: 1 1 auto; }
+.admin-travel-revision h1 { min-width: 0; margin: 0; font: 700 clamp(1.2rem, 5vw, 1.75rem)/1.15 Georgia, serif; }
+.admin-travel-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 0.75rem; min-width: 0; }
+.admin-travel-site-rev { color: var(--muted); font-size: 0.75rem; }
+.admin-travel-facts { display: grid; gap: 6px; margin: 0; font-size: 0.875rem; min-width: 0; }
+.admin-travel-facts > div { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); align-items: baseline; gap: 8px; min-width: 0; }
+.admin-travel-facts dt { color: var(--muted); font-size: 0.8125rem; font-weight: 700; white-space: nowrap; }
+.admin-travel-facts dd { margin: 0; min-width: 0; }
+.admin-travel-section { display: grid; gap: 8px; padding-top: 10px; border-top: 1px solid var(--line); min-width: 0; }
+.admin-travel-section h2 { margin: 0; font-size: 0.9375rem; }
+.admin-travel-section h3 { margin: 0; font-size: 0.8125rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
+.admin-travel-section .admin-empty { margin: 0; font-size: 0.875rem; }
+.admin-travel-day { display: grid; gap: 6px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; min-width: 0; }
+.admin-travel-day-empty { margin: 0; color: var(--muted); font-size: 0.8125rem; }
+.admin-travel-assignments, .admin-travel-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; min-width: 0; }
+.admin-travel-assignment { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 8px; padding-top: 6px; border-top: 1px solid var(--line); font-size: 0.875rem; min-width: 0; }
+.admin-travel-assignment:first-child { padding-top: 0; border-top: 0; }
+.admin-travel-assignment-title { font-weight: 600; min-width: 0; }
+.admin-travel-assignment-meta { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; font-size: 0.75rem; min-width: 0; }
+.admin-travel-time { font-variant-numeric: tabular-nums; font-weight: 600; }
+.admin-travel-role { color: var(--muted); }
+.admin-travel-pill { display: inline-block; padding: 1px 6px; border-radius: 999px; background: var(--soft); font-size: 0.75rem; font-weight: 600; }
+.admin-travel-assignment[data-revision-time-precision="proposed"] .admin-travel-time-precision { background: #fff8e1; color: #7a4f01; border: 1px dashed #d6a436; }
+.admin-travel-assignment[data-revision-time-precision="exact"] .admin-travel-time-precision,
+.admin-travel-assignment[data-revision-time-precision="approximate"] .admin-travel-time-precision,
+.admin-travel-assignment[data-revision-time-precision="window"] .admin-travel-time-precision { background: #e8f5e9; color: #1b5e20; }
+.admin-travel-assignment[data-revision-proposed-by="system"] .admin-travel-origin { background: #eef4ff; color: #1d4ed8; }
+.admin-travel-assignment[data-revision-proposed-by="customer"] .admin-travel-origin { background: #e8f5e9; color: #1b5e20; }
+.admin-travel-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; font-size: 0.875rem; min-width: 0; }
+.admin-travel-row-primary { min-width: 0; }
+.admin-travel-sub { display: grid; gap: 6px; padding-top: 6px; min-width: 0; }
 .admin-travel-capabilities { display: grid; gap: 8px; margin-top: 16px; }
 .admin-travel-capabilities h2 { margin: 0; font-size: 1rem; }
 .admin-travel-capabilities details { min-width: 0; border: 1px solid var(--line); border-radius: 8px; overflow-wrap: anywhere; }

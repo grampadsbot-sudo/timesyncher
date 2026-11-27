@@ -7,7 +7,6 @@ import path from 'node:path';
 import { startVkAdminLocalServer } from './qa/vk-admin-local-server.mjs';
 import { loadVkAdminPlaywright } from './qa/vk-admin-playwright.mjs';
 import { LocalVkAdminStore } from '../src/vacation/vk-admin-review-storage.mjs';
-import { travelSummaryDocument } from '../src/vacation/vk-travel-summary.mjs';
 import { tripStateCapabilities } from '../src/vacation/trip-state-action-registry.mjs';
 import { tripStateBacking, tripStateSiteLocked } from '../src/vacation/trip-state-action-site.mjs';
 
@@ -97,14 +96,6 @@ const query = async (strings, ...values) => {
 
 const stateDir = await mkdtemp(path.join(os.tmpdir(), 'vk-travel-summary-cap-'));
 const store = new LocalVkAdminStore(stateDir);
-for (const entry of trips) {
-  for (const turnId of entry.turns) {
-    await store.putJson(`artifacts/${entry.tripId}/travel-summary/${turnId}.json`, {
-      ...travelSummaryDocument({ turnId, where: entry.row.destination, who: entry.label, transport: '', tripName: entry.row.title, description: '' }),
-      turnId,
-    });
-  }
-}
 
 async function readRenderedCapabilities(page) {
   const section = page.getByRole('region', { name: 'What the assistant can do' });

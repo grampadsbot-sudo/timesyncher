@@ -4,7 +4,8 @@ import { dirname } from 'node:path';
 import { DatabaseJsonStore, LocalJsonStore } from '../onboarding/eula-persistent-store.mjs';
 import { hasDatabase, sql } from './db.mjs';
 import { listOnboardingCaptureTags, onboardingCaptureTag } from './vk-admin-onboarding-captures.mjs';
-import { travelSummaryFromDocument, travelSummaryPrefix, travelSummaryValues } from './vk-travel-summary.mjs';
+import { getTripStateRevisionForTurn } from './trip-state-revision-store.mjs';
+import { projectTravelSummaryFromRevision } from './vk-travel-summary.mjs';
 
 export class LocalVkAdminStore extends LocalJsonStore {
   async listOnboardingArtifacts(vacationId) {
@@ -201,40 +202,41 @@ function storedModelRules(value) {
       && typeof section.text === 'string' && section.text));
 }
 
-export async function listTravelSummarySnapshots(store, vacation) {
-  const stored = await store.listJson(travelSummaryPrefix(vacation.tripId));
-  const byTurn = new Map(stored.filter((snapshot) => typeof snapshot?.turnId === 'string')
-    .map((snapshot) => [snapshot.turnId, snapshot]));
+function revisionTurnNumber(turn, fallback) {
+  const liveTurn = Number(turn?.payload?.liveTranscript?.turnIndex);
+  return Number.isInteger(liveTurn) && liveTurn > 0 ? liveTurn : fallback;
+}
+
+async function loadTurnRevision(db, tripId, turn) {
+  if (!db || !tripId || !Number.isInteger(turn) || turn < 1) return null;
+  try {
+    return await getTripStateRevisionForTurn(tripId, turn, db);
+  } catch (error) {
+    if (error?.code === '42P01') return null;
+    throw error;
+  }
+}
+
+export async function listTravelSummarySnapshots(db, vacation) {
   const turns = vacation.turns.filter((turn) => turn.turnId && turn.direction === 'inbound' && turn.speaker === 'customer');
   const replyRules = new Map();
   for (const { direction, speaker, requestId, modelRules } of vacation.turns) {
     if (direction !== 'outbound' || speaker !== 'app' || !requestId || !modelRules) continue;
     replyRules.set(requestId, [...(replyRules.get(requestId) || []), ...storedModelRules(modelRules)]);
   }
-  const people = new Set();
-  let where = '';
-  return turns.map((turn, index) => {
-    const payload = turn.payload;
-    const snapshot = travelSummaryFromDocument(byTurn.get(turn.turnId));
-    where = snapshot?.where || payload?.destination || where;
-    for (const person of Array.isArray(payload?.roster) ? payload.roster : []) {
-      if (person?.name && ['owner', 'collaborator', 'child'].includes(person.role)) people.add(person.name);
-    }
-    const latest = index === turns.length - 1;
+  return Promise.all(turns.map(async (turn, index) => {
+    const turnNumber = index + 1;
+    const revisionRow = await loadTurnRevision(db, vacation.tripId, revisionTurnNumber(turn, turnNumber));
     return {
       turnId: turn.turnId,
-      turnNumber: index + 1,
+      turnNumber,
       modelRules: [
         ...storedModelRules(turn.modelRules),
         ...(replyRules.get(turn.requestId) || []),
       ],
-      ...travelSummaryValues(snapshot || {
-        where: latest ? vacation.destination || where : where,
-        tripName: latest && vacation.shareSlug ? vacation.title : '',
-        who: [...people].join(', '),
-      }),
+      tripState: projectTravelSummaryFromRevision(revisionRow),
     };
-  });
+  }));
 }
 
 export async function saveReviewResults(store, vacationId, { qa, survey }) {

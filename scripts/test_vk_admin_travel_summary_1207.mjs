@@ -1,17 +1,18 @@
 import assert from 'node:assert/strict';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { mkdtemp, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { startVkAdminLocalServer } from './qa/vk-admin-local-server.mjs';
 import { loadVkAdminPlaywright } from './qa/vk-admin-playwright.mjs';
 import { LocalVkAdminStore } from '../src/vacation/vk-admin-review-storage.mjs';
-import { travelSummaryDocument, travelSummaryForTurn } from '../src/vacation/vk-travel-summary.mjs';
+import { projectTravelSummaryFromRevision } from '../src/vacation/vk-travel-summary.mjs';
 import { persistVacationAppCustomerTurn } from '../src/vacation/vacation-app-queue-persist.mjs';
 import { turnUnderstandingRequest } from '../src/vacation/turn-understanding.mjs';
 import { tripIntakeExtractionChatRequest } from '../src/vacation/trip-intake-classify.mjs';
 import { replyInstructionsPayload, withOpenRouterLedger } from '../src/vacation/openrouter-call-ledger.mjs';
 import { vacationAppTurnPayloadForClient } from '../src/vacation/blocked-turn-payload.mjs';
+import { tripStateCapabilities } from '../src/vacation/trip-state-action-registry.mjs';
 import { callTieredModel } from './vacation-app-reply-rules.mjs';
 
 const tripId = randomUUID();
@@ -27,18 +28,97 @@ const turn = (id, direction, hour) => ({
   id, direction, speaker: direction === 'inbound' ? 'customer' : 'app',
   body: '', payload: {}, at: `2026-11-26T${hour}:00:00Z`,
 });
-const first = { turnId: firstId, where: token(), who: '', transport: '', tripName: '', description: '' };
-const middle = { ...first, turnId: middleId };
-const modelFields = { where: first.where, who: token(), transport: token(), description: token() };
-const last = { turnId: lastId, ...travelSummaryForTurn(tripRow, { ...modelFields, tripName: token() }) };
-assert.equal(last.tripName, tripRow.title);
-assert.equal(last.description, modelFields.description);
-const context = { where: first.where, previousSummary: first, customerTurns: [token()] };
-const request = turnUnderstandingRequest(tripIntakeExtractionChatRequest({ message: '', model: 'fixture' }), 'Customer turn', context);
-assert.deepEqual(JSON.parse(request.messages[1].content).savedVacation, context);
-assert.deepEqual(request.response_format.json_schema.schema.properties.travelSummary.required, [
-  'where', 'who', 'transport', 'description',
-]);
+
+const request = turnUnderstandingRequest(tripIntakeExtractionChatRequest({ message: '', model: 'fixture' }), 'Customer turn');
+assert.equal('travelSummary' in request.response_format.json_schema.schema.properties, false);
+assert.deepEqual(Object.keys(JSON.parse(request.messages[1].content)), ['sentences']);
+
+const capabilities = tripStateCapabilities({ env: {} });
+function makeRevisionRow({ turnNumber, revision, destination, title, itemTitle, timeValue, precision, proposedBy, askText, stepTask }) {
+  const state = {
+    version: '1.0',
+    trip_id: tripId,
+    updated_turn: turnNumber,
+    revision,
+    phase: 'shipped',
+    scope: { mode: 'full', omitted: {} },
+    capabilities,
+    saved: {
+      site_revision: `site-${revision}`,
+      read: 'current',
+      trip: { title, destination, start: '2027-04-05', end: '2027-04-06', via: 'intake', turn: 1 },
+      days: {
+        d1: {
+          date: '2027-04-05',
+          assigned: [{
+            id: `a-${revision}`,
+            item: `it-${revision}`,
+            type: 'park',
+            role: 'visit',
+            time: { value: timeValue, precision },
+            proposed_by: proposedBy,
+            via: 'chat_action',
+            turn: turnNumber,
+          }],
+          via: 'intake',
+          turn: 1,
+        },
+      },
+      items: {
+        [`it-${revision}`]: { title: itemTitle, type: 'park', basis: 'named', proposed_by: proposedBy, via: 'customer_named', turn: turnNumber },
+      },
+      unassigned: [],
+      lodging: {},
+      flights: {},
+      ground: {},
+      travelers: {
+        'tr-1': { name: `Traveler ${token()}`, relation: 'self', age: null, via: 'intake', turn: 1 },
+      },
+      collaborators: {},
+      invites: {},
+    },
+    disclosed: {
+      party: { kind: 'party', value: `Party ${token()}`, turn: 1 },
+    },
+    candidates: {},
+    research: { key: null, state: 'waiting', turn: 1, areas: [], gaps: [] },
+    proposals: {},
+    open_asks: askText ? [{ id: `ask-${revision}`, text: askText, first_turn: turnNumber, status: 'open', outcome: null, turn: turnNumber, refs: [] }] : [],
+    answered: [],
+    said: [],
+    last_actions: [],
+    tool_status: [],
+    next_steps: [{ kind: 'wait', task: stepTask, refs: [] }],
+    updates: [{ section: 'saved', source: 'site_read', turn: turnNumber }],
+  };
+  const state_json = JSON.stringify(state);
+  return {
+    trip_id: tripId,
+    revision,
+    request_id: `req-${turnNumber}`,
+    turn: turnNumber,
+    phase: 'shipped',
+    schema_version: '1.0',
+    digest: createHash('sha256').update(state_json).digest('hex'),
+    state_json,
+    shipped_reply_id: randomUUID(),
+  };
+}
+
+const firstRevRow = makeRevisionRow({
+  turnNumber: 1, revision: 1, destination: token(), title: token(), itemTitle: `Park ${token()}`,
+  timeValue: '09:00', precision: 'proposed', proposedBy: 'system', askText: '', stepTask: `Check plan ${token()}`,
+});
+const lastRevRow = makeRevisionRow({
+  turnNumber: 3, revision: 2, destination: token(), title: tripRow.title, itemTitle: `Museum ${token()}`,
+  timeValue: '10:30', precision: 'exact', proposedBy: 'customer', askText: `Ask ${token()}`, stepTask: `Confirm times ${token()}`,
+});
+const revisionsByTurn = new Map([[1, firstRevRow], [3, lastRevRow]]);
+const expectedSnapshots = [
+  { turnId: firstId, turnNumber: 1, tripState: projectTravelSummaryFromRevision(firstRevRow) },
+  { turnId: middleId, turnNumber: 2, tripState: null },
+  { turnId: lastId, turnNumber: 3, tripState: projectTravelSummaryFromRevision(lastRevRow) },
+];
 
 async function captureRules(purpose, intakeReplyTurn = false) {
   const systemExtra = `\n  ${token()} <em>é</em> &\r\nsecond line\rthird line\n`;
@@ -77,9 +157,13 @@ async function captureRules(purpose, intakeReplyTurn = false) {
 
 const firstRules = [await captureRules('reply_draft')];
 const lastRules = [await captureRules('reply_rewrite', true)];
-const query = async (strings) => {
+const query = async (strings, ...values) => {
   const sql = strings.join('?');
   if (sql.includes('from trips t left join customers c')) return [tripRow];
+  if (sql.includes('from vacation_trip_state_revisions')) {
+    const row = revisionsByTurn.get(values[1]);
+    return row ? [row] : [];
+  }
   if (sql.includes('from transcript_turns')) return [
     { ...turn(firstId, 'inbound', 19), payload: { modelRules: firstRules } },
     turn(randomUUID(), 'outbound', 20),
@@ -91,23 +175,15 @@ const query = async (strings) => {
 };
 const stateDir = await mkdtemp(path.join(os.tmpdir(), 'vk-travel-summary-'));
 const store = new LocalVkAdminStore(stateDir);
-const save = (snapshot) => store.putJson(`artifacts/${tripId}/travel-summary/${snapshot.turnId}.json`, snapshot);
-await save({ ...travelSummaryDocument(first), turnId: firstId });
-await save({ ...travelSummaryDocument(middle), turnId: middleId });
-const { turnId: storedId, ...forPersist } = last;
-await persistVacationAppCustomerTurn(async (strings, ...values) => {
+await persistVacationAppCustomerTurn(async (strings) => {
   const sql = strings.join('?');
   if (sql.includes('insert into vacation_requests') || sql.includes('insert into worker_jobs')) return [{ id: randomUUID() }];
   if (sql.includes('insert into transcript_turns')) {
-    assert.ok(sql.includes('insert into eula_store_objects'), 'the turn and snapshot are stored in the same statement');
-    assert.ok(values.includes(`vk-admin-review/artifacts/${tripId}/travel-summary`));
-    const document = values.find((value) => value?.description === modelFields.description);
-    assert.deepEqual(document, { ...forPersist, version: 2 });
-    await save({ turnId: storedId, ...document });
-    return [{ id: storedId }];
+    assert.equal(sql.includes('insert into eula_store_objects'), false, 'customer turn persist must not write 5-field snapshot');
+    return [{ id: lastId }];
   }
   return [];
-}, { transcriptOwnerId: customerId, tripId, payload: {}, turnTag: {}, jobFields: {}, travelSummary: forPersist });
+}, { transcriptOwnerId: customerId, tripId, payload: {}, turnTag: {}, jobFields: {} });
 
 async function assertSummary(page, snapshot, turnNumber) {
   await page.locator('#tripButton').click();
@@ -125,7 +201,8 @@ async function assertSummary(page, snapshot, turnNumber) {
   await page.keyboard.press('Escape');
 
   const actual = await page.locator('.admin-travel').evaluate((view) => {
-    const cover = view.querySelector('[data-travel-cover]');
+    const revision = view.querySelector('[data-travel-revision]');
+    const empty = view.querySelector('[data-travel-no-trip-state]');
     const pane = view.closest('.admin-view-panel');
     const geometry = (node) => {
       const bounds = node.getBoundingClientRect();
@@ -140,24 +217,27 @@ async function assertSummary(page, snapshot, turnNumber) {
     return {
       turnId: view.querySelector('[data-travel-snapshot]').dataset.travelSnapshot,
       value: view.querySelector('input').valueAsNumber,
-      fields: [...cover.querySelectorAll('[data-travel-field]')].map((node) => [node.dataset.travelField, node.textContent]),
-      structure: [...cover.querySelectorAll('*')].map((node) => node.tagName),
+      hasRevision: Boolean(revision),
+      emptyText: empty?.textContent ?? null,
+      title: revision?.querySelector('[data-revision-trip-title]')?.textContent ?? null,
+      destination: revision?.querySelector('[data-revision-trip-destination]')?.textContent ?? null,
+      assignmentTitle: revision?.querySelector('[data-revision-assignment-title]')?.textContent ?? null,
       viewStructure: [...view.children].map((node) => node.tagName),
       scrubberStructure: [...view.querySelector('.admin-travel-scrubber').children].map((node) => node.tagName),
       width: innerWidth,
-      overflow: [pane, view, cover, ...view.querySelectorAll('header, h1, dt, dd, p, input, button, details')].map(geometry).filter(Boolean),
+      overflow: [pane, view, ...(revision ? [revision] : []), ...view.querySelectorAll('header, h1, dt, dd, p, input, button, details')].map(geometry).filter(Boolean),
       wraps: [...view.querySelectorAll('label, output, dt')].filter((node) => !hasOneLine(node)).map((node) => node.tagName),
     };
   });
-  const fields = Object.entries(snapshot).filter(([key, value]) => key !== 'turnId' && value);
-  assert.deepEqual(Object.fromEntries(actual.fields), Object.fromEntries(fields), 'visible fields are bound to the selected stored snapshot');
-  assert.equal(actual.fields.length, fields.length);
-  const labels = ['where', 'who', 'transport'].filter((field) => snapshot[field]);
-  assert.deepEqual(actual.structure, [
-    ...(snapshot.tripName ? ['HEADER', 'IMG', 'H1'] : []),
-    ...(labels.length ? ['DL', ...labels.flatMap(() => ['DIV', 'DT', 'DD'])] : []),
-    ...(snapshot.description ? ['P'] : []),
-  ], 'cover contains only bound fields and their labels');
+  if (snapshot.tripState) {
+    assert.equal(actual.hasRevision, true, 'visible fields are bound to the selected stored revision');
+    assert.equal(actual.title, snapshot.tripState.trip.title, 'visible fields are bound to the selected stored revision');
+    assert.equal(actual.destination, snapshot.tripState.trip.destination, 'visible fields are bound to the selected stored revision');
+    assert.equal(actual.assignmentTitle, snapshot.tripState.days[0].assigned[0].title, 'visible fields are bound to the selected stored revision');
+  } else {
+    assert.equal(actual.hasRevision, false);
+    assert.equal(actual.emptyText, 'No Trip State for this turn.');
+  }
   assert.deepEqual(actual.viewStructure, ['DIV', 'DIV']);
   assert.deepEqual(actual.scrubberStructure, ['LABEL', 'BUTTON', 'INPUT', 'BUTTON', 'OUTPUT']);
   assert.equal(actual.turnId, snapshot.turnId);
@@ -214,9 +294,9 @@ try {
   const response = await page.request.get(endpoint);
   assert.ok(response.ok());
   assert.deepEqual((await response.json()).snapshots, [
-    { ...first, turnNumber: 1, modelRules: firstRules },
-    { ...middle, turnNumber: 2, modelRules: [] },
-    { ...last, turnNumber: 3, modelRules: lastRules },
+    { ...expectedSnapshots[0], modelRules: firstRules },
+    { ...expectedSnapshots[1], modelRules: [] },
+    { ...expectedSnapshots[2], modelRules: lastRules },
   ]);
   assert.equal((await page.request.put(endpoint, { data: { snapshots: [] } })).status(), 405);
   await page.goto(`${server.base}/vacation-app/admin`);
@@ -231,33 +311,26 @@ try {
     const { width, height } = await arrow.boundingBox();
     assert.ok(width >= 44 && height >= 44);
   }
-  await assertTurn(page, last, 3, lastRules[0].sections);
+  await assertTurn(page, expectedSnapshots[2], 3, lastRules[0].sections);
   await previous.tap();
-  await assertTurn(page, middle, 2, []);
+  await assertTurn(page, expectedSnapshots[1], 2, []);
   await previous.tap();
-  await assertTurn(page, first, 1, firstRules[0].sections);
+  await assertTurn(page, expectedSnapshots[0], 1, firstRules[0].sections);
   await page.locator('.admin-travel-rules summary').first().tap();
   await next.tap();
-  await assertTurn(page, middle, 2, []);
+  await assertTurn(page, expectedSnapshots[1], 2, []);
   await slider.press('Home');
-  await assertTurn(page, first, 1, firstRules[0].sections);
+  await assertTurn(page, expectedSnapshots[0], 1, firstRules[0].sections);
   await next.tap();
   await next.tap();
-  await assertTurn(page, last, 3, lastRules[0].sections);
+  await assertTurn(page, expectedSnapshots[2], 3, lastRules[0].sections);
 
-  await page.locator('[data-travel-field="who"]').evaluate((field) => { field.textContent = ''; });
-  await assert.rejects(() => assertSummary(page, last, 3),
-    (error) => error.message.startsWith('visible fields are bound to the selected stored snapshot'));
-  await page.locator('[data-travel-field="who"]').evaluate((field, value) => { field.textContent = value; }, last.who);
-  await page.locator('[data-travel-cover]').evaluate((cover) => {
-    const extra = document.createElement('p');
-    extra.textContent = 'Placeholder';
-    cover.append(extra);
-  });
-  await assert.rejects(() => assertSummary(page, last, 3),
-    (error) => error.message.startsWith('cover contains only bound fields and their labels'));
+  await page.locator('[data-revision-trip-destination]').evaluate((field) => { field.textContent = ''; });
+  await assert.rejects(() => assertSummary(page, expectedSnapshots[2], 3),
+    (error) => error.message.startsWith('visible fields are bound to the selected stored revision'));
+  await page.locator('[data-revision-trip-destination]').evaluate((field, value) => { field.textContent = value; }, expectedSnapshots[2].tripState.trip.destination);
   await page.locator('[data-view="travel-summary"]').evaluate((item) => item.remove());
-  await assert.rejects(() => assertSummary(page, last, 3),
+  await assert.rejects(() => assertSummary(page, expectedSnapshots[2], 3),
     (error) => error.message.startsWith('Travel Summary must be a dropdown option'));
 } finally {
   await browser.close();
@@ -265,4 +338,4 @@ try {
   await rm(stateDir, { recursive: true, force: true });
 }
 
-console.log('PASS VK admin Travel Summary storage, turn replay, and 390 px layout gates');
+console.log('PASS VK admin Travel Summary revision replay, model rules, and 390 px layout gates');
