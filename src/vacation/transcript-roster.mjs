@@ -101,8 +101,6 @@ export function completeRosterParty(doc) {
       party.preference_subjects.push(Number.isFinite(age) ? { name, age } : { name });
       rememberRoster(sources, `preference_subjects.${name}`, Number.isFinite(age) ? age : '', 'chat_extraction');
     } else if (role === 'viewer' || role === 'editor' || role === 'collaborator') {
-      // Chat extraction does not grant view or edit. vk completeRosterParty
-      // ignores these roles; scripts/test_roster_extraction_party.mjs:83.
       continue;
     } else {
       unplaced = true;
