@@ -24,7 +24,7 @@ import { createBoundedReplyShipGate, createBoundedRewriteClaim, rewriteVacationA
 import { sessionReplyBackend } from '../src/vacation/vk-bot-mcp-reply.mjs';
 import { isOrdinaryPlanningTurn, recoverOrdinaryPlanningReply } from '../src/vacation/chat-plan-persist.mjs';
 import { openRouterTurnTelemetry } from '../src/vacation/openrouter-call-ledger.mjs';
-
+import { createTripStateRevisionStore } from '../src/vacation/trip-state-revision-store.mjs';
 export async function queueVacationAppTurn(db, session, trip, body, hooks, intake = {}) {
   const env = process.env;
   const tripId = trip?.id ?? null;
@@ -284,6 +284,9 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
   const { replyCustomerTurn, itineraryEditResult, itineraryEditAuthoritative, itineraryEditCannedReply } = await prepareChatItineraryEditForQueueTurn({
     db, trip, seat, tripId, requestText, turnId: turnRows[0]?.id || null, httpReq: intake?.httpReq || null, env,
   });
+  const tripStateReady = Boolean(await createTripStateRevisionStore({ env }).prepare({
+    trip, requestId, turn: customerTurnIndex, actorId: session.customer_id, classification, text: requestText,
+  }));
   let produced;
   const replyStarted = Date.now();
   try {
@@ -426,7 +429,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
       collaborator: Boolean(seat),
       understanding: classification.understanding,
       travelSummary,
-      tripId,
+      tripId, ...(tripStateReady ? { tripStateReady } : {}),
       turnActionResults,
       sessionStartedMs,
       wallStarted: started, ...openRouterTurnTelemetry(),
@@ -487,7 +490,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     recordCustomerThingNotes: hooks.recordCustomerThingNotes,
     publishIntakeShare: hooks.publishIntakeShare,
     vacationAppTripSummary: hooks.vacationAppTripSummary,
-    replyBackend,
+    replyBackend, tripStateReady,
     postStartedMs: Number(intake.postStartedMs) > 0 ? Number(intake.postStartedMs) : started, postBudgetMs: intake.postBudgetMs ?? null, activityCommitDecisionsImpl: intake.activityCommitDecisionsImpl ?? null,
   });
   if (itineraryEditResult?.client) {
