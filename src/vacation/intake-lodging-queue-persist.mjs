@@ -5,7 +5,7 @@ import {
   persistIntakeLodgingLookupOnCustomerTurn,
 } from './intake-lodging-thing.mjs';
 import { searchIntakeLodgingPlaces } from './intake-lodging-search.mjs';
-import { tripStateActionsEnabled } from './chat-plan-persist.mjs';
+import { tripRowForStateActions, tripStateActionsEnabled } from './trip-state-actions-enabled.mjs';
 import { validatePlannedThings } from './chat-planned-thing-validation.mjs';
 
 export async function maybePersistFirstIntakeLodging({
@@ -22,16 +22,18 @@ export async function persistQueuedIntakeLodgingFromWanted(db, tripId, wantedThi
   env = process.env,
   fetchImpl = globalThis.fetch,
   searchImpl = searchIntakeLodgingPlaces,
+  trip = null,
 } = {}) {
   const lodgingWanted = intakeLodgingWanted([], wantedThings).filter((thing) => tripThingNameInText(thing.title, customerText));
   if (!lodgingWanted.length || !db || !tripId) return null;
+  const tripRow = await tripRowForStateActions(db, tripId, trip);
   const existingRows = await db`
     select id, category, title, description, metadata, location
     from trip_things
     where trip_id = ${tripId}
     order by created_at asc
   `;
-  const uniqueLodging = validatePlannedThings(lodgingWanted, { customerOnly: tripStateActionsEnabled(env), existing: existingRows });
+  const uniqueLodging = validatePlannedThings(lodgingWanted, { customerOnly: tripStateActionsEnabled({ env, trip: tripRow }), existing: existingRows });
   if (!uniqueLodging.length) return null;
   const lodgingOutcome = await persistIntakeLodgingThings(db, tripId, null, uniqueLodging, {
     destinationHint: extractedDestination,

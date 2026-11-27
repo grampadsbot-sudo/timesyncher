@@ -1,3 +1,5 @@
+import { tripStateActionsEnabled } from './trip-state-actions-enabled.mjs';
+
 const definitions = {
   set_time: ['existing', ['item', 'day', 'time']],
   add_bar_before: ['existing', ['anchor', 'day']],
@@ -12,17 +14,13 @@ const definitions = {
   hold_invite: ['new', ['name', 'access']],
 };
 
-export function tripStateActionFlag(env = process.env) {
-  return env.VK_TRIP_STATE_ACTIONS === '1' || env.VK_TRIP_STATE_ACTIONS === 'true';
-}
-
 export function tripStateCapabilities({
-  env, backing, grant, locked, read, serviceAvailable, emailHeld, accessRights, productFacts,
+  env, trip, backing, grant, locked, read, serviceAvailable, emailHeld, accessRights, productFacts,
 } = {}) {
   const actions = Object.fromEntries(Object.entries(definitions).map(([name, [wiring, requires]]) => {
     let reason = 'ready';
     if (name === 'invite_collaborator' && emailHeld) reason = 'on_hold';
-    else if (wiring !== 'new' || !tripStateActionFlag(env) || backing !== 'intake') reason = 'not_wired';
+    else if (wiring !== 'new' || !tripStateActionsEnabled({ env, trip }) || backing !== 'intake') reason = 'not_wired';
     else if (locked) reason = 'trip_locked';
     else if (grant !== 'owner' && (grant !== 'edit' || name === 'hold_invite')) reason = 'no_grant';
     else if (serviceAvailable === false) reason = 'service_unavailable';
