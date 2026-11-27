@@ -1,0 +1,1 @@
+export { isUsableMapLatLng } from '../../../../src/vacation/trip-map-initial-view.mjs';
