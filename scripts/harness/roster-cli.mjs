@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { dryRunCustomer } from './dry.mjs';
+import { REPLY_BACKENDS } from './backends.mjs';
 import { DEFAULT_FINDINGS, REQUIRED_HEADINGS } from './findings.mjs';
 import { runRamp } from './ramp.mjs';
 import { DEFAULT_ROSTER, RAMP_SIZES, abArms, loadRoster, loadStoriesDir, rampOrder, storyForEntry, waveStories } from './roster.mjs';
@@ -26,8 +27,8 @@ function seedDryFindings(file) {
 
 function validatedBackend(name) {
   if (!name) return '';
-  if (name === 'openrouter' || name === 'vk_bot_mcp') return name;
-  throw new Error('refused: --reply-backend must be openrouter or vk_bot_mcp');
+  if (REPLY_BACKENDS.includes(name)) return name;
+  throw new Error(`refused: --reply-backend must be one of ${REPLY_BACKENDS.join(', ')}`);
 }
 
 export async function runRosterCli(argv, { outRoot, liveOptions = null, buildSha = '', log = (line) => process.stdout.write(`${line}\n`) } = {}) {
@@ -37,7 +38,7 @@ export async function runRosterCli(argv, { outRoot, liveOptions = null, buildSha
   const inject = value(argv, '--inject-fail');
   if (inject && !dry) throw new Error('refused: --inject-fail is dry-only');
   if (!dry && !liveOptions) throw new Error('refused: live roster run needs the staging http options');
-  const forcedBackend = validatedBackend(value(argv, '--reply-backend'));
+  const forcedBackend = validatedBackend(value(argv, '--reply-backend')) || (dry ? '' : 'trip_state');
   const customers = loadRoster(value(argv, '--roster') || DEFAULT_ROSTER);
   const dialogStories = value(argv, '--stories-dir') ? loadStoriesDir(value(argv, '--stories-dir')) : null;
   const one = value(argv, '--customer');

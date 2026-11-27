@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { REPLY_BACKENDS } from './backends.mjs';
 
 export const DEFAULT_FINDINGS = path.join(os.homedir(), 'tsv-dispatch', 'findings', 'vk-customer-test-findings.md');
 export const REQUIRED_HEADINGS = ['# VK customer test findings', '## Section format (harness appends)', '## Entries'];
@@ -158,6 +159,8 @@ export function customerSection(card, { wave, at = new Date() } = {}) {
     ? (brokeBase === 'nothing' ? fbNote : clean(`${brokeBase}; ${fbNote}`))
     : brokeBase;
   const openRouter = openRouterTurnCosts(card);
+  const storedRoute = (card.turns || []).filter((turn) => turn.role === 'app' && turn.ruled)
+    .map((turn) => `T${turn.n} ${clean(turn.stored_producer)} / ${clean(turn.stored_backend)}`).join(' | ');
   const corrections = (card.turns || []).filter((turn) => turn.self_correction)
     .map((turn) => `T${turn.n} ${turn.self_correction}`).join(', ');
   return [
@@ -166,6 +169,11 @@ export function customerSection(card, { wave, at = new Date() } = {}) {
     `- What broke or confused: ${broke}`,
     `- Time per turn: ${turnTimes(card)} | Cost ($ replies / $ media): ${replyCost(card)} / ${mediaCost(card)} | Media GB: ${card.media?.gb ?? 'not measured'}${card.media?.source ? ` (${card.media.source})` : ''}`,
     ...(openRouter ? [`- OpenRouter per app turn: ${openRouter}`] : []),
+    ...(card.reply_backend === 'trip_state' ? [
+      `- App reply path: ${card.app_reply_path || 'Trip State / OpenRouter'}`,
+      `- Stored app routes: ${storedRoute || 'unmeasured'}`,
+      `- Stored itinerary items: ${card.itineraryCount ?? 'unmeasured'}`,
+    ] : []),
     ...(corrections ? [`- App self-correction (Jev): ${corrections}`] : []),
     `- Severity (blocker/major/minor): ${severityOf(card)}`,
     `- Redesign implication (one line): ${implicationOf(card)}`,
@@ -179,7 +187,7 @@ export function waveSection(summary, { at = new Date() } = {}) {
   const blocker = fails.some((card) => severityOf(card) === 'blocker');
   return [
     `### ${summary.wave} / wave summary / ${hst(at)}`,
-    `- Arm (A/B): ${['openrouter', 'vk_bot_mcp'].map((arm) => `${arm} ${cards.filter((card) => card.reply_backend === arm).length}`).join(', ')} | Coupon: ${cards.filter((card) => /redeemed|reuse_rejected|dry-not-sent/.test(card.coupon_redemption?.status || '')).length}/${cards.length} ok | Edge case: ${cards.filter((card) => card.roster?.edge_case).length} | Result: ${summary.failed ? 'FAIL' : summary.mode === 'dry' ? 'DRY_PASS' : 'PASS'}${summary.stopped ? ` (ramp stopped: ${clean(summary.stopped, 120)})` : ''}`,
+    `- Arm (A/B): ${REPLY_BACKENDS.map((arm) => `${arm} ${cards.filter((card) => card.reply_backend === arm).length}`).join(', ')} | Coupon: ${cards.filter((card) => /redeemed|reuse_rejected|dry-not-sent/.test(card.coupon_redemption?.status || '')).length}/${cards.length} ok | Edge case: ${cards.filter((card) => card.roster?.edge_case).length} | Result: ${summary.failed ? 'FAIL' : summary.mode === 'dry' ? 'DRY_PASS' : 'PASS'}${summary.stopped ? ` (ramp stopped: ${clean(summary.stopped, 120)})` : ''}`,
     `- What broke or confused: ${fails.length ? clean(fails.map((card) => `${card.roster?.id ?? card.story_id} ${card.reason}`).join('; ')) : 'nothing'}`,
     `- Time per turn: see customer sections | Cost: ${clean(summary.cost)} | Media GB: ${gb.toFixed(3)} total`,
     `- Severity (blocker/major/minor): ${blocker ? 'blocker' : fails.length ? 'major' : 'minor'}`,

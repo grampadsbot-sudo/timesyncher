@@ -1,4 +1,4 @@
-const LABELS = ['openrouter', 'vk_bot_mcp'];
+import { REPLY_BACKENDS } from './backends.mjs';
 const REFUSALS = new Set(['backend-not-available', 'dialog-renderer-refused']);
 
 export function percentile(values, p) {
@@ -72,7 +72,7 @@ function estimateCells(rows) {
 }
 
 export function compareBackends(cards) {
-  return LABELS.map((backend) => {
+  return REPLY_BACKENDS.filter((backend) => backend !== 'trip_state' || cards.some((card) => card.reply_backend === backend)).map((backend) => {
     const rows = cards.filter((card) => card.reply_backend === backend);
     const walls = [];
     const scores = [];

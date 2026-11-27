@@ -1,12 +1,10 @@
 import { createAdminArtifactWriter, firstFiveTurnCapture, storeDialogPdf, storePdf } from './admin-review-artifacts.mjs';
-import fs from 'node:fs';
 import path from 'node:path';
 import { preflightHarnessEnv, secretValues, stagingOrigin } from './env.mjs';
 import { loadBannedHosts, guardedFetch } from './fetch-guard.mjs';
 import { acceptAndConfirmEula } from './eula-accept.mjs';
 import { provisionThrowaway } from './live-provision.mjs';
 import { customerAskFromEnv } from './customer-live.mjs';
-import { sumUsageUsd } from './cost.mjs';
 import { playCustomerTurns } from './live-play.mjs';
 import { attachMedia, captureScreens, collaboratorStepFailure, fetchKeepsake, renderDialog, renderStoredDialog, runSteps, writeVideoCheck } from './live-outputs.mjs';
 import { captureOnboardingPdf, rebuildCustomerPdf } from './onboarding-capture.mjs';
@@ -22,6 +20,9 @@ import { assertAdminOnboardingCaptures } from './admin-onboarding-captures.mjs';
 import { captureVacationInviteOnboarding } from './onboarding-invites.mjs';
 import { attachSsrToKeepsakeMetadata } from '../customer_suite/ssr/dialog-hook.mjs';
 import { createLiveSsrHarness, primeLiveSsr } from './live-ssr-harness.mjs';
+import { finishMeasuredPlay } from './outcomes.mjs';
+
+export { writeOutcomes } from './outcomes.mjs';
 
 function stampLivePdf(doc, played) {
   if (!doc || !Array.isArray(doc.turns)) return doc;
@@ -54,53 +55,6 @@ export function maxTurnsFromEnv(env = process.env) {
   return Math.max(1, Math.floor(raw));
 }
 
-export function rescuedTimeoutsSummary(raw) {
-  const value = raw && typeof raw === 'object' ? raw : {};
-  const turns = Array.isArray(value.turns) ? value.turns.map((n) => Number(n)).filter(Number.isFinite) : [];
-  return {
-    count: Number(value.count) || turns.length,
-    turns,
-    timeouts: Number(value.timeouts) || 0,
-  };
-}
-
-export function writeOutcomes(outDir, payload) {
-  if (!outDir) return payload;
-  try {
-    const costs = [];
-    const turns = Array.isArray(payload?.customerTurns) ? payload.customerTurns : [];
-    for (const turn of turns) {
-      if (turn?.cost) costs.push(turn.cost);
-    }
-    const rawFallbacks = payload?.planningFallbacks && typeof payload.planningFallbacks === 'object'
-      ? payload.planningFallbacks
-      : { count: 0, turns: [] };
-    const fallbackTurns = Array.isArray(rawFallbacks.turns) ? rawFallbacks.turns : [];
-    const costUsd = sumUsageUsd(turns.filter((turn) => turn?.cost).map((turn) => ({ usage: turn.cost, model: turn.model || '' })));
-    const rec = {
-      tripId: payload?.tripId ? String(payload.tripId) : '',
-      itineraryCount: Number(payload?.itineraryCount) || 0,
-      keepsakeOk: payload?.keepsakeOk === true,
-      pricingReactionCaptured: payload?.pricingReactionCaptured === true,
-      customerTurnCount: Number(payload?.customerTurnCount) || turns.filter((turn) => turn.role === 'customer').length,
-      hitTurnCap: payload?.hitTurnCap === true,
-      reason: payload?.reason || '',
-      planningFallbacks: { count: Number(rawFallbacks.count) || fallbackTurns.length, turns: fallbackTurns },
-      rescuedTimeouts: rescuedTimeoutsSummary(payload?.rescuedTimeouts),
-      costs,
-      costUsd,
-      ...(payload.adminArtifacts ? { adminArtifacts: payload.adminArtifacts } : {}),
-      liveShaStart: payload?.liveShaStart || '',
-      liveShaEnd: payload?.liveShaEnd || '',
-    };
-    fs.mkdirSync(outDir, { recursive: true });
-    fs.writeFileSync(path.join(outDir, 'outcomes.json'), `${JSON.stringify(rec, null, 2)}\n`);
-  } catch {
-    return payload;
-  }
-  return payload;
-}
-
 async function storedLiveTranscript(db, token) {
   const { loadLiveTranscriptByToken } = await import('../../src/vacation/live-app-turn.mjs');
   try {
@@ -118,7 +72,7 @@ function recordArtifactFailure(artifacts, failure, error) {
   }
 }
 
-export async function playWithAdminArtifacts({ origin, token, tripId, outDir, secrets, fetchImpl, replyBackend, put, play, loadTranscript, openPage }) {
+export async function playWithAdminArtifacts({ origin, token, tripId, outDir, secrets, fetchImpl, replyBackend, put, play, loadTranscript, openPage, measure }) {
   const capture = firstFiveTurnCapture({ origin, token, outDir, put, openPage });
   const adminArtifacts = { captures: [], dialogPdf: false, keepsakePdf: false, errors: [], httpFailures: [] };
   const captureFailure = (n) => `turn-${n}-capture-or-upload-failed`;
@@ -135,6 +89,7 @@ export async function playWithAdminArtifacts({ origin, token, tripId, outDir, se
   } catch (error) {
     played = { reason: 'harness-error', detail: redactUrls(redactText(error?.message || error, secrets)) };
   } finally {
+    if (measure) played = { ...played, ...await measure(played?.tripId) };
     await capture.flush((n, error) => {
       if (error) recordArtifactFailure(adminArtifacts, captureFailure(n), error);
       else {
@@ -201,11 +156,12 @@ export function liveOptions(env = process.env) {
   const bannedHosts = loadBannedHosts();
   const fetchImpl = guardedFetch(globalThis.fetch.bind(globalThis), bannedHosts);
   const origin = stagingOrigin(ready);
-  const play = async (story, options) => {
-      const { sql } = await import('../../src/vacation/db.mjs');
-      const db = sql(ready);
-      const created = await provisionThrowaway(db, story, { tag: options.tag, runId: options.runId, env: ready });
-      const secrets = secretValues(ready, [created.token, created.shareToken]);
+  const playProvisioned = async (story, options, db, secrets, { rememberTrip, measure }) => {
+      const created = await provisionThrowaway(db, story, {
+        tag: options.tag, runId: options.runId, env: ready, outDir: options.outDir, secrets,
+      });
+      rememberTrip(created.tripId);
+      secrets.push(created.token, created.shareToken);
       let couponRedemption = null;
       if (story.coupon) {
         try {
@@ -252,7 +208,6 @@ export function liveOptions(env = process.env) {
           liveShaStart: '',
           liveShaEnd: '',
           storedTurns: 0,
-          itineraryCount: 0,
           tripId: created.tripId,
           shareToken: created.shareToken,
           detail: 'eula.accepted was not true after accept',
@@ -275,7 +230,7 @@ export function liveOptions(env = process.env) {
           ...onboardingFields(),
         };
       }
-      const liveCustomer = story.reply_backend === 'vk_bot_mcp';
+      const liveCustomer = story.reply_backend === 'vk_bot_mcp' || story.reply_backend === 'trip_state';
       const harnessVacation = { db, tripId: created.tripId, tag: options.tag, openStore: () => vkAdminStorage(ready) };
       const putArtifact = createAdminArtifactWriter({
         origin, login: ready.VK_ADMIN_LOGIN, fetchImpl, harnessVacation,
@@ -287,6 +242,7 @@ export function liveOptions(env = process.env) {
         origin, token: created.token, tripId: created.tripId, outDir: options.outDir, secrets, fetchImpl,
         replyBackend: story.reply_backend, put: putArtifact,
         loadTranscript: async () => await storedLiveTranscript(db, created.token),
+        measure,
         play: (afterCustomerTurn) => playCustomerTurns(story, {
           origin,
           token: created.token,
@@ -295,6 +251,7 @@ export function liveOptions(env = process.env) {
           hosts: bannedHosts,
           waitMs: 20000,
           secrets,
+          onTrip: rememberTrip,
           afterCustomerTurn,
           liveCustomer,
           customerAsk: customerAskFromEnv(ready, bannedHosts),
@@ -343,7 +300,7 @@ export function liveOptions(env = process.env) {
       };
       if (played.reason) {
         const keepsake = !chatLeftNoThing(played) ? await storeHarnessKeepsake(keepsakeOptions) : null;
-        return writeOutcomes(options.outDir, {
+        return {
           ...base,
           tripId,
           ssrReactions,
@@ -354,7 +311,7 @@ export function liveOptions(env = process.env) {
           pricingReactionCaptured: played.pricingReactionCaptured === true,
           customerTurnCount: played.customerTurnCount || 0,
           hitTurnCap: played.hitTurnCap === true,
-        });
+        };
       }
       const qa = played.qaRating && played.qaRating !== 'slot' ? played.qaRating : null;
       if (qa || played.survey) {
@@ -383,7 +340,7 @@ export function liveOptions(env = process.env) {
         const outDialog = ssrRecord ? await renderLiveDialogWithSsr(ssrRecord) : dialog;
         const outTranscript = transcriptForScorecard(outDialog.transcript, transcript);
         const video = await writeVideoCheck({ origin, attachment: { ok: false, detail: 'no-thing-after-chat', bindings: [] }, fetchImpl, outDir: options.outDir });
-        return writeOutcomes(options.outDir, {
+        return {
           ...base,
           tripId,
           steps,
@@ -403,7 +360,7 @@ export function liveOptions(env = process.env) {
           hitTurnCap: played.hitTurnCap === true,
           keepsakeOk: false,
           ...onboardingFields(),
-        });
+        };
       }
       const attachment = await attachMedia({ origin, shareToken, story, fetchImpl, env: ready });
       const video = await writeVideoCheck({ origin, attachment, fetchImpl, outDir: options.outDir });
@@ -442,7 +399,7 @@ export function liveOptions(env = process.env) {
           ? `cap-without-required:${missing.join(',')}`
           : `missing-required:${missing.join(',')}`;
       }
-      return writeOutcomes(options.outDir, {
+      return {
         ...base,
         tripId,
         steps,
@@ -468,7 +425,16 @@ export function liveOptions(env = process.env) {
         chromeOk: screens.ok === true && !(screens.hits || []).length,
         chromeDetail: (screens.hits || []).join(','),
         ...onboardingFields(),
-      });
+      };
+  };
+  const play = async (story, options) => {
+    const { sql } = await import('../../src/vacation/db.mjs');
+    const db = sql(ready);
+    const secrets = secretValues(ready);
+    return finishMeasuredPlay({
+      db, tag: options.tag, outDir: options.outDir, secrets,
+      play: async (measurement) => await playProvisioned(story, options, db, secrets, measurement),
+    });
   };
   return {
     env: ready,
@@ -484,9 +450,9 @@ export function liveOptions(env = process.env) {
       origin,
       play,
     },
-    async cleanup(tag) {
+    async cleanup(tag, { outDir } = {}) {
       const { sql } = await import('../../src/vacation/db.mjs');
-      return deleteTaggedRows(sql(ready), tag);
+      return deleteTaggedRows(sql(ready), tag, { snapshotDir: outDir, secrets: secretValues(ready) });
     },
   };
 }

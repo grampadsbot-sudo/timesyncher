@@ -1,3 +1,5 @@
+import { itineraryMeasurement } from './itinerary-evidence.mjs';
+
 const REQUIRED_CHECK_IDS = [
   'dialog-pdf',
   'keepsake-pdf',
@@ -70,6 +72,9 @@ export function buildScorecard(input) {
     run_id: input.run_id,
     story_id: input.story_id,
     reply_backend: input.reply_backend,
+    ...(input.reply_backend === 'trip_state' ? { app_reply_path: 'Trip State / OpenRouter' } : {}),
+    ...itineraryMeasurement(input),
+    planningAgreementTurns: input.planningAgreementTurns ?? null,
     build_sha: input.build_sha || '',
     live_sha_start: input.live_sha_start || '',
     live_sha_end: input.live_sha_end || '',

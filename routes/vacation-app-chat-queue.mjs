@@ -140,6 +140,9 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     authorId: session.customer_id || null,
     intakeEvent: jobFields.intakeEvent,
     wantedThings: jobFields.wantedThings,
+    ...(trip?.metadata?.replyBackend === 'trip_state' && tripStateActionsEnabled({ env, trip }) ? {
+      committedPlan: classification.understanding?.committedSentenceIndexes?.length > 0,
+    } : {}),
     roster: jobFields.roster,
     rosterError: jobFields.rosterError,
     destination: jobFields.destination,

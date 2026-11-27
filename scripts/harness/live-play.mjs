@@ -157,7 +157,7 @@ function initialOpenerTurns(body) {
     .filter((turn) => Boolean(turn.text));
 }
 
-export async function playCustomerTurns(story, { origin, token, tripId, fetchImpl, hosts, waitMs = 0, secrets = [], liveCustomer = false, customerAsk = null, customerLanes = null, maxTurns = 0, probeDelaysMs = null, sleepImpl = null, afterCustomerTurn = null }) {
+export async function playCustomerTurns(story, { origin, token, tripId, fetchImpl, hosts, waitMs = 0, secrets = [], liveCustomer = false, customerAsk = null, customerLanes = null, maxTurns = 0, probeDelaysMs = null, sleepImpl = null, afterCustomerTurn = null, onTrip = null }) {
   const probeDelays = storedTurnProbeDelays(probeDelaysMs);
   const sleep = typeof sleepImpl === 'function' ? sleepImpl : (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
   const allowed = new URL(origin).origin;
@@ -218,7 +218,7 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
       liveShaStart,
       liveShaEnd: String(end.body?.sha || ''),
       storedTurns: extra.storedTurns || 0,
-      itineraryCount: extra.itineraryCount || 0,
+      observedItineraryCount: extra.itineraryCount || 0,
       tripId: extra.tripId || tripId || '',
       shareToken: extra.shareToken || '',
       detail: extra.detail || reason,
@@ -244,6 +244,12 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
   let seenApp = latestStoredAppTurn(opened.body);
   const openerTurns = initialOpenerTurns(opened.body);
   let currentTrip = tripFields(opened.body).tripId || tripId || '';
+  const selectTrip = (id) => {
+    if (!id) return;
+    currentTrip = id;
+    onTrip?.(id);
+  };
+  selectTrip(currentTrip);
   let shareToken = tripFields(opened.body).shareToken;
   let items = itineraryCount(opened.body);
   const timings = [];
@@ -336,7 +342,7 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
           seenApp = storedApp;
           items = Math.max(items, itineraryCount(probe.body));
           shareToken = tripFields(probe.body).shareToken || shareToken;
-          if (tripFields(probe.body).tripId) currentTrip = tripFields(probe.body).tripId;
+          selectTrip(tripFields(probe.body).tripId);
           lastReply = storedApp.text;
           travelSummary = probe.body?.travelSummary ?? draft.body?.travelSummary ?? travelSummary;
           const isFallback = isPlanningFallbackTurn(storedApp.text, storedApp);
@@ -367,7 +373,7 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
     let reply = replyText(final.body) || replyText(draft.body);
     const stamp = replyModelStamp(final.body?.reply ? final.body : draft.body);
     const nextTrip = tripFields(final.body).tripId || tripFields(draft.body).tripId;
-    if (nextTrip) currentTrip = nextTrip;
+    selectTrip(nextTrip);
     shareToken = tripFields(final.body).shareToken || tripFields(draft.body).shareToken || shareToken;
     if (!reply && waitMs > 0) {
       const deadline = Date.now() + waitMs;
@@ -388,7 +394,7 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
     const count = ruled == null ? storedTurns(history.body) : ruled;
     items = Math.max(items, itineraryCount(final.body), itineraryCount(draft.body), itineraryCount(history.body));
     shareToken = tripFields(history.body).shareToken || shareToken;
-    if (tripFields(history.body).tripId) currentTrip = tripFields(history.body).tripId;
+    selectTrip(tripFields(history.body).tripId);
     lastReply = reply || lastReply;
     travelSummary = final.body?.travelSummary ?? history.body?.travelSummary ?? draft.body?.travelSummary ?? travelSummary;
     const replyBody = final.body?.reply ? final.body : draft.body;
@@ -458,7 +464,7 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
     liveShaStart,
     liveShaEnd: String(end.body?.sha || ''),
     storedTurns: seen,
-    itineraryCount: items,
+    observedItineraryCount: items,
     tripId: currentTrip,
     shareToken,
     detail: '',

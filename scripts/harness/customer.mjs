@@ -5,7 +5,7 @@ import { assertThrowaway, cleanupCommand, harnessTag } from './protected.mjs';
 import { redactText } from './redact.mjs';
 import { buildScorecard } from './scorecard.mjs';
 import { couponCheck, publicCouponResult } from './coupon.mjs';
-import { isSpendLimitReason, redactUrls } from './backends.mjs';
+import { isSpendLimitReason, redactUrls, REPLY_BACKENDS } from './backends.mjs';
 import { abArmLabel } from './dry.mjs';
 import { mediaLoad } from './media-plan.mjs';
 import { confirmStoredTurns } from './stored-turn.mjs';
@@ -13,6 +13,7 @@ import { noteUnstoredRows } from './unstored-turn.mjs';
 import { extractLegacyDlrComparison } from '../customer_suite/ssr/aggregate.mjs';
 import { recordDialogPdfStatus } from '../customer_suite/ssr/dialog-hook.mjs';
 import { createHarnessSsrHook } from '../customer_suite/ssr/hooks.mjs';
+import { itineraryMeasurement, itineraryStoredCheck } from './itinerary-evidence.mjs';
 
 function mergeWall(rows, timings) {
   const byN = new Map((timings || []).map((row) => [row.n, row.wall_ms]));
@@ -74,7 +75,7 @@ function blankTurn(index, replyBackend) {
 
 export async function runCustomer(story, options) {
   const replyBackend = story.reply_backend;
-  if (replyBackend !== 'openrouter' && replyBackend !== 'vk_bot_mcp') throw new Error('refused: reply_backend is missing');
+  if (!REPLY_BACKENDS.includes(replyBackend)) throw new Error('refused: reply_backend is missing or invalid');
   assertThrowaway({ name: story.customer?.name, displayName: story.customer?.name, email: story.customer?.email_alias });
   const tag = harnessTag(options.runId, story.story_id);
   options.tag = tag;
@@ -110,6 +111,9 @@ export async function runCustomer(story, options) {
       if (played.dialogRefused) gaps = [...new Set([...gaps, 'dialog-renderer-refused'])];
       if (played.dialogRefused && !reason) reason = 'dialog-renderer-refused';
       checks = artifactChecks(played);
+      if (played.replacementError) {
+        checks.push({ id: 'prior-vacation-snapshot', pass: false, detail: played.replacementError, artifact: '' });
+      }
       if (story.coupon) checks.push(couponCheck(played.couponRedemption));
       if (isSpendLimitReason(reason)) {
         checks.push({ id: 'app-billing', pass: false, detail: redactUrls(played.detail && played.detail !== reason ? played.detail : `app hit a spend/quota limit (${reason})`).slice(0, 300), artifact: '' });
@@ -119,13 +123,18 @@ export async function runCustomer(story, options) {
     reason = reason || 'harness-error';
     checks.push({ id: 'harness-error', pass: false, detail: redactText(error?.message || error, secrets), artifact: '' });
   }
+  if (replyBackend === 'trip_state') {
+    const check = itineraryStoredCheck(played, options.env);
+    checks.push(check);
+    if (!check.pass && !reason) reason = check.id;
+  }
   const billed = isSpendLimitReason(reason);
   const playedMcp = replyBackend === 'vk_bot_mcp' && played;
   const cost = withDryRunCapShare((replyBackend === 'vk_bot_mcp' && !playedMcp) || billed
     ? { state: 'not-run', amount: null, unit: '', gap: '', per_customer: null }
     : rollupCost(turns), story.story_id);
   if (cost.gap) gaps = [...new Set([...gaps, cost.gap])];
-  if ((replyBackend === 'openrouter' || playedMcp) && !billed) {
+  if ((replyBackend !== 'vk_bot_mcp' || playedMcp) && !billed) {
     const stored = !cost.gap && (cost.state === 'measured' || cost.state === 'unmeasured' || cost.state === 'mixed' || cost.state === 'not-run');
     checks.push({ id: 'stored-cost', pass: stored, detail: cost.gap || cost.state, artifact: '' });
   }
@@ -152,7 +161,7 @@ export async function runCustomer(story, options) {
   if (keep) cleanup = { deleted: {}, remaining: null, kept: true, command: cleanupCommand(options.runId, story.story_id) };
   else if (options.cleanup) {
     try {
-      cleanup = await options.cleanup(tag);
+      cleanup = await options.cleanup(tag, { outDir: options.outDir });
     } catch (error) {
       cleanup = { deleted: {}, remaining: null, error: redactText(error?.message || error, secrets) };
     }
@@ -198,6 +207,8 @@ export async function runCustomer(story, options) {
     story_id: story.story_id,
     tripId: played?.tripId || '',
     reply_backend: replyBackend,
+    ...itineraryMeasurement(played),
+    planningAgreementTurns: played?.planningAgreementTurns ?? null,
     build_sha: options.buildSha || '',
     live_sha_start: played?.liveShaStart || '',
     live_sha_end: played?.liveShaEnd || '',
@@ -223,8 +234,8 @@ export async function runCustomer(story, options) {
     card.roster = story.roster;
     card.ab_arm = abArmLabel(story);
   }
-  if (played && Number.isFinite(Number(played.itineraryCount))) {
-    card.media = mediaLoad({ itineraryItems: Number(played.itineraryCount), hasHotel: true, source: 'estimate-live (itinerary items counted; bytes per file assumed)' });
+  if (card.itineraryCountSource === 'db') {
+    card.media = mediaLoad({ itineraryItems: card.itineraryCount, hasHotel: true, source: 'estimate-live (itinerary items counted; bytes per file assumed)' });
   }
   fs.writeFileSync(path.join(options.outDir, 'scorecard.json'), `${JSON.stringify(card, null, 2)}\n`);
   if (keep) process.stdout.write(`${cleanup.command}\n`);

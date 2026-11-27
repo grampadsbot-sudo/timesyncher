@@ -52,6 +52,7 @@ function dryTurns(story) {
 }
 
 export function abArmLabel(story) {
+  if (story.reply_backend === 'trip_state') return 'Trip State (OpenRouter)';
   const id = Number(story.roster?.id);
   if (!Number.isInteger(id) || id > 10) return `none (${story.reply_backend})`;
   return story.reply_backend === 'vk_bot_mcp' ? 'B vk_bot_mcp' : 'A openrouter';
