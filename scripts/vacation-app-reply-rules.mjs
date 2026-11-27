@@ -1,9 +1,11 @@
 import { sumTurnCost } from '../src/vacation/turn-cost.mjs';
 import { fetchOpenRouterJson, recordReplyInstructions } from '../src/vacation/openrouter-call-ledger.mjs';
-export { planFactsForReply } from '../src/vacation/reply-plan-entitlement.mjs';
-import { modelVisibleTripContext } from '../src/vacation/provider-result-context.mjs';
-import { replyTurnRuleSections, staticReplySections, STATIC_REPLY_RULES } from '../src/vacation/reply-prompt-sections.mjs';
-export { replyRulesSystem, sourcedPlaceRule } from '../src/vacation/reply-prompt-sections.mjs';
+import { planFactsForReply } from '../src/vacation/reply-plan-entitlement.mjs';
+import { modelVisibleTripContext, namedSearchAreaAwayFromLodgingReplyLine } from '../src/vacation/provider-result-context.mjs';
+import { gapAskReplyPromptTripRaw, perFactGapAskRuleLines } from '../src/vacation/gap-ask-reply-context.mjs';
+import { ruleSections, staticReplySections, STATIC_REPLY_RULES } from '../src/vacation/reply-prompt-sections.mjs';
+export { sourcedPlaceRule } from '../src/vacation/reply-prompt-sections.mjs';
+export { planFactsForReply };
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -588,6 +590,101 @@ export function replyRequestBody({ rules, customerTurn, stage, screen, modelTier
 
 function chatReplyText(content) {
   return text(openRouterChatVisibleText(content), 3500);
+}
+
+export function replyRulesSystem(...args) {
+  return [STATIC_REPLY_RULES, ...replyTurnRuleSections(...args).map(({ text }) => text)].join('\n');
+}
+
+function replyTurnRuleSections(rules, destination, upsell, postIntake, customerTurn = '', context = {}) {
+  const lock = text(destination, 160);
+  const priceAsk = /\b(price|pricing|how much|what(?:'s| is) (?:the )?(?:price|cost))\b/i.test(String(customerTurn || ''));
+  const planLine = String(context.planLine || '').trim();
+  const configuredSeat = Number(context.seatDollars);
+  const seatDollars = Number.isFinite(configuredSeat) && configuredSeat > 0 ? configuredSeat : null;
+  const tripSource = context.tripContext && typeof context.tripContext === 'object' ? context.tripContext : null;
+  const { tripRaw, gapAskPromptTurn } = gapAskReplyPromptTripRaw(tripSource, postIntake, modelVisibleTripContext);
+  const itinerary = Array.isArray(tripRaw?.itinerary) ? tripRaw.itinerary.filter(Boolean).slice(0, 12) : [];
+  const dates = String(tripRaw?.dates || '').trim();
+  const rule = String(tripRaw?.rule || '').trim();
+  const turnInvitePending = tripRaw?.turnInvite?.ok === true;
+  const turnInviteRule = String(tripRaw?.turnInviteRule || '').trim();
+  const unscheduledOpen = Array.isArray(tripRaw?.chatPlaceSearch?.unscheduled)
+    && tripRaw.chatPlaceSearch.unscheduled.some((row) => row?.notOnADay === true);
+  const customerInput = {};
+  const statedTripFields = new Set(['itinerary', 'dates', 'rule']);
+  for (const [key, value] of Object.entries(tripRaw || {})) {
+    if (statedTripFields.has(key) || key === 'unscheduledDayRule' || key === 'tripReplyGate' || key === 'placeSearchAreaScope' || key === 'namedSearchAwayFromStatedLodging') continue;
+    if (Array.isArray(value)) {
+      const items = value.map((item) => String(item || '').trim()).filter(Boolean);
+      if (items.length) customerInput[key] = items;
+    } else if (value && typeof value === 'object') {
+      customerInput[key] = key === 'chatPlaceSearch'
+        ? Object.fromEntries(Object.entries(value).filter(([field]) => field !== 'unscheduledDayRule'))
+        : value;
+    } else if (value === true) {
+      customerInput[key] = true;
+    } else if (typeof value === 'string' && value.trim()) {
+      customerInput[key] = value.trim();
+    }
+  }
+  const hasCustomerInput = Object.keys(customerInput).length > 0;
+  const trip = itinerary.length || dates || rule || hasCustomerInput
+    ? { itinerary, dates, rule, ...customerInput }
+    : null;
+  const seatName = String(context.seat?.name || context.seat?.displayName || '').trim();
+  const seat = seatName ? { name: seatName, payer: String(context.seat?.payer || '').trim() } : null;
+  const planFacts = planFactsForReply({
+    rules,
+    upsell,
+    postIntake,
+    planLine,
+    seatDollars,
+    planOwned: context.planOwned === true,
+    purchasedPlan: context.purchasedPlan || '',
+    priceAsk,
+  });
+  const upsellLine = `Plan facts: ${JSON.stringify(planFacts)}`;
+  return ruleSections([
+    ['Destination and search', [
+      lock
+        ? `Destination lock: ${lock}. This is the only place for this trip. Do not move the customer to any other city or island.`
+        : 'If the customer has named a destination, stay there. Do not invent a different city or island.',
+      namedSearchAreaAwayFromLodgingReplyLine(tripSource),
+    ]],
+    ['Notes and collaborators', [
+      ...(unscheduledOpen ? [] : [`Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}). Never say "Thing" to the customer.`]),
+      turnInvitePending
+        ? 'Do not say seat to the customer; say collaborator. Always say "vacation", never "trip". The emailed invitee is not on the vacation yet — describe the pending invite only.'
+        : 'Do not say seat to the customer; say collaborator instead. Always say "vacation", never "trip".',
+      turnInviteRule,
+    ]],
+    ['Access questions and pricing', [
+      (/\?/.test(String(customerTurn || '')) && /\bview access\b/i.test(String(customerTurn || '')) && /\bedit access\b/i.test(String(customerTurn || ''))
+        ? 'This turn asks a real question about collaborator access. Offer the choice between view access and edit access. Use both phrases. Do not choose for them.'
+        : 'When the customer does not ask about access, do not add an access menu.'),
+      upsellLine,
+      seatDollars && planLine ? `Seat price: $${seatDollars}. State this line exactly: ${planLine}.` : '',
+      seat ? `Seat record: ${JSON.stringify(seat)}. The name is the person joining.` : '',
+    ]],
+    ['Itinerary and dates', [
+      unscheduledOpen ? '' : 'Do not move an activity off the day already named.',
+      unscheduledOpen
+        ? 'A saved place that is not on a day stays off every weekday. A weekday already used by a different activity is not a day for that place.'
+        : 'When the customer asks for a later activity and does not name a day, use only a day that is already on the saved trip record. Do not invent a day. Do not dodge the question with "it sounds like", "wonderful trip", "I can help you", or "coming together".',
+    ]],
+    ['Questions for this turn', [
+      ...(gapAskPromptTurn ? perFactGapAskRuleLines(tripRaw) : []),
+    ]],
+    ['Saved trip record', [
+      trip ? `Saved trip record: ${JSON.stringify(trip)}` : '',
+    ]],
+    ['Reply limits and format', [
+      'Item34 ban: never say "splitting payments", split payment, split-payer, splitting payment, or splitting anything up. If one seat is already covered and another person has their own seat, say that.',
+      'Write at least four sentences of real banter, about sixty words. Notice who is coming, the days, and what they care about, then do the useful thing. Do not answer in one clipped sentence.',
+      'End with one final line that starts with BEAT: and a three-to-six word label of only what this reply actually did. Do not say the reply set, saved, added, or offered something it did not do. Do not put BEAT anywhere else.',
+    ]],
+  ]);
 }
 
 function splitBeat(answer) {
