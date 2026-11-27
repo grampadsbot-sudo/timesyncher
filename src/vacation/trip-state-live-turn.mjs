@@ -15,12 +15,52 @@ import {
   appTextBanned,
   rewriteReplacesDraft,
   sameTierRewriteRequest,
-  plainCustomerText,
   splitRewriteChange,
-  trimmedRewriteChange,
 } from './live-app-turn.mjs';
 
 const MAX_TOOL_CALLS = 8;
+
+function trimmedRewriteChange(change) {
+  return String(change || '').replace(/\s+/g, ' ').trim();
+}
+
+function plainCustomerText(value) {
+  let text = String(value || '');
+  let out = '';
+  for (let i = 0; i < text.length;) {
+    if (text.startsWith('**', i)) {
+      const end = text.indexOf('**', i + 2);
+      const newline = text.indexOf('\n', i + 2);
+      if (end > i + 2 && (newline === -1 || end < newline)) {
+        out += text.slice(i + 2, end);
+        i = end + 2;
+        continue;
+      }
+    }
+    out += text[i];
+    i += 1;
+  }
+  text = out;
+  out = '';
+  for (let i = 0; i < text.length;) {
+    const prev = i === 0 ? '' : text[i - 1];
+    const atEdge = i === 0 || prev === ' ' || prev === '\n' || prev === '\t' || prev === '(';
+    if (atEdge && text[i] === '*' && text[i + 1] !== '*') {
+      const end = text.indexOf('*', i + 1);
+      const newline = text.indexOf('\n', i + 1);
+      const after = end === -1 ? '' : text[end + 1] || '';
+      const afterOk = after === '' || ' \n\t).,!?;:'.includes(after);
+      if (end > i + 1 && (newline === -1 || end < newline) && afterOk) {
+        out += text.slice(i + 1, end);
+        i = end + 1;
+        continue;
+      }
+    }
+    out += text[i];
+    i += 1;
+  }
+  return out;
+}
 
 function cleanReply(value) {
   return finalizeCustomerReplyText(plainCustomerText(String(value || '').trim()));
