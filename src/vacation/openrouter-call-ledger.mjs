@@ -5,6 +5,7 @@ import { openRouterHaikuRequest } from '../../scripts/openrouter-tier-provider.m
 const turnContext = new AsyncLocalStorage();
 const MEASURED = 'openrouter_usage_cost';
 const ESTIMATED = 'openrouter_listed_price';
+const replyPurposes = new Set(['reply_draft', 'reply_rewrite', 'reply_interim']);
 
 function logCall(row, turn) {
   console.log(JSON.stringify({
@@ -18,7 +19,7 @@ function flushCalls(turn) {
 }
 
 export function withOpenRouterLedger(work, tripId = null) {
-  const turn = { calls: [], pending: new Set(), logged: 0, closed: false, tripId, requestId: null };
+  const turn = { calls: [], replyInstructions: [], pending: new Set(), logged: 0, closed: false, tripId, requestId: null };
   return turnContext.run(turn, async () => {
     try {
       return await work();
@@ -80,6 +81,15 @@ export function openRouterTurnTelemetry() {
     totals.estimatedUsd = Number(totals.estimatedUsd.toFixed(8));
   }
   return { openrouterCalls, openrouterTotals };
+}
+
+export function recordReplyInstructions(purpose, sections) {
+  if (replyPurposes.has(purpose)) turnContext.getStore()?.replyInstructions.push({ purpose, sections });
+}
+
+export function replyInstructionsPayload() {
+  const instructions = turnContext.getStore()?.replyInstructions;
+  return instructions?.length ? { modelRules: [...instructions] } : {};
 }
 
 export function pendingOpenRouterCalls() {
