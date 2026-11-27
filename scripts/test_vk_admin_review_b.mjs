@@ -225,7 +225,7 @@ try {
       await menuButton.click();
       assert.deepEqual(
         await page.locator('.admin-header-views .trip-option b').allTextContents(),
-        [...basicViews, 'All vacations'],
+        [...basicViews.slice(0, 6), 'All vacations'],
       );
       assert.deepEqual(await viewOptions.allTextContents(), [...basicViews.slice(0, 6), 'All vacations']);
       await shotMenu('header-multiple-vacations');
