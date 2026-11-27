@@ -1,19 +1,25 @@
 import { cannedWelcomeLiveTurn } from '../../src/vacation/onboarding-welcome.mjs';
 
-export function buildAdminReviewBFixture(orlando) {
-  const tripId = 'aaaaaaaa-0000-0000-0000-000000000116';
-  const other = 'bbbbbbbb-0000-0000-0000-000000000116';
-  const olderTrip = 'cccccccc-0000-0000-0000-000000000116';
-  const failedTrip = 'eeeeeeee-0000-0000-0000-000000000116';
-  const customerId = 'fixture-lopez-current';
-  const earlierCustomerId = 'fixture-lopez-earlier';
-  const fixtureTrip = 'vk-fixture-trip-001';
-  const current = '2026-11-26T12:00:00.000Z';
-  const before = '2026-11-25T12:00:00.000Z';
+export const VK_ADMIN_REVIEW_B_IDS = {
+  tripId: 'aaaaaaaa-0000-0000-0000-000000000116',
+  other: 'bbbbbbbb-0000-0000-0000-000000000116',
+  olderTrip: 'cccccccc-0000-0000-0000-000000000116',
+  failedTrip: 'eeeeeeee-0000-0000-0000-000000000116',
+  customerId: 'fixture-lopez-current',
+  earlierCustomerId: 'fixture-lopez-earlier',
+  fixtureTrip: 'vk-fixture-trip-001',
+  current: '2026-11-26T12:00:00.000Z',
+  before: '2026-11-25T12:00:00.000Z',
+};
+
+export function buildVkAdminReviewBFixture(shareSlug) {
+  const {
+    tripId, other, olderTrip, failedTrip, customerId, earlierCustomerId, current, before,
+  } = VK_ADMIN_REVIEW_B_IDS;
   const vacations = [
     { trip_id: tripId, title: 'Test harness review', destination: 'Fixture destination', customer_id: customerId, display_name: 'Sofia Lopez',
       customer_email: 'harness+fixture-current+vk-001-lopez@harness.invalid',
-      share_slug: orlando.shareSlug, harness_tag: 'harness:fixture:review', created_at: current,
+      share_slug: shareSlug, harness_tag: 'harness:fixture:review', created_at: current,
       start_date: '2027-03-01', end_date: '2027-03-05', qa: { score: 4 }, survey: { rating: 'happy' } },
     { trip_id: other, title: 'Second fixture', destination: 'Fixture destination', customer_id: 'fixture-2', display_name: 'Second fixture', created_at: before },
     { trip_id: olderTrip, title: 'Earlier fixture vacation', destination: 'Earlier destination', customer_id: earlierCustomerId,
@@ -32,22 +38,15 @@ export function buildAdminReviewBFixture(orlando) {
       ledger('req-2', names[0], 'openrouter_usage_cost', 0.003, { purpose: 'reply_draft' })],
     [ledger('req-3', names[2], 'unpriced', null, { purpose: 'reply_draft' })],
   ];
-  const graded = [
-    { score: 4.25, disposition: 'keep' },
-    { score: 3.8, disposition: 'rewrite' },
-    { score: 3.5, disposition: 'keep' },
-  ];
   const turns = replies.flatMap((rows, index) => {
     const common = { request_id: `req-${index + 1}`, at: current };
-    const quality = { judged: true, score: graded[index].score, disposition: graded[index].disposition };
     return [
       { ...common, speaker: 'customer', direction: 'inbound', body: `Customer line ${index + 1}`,
         payload: index === 0 ? { liveTranscript: { openrouterCalls: rows.slice(0, 1) } } : {} },
       { ...common, speaker: 'app', direction: 'outbound', body: `App reply ${index + 1}`,
         payload: { liveTranscript: index === 1
-          ? { modelId: names[0], quality: { ...quality, shippedModel: names[index] }, shippedRewrite: true,
-            jevDisposition: graded[index].disposition, openrouterCalls: rows }
-          : { shippedModel: names[index], quality, jevDisposition: graded[index].disposition, openrouterCalls: rows } } },
+          ? { modelId: names[0], quality: { shippedModel: names[index] }, shippedRewrite: true, openrouterCalls: rows }
+          : { shippedModel: names[index], openrouterCalls: rows } } },
     ];
   });
   const openingGreeting = "Welcome, Sofia! You're all set to start planning your vacation.";
@@ -55,10 +54,9 @@ export function buildAdminReviewBFixture(orlando) {
     payload: { welcomeAudience: 'owner', liveTranscript: cannedWelcomeLiveTurn({ text: openingGreeting, at: current }) } });
   turns.push({ request_id: 'req-4', at: current, speaker: 'app', direction: 'outbound', body: 'App reply 4',
     payload: { liveTranscript: { model: { responseModel: 'vendor/legacy',
-      cost: { status: 'measured', currency: 'USD', dollars: 0.004, source: 'openrouter_usage_cost' } },
-    quality: { judged: true, score: 4, disposition: 'keep' }, jevDisposition: 'keep' } } });
-  const queries = [];
+      cost: { status: 'measured', currency: 'USD', dollars: 0.004, source: 'openrouter_usage_cost' } } } } });
   const storedOnboarding = [{ id: 'fixture-session', status: 'completed', current_step: 'vacation_app', created_at: before, completed_at: current }];
+  const queries = [];
   const db = async (parts, id) => {
     const query = parts.join('?');
     queries.push(query);
@@ -73,8 +71,27 @@ export function buildAdminReviewBFixture(orlando) {
     if (query.includes('from trips')) return id ? vacations.filter((row) => row.trip_id === id) : vacations;
     throw new Error('Unknown fixture query');
   };
+  return { vacations, turns, openingGreeting, db, queries };
+}
+
+export function vkAdminReviewBReplayPage({ assert, fs, png, tripId }) {
   return {
-    tripId, other, olderTrip, failedTrip, customerId, earlierCustomerId, fixtureTrip, current, before,
-    vacations, turns, openingGreeting, db, queries,
+    async goto(url) { assert.equal(new URL(url).searchParams.get('tripId'), tripId); },
+    async waitForFunction(_callback, arg) {
+      if (arg == null || typeof arg === 'number') return;
+      assert.match(String(arg), /^Customer line [1-5]$/);
+    },
+    locator(selector) {
+      if (selector === '#messages') return { evaluate: async () => {} };
+      if (selector === '#workspace.chat-only' || selector === '.chat-pane') {
+        return {
+          count: async () => 1,
+          screenshot: async ({ path: file }) => { await fs.writeFile(file, png); return png; },
+        };
+      }
+      if (selector === '.site-pane iframe') return { count: async () => 0, first: () => ({ waitFor: async () => {}, contentFrame: () => null }) };
+      throw new Error(`unexpected selector ${selector}`);
+    },
+    async screenshot({ path: file }) { await fs.writeFile(file, png); return png; },
   };
 }
