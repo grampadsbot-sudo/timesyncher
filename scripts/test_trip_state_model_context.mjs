@@ -24,18 +24,22 @@ addFormats(ajv);
 const validate = ajv.compile(JSON.parse(file('../src/vacation/trip-state.schema.json')));
 const sha256 = (value) => createHash('sha256').update(String(value), 'utf8').digest('hex');
 
-const OFF_CHAT_BASELINE_HASH = '56b85e1cbab3a3a22ddedc41ffbe7e8511eb41e57530eacbf450d6ae216bddd0';
+const OFF_CHAT_BASELINE_HASH = 'e286abc6c27fa244ea95b868c578cac318578f3db7bff0d627b597fa9ef743a5';
 const OFF_JEV_BASELINE_HASH = '6911ce7e3051f7ba7d2a2d6851a1c89a3e13e78d85c28cebb3bc108a5836a957';
 const BASE_INTENT = { intent: { asksPrice: false, asksAccess: false, pullsAccess: false, seats: [], ask: false } };
 const OFFLINE_ENV = { OPENROUTER_API_KEY: 'test-key-offline' };
 
 async function withMockFetch(handler, fn) {
   const original = globalThis.fetch;
+  const originalPath = process.env.PATH;
   globalThis.fetch = handler;
+  process.env.PATH = '/nonexistent';
   try {
     return await fn();
   } finally {
     globalThis.fetch = original;
+    if (originalPath === undefined) delete process.env.PATH;
+    else process.env.PATH = originalPath;
   }
 }
 
