@@ -156,7 +156,7 @@ export function liveOptions(env = process.env) {
   const bannedHosts = loadBannedHosts();
   const fetchImpl = guardedFetch(globalThis.fetch.bind(globalThis), bannedHosts);
   const origin = stagingOrigin(ready);
-  const playProvisioned = async (story, options, db, secrets, { rememberTrip, measure }) => {
+  const playProvisioned = async (story, options, secrets, { db, rememberTrip, measure }) => {
       const created = await provisionThrowaway(db, story, {
         tag: options.tag, runId: options.runId, env: ready, outDir: options.outDir, secrets,
       });
@@ -429,12 +429,14 @@ export function liveOptions(env = process.env) {
       };
   };
   const play = async (story, options) => {
-    const { sql } = await import('../../src/vacation/db.mjs');
-    const db = sql(ready);
     const secrets = secretValues(ready);
     return finishMeasuredPlay({
-      db, tag: options.tag, outDir: options.outDir, secrets,
-      play: async (measurement) => await playProvisioned(story, options, db, secrets, measurement),
+      tag: options.tag, outDir: options.outDir, secrets,
+      async connect() {
+        const { sql } = await import('../../src/vacation/db.mjs');
+        return sql(ready);
+      },
+      play: async (measurement) => await playProvisioned(story, options, secrets, measurement),
     });
   };
   return {

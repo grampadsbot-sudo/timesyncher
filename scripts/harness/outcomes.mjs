@@ -53,7 +53,8 @@ export function writeOutcomes(outDir, payload) {
   return payload;
 }
 
-export async function finishMeasuredPlay({ db, tag, outDir, secrets, play }) {
+export async function finishMeasuredPlay({ connect, tag, outDir, secrets, play }) {
+  let db;
   let tripId = '';
   let evidence;
   const rememberTrip = (id) => { if (id) tripId = id; };
@@ -69,7 +70,8 @@ export async function finishMeasuredPlay({ db, tag, outDir, secrets, play }) {
   };
   let played;
   try {
-    played = await play({ rememberTrip, measure });
+    db = await connect();
+    played = await play({ db, rememberTrip, measure });
   } catch (error) {
     played = { reason: 'harness-error', detail: redactUrls(redactText(error?.message || error, secrets)) };
   }
