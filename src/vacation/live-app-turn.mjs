@@ -433,10 +433,10 @@ export function draftingFacts(priorTurns, customerTurn = '', saved = null) {
   const gap = draftingGapFields(record, things);
   const facts = {
     itinerary,
-    roster,
     dates: span?.spanLabel ? `Saved vacation dates: ${span.spanLabel}.` : '',
     ...gap.facts,
   };
+  if (travelers.length || absent.length) facts.roster = roster;
   if (party.askRoster === true) facts.askRoster = true;
   return facts;
 }
