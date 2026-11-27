@@ -232,9 +232,10 @@ export async function runCustomer(story, options) {
     ...(reason === 'turn-not-stored' || reason === 'first-intake-reply-flagged' || reason === 'key-limit' ? { turn_http: played?.exchange || null } : {}),
   });
   if (story.coupon) card.coupon_redemption = publicCouponResult(played?.couponRedemption) || { status: 'not-run', pass: false, detail: reason || 'not-run' };
-  if (story.roster) {
-    card.roster = story.roster;
-    card.ab_arm = abArmLabel(story);
+  if (played?.storagePath) card.storagePath = played.storagePath;
+  if (story.roster || played?.storagePath) {
+    if (story.roster) card.roster = story.roster;
+    card.ab_arm = abArmLabel(story, { storagePath: played?.storagePath });
   }
   if (card.itineraryCountSource === 'db') {
     card.media = mediaLoad({ itineraryItems: card.itineraryCount, hasHotel: true, source: 'estimate-live (itinerary items counted; bytes per file assumed)' });

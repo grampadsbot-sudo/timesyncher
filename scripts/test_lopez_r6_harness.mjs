@@ -103,7 +103,7 @@ function makeLiveServerMock(replyPlan) {
       text: async () => JSON.stringify({
         ok: true,
         eula: { accepted: true },
-        itinerary: stored.length > 1 ? [{ id: 'thing-1', title: 'Magic Kingdom' }] : [],
+        itinerary: [],
         turns: stored,
         trip: { id: tripId, shareToken: 'share-r6' },
       }),
@@ -131,10 +131,10 @@ const recoveredPlay = await playCustomerTurns(
       return { text: `Customer planning turn ${index + 1} for Orlando family days.`, model: GEMINI_CUSTOMER_MODEL, cost: { input_tokens: 10500, output_tokens: 900, thinking_tokens: 700, cache_read_tokens: 0, total_tokens: 11400 } };
     },
     fetchImpl: makeLiveServerMock([
-      { reply: PLANNING_ERROR_REPLY, appTurnIndex: 3, travelSummary: { where: 'Orlando', who: 'Two adults and two kids', transport: '', tripName: 'Family vacation', description: '' } },
-      { reply: PLANNING_ERROR_REPLY, appTurnIndex: 5 },
-      { reply: 'Day 1: Check in at Pop Century Resort. Day 2: Magic Kingdom.', appTurnIndex: 7 },
-      { reply: 'The household plan is $129 per year for unlimited vacations.', appTurnIndex: 9 },
+      { reply: PLANNING_ERROR_REPLY, appTurnIndex: 3, itinerary: [], travelSummary: { where: 'Orlando', who: 'Two adults and two kids', transport: '', tripName: 'Family vacation', description: '' } },
+      { reply: PLANNING_ERROR_REPLY, appTurnIndex: 5, itinerary: [] },
+      { reply: 'Day 1: Check in at Pop Century Resort. Day 2: Magic Kingdom.', appTurnIndex: 7, itinerary: [] },
+      { reply: 'The household plan is $129 per year for unlimited vacations.', appTurnIndex: 9, itinerary: [] },
       { reply: 'Great, your Orlando days and household plan choice are noted.', appTurnIndex: 11 },
     ]),
   },
@@ -200,10 +200,10 @@ const abortedPlay = await playCustomerTurns(
       cost: null,
     }),
     fetchImpl: makeLiveServerMock([
-      { reply: PLANNING_ERROR_REPLY, appTurnIndex: 3 },
-      { reply: PLANNING_ERROR_REPLY, appTurnIndex: 5 },
-      { reply: PLANNING_ERROR_REPLY, appTurnIndex: 7 },
-      { reply: 'Too late.', appTurnIndex: 9 },
+      { reply: PLANNING_ERROR_REPLY, appTurnIndex: 3, itinerary: [] },
+      { reply: PLANNING_ERROR_REPLY, appTurnIndex: 5, itinerary: [] },
+      { reply: PLANNING_ERROR_REPLY, appTurnIndex: 7, itinerary: [] },
+      { reply: 'Too late.', appTurnIndex: 9, itinerary: [] },
     ]),
   },
 );
@@ -262,7 +262,8 @@ const syntheticPriced = [
   { role: 'customer', odd: false, text: '$129 per year for the household plan sounds reasonable, that works for us.' },
 ];
 assert.equal(pricingReactionCaptured(syntheticPriced), true);
-assert.equal(chatGoalsReached({ itineraryCount: 2, customerTurns: r5Fixture.turns, index: 2, maxTurns: 10 }).done, false);
+assert.equal(chatGoalsReached({ itineraryCount: 2, customerTurns: r5Fixture.turns, index: 2, maxTurns: 10 }).done, true);
+assert.equal(chatGoalsReached({ itineraryCount: 0, customerTurns: syntheticPriced, index: 2, maxTurns: 10 }).done, false);
 assert.equal(chatGoalsReached({ itineraryCount: 2, customerTurns: syntheticPriced, index: 2, maxTurns: 10 }).done, true);
 
 const longHistory = Array.from({ length: 16 }, (_, idx) => ({

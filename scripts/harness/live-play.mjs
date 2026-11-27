@@ -133,12 +133,11 @@ export function pricingReactionCaptured(customerTurns) {
     .some((turn) => turn?.role === 'customer' && turn?.odd !== true && customerPriceReaction(turn.text));
 }
 
-export function chatGoalsReached({ itineraryCount: items, customerTurns, index, maxTurns, pricing } = {}) {
+export function chatGoalsReached({ itineraryCount: items, index, maxTurns } = {}) {
   const cap = Math.max(1, Number(maxTurns) || 100);
   const atCap = Number(index) + 1 >= cap;
-  const pricingOk = pricing === true || pricingReactionCaptured(customerTurns);
   const itineraryOk = Number(items) > 0;
-  return { itineraryOk, pricingOk, atCap, done: itineraryOk && pricingOk };
+  return { itineraryOk, atCap, done: itineraryOk };
 }
 
 function tripFields(body) {

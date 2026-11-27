@@ -181,6 +181,17 @@ export function customerSection(card, { wave, at = new Date() } = {}) {
   ].join('\n');
 }
 
+function storedArmClause(cards) {
+  const rows = cards.filter((card) => card.storagePath === 'trip_state' || card.storagePath === 'chat_persist');
+  if (!rows.length) return '';
+  const counts = new Map();
+  for (const card of rows) {
+    const label = card.ab_arm || card.storagePath;
+    counts.set(label, (counts.get(label) || 0) + 1);
+  }
+  return ` | stored ${[...counts].map(([name, count]) => `${name} ${count}`).join(', ')}`;
+}
+
 export function waveSection(summary, { at = new Date() } = {}) {
   const cards = summary.cards || [];
   const fails = cards.filter((card) => card.verdict === 'FAIL');
@@ -188,7 +199,7 @@ export function waveSection(summary, { at = new Date() } = {}) {
   const blocker = fails.some((card) => severityOf(card) === 'blocker');
   return [
     `### ${summary.wave} / wave summary / ${hst(at)}`,
-    `- Arm (A/B): ${REPLY_BACKENDS.map((arm) => `${arm} ${cards.filter((card) => card.reply_backend === arm).length}`).join(', ')} | Coupon: ${cards.filter((card) => /redeemed|reuse_rejected|dry-not-sent/.test(card.coupon_redemption?.status || '')).length}/${cards.length} ok | Edge case: ${cards.filter((card) => card.roster?.edge_case).length} | Result: ${summary.failed ? 'FAIL' : summary.mode === 'dry' ? 'DRY_PASS' : 'PASS'}${summary.stopped ? ` (ramp stopped: ${clean(summary.stopped, 120)})` : ''}`,
+    `- Arm (A/B): ${REPLY_BACKENDS.map((arm) => `${arm} ${cards.filter((card) => card.reply_backend === arm).length}`).join(', ')}${storedArmClause(cards)} | Coupon: ${cards.filter((card) => /redeemed|reuse_rejected|dry-not-sent/.test(card.coupon_redemption?.status || '')).length}/${cards.length} ok | Edge case: ${cards.filter((card) => card.roster?.edge_case).length} | Result: ${summary.failed ? 'FAIL' : summary.mode === 'dry' ? 'DRY_PASS' : 'PASS'}${summary.stopped ? ` (ramp stopped: ${clean(summary.stopped, 120)})` : ''}`,
     `- What broke or confused: ${fails.length ? clean(fails.map((card) => `${card.roster?.id ?? card.story_id} ${card.reason}`).join('; ')) : 'nothing'}`,
     `- Time per turn: see customer sections | Cost: ${clean(summary.cost)} | Media GB: ${gb.toFixed(3)} total`,
     `- Severity (blocker/major/minor): ${blocker ? 'blocker' : fails.length ? 'major' : 'minor'}`,

@@ -21,6 +21,7 @@ import { captureVacationInviteOnboarding } from './onboarding-invites.mjs';
 import { attachSsrToKeepsakeMetadata } from '../customer_suite/ssr/dialog-hook.mjs';
 import { createLiveSsrHarness, primeLiveSsr } from './live-ssr-harness.mjs';
 import { finishMeasuredPlay } from './outcomes.mjs';
+import { finishArtifactReport, liveFinishReason, writeFinishArtifacts } from './finish-artifacts.mjs';
 
 export { writeOutcomes } from './outcomes.mjs';
 
@@ -384,22 +385,34 @@ export function liveOptions(env = process.env) {
       } catch (error) {
         onboard = { ...onboard, ok: false, detail: String(error?.message || error).slice(0, 240) };
       }
-      const pricingOk = played.pricingReactionCaptured === true;
-      const itineraryOk = Number(played.itineraryCount) > 0;
       const keepsakeOk = keepsake.ok === true;
+      const measured = typeof measure === 'function' ? await measure(tripId) : {};
+      const itineraryOk = Number(measured.itineraryCount) > 0;
+      const artifactReport = finishArtifactReport({
+        dialogPdf: outDialog.ok === true,
+        keepsakePdf: keepsakeOk,
+        screenshotCount: Array.isArray(screens.files) ? screens.files.length : 0,
+        turnCount: Number(played.customerTurnCount) || 0,
+        astraJsonTurns: Number(measured.astraJsonTurns) || 0,
+        timingTurns: Array.isArray(played.timings) ? played.timings.length : 0,
+      });
       let reason = assertAdminOnboardingCaptures(story, adminArtifacts)
         || (adminArtifacts.errors.length ? 'admin-artifact-upload-or-capture-failed' : '')
         || (adminArtifacts.captures.length !== 5 ? 'admin-first-five-captures-missing' : '');
-      if (liveCustomer && (!itineraryOk || !keepsakeOk || !pricingOk)) {
-        const missing = [
-          itineraryOk ? null : 'itinerary',
-          keepsakeOk ? null : 'keepsake',
-          pricingOk ? null : 'pricing-reaction',
-        ].filter(Boolean);
-        reason = played.hitTurnCap
-          ? `cap-without-required:${missing.join(',')}`
-          : `missing-required:${missing.join(',')}`;
+      if (liveCustomer) {
+        reason = liveFinishReason({
+          itineraryOk,
+          hitTurnCap: played.hitTurnCap === true,
+          artifacts: artifactReport,
+          priorReason: reason,
+        });
       }
+      writeFinishArtifacts(options.outDir, artifactReport, {
+        itineraryOk,
+        itineraryCount: Number.isInteger(measured.itineraryCount) ? measured.itineraryCount : null,
+        storagePath: measured.storagePath || '',
+        harnessOk: !reason,
+      });
       return {
         ...base,
         tripId,
@@ -414,7 +427,7 @@ export function liveOptions(env = process.env) {
         refusals: outDialog.refusals || [],
         keepsakeOk,
         keepsakeDetail: keepsake.detail || '',
-        pricingReactionCaptured: pricingOk,
+        pricingReactionCaptured: played.pricingReactionCaptured === true,
         customerTurnCount: played.customerTurnCount || 0,
         hitTurnCap: played.hitTurnCap === true,
         reason,
