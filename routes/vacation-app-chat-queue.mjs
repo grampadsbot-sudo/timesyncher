@@ -283,7 +283,8 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
   const { replyCustomerTurn, itineraryEditResult, itineraryEditAuthoritative, itineraryEditCannedReply } = await prepareChatItineraryEditForQueueTurn({
     db, trip, seat, tripId, requestText, turnId: turnRows[0]?.id || null, httpReq: intake?.httpReq || null, env,
   });
-  const tripStateReady = Boolean(await createTripStateRevisionStore({ env }).prepare({ trip, requestId, turn: customerTurnIndex, actorId: session.customer_id, classification, text: requestText }));
+  const tripStateRevision = await createTripStateRevisionStore({ env }).prepare({ trip, requestId, turn: customerTurnIndex, actorId: session.customer_id, classification, text: requestText });
+  const tripStateReady = Boolean(tripStateRevision);
   let produced;
   const replyStarted = Date.now();
   try {
@@ -329,7 +330,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
         loadOwnerPlan,
         turnActionResults: itineraryEditAuthoritative ? { ...(turnActionResults || {}), itineraryEditAuthoritative } : turnActionResults,
         placeSearchReplyFacts, understanding: classification.understanding,
-        travelSummary,
+        travelSummary, trip, tripStateRevision,
       });
     }
   } catch (error) {
@@ -393,7 +394,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     env,
     jobFields,
     firstIntake,
-    travelSummary,
+    travelSummary, tripStateContext: produced.tripStateContext || null,
   });
   const blockReplyShipGate = createBoundedReplyShipGate({
     tripId,
@@ -428,7 +429,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
       collaborator: Boolean(seat),
       understanding: classification.understanding,
       travelSummary,
-      tripId, ...(tripStateReady ? { tripStateReady } : {}),
+      tripId, ...(tripStateReady ? { tripStateReady, tripStateContext: produced.tripStateContext || null } : {}),
       turnActionResults,
       sessionStartedMs,
       wallStarted: started, ...openRouterTurnTelemetry(),
@@ -452,7 +453,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
   const replyBackend = sessionReplyBackend(session);
   await rewriteVacationAppActionClaim(produced, { rewriteClaim, turnActionResults, replyClaimContext, seat, replyBackend });
   Object.assign(payload, replyInstructionsPayload());
-  await applyReplyQuality(produced, { customerTurn: requestText, env, previousReply: claimedFrom, tripContext: { travelSummary } });
+  await applyReplyQuality(produced, { customerTurn: requestText, env, previousReply: claimedFrom, tripContext: { travelSummary }, tripStateContext: produced.tripStateContext || null });
   if (!String(produced?.reply || '').trim() && isOrdinaryPlanningTurn(requestText)) {
     Object.assign(produced, recoverOrdinaryPlanningReply(produced, requestText, { backend: replyBackend, previousReply: claimedFrom }));
   }

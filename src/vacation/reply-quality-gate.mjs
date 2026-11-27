@@ -128,14 +128,14 @@ export function heldJudgedDraft({ shippedDraft, enforceInTurnPlaces, finished, p
   };
 }
 
-export async function requireReplyQuality(produced, { customerTurn = '', tripContext = null, env = process.env, judge = null } = {}) {
+export async function requireReplyQuality(produced, { customerTurn = '', tripContext = null, env = process.env, judge = null, tripStateContext = null } = {}) {
   if (!produced?.reply) return produced;
   const already = produced.model?.quality?.judged === true
     ? produced.model.quality
     : (produced.quality?.judged === true ? produced.quality : null);
   if (already) return produced;
   const started = Date.now();
-  const quality = judge ? await judge() : await jevQualityRewrite({ customerTurn, draft: produced.reply, tripContext, env, purpose: 'jev_quality_rewrite' });
+  const quality = judge ? await judge() : await jevQualityRewrite({ customerTurn, draft: produced.reply, tripContext, env, purpose: 'jev_quality_rewrite', tripStateContext });
   const judgeMs = Math.max(0, Date.now() - started);
   if (quality?.judged !== true) {
     if (jevJudgeErrored(quality)) {
@@ -192,7 +192,7 @@ export async function requireReplyQuality(produced, { customerTurn = '', tripCon
   };
 }
 
-export async function applyReplyQuality(produced, { customerTurn = '', tripContext = null, env = process.env, previousReply = undefined } = {}) {
+export async function applyReplyQuality(produced, { customerTurn = '', tripContext = null, env = process.env, previousReply = undefined, tripStateContext = null } = {}) {
   if (!produced || typeof produced !== 'object') return produced;
   if (produced.reply && previousReply !== undefined && produced.reply !== previousReply) {
     produced.quality = null;
@@ -200,7 +200,7 @@ export async function applyReplyQuality(produced, { customerTurn = '', tripConte
   }
   if (!produced.reply) return produced;
   if (produced.model?.quality?.judged === true || produced.quality?.judged === true) return produced;
-  const judged = await requireReplyQuality(produced, { customerTurn, tripContext, env });
+  const judged = await requireReplyQuality(produced, { customerTurn, tripContext, env, tripStateContext });
   produced.reply = judged.reply;
   produced.quality = judged.quality;
   produced.model = judged.model;
