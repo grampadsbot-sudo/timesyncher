@@ -22,6 +22,8 @@ assert.equal(APP_HISTORY_WINDOW_ROWS, 120, 'mirrors the app history GET limit 12
 function makeServer(plan = () => undefined) {
   let clock = 0;
   let liveIndex = 0;
+  const cap = { n: 0 };
+  let shown = false;
   const rows = [
     { speaker: 'app', body: 'Welcome! Tell me about your vacation.', at: new Date(T0).toISOString(), payload: { liveTranscript: { fixedOpener: true, replyProducer: 'vacation-app-onboarding-opener', jev: { reason: 'fixed_onboarding_opener' } } } },
   ];
@@ -59,15 +61,17 @@ function makeServer(plan = () => undefined) {
         return { status: 504, text: async () => JSON.stringify(VERCEL_504) };
       }
       const appTurnIndex = liveIndex + 1;
+      const itinerary = cap.n > 0 && n === cap.n && !step.notStored ? [{ id: 'thing-1', title: 'Rainbow Falls' }] : [];
+      if (itinerary.length) shown = true;
       if (step.upsell) {
         const line = 'TimeSyncher doesn\'t book reservations directly, but I can keep the plan ready.';
         addRow('app', line, { unruled: true });
-        return { status: 201, text: async () => JSON.stringify({ ok: true, status: 'replied', reply: line, itinerary: [{ id: 'thing-1', title: 'Rainbow Falls' }], trip: { id: tripId } }) };
+        return { status: 201, text: async () => JSON.stringify({ ok: true, status: 'replied', reply: line, itinerary, trip: { id: tripId } }) };
       }
       if (!step.notStored) addRow('app', reply);
       return {
         status: 201,
-        text: async () => JSON.stringify({ ok: true, status: 'replied', reply, modelId: MODEL, appTurnIndex, itinerary: [{ id: 'thing-1', title: 'Rainbow Falls' }], trip: { id: tripId } }),
+        text: async () => JSON.stringify({ ok: true, status: 'replied', reply, modelId: MODEL, appTurnIndex, itinerary, trip: { id: tripId } }),
       };
     }
     log.gets += 1;
@@ -84,15 +88,16 @@ function makeServer(plan = () => undefined) {
     if (log.ruledAfterPost.length) log.ruledAfterPost.at(-1).push(ruledReplyCount({ turns }));
     return {
       status: 200,
-      text: async () => JSON.stringify({ ok: true, eula: { accepted: true }, itinerary: rows.length > 1 ? [{ id: 'thing-1', title: 'Rainbow Falls' }] : [], turns, trip: { id: tripId } }),
+      text: async () => JSON.stringify({ ok: true, eula: { accepted: true }, itinerary: shown ? [{ id: 'thing-1', title: 'Rainbow Falls' }] : [], turns, trip: { id: tripId } }),
     };
   };
-  return { fetchImpl, log, rows, window };
+  return { fetchImpl, log, rows, window, cap };
 }
 
 const sleeps = [];
 async function play(server, maxTurns, token) {
   sleeps.length = 0;
+  server.cap.n = maxTurns;
   return playCustomerTurns(
     { ...story, reply_backend: 'vk_bot_mcp' },
     {
