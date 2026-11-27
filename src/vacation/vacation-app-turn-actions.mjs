@@ -1,8 +1,5 @@
 import { openCollaboratorAppSeats, seatFromSession } from './collaborator-app-seat.mjs';
-import {
-  collaboratorInviteFromClassification,
-  shouldRunCollaboratorInviteFromChat,
-} from './collaborator-invite-action.mjs';
+import { collaboratorInviteFromClassification } from './collaborator-invite-action.mjs';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i;
 
@@ -38,16 +35,14 @@ export async function runVacationAppTurnActions({
   tripId,
   requestText,
   classification = null,
-  roster = [],
   env = process.env,
   openSeats = openCollaboratorAppSeats,
 } = {}) {
   const results = {};
   if (!db || !session?.customer_id || seatFromSession(session)) return results;
-  if (!shouldRunCollaboratorInviteFromChat(classification)) return results;
-
-  const fromClassifier = collaboratorInviteFromClassification(classification);
-  const inviteeEmail = fromClassifier?.email ? String(fromClassifier.email).toLowerCase() : null;
+  const fromClassifier = collaboratorInviteFromClassification(classification, requestText);
+  if (!fromClassifier) return results;
+  const inviteeEmail = fromClassifier.email;
   if (!inviteeEmail) {
     results.invite = inviteRow(false, 'missing_email', null);
     return results;
@@ -56,7 +51,7 @@ export async function runVacationAppTurnActions({
     results.invite = inviteRow(false, 'invalid_email', inviteeEmail);
     return results;
   }
-  const inviteeName = fromClassifier?.name ? String(fromClassifier.name).trim() : '';
+  const inviteeName = fromClassifier.name;
   if (!inviteeName) {
     results.invite = inviteRow(false, 'missing_invitee_name', inviteeEmail);
     return results;

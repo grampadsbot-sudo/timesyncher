@@ -269,7 +269,6 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
       tripId,
       requestText,
       classification,
-      roster: Array.isArray(classification.roster) ? classification.roster : [],
       env,
     });
     payload.turnActionResults = turnActionResults;
