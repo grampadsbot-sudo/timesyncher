@@ -194,7 +194,7 @@ async function handleArtifacts(req, res, env, db, getStore, tripId, artifact, ca
       detail: true, includeModelRules: true, includeCapabilities: true, env, capabilities: capabilitiesFn,
     });
     if (!vacation) return notFound(res);
-    const snapshots = await listTravelSummarySnapshots(getStore(), vacation);
+    const snapshots = await listTravelSummarySnapshots(db, vacation);
     return send(res, 200, { ok: true, snapshots, capabilities: vacation.capabilities });
   }
   const type = artifact ? artifactType(artifact) : '';

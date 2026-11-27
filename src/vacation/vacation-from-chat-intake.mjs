@@ -30,7 +30,6 @@ export async function classifyVacationChatIntake(requestText, env = process.env,
     ...opts,
     requireExtractedTripDates: true,
     turnSession,
-    travelSummaryContext: {},
   }));
   const jobFields = tripIntakeJobFields({
     requestText,

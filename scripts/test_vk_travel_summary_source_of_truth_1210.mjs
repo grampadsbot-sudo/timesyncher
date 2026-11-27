@@ -3,7 +3,6 @@ import { randomUUID } from 'node:crypto';
 import { customerAskFromEnv, speakCustomer } from './harness/customer-live.mjs';
 import { produceLiveAppReply } from '../src/vacation/live-app-turn.mjs';
 import { classifyTripIntake } from '../src/vacation/trip-intake-classify.mjs';
-import { refreshTravelSummaryTripFields, travelSummaryContext, travelSummaryForTurn } from '../src/vacation/vk-travel-summary.mjs';
 
 const trip = { id: randomUUID(), title: 'Coast holiday', destination: 'Atlantic coast' };
 const customerTurn = 'I’m traveling with my husband and two kids.';
@@ -15,7 +14,6 @@ const party = {
 const disclosed = { where: trip.destination, who: 'Husband and two kids', transport: '', description: '' };
 const expected = { ...disclosed, tripName: trip.title };
 const previousText = 'We’re taking a holiday on the Atlantic coast.';
-const things = [{ title: 'Coastal Railway', category: 'train', starts_at: null }];
 const draft = 'There are plenty of ways to spend time together.';
 const rewrite = 'We can keep the coast holiday flexible for your family.\nWHAT_I_CHANGED: Focused the reply on the family.';
 const env = { OPENROUTER_API_KEY: 'test-key-offline' };
@@ -32,41 +30,25 @@ function assertModelSummary(payload, state) {
   assertNoPrivateData(payload);
 }
 
-const evidence = await travelSummaryContext(async (strings, ...values) => {
-  const query = strings.join(' ');
-  if (query.includes('eula_store_objects')) {
-    assert.ok(query.includes("a.document->>'version'"));
-    assert.ok(values.includes('2'));
-    return [{ summary: { who: hidden.join(', ') } }];
-  }
-  if (query.includes('from transcript_turns')) return [{ body: previousText }];
-  if (query.includes('from trip_things')) return things;
-  assert.fail('summary queried an unexpected source');
-}, { ...trip, party, metadata: { dialogParty: party } });
-assert.deepEqual(evidence.customerTurns, [previousText]);
-assert.deepEqual(evidence.things, things);
-assert.equal(evidence.previousSummary, null);
-assertNoPrivateData(evidence);
-
 let extractedRequest;
 const session = { trip_id: trip.id };
 const classified = await classifyTripIntake({
-  text: customerTurn, env, turnSession: session, travelSummaryContext: evidence,
+  text: customerTurn, env, turnSession: session,
   fetchImpl: async (_url, init) => {
     extractedRequest = JSON.parse(init.body);
     return fixture({ choices: [{ message: { content: JSON.stringify({
       turnKind: 'other', things: [], roster: [], intent,
-      contentTags: { tags: [], ask: true }, committedSentenceIndexes: [], travelSummary: disclosed,
+      contentTags: { tags: [], ask: true }, committedSentenceIndexes: [],
     }) } }] });
   },
 });
 assert.equal(classified.ok, true);
 assertNoPrivateData(extractedRequest.messages);
+assert.equal('travelSummary' in extractedRequest.response_format.json_schema.schema.properties, false);
 const evidenceSent = JSON.parse(extractedRequest.messages[1].content);
-assert.deepEqual(evidenceSent.savedVacation, evidence);
+assert.equal('savedVacation' in evidenceSent, false);
 assert.equal(evidenceSent.sentences.join(' '), customerTurn);
-const summary = travelSummaryForTurn(trip, classified.understanding.travelSummary);
-assert.deepEqual(summary, expected);
+assert.equal('travelSummary' in classified.understanding, false);
 
 const replyCalls = [];
 const jevCalls = [];
@@ -90,7 +72,7 @@ globalThis.fetch = async (url, init) => {
 };
 try {
   await produceLiveAppReply({
-    customerTurn, session, env, understanding: classified.understanding, travelSummary: summary,
+    customerTurn, session, env, understanding: classified.understanding, travelSummary: expected,
     priorTurns: [{ role: 'customer', text: previousText }],
     loadSavedTripRecordFn: async () => ({ ...trip, party, metadata: { dialogParty: party }, things: [] }),
   });
@@ -118,17 +100,9 @@ const ask = customerAskFromEnv({ HARNESS_CUSTOMER_MODEL_URL: 'http://127.0.0.1:1
   simulatorPayload = JSON.parse(init.body);
   return fixture({ text: 'We are taking the train.' });
 });
-await speakCustomer({ persona: { name: 'Test traveler', goals: [hidden[0]] }, travelSummary: summary, index: 1, ask });
+await speakCustomer({ persona: { name: 'Test traveler', goals: [hidden[0]] }, travelSummary: expected, index: 1, ask });
 assert.deepEqual(simulatorPayload.travelSummary, expected);
 assertNoPrivateData(simulatorPayload.travelSummary);
 assert.equal(simulatorPayload.goal, hidden[0]);
-
-const revisedTrip = { ...trip, title: 'Website title after save' };
-const updated = await refreshTravelSummaryTripFields(async (strings, document, key) => {
-  assert.ok(strings.join(' ').includes('update eula_store_objects'));
-  assert.equal(key, `vk-admin-review/artifacts/${trip.id}/travel-summary/example-turn.json`);
-  assert.deepEqual(document, { ...expected, tripName: revisedTrip.title, turnId: 'example-turn', version: 2 });
-}, revisedTrip, 'example-turn', summary);
-assert.deepEqual(updated, { ...expected, tripName: revisedTrip.title });
 
 console.log('PASS Travel Summary disclosure, Haiku/Jev, same-tier rewrite, and simulator payload');
