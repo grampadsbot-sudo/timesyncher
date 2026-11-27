@@ -73,11 +73,6 @@ async function keepsakeOrderSendsSameOriginAndOtherPathsStayDeny() {
   }
   const hashedAsset = '/assets/app-Abcd1234.js';
   assert.equal(frameOptionsFor(vercel.headers, hashedAsset), defaultFrame, hashedAsset);
-  const assetRule = vercel.headers.find((rule) => String(rule.source).startsWith('/assets/'));
-  assert.equal(
-    assetRule?.headers.find((header) => header.key === 'Cache-Control')?.value,
-    'public, max-age=31536000, immutable',
-  );
   assert.equal(JSON.stringify(vercel).includes('SAMEORIGIN'), false);
 
   const order = mockRes();

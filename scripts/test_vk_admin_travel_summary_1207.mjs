@@ -109,15 +109,19 @@ const firstRevRow = makeRevisionRow({
   turnNumber: 1, revision: 1, destination: token(), title: token(), itemTitle: `Park ${token()}`,
   timeValue: '09:00', precision: 'proposed', proposedBy: 'system', askText: '', stepTask: `Check plan ${token()}`,
 });
-const lastRevRow = makeRevisionRow({
-  turnNumber: 3, revision: 2, destination: token(), title: tripRow.title, itemTitle: `Museum ${token()}`,
-  timeValue: '10:30', precision: 'exact', proposedBy: 'customer', askText: `Ask ${token()}`, stepTask: `Confirm times ${token()}`,
-});
+const lastRevRow = {
+  ...makeRevisionRow({
+    turnNumber: 3, revision: 2, destination: token(), title: tripRow.title, itemTitle: `Museum ${token()}`,
+    timeValue: '10:30', precision: 'exact', proposedBy: 'customer', askText: `Ask ${token()}`, stepTask: `Confirm times ${token()}`,
+  }),
+  request_id: lastRequest,
+};
 const revisionsByTurn = new Map([[1, firstRevRow], [3, lastRevRow]]);
+const revisionsByRequest = new Map([[lastRequest, lastRevRow]]);
 const expectedSnapshots = [
-  { turnId: firstId, turnNumber: 1, tripState: projectTravelSummaryFromRevision(firstRevRow) },
-  { turnId: middleId, turnNumber: 2, tripState: null },
-  { turnId: lastId, turnNumber: 3, tripState: projectTravelSummaryFromRevision(lastRevRow) },
+  { turnId: firstId, turnNumber: 1, tripState: projectTravelSummaryFromRevision(firstRevRow), conversationState: JSON.parse(firstRevRow.state_json) },
+  { turnId: middleId, turnNumber: 2, tripState: null, conversationState: null },
+  { turnId: lastId, turnNumber: 3, tripState: projectTravelSummaryFromRevision(lastRevRow), conversationState: JSON.parse(lastRevRow.state_json) },
 ];
 
 async function captureRules(purpose, intakeReplyTurn = false) {
@@ -161,7 +165,7 @@ const query = async (strings, ...values) => {
   const sql = strings.join('?');
   if (sql.includes('from trips t left join customers c')) return [tripRow];
   if (sql.includes('from vacation_trip_state_revisions')) {
-    const row = revisionsByTurn.get(values[1]);
+    const row = sql.includes('request_id =') ? revisionsByRequest.get(values[1]) : revisionsByTurn.get(values[1]);
     return row ? [row] : [];
   }
   if (sql.includes('from transcript_turns')) return [
@@ -236,9 +240,9 @@ async function assertSummary(page, snapshot, turnNumber) {
     assert.equal(actual.assignmentTitle, snapshot.tripState.days[0].assigned[0].title, 'visible fields are bound to the selected stored revision');
   } else {
     assert.equal(actual.hasRevision, false);
-    assert.equal(actual.emptyText, 'No Trip State for this turn.');
+    assert.equal(actual.emptyText, 'No vacation state was stored for this turn.');
   }
-  assert.deepEqual(actual.viewStructure, ['DIV', 'DIV']);
+  assert.deepEqual(actual.viewStructure, ['DIV', 'DIV', 'SECTION']);
   assert.deepEqual(actual.scrubberStructure, ['LABEL', 'BUTTON', 'INPUT', 'BUTTON', 'OUTPUT']);
   assert.equal(actual.turnId, snapshot.turnId);
   assert.equal(actual.value, turnNumber);

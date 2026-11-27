@@ -263,7 +263,7 @@ const livePlayed = await playCustomerTurns(
 );
 assert.equal(livePlayed.reason, '');
 assert.equal(livePlayed.customerTurnCount, 2);
-assert.equal(livePlayed.itineraryCount, 1);
+assert.equal(livePlayed.observedItineraryCount, 1);
 assert.equal(livePlayed.pricingReactionCaptured, true);
 assert.equal(livePlayed.hitTurnCap, false);
 assert.equal(livePlayed.webAccessCookie, true);
@@ -344,6 +344,7 @@ const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lopez-r4-outcomes-'));
 try {
   const payload = {
     itineraryCount: 3,
+    itineraryCountSource: 'db',
     keepsakeOk: true,
     pricingReactionCaptured: true,
     customerTurnCount: 7,

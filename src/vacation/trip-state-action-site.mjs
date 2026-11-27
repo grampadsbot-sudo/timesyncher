@@ -4,7 +4,7 @@ import { shareSlugEditGuardDecision } from './chat-itinerary-edit-slug-guard.mjs
 import { finalizeServedSharedTripPayload } from './shared-trip-served-page.mjs';
 import { normalizeThingType } from './timeline-icons.mjs';
 
-export const tripItemKinds = new Set(['hotel', 'park', 'activity', 'meal', 'restaurant', 'flight_option', 'ground_ride', 'other']);
+export const tripItemKinds = new Set(['hotel', 'park', 'activity', 'meal', 'restaurant', 'bar', 'event', 'flight_option', 'ground_ride', 'other']);
 
 export function digestTripState(value) {
   const hash = createHash('sha256');

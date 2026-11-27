@@ -4,8 +4,8 @@ import { dirname } from 'node:path';
 import { DatabaseJsonStore, LocalJsonStore } from '../onboarding/eula-persistent-store.mjs';
 import { hasDatabase, sql } from './db.mjs';
 import { listOnboardingCaptureTags, onboardingCaptureTag } from './vk-admin-onboarding-captures.mjs';
-import { getTripStateRevisionForTurn } from './trip-state-revision-store.mjs';
-import { projectTravelSummaryFromRevision } from './vk-travel-summary.mjs';
+import { getTripStateRevisionForRequest, getTripStateRevisionForTurn } from './trip-state-revision-store.mjs';
+import { parseRevisionState, projectTravelSummaryFromRevision } from './vk-travel-summary.mjs';
 
 export class LocalVkAdminStore extends LocalJsonStore {
   async listOnboardingArtifacts(vacationId) {
@@ -207,10 +207,11 @@ function revisionTurnNumber(turn, fallback) {
   return Number.isInteger(liveTurn) && liveTurn > 0 ? liveTurn : fallback;
 }
 
-async function loadTurnRevision(db, tripId, turn) {
+async function loadTurnRevision(db, tripId, turn, requestId) {
   if (!db || !tripId || !Number.isInteger(turn) || turn < 1) return null;
   try {
-    return await getTripStateRevisionForTurn(tripId, turn, db);
+    return await (requestId ? getTripStateRevisionForRequest(tripId, requestId, db)
+      : getTripStateRevisionForTurn(tripId, turn, db));
   } catch (error) {
     if (error?.code === '42P01') return null;
     throw error;
@@ -226,7 +227,7 @@ export async function listTravelSummarySnapshots(db, vacation) {
   }
   return Promise.all(turns.map(async (turn, index) => {
     const turnNumber = index + 1;
-    const revisionRow = await loadTurnRevision(db, vacation.tripId, revisionTurnNumber(turn, turnNumber));
+    const revisionRow = await loadTurnRevision(db, vacation.tripId, revisionTurnNumber(turn, turnNumber), turn.requestId);
     return {
       turnId: turn.turnId,
       turnNumber,
@@ -235,8 +236,41 @@ export async function listTravelSummarySnapshots(db, vacation) {
         ...(replyRules.get(turn.requestId) || []),
       ],
       tripState: projectTravelSummaryFromRevision(revisionRow),
+      conversationState: parseRevisionState(revisionRow),
     };
   }));
+}
+
+export function travelSummaryTiming(vacation, snapshots) {
+  const replies = new Map();
+  const customers = new Map();
+  for (const turn of vacation.turns) {
+    if (turn.direction === 'inbound' && turn.speaker === 'customer') customers.set(turn.turnId, turn);
+    if (turn.direction === 'outbound' && turn.speaker === 'app' && turn.requestId) replies.set(turn.requestId, turn);
+  }
+  const latency = (turn) => {
+    const raw = turn?.responseLatencyMs ?? turn?.payload?.liveTranscript?.latencyMs;
+    const value = raw == null ? NaN : Number(raw);
+    return Number.isFinite(value) && value >= 0 ? value : null;
+  };
+  const buildSnapshot = snapshots.find(({ conversationState }) => conversationState?.research?.build);
+  const build = buildSnapshot?.conversationState.research.build;
+  const first = Date.parse(customers.get(snapshots[0]?.turnId)?.at);
+  let last = first;
+  const turns = snapshots.map(({ turnId, turnNumber }) => {
+    const customer = customers.get(turnId);
+    const app = customer?.requestId ? replies.get(customer.requestId) : null;
+    for (const timestamp of [customer?.at, app?.at].map(Date.parse).filter(Number.isFinite)) last = Math.max(last, timestamp);
+    return { turnNumber, customerMs: latency(customer), appMs: latency(app) };
+  });
+  return {
+    turns,
+    buildTurn: buildSnapshot?.turnNumber ?? null,
+    timeToBuildMs: build?.started_offset_ms ?? null,
+    buildDurationMs: build?.duration_ms ?? null,
+    itemsByType: build?.items_by_type ?? null,
+    totalWallMs: Number.isFinite(first) ? last - first : null,
+  };
 }
 
 export async function saveReviewResults(store, vacationId, { qa, survey }) {

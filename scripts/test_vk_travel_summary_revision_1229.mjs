@@ -415,7 +415,7 @@ try {
   await page.getByRole('button', { name: 'Previous turn' }).tap();
   const emptyNotice = page.locator('[data-travel-no-trip-state="1"]');
   await emptyNotice.waitFor();
-  assertExactBytes(await emptyNotice.textContent(), 'No Trip State for this turn.', 'explicit pre-Trip-State empty state');
+  assertExactBytes(await emptyNotice.textContent(), 'No vacation state was stored for this turn.', 'explicit pre-Trip-State empty state');
   assert.equal(await page.locator('[data-travel-revision]').count(), 0);
   const preText = await page.locator('.admin-travel').textContent();
   assert.equal(preText.includes(decoyWhere), false, 'no fallback destination on pre-Trip-State turn');

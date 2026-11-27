@@ -1,3 +1,6 @@
+import { itineraryMeasurement } from './itinerary-evidence.mjs';
+import { initialBuildFinding } from './initial-build.mjs';
+
 const REQUIRED_CHECK_IDS = [
   'dialog-pdf',
   'keepsake-pdf',
@@ -66,15 +69,27 @@ export function buildScorecard(input) {
     reason = first?.detail || first?.id || 'fail';
   }
   const verdict = failed ? 'FAIL' : 'PASS';
+  const initialBuild = input.initialBuild?.source === 'db' ? input.initialBuild : null;
+  const wall = Date.parse(input.ended_at) - Date.parse(input.started_at);
   return {
     run_id: input.run_id,
     story_id: input.story_id,
     reply_backend: input.reply_backend,
+    ...(input.reply_backend === 'trip_state' ? { app_reply_path: 'Trip State / OpenRouter' } : {}),
+    ...itineraryMeasurement(input),
+    planningAgreementTurns: input.planningAgreementTurns ?? null,
     build_sha: input.build_sha || '',
     live_sha_start: input.live_sha_start || '',
     live_sha_end: input.live_sha_end || '',
     started_at: input.started_at,
     ended_at: input.ended_at,
+    ...(input.reply_backend === 'trip_state' ? { findings: [initialBuildFinding(initialBuild)] } : {}),
+    timing: {
+      turns: (input.timings || []).map((row) => ({ turnNumber: row.n, customerMs: row.customer_ms ?? null, appMs: row.wall_ms ?? null })),
+      timeToBuildMs: initialBuild?.timeToBuildMs ?? null,
+      buildDurationMs: initialBuild?.buildDurationMs ?? null,
+      totalWallMs: Number.isFinite(wall) && wall >= 0 ? wall : null,
+    },
     checks,
     steps_present: input.steps_present || [],
     turns: input.turns || [],

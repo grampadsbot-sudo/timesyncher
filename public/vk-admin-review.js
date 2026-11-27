@@ -233,7 +233,7 @@ window.startVkAdminReview = (() => {
 
   function travelSummaryRevision(tripState) {
     if (!tripState || typeof tripState !== 'object') {
-      return '<p class="admin-empty" role="status" data-travel-no-trip-state="1">No Trip State for this turn.</p>';
+      return '<p class="admin-empty" role="status" data-travel-no-trip-state="1">No vacation state was stored for this turn.</p>';
     }
     const trip = tripState.trip || {};
     const headerFacts = [
@@ -317,18 +317,36 @@ window.startVkAdminReview = (() => {
   }
 
   function travelSummaryContent(snapshot, capabilities) {
+    const conversation = snapshot.conversationState;
     return travelSummaryRevision(snapshot.tripState)
       + travelSummaryCapabilities(snapshot.tripState?.capabilities || capabilities)
+      + (conversation ? `<section class="admin-travel-conversation" aria-label="Conversation management"><h2>Conversation management</h2><details><summary>Stored JSON for turn ${safe(snapshot.turnNumber)}</summary><pre class="admin-travel-json" data-conversation-json>${safe(JSON.stringify(conversation, null, 2))}</pre></details></section>` : '')
       + travelSummaryRules(snapshot);
+  }
+
+  function travelTiming(timing) {
+    if (!timing) return '';
+    const ms = (value) => Number.isFinite(value) ? `${value.toLocaleString()} ms` : 'Unavailable';
+    const items = Object.entries(timing.itemsByType || {});
+    const counts = items.length ? items.map(([type, count]) => `${safe(type.replaceAll('_', ' '))} ${safe(count)}`).join(', ')
+      : timing.itemsByType ? '0' : 'Unavailable';
+    const turns = timing.turns.map(({ turnNumber, customerMs, appMs }) =>
+      `<tr><th scope="row">${safe(turnNumber)}</th><td>${ms(customerMs)}</td><td>${ms(appMs)}</td></tr>`).join('');
+    return `<section class="admin-travel-section admin-travel-timing" aria-label="Timing summary"><h2>Timing summary</h2>
+      <dl class="admin-travel-facts"><div><dt>Time to build</dt><dd>${ms(timing.timeToBuildMs)}${timing.buildTurn ? ` (turn ${safe(timing.buildTurn)})` : ''}</dd></div>
+      <div><dt>Build duration</dt><dd>${ms(timing.buildDurationMs)}</dd></div>
+      <div><dt>Total wall time</dt><dd>${ms(timing.totalWallMs)}</dd></div>
+      <div><dt>Build items by type</dt><dd>${counts}</dd></div></dl>
+      ${turns ? `<details><summary>Per-turn latency</summary><table aria-label="Per-turn latency"><thead><tr><th scope="col">Turn</th><th scope="col">Customer</th><th scope="col">App</th></tr></thead><tbody>${turns}</tbody></table></details>` : ''}</section>`;
   }
 
   function travelSummary(vac) {
     const result = state.travelSummaries.get(vac.tripId);
     if (!result) return '<p class="admin-empty" role="status">Loading Travel Summary…</p>';
     if (result.failed) return '<p class="admin-empty" role="status">Travel Summary could not be loaded.</p>';
-    const { snapshots, capabilities } = result;
+    const { snapshots, capabilities, timing } = result;
     if (!snapshots.length) {
-      return `<section class="admin-travel" aria-label="Travel Summary"><p class="admin-empty" role="status">No customer turns recorded for this vacation.</p>${travelSummaryCapabilities(capabilities)}</section>`;
+      return `<section class="admin-travel" aria-label="Travel Summary"><p class="admin-empty" role="status">No customer turns recorded for this vacation.</p>${travelSummaryCapabilities(capabilities)}${travelTiming(timing)}</section>`;
     }
     const chosen = snapshots.findIndex(({ turnId }) => turnId === state.travelSummaryTurn);
     const index = chosen < 0 ? snapshots.length - 1 : chosen;
@@ -342,6 +360,7 @@ window.startVkAdminReview = (() => {
         <output for="adminTravelTurn">${snapshot.turnNumber} / ${snapshots.length}</output>
       </div>
       <div data-travel-snapshot="${safe(snapshot.turnId)}">${travelSummaryContent(snapshot, capabilities)}</div>
+      ${travelTiming(timing)}
     </section>`;
   }
 

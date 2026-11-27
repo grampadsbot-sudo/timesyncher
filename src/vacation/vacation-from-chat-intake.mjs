@@ -13,6 +13,7 @@ import { attachSessionCollaboratorInvitesToTrip, loadCollaboratorInviteForEmail 
 import { queueOrSendCollaboratorInviteEmail } from './email.mjs';
 import { publicTripUrl } from './web-access.mjs';
 import { scheduleTripDestinationGeocode } from './trip-destination-center.mjs';
+import { tripStateActionsEnabled } from './trip-state-actions-enabled.mjs';
 
 export function tripIntakeJobKind() {
   return ['trip', 'intake'].join('_');
@@ -30,6 +31,7 @@ export async function classifyVacationChatIntake(requestText, env = process.env,
     ...opts,
     requireExtractedTripDates: true,
     turnSession,
+    includePlanningInputs: tripStateActionsEnabled({ env }),
   }));
   const jobFields = tripIntakeJobFields({
     requestText,

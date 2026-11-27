@@ -5,7 +5,7 @@
   "required": ["story_id", "customer", "party", "destination", "dates", "turns", "steps", "media"],
   "properties": {
     "story_id": { "type": "string", "minLength": 1, "pattern": "^[a-z0-9][a-z0-9-]{0,63}$" },
-    "reply_backend": { "enum": ["openrouter", "vk_bot_mcp"] },
+    "reply_backend": { "enum": ["openrouter", "vk_bot_mcp", "trip_state"] },
     "customer": {
       "type": "object",
       "additionalProperties": false,

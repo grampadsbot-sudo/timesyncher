@@ -54,12 +54,13 @@ function normalizedResearch(raw, { key, turn, destination, extraGaps = [] }) {
   ].map((entry) => String(entry || '').trim().slice(0, 280)).filter(Boolean))];
   const state = ['waiting', 'running', 'complete', 'partial', 'empty', 'failed'].includes(raw?.state)
     ? raw.state : 'failed';
-  return { key, state, turn, areas, gaps };
+  return { key, state, turn, areas, gaps, ...(raw?.provider_unavailable ? { provider_unavailable: true } : {}) };
 }
 
 export async function prepareProactiveTripState({
   trip, requestId, turn, actorId, classification, text = '',
   history = [], wantedThings, disclosures, travelers, grant,
+  firstCustomerStartedMs = Date.now(),
   env = process.env, pool, fetchImpl = globalThis.fetch,
   searchImpl = searchProactiveItinerary,
 }) {
@@ -89,25 +90,32 @@ export async function prepareProactiveTripState({
     start_date: planningState.saved.trip.start,
     end_date: planningState.saved.trip.end,
   });
-  const canPlan = Boolean(
-    key
-    && planningState.capabilities.actions.save_plan.enabled
-    && planningState.research?.key !== key,
-  );
-  if (!canPlan) {
-    return revisionStore.prepare({ ...baseArgs, turn: effectiveTurn, phase: 'reply_ready' });
-  }
-
   const currentThings = Array.isArray(wantedThings)
     ? wantedThings
     : (classification?.ok === true && Array.isArray(classification.things) ? classification.things : []);
   const turnHistory = combinedHistory(history, effectiveTurn, text, currentThings);
   const criteria = proactiveCriteria(planningState, turnHistory);
+  const readyArgs = { ...baseArgs, turn: effectiveTurn, phase: 'reply_ready' };
+  const canSave = planningState.capabilities.actions.save_plan.enabled;
+  if (canSave && !planningState.research.key && criteria.missing.length) {
+    return revisionStore.prepare({
+      ...readyArgs,
+      research: { ...planningState.research, turn: effectiveTurn, gaps: criteria.missing },
+      nextSteps: [{ kind: 'ask', task: 'Ask one question to collect the missing vacation planning inputs.',
+        refs: [], missing_inputs: criteria.missing }],
+    });
+  }
+  if (!key || !canSave || criteria.missing.length || planningState.research.key === key) {
+    return revisionStore.prepare(readyArgs);
+  }
+
+  const buildStarted = Date.now();
   const researched = await searchImpl({
     destination: planningState.saved.trip.destination,
     start: planningState.saved.trip.start,
     end: planningState.saved.trip.end,
     criteria: criteria.search,
+    targets: criteria.targets,
     turn: effectiveTurn,
     key,
     env,
@@ -168,11 +176,13 @@ export async function prepareProactiveTripState({
     : undefined;
 
   return revisionStore.prepare({
-    ...baseArgs,
+    ...readyArgs,
     trip: site?.trip || activeTrip,
-    turn: effectiveTurn,
-    phase: 'reply_ready',
-    research: finalResearch,
+    research: { ...finalResearch, build: {
+      started_offset_ms: Math.max(0, buildStarted - firstCustomerStartedMs),
+      duration_ms: Math.max(0, Date.now() - buildStarted),
+      items_by_type: {},
+    } },
     candidates,
     nextSteps,
   });

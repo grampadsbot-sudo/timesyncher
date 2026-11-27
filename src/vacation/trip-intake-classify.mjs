@@ -174,6 +174,8 @@ function parseExtraction(raw) {
     question: parsed.question ?? parsed.webQuestion,
     things: parsed.things,
     roster: Array.isArray(parsed.roster) ? parsed.roster : [],
+    planningParty: parsed.planningParty,
+    planningWants: parsed.planningWants,
     inviteeName: parsed.inviteeName,
     inviteeEmail: parsed.inviteeEmail,
     sendCollaboratorInvite: parsed.sendCollaboratorInvite,
@@ -324,6 +326,7 @@ export async function classifyTripIntake({
   fetchImpl = fetch,
   requireExtractedTripDates = false,
   turnSession = null,
+  includePlanningInputs = false,
   customerTurnId = '',
   customerTurns = [],
   existingThings = [],
@@ -410,7 +413,7 @@ export async function classifyTripIntake({
       fetchImpl,
       OPENROUTER_CHAT_COMPLETIONS_URL,
       key,
-      turnSession ? turnUnderstandingRequest(request, String(text || '').slice(0, 12000)) : request,
+      turnSession ? turnUnderstandingRequest(request, String(text || '').slice(0, 12000), includePlanningInputs) : request,
       turnSession ? 'turn_understanding' : 'intake_extract',
     );
     const extractedFields = parseExtraction(chatText(extracted));
@@ -440,6 +443,10 @@ export async function classifyTripIntake({
       intake,
       things,
       roster,
+      ...(includePlanningInputs ? {
+        planningParty: extractedFields.planningParty,
+        planningWants: extractedFields.planningWants,
+      } : {}),
       inviteeName: clean(extractedFields.inviteeName, 180),
       inviteeEmail: clean(extractedFields.inviteeEmail, 180).toLowerCase(),
       destination: clean(extractedFields.destination, 180),

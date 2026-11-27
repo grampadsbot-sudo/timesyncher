@@ -172,7 +172,7 @@ function planRecord(op, args, site, saved, context, receipt, signature) {
     .map((row) => [row.id, row.before]));
   const changes = Object.fromEntries([...refs].filter((ref) => digestTripState(before.get(ref) ?? null) !== proof[ref])
     .map((ref) => [ref, { before: before.get(ref) ?? null, after: after.get(ref) ?? null }]));
-  return { next, record: { ...planned, signature, proof, changes, order, turn: context.turn, ...(system ? { authority: 'system_plan' } : {}) } };
+  return { next, record: { ...planned, op, signature, proof, changes, order, turn: context.turn, ...(system ? { authority: 'system_plan' } : {}) } };
 }
 
 function verifyRecord(record, saved, replay, op, args) {

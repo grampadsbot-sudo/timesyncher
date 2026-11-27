@@ -66,8 +66,8 @@ const posted = scriptedFetch({
 const played = await playCustomerTurns(story, { origin, token: 'fixture-session', tripId, hosts, waitMs: 0, fetchImpl: posted.fetchImpl });
 assert.equal(played.reason, '');
 assert.equal(played.storedTurns, 1);
-assert.equal(played.itineraryCount, 1);
-assert.equal(chatLeftNoThing(played), false);
+assert.equal(played.observedItineraryCount, 1);
+assert.equal(chatLeftNoThing({ itineraryCount: 1, itineraryCountSource: 'db' }), false);
 const post = posted.calls.filter((call) => call.method === 'POST');
 assert.equal(post.length, 1);
 assert.equal(post[0].url.pathname, '/api/vacation-itinerary');
@@ -96,7 +96,7 @@ const emptyThings = scriptedFetch({
 });
 const noThing = await playCustomerTurns(story, { origin, token: 'fixture-session', tripId, hosts, waitMs: 0, fetchImpl: emptyThings.fetchImpl });
 assert.equal(noThing.reason, '');
-assert.equal(noThing.itineraryCount, 0);
+assert.equal(noThing.observedItineraryCount, 0);
 assert.equal(chatLeftNoThing(noThing), true);
 const runtime = fs.readFileSync(new URL('./harness/runtime.mjs', import.meta.url), 'utf8');
 assert.match(runtime, /chatLeftNoThing\(played\)/);

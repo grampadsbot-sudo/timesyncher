@@ -34,7 +34,8 @@ export function confirmStoredTurns(transcript, pdfText, replyBackend) {
     const model = storedModelId(turn);
     const backend = storedBackend(turn);
     const score = storedJevScore(turn);
-    const cost = generated ? readStoredCost(turn, replyBackend) : { state: 'not-run', amount: null, unit: '', gap: '' };
+    const costBackend = replyBackend === 'trip_state' ? 'openrouter' : replyBackend;
+    const cost = generated ? readStoredCost(turn, costBackend) : { state: 'not-run', amount: null, unit: '', gap: '' };
     const gap = [];
     if (generated && !model) gap.push('stored-model-missing');
     if (generated && model && pdf && !pdf.includes(model)) gap.push('dialog-pdf-model-not-shown');
@@ -48,6 +49,7 @@ export function confirmStoredTurns(transcript, pdfText, replyBackend) {
       reply_backend: replyBackend,
       stored_model: model,
       stored_backend: backend,
+      stored_producer: String(turn?.replyProducer || ''),
       jev_score: score,
       ...(turn.quality?.selfCorrection ? { self_correction: turn.quality.selfCorrection } : {}),
       wall_ms: null,

@@ -1,4 +1,5 @@
 import { assertThrowaway, isHarnessTag } from './protected.mjs';
+import { snapshotHarnessVacation } from './vacation-snapshot.mjs';
 
 export function assertCleanupAllowed({ tag, rows }) {
   if (!isHarnessTag(tag)) throw new Error('refused: cleanup tag is missing');
@@ -32,7 +33,7 @@ async function dropTripTable(db, table, tripIds) {
   return 0;
 }
 
-export async function deleteTaggedRows(db, tag) {
+export async function deleteTaggedRows(db, tag, { snapshotDir, secrets } = {}) {
   if (!isHarnessTag(tag)) throw new Error('refused: cleanup tag is missing');
   const trips = await db`select id::text as id, metadata->>'harnessTag' as harness_tag, coalesce(metadata->>'publicSlug', metadata->>'shareToken', metadata->>'sharedToken', '') as share_token from trips where metadata->>'harnessTag' = ${tag}`;
   const customers = await db`select id::text as id, email, display_name, metadata->>'harnessTag' as harness_tag from customers where metadata->>'harnessTag' = ${tag}`;
@@ -49,6 +50,11 @@ export async function deleteTaggedRows(db, tag) {
   const tripIds = trips.map((row) => row.id);
   const shares = trips.map((row) => row.share_token).filter(Boolean);
   for (const share of shares) assertThrowaway({ shareToken: share });
+  if (snapshotDir) {
+    for (const tripId of tripIds) {
+      await snapshotHarnessVacation(db, { tripId, tag, outDir: snapshotDir, secrets });
+    }
+  }
   if (shares.length && await tableExists(db, 'thing_media_bindings')) {
     deleted.media = (await db`delete from thing_media_bindings where share_token = any(${shares}::text[]) returning id`).length;
   }

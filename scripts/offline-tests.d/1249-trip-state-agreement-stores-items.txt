@@ -1,0 +1,1 @@
+scripts/test_trip_state_agreement_stores_items.mjs

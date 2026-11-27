@@ -1,12 +1,10 @@
-function isBackend(value) {
-  return value === 'openrouter' || value === 'vk_bot_mcp';
-}
+export const REPLY_BACKENDS = ['openrouter', 'vk_bot_mcp', 'trip_state'];
 
 function fillBlock(group) {
   let openCount = group.filter((story) => story.reply_backend === 'openrouter').length;
   let mcpCount = group.filter((story) => story.reply_backend === 'vk_bot_mcp').length;
   for (const story of group) {
-    if (isBackend(story.reply_backend)) continue;
+    if (REPLY_BACKENDS.includes(story.reply_backend)) continue;
     if (openCount < 5) {
       story.reply_backend = 'openrouter';
       openCount += 1;
