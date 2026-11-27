@@ -12,13 +12,9 @@ window.startVkAdminReview = (() => {
   const showTestCustomersKey = 'vkAdminShowTestCustomers';
   const json = (method, body) => ({ method, headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
   const state = { customers: new Map(), opened: [], recent: new Set(), details: new Map(), artifacts: new Map(),
-<<<<<<< HEAD
     selection: null, view: 'all', feedbackRollup: null, feedbackRollupFailed: false, attachments: [],
-    voiceMode: false, voiceArmed: false, sending: false, opening: false };
-=======
-    selection: null, view: 'all', attachments: [], voiceMode: false, voiceArmed: false, sending: false, opening: false,
+    voiceMode: false, voiceArmed: false, sending: false, opening: false,
     showTestCustomers: false, hiddenTestCount: 0, loadingCustomers: false };
->>>>>>> origin/vk
   let notesRequest = 0;
   let root;
 
@@ -84,15 +80,11 @@ window.startVkAdminReview = (() => {
   }
 
   function customerList() {
-<<<<<<< HEAD
     const rollup = '<div class="admin-feedback-rollup-link"><button class="admin-open" type="button" data-view="feedback-all">All customers Feedback & QA</button></div>';
-    return `${rollup}<div class="admin-customers" data-admin-customers="1">${[...state.customers].map(([key, account]) => {
-=======
     const intro = `<p class="admin-view-note" data-admin-customers-intro="1">${safe(allCustomersIntro)}</p>`;
     const count = state.hiddenTestCount ? ` (${safe(state.hiddenTestCount)})` : '';
     const toggle = `<label class="admin-view-note admin-test-toggle"><input type="checkbox" data-admin-show-test${state.showTestCustomers ? ' checked' : ''} /> Show test customers${count}</label><p class="admin-view-note" role="status" data-admin-customers-status hidden></p>`;
-    return `<div class="admin-customers" data-admin-customers="1">${intro}${toggle}${[...state.customers].map(([key, account]) => {
->>>>>>> origin/vk
+    return `${rollup}<div class="admin-customers" data-admin-customers="1">${intro}${toggle}${[...state.customers].map(([key, account]) => {
       const latest = account.vacations[0];
       const coupon = account.coupon ? `<small class="admin-coupon">${safe(account.coupon)}</small>` : '';
       return `<section class="admin-group" data-trip-group="${safe(latest.tripId)}" data-sort-at="${safe(latest.sortAt)}"><header><b>${safe(account.name)}${testPill(latest)}</b><small>${safe(latest.destination)} · <time datetime="${safe(latest.sortAt)}">${safe(latest.sortAt.slice(0, 10))}</time></small>${coupon}</header><button class="admin-open" type="button" data-customer-id="${safe(account.id)}" data-open-account="${safe(key)}" aria-label="Open ${safe(account.name)}">${state.recent.has(key) ? 'Opened' : 'Open'}</button></section>`;
