@@ -1,0 +1,274 @@
+{
+  "saved": {
+    "site_revision": "site6",
+    "read": "current",
+    "trip": {
+      "title": "Orlando Theme Parks Family Trip",
+      "destination": "Orlando",
+      "start": "2027-04-05",
+      "end": "2027-04-09",
+      "via": "intake",
+      "turn": 2
+    },
+    "days": {
+      "d1": {
+        "date": "2027-04-05",
+        "assigned": [
+          {
+            "id": "ci",
+            "item": "h",
+            "type": "hotel",
+            "role": "check_in",
+            "time": {
+              "value": "16:00",
+              "precision": "proposed"
+            },
+            "via": "chat_action",
+            "turn": 6,
+            "proposed_by": "customer"
+          },
+          {
+            "id": "p1",
+            "item": "pool",
+            "type": "activity",
+            "role": "visit",
+            "time": {
+              "value": "17:00",
+              "precision": "proposed"
+            },
+            "via": "chat_action",
+            "turn": 6,
+            "proposed_by": "customer"
+          }
+        ],
+        "via": "intake",
+        "turn": 2
+      },
+      "d2": {
+        "date": "2027-04-06",
+        "assigned": [
+          {
+            "id": "v2",
+            "item": "mk",
+            "type": "park",
+            "role": "visit",
+            "time": {
+              "value": "08:30",
+              "precision": "proposed"
+            },
+            "via": "chat_action",
+            "turn": 6,
+            "proposed_by": "customer"
+          }
+        ],
+        "via": "intake",
+        "turn": 2
+      },
+      "d3": {
+        "date": "2027-04-07",
+        "assigned": [
+          {
+            "id": "v3",
+            "item": "ak",
+            "type": "park",
+            "role": "visit",
+            "time": {
+              "value": "08:30",
+              "precision": "proposed"
+            },
+            "via": "chat_action",
+            "turn": 6,
+            "proposed_by": "customer"
+          },
+          {
+            "id": "p3",
+            "item": "pool",
+            "type": "activity",
+            "role": "visit",
+            "time": {
+              "value": "14:00",
+              "precision": "proposed"
+            },
+            "via": "chat_action",
+            "turn": 6,
+            "proposed_by": "customer"
+          }
+        ],
+        "via": "intake",
+        "turn": 2
+      },
+      "d4": {
+        "date": "2027-04-08",
+        "assigned": [
+          {
+            "id": "v4",
+            "item": "hs",
+            "type": "park",
+            "role": "visit",
+            "time": {
+              "value": "09:00",
+              "precision": "proposed"
+            },
+            "via": "chat_action",
+            "turn": 6,
+            "proposed_by": "customer"
+          }
+        ],
+        "via": "intake",
+        "turn": 2
+      },
+      "d5": {
+        "date": "2027-04-09",
+        "assigned": [
+          {
+            "id": "co",
+            "item": "h",
+            "type": "hotel",
+            "role": "check_out",
+            "time": {
+              "value": "11:00",
+              "precision": "proposed"
+            },
+            "via": "chat_action",
+            "turn": 6,
+            "proposed_by": "customer"
+          }
+        ],
+        "via": "intake",
+        "turn": 2
+      }
+    },
+    "items": {
+      "h": {
+        "title": "Lake Buena Vista hotel (TBD)",
+        "type": "hotel",
+        "basis": "placeholder",
+        "via": "customer_named",
+        "turn": 6,
+        "proposed_by": "customer"
+      },
+      "pool": {
+        "title": "Pool time",
+        "type": "activity",
+        "basis": "plan_block",
+        "via": "customer_named",
+        "turn": 6,
+        "proposed_by": "customer"
+      },
+      "mk": {
+        "title": "Magic Kingdom",
+        "type": "park",
+        "basis": "named",
+        "via": "customer_named",
+        "turn": 6,
+        "proposed_by": "customer"
+      },
+      "ak": {
+        "title": "Animal Kingdom",
+        "type": "park",
+        "basis": "named",
+        "via": "customer_named",
+        "turn": 6,
+        "proposed_by": "customer"
+      },
+      "hs": {
+        "title": "Hollywood Studios",
+        "type": "park",
+        "basis": "named",
+        "via": "customer_named",
+        "turn": 6,
+        "proposed_by": "customer"
+      }
+    },
+    "unassigned": [],
+    "lodging": {
+      "h": {
+        "check_in": "d1",
+        "check_out": "d5",
+        "via": "chat_action",
+        "turn": 6
+      }
+    },
+    "flights": {},
+    "ground": {},
+    "collaborators": {},
+    "invites": {},
+    "travelers": {
+      "tr-sofia": {
+        "name": "Sofia Lopez",
+        "relation": "self",
+        "age": null,
+        "via": "intake",
+        "turn": 2
+      },
+      "tr-husband": {
+        "name": null,
+        "relation": "husband",
+        "age": null,
+        "via": "intake",
+        "turn": 2
+      },
+      "tr-child-6": {
+        "name": null,
+        "relation": "child",
+        "age": "6",
+        "via": "intake",
+        "turn": 2
+      },
+      "tr-child-9": {
+        "name": null,
+        "relation": "child",
+        "age": "9",
+        "via": "intake",
+        "turn": 2
+      }
+    }
+  },
+  "disclosed": {
+    "sofia": {
+      "kind": "party",
+      "value": "Sofia Lopez",
+      "turn": 2
+    },
+    "family": {
+      "kind": "party",
+      "value": "My husband and our two kids, ages 6 and 9",
+      "turn": 2
+    },
+    "budget": {
+      "kind": "budget",
+      "value": "Mid-range",
+      "turn": 2
+    },
+    "pace": {
+      "kind": "pace",
+      "value": "A clear daily plan at a pace the kids can manage",
+      "turn": 2
+    },
+    "dest": {
+      "kind": "destination",
+      "value": "Orlando theme parks",
+      "turn": 2
+    },
+    "dates": {
+      "kind": "dates",
+      "value": "April 5–9, 2027",
+      "turn": 2
+    },
+    "base": {
+      "kind": "preference",
+      "value": "Mid-range Lake Buena Vista hotel near the parks with an afternoon pool",
+      "turn": 4
+    },
+    "access": {
+      "kind": "access",
+      "value": "Edit access requested for the family",
+      "turn": 4
+    },
+    "shape": {
+      "kind": "preference",
+      "value": "Opening hotel/pool; easy Magic Kingdom day; slower Animal Kingdom and long pool break; light Hollywood Studios morning; leave hotel on closing day",
+      "turn": 6
+    }
+  }
+}

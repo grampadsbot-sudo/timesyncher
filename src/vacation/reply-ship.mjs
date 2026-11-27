@@ -19,6 +19,7 @@ import { savedThingFieldsForTurn } from './turn-saved-thing-ids.mjs';
 import { sessionReplyBackend } from './vk-bot-mcp-reply.mjs';
 import { bindOpenRouterLedger, openRouterTurnTelemetry, pendingOpenRouterCalls, replyInstructionsPayload } from './openrouter-call-ledger.mjs';
 import { scheduleBackgroundWork } from './deferred-work.mjs';
+import { createTripStateRevisionStore } from './trip-state-revision-store.mjs';
 
 async function withPostReplyCallTelemetry(db, requestId, appLive, work) {
   let storedCalls = appLive.openrouterTotals?.calls ?? 0;
@@ -66,6 +67,41 @@ export async function outboundAppReplyForRequest(db, requestId) {
     limit 1
   `;
   return rows[0] || null;
+}
+
+async function writeOutboundAppTurn({
+  db, tripId, requestId, transcriptOwnerId, appLive, body, latency, turnActionResults,
+  tripStateReady, deduplicate = false,
+}) {
+  const writeReply = async (query) => {
+    if (deduplicate || tripStateReady) {
+      const existing = await outboundAppReplyForRequest(query, requestId);
+      if (existing) return { ...existing, duplicateSuppressed: true };
+    }
+    logVacationAppReplyTelemetry(appLive);
+    const [row] = await query`
+      insert into transcript_turns (
+        customer_id, trip_id, request_id, speaker, channel, body, payload, direction,
+        sent_at, response_latency_ms
+      )
+      values (
+        ${transcriptOwnerId}, ${tripId}, ${requestId}, 'app', 'vacation-app', ${body},
+        ${{
+          source: 'vacation_app', surface: 'vacation-app', selectedTripId: tripId, liveTranscript: appLive,
+          ...replyInstructionsPayload(),
+          ...(turnActionResults?.invite?.ok === false ? { inviteActionFailed: true } : {}),
+        }},
+        'outbound', now(), ${latency}
+      )
+      returning transcript_turns.id, body
+    `;
+    return row;
+  };
+  if (tripStateReady) {
+    const shipped = await createTripStateRevisionStore().ship({ tripId, requestId, writeReply });
+    if (shipped) return shipped.reply;
+  }
+  return writeReply(db);
 }
 
 export async function markWorkerJobLiveHandled(db, jobId) {
@@ -143,6 +179,7 @@ export async function persistVacationAppOutboundReply({
   postStartedMs = null,
   postBudgetMs = null,
   activityCommitDecisionsImpl = null,
+  tripStateReady = false,
 }) {
   const judgedQuality = produced?.model?.quality?.judged === true
     ? produced.model.quality
@@ -159,11 +196,6 @@ export async function persistVacationAppOutboundReply({
   if (firstIntake && produced?.reply) produced.reply = ensurePostIntakeCollabCopy(produced.reply);
   if (produced?.reply) produced.reply = sayVacationNotTrip(produced.reply);
   if (produced?.reply) produced.reply = finalizeCustomerReplyText(produced.reply);
-  const priorApp = await outboundAppReplyForRequest(db, requestId);
-  if (priorApp?.id) {
-    await markWorkerJobLiveHandled(db, jobId);
-    return { ...base, ok: true, status: 'replied', reply: priorApp.body, duplicateSuppressed: true, error: null };
-  }
   const appLive = liveTurnRecord({
     turnIndex: customerTurnIndex + 1,
     role: 'app',
@@ -177,24 +209,14 @@ export async function persistVacationAppOutboundReply({
     rules: produced.rules, backend: replyBackend,
   });
   Object.assign(appLive, openRouterTurnTelemetry());
-  logVacationAppReplyTelemetry(appLive);
-  await db`
-    insert into transcript_turns (
-      customer_id, trip_id, request_id, speaker, channel, body, payload, direction,
-      sent_at, response_latency_ms
-    )
-    values (
-      ${transcriptOwnerId}, ${tripId}, ${requestId}, 'app', 'vacation-app', ${produced.reply},
-      ${{
-        source: 'vacation_app',
-        surface: 'vacation-app',
-        selectedTripId: tripId,
-        liveTranscript: appLive,
-        ...(base?.turnActionResults?.invite?.ok === false ? { inviteActionFailed: true } : {}),
-      }},
-      'outbound', now(), ${exchangeLatency}
-    )
-  `;
+  const outbound = await writeOutboundAppTurn({
+    db, tripId, requestId, transcriptOwnerId, appLive, body: produced.reply, latency: exchangeLatency,
+    turnActionResults: base?.turnActionResults, tripStateReady, deduplicate: true,
+  });
+  if (outbound?.duplicateSuppressed) {
+    await markWorkerJobLiveHandled(db, jobId);
+    return { ...base, ok: true, status: 'replied', reply: outbound.body, duplicateSuppressed: true, error: null };
+  }
   const itinerary = await withPostReplyCallTelemetry(db, requestId, appLive, () => recordCustomerThingNotes(
     db,
     tripId,
@@ -333,25 +355,11 @@ export async function commitShippedRewrite(db, session, pending, finished, { rec
     speakerName: pending.speakerName || null,
   });
   Object.assign(appLive, openRouterTurnTelemetry());
-  logVacationAppReplyTelemetry(appLive);
-  await db`
-    insert into transcript_turns (
-      customer_id, trip_id, request_id, speaker, channel, body, payload, direction,
-      sent_at, response_latency_ms
-    )
-    values (
-      ${transcriptCustomerId(session)}, ${pending.tripId}, ${pending.requestId}, 'app', 'vacation-app', ${finished.reply},
-      ${{
-        source: 'vacation_app',
-        surface: 'vacation-app',
-        selectedTripId: pending.tripId,
-        liveTranscript: appLive,
-        ...replyInstructionsPayload(),
-        ...(pending?.turnActionResults?.invite?.ok === false ? { inviteActionFailed: true } : {}),
-      }},
-      'outbound', now(), ${wallMs}
-    )
-  `;
+  const outbound = await writeOutboundAppTurn({
+    db, tripId: pending.tripId, requestId: pending.requestId, transcriptOwnerId: transcriptCustomerId(session),
+    appLive, body: finished.reply, latency: wallMs, turnActionResults: pending.turnActionResults,
+    tripStateReady: pending.tripStateReady,
+  });
   const itinerary = await withPostReplyCallTelemetry(db, pending.requestId, appLive, () => recordCustomerThingNotes(
     db,
     pending.tripId,
@@ -405,7 +413,7 @@ export async function commitShippedRewrite(db, session, pending, finished, { rec
   return {
     ok: true,
     status: 'replied',
-    reply: finished.reply,
+    reply: outbound?.duplicateSuppressed ? outbound.body : finished.reply,
     ...appReplyTelemetry(appLive),
     interimReply: finished.log?.interimReply || pending.interimReply || null,
     itinerary,

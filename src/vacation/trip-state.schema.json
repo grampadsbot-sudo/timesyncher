@@ -1,0 +1,1877 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "VK Trip State v1 \u2014 canonical trip and turn snapshot (final merged v1, updated for the 11/26 8:22 PM HST ruling: proactive itinerary, travelers \u2260 access grants, proposed times)",
+  "description": "Map keys are stable trip-scoped IDs. Provenance, readback, transitions and relational invariants are specified in SPEC.md. Assignments carry proposed_by=system|customer. Clock times the system guesses use time.precision=proposed. saved.travelers are people on the trip and never imply collaborator, editor, or viewer access.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": "1.0"
+    },
+    "trip_id": {
+      "$ref": "#/$defs/id"
+    },
+    "updated_turn": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "phase": {
+      "enum": [
+        "planning",
+        "reply_ready",
+        "shipped"
+      ]
+    },
+    "capabilities": {
+      "$ref": "#/$defs/capabilities"
+    },
+    "saved": {
+      "$ref": "#/$defs/saved"
+    },
+    "disclosed": {
+      "type": "object",
+      "propertyNames": {
+        "$ref": "#/$defs/id"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/fact"
+      }
+    },
+    "candidates": {
+      "type": "object",
+      "propertyNames": {
+        "$ref": "#/$defs/id"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/candidate"
+      }
+    },
+    "research": {
+      "$ref": "#/$defs/research"
+    },
+    "proposals": {
+      "type": "object",
+      "propertyNames": {
+        "$ref": "#/$defs/id"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/proposal"
+      }
+    },
+    "open_asks": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "#/$defs/ask"
+          },
+          {
+            "properties": {
+              "status": {
+                "enum": [
+                  "open",
+                  "needs_info"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    "answered": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "#/$defs/ask"
+          },
+          {
+            "properties": {
+              "status": {
+                "enum": [
+                  "done",
+                  "declined"
+                ]
+              },
+              "outcome": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 280
+              }
+            }
+          }
+        ]
+      }
+    },
+    "said": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/said"
+      }
+    },
+    "last_actions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/action"
+      }
+    },
+    "tool_status": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/status"
+      }
+    },
+    "next_steps": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/step"
+      },
+      "minItems": 1,
+      "maxItems": 3
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "enum": [
+            "full",
+            "focus"
+          ]
+        },
+        "omitted": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "capabilities": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "saved": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "disclosed": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "candidates": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "research": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "proposals": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "open_asks": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "answered": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "said": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "last_actions": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "tool_status": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "next_steps": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "required": []
+        }
+      },
+      "required": [
+        "mode",
+        "omitted"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "full"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "omitted": {
+                "maxProperties": 0
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "omitted": {
+                "minProperties": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "updates": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/update"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "version",
+    "trip_id",
+    "updated_turn",
+    "revision",
+    "phase",
+    "capabilities",
+    "saved",
+    "disclosed",
+    "candidates",
+    "research",
+    "proposals",
+    "open_asks",
+    "answered",
+    "said",
+    "last_actions",
+    "tool_status",
+    "next_steps",
+    "scope",
+    "updates"
+  ],
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$"
+    },
+    "origin": {
+      "enum": [
+        "customer_named",
+        "search",
+        "chat_action",
+        "intake",
+        "human",
+        "collaborator",
+        "legacy_site"
+      ]
+    },
+    "kind": {
+      "enum": [
+        "hotel",
+        "park",
+        "activity",
+        "meal",
+        "restaurant",
+        "flight_option",
+        "ground_ride",
+        "other"
+      ]
+    },
+    "time": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "precision": {
+          "enum": [
+            "window",
+            "approximate",
+            "exact",
+            "proposed"
+          ]
+        }
+      },
+      "required": [
+        "value",
+        "precision"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "precision": {
+                "enum": [
+                  "approximate",
+                  "exact",
+                  "proposed"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "string",
+                "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 280
+        },
+        "type": {
+          "enum": [
+            "hotel",
+            "park",
+            "activity",
+            "meal",
+            "restaurant",
+            "flight_option",
+            "ground_ride",
+            "other"
+          ]
+        },
+        "basis": {
+          "enum": [
+            "named",
+            "placeholder",
+            "verified_place",
+            "plan_block",
+            "comparison",
+            "legacy"
+          ]
+        },
+        "candidate_id": {
+          "$ref": "#/$defs/id"
+        },
+        "via": {
+          "$ref": "#/$defs/origin"
+        },
+        "turn": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "proposed_by": {
+          "enum": [
+            "system",
+            "customer"
+          ]
+        }
+      },
+      "required": [
+        "title",
+        "type",
+        "basis",
+        "proposed_by",
+        "via",
+        "turn"
+      ]
+    },
+    "assignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "item": {
+          "$ref": "#/$defs/id"
+        },
+        "type": {
+          "enum": [
+            "hotel",
+            "park",
+            "activity",
+            "meal",
+            "restaurant",
+            "flight_option",
+            "ground_ride",
+            "other"
+          ]
+        },
+        "role": {
+          "enum": [
+            "visit",
+            "check_in",
+            "check_out",
+            "leg",
+            "ride"
+          ]
+        },
+        "time": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "via": {
+          "$ref": "#/$defs/origin"
+        },
+        "turn": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "proposed_by": {
+          "enum": [
+            "system",
+            "customer"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "item",
+        "type",
+        "role",
+        "time",
+        "proposed_by",
+        "via",
+        "turn"
+      ]
+    },
+    "day": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "date": {
+          "type": "string",
+          "format": "date"
+        },
+        "assigned": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/assignment"
+          }
+        },
+        "via": {
+          "$ref": "#/$defs/origin"
+        },
+        "turn": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "date",
+        "assigned",
+        "via",
+        "turn"
+      ]
+    },
+    "stay": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "check_in": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "check_out": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "via": {
+          "$ref": "#/$defs/origin"
+        },
+        "turn": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "check_in",
+        "check_out",
+        "via",
+        "turn"
+      ]
+    },
+    "flight": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "direction": {
+          "enum": [
+            "outbound",
+            "return",
+            "other"
+          ]
+        },
+        "carrier": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 280
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "origin": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 280
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "destination": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 280
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "evidence": {
+          "enum": [
+            "customer_option",
+            "site_record"
+          ]
+        },
+        "via": {
+          "$ref": "#/$defs/origin"
+        },
+        "turn": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "direction",
+        "carrier",
+        "origin",
+        "destination",
+        "evidence",
+        "via",
+        "turn"
+      ]
+    },
+    "ride": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "enum": [
+            "ride",
+            "rental",
+            "transit",
+            "other"
+          ]
+        },
+        "between": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 280
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "via": {
+          "$ref": "#/$defs/origin"
+        },
+        "turn": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "mode",
+        "between",
+        "via",
+        "turn"
+      ]
+    },
+    "member": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 280
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "access": {
+          "enum": [
+            "view",
+            "edit",
+            "collaborator",
+            "owner"
+          ]
+        },
+        "status": {
+          "enum": [
+            "active",
+            "revoked"
+          ]
+        },
+        "via": {
+          "$ref": "#/$defs/origin"
+        },
+        "turn": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "name",
+        "access",
+        "status",
+        "via",
+        "turn"
+      ]
+    },
+    "invite": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 280
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "access": {
+          "enum": [
+            "view",
+            "edit",
+            "collaborator"
+          ]
+        },
+        "status": {
+          "enum": [
+            "held",
+            "queued",
+            "sent",
+            "accepted",
+            "expired",
+            "revoked",
+            "failed"
+          ]
+        },
+        "via": {
+          "$ref": "#/$defs/origin"
+        },
+        "turn": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "name",
+        "access",
+        "status",
+        "via",
+        "turn"
+      ]
+    },
+    "head": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 280
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "destination": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 280
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "start": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "end": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "via": {
+          "$ref": "#/$defs/origin"
+        },
+        "turn": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "title",
+        "destination",
+        "start",
+        "end",
+        "via",
+        "turn"
+      ]
+    },
+    "saved": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "site_revision": {
+          "$ref": "#/$defs/id"
+        },
+        "read": {
+          "enum": [
+            "current",
+            "stale",
+            "unavailable"
+          ]
+        },
+        "trip": {
+          "$ref": "#/$defs/head"
+        },
+        "days": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/id"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/day"
+          }
+        },
+        "items": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/id"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/item"
+          }
+        },
+        "unassigned": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          },
+          "uniqueItems": true
+        },
+        "lodging": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/id"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/stay"
+          }
+        },
+        "flights": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/id"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/flight"
+          }
+        },
+        "ground": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/id"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/ride"
+          }
+        },
+        "travelers": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/id"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/traveler"
+          }
+        },
+        "collaborators": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/id"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/member"
+          }
+        },
+        "invites": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/id"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/invite"
+          }
+        }
+      },
+      "required": [
+        "site_revision",
+        "read",
+        "trip",
+        "days",
+        "items",
+        "unassigned",
+        "lodging",
+        "flights",
+        "ground",
+        "travelers",
+        "collaborators",
+        "invites"
+      ]
+    },
+    "capability": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "wiring": {
+          "enum": [
+            "existing",
+            "adapter",
+            "new"
+          ]
+        },
+        "requires": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          },
+          "uniqueItems": true
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "reason": {
+          "enum": [
+            "ready",
+            "not_wired",
+            "no_grant",
+            "trip_locked",
+            "on_hold",
+            "reader_unavailable",
+            "service_unavailable"
+          ]
+        }
+      },
+      "required": [
+        "wiring",
+        "requires",
+        "enabled",
+        "reason"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "enabled": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "reason": {
+                "const": "ready"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "reason": {
+                "not": {
+                  "const": "ready"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "actions": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "set_time": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/capability"
+                },
+                {
+                  "properties": {
+                    "wiring": {
+                      "const": "existing"
+                    },
+                    "requires": {
+                      "const": [
+                        "item",
+                        "day",
+                        "time"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "add_bar_before": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/capability"
+                },
+                {
+                  "properties": {
+                    "wiring": {
+                      "const": "existing"
+                    },
+                    "requires": {
+                      "const": [
+                        "anchor",
+                        "day"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "undo": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/capability"
+                },
+                {
+                  "properties": {
+                    "wiring": {
+                      "const": "existing"
+                    },
+                    "requires": {
+                      "const": [
+                        "edit_id"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "search_places": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/capability"
+                },
+                {
+                  "properties": {
+                    "wiring": {
+                      "const": "adapter"
+                    },
+                    "requires": {
+                      "const": [
+                        "area",
+                        "category",
+                        "criteria"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "invite_collaborator": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/capability"
+                },
+                {
+                  "properties": {
+                    "wiring": {
+                      "const": "adapter"
+                    },
+                    "requires": {
+                      "const": [
+                        "name",
+                        "email",
+                        "access",
+                        "send_request"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "place_on_day": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/capability"
+                },
+                {
+                  "properties": {
+                    "wiring": {
+                      "const": "new"
+                    },
+                    "requires": {
+                      "const": [
+                        "item",
+                        "day",
+                        "role"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "add_from_search": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/capability"
+                },
+                {
+                  "properties": {
+                    "wiring": {
+                      "const": "new"
+                    },
+                    "requires": {
+                      "const": [
+                        "candidate"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "add_named_item": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/capability"
+                },
+                {
+                  "properties": {
+                    "wiring": {
+                      "const": "new"
+                    },
+                    "requires": {
+                      "const": [
+                        "type",
+                        "label",
+                        "evidence"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "set_stay": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/capability"
+                },
+                {
+                  "properties": {
+                    "wiring": {
+                      "const": "new"
+                    },
+                    "requires": {
+                      "const": [
+                        "hotel",
+                        "check_in",
+                        "check_out"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "save_plan": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/capability"
+                },
+                {
+                  "properties": {
+                    "wiring": {
+                      "const": "new"
+                    },
+                    "requires": {
+                      "const": [
+                        "operations",
+                        "authority"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "hold_invite": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/capability"
+                },
+                {
+                  "properties": {
+                    "wiring": {
+                      "const": "new"
+                    },
+                    "requires": {
+                      "const": [
+                        "name",
+                        "access"
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "required": [
+            "set_time",
+            "add_bar_before",
+            "undo",
+            "search_places",
+            "invite_collaborator",
+            "place_on_day",
+            "add_from_search",
+            "add_named_item",
+            "set_stay",
+            "save_plan",
+            "hold_invite"
+          ]
+        },
+        "booking": {
+          "const": false
+        },
+        "payment": {
+          "const": false
+        },
+        "email": {
+          "enum": [
+            "explicit_request_only",
+            "held"
+          ]
+        },
+        "product_facts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "$ref": "#/$defs/id"
+              },
+              "value": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 280
+              },
+              "catalog_revision": {
+                "$ref": "#/$defs/id"
+              }
+            },
+            "required": [
+              "key",
+              "value",
+              "catalog_revision"
+            ]
+          }
+        },
+        "access_rights": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "view": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/id"
+              },
+              "uniqueItems": true
+            },
+            "edit_after_accept": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/id"
+              },
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "view",
+            "edit_after_accept"
+          ]
+        }
+      },
+      "required": [
+        "actions",
+        "booking",
+        "payment",
+        "email",
+        "product_facts",
+        "access_rights"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "email": {
+                "const": "held"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "actions": {
+                "properties": {
+                  "invite_collaborator": {
+                    "properties": {
+                      "enabled": {
+                        "const": false
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "fact": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "party",
+            "budget",
+            "pace",
+            "preference",
+            "constraint",
+            "destination",
+            "dates",
+            "access"
+          ]
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 280
+        },
+        "turn": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "kind",
+        "value",
+        "turn"
+      ]
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "enum": [
+            "hotel",
+            "park",
+            "activity",
+            "meal",
+            "restaurant",
+            "flight_option",
+            "ground_ride",
+            "other"
+          ]
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 280
+        },
+        "area": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 280
+        },
+        "source": {
+          "const": "vk_search"
+        },
+        "result_id": {
+          "$ref": "#/$defs/id"
+        },
+        "turn": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "facts": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 280
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "type",
+        "title",
+        "area",
+        "source",
+        "result_id",
+        "turn",
+        "facts"
+      ]
+    },
+    "research": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "state": {
+          "enum": [
+            "waiting",
+            "running",
+            "complete",
+            "partial",
+            "empty",
+            "failed"
+          ]
+        },
+        "turn": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "areas": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 280
+          }
+        },
+        "gaps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 280
+          }
+        }
+      },
+      "required": [
+        "key",
+        "state",
+        "turn",
+        "areas",
+        "gaps"
+      ]
+    },
+    "ask": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 280
+        },
+        "first_turn": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "status": {
+          "enum": [
+            "open",
+            "needs_info",
+            "done",
+            "declined"
+          ]
+        },
+        "outcome": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 280
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "turn": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "id",
+        "text",
+        "first_turn",
+        "status",
+        "outcome",
+        "turn",
+        "refs"
+      ]
+    },
+    "said": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "topic": {
+          "$ref": "#/$defs/id"
+        },
+        "meaning": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 280
+        },
+        "turn": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "topic",
+        "meaning",
+        "turn"
+      ]
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "receipt": {
+          "$ref": "#/$defs/id"
+        },
+        "op": {
+          "enum": [
+            "set_time",
+            "add_bar_before",
+            "undo",
+            "search_places",
+            "invite_collaborator",
+            "hold_invite",
+            "place_on_day",
+            "add_from_search",
+            "add_named_item",
+            "set_stay",
+            "save_plan",
+            "intake"
+          ]
+        },
+        "refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "turn": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "receipt",
+        "op",
+        "refs",
+        "turn"
+      ]
+    },
+    "status": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "op": {
+          "enum": [
+            "set_time",
+            "add_bar_before",
+            "undo",
+            "search_places",
+            "invite_collaborator",
+            "hold_invite",
+            "place_on_day",
+            "add_from_search",
+            "add_named_item",
+            "set_stay",
+            "save_plan",
+            "intake"
+          ]
+        },
+        "receipt": {
+          "$ref": "#/$defs/id"
+        },
+        "result": {
+          "enum": [
+            "found",
+            "empty",
+            "applied",
+            "no_change",
+            "needs_info",
+            "denied",
+            "conflict",
+            "failed",
+            "pending_readback",
+            "partial"
+          ]
+        },
+        "detail": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 280
+        },
+        "refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          },
+          "uniqueItems": true
+        },
+        "turn": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "op",
+        "receipt",
+        "result",
+        "detail",
+        "refs",
+        "turn"
+      ]
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "ask",
+            "propose",
+            "answer",
+            "act",
+            "wait"
+          ]
+        },
+        "task": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 280
+        },
+        "refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "kind",
+        "task",
+        "refs"
+      ]
+    },
+    "line": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "day": {
+          "$ref": "#/$defs/id"
+        },
+        "type": {
+          "enum": [
+            "hotel",
+            "park",
+            "activity",
+            "meal",
+            "restaurant",
+            "flight_option",
+            "ground_ride",
+            "other"
+          ]
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 280
+        },
+        "item": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "time": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "role": {
+          "enum": [
+            "visit",
+            "check_in",
+            "check_out",
+            "leg",
+            "ride"
+          ]
+        }
+      },
+      "required": [
+        "day",
+        "type",
+        "label",
+        "item",
+        "time",
+        "role"
+      ]
+    },
+    "proposal": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "turn": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "lines": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/line"
+          },
+          "minItems": 1
+        },
+        "status": {
+          "enum": [
+            "prepared",
+            "offered",
+            "accepted",
+            "superseded"
+          ]
+        }
+      },
+      "required": [
+        "turn",
+        "lines",
+        "status"
+      ]
+    },
+    "update": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "section": {
+          "enum": [
+            "capabilities",
+            "saved",
+            "disclosed",
+            "candidates",
+            "research",
+            "proposals",
+            "open_asks",
+            "answered",
+            "said",
+            "last_actions",
+            "tool_status",
+            "next_steps"
+          ]
+        },
+        "source": {
+          "enum": [
+            "registry",
+            "site_read",
+            "customer_turn",
+            "understanding",
+            "vk_search",
+            "planner",
+            "tool_result",
+            "reconcile",
+            "shipped_reply",
+            "turn_reset"
+          ]
+        },
+        "turn": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "section",
+        "source",
+        "turn"
+      ]
+    },
+    "traveler": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 280
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "relation": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "age": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "via": {
+          "$ref": "#/$defs/origin"
+        },
+        "turn": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "name",
+        "relation",
+        "age",
+        "via",
+        "turn"
+      ]
+    }
+  }
+}
