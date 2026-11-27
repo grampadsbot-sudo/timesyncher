@@ -31,7 +31,7 @@ import { insertIntakeTripThingRow } from '../src/vacation/trip-things.mjs';
 import { createVacationFromChatMessage } from '../src/vacation/vacation-from-chat-intake.mjs';
 import { onboardingWelcomeFailure, welcomeFailureBody } from '../src/vacation/welcome-failure.mjs';
 import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-store.mjs';
-import { customerModality, jevStamp, liveTurnRecord, intakeSpan, firstMarkedIntake, produceLiveAppReply, finishTierRewrite, activityCommitDecisions, applyCustomerNotes, completeRosterParty } from '../src/vacation/live-app-turn.mjs';
+import { customerModality, jevStamp, liveTurnRecord, intakeSpan, firstMarkedIntake, produceLiveAppReply, activityCommitDecisions, applyCustomerNotes, completeRosterParty } from '../src/vacation/live-app-turn.mjs';
 import { queueVacationAppTurn as runQueueVacationAppTurn } from './vacation-app-chat-queue.mjs';
 import { cannedWelcomeLiveTurn, missingWelcomeFields, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
 import {
@@ -46,7 +46,7 @@ import { appReplyTelemetry, logVacationAppReplyTelemetry } from '../src/vacation
 import { bindOpenRouterLedger, openRouterTurnTelemetry, withOpenRouterLedger } from '../src/vacation/openrouter-call-ledger.mjs';
 import {
   applyLiveAppReplyFailureToPayload,
-  commitShippedRewrite,
+  finishPendingReply,
   markWorkerJobLiveHandled,
   persistVacationAppOutboundReply,
   storeReplyFailure,
@@ -956,17 +956,12 @@ async function handleVacationApp(req, res, db, url) {
       const meta = session.metadata && typeof session.metadata === 'object' ? session.metadata : {};
       const pending = meta.pendingRewrite;
       if (!pending?.draft || !pending?.tripId) return sendJson(res, 409, { ok: false, error: 'No rewrite is waiting.' });
-      bindOpenRouterLedger(pending);
       const rewriteSeat = await seatForSessionTrip(db, session, pending.tripId);
-      const finished = pending.resolved?.reply
-        ? pending.resolved
-        : await finishTierRewrite({ pending, env: process.env });
-      if (!finished.reply) return sendJson(res, 502, { ok: false, error: finished.reason || 'The rewrite did not produce a reply.', ...openRouterTurnTelemetry() });
-      const shipped = await commitShippedRewrite(db, sessionWithTripSeat(session, rewriteSeat), pending, finished, {
+      const { status, body: replyBody } = await finishPendingReply(db, sessionWithTripSeat(session, rewriteSeat), pending, {
         recordCustomerThingNotes: attachIntakeItineraryFromReply,
         publishIntakeShare, postStartedMs: postStarted,
       });
-      return sendJson(res, 200, { ...shipped, ...openRouterTurnTelemetry() });
+      return sendJson(res, status, { ...replyBody, ...openRouterTurnTelemetry() });
     }
     if (body.action === 'record-party') {
       const partyTripId = cleanText(body.tripId || body.trip_id, 80) || session.trip_id || '';

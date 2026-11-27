@@ -23,7 +23,7 @@ import { producedDemoLockedChatEditReply } from '../src/vacation/chat-itinerary-
 import { createBoundedReplyShipGate, createBoundedRewriteClaim, rewriteVacationAppActionClaim } from '../src/vacation/vacation-app-chat-postgen.mjs';
 import { sessionReplyBackend } from '../src/vacation/vk-bot-mcp-reply.mjs';
 import { isOrdinaryPlanningTurn, recoverOrdinaryPlanningReply } from '../src/vacation/chat-plan-persist.mjs';
-import { openRouterTurnTelemetry } from '../src/vacation/openrouter-call-ledger.mjs';
+import { openRouterTurnTelemetry, replyInstructionsPayload } from '../src/vacation/openrouter-call-ledger.mjs';
 
 export async function queueVacationAppTurn(db, session, trip, body, hooks, intake = {}) {
   const env = process.env;
@@ -344,6 +344,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     ? { ok: Boolean(produced.rules.ok), via: produced.rules.via || null, slug: produced.rules.slug || null }
     : null;
   stampCustomerLivePayload(payload, customerLive, { firstIntake, produced });
+  Object.assign(payload, replyInstructionsPayload());
   await db`
     update transcript_turns
     set payload = ${payload}
@@ -408,6 +409,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
   if (produced.status === 'interim' && produced.pending) {
     const interimDraft = produced.interimReply?.text || '';
     const interimText = await rewriteClaim(interimDraft);
+    Object.assign(payload, replyInstructionsPayload());
     if (String(interimDraft || '').trim() && !interimText) {
       const failure = applyLiveAppReplyFailureToPayload(payload, customerLive, produced);
       await storeReplyFailure(db, turnRows[0].id, payload);
@@ -448,6 +450,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
   const claimedFrom = produced.reply;
   const replyBackend = sessionReplyBackend(session);
   await rewriteVacationAppActionClaim(produced, { rewriteClaim, turnActionResults, replyClaimContext, seat, replyBackend });
+  Object.assign(payload, replyInstructionsPayload());
   await applyReplyQuality(produced, { customerTurn: requestText, env, previousReply: claimedFrom, tripContext: { travelSummary } });
   if (!String(produced?.reply || '').trim() && isOrdinaryPlanningTurn(requestText)) {
     Object.assign(produced, recoverOrdinaryPlanningReply(produced, requestText, { backend: replyBackend, previousReply: claimedFrom }));

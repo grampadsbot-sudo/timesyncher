@@ -43,7 +43,7 @@ async function claimJobs(db, { workerId, limit }) {
       (
         select coalesce(jsonb_agg(row_to_json(turns) order by turns.created_at), '[]'::jsonb)
         from (
-          select id, speaker, channel, direction, body, payload, turn_category, turn_tags, created_at
+          select id, speaker, channel, direction, body, payload - 'modelRules' as payload, turn_category, turn_tags, created_at
           from transcript_turns
           where trip_id = claimed.trip_id
           order by created_at desc

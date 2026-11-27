@@ -190,7 +190,7 @@ async function handleNotes(req, res, db, getStore, [id, index]) {
 async function handleArtifacts(req, res, db, getStore, tripId, artifact) {
   if (artifact === 'travel-summary') {
     if (req.method !== 'GET') return methodNotAllowed(res);
-    const vacation = await findVkAdminVacation(db, tripId, { detail: true });
+    const vacation = await findVkAdminVacation(db, tripId, { detail: true, includeModelRules: true });
     if (!vacation) return notFound(res);
     const snapshots = await listTravelSummarySnapshots(getStore(), vacation);
     return send(res, 200, { ok: true, snapshots });

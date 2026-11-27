@@ -9,7 +9,7 @@ export function stampCustomerLivePayload(payload, customerLive, { firstIntake, p
   payload.liveTranscript = customerLive;
   syncFirstIntakeCustomerInputOnTurn(payload, customerLive, { firstIntake, produced });
 }
-import { liveTurnRecord } from './live-app-turn.mjs';
+import { finishTierRewrite, liveTurnRecord } from './live-app-turn.mjs';
 import { appReplyTelemetry, logVacationAppReplyTelemetry } from './reply-telemetry.mjs';
 import { attachBlockedFirstIntakeDraft } from './blocked-turn-payload.mjs';
 import { assertCustomerReplyShippable } from './reply-id-citation.mjs';
@@ -17,7 +17,7 @@ import { replyClaimContextFromIntent } from './reply-action-claim.mjs';
 import { rewriteBlockedActionClaim } from './reply-action-claim-rewrite.mjs';
 import { savedThingFieldsForTurn } from './turn-saved-thing-ids.mjs';
 import { sessionReplyBackend } from './vk-bot-mcp-reply.mjs';
-import { openRouterTurnTelemetry, pendingOpenRouterCalls } from './openrouter-call-ledger.mjs';
+import { bindOpenRouterLedger, openRouterTurnTelemetry, pendingOpenRouterCalls, replyInstructionsPayload } from './openrouter-call-ledger.mjs';
 import { scheduleBackgroundWork } from './deferred-work.mjs';
 
 async function withPostReplyCallTelemetry(db, requestId, appLive, work) {
@@ -264,6 +264,23 @@ export async function persistVacationAppOutboundReply({
   };
 }
 
+export async function finishPendingReply(db, session, pending, hooks) {
+  bindOpenRouterLedger(pending);
+  const finished = pending.resolved?.reply ? pending.resolved : await finishTierRewrite({ pending });
+  if (!finished.reply) {
+    const { modelRules } = replyInstructionsPayload();
+    if (pending.customerTurnId && modelRules) {
+      await db`
+        update transcript_turns
+        set payload = jsonb_set(payload, '{modelRules}', coalesce(payload->'modelRules', '[]'::jsonb) || ${JSON.stringify(modelRules)}::jsonb)
+        where id = ${pending.customerTurnId}
+      `;
+    }
+    return { status: 502, body: { ok: false, error: finished.reason || 'The rewrite did not produce a reply.' } };
+  }
+  return { status: 200, body: await commitShippedRewrite(db, session, pending, finished, hooks) };
+}
+
 export async function commitShippedRewrite(db, session, pending, finished, { recordCustomerThingNotes, publishIntakeShare, postStartedMs = null, postBudgetMs = null }) {
   const claimContext = replyClaimContextFromIntent({
     ...(pending.intent && typeof pending.intent === 'object' ? pending.intent : {}),
@@ -329,6 +346,7 @@ export async function commitShippedRewrite(db, session, pending, finished, { rec
         surface: 'vacation-app',
         selectedTripId: pending.tripId,
         liveTranscript: appLive,
+        ...replyInstructionsPayload(),
         ...(pending?.turnActionResults?.invite?.ok === false ? { inviteActionFailed: true } : {}),
       }},
       'outbound', now(), ${wallMs}

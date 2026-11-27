@@ -1,8 +1,11 @@
 import { sumTurnCost } from '../src/vacation/turn-cost.mjs';
-import { fetchOpenRouterJson } from '../src/vacation/openrouter-call-ledger.mjs';
+import { fetchOpenRouterJson, recordReplyInstructions } from '../src/vacation/openrouter-call-ledger.mjs';
 import { planFactsForReply } from '../src/vacation/reply-plan-entitlement.mjs';
 import { modelVisibleTripContext, namedSearchAreaAwayFromLodgingReplyLine } from '../src/vacation/provider-result-context.mjs';
 import { gapAskReplyPromptTripRaw, perFactGapAskRuleLines } from '../src/vacation/gap-ask-reply-context.mjs';
+import { ruleSections, staticReplySections, STATIC_REPLY_RULES } from '../src/vacation/reply-prompt-sections.mjs';
+export { sourcedPlaceRule } from '../src/vacation/reply-prompt-sections.mjs';
+export { planFactsForReply };
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -589,39 +592,11 @@ function chatReplyText(content) {
   return text(openRouterChatVisibleText(content), 3500);
 }
 
-export function sourcedPlaceRule() {
-  return 'Name a place only when this turn lists it under Results. Never invent a place name or id.';
-}
-
-export { planFactsForReply };
-
-const USE_SAVED_TRIP_RULE = 'Use the saved trip record. If a day or activity is not on that record, do not announce it as set. Do not call any day the last day, the last evening, after check-out, or one last time, and do not say pack or head out, unless that day is the saved trip end. Write hotel and lodging times as check-in and check-out, with the hyphen. Do not shorten a date range.';
-
-const STATIC_REPLY_RULES = [
-  'You are the TimeSyncher vacation-app producer. Reply to the customer turn.',
-  'Apply these ordinary reply rules unless the following instructions specify an intake or starter reply.',
-  sourcedPlaceRule(),
-  USE_SAVED_TRIP_RULE,
-  'Do not open with a comma-separated roster roll call like Name, you, Name are set or locked in.',
-  'Do not insert a welcome the customer did not ask for.',
-  'Use Travel Summary as the trip state. Use who and the customer’s own messages for traveler names, relationships and group size. If the customer gave a relationship without a name, keep that relationship. A person who just joined is a collaborator, not the account holder.',
-  'Address the person who is speaking. Do not give that person an activity the saved trip record assigns to someone else.',
-  'Do not say we have corrected that, or I have corrected that, unless the customer asked for a correction.',
-  'Do not put an activity on a day that is not already that activity on the saved trip record.',
-  'When the customer asks to add a place, the chat box is the search. There is no separate search screen.',
-  'Viewers and editors are not on the trip. Do not put them in the house, the crew, or the group for a day. A saved preference rule stays as saved. Do not call it locked in and do not rename it.',
-  'When the customer asks for two options on a day, offer only activities already saved on that day or named in the question. Do not repeat a paragraph.',
-  'Do not invent an activity the customer did not name.',
-  'Write plain sentences. Do not use markdown asterisks.',
-  'Do not say you are setting that plan up. Do not say a plan covers people the customer did not name as covered.',
-  'The customer URL owns vacations. Do not push vacation URLs onto collaborator seats.',
-].join('\n');
-
 export function replyRulesSystem(...args) {
-  return [STATIC_REPLY_RULES, replyTurnRules(...args)].join('\n');
+  return [STATIC_REPLY_RULES, ...replyTurnRuleSections(...args).map(({ text }) => text)].join('\n');
 }
 
-function replyTurnRules(rules, destination, upsell, postIntake, customerTurn = '', context = {}) {
+function replyTurnRuleSections(rules, destination, upsell, postIntake, customerTurn = '', context = {}) {
   const lock = text(destination, 160);
   const priceAsk = /\b(price|pricing|how much|what(?:'s| is) (?:the )?(?:price|cost))\b/i.test(String(customerTurn || ''));
   const planLine = String(context.planLine || '').trim();
@@ -670,32 +645,46 @@ function replyTurnRules(rules, destination, upsell, postIntake, customerTurn = '
     priceAsk,
   });
   const upsellLine = `Plan facts: ${JSON.stringify(planFacts)}`;
-  return [
-    lock
-      ? `Destination lock: ${lock}. This is the only place for this trip. Do not move the customer to any other city or island.`
-      : 'If the customer has named a destination, stay there. Do not invent a different city or island.',
-    namedSearchAreaAwayFromLodgingReplyLine(tripSource),
-    ...(unscheduledOpen ? [] : [`Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}). Never say "Thing" to the customer.`]),
-    turnInvitePending
-      ? 'Do not say seat to the customer; say collaborator. Always say "vacation", never "trip". The emailed invitee is not on the vacation yet — describe the pending invite only.'
-      : 'Do not say seat to the customer; say collaborator instead. Always say "vacation", never "trip".',
-    turnInviteRule,
-    (/\?/.test(String(customerTurn || '')) && /\bview access\b/i.test(String(customerTurn || '')) && /\bedit access\b/i.test(String(customerTurn || ''))
-      ? 'This turn asks a real question about collaborator access. Offer the choice between view access and edit access. Use both phrases. Do not choose for them.'
-      : 'When the customer does not ask about access, do not add an access menu.'),
-    upsellLine,
-    seatDollars && planLine ? `Seat price: $${seatDollars}. State this line exactly: ${planLine}.` : '',
-    seat ? `Seat record: ${JSON.stringify(seat)}. The name is the person joining.` : '',
-    unscheduledOpen ? '' : 'Do not move an activity off the day already named.',
-    unscheduledOpen
-      ? 'A saved place that is not on a day stays off every weekday. A weekday already used by a different activity is not a day for that place.'
-      : 'When the customer asks for a later activity and does not name a day, use only a day that is already on the saved trip record. Do not invent a day. Do not dodge the question with "it sounds like", "wonderful trip", "I can help you", or "coming together".',
-    ...(gapAskPromptTurn ? perFactGapAskRuleLines(tripRaw) : []),
-    trip ? `Saved trip record: ${JSON.stringify(trip)}` : '',
-    'Item34 ban: never say "splitting payments", split payment, split-payer, splitting payment, or splitting anything up. If one seat is already covered and another person has their own seat, say that.',
-    'Write at least four sentences of real banter, about sixty words. Notice who is coming, the days, and what they care about, then do the useful thing. Do not answer in one clipped sentence.',
-    'End with one final line that starts with BEAT: and a three-to-six word label of only what this reply actually did. Do not say the reply set, saved, added, or offered something it did not do. Do not put BEAT anywhere else.',
-  ].filter(Boolean).join('\n');
+  return ruleSections([
+    ['Destination and search', [
+      lock
+        ? `Destination lock: ${lock}. This is the only place for this trip. Do not move the customer to any other city or island.`
+        : 'If the customer has named a destination, stay there. Do not invent a different city or island.',
+      namedSearchAreaAwayFromLodgingReplyLine(tripSource),
+    ]],
+    ['Notes and collaborators', [
+      ...(unscheduledOpen ? [] : [`Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}). Never say "Thing" to the customer.`]),
+      turnInvitePending
+        ? 'Do not say seat to the customer; say collaborator. Always say "vacation", never "trip". The emailed invitee is not on the vacation yet — describe the pending invite only.'
+        : 'Do not say seat to the customer; say collaborator instead. Always say "vacation", never "trip".',
+      turnInviteRule,
+    ]],
+    ['Access questions and pricing', [
+      (/\?/.test(String(customerTurn || '')) && /\bview access\b/i.test(String(customerTurn || '')) && /\bedit access\b/i.test(String(customerTurn || ''))
+        ? 'This turn asks a real question about collaborator access. Offer the choice between view access and edit access. Use both phrases. Do not choose for them.'
+        : 'When the customer does not ask about access, do not add an access menu.'),
+      upsellLine,
+      seatDollars && planLine ? `Seat price: $${seatDollars}. State this line exactly: ${planLine}.` : '',
+      seat ? `Seat record: ${JSON.stringify(seat)}. The name is the person joining.` : '',
+    ]],
+    ['Itinerary and dates', [
+      unscheduledOpen ? '' : 'Do not move an activity off the day already named.',
+      unscheduledOpen
+        ? 'A saved place that is not on a day stays off every weekday. A weekday already used by a different activity is not a day for that place.'
+        : 'When the customer asks for a later activity and does not name a day, use only a day that is already on the saved trip record. Do not invent a day. Do not dodge the question with "it sounds like", "wonderful trip", "I can help you", or "coming together".',
+    ]],
+    ['Questions for this turn', [
+      ...(gapAskPromptTurn ? perFactGapAskRuleLines(tripRaw) : []),
+    ]],
+    ['Saved trip record', [
+      trip ? `Saved trip record: ${JSON.stringify(trip)}` : '',
+    ]],
+    ['Reply limits and format', [
+      'Item34 ban: never say "splitting payments", split payment, split-payer, splitting payment, or splitting anything up. If one seat is already covered and another person has their own seat, say that.',
+      'Write at least four sentences of real banter, about sixty words. Notice who is coming, the days, and what they care about, then do the useful thing. Do not answer in one clipped sentence.',
+      'End with one final line that starts with BEAT: and a three-to-six word label of only what this reply actually did. Do not say the reply set, saved, added, or offered something it did not do. Do not put BEAT anywhere else.',
+    ]],
+  ]);
 }
 
 function splitBeat(answer) {
@@ -901,11 +890,12 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
   const userContent = JSON.stringify(intakeReplyTurn
     ? { ...replyFacts, ...(request.trip_context?.travelSummary && { travelSummary: request.trip_context.travelSummary }) }
     : request);
-  const turnRules = intakeReplyTurn
-    ? systemExtra
-    : [replyTurnRules(rules, destination, upsell, postIntake, customerTurn, {
+  const turnSections = intakeReplyTurn ? [] : replyTurnRuleSections(rules, destination, upsell, postIntake, customerTurn, {
       tripContext, planLine, seatDollars, seat, planOwned, purchasedPlan: tripContext?.purchased_plan || '',
-    }), systemExtra].filter(Boolean).join('\n\n');
+  });
+  const extraSection = { title: intakeReplyTurn ? 'Intake or starter instructions' : 'Additional instructions for this turn', text: systemExtra };
+  const turnRules = [turnSections.map(({ text }) => text).join('\n'), systemExtra].filter(Boolean).join('\n\n');
+  const intakeDirective = intakeReplyTurn ? { title: 'Intake or starter priority', text: 'Follow the intake or starter instructions in the next block for this turn.' } : null;
   const genStarted = Date.now();
   try {
     const { response, body, cost } = await fetchOpenRouterJson(OPENROUTER_CHAT_COMPLETIONS_URL, {
@@ -931,7 +921,7 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
             role: 'system',
             content: [
               openRouterCachedSystemPart(STATIC_REPLY_RULES),
-              ...(intakeReplyTurn ? [{ type: 'text', text: 'Follow the intake or starter instructions in the next block for this turn.' }] : []),
+              ...(intakeDirective ? [{ type: 'text', text: intakeDirective.text }] : []),
               { type: 'text', text: turnRules },
             ],
           },
@@ -952,6 +942,12 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
     }
     const visible = splitBeat(answer);
     if (!visible.text) return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: 'tiered model returned an empty reply', genLatencyMs: elapsed, cost };
+    recordReplyInstructions(purpose, [
+      ...staticReplySections,
+      ...(intakeDirective ? [intakeDirective] : []),
+      ...turnSections,
+      ...(systemExtra ? [extraSection] : []),
+    ]);
     return { called: true, via: 'openrouter-chat', modelTier, responseModel, text: visible.text, beats: visible.beats, maxTokens: 900, genLatencyMs: elapsed, cost, backend: 'openrouter' };
   } catch (error) {
     return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: text(error?.message || error?.name || error, 300), genLatencyMs: Math.max(0, Date.now() - genStarted), cost: null };

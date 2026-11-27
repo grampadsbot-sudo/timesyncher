@@ -10,11 +10,16 @@ import { travelSummaryDocument, travelSummaryForTurn } from '../src/vacation/vk-
 import { persistVacationAppCustomerTurn } from '../src/vacation/vacation-app-queue-persist.mjs';
 import { turnUnderstandingRequest } from '../src/vacation/turn-understanding.mjs';
 import { tripIntakeExtractionChatRequest } from '../src/vacation/trip-intake-classify.mjs';
+import { replyInstructionsPayload, withOpenRouterLedger } from '../src/vacation/openrouter-call-ledger.mjs';
+import { vacationAppTurnPayloadForClient } from '../src/vacation/blocked-turn-payload.mjs';
+import { callTieredModel } from './vacation-app-reply-rules.mjs';
 
 const tripId = randomUUID();
 const customerId = randomUUID();
 const firstId = randomUUID();
+const middleId = randomUUID();
 const lastId = randomUUID();
+const lastRequest = randomUUID();
 const token = () => randomUUID().slice(0, 8);
 const tripRow = { trip_id: tripId, customer_id: customerId, title: token(), destination: token(),
   customer_email: 'summary-test@gmail.com', display_name: 'Summary test account', created_at: '2026-11-26T18:00:00Z' };
@@ -23,6 +28,7 @@ const turn = (id, direction, hour) => ({
   body: '', payload: {}, at: `2026-11-26T${hour}:00:00Z`,
 });
 const first = { turnId: firstId, where: token(), who: '', transport: '', tripName: '', description: '' };
+const middle = { ...first, turnId: middleId };
 const modelFields = { where: first.where, who: token(), transport: token(), description: token() };
 const last = { turnId: lastId, ...travelSummaryForTurn(tripRow, { ...modelFields, tripName: token() }) };
 assert.equal(last.tripName, tripRow.title);
@@ -34,16 +40,60 @@ assert.deepEqual(request.response_format.json_schema.schema.properties.travelSum
   'where', 'who', 'transport', 'description',
 ]);
 
+async function captureRules(purpose, intakeReplyTurn = false) {
+  const systemExtra = `\n  ${token()} <em>é</em> &\r\nsecond line\rthird line\n`;
+  const customerTurn = token();
+  const realFetch = globalThis.fetch;
+  let messages;
+  globalThis.fetch = async (url, { body }) => {
+    assert.equal(new URL(url).pathname, '/api/v1/chat/completions');
+    const sent = JSON.parse(body);
+    messages = sent.messages;
+    return Response.json({ model: sent.model, choices: [{ message: { content: token() } }], usage: { cost: 0 } });
+  };
+  try {
+    return await withOpenRouterLedger(async () => {
+      const result = await callTieredModel({
+        customerTurn, systemExtra, purpose, intakeReplyTurn, jev: { jevRan: true, modelTier: 1 }, env: { OPENROUTER_API_KEY: token() },
+      });
+      assert.equal(result.called, true, result.reason);
+      const { modelRules } = replyInstructionsPayload();
+      const [recorded] = modelRules;
+      assert.equal(modelRules.length, 1);
+      assert.equal(recorded.purpose, purpose);
+      const systemBlocks = messages.find(({ role }) => role === 'system').content.map(({ text }) => text);
+      const extra = intakeReplyTurn ? systemBlocks.pop() : systemBlocks.at(-1).slice(-systemExtra.length);
+      assert.equal(extra, systemExtra);
+      if (!intakeReplyTurn) systemBlocks[1] = systemBlocks[1].slice(0, -extra.length - 2);
+      assert.deepEqual(Buffer.from(recorded.sections.at(-1).text), Buffer.from(extra));
+      assert.deepEqual(Buffer.from(recorded.sections.slice(0, -1).map(({ text }) => text).join('\n')), Buffer.from(systemBlocks.join('\n')));
+      assert.deepEqual(vacationAppTurnPayloadForClient({ modelRules, roster: [] }), { roster: [] });
+      return recorded;
+    });
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+}
+
+const firstRules = [await captureRules('reply_draft')];
+const lastRules = [await captureRules('reply_rewrite', true)];
 const query = async (strings) => {
   const sql = strings.join('?');
   if (sql.includes('from trips t left join customers c')) return [tripRow];
-  if (sql.includes('from transcript_turns')) return [turn(firstId, 'inbound', 19), turn(randomUUID(), 'outbound', 20), turn(lastId, 'inbound', 21)];
+  if (sql.includes('from transcript_turns')) return [
+    { ...turn(firstId, 'inbound', 19), payload: { modelRules: firstRules } },
+    turn(randomUUID(), 'outbound', 20),
+    { ...turn(middleId, 'inbound', 21), payload: { liveTranscript: { rules: { ok: true, slug: token(), contentHash: token() } } } },
+    { ...turn(lastId, 'inbound', 22), request_id: lastRequest },
+    { ...turn(randomUUID(), 'outbound', 23), request_id: lastRequest, payload: { modelRules: lastRules } },
+  ];
   return [];
 };
 const stateDir = await mkdtemp(path.join(os.tmpdir(), 'vk-travel-summary-'));
 const store = new LocalVkAdminStore(stateDir);
 const save = (snapshot) => store.putJson(`artifacts/${tripId}/travel-summary/${snapshot.turnId}.json`, snapshot);
 await save({ ...travelSummaryDocument(first), turnId: firstId });
+await save({ ...travelSummaryDocument(middle), turnId: middleId });
 const { turnId: storedId, ...forPersist } = last;
 await persistVacationAppCustomerTurn(async (strings, ...values) => {
   const sql = strings.join('?');
@@ -95,7 +145,7 @@ async function assertSummary(page, snapshot, turnNumber) {
       viewStructure: [...view.children].map((node) => node.tagName),
       scrubberStructure: [...view.querySelector('.admin-travel-scrubber').children].map((node) => node.tagName),
       width: innerWidth,
-      overflow: [pane, view, cover, ...view.querySelectorAll('header, h1, dt, dd, p, input')].map(geometry).filter(Boolean),
+      overflow: [pane, view, cover, ...view.querySelectorAll('header, h1, dt, dd, p, input, button, details')].map(geometry).filter(Boolean),
       wraps: [...view.querySelectorAll('label, output, dt')].filter((node) => !hasOneLine(node)).map((node) => node.tagName),
     };
   });
@@ -109,12 +159,43 @@ async function assertSummary(page, snapshot, turnNumber) {
     ...(snapshot.description ? ['P'] : []),
   ], 'cover contains only bound fields and their labels');
   assert.deepEqual(actual.viewStructure, ['DIV', 'DIV']);
-  assert.deepEqual(actual.scrubberStructure, ['LABEL', 'INPUT', 'OUTPUT']);
+  assert.deepEqual(actual.scrubberStructure, ['LABEL', 'BUTTON', 'INPUT', 'BUTTON', 'OUTPUT']);
   assert.equal(actual.turnId, snapshot.turnId);
   assert.equal(actual.value, turnNumber);
   assert.equal(actual.width, 390);
   assert.deepEqual(actual.overflow, [], 'Travel Summary stored fields are not clipped');
   assert.deepEqual(actual.wraps, [], 'Travel Summary controls fit on one line');
+}
+
+async function assertTurn(page, snapshot, number, rules) {
+  await assertSummary(page, snapshot, number);
+  const view = page.getByRole('region', { name: 'Travel Summary' });
+  const rulesPanel = view.getByRole('region', { name: 'Model rules' });
+  const sections = rulesPanel.locator('details');
+  assert.equal(await view.locator('output').textContent(), `${number} / 3`);
+  assert.equal(await view.getByRole('slider').getAttribute('aria-valuetext'), `${number} of 3`);
+  assert.equal(await view.getByRole('button', { name: 'Previous turn' }).isDisabled(), number === 1);
+  assert.equal(await view.getByRole('button', { name: 'Next turn' }).isDisabled(), number === 3);
+  assert.equal(await sections.count(), rules.length);
+  assert.equal(await rulesPanel.locator('.admin-empty').count(), Number(rules.length === 0));
+  if (!rules.length) {
+    assert.equal(await rulesPanel.locator('.admin-empty').textContent(), 'No model rules were stored for this turn.');
+    assert.equal(await rulesPanel.locator('.admin-travel-rule-text').count(), 0);
+  }
+  assert.equal(await rulesPanel.locator('details[open]').count(), 0);
+  for (const [index, { title, text }] of rules.entries()) {
+    const section = sections.nth(index);
+    const toggle = section.locator('summary');
+    const content = section.locator('.admin-travel-rule-text');
+    assert.equal(await toggle.textContent(), title);
+    assert.equal(await content.isVisible(), false);
+    await toggle.tap();
+    assert.equal(await content.isVisible(), true);
+    assert.deepEqual(Buffer.from(await content.textContent()), Buffer.from(text));
+    assert.equal(await content.locator('*').count(), 0);
+    await toggle.tap();
+    assert.equal(await content.isVisible(), false);
+  }
 }
 
 process.env.VK_ADMIN_LOGIN = randomUUID();
@@ -127,10 +208,15 @@ try {
   const endpoint = `${server.base}/api/admin/customers/${tripId}/artifacts/travel-summary`;
   assert.equal((await page.request.get(endpoint)).status(), 401);
   assert.ok((await page.request.post(`${server.base}/api/admin/session`, { data: { login: process.env.VK_ADMIN_LOGIN } })).ok());
+  const detail = await page.request.get(`${server.base}/api/admin/customers/${tripId}`);
+  assert.ok(detail.ok());
+  assert.ok((await detail.json()).vacation.turns.every((turn) => !('modelRules' in turn) && !('modelRules' in turn.payload)));
   const response = await page.request.get(endpoint);
   assert.ok(response.ok());
   assert.deepEqual((await response.json()).snapshots, [
-    { ...first, turnNumber: 1 }, { ...last, turnNumber: 2 },
+    { ...first, turnNumber: 1, modelRules: firstRules },
+    { ...middle, turnNumber: 2, modelRules: [] },
+    { ...last, turnNumber: 3, modelRules: lastRules },
   ]);
   assert.equal((await page.request.put(endpoint, { data: { snapshots: [] } })).status(), 405);
   await page.goto(`${server.base}/vacation-app/admin`);
@@ -139,14 +225,28 @@ try {
   await page.getByRole('option', { name: 'Travel Summary', exact: true }).click();
   const slider = page.getByRole('slider', { name: 'Turn' });
   await slider.waitFor();
-  await assertSummary(page, last, 2);
-  await slider.press('ArrowLeft');
-  await assertSummary(page, first, 1);
-  await slider.press('ArrowRight');
-  await assertSummary(page, last, 2);
+  const previous = page.getByRole('button', { name: 'Previous turn' });
+  const next = page.getByRole('button', { name: 'Next turn' });
+  for (const arrow of [previous, next]) {
+    const { width, height } = await arrow.boundingBox();
+    assert.ok(width >= 44 && height >= 44);
+  }
+  await assertTurn(page, last, 3, lastRules[0].sections);
+  await previous.tap();
+  await assertTurn(page, middle, 2, []);
+  await previous.tap();
+  await assertTurn(page, first, 1, firstRules[0].sections);
+  await page.locator('.admin-travel-rules summary').first().tap();
+  await next.tap();
+  await assertTurn(page, middle, 2, []);
+  await slider.press('Home');
+  await assertTurn(page, first, 1, firstRules[0].sections);
+  await next.tap();
+  await next.tap();
+  await assertTurn(page, last, 3, lastRules[0].sections);
 
   await page.locator('[data-travel-field="who"]').evaluate((field) => { field.textContent = ''; });
-  await assert.rejects(() => assertSummary(page, last, 2),
+  await assert.rejects(() => assertSummary(page, last, 3),
     (error) => error.message.startsWith('visible fields are bound to the selected stored snapshot'));
   await page.locator('[data-travel-field="who"]').evaluate((field, value) => { field.textContent = value; }, last.who);
   await page.locator('[data-travel-cover]').evaluate((cover) => {
@@ -154,10 +254,10 @@ try {
     extra.textContent = 'Placeholder';
     cover.append(extra);
   });
-  await assert.rejects(() => assertSummary(page, last, 2),
+  await assert.rejects(() => assertSummary(page, last, 3),
     (error) => error.message.startsWith('cover contains only bound fields and their labels'));
   await page.locator('[data-view="travel-summary"]').evaluate((item) => item.remove());
-  await assert.rejects(() => assertSummary(page, last, 2),
+  await assert.rejects(() => assertSummary(page, last, 3),
     (error) => error.message.startsWith('Travel Summary must be a dropdown option'));
 } finally {
   await browser.close();

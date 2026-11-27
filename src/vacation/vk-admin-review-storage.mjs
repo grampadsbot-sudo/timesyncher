@@ -187,11 +187,24 @@ export async function listReviewArtifacts(store, vacationId) {
   };
 }
 
+function storedModelRules(value) {
+  if (!Array.isArray(value)) return [];
+  return value.filter((prompt) => ['reply_draft', 'reply_rewrite', 'reply_interim'].includes(prompt?.purpose)
+    && Array.isArray(prompt.sections) && prompt.sections.length > 0
+    && prompt.sections.every((section) => typeof section?.title === 'string' && section.title
+      && typeof section.text === 'string' && section.text));
+}
+
 export async function listTravelSummarySnapshots(store, vacation) {
   const stored = await store.listJson(travelSummaryPrefix(vacation.tripId));
   const byTurn = new Map(stored.filter((snapshot) => typeof snapshot?.turnId === 'string')
     .map((snapshot) => [snapshot.turnId, snapshot]));
   const turns = vacation.turns.filter((turn) => turn.turnId && turn.direction === 'inbound' && turn.speaker === 'customer');
+  const replyRules = new Map();
+  for (const { direction, speaker, requestId, modelRules } of vacation.turns) {
+    if (direction !== 'outbound' || speaker !== 'app' || !requestId || !modelRules) continue;
+    replyRules.set(requestId, [...(replyRules.get(requestId) || []), ...storedModelRules(modelRules)]);
+  }
   const people = new Set();
   let where = '';
   return turns.map((turn, index) => {
@@ -205,6 +218,10 @@ export async function listTravelSummarySnapshots(store, vacation) {
     return {
       turnId: turn.turnId,
       turnNumber: index + 1,
+      modelRules: [
+        ...storedModelRules(turn.modelRules),
+        ...(replyRules.get(turn.requestId) || []),
+      ],
       ...travelSummaryValues(snapshot || {
         where: latest ? vacation.destination || where : where,
         tripName: latest && vacation.shareSlug ? vacation.title : '',
