@@ -1,0 +1,1 @@
+export function isUsableMapLatLng(lat: unknown, lng: unknown): boolean;

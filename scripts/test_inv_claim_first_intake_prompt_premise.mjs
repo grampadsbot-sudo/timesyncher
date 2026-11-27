@@ -89,7 +89,7 @@ hit('planned activities', /\bplanned activities\b/i);
 hit('invite_contact field', /invite_contact/);
 hit('plans gap', /"plans"/);
 hit('reply rules pack', /Item34 ban|shared-reply-smoke|Write at least four sentences/);
-hit('onboarding welcome pack', /hold the mic button|You're all set/);
+hit('onboarding welcome pack', /tap the mic button|You're all set/);
 
 if (!/ask where they are staying/i.test(system)) violations.push('missing lodging ask');
 if (facts.lodgingAsk !== true) violations.push(`lodgingAsk=${String(facts.lodgingAsk)}`);

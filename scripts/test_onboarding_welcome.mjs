@@ -114,7 +114,15 @@ try {
   assert.doesNotMatch(templates.owner_no_site, /\{tripSiteUrl\}/);
   assert.doesNotMatch(templates.collaborator_no_site, /\{tripSiteUrl\}/);
 
-  const trip = { id: 'trip-1', publicUrl: tripSiteUrl, title: tripTitle, shareToken: 'intake-trip1slug' };
+  const trip = {
+    id: 'trip-1',
+    publicUrl: tripSiteUrl,
+    title: tripTitle,
+    shareToken: 'intake-trip1slug',
+    destination: 'zon-abcdef12',
+    start_date: '2026-07-01',
+    end_date: '2026-07-08',
+  };
   const stored = [];
   const welcomeClaims = new Set();
   const claimKey = (sessionId, welcomeFor) => `${sessionId}|${welcomeFor}`;
