@@ -259,9 +259,7 @@ const failed = await applyChatPlaceSearchForVacationTurn({
 assert.equal(failed.kind, 'failed');
 assert.equal(failed.placeSearch.status, 'failed');
 assert.equal(Array.isArray(failed.placeSearch.providers), true);
-assert.equal(failInserts.length, 1);
-const failMeta = JSON.parse(failInserts[0].find((value) => typeof value === 'string' && value.includes('needsDetails')));
-assert.equal(failMeta.needsDetails, true);
+assert.equal(failInserts.length, 0, 'search miss without customer provenance does not persist a Thing');
 
 const errorDb = mockDb();
 const errored = await applyChatPlaceSearchForVacationTurn({
@@ -285,7 +283,7 @@ const errored = await applyChatPlaceSearchForVacationTurn({
 });
 assert.equal(errored.kind, 'failed');
 assert.match(errored.error, /Brave Place Search failed/);
-assert.equal(errorDb.inserts.length, 1);
+assert.equal(errorDb.inserts.length, 0, 'provider search error without customer provenance does not persist');
 
 const thing = placeToTripThing(mockPlace(SCT_QUERIES[0]));
 assert.equal(thing.metadata.sourceRef.id, SCT_QUERIES[0].mockId);
@@ -305,6 +303,12 @@ const intakeSaved = await persistChatIntakePlaceThing(intakeDb, {
   category: 'restaurant',
   title: 'Saved Bistro',
   destinationHint: 'Seattle',
+  metadata: {
+    origin: 'customer_turn',
+    customerTurnId: 'turn-intake-hit',
+    customerSpan: 'Saved Bistro',
+  },
+  provenanceContext: { customerTurns: { 'turn-intake-hit': { speaker: 'customer', text: 'Please save Saved Bistro.' } } },
   searchImpl: async () => ({
     places: [mockPlace({ mockId: 'brave-bistro', provider: 'brave', category: 'restaurant', title: 'Saved Bistro' })],
     providers: [],
@@ -374,7 +378,13 @@ backfillRows.push({
   category: 'restaurant',
   title: 'Needs Search',
   location: {},
-  metadata: { source: 'chat_extraction', needsDetails: true },
+  metadata: {
+    source: 'chat_extraction',
+    needsDetails: true,
+    origin: 'customer_turn',
+    customerTurnId: 'backfill-turn',
+    customerSpan: 'Needs Search',
+  },
   source: null,
   description: '',
   starts_at: null,
