@@ -1,6 +1,5 @@
 import { assignTripSiteUrlWhenThingsPresent } from './trip-site-url-after-insert.mjs';
 import { applyIntakeExtractedTripTitle } from './intake-title-persist.mjs';
-import { intakeLodgingWanted } from './trip-intake-classify.mjs';
 import { validatePlannedThings } from './chat-planned-thing-validation.mjs';
 import { tripStateActionsEnabled } from './chat-plan-persist.mjs';
 import {
@@ -12,8 +11,7 @@ export async function intakeItineraryExistingThings(
   db,
   tripId,
   text,
-  extracted,
-  wantedThings,
+  lodgingWanted,
   {
     extractedDestination = '',
     extractedTitle = '',
@@ -28,7 +26,6 @@ export async function intakeItineraryExistingThings(
   },
   loadTripThings,
 ) {
-  const lodgingWanted = intakeLodgingWanted(extracted, wantedThings);
   if (String(text || '').trim()) {
     await applyIntakeExtractedTripTitle(db, tripId, {
       extractedDestination,

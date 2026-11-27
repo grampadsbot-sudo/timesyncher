@@ -296,6 +296,7 @@ export async function runVacationAppInTurnSearch({
       classificationOk: true,
       seat: null,
       wantedThings: workerJobContext.jobFields?.wantedThings || [],
+      customerText: customerTurn,
       customerTurnId: turnId,
       extractedDestination: workerJobContext.jobFields?.destination || '',
       env,

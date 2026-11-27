@@ -61,6 +61,7 @@ import {
   resolveIntakePlace,
   tripIntakeJobFields,
 } from '../src/vacation/trip-intake-classify.mjs';
+import { normalizeTripThingName } from '../src/vacation/trip-thing-name-shape.mjs';
 import { keepPlannedDays, persistCustomerNotesOnly, persistFollowupLodgingSafely, plannedCustomerThings, tripStateActionsEnabled } from '../src/vacation/chat-plan-persist.mjs';
 import { validatePlannedThings } from '../src/vacation/chat-planned-thing-validation.mjs';
 import {
@@ -611,7 +612,7 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
   const priorRows = await db`select title, destination, metadata from trips where id = ${tripId} limit 1`;
   const existing = await db`select count(*)::int as n from trip_things where trip_id = ${tripId}`;
   if (Number(existing[0]?.n) > 0) {
-    return intakeItineraryExistingThings(db, tripId, text, extracted, wantedThings, {
+    return intakeItineraryExistingThings(db, tripId, text, lodgingWanted, {
       extractedDestination, extractedTitle, destinationError, titleError, searchImpl, searchPlacesImpl: work ? work.lodgingSearch(searchPlacesImpl) : searchPlacesImpl, env, fetchImpl: work ? work.fetchImpl : fetchImpl, customerTurnId,
       savedTripTitle: priorRows[0]?.title,
     }, loadTripThings);
@@ -793,7 +794,7 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
   for (const thing of next) {
     const prior = current.find((item) => item.id && item.id === thing.id);
     if (!prior) {
-      if (current.some((item) => item.title === thing.title)) continue;
+      if (current.some((item) => normalizeTripThingName(item.title) === normalizeTripThingName(thing.title))) continue;
       const metadata = chatSaveMetadata(thing, {
         whenLabel: thing.whenLabel,
         customerWhen: thing.customerWhen,
