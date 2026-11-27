@@ -201,7 +201,10 @@ export async function persistVacationAppOutboundReply({
   if (tripStateReady && (!tripStatePin || tripStateNeedsRewrite(judgedQuality))) {
     return { ...base, ...tripStateReplyFailure('trip_state_reply_unverified') };
   }
-  if (!tripStateReady && produced?.reply) produced.reply = finalizeCustomerReplyText(sayVacationNotTrip(produced.reply));
+  if (!tripStateReady && produced?.reply) {
+    produced.reply = sayVacationNotTrip(produced.reply);
+    produced.reply = finalizeCustomerReplyText(produced.reply);
+  }
   const appLive = liveTurnRecord({
     turnIndex: customerTurnIndex + 1,
     role: 'app',
@@ -349,7 +352,10 @@ export async function commitShippedRewrite(db, session, pending, finished, { rec
   if (tripStateReady && (!tripStatePin || tripStateNeedsRewrite(judgedQuality))) {
     return tripStateReplyFailure('trip_state_reply_unverified');
   }
-  if (!tripStateReady) finished = { ...finished, reply: finalizeCustomerReplyText(sayVacationNotTrip(finished.reply)) };
+  if (!tripStateReady) {
+    finished = { ...finished, reply: sayVacationNotTrip(finished.reply) };
+    finished.reply = finalizeCustomerReplyText(finished.reply);
+  }
   const wallMs = Math.max(1, Date.now() - (Number(pending.wallStarted) || Date.now()));
   const appLive = liveTurnRecord({
     turnIndex: Number(pending.customerTurnIndex) + 1,
