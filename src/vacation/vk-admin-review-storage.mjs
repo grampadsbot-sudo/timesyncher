@@ -4,7 +4,6 @@ import { dirname } from 'node:path';
 import { DatabaseJsonStore, LocalJsonStore } from '../onboarding/eula-persistent-store.mjs';
 import { hasDatabase, sql } from './db.mjs';
 import { listOnboardingCaptureTags, onboardingCaptureTag } from './vk-admin-onboarding-captures.mjs';
-import { getTripStateRevisionForRequest, getTripStateRevisionForTurn } from './trip-state-revision-store.mjs';
 import { parseRevisionState, projectTravelSummaryFromRevision } from './vk-travel-summary.mjs';
 
 export class LocalVkAdminStore extends LocalJsonStore {
@@ -207,15 +206,28 @@ function revisionTurnNumber(turn, fallback) {
   return Number.isInteger(liveTurn) && liveTurn > 0 ? liveTurn : fallback;
 }
 
-async function loadTurnRevision(db, tripId, turn, requestId) {
-  if (!db || !tripId || !Number.isInteger(turn) || turn < 1) return null;
+async function listTripRevisions(db, tripId) {
+  if (!db || !tripId) return [];
   try {
-    return await (requestId ? getTripStateRevisionForRequest(tripId, requestId, db)
-      : getTripStateRevisionForTurn(tripId, turn, db));
+    return await db`
+      select * from vacation_trip_state_revisions
+      where trip_id = ${tripId}
+      order by revision
+    `;
   } catch (error) {
-    if (error?.code === '42P01') return null;
+    if (error?.code === '42P01') return [];
     throw error;
   }
+}
+
+export function revisionForAdminTurn(revisions, turnNumber, requestId) {
+  const rows = Array.isArray(revisions) ? revisions : [];
+  if (requestId) {
+    const matched = rows.filter((row) => String(row.request_id) === String(requestId));
+    if (matched.length) return matched[matched.length - 1];
+  }
+  const byTurn = rows.filter((row) => Number(row.turn) === Number(turnNumber));
+  return byTurn.length ? byTurn[byTurn.length - 1] : null;
 }
 
 export async function listTravelSummarySnapshots(db, vacation) {
@@ -225,9 +237,10 @@ export async function listTravelSummarySnapshots(db, vacation) {
     if (direction !== 'outbound' || speaker !== 'app' || !requestId || !modelRules) continue;
     replyRules.set(requestId, [...(replyRules.get(requestId) || []), ...storedModelRules(modelRules)]);
   }
-  return Promise.all(turns.map(async (turn, index) => {
+  const revisions = await listTripRevisions(db, vacation.tripId);
+  return turns.map((turn, index) => {
     const turnNumber = index + 1;
-    const revisionRow = await loadTurnRevision(db, vacation.tripId, revisionTurnNumber(turn, turnNumber), turn.requestId);
+    const revisionRow = revisionForAdminTurn(revisions, revisionTurnNumber(turn, turnNumber), turn.requestId);
     return {
       turnId: turn.turnId,
       turnNumber,
@@ -238,7 +251,7 @@ export async function listTravelSummarySnapshots(db, vacation) {
       tripState: projectTravelSummaryFromRevision(revisionRow),
       conversationState: parseRevisionState(revisionRow),
     };
-  }));
+  });
 }
 
 export function travelSummaryTiming(vacation, snapshots) {

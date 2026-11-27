@@ -38,6 +38,14 @@ export function isVkAdminAllowedHost(req, env = process.env) {
   return vkAdminExtraAllowedHosts(env).includes(host);
 }
 
+export function vkAdminRequestHostname(req) {
+  return hostnameOnly(hostFromRequest(req));
+}
+
+export function isVkAdminStagingHost(req) {
+  return vkAdminRequestHostname(req) === 'vacation-staging.timesyncher.com';
+}
+
 function adminKeys(env) {
   const login = String(env.VK_ADMIN_LOGIN || '');
   const secret = String(env.VK_ADMIN_SESSION_SECRET || '');
