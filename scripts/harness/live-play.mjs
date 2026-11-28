@@ -137,7 +137,8 @@ export function chatGoalsReached({ itineraryCount: items, index, maxTurns } = {}
   const cap = Math.max(1, Number(maxTurns) || 50);
   const atCap = Number(index) + 1 >= cap;
   const itineraryOk = Number(items) > 0;
-  return { itineraryOk, atCap, done: itineraryOk };
+  // Craig t4222u: play all maxTurns customer messages. A saved itinerary is not a stop.
+  return { itineraryOk, atCap, done: atCap };
 }
 
 function tripFields(body) {
