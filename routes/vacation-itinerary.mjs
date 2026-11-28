@@ -539,6 +539,8 @@ function queueVacationAppHooks() {
 const postStartedByRequest = new WeakMap();
 
 async function queueVacationAppTurn(db, session, trip, body, intakePrefill = null, httpReq = null) {
+  const storedTrip = await tripRowForStateActions(db, trip?.id, trip?.metadata ? trip : null);
+  const chatTrip = trip ? { ...trip, ...storedTrip } : null;
   const welcomeStarted = Date.now();
   if (!seatFromSession(session)) await ensureOnboardingOpener(db, session, trip || null);
   const welcomeMs = Date.now() - welcomeStarted;
@@ -547,8 +549,13 @@ async function queueVacationAppTurn(db, session, trip, body, intakePrefill = nul
   if (aiMcpReply) return aiMcpReply;
   const pendingPreviewReply = await tryHandlePendingPreviewChatTurn(db, { session, trip, requestText });
   if (pendingPreviewReply) return pendingPreviewReply;
-  const intake = await resolveVacationAppQueueIntake(requestText, intakePrefill, process.env, session, { db, trip });
-  return runQueueVacationAppTurn(db, session, trip, body, queueVacationAppHooks(), { requestText, ...intake, welcomeMs, httpReq, postStartedMs: httpReq ? postStartedByRequest.get(httpReq) : null });
+  const replyBackend = chatTrip?.metadata?.replyBackend
+    || (trip?.id && trip.id === session?.trip_id ? session.metadata?.replyBackend : '');
+  if (replyBackend === 'trip_state' && !tripStateActionsEnabled({ trip: chatTrip })) {
+    return { ok: false, status: 'reply_unavailable', reply: null, error: 'trip_state_actions_unavailable' };
+  }
+  const intake = await resolveVacationAppQueueIntake(requestText, intakePrefill, process.env, session, { trip: chatTrip });
+  return runQueueVacationAppTurn(db, session, chatTrip, body, queueVacationAppHooks(), { requestText, ...intake, welcomeMs, httpReq, postStartedMs: httpReq ? postStartedByRequest.get(httpReq) : null });
 }
 
 export function chatSaveMetadata(thing, scheduled) {
