@@ -20,6 +20,11 @@ import {
 } from './live-app-turn.mjs';
 
 const MAX_TOOL_CALLS = 8;
+const ungroundedReply = 'I couldn’t verify enough to answer that reliably. Could you tell me what you’d like me to check first?';
+
+export function isTripStateRewriteFallback({ reply, log }) {
+  return reply === ungroundedReply && log?.rewriteFailReason === 'rewrite_ungrounded' && log.shippedModel === null;
+}
 
 function trimmedRewriteChange(change) {
   return String(change || '').replace(/\s+/g, ' ').trim();
@@ -103,7 +108,7 @@ function stampTripStateReply({ reply, quality, draftModel, log, draft, model }) 
     model: {
       called: true,
       via: model?.via || 'openrouter-chat',
-      responseModel: draftModel,
+      responseModel: log.shippedModel === null ? null : draftModel,
       modelTier: model?.modelTier ?? null,
       genLatencyMs: log.latencyMs?.draft ?? null,
       maxTokens: model?.maxTokens ?? 900,
@@ -395,7 +400,9 @@ export async function finishTripStateRewrite({ pending, env = process.env, rules
 
   const rewritePassed = !failReason && rewriteQuality?.judged === true && !tripStateNeedsRewrite(rewriteQuality);
   const draftGrounded = !tripStateNeedsRewrite(pending?.quality);
-  const shippedText = rewritePassed ? rewritten : (draftGrounded ? String(pending?.draft || '').trim() : '');
+  const usedFallback = !draftGrounded && failReason === 'rewrite_ungrounded';
+  const groundedDraft = draftGrounded ? String(pending?.draft || '').trim() : '';
+  const shippedText = rewritePassed ? rewritten : (usedFallback ? ungroundedReply : groundedDraft);
   const rewriteModel = String(called?.responseModel || pending?.draftModel || '').trim();
   const shownChange = rewritePassed ? (trimmedRewriteChange(split.change) || null) : null;
   const shippedQuality = rewritePassed ? rewriteQuality : pending?.quality;
@@ -414,7 +421,7 @@ export async function finishTripStateRewrite({ pending, env = process.env, rules
       error: rewritePassed ? null : (failReason || 'rewrite_not_shipped'),
     }],
     shippedRewrite: rewritePassed,
-    shippedModel: rewritePassed ? rewriteModel : (pending?.draftModel || null),
+    shippedModel: rewritePassed ? rewriteModel : (usedFallback ? null : (pending?.draftModel || null)),
     jevScoreDraft: pending?.draftScore ?? null,
     jevScoreRewrite: rewriteQuality?.judged ? rewriteQuality.score : null,
     jevScoreRaw: rawScore(shippedQuality?.scoreRaw),

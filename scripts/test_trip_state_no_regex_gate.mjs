@@ -18,6 +18,7 @@ const requestIds = {
   verified: 'd7d32a33-d8e5-426d-a382-51a600333032',
   deferred: 'b26c3657-7ee5-4bb2-aa55-6a0a106b894b',
   stale: '542b64c5-117d-46d2-8b42-00e26a2f9929',
+  ungrounded: 'caeacf5b-0a08-4064-b5cc-fdc0388270de',
 };
 const dayId = String(intId(`${tripId}:day:2027-04-06`));
 const trip = {
@@ -69,7 +70,7 @@ const hooks = {
   tripStateStore: store,
 };
 
-async function generate(revision, draft) {
+async function generate(revision, draft, ungroundedRewrite = '') {
   const originalFetch = globalThis.fetch;
   const originalPath = process.env.PATH;
   const writerPins = [];
@@ -78,14 +79,16 @@ async function generate(revision, draft) {
     const body = JSON.parse(init.body);
     if (new URL(url).pathname.endsWith('/decisions')) {
       judgePins.push(body.state.trip_state_pin);
-      assert.equal(body.state.draft, draft);
+      assert.equal(body.state.draft, judgePins.length === 1 ? draft : ungroundedRewrite);
       return Response.json({ answers: {
-        overall_quality: { score: 4 }, disposition: { choice: 'keep' }, fix_focus: { choice: 'keep' },
-        claims_mutation: { noul: 0.99 }, change_claim_grounded: { noul: 0.99 },
+        overall_quality: { score: ungroundedRewrite ? 1 : 4 },
+        disposition: { choice: ungroundedRewrite ? 'rewrite' : 'keep' },
+        fix_focus: { choice: ungroundedRewrite ? 'misses_ask' : 'keep' },
+        claims_mutation: { noul: ungroundedRewrite ? 0.01 : 0.99 }, change_claim_grounded: { noul: 0.99 },
       } });
     }
     writerPins.push(JSON.parse(body.messages[1].content[0].text).pin);
-    const text = writerPins.length === 1 ? draft : `${draft}\nWHAT_I_CHANGED: Repeated the placement claim.`;
+    const text = writerPins.length === 1 ? draft : `${ungroundedRewrite || draft}\nWHAT_I_CHANGED: Reworded the reply.`;
     return Response.json({ model: body.model, choices: [{ message: { content: text } }] });
   };
   process.env.PATH = '/nonexistent';
@@ -96,7 +99,7 @@ async function generate(revision, draft) {
       understanding: { intent: { asksPrice: false, asksAccess: false, pullsAccess: false, seats: [], ask: false } },
     });
     assert.deepEqual(writerPins, Array(writerPins.length).fill(produced.tripStateContext.pin));
-    assert.deepEqual(judgePins, [produced.tripStateContext.pin]);
+    assert.deepEqual(judgePins, Array(ungroundedRewrite ? 2 : 1).fill(produced.tripStateContext.pin));
     return produced;
   } finally {
     globalThis.fetch = originalFetch;
@@ -133,6 +136,18 @@ try {
   assert.equal((await ship(requestIds.missing, blocked)).error, 'trip_state_reply_unverified');
   const incompleteJudgment = applyTripStateJevQuality({ judged: true, score: 4 }, { answers: {} }, blocked.tripStateContext.state);
   assert.equal(incompleteJudgment.judged, false);
+
+  const ungrounded = await generate(await prepare(requestIds.ungrounded, 5),
+    'Moonstone Arcade is a good stop for the afternoon.', 'Try the Juniper Observatory for the evening instead.');
+  assert.equal(ungrounded.log.rewriteFailReason, 'rewrite_ungrounded');
+  const safeReply = 'I couldn’t verify enough to answer that reliably. Could you tell me what you’d like me to check first?';
+  assert.equal(ungrounded.reply, safeReply);
+  assert.equal((await ship(requestIds.ungrounded, { ...ungrounded, reply: 'I added Moonstone Arcade.' })).error,
+    'trip_state_reply_unverified');
+  const fallback = await ship(requestIds.ungrounded, ungrounded);
+  assert.equal(fallback.status, 'replied');
+  assert.equal(fallback.reply, safeReply);
+  assert.deepEqual(await db`select body from transcript_turns where request_id = ${requestIds.ungrounded}`, [{ body: safeReply }]);
 
   const meta = {
     tripState: {

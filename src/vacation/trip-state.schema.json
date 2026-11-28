@@ -1389,7 +1389,7 @@
           "maxLength": 280
         },
         "source": {
-          "const": "vk_search"
+          "enum": ["vk_search", "tavily"]
         },
         "result_id": {
           "$ref": "#/$defs/id"

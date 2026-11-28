@@ -194,7 +194,7 @@ function promoteSearch(site, saved, context, args) {
   let created = false;
   if (replacement && item && replacement !== item) return conflict('The selected candidate is already saved as another item.');
   if (!item) {
-    if (!scoped || selection?.source !== 'vk_search' || !validTripStateId(selection.result_id)
+    if (!scoped || !['vk_search', 'tavily'].includes(selection?.source) || !validTripStateId(selection.result_id)
       || !tripItemKinds.has(selection.type)
       || !context.state.research.areas.some((area) => normalizeTripThingName(area) === normalizeTripThingName(selection.area))) {
       return conflict('The selected candidate is outside the current search scope.');

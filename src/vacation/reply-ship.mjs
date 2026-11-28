@@ -19,6 +19,7 @@ import { bindOpenRouterLedger, openRouterTurnTelemetry, pendingOpenRouterCalls, 
 import { scheduleBackgroundWork } from './deferred-work.mjs';
 import { createTripStateRevisionStore } from './trip-state-revision-store.mjs';
 import { tripStateNeedsRewrite } from './trip-state-model-context.mjs';
+import { isTripStateRewriteFallback } from './trip-state-live-turn.mjs';
 
 function tripStateReplyFailure(error) {
   return { ok: false, status: 'reply_unavailable', reply: null, error };
@@ -198,7 +199,7 @@ export async function persistVacationAppOutboundReply({
     };
   }
   const tripStatePin = tripStateReady ? produced.tripStateContext?.pin : null;
-  if (tripStateReady && (!tripStatePin || tripStateNeedsRewrite(judgedQuality))) {
+  if (tripStateReady && (!tripStatePin || (tripStateNeedsRewrite(judgedQuality) && !isTripStateRewriteFallback(produced)))) {
     return { ...base, ...tripStateReplyFailure('trip_state_reply_unverified') };
   }
   if (!tripStateReady && produced?.reply) {
@@ -349,7 +350,7 @@ export async function commitShippedRewrite(db, session, pending, finished, { rec
     return { ok: false, status: 'reply_unavailable', reply: null, error: String(finished?.quality?.reason || finished?.reason || 'quality_not_judged') };
   }
   const tripStatePin = tripStateReady ? pending.tripStateContext?.pin : null;
-  if (tripStateReady && (!tripStatePin || tripStateNeedsRewrite(judgedQuality))) {
+  if (tripStateReady && (!tripStatePin || (tripStateNeedsRewrite(judgedQuality) && !isTripStateRewriteFallback(finished)))) {
     return tripStateReplyFailure('trip_state_reply_unverified');
   }
   if (!tripStateReady) {
