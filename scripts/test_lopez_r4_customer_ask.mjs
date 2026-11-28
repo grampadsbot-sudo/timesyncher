@@ -264,7 +264,6 @@ const livePlayed = await playCustomerTurns(
   },
 );
 assert.equal(livePlayed.reason, '');
-// Craig t4222u: a saved itinerary does not end the play. This fixture asks for 10 turns.
 assert.equal(livePlayed.customerTurnCount, 10);
 assert.equal(livePlayed.observedItineraryCount, 1);
 assert.equal(livePlayed.pricingReactionCaptured, true);
