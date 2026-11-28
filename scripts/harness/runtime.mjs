@@ -22,6 +22,7 @@ import { attachSsrToKeepsakeMetadata } from '../customer_suite/ssr/dialog-hook.m
 import { createLiveSsrHarness, primeLiveSsr } from './live-ssr-harness.mjs';
 import { finishMeasuredPlay } from './outcomes.mjs';
 import { finishArtifactReport, liveFinishReason, writeFinishArtifacts } from './finish-artifacts.mjs';
+import { recordStoppedPlay } from './stopped-play.mjs';
 
 export { writeOutcomes } from './outcomes.mjs';
 
@@ -311,6 +312,15 @@ export function liveOptions(env = process.env) {
       };
       if (played.reason) {
         const keepsake = !chatLeftNoThing(played) ? await storeHarnessKeepsake(keepsakeOptions) : null;
+        const stopped = await recordStoppedPlay({
+          played,
+          origin,
+          shareToken,
+          sessionToken: created.token,
+          outDir: options.outDir,
+          dialogOk: dialog.ok === true,
+          keepsakeOk: keepsake?.ok === true,
+        });
         return {
           ...base,
           tripId,
@@ -322,6 +332,9 @@ export function liveOptions(env = process.env) {
           pricingReactionCaptured: played.pricingReactionCaptured === true,
           customerTurnCount: played.customerTurnCount || 0,
           hitTurnCap: played.hitTurnCap === true,
+          reason: played.reason,
+          screensOk: stopped.screens.ok === true,
+          screensDetail: stopped.screens.error || '',
         };
       }
       const qa = played.qaRating && played.qaRating !== 'slot' ? played.qaRating : null;

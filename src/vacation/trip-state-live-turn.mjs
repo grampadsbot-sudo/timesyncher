@@ -4,6 +4,7 @@ import { customerIntent, emptyIntent } from './customer-intent.mjs';
 import { finalizeCustomerReplyText } from './reply-customer-wording.mjs';
 import { sayVacationNotTrip } from './customer-visible-copy.mjs';
 import { unjudgedReply } from './reply-quality-gate.mjs';
+import { storedReplyWhenSearchUnavailable } from './trip-state-search-unavailable-reply.mjs';
 import { sumModelCost, sumTurnCost } from './turn-cost.mjs';
 import { tripStateActionsEnabled } from './trip-state-actions-enabled.mjs';
 import { assertTripState } from './trip-state-projector.mjs';
@@ -265,6 +266,8 @@ export async function produceTripStateLiveReply({
   const reply = cleanReply(model?.called && model.text ? String(model.text) : '');
   const banned = appTextBanned(reply);
   if (!reply || banned) {
+    const stored = storedReplyWhenSearchUnavailable({ rules, jev, model, tripStateContext });
+    if (stored) return stored;
     return { reply: null, rules, jev, model, tripStateContext, reason: banned || model?.reason || 'live_dispatcher_failed' };
   }
 
@@ -463,6 +466,8 @@ export async function finishTripStateRewrite({ pending, env = process.env, rules
     judgeMs: rewritePassed ? rewriteQualityMs : draftQualityMs,
   };
   if (!shippedText) {
+    const stored = storedReplyWhenSearchUnavailable({ rules, jev: pending?.jev, model: pending?.model, log, responseModel: pending?.draftModel, tripStateContext });
+    if (stored) return stored;
     return {
       reply: null,
       rules,
