@@ -429,6 +429,66 @@ try {
   assert.equal((await db`select * from trip_things where trip_id = ${offTripId}`).length, 0);
   assert.equal((await db`select * from vacation_trip_state_action_receipts where trip_id = ${offTripId}`).length, 0);
   assert.deepEqual(await listTripStateRevisions(offTripId, db), []);
+
+  const lopezTripId = 'd46f2867-a00c-4ed0-b9f0-1e023f7c6036';
+  const lopezText = 'Hi, I\'m planning a 5-day vacation to Orlando theme parks, FL from April 5, 2027 to April 9, 2027. It\'s 2 parents and kids 6 and 9. Our budget is mid-range.';
+  const droppedQuote = {
+    ok: true, destination: 'the theme park city', hasDates: true, startDate: 'April 5', endDate: 'April 9',
+    things: [], roster: [], planningParty: 'a family of four', planningWants: [{ category: 'park', value: 'the best parks for their ages' }],
+  };
+  await db`
+    insert into trips (id, customer_id, title, destination, start_date, end_date, status, metadata)
+    values (
+      ${lopezTripId}, ${actorId}, 'Orlando theme parks, FL harness', 'Orlando theme parks, FL',
+      '2027-04-05', '2027-04-09', 'planning',
+      ${{ trip_state_actions: true, intakeShare: true }}
+    )
+  `;
+  const lopezTrip = {
+    id: lopezTripId, customer_id: actorId, title: 'Orlando theme parks, FL harness',
+    destination: 'Orlando theme parks, FL', start_date: '2027-04-05', end_date: '2027-04-09', status: 'planning',
+    metadata: { trip_state_actions: true, intakeShare: true },
+  };
+  const lopezSearches = [];
+  const lopezSearch = async (args) => {
+    lopezSearches.push(args);
+    return searchProactiveItinerary({
+      ...args,
+      env: { VK_SEARCH_WAKE_URL: 'https://vk-search.test/wake' },
+      fetchImpl: createOfflineSearchFetch([]),
+    });
+  };
+  const held = await prepareProactiveTripState({
+    trip: lopezTrip, requestId: 'req-lopez-thin', turn: 1, actorId,
+    classification: { ok: true, things: [], roster: [], planningParty: '', planningWants: [] },
+    text: 'Can you help plan a vacation?', history: [], wantedThings: [],
+    env: {}, pool, searchImpl: lopezSearch,
+  });
+  const heldState = JSON.parse(held.state_json);
+  assert.deepEqual(heldState.next_steps[0].missing_inputs, ['party', 'interests/wants']);
+  assert.equal(lopezSearches.length, 0);
+  assert.equal(heldState.research.build, undefined);
+  const lopez = await prepareProactiveTripState({
+    trip: lopezTrip, requestId: 'req-lopez-1', turn: 2, actorId,
+    classification: droppedQuote,
+    text: lopezText, history: [{ turn: 1, text: 'Can you help plan a vacation?', things: [] }],
+    wantedThings: [], env: {}, pool, searchImpl: lopezSearch,
+  });
+  const lopezState = JSON.parse(lopez.state_json);
+  assert.equal(validate(lopezState), true, ajv.errorsText(validate.errors));
+  assert.equal(lopezSearches.length, 1);
+  assert.ok(lopezSearches[0].criteria.some((entry) => entry.includes('6') && entry.includes('9')));
+  assert.ok(lopezSearches[0].criteria.some((entry) => entry.includes('mid-range')));
+  assert.ok(lopezSearches[0].targets.park.some((term) => /theme parks/i.test(term)));
+  assert.equal(lopezState.research.state, 'complete');
+  assert.ok(lopezState.research.build);
+  assert.ok(Object.values(lopezState.research.build.items_by_type).reduce((sum, count) => sum + count, 0) > 0);
+  const lopezPlaced = await db`
+    select count(*)::int as n from trip_things
+    where trip_id = ${lopezTripId}
+      and jsonb_array_length(coalesce(metadata->'tripState'->'occurrences', '[]'::jsonb)) > 0
+  `;
+  assert.ok(lopezPlaced[0].n > 0);
 } finally {
   useNominatimStore(null);
   await raw.close();
