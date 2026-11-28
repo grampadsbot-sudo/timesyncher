@@ -16,7 +16,55 @@ const searchTypes = {
 };
 const timing = /\b(?:[01]?\d|2[0-3]):[0-5]\d(?:\s*[ap]\.?m\.?)?|\b(?:1[0-2]|0?[1-9])\s*[ap]\.?m\.?/i;
 const pacePattern = /\b(?:slow|relaxed|easy|leisurely|low[- ]key)\s+(?:pace|days|trip)|\b(?:take it easy|don't pack|downtime|one (?:activity|thing) per day)\b/i;
-const budgetPattern = /(?:\$|USD\s*)\d[\d,]*(?:\.\d\d)?|\b(?:on a budget|budget-friendly|inexpensive|low-cost|free activities)\b/i;
+const budgetPattern = /(?:\$|USD\s*)\d[\d,]*(?:\.\d\d)?|\b(?:on a budget|budget-friendly|inexpensive|low-cost|free activities|mid-range|splurge)\b/i;
+const statedParty = /\b(?:traveling alone|just me|by myself|my husband|my wife|my partner|our family|family of\s+\d+|\d+\s+parents?)\b|\b(?:our|my|two|three|\d+)\s+(?:kids?|children|sons?|daughters?)\b|\bkids?\s+(?:ages?\s+)?\d{1,2}\b/i;
+const ageDigits = /\b(?:ages?\s+(\d{1,2})(?:\s*(?:and|,)\s*(\d{1,2}))?|(\d{1,2})[- ]year[- ]olds?|kids?\s+(\d{1,2})(?:\s*(?:and|,)\s*(\d{1,2}))?)\b/gi;
+const ageWords = 'one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve';
+const ageWordPattern = new RegExp(`\\b(?:ages?|who are)\\s+(${ageWords})(?:\\s*(?:and|,)\\s*(${ageWords}))?\\b`, 'gi');
+const ageWordValues = {
+  one: '1', two: '2', three: '3', four: '4', five: '5', six: '6',
+  seven: '7', eight: '8', nine: '9', ten: '10', eleven: '11', twelve: '12',
+};
+const statedInterests = [
+  [/\btheme\s+parks?\b/i, 'park'],
+  [/\b(?:amusement|water)\s+parks?\b/i, 'park'],
+  [/\bparks\b/i, 'park'],
+  [/\bpool(?:\s+breaks?)?\b/i, 'park'],
+  [/\bbeaches?\b/i, 'park'],
+  [/\bhik(?:e|es|ing)\b/i, 'park'],
+  [/\bmuseums?\b/i, 'park'],
+  [/\b(?:seafood|dinners?|restaurants?)\b/i, 'restaurant'],
+  [/\b(?:hotels?|resorts?|lodging)\b/i, 'hotel'],
+  [/\b(?:bars?|nightlife)\b/i, 'bar'],
+  [/\b(?:concerts?|shows?)\b/i, 'event'],
+];
+
+function agesInText(text) {
+  const value = String(text || '');
+  ageDigits.lastIndex = 0;
+  ageWordPattern.lastIndex = 0;
+  const digits = [...value.matchAll(ageDigits)].flatMap((match) => [match[1], match[2], match[3], match[4], match[5]]);
+  const words = [...value.matchAll(ageWordPattern)].flatMap((match) => [ageWordValues[String(match[1] || '').toLowerCase()], ageWordValues[String(match[2] || '').toLowerCase()]]);
+  return [...digits, ...words].filter(Boolean);
+}
+
+function quotedInterests(history) {
+  const found = [];
+  const seen = new Set();
+  for (const { text } of history) {
+    const source = String(text || '');
+    for (const [pattern, category] of statedInterests) {
+      const match = source.match(pattern);
+      if (!match) continue;
+      const value = match[0].replace(/\s+/g, ' ');
+      const key = `${category}:${value.toLowerCase()}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      found.push([category, value]);
+    }
+  }
+  return found;
+}
 
 export function proactiveResearchKey(trip) {
   const destination = normalizeTripThingName(trip.destination);
@@ -30,6 +78,13 @@ export function proactiveCriteria(state, history) {
   const wants = [...preferences.map(({ category, value }) => [category, value]),
     ...history.flatMap(({ things }) => things.map(({ kind, name, title }) => [searchTypes[wantedTypes[kind]], name || title])),
   ].filter(([, value]) => value);
+  for (const entry of quotedInterests(history)) {
+    if (wants.some(([, value]) => String(value).toLowerCase() === entry[1].toLowerCase())) continue;
+    wants.push(entry);
+  }
+  const partyKnown = facts.some(({ kind }) => kind === 'party')
+    || Object.keys(state.saved.travelers).length > 0
+    || history.some(({ text }) => statedParty.test(String(text || '')));
   const targets = {};
   for (const [category, value] of wants) {
     if (!Object.hasOwn(searchTypes, category)) continue;
@@ -44,12 +99,8 @@ export function proactiveCriteria(state, history) {
     ...Object.values(state.saved.travelers)
       .filter(({ relation, age }) => relation === 'child' && /^\d{1,2}$/.test(age || ''))
       .map(({ age }) => age),
-    ...facts.filter(({ kind }) => kind === 'party')
-      .flatMap(({ value }) => [...String(value).matchAll(/\b(?:ages?\s+(\d{1,2})(?:\s*(?:and|,)\s*(\d{1,2}))?|(\d{1,2})[- ]year[- ]olds?)\b/gi)]
-        .flatMap((match) => [match[1], match[2], match[3]]).filter(Boolean)),
-    ...history
-      .flatMap(({ text }) => [...String(text || '').matchAll(/\b(?:ages?\s+(\d{1,2})(?:\s*(?:and|,)\s*(\d{1,2}))?|(\d{1,2})[- ]year[- ]olds?)\b/gi)]
-        .flatMap((match) => [match[1], match[2], match[3]]).filter(Boolean)),
+    ...facts.filter(({ kind }) => kind === 'party').flatMap(({ value }) => agesInText(value)),
+    ...history.flatMap(({ text }) => agesInText(text)),
   ];
   const ages = [...new Set(ageMatches)];
   const family = ages.length > 0 || history.some(({ text }) => /\b(?:kids|children|toddler|family-friendly)\b/i.test(text));
@@ -59,7 +110,7 @@ export function proactiveCriteria(state, history) {
     missing: [
       !state.saved.trip.destination && 'destination',
       (!state.saved.trip.start || !state.saved.trip.end) && 'dates',
-      !facts.some(({ kind }) => kind === 'party') && !Object.keys(state.saved.travelers).length && 'party',
+      !partyKnown && 'party',
       !wants.length && 'interests/wants',
     ].filter(Boolean),
     search: [family ? `family-friendly${ages.length ? ` for ages ${ages.join(' and ')}` : ''}` : '',
