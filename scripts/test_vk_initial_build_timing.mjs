@@ -240,10 +240,17 @@ try {
 
   const empty = await provision('empty-search');
   const { state: emptyState } = await send(empty, 1, blurb, classification, {});
-  assert.equal(emptyState.research.provider_unavailable, true);
+  assert.equal(emptyState.research.state, 'empty');
+  assert.equal(emptyState.research.provider_unavailable, undefined);
   const zero = await measureInitialBuild(db, empty.tripId, empty.tag);
-  for (const [evidence, detail] of [[noBuild, /No initial build recorded/], [zero, /VK Search was unavailable.*zero placed items/],
-    [{ ...measured, turn: 3 }, /customer turn 3/]]) {
+  assert.equal(zero.providerUnavailable, false);
+  assert.deepEqual(zero.itemsByType, {});
+  for (const [evidence, detail] of [
+    [noBuild, /No initial build recorded/],
+    [zero, /^Initial build stored zero placed items$/],
+    [{ ...zero, providerUnavailable: true }, /VK Search was unavailable.*zero placed items/],
+    [{ ...measured, turn: 3 }, /customer turn 3/],
+  ]) {
     const card = score(evidence);
     assert.equal(card.verdict, 'PASS');
     assert.equal(card.checks.some(({ id }) => id === 'initial-build'), false);
