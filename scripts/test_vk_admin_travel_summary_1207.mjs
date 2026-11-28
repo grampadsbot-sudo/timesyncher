@@ -312,8 +312,9 @@ try {
   assert.equal((await page.request.put(endpoint, { data: { snapshots: [] } })).status(), 405);
   await page.goto(`${server.base}/vacation-app/admin`);
   await page.getByRole('button', { name: 'Open Summary test account', exact: true }).click();
+  await page.locator('#tripButton', { hasText: 'Summary test account' }).waitFor();
   await page.locator('#tripButton').click();
-  await page.getByRole('option', { name: 'Travel Summary', exact: true }).click();
+  await page.locator('#vacationDropdown.open').getByRole('option', { name: 'Travel Summary', exact: true }).click();
   const slider = page.getByRole('slider', { name: 'Turn' });
   await slider.waitFor();
   const previous = page.getByRole('button', { name: 'Previous turn' });

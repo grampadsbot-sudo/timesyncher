@@ -38,8 +38,10 @@ function makeServer(plan) {
     { speaker: 'app', body: 'Welcome! Tell me about your vacation.', payload: { liveTranscript: { fixedOpener: true, replyProducer: 'vacation-app-onboarding-opener', jev: { reason: 'fixed_onboarding_opener' } } } },
   ];
   const log = { posts: 0, gets: 0, getsAfterPost: [] };
+  const cap = { n: 0 };
   let postIndex = 0;
   let pending = null;
+  let shown = false;
   const fetchImpl = async (url, init = {}) => {
     const parsed = new URL(String(url));
     if (parsed.pathname === '/api/version') return { status: 200, text: async () => JSON.stringify({ sha: 'sha-1147' }) };
@@ -53,9 +55,11 @@ function makeServer(plan) {
         return { status: step.status || 502, text: async () => JSON.stringify(step.fail) };
       }
       stored.push(appTurn(stored, step.reply));
+      const itinerary = cap.n > 0 && log.posts === cap.n ? [{ id: 'thing-1', title: 'Hilo farmers market' }] : [];
+      if (itinerary.length) shown = true;
       return {
         status: 201,
-        text: async () => JSON.stringify({ ok: true, status: 'replied', reply: step.reply, modelId: MODEL, itinerary: [{ id: 'thing-1', title: 'Hilo farmers market' }], turns: stored, trip: { id: tripId } }),
+        text: async () => JSON.stringify({ ok: true, status: 'replied', reply: step.reply, modelId: MODEL, itinerary, turns: stored, trip: { id: tripId } }),
       };
     }
     log.gets += 1;
@@ -69,14 +73,15 @@ function makeServer(plan) {
     }
     return {
       status: 200,
-      text: async () => JSON.stringify({ ok: true, eula: { accepted: true }, itinerary: stored.length > 1 ? [{ id: 'thing-1', title: 'Hilo farmers market' }] : [], turns: stored, trip: { id: tripId } }),
+      text: async () => JSON.stringify({ ok: true, eula: { accepted: true }, itinerary: shown ? [{ id: 'thing-1', title: 'Hilo farmers market' }] : [], turns: stored, trip: { id: tripId } }),
     };
   };
-  return { fetchImpl, log };
+  return { fetchImpl, log, cap };
 }
 
 async function play(plan, maxTurns, token) {
   const server = makeServer(plan);
+  server.cap.n = maxTurns;
   const sleeps = [];
   const played = await playCustomerTurns(
     { ...story, reply_backend: 'vk_bot_mcp' },

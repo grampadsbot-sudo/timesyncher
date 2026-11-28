@@ -362,6 +362,8 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
           } else {
             consecutiveFallbacks = 0;
           }
+          const reachedAfterStored = chatGoalsReached({ itineraryCount: items, customerTurns, index, maxTurns: limit });
+          if (liveCustomer && reachedAfterStored.done && (!afterCustomerTurn || index + 1 >= 5)) break;
           continue;
         }
       }
@@ -431,6 +433,8 @@ export async function playCustomerTurns(story, { origin, token, tripId, fetchImp
     } else {
       consecutiveFallbacks = 0;
     }
+    const reached = chatGoalsReached({ itineraryCount: items, customerTurns, index, maxTurns: limit });
+    if (liveCustomer && reached.done && (!afterCustomerTurn || index + 1 >= 5)) break;
   }
   if (liveCustomer && items === 0) {
     const confirm = {

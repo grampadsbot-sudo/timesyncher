@@ -191,6 +191,7 @@ assert.equal(chatGoalsReached({ itineraryCount: 0, index: 1, maxTurns: 100 }).do
 assert.equal(chatGoalsReached({ itineraryCount: 2, index: 1, maxTurns: 100 }).done, true);
 const reached = chatGoalsReached({ itineraryCount: 2, index: 1, maxTurns: 100 });
 assert.equal(reached.itineraryOk, true);
+assert.equal(Object.hasOwn(reached, 'pricingOk'), false);
 assert.equal(reached.atCap, false);
 assert.equal(reached.done, true);
 assert.equal(chatGoalsReached({ itineraryCount: 2, index: 49, maxTurns: 50 }).atCap, true);
@@ -262,14 +263,14 @@ const livePlayed = await playCustomerTurns(
   },
 );
 assert.equal(livePlayed.reason, '');
-assert.equal(livePlayed.customerTurnCount, 10);
+assert.equal(livePlayed.customerTurnCount, 1);
 assert.equal(livePlayed.observedItineraryCount, 1);
-assert.equal(livePlayed.pricingReactionCaptured, true);
-assert.equal(livePlayed.hitTurnCap, true);
+assert.equal(livePlayed.pricingReactionCaptured, false);
+assert.equal(livePlayed.hitTurnCap, false);
 assert.equal(livePlayed.webAccessCookie, true);
 assert.equal(secrets.includes('web-access-cookie-secret-999'), true);
 const forwarded = seenHeaders.filter((entry) => entry.headers.cookie === 'ts_vacation_web_access=web-access-cookie-secret-999');
-assert.ok(forwarded.length >= 2);
+assert.ok(forwarded.length >= 1);
 assert.equal(forwarded[0].headers['x-timesyncher-web-access-token'], 'web-access-cookie-secret-999');
 
 let capPosts = 0;
@@ -302,7 +303,7 @@ const capped = await playCustomerTurns(
               ok: true,
               status: 'replied',
               reply: 'TimeSyncher doesn\'t book reservations directly, but we can set up your AI for reservations.',
-              itinerary: [{ id: 'thing-cap', title: 'Park Day' }],
+              itinerary: [],
               turns: capTurns,
               trip: { id: tripId, shareToken: 'share-cap' },
             }),
@@ -316,7 +317,7 @@ const capped = await playCustomerTurns(
             status: 'replied',
             reply: 'Added park timing.',
             modelId: 'anthropic/claude-haiku-5.5',
-            itinerary: [{ id: 'thing-cap', title: 'Park Day' }],
+            itinerary: [],
             turns: capTurns,
             trip: { id: tripId, shareToken: 'share-cap' },
           }),
@@ -327,7 +328,7 @@ const capped = await playCustomerTurns(
         text: async () => JSON.stringify({
           ok: true,
           eula: { accepted: true },
-          itinerary: [{ id: 'thing-cap', title: 'Park Day' }],
+          itinerary: [],
           turns: capTurns,
           trip: { id: tripId, shareToken: 'share-cap' },
         }),
