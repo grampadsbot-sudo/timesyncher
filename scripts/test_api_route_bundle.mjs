@@ -65,7 +65,6 @@ function builderSrc(src) {
   return src.startsWith('^') ? src : `^${src}$`;
 }
 
-// Vercel continues through header-only middleware; only a terminal route selects a destination.
 function firstRoute(pathname, routes = vercel.routes) {
   for (const route of routes) {
     const match = pathname.match(new RegExp(builderSrc(route.src)));
