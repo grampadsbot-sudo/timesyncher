@@ -206,8 +206,6 @@ async function loadViaHttp(env) {
 }
 
 function loadViaCli(env) {
-  // An explicit empty env is a hermetic caller (unit tests pass {}).
-  // Do not consult the operator gbrain binary on PATH. process.env still does.
   if (env && env !== process.env && Object.keys(env).length === 0) return null;
   const attempts = [
     ['get-page', '--slug', REPLY_RULES_SLUG],
