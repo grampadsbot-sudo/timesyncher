@@ -10,6 +10,14 @@
   },
   "routes": [
     {
+      "src": "/(.*)",
+      "headers": {
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY"
+      },
+      "continue": true
+    },
+    {
       "src": "/api/bind-thing-media",
       "dest": "/api/[...route]?...route=bind-thing-media&mediaBind=1"
     },
