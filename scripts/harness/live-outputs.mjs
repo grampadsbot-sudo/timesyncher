@@ -112,7 +112,7 @@ export async function renderDialog({
   if (redactForAdmin) {
     const { assertLiveTranscript } = await import('../live-transcript-dialog-pdf.mjs');
     try {
-      assertLiveTranscript(payload);
+      assertLiveTranscript(payload, { recordItem34: true });
     } catch (error) {
       return { ok: false, detail: redactUrls(redactText(error.message, secrets)), transcript: null, pdfText: '', out };
     }
@@ -128,6 +128,7 @@ export async function renderDialog({
     '--jsonlOut', jsonl,
     '--timing', timing,
     '--state', state,
+    '--record-item34',
   ], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
   for (const file of [transcriptFile, jsonl, timing, state]) scrubFile(file, secrets);
   const detail = redactText(`${result.stdout || ''}\n${result.stderr || ''}`, secrets).trim();
@@ -145,13 +146,14 @@ export async function renderDialog({
   const { extractPdfText } = await import('../live-transcript-dialog-pdf.mjs');
   const pdfText = nonEmpty(out) ? extractPdfText(fs.readFileSync(out)) : '';
   const generated = parsed.ok === true && nonEmpty(out);
+  const refusals = parsed.contentFails || [];
   return {
     ok: generated,
-    detail: parsed.ok === true ? 'ok' : detail,
+    detail: generated ? (refusals.length ? 'present (partial)' : 'ok') : detail,
     dialogPdfStatus: recordDialogPdfStatus({ generated, pdfPath: out, skipReason: generated ? '' : detail, ssrAggregate: ssrSummary }),
     transcript: transcriptFromJsonl(jsonl),
     pdfText,
-    refusals: parsed.contentFails || [],
+    refusals,
     interimFlags: Array.isArray(parsed.interimFlags) ? parsed.interimFlags : [],
     out,
   };

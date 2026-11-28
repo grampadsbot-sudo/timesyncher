@@ -42,7 +42,7 @@ function fail(error) {
 function storedNoteIsScript(note) {
   return /the reply (covers|misses) this turn\b|\bkeep the reply\b|^(?:answers?|name the price|take out the place|name the seats)\b|stays with that wording/i.test(String(note || '').trim());
 }
-export function assertLiveTranscript(doc) {
+export function assertLiveTranscript(doc, { recordItem34 = false } = {}) {
   if (!doc || typeof doc !== 'object' || Array.isArray(doc)) {
     throw new Error('refused: Dialog PDF needs a live transcript document');
   }
@@ -57,7 +57,7 @@ export function assertLiveTranscript(doc) {
   if (!targetPerson) throw new Error('refused: Dialog PDF needs target_person for APP to <target_person> labels');
   const turns = Array.isArray(doc.turns) ? doc.turns : [];
   if (turns.length === 0) throw new Error('refused: live transcript has no turns');
-  const contentFails = [], interimFlags = [];
+  const contentFails = [], interimFlags = [], item34Flags = [];
   let expect = 'customer';
   let start = 0;
   if (turns[0]?.role === 'app') start = 1;
@@ -74,7 +74,11 @@ export function assertLiveTranscript(doc) {
     }
     const text = String(turn.text || '');
     if (!text.trim()) throw new Error(`refused: turn ${turn.turnIndex} text is empty`);
-    if (item34BanHit(text)) throw new Error(`refused: turn ${turn.turnIndex} uses split-payment jargon`);
+    if (item34BanHit(text)) {
+      const flag = item34Finding(turn);
+      if (!recordItem34) throw new Error(`refused: ${flag}`);
+      item34Flags.push(flag);
+    }
     if (turn.storedText != null && String(turn.storedText) !== text) {
       throw new Error(`refused: turn ${turn.turnIndex} stored text does not match the customer-visible body`);
     }
@@ -242,9 +246,9 @@ export function assertLiveTranscript(doc) {
   if (interim.length) throw new Error(`refused: ${interim[0]}`);
   if (expect === 'app') throw new Error('refused: live transcript ends on a customer turn with no app reply');
   if (contentFails.length) throw new Error(contentFails.join('\n'));
-  return { ...doc, targetPerson, turns, contentFails: [], interimFlags };
+  return { ...doc, targetPerson, turns, contentFails: item34Flags, interimFlags };
 }
-
+function item34Finding(turn) { return `turn ${turn.turnIndex} uses split-payment jargon`; }
 export function buildTimingSummary(doc) {
   const turns = doc.turns || [];
   const last = turns[turns.length - 1];
@@ -317,7 +321,7 @@ function wrapLines(text, width) {
 }
 
 export function assessPackShape(doc, options = {}) {
-  const checked = options.skipAssert ? doc : assertLiveTranscript(doc);
+  const checked = options.skipAssert ? doc : assertLiveTranscript(doc, options);
   const summary = buildTimingSummary(checked);
   const missingAppOpen = checked.turns[0]?.role !== 'app';
   const corpus = (checked.turns || []).map((turn) => turn.text || '').join('\n');
@@ -344,7 +348,7 @@ export function assessPackShape(doc, options = {}) {
     ? `${summary.voiceTurns} voice turn(s) in this live transcript`
     : 'PARTIAL: no voice/STT turn in this live transcript';
   return {
-    status: missingAppOpen ? 'PARTIAL' : 'DONE',
+    status: missingAppOpen || checked.contentFails?.length ? 'PARTIAL' : 'DONE',
     missing_app_open: missingAppOpen,
     missing_app_open_next: missingAppOpen
       ? 'Next live session must capture an app line the customer already saw before the first customer turn (onboarding opener). Do not invent that line.'
@@ -481,22 +485,6 @@ function packPages(doc, shape) {
   return [cover, meta, transcript, notes].map((lines) => lines.flatMap((line) => wrapLines(line, 92)));
 }
 
-function paginate(lines, pageSize, header) {
-  const pages = [];
-  let index = 0;
-  while (index < lines.length) {
-    const room = pages.length === 0 ? pageSize : pageSize - 2;
-    const slice = lines.slice(index, index + room);
-    pages.push(pages.length === 0 || !header ? slice : [header, '', ...slice]);
-    index += room;
-  }
-  return pages.length ? pages : [[]];
-}
-
-function pdfEscape(value) {
-  return pdfAscii(value).replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)').replace(/·/g, '\\267');
-}
-
 export function formatLiveTimingLine({ gen, model, tier, jevMs, maxTokens, backend = '' }) {
   const line = `timing: jev=${jevMs}ms gen=${gen}ms model=${model} tier=${tier} max_tokens=${maxTokens}${(backend === 'openrouter' || backend === 'vk_bot_mcp') ? ` backend=${backend}` : ''}`;
   if (/zev/i.test(line)) throw new Error('refused: timing line contained zev');
@@ -578,6 +566,7 @@ export function liveV7Pack(doc, shape) {
   const bins = scores.map((score) => Math.max(1, Math.min(5, Math.round(score))));
   const histogram = [5, 4, 3, 2, 1].map((score) => `${score}×${bins.filter((item) => item === score).length}`).join(', ');
   const needsRepair = scores.filter((score) => score <= 2).length;
+  const responseReady = Number(meanQuality) >= 3 && !doc.contentFails?.length;
   const gens = generated.map((turn) => Number(turn.genLatencyMs ?? turn.model?.genLatencyMs));
   const overall = timingStats(gens);
   const map = bakeoffTierModels();
@@ -605,8 +594,7 @@ export function liveV7Pack(doc, shape) {
     deploy_banner: String(doc.deployBanner || '').trim(),
     build_vs_tip: String(doc.buildVsTip || '').trim(),
     void: doc.void === true || String(doc.deployBanner || '').startsWith('VOID'),
-    record_fails: false,
-    content_fails: [],
+    content_fails: doc.contentFails || [],
     interim_flags: Array.isArray(doc.interimFlags) ? doc.interimFlags : [],
     pack_id: shape.pack_id,
     footer_id: shape.pack_id,
@@ -625,7 +613,7 @@ export function liveV7Pack(doc, shape) {
       ['needs_repair', '15', String(needsRepair)],
       ['Dialog rollup overall', '3', meanQuality],
       ['Dialog needs_repair', 'True', needsRepair > 0 ? 'True' : 'False'],
-      ['Dialog response_ready', 'False', Number(meanQuality) >= 3 ? 'True' : 'False'],
+      ['Dialog response_ready', 'False', responseReady ? 'True' : 'False'],
     ],
     tier_rows: [
       ['Tier', 'Model', 'Mean overall'],
@@ -651,7 +639,7 @@ export function liveV7Pack(doc, shape) {
     ],
     roster: assertRosterRoleBlock(doc),
     beats: [...new Set(generated.flatMap((turn) => (Array.isArray(turn.beats) ? turn.beats : [])))].join(', ') || '(none stored)',
-    judge: `response_ready=${Number(meanQuality) >= 3} · needs_repair=${needsRepair > 0}. scores: mean ${meanQuality} on the Jev labeled scale (raw + 1). Jev scored every generated reply.`,
+    judge: `response_ready=${responseReady} · needs_repair=${needsRepair > 0}. scores: mean ${meanQuality} on the Jev labeled scale (raw + 1). Jev scored every generated reply.`,
     turns: (doc.turns || []).map((turn) => {
       const app = turn.role === 'app';
       const generatedTurn = app && turn.jev?.jevRan === true;
@@ -669,6 +657,7 @@ export function liveV7Pack(doc, shape) {
         meta: meta.join(' · '),
         app,
         text: String(turn.text || ''),
+        item34_flag: doc.contentFails?.includes(item34Finding(turn)) ? item34Finding(turn) : '',
         rewrite_label: shippedRewriteLabel(turn),
         jev_ran: generatedTurn ? jevRanLine(turn) : '',
         producer_log: app ? producerLogLine(turn) : '',
@@ -804,13 +793,13 @@ export function renderLiveTranscriptPdf(doc, options = {}) {
   let checked = doc;
   if (options.recordRefusals) {
     try {
-      checked = assertLiveTranscript(doc);
+      checked = assertLiveTranscript(doc, options);
     } catch (error) {
       refusal = error.message;
       checked = doc;
     }
   } else {
-    checked = assertLiveTranscript(doc);
+    checked = assertLiveTranscript(doc, options);
   }
   checked = {
     ...checked,
@@ -820,7 +809,8 @@ export function renderLiveTranscriptPdf(doc, options = {}) {
   const shape = assessPackShape(checked, { ...options, skipAssert: Boolean(refusal) });
   const pack = liveV7Pack(checked, shape);
   const script = fileURLToPath(new URL('./live_v7_dialog_pdf.py', import.meta.url));
-  const result = spawnSync('python3', [script], { input: JSON.stringify(pack), maxBuffer: 16 * 1024 * 1024 });
+  const args = !refusal && options.recordItem34 && pack.content_fails.length ? [script, '--record-item34'] : [script];
+  const result = spawnSync('python3', args, { input: JSON.stringify(pack), maxBuffer: 16 * 1024 * 1024 });
   if (result.status !== 0) {
     throw new Error(`refused: v7 PDF chrome failed: ${result.stderr?.toString() || result.status}`);
   }
@@ -891,6 +881,7 @@ function qaInput(doc, shape) {
     source: 'live-app',
     grading: 'live text only',
     status: shape.status,
+    ...(doc.contentFails?.length ? { content_fails: doc.contentFails } : {}),
     missing_app_open: shape.missing_app_open,
     missing_app_open_next: shape.missing_app_open_next,
     sessionToken: shape.sessionToken,
@@ -927,7 +918,8 @@ function exitUntrusted(error) {
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (!args.out) throw new Error('refused: --out PDF path is required');
-  const transcript = assertLiveTranscript(await loadTranscript(args));
+  const recordItem34 = args['record-item34'] === true;
+  const transcript = assertLiveTranscript(await loadTranscript(args), { recordItem34 });
   let driveSha = '';
   if (!args.fixture) {
     try {
@@ -942,12 +934,12 @@ async function main() {
   const shape = assessPackShape(transcript, {
     trip: args.trip,
     head: args.head,
-    dpl: args.dpl,
+    dpl: args.dpl, recordItem34,
   });
   const pdf = renderLiveTranscriptPdf(transcript, {
     trip: args.trip,
     head: args.head,
-    dpl: args.dpl,
+    dpl: args.dpl, recordItem34,
   });
   const labelCounts = jevRewriteLabelCounts(transcript, extractPdfText(pdf));
   const rendered = extractPdfText(pdf);

@@ -11,6 +11,8 @@ Hold certify. This inventory is not a certify.
 3. **EULA first screen of the app URL.** `vacation-app.html` paints Review Terms & Privacy (`#eulaScreen`, Agree) when `eula.accepted` is not true. Acceptance posts to `/api/eula?action=accept` from that screen.
 4. **Onboarding chat.** After Agree, the customer is in the app shell. The only layout statement is `features/screens/app.md`.
 
+The onboarding evidence PDF labels the terms page for each captured viewport. A browser Agree click is labeled `Agree clicked`. A viewport that opens an already accepted session is labeled `already accepted`. When both captures use the same coupon session, the second viewport can show the already accepted state while the first supplies the click evidence.
+
 ## Retired customer path
 
 Do not drive or cite these as the customer launch:

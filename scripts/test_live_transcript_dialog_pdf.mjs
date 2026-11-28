@@ -730,9 +730,13 @@ rejects(liveDoc({
 rejects(liveDoc({
   turns: liveDoc().turns.map((turn) => (turn.role === 'app' ? { ...turn, modelId: 'google/gemini-2.5-flash', jev: { ...turn.jev, responseModel: 'google/gemini-2.5-flash' } } : turn)),
 }), /bake-off map/);
-rejects(liveDoc({
+const item34Doc = liveDoc({
   turns: liveDoc().turns.map((turn) => (turn.role === 'app' ? { ...turn, text: 'Since you are splitting payments, Kimberly is covered.' } : turn)),
-}), /split-payment jargon/);
+});
+rejects(item34Doc, /refused: turn 2 uses split-payment jargon/);
+assert.throws(() => renderLiveTranscriptPdf(item34Doc), /refused: turn 2 uses split-payment jargon/);
+const flaggedPdf = extractPdfText(renderLiveTranscriptPdf(item34Doc, { recordItem34: true }));
+assert.match(flaggedPdf, /Since you are splitting payments, Kimberly is covered\.\s*FLAG\. turn 2 uses split-payment jargon/);
 const jevRewrite = liveDoc({
   turns: liveDoc().turns.map((turn) => (turn.role === 'app' ? {
     ...turn,

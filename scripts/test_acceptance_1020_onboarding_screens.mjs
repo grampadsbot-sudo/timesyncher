@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { buildScorecard } from './harness/scorecard.mjs';
 import { buildCustomerPdf } from './harness/onboarding-pdf.mjs';
-import { captureOnboardingPdf, purchaseEmailSurface, showPaymentStep, submitTestCard, walkOnboardingWidth } from './harness/onboarding-capture.mjs';
+import { captureOnboardingPdf, purchaseEmailSurface, rebuildCustomerPdf, showPaymentStep, submitTestCard, walkOnboardingWidth } from './harness/onboarding-capture.mjs';
 import {
   ONBOARDING_SCREENS,
   ONBOARDING_WIDTHS,
@@ -78,7 +78,7 @@ await assert.rejects(
   /stripe test card field was not on the page/,
 );
 
-function fakePage() {
+function fakePage({ accepted = false } = {}) {
   const events = [];
   const page = {
     _url: 'https://vacation-staging.timesyncher.com/',
@@ -95,7 +95,12 @@ function fakePage() {
       fs.writeFileSync(file, varied);
       events.push('shot');
     },
-    locator() { return { innerText: async () => 'Welcome. Purchase confirmed. Step 1: Contact Info.' }; },
+    locator(selector) {
+      return {
+        count: async () => selector === '#eulaScreen' && accepted ? 0 : 1,
+        innerText: async () => 'Welcome. Purchase confirmed. Step 1: Contact Info.',
+      };
+    },
   };
   return { page, events };
 }
@@ -140,6 +145,30 @@ assert.equal(missing.detail, 'missing homepage 390');
 const blankShot = walked.map((shot) => shot.id === 'checkout-payment' && shot.width === 430 ? { ...shot, blank: true, gap: 'blank checkout-payment 430' } : shot);
 assert.equal(assessOnboardingScreens({ shots: blankShot, pdfText: built.pdfText, termsClick: 'ui' }).detail, 'blank checkout-payment 430');
 assert.equal(assessOnboardingScreens({ shots: walked, pdfText: built.pdfText, termsClick: '' }).detail, 'terms-gate: not a ui click');
+
+const couponPages = new Map();
+const couponCapture = await captureOnboardingPdf({
+  origin, outDir: dir, customer, runId: 'coupon-eula',
+  pageFactory: async (width) => {
+    const opened = fakePage({ accepted: couponPages.get(390)?.events.includes('#eulaAgreeButton') });
+    couponPages.set(width, opened);
+    return opened;
+  },
+  payment: {
+    showPayment: async (page) => page.click('#continueBtn'),
+    submitPayment: async (page) => page.goto(`${origin}/order-success.html?session=throwaway-session`),
+  },
+});
+assert.equal(couponCapture.ok, true, couponCapture.detail);
+assert.equal(couponCapture.termsClick, 'ui');
+assert.equal(couponPages.get(390).events.includes('#eulaAgreeButton'), true);
+assert.equal(couponPages.get(430).events.includes('#eulaAgreeButton'), false);
+assert.deepEqual(couponCapture.shots.filter((shot) => shot.id === 'terms-gate').map((shot) => shot.termsClick), ['ui', 'accepted-skip']);
+const rebuilt = await rebuildCustomerPdf(couponCapture, [later]);
+assert.equal(rebuilt.ok, true, rebuilt.detail);
+const couponPdf = buildCustomerPdf({ shots: rebuilt.shots, laterFiles: [later], outPath: rebuilt.outPath });
+assert.match(couponPdf.pdfText, /onboarding terms-gate 390 - Agree clicked/);
+assert.match(couponPdf.pdfText, /onboarding terms-gate 430 - already accepted/);
 
 const quiet = fs.mkdtempSync(path.join(os.tmpdir(), 'onboarding-email-'));
 const noMail = await walkOnboardingWidth({

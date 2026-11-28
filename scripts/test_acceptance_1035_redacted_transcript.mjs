@@ -4,7 +4,9 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { runCustomer } from './harness/customer.mjs';
+import { playWithAdminArtifacts } from './harness/runtime.mjs';
 import { redactedLiveTranscript, transcriptForScorecard, writeRedactedLiveTranscript } from './harness/redacted-transcript.mjs';
+import { readTipSha } from './void-stale-build.mjs';
 
 const token = 'fixture-session-token-value-123';
 const share = 'https://vacation-staging.timesyncher.com/shared/intake-throwaway-slug';
@@ -91,6 +93,67 @@ assert.notEqual(card.reason, 'dialog-renderer-refused');
 assert.equal(card.turns.length, 2);
 assert.equal(card.turns[1].n, 3);
 assert.equal(card.turns[1].stored_model, 'anthropic/claude-haiku-5.5');
+
+const flaggedText = 'There is no extra cost for how you’re splitting it up.';
+const flaggedTranscript = {
+  live: true,
+  capture: 'live-vacation-app',
+  targetPerson: 'Avery',
+  turns: [
+    { ...transcript.turns[0], latencyMs: null, modality: 'text' },
+    { turnIndex: 6, role: 'customer', text: 'What about our seats?', modality: 'text', latencyMs: 10, sessionE2eMs: 10, jev: { jevRan: false, reason: 'customer_turn' } },
+    {
+      ...transcript.turns[1], turnIndex: 7, modality: 'text',
+      text: `${flaggedText} See ${share} and ${token}`, storedText: `${flaggedText} See ${share} and ${token}`,
+      draftModel: transcript.turns[1].modelId, shippedModel: transcript.turns[1].modelId,
+      jev: { ...transcript.turns[1].jev, modelTier: 1 }, jevBeforeModel: true, jevScoreDraft: 4,
+      jevNoteReason: 'jev_no_free_text', quality: { judged: true, score: 4, comment: 'Coverage is discussed.' },
+      cost: 'unmeasured',
+    },
+  ],
+};
+const sha = readTipSha();
+const adminWrites = [];
+const { dialog, adminArtifacts } = await playWithAdminArtifacts({
+  outDir: dir, secrets: [token], replyBackend: 'openrouter',
+  play: async () => ({ liveShaStart: sha }),
+  loadTranscript: async () => flaggedTranscript,
+  put: async (_tripId, artifact, bytes) => { adminWrites.push({ artifact, bytes }); },
+});
+const [finding] = dialog.refusals || [];
+assert.equal(dialog.ok, true, dialog.detail);
+assert.equal(finding, 'turn 7 uses split-payment jargon');
+assert.match(dialog.pdfText, /PARTIAL - Content check failed/);
+assert.match(dialog.pdfText, /response_ready=False/i);
+assert.match(dialog.pdfText, /What about our seats\?/);
+assert.match(dialog.pdfText, /There is no extra cost for how you.re splitting it up\./);
+assert.match(dialog.pdfText, /FLAG\. turn 7 uses split-payment jargon/);
+assert.equal(dialog.pdfText.includes(token), false);
+assert.equal(dialog.pdfText.includes(share), false);
+assert.ok(dialog.transcript.turns[2].text.startsWith(flaggedText));
+assert.equal(adminArtifacts.dialogPdf, true);
+assert.deepEqual(adminArtifacts.errors, []);
+assert.deepEqual(adminWrites, [{ artifact: 'dialog-pdf', bytes: fs.readFileSync(dialog.out) }]);
+const qaInput = JSON.parse(fs.readFileSync(path.join(dir, 'qa-input.json'), 'utf8'));
+assert.equal(qaInput.status, 'PARTIAL');
+assert.deepEqual(qaInput.content_fails, [finding]);
+
+const partialCard = await runCustomer(story, {
+  runId: 'r-flagged', outDir: dir, secrets: [token],
+  cleanup: async () => ({ deleted: {}, remaining: 0 }),
+  play: async () => ({
+    transcript: dialog.transcript, pdfText: dialog.pdfText,
+    dialogOk: dialog.ok, dialogDetail: dialog.detail, dialogRefused: !dialog.ok, refusals: dialog.refusals,
+    liveShaStart: sha, liveShaEnd: sha,
+    keepsakeOk: true, screensOk: true, onboardingPdfOk: true, videoExists: true, videoPass: true, chromeOk: true,
+  }),
+});
+assert.equal(partialCard.verdict, 'FAIL');
+assert.equal(partialCard.reason, finding);
+assert.equal(partialCard.checks.find((check) => check.id === 'dialog-pdf').pass, true);
+assert.deepEqual(partialCard.checks.filter((check) => !check.pass), [
+  { id: 'dialog-renderer-ok', pass: false, detail: finding, artifact: 'dialog.pdf' },
+]);
 
 const renderer = fs.readFileSync(new URL('./live-transcript-dialog-pdf.mjs', import.meta.url), 'utf8');
 assert.match(renderer, /quality\?\.judged !== true/);

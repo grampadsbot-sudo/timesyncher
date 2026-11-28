@@ -31,7 +31,7 @@ const stateDb = async () => [{ revisions: 4, things: 19 }];
 assert.equal((await measureItemStorage(stateDb, tripId, tag)).storagePath, 'trip_state');
 
 const complete = finishArtifactReport({
-  dialogPdf: true, keepsakePdf: true, screenshotCount: 2, turnCount: 50, astraJsonTurns: 50, timingTurns: 50,
+  dialogPdf: true, adminDialogPdf: true, keepsakePdf: true, screenshotCount: 2, turnCount: 50, astraJsonTurns: 50, timingTurns: 50,
 });
 assert.equal(complete.complete, true);
 assert.equal(liveFinishReason({ itineraryOk: true, hitTurnCap: true, artifacts: complete }), '');
@@ -40,7 +40,7 @@ assert.equal(chatGoalsReached({ itineraryCount: 19, index: 49, maxTurns: 50 }).a
 assert.equal(Object.hasOwn(chatGoalsReached({ itineraryCount: 19, index: 1, maxTurns: 50 }), 'pricingOk'), false);
 
 const missingShots = finishArtifactReport({
-  dialogPdf: true, keepsakePdf: true, screenshotCount: 0, turnCount: 50, astraJsonTurns: 50, timingTurns: 50,
+  dialogPdf: true, adminDialogPdf: true, keepsakePdf: true, screenshotCount: 0, turnCount: 50, astraJsonTurns: 50, timingTurns: 50,
 });
 const capped = liveFinishReason({ itineraryOk: true, hitTurnCap: true, artifacts: missingShots });
 assert.match(capped, /^missing-artifacts:/);
@@ -49,6 +49,7 @@ assert.match(ringArtifactMessage(missingShots), /screenshots: missing/);
 assert.match(ringArtifactMessage(missingShots), /dialog-pdf: present/);
 assert.match(ringArtifactMessage(complete), /admin-astra-json: present/);
 assert.match(ringArtifactMessage(complete), /admin-timing-summary: present/);
+assert.match(ringArtifactMessage(finishArtifactReport({ dialogPdf: true, turnCount: 50 })), /admin-dialog: missing/);
 
 const noItems = liveFinishReason({
   itineraryOk: false,

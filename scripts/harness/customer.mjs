@@ -27,6 +27,7 @@ function mergeWall(rows, timings) {
 
 function artifactChecks(played) {
   const sameSha = Boolean(played.liveShaStart) && played.liveShaStart === played.liveShaEnd;
+  const dialogFindings = (played.refusals || []).join('; ');
   return [
     { id: 'dialog-pdf', pass: played.dialogOk === true, detail: played.dialogDetail || '', artifact: 'dialog.pdf' },
     { id: 'keepsake-pdf', pass: played.keepsakeOk === true, detail: played.keepsakeDetail || '', artifact: 'keepsake.pdf' },
@@ -34,7 +35,7 @@ function artifactChecks(played) {
     { id: 'onboarding-screens-in-pdf', pass: played.onboardingPdfOk === true, detail: played.onboardingPdfDetail || 'missing', artifact: 'customer.pdf' },
     { id: 'video-check', pass: played.videoExists === true && !String(played.videoDetail || '').startsWith('video-missing'), detail: played.videoDetail || '', artifact: 'video-check.json' },
     { id: 'video-check-pass', pass: played.videoPass === true, detail: played.videoDetail || '', artifact: 'video-check.json' },
-    { id: 'dialog-renderer-ok', pass: played.dialogOk === true, detail: played.dialogDetail || '', artifact: 'dialog.pdf' },
+    { id: 'dialog-renderer-ok', pass: played.dialogOk === true && !dialogFindings, detail: dialogFindings || played.dialogDetail || '', artifact: 'dialog.pdf' },
     { id: 'no-stub-chrome', pass: played.chromeOk === true, detail: played.chromeOk === true ? (played.chromeDetail || 'clean') : (played.chromeDetail || 'not-clean'), artifact: 'screens/' },
     { id: 'build-sha', pass: sameSha, detail: sameSha ? 'same' : 'build sha changed or missing', artifact: '' },
   ];
