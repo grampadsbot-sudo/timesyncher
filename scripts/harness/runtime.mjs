@@ -51,6 +51,13 @@ export function chatLeftNoThing(played) {
   return played?.itineraryCountSource !== 'db' || !(played.itineraryCount > 0);
 }
 
+function dialogFields(dialog) {
+  return {
+    pdfText: dialog.pdfText, dialogOk: dialog.ok === true, dialogDetail: dialog.detail,
+    dialogRefused: dialog.ok !== true, refusals: dialog.refusals || [], interimFlags: dialog.interimFlags || [],
+  };
+}
+
 export const HARNESS_DEFAULT_MAX_TURNS = 50;
 
 export function maxTurnsFromEnv(env = process.env) {
@@ -319,6 +326,7 @@ export function liveOptions(env = process.env) {
           sessionToken: created.token,
           outDir: options.outDir,
           dialogOk: dialog.ok === true,
+          adminDialogPdf: adminArtifacts.dialogPdf,
           keepsakeOk: keepsake?.ok === true,
         });
         return {
@@ -326,7 +334,7 @@ export function liveOptions(env = process.env) {
           tripId,
           ssrReactions,
           transcript,
-          pdfText: dialog.pdfText,
+          ...(dialog.ok ? dialogFields(dialog) : { pdfText: dialog.pdfText }),
           keepsakeOk: keepsake?.ok === true,
           keepsakeDetail: keepsake?.detail || '',
           pricingReactionCaptured: played.pricingReactionCaptured === true,
@@ -372,10 +380,7 @@ export function liveOptions(env = process.env) {
           ssrReactions,
           ssr: ssrRecord,
           transcript: outTranscript,
-          pdfText: outDialog.pdfText,
-          dialogOk: outDialog.ok === true,
-          dialogDetail: outDialog.detail,
-          dialogRefused: outDialog.ok !== true,
+          ...dialogFields(outDialog),
           videoExists: !String(video.detail || '').startsWith('video-missing'),
           videoPass: false,
           videoDetail: video.detail,
@@ -413,6 +418,7 @@ export function liveOptions(env = process.env) {
       const itineraryOk = Number(measured.itineraryCount) > 0;
       const artifactReport = finishArtifactReport({
         dialogPdf: outDialog.ok === true,
+        adminDialogPdf: adminArtifacts.dialogPdf,
         keepsakePdf: keepsakeOk,
         screenshotCount: Array.isArray(screens.files) ? screens.files.length : 0,
         turnCount: Number(played.customerTurnCount) || 0,
@@ -434,7 +440,7 @@ export function liveOptions(env = process.env) {
         itineraryOk,
         itineraryCount: Number.isInteger(measured.itineraryCount) ? measured.itineraryCount : null,
         storagePath: measured.storagePath || '',
-        harnessOk: !reason,
+        harnessOk: !reason && !outDialog.refusals?.length,
       });
       return {
         ...base,
@@ -443,15 +449,10 @@ export function liveOptions(env = process.env) {
         ssrReactions,
         ssr: ssrRecord,
         transcript: outTranscript,
-        pdfText: outDialog.pdfText,
-        dialogOk: outDialog.ok === true,
-        dialogDetail: outDialog.detail,
-        dialogRefused: outDialog.ok !== true,
-        refusals: outDialog.refusals || [],
+        ...dialogFields(outDialog),
         keepsakeOk,
         keepsakeDetail: keepsake.detail || '',
         pricingReactionCaptured: played.pricingReactionCaptured === true,
-        interimFlags: outDialog.interimFlags || [],
         customerTurnCount: played.customerTurnCount || 0,
         hitTurnCap: played.hitTurnCap === true,
         reason,

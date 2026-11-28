@@ -208,15 +208,18 @@ export async function walkOnboardingWidth({
     shots.push(await shoot(page, dir, 'app-entry', width, readText));
     if (entry === 'eula') {
       await page.fill('#eulaName', customer.name);
-      shots.push(await shoot(page, dir, 'terms-gate', width, readText));
+      const termsShot = await shoot(page, dir, 'terms-gate', width, readText);
+      shots.push(termsShot);
       await page.click('#eulaAgree');
       await page.click('#eulaAgreeButton');
       termsClick = 'ui';
+      termsShot.termsClick = termsClick;
       await page.waitForFunction(() => !document.querySelector('#eulaScreen'), null, { timeout: 20000 });
     } else {
       await page.waitForFunction(() => /welcome/i.test(document.body.innerText || ''), null, { timeout: 20000 });
-      shots.push(await shoot(page, dir, 'terms-gate', width, readText));
+      const termsShot = await shoot(page, dir, 'terms-gate', width, readText);
       termsClick = 'accepted-skip';
+      shots.push({ ...termsShot, termsClick });
     }
     await page.waitForFunction(() => /welcome/i.test(document.body.innerText || ''), null, { timeout: 20000 });
     shots.push(await shoot(page, dir, 'welcome', width, readText));
@@ -234,14 +237,13 @@ export async function walkOnboardingWidth({
 export function combineTermsClicks(clicks) {
   const rows = Array.isArray(clicks) ? clicks : [];
   if (rows.length !== ONBOARDING_WIDTHS.length) return '';
-  if (rows.every((click) => click === 'ui')) return 'ui';
-  if (rows.every((click) => click === 'accepted-skip')) return 'accepted-skip';
-  return '';
+  if (rows.some((click) => click !== 'ui' && click !== 'accepted-skip')) return '';
+  return rows.includes('ui') ? 'ui' : 'accepted-skip';
 }
 
 function resultFrom(shots, termsClick, laterFiles, outPath) {
-  const everyClick = ONBOARDING_WIDTHS.every((width) => shots.some((shot) => shot.width === width && shot.id === 'terms-gate' && !shot.gap && !shot.missing));
-  const click = everyClick && (termsClick === 'ui' || termsClick === 'accepted-skip') ? termsClick : '';
+  const hasTermsShots = ONBOARDING_WIDTHS.every((width) => shots.some((shot) => shot.width === width && shot.id === 'terms-gate' && !shot.gap && !shot.missing));
+  const click = hasTermsShots && (termsClick === 'ui' || termsClick === 'accepted-skip') ? termsClick : '';
   const written = buildCustomerPdf({ shots, laterFiles, outPath });
   const assessed = assessOnboardingScreens({ shots, pdfText: written.pdfText, termsClick: click });
   return { ...assessed, shots, termsClick: click, outPath };

@@ -158,16 +158,19 @@ def tbl(rows, col_widths):
     return table
 
 
-def build(pack):
+def build(pack, record_item34=False):
     banner = str(pack.get("deploy_banner") or "").strip()
     if not banner:
         raise SystemExit("refused: dialog stamp is empty")
     pdfmetrics.registerFont(TTFont("DejaVuSans", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"))
     pending = [str(line).strip() for line in (pack.get("content_fails") or []) if str(line).strip()]
-    if pending:
+    turns = pack.get("turns") or []
+    flagged = {turn.get("item34_flag") for turn in turns if turn.get("item34_flag")}
+    if pending and (not record_item34 or set(pending) != flagged):
         raise SystemExit("content check failed: " + "; ".join(pending))
     assert_quality(pack)
-    assert_item34(pack)
+    partial = record_item34 and bool(pending)
+    assert_item34({"turns": [turn for turn in turns if not (partial and turn.get("item34_flag"))]})
     styles = getSampleStyleSheet()
     styles.add(ParagraphStyle(name="CoverTitle", parent=styles["Title"], fontName="DejaVuSans", fontSize=16, spaceAfter=8, alignment=TA_CENTER))
     styles.add(ParagraphStyle(name="Section", parent=styles["Heading1"], fontSize=12, spaceBefore=10, spaceAfter=6))
@@ -203,7 +206,12 @@ def build(pack):
     story.append(Spacer(1, 4))
     story.append(Paragraph("QUALITY COMPARISON vs v6 gpt-5-mini", styles["Section"]))
     story.append(Paragraph(f"<b>Headline:</b> {latin(pack.get('headline'))}", styles["Headline"]))
-    story.append(Paragraph("Content checks: none.", styles["Body"]))
+    if partial:
+        story.append(Paragraph("PARTIAL - Content check failed", styles["Section"]))
+        for line in pending:
+            story.append(Paragraph(latin(line), styles["Body"]))
+    else:
+        story.append(Paragraph("Content checks: none.", styles["Body"]))
     for line in pack.get("interim_flags") or []:
         text = str(line).strip()
         if text:
@@ -253,7 +261,7 @@ def build(pack):
     story.append(PageBreak())
     story.append(Paragraph("Full interleaved transcript (quality + timing under each app turn)", styles["Section"]))
     story.append(Paragraph("Mark in-app corrections here. Each APP turn shows model + tier.", styles["Meta"]))
-    for turn in pack.get("turns") or []:
+    for turn in turns:
         style = styles["TurnApp"] if turn.get("app") else styles["TurnCust"]
         block = []
         if turn.get("jev_ran"):
@@ -262,6 +270,8 @@ def build(pack):
             f"<b>{latin(turn.get('label'))}</b> <font size='6.5' color='#666'>[{latin(turn.get('meta'))}]</font><br/>{latin(turn.get('text'))}",
             style,
         ))
+        if partial and turn.get("item34_flag"):
+            block.append(Paragraph(latin(f"FLAG. {turn['item34_flag']}"), styles["Qual"]))
         if turn.get("rewrite_label"):
             block.append(Paragraph(latin(turn.get("rewrite_label")), styles["Qual"]))
         if turn.get("quality"):
@@ -309,13 +319,14 @@ def build(pack):
     doc.build(story, onFirstPage=paint, onLaterPages=paint)
     pdf_bytes = buffer.getvalue()
     assert_timing_bytes(pdf_bytes)
-    assert_item34_bytes(pdf_bytes)
+    if not partial:
+        assert_item34_bytes(pdf_bytes)
     return pdf_bytes
 
 
 def main():
     pack = json.load(sys.stdin)
-    sys.stdout.buffer.write(build(pack))
+    sys.stdout.buffer.write(build(pack, record_item34="--record-item34" in sys.argv[1:]))
 
 
 if __name__ == "__main__":

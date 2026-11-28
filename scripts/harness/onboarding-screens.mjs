@@ -129,7 +129,9 @@ export function orderCustomerPages(shots, laterFiles = []) {
     for (const width of ONBOARDING_WIDTHS) {
       const shot = (shots || []).find((item) => item.id === screen.id && item.width === width);
       if (!shot?.file || shot.missing || shot.blank || shot.gap) continue;
-      pages.push({ label: onboardingLabel(screen.id, width), image: shot.file });
+      const label = onboardingLabel(screen.id, width);
+      const action = screen.id === 'terms-gate' ? { ui: 'Agree clicked', 'accepted-skip': 'already accepted' }[shot.termsClick] : '';
+      pages.push({ label: action ? `${label} - ${action}` : label, image: shot.file });
     }
   }
   for (const file of laterFiles || []) {

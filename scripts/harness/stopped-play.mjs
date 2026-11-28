@@ -1,7 +1,7 @@
 import { captureScreens } from './live-outputs.mjs';
 import { finishArtifactReport, writeFinishArtifacts } from './finish-artifacts.mjs';
 
-export async function recordStoppedPlay({ played, origin, shareToken, sessionToken, outDir, dialogOk = false, keepsakeOk = false }) {
+export async function recordStoppedPlay({ played, origin, shareToken, sessionToken, outDir, dialogOk = false, adminDialogPdf = false, keepsakeOk = false }) {
   let screens = { ok: false, files: [], error: '' };
   if (outDir && shareToken) {
     try {
@@ -12,6 +12,7 @@ export async function recordStoppedPlay({ played, origin, shareToken, sessionTok
   }
   const artifactReport = finishArtifactReport({
     dialogPdf: dialogOk === true,
+    adminDialogPdf,
     keepsakePdf: keepsakeOk === true,
     screenshotCount: Array.isArray(screens.files) ? screens.files.length : 0,
     turnCount: Number(played?.customerTurnCount) || 0,

@@ -13,6 +13,7 @@ export const FINISH_ARTIFACTS = [
 
 export function finishArtifactReport({
   dialogPdf = false,
+  adminDialogPdf = false,
   keepsakePdf = false,
   screenshotCount = 0,
   turnCount = 0,
@@ -27,7 +28,7 @@ export function finishArtifactReport({
     'dialog-pdf': dialogPdf === true,
     'keepsake-pdf': keepsakePdf === true,
     screenshots: shots > 0,
-    'admin-dialog': dialogPdf === true && turns > 0,
+    'admin-dialog': adminDialogPdf === true,
     'admin-turns': turns > 0,
     'admin-astra-json': turns > 0 && astra >= turns,
     'admin-timing-summary': timing > 0,

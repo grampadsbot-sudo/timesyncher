@@ -417,7 +417,8 @@ assert.equal(await appEntryKind({
 assert.equal(await appEntryKind(acceptedSkipPage()), 'chat');
 assert.equal(combineTermsClicks(['ui', 'ui']), 'ui');
 assert.equal(combineTermsClicks(['accepted-skip', 'accepted-skip']), 'accepted-skip');
-assert.equal(combineTermsClicks(['ui', 'accepted-skip']), '');
+assert.equal(combineTermsClicks(['ui', 'accepted-skip']), 'ui');
+assert.equal(combineTermsClicks(['ui', '']), '');
 
 const skipDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lopez-r3-skip-eula-'));
 const skipShots = [];
