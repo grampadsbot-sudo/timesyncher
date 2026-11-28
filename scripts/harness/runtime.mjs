@@ -83,6 +83,32 @@ function recordArtifactFailure(artifacts, failure, error) {
   }
 }
 
+async function recordStoppedPlay({ played, origin, shareToken, sessionToken, outDir, dialogOk = false, keepsakeOk = false }) {
+  let screens = { ok: false, files: [], error: '' };
+  if (outDir && shareToken) {
+    try {
+      screens = await captureScreens({ origin, shareToken, sessionToken, outDir });
+    } catch (error) {
+      screens = { ok: false, files: [], error: String(error?.message || error).slice(0, 200) };
+    }
+  }
+  const artifactReport = finishArtifactReport({
+    dialogPdf: dialogOk === true,
+    keepsakePdf: keepsakeOk === true,
+    screenshotCount: Array.isArray(screens.files) ? screens.files.length : 0,
+    turnCount: Number(played?.customerTurnCount) || 0,
+    astraJsonTurns: Number(played?.astraJsonTurns) || 0,
+    timingTurns: Array.isArray(played?.timings) ? played.timings.length : 0,
+  });
+  writeFinishArtifacts(outDir, artifactReport, {
+    itineraryOk: Number(played?.itineraryCount) > 0,
+    itineraryCount: Number.isInteger(played?.itineraryCount) ? played.itineraryCount : null,
+    storagePath: played?.storagePath || '',
+    harnessOk: false,
+  });
+  return { screens, artifactReport };
+}
+
 export async function playWithAdminArtifacts({ origin, token, tripId, outDir, secrets, fetchImpl, replyBackend, put, play, loadTranscript, openPage, measure }) {
   const capture = firstFiveTurnCapture({ origin, token, outDir, put, openPage });
   const adminArtifacts = { captures: [], dialogPdf: false, keepsakePdf: false, errors: [], httpFailures: [] };
@@ -311,6 +337,15 @@ export function liveOptions(env = process.env) {
       };
       if (played.reason) {
         const keepsake = !chatLeftNoThing(played) ? await storeHarnessKeepsake(keepsakeOptions) : null;
+        const stopped = await recordStoppedPlay({
+          played,
+          origin,
+          shareToken,
+          sessionToken: created.token,
+          outDir: options.outDir,
+          dialogOk: dialog.ok === true,
+          keepsakeOk: keepsake?.ok === true,
+        });
         return {
           ...base,
           tripId,
@@ -322,6 +357,9 @@ export function liveOptions(env = process.env) {
           pricingReactionCaptured: played.pricingReactionCaptured === true,
           customerTurnCount: played.customerTurnCount || 0,
           hitTurnCap: played.hitTurnCap === true,
+          reason: played.reason,
+          screensOk: stopped.screens.ok === true,
+          screensDetail: stopped.screens.error || '',
         };
       }
       const qa = played.qaRating && played.qaRating !== 'slot' ? played.qaRating : null;
