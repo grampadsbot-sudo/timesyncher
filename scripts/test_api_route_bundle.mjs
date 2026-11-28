@@ -65,13 +65,30 @@ function builderSrc(src) {
   return src.startsWith('^') ? src : `^${src}$`;
 }
 
-function firstRoute(pathname) {
-  for (const route of vercel.routes) {
+// Vercel continues through header-only middleware; only a terminal route selects a destination.
+function firstRoute(pathname, routes = vercel.routes) {
+  for (const route of routes) {
     const match = pathname.match(new RegExp(builderSrc(route.src)));
-    if (match) return { route, match };
+    if (!match) continue;
+    if (route.continue === true) {
+      assert.equal(route.dest, undefined, 'header-only continue route must not rewrite');
+      assert.ok(route.headers && Object.keys(route.headers).length, 'continue route must apply headers');
+      continue;
+    }
+    return { route, match };
   }
   return null;
 }
+
+const headerOnly = { src: '/(.*)', headers: { 'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY' }, continue: true };
+const terminal = { src: '/api/(.*)', dest: '/api/[...route]?...route=$1' };
+assert.equal(firstRoute('/api/version', [headerOnly, terminal]).route, terminal);
+assert.equal(firstRoute('/assets/app-abcdefgh.js', [headerOnly, terminal]), null);
+assert.equal(firstRoute('/api/version', [terminal, headerOnly]).route, terminal);
+assert.equal(firstRoute('/api/version', [{ ...headerOnly, continue: false }]).route.dest, undefined,
+  'a terminal route without a destination must remain visible to destination assertions');
+assert.throws(() => firstRoute('/api/version', [{ ...headerOnly, dest: '/wrong' }, terminal]), /must not rewrite/);
+assert.throws(() => firstRoute('/api/version', [{ ...headerOnly, headers: {} }, terminal]), /must apply headers/);
 
 function destUrl(route, match, search = '') {
   const dest = route.dest.replace(/\$(\d+)/g, (_, index) => match[Number(index)] ?? '');
