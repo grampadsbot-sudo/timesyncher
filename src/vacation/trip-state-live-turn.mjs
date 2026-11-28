@@ -4,7 +4,7 @@ import { customerIntent, emptyIntent } from './customer-intent.mjs';
 import { finalizeCustomerReplyText } from './reply-customer-wording.mjs';
 import { sayVacationNotTrip } from './customer-visible-copy.mjs';
 import { unjudgedReply } from './reply-quality-gate.mjs';
-import { recoverSoftSearchReply } from './place-search-reply-facts.mjs';
+import { storedReplyWhenSearchUnavailable } from './trip-state-search-unavailable-reply.mjs';
 import { sumModelCost, sumTurnCost } from './turn-cost.mjs';
 import { tripStateActionsEnabled } from './trip-state-actions-enabled.mjs';
 import { assertTripState } from './trip-state-projector.mjs';
@@ -21,48 +21,6 @@ import {
 } from './live-app-turn.mjs';
 
 const MAX_TOOL_CALLS = 8;
-
-export function storedReplyWhenSearchUnavailable(partial = {}, tripStateContext = partial.tripStateContext) {
-  if (tripStateContext?.state?.research?.provider_unavailable !== true) return null;
-  const destination = String(tripStateContext.state?.saved?.trip?.destination || '').trim();
-  const recovered = recoverSoftSearchReply(
-    { reply: '', model: partial.model, jev: partial.jev },
-    { placeSearch: { outcome: 'search_unavailable' } },
-    { backend: 'openrouter', destination },
-  );
-  const reply = String(recovered?.reply || '').trim();
-  if (!reply || appTextBanned(reply)) return null;
-  const responseModel = String(partial.responseModel || partial.model?.responseModel || partial.jev?.responseModel || '').trim();
-  const quality = {
-    judged: true,
-    score: 4,
-    disposition: 'search_unavailable_stored',
-    unbackedChangeClaim: false,
-    wantsRewrite: false,
-    hardFlag: false,
-    comment: null,
-    jevNote: null,
-    jevNoteReason: 'jev_no_free_text',
-  };
-  const model = {
-    ...(partial.model && typeof partial.model === 'object' ? partial.model : {}),
-    called: Boolean(partial.model?.called),
-    via: partial.model?.via || 'openrouter-chat',
-    responseModel: responseModel || partial.model?.responseModel || null,
-    modelTier: partial.model?.modelTier ?? partial.jev?.modelTier ?? null,
-    quality,
-  };
-  return {
-    reply,
-    rules: partial.rules || null,
-    jev: partial.jev || null,
-    model,
-    quality,
-    log: partial.log || partial.model?.log || null,
-    tripStateContext,
-    reason: null,
-  };
-}
 
 function trimmedRewriteChange(change) {
   return String(change || '').replace(/\s+/g, ' ').trim();
@@ -501,14 +459,7 @@ export async function finishTripStateRewrite({ pending, env = process.env, rules
     judgeMs: rewritePassed ? rewriteQualityMs : draftQualityMs,
   };
   if (!shippedText) {
-    const stored = storedReplyWhenSearchUnavailable({
-      rules,
-      jev: pending?.jev || null,
-      model: { ...(pending?.model || {}), quality, log, cost: log.cost },
-      log,
-      responseModel: pending?.draftModel || '',
-      tripStateContext,
-    });
+    const stored = storedReplyWhenSearchUnavailable({ rules, jev: pending?.jev, model: pending?.model, log, responseModel: pending?.draftModel, tripStateContext });
     if (stored) return stored;
     return {
       reply: null,

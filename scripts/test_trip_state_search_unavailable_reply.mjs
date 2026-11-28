@@ -3,7 +3,8 @@ import fs from 'node:fs';
 import { finishArtifactReport } from './harness/finish-artifacts.mjs';
 import { replyPlaceSearchProviderLeakReason } from '../src/vacation/place-search-reply-facts.mjs';
 import { tripStateNeedsRewrite } from '../src/vacation/trip-state-model-context.mjs';
-import { finishTripStateRewrite, storedReplyWhenSearchUnavailable } from '../src/vacation/trip-state-live-turn.mjs';
+import { finishTripStateRewrite } from '../src/vacation/trip-state-live-turn.mjs';
+import { storedReplyWhenSearchUnavailable } from '../src/vacation/trip-state-search-unavailable-reply.mjs';
 
 const context = (unavailable) => ({
   pin: { trip_id: 'fixture-trip', revision: 2, digest: 'a', revision_digest: 'a' },

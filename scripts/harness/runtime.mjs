@@ -22,6 +22,7 @@ import { attachSsrToKeepsakeMetadata } from '../customer_suite/ssr/dialog-hook.m
 import { createLiveSsrHarness, primeLiveSsr } from './live-ssr-harness.mjs';
 import { finishMeasuredPlay } from './outcomes.mjs';
 import { finishArtifactReport, liveFinishReason, writeFinishArtifacts } from './finish-artifacts.mjs';
+import { recordStoppedPlay } from './stopped-play.mjs';
 
 export { writeOutcomes } from './outcomes.mjs';
 
@@ -81,32 +82,6 @@ function recordArtifactFailure(artifacts, failure, error) {
   if (Number.isInteger(error?.status)) {
     artifacts.httpFailures.push({ failure, operation: error.operation, status: error.status });
   }
-}
-
-async function recordStoppedPlay({ played, origin, shareToken, sessionToken, outDir, dialogOk = false, keepsakeOk = false }) {
-  let screens = { ok: false, files: [], error: '' };
-  if (outDir && shareToken) {
-    try {
-      screens = await captureScreens({ origin, shareToken, sessionToken, outDir });
-    } catch (error) {
-      screens = { ok: false, files: [], error: String(error?.message || error).slice(0, 200) };
-    }
-  }
-  const artifactReport = finishArtifactReport({
-    dialogPdf: dialogOk === true,
-    keepsakePdf: keepsakeOk === true,
-    screenshotCount: Array.isArray(screens.files) ? screens.files.length : 0,
-    turnCount: Number(played?.customerTurnCount) || 0,
-    astraJsonTurns: Number(played?.astraJsonTurns) || 0,
-    timingTurns: Array.isArray(played?.timings) ? played.timings.length : 0,
-  });
-  writeFinishArtifacts(outDir, artifactReport, {
-    itineraryOk: Number(played?.itineraryCount) > 0,
-    itineraryCount: Number.isInteger(played?.itineraryCount) ? played.itineraryCount : null,
-    storagePath: played?.storagePath || '',
-    harnessOk: false,
-  });
-  return { screens, artifactReport };
 }
 
 export async function playWithAdminArtifacts({ origin, token, tripId, outDir, secrets, fetchImpl, replyBackend, put, play, loadTranscript, openPage, measure }) {
