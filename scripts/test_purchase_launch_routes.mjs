@@ -29,10 +29,25 @@ function builderSrc(src) {
 function firstRoute(routes, pathname) {
   for (const route of routes) {
     const match = pathname.match(new RegExp(builderSrc(route.src)));
-    if (match) return { route, match };
+    if (!match) continue;
+    if (route.continue === true) {
+      assert.equal(route.dest, undefined, 'header-only continue route must not rewrite');
+      assert.ok(route.headers && Object.keys(route.headers).length, 'continue route must apply headers');
+      continue;
+    }
+    return { route, match };
   }
   return null;
 }
+
+const headerOnly = { src: '/(.*)', headers: { 'X-Content-Type-Options': 'nosniff' }, continue: true };
+const terminal = { src: '/api/(.*)', dest: '/api/[...route]?...route=$1' };
+assert.equal(firstRoute([headerOnly, terminal], '/api/shared/test/').route, terminal);
+assert.equal(firstRoute([terminal, headerOnly], '/api/shared/test/').route, terminal);
+assert.equal(firstRoute([headerOnly], '/api/shared/test/'), null);
+assert.equal(firstRoute([{ ...headerOnly, continue: false }], '/api/shared/test/').route.dest, undefined);
+assert.throws(() => firstRoute([{ ...headerOnly, dest: "/wrong" }, terminal], '/api/shared/test/'), /must not rewrite/);
+assert.throws(() => firstRoute([{ ...headerOnly, headers: {} }, terminal], '/api/shared/test/'), /must apply headers/);
 
 function contentType(file) {
   if (file.endsWith('.mjs') || file.endsWith('.js')) return 'application/javascript; charset=utf-8';
