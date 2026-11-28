@@ -262,9 +262,9 @@ const syntheticPriced = [
   { role: 'customer', odd: false, text: '$129 per year for the household plan sounds reasonable, that works for us.' },
 ];
 assert.equal(pricingReactionCaptured(syntheticPriced), true);
-assert.equal(chatGoalsReached({ itineraryCount: 2, index: 2, maxTurns: 10 }).done, true);
+assert.equal(chatGoalsReached({ itineraryCount: 2, index: 2, maxTurns: 10 }).done, false);
 assert.equal(chatGoalsReached({ itineraryCount: 0, index: 2, maxTurns: 10 }).done, false);
-assert.equal(chatGoalsReached({ itineraryCount: 2, index: 2, maxTurns: 10 }).done, true);
+assert.equal(chatGoalsReached({ itineraryCount: 2, index: 9, maxTurns: 10 }).done, true);
 
 const longHistory = Array.from({ length: 16 }, (_, idx) => ({
   role: idx % 2 === 0 ? 'customer' : 'app',
