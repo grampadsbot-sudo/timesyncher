@@ -1,0 +1,38 @@
+{
+  "repo": "grampadsbot-sudo/timesyncher",
+  "viewports": [
+    {
+      "name": "iphone-390",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "name": "iphone-430",
+      "width": 430,
+      "height": 932
+    }
+  ],
+  "touch": true,
+  "trip_fixture": "demo-nyc-99-snapshot-20261110",
+  "fixture_variants": [
+    {
+      "name": "local-snapshot-only",
+      "owner_trips": "owner-trips-live.json"
+    }
+  ],
+  "role": "editor",
+  "entry": "/vacation-app.html",
+  "steps": [],
+  "issue": 1019,
+  "source": "dr eggbot 2026-11-18 (moved from 1014)",
+  "note": "PARKED #1019: hashed /assets/* immutable Cache-Control; needs guarded host path design by dr eggbot.",
+  "assertions": [
+    {
+      "id": "hashed-assets-immutable-cache",
+      "type": "unit_script",
+      "script": "scripts/test_1014_hashed_assets_cache_headers.mjs",
+      "timeout_ms": 60000,
+      "note": "Hashed /assets/* responses carry long-lived immutable Cache-Control (public, max-age=31536000, immutable). Unhashed HTML and API responses are not given that policy."
+    }
+  ]
+}
