@@ -69,8 +69,12 @@ assert.match(waveSection({ wave: 'lopez', mode: 'live', cards: [card], failed: f
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const launcher = path.join(root, 'scripts/host/start_customer_run.py');
 const install = fs.readFileSync(path.join(root, 'scripts/host/install_vk_ship_round.sh'), 'utf8');
-assert.match(install, /bin\/start_customer_run\.py/);
-assert.doesNotMatch(install, /start_customer_run\.py >>/);
+assert.equal(fs.existsSync(launcher), true);
+assert.doesNotMatch(
+  install,
+  /start_customer_run/,
+  'install_vk_ship_round.sh must leave ~/tsv-dispatch/bin/start_customer_run.py alone',
+);
 assert.equal(fs.readFileSync(launcher, 'utf8').includes('crontab'), false);
 
 const plan = spawnSync('python3', [launcher, 'lopez', '--plan'], { encoding: 'utf8' });
