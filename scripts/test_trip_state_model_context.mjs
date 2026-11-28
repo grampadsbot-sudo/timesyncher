@@ -181,9 +181,9 @@ try {
   assert.deepEqual(writerReq.messages.map((m) => m.role), ['system', 'system', 'user']);
   assert.equal(writerReq.messages[2].content, 'Put Botanical Gardens on Tuesday.');
   assert.ok(writerReq.messages[0].content.map((part) => part.text).join('\n').includes(TRIP_STATE_SYSTEM_INSTRUCTION));
-  assert.match(writerReq.messages[0].content[0].text, /Keep internal payment and cost-sharing jargon out of customer replies/);
-  assert.match(jevReq.questions.overall_quality.instructions, /Score 1 or 2 when the draft uses split-payment or cost-sharing jargon/);
-  assert.match(jevReq.questions.disposition.criteria.rewrite, /split-payment or cost-sharing jargon/);
+  assert.match(writerReq.messages[0].content[0].text, /Keep internal seat-cost labels out of customer replies/);
+  assert.match(jevReq.questions.overall_quality.instructions, /Score 1 or 2 when the draft uses an internal seat-cost label/);
+  assert.match(jevReq.questions.disposition.criteria.rewrite, /internal seat-cost label/);
   for (const forbidden of ['Saved trip record', 'Seat record', 'Do not say seat', 'BEAT:', 'OLD_TRANSCRIPT_SENTINEL_TURN_', 'recent_turns']) {
     assert.equal(JSON.stringify(writerReq).includes(forbidden), false, `writer leaked ${forbidden}`);
     assert.equal(JSON.stringify(jevReq).includes(forbidden), false, `jev leaked ${forbidden}`);
@@ -239,7 +239,7 @@ try {
   const rewriteReq = unbackedChatPayloads[1];
   assert.equal(rewriteReq.tools, undefined);
   assert.ok(rewriteReq.messages[0].content.map((part) => part.text).join('\n').includes(TRIP_STATE_REWRITE_INSTRUCTION));
-  assert.match(rewriteReq.messages[0].content[0].text, /Keep internal payment and cost-sharing jargon out of customer replies/);
+  assert.match(rewriteReq.messages[0].content[0].text, /Keep internal seat-cost labels out of customer replies/);
   const draftPin = JSON.parse(unbackedChatPayloads[0].messages[1].content[0].text).pin;
   assert.deepEqual(JSON.parse(rewriteReq.messages[1].content[0].text).pin, draftPin);
   assert.deepEqual(unbackedJevPayloads[0].state.trip_state_pin, draftPin);

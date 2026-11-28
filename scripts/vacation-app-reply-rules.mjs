@@ -205,7 +205,10 @@ async function loadViaHttp(env) {
   return null;
 }
 
-function loadViaCli() {
+function loadViaCli(env) {
+  // An explicit empty env is a hermetic caller (unit tests pass {}).
+  // Do not consult the operator gbrain binary on PATH. process.env still does.
+  if (env && env !== process.env && Object.keys(env).length === 0) return null;
   const attempts = [
     ['get-page', '--slug', REPLY_RULES_SLUG],
     ['page', 'get', REPLY_RULES_SLUG],
@@ -278,7 +281,7 @@ function loadViaBundledSnapshot() {
 export async function loadVacationAppReplyRules(env = process.env) {
   const http = await loadViaHttp(env);
   if (http?.ok) return http;
-  const cli = loadViaCli();
+  const cli = loadViaCli(env);
   if (cli?.ok) return cli;
   const brainRoot = env.TIMESYNCHER_PRODUCT_GBRAIN_ROOT || env.TIMESYNCHER_PRIVATE_GBRAIN;
   if (brainRoot) {
